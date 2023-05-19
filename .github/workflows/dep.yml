@@ -1,0 +1,24 @@
+name: 'Dependency Review'
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    env:
+      FIRST_COMMIT_SHA: bca36d71977c623525a48c631309fcedb26605a9
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v3
+      - name: 'Dependency Review'
+        uses: actions/dependency-review-action@v3
+        with:
+          head-ref: HEAD
+          base-ref: "${{ env.FIRST_COMMIT_SHA }}"
+          config-file: './.github/dependency-review-config.yml'

@@ -1,0 +1,8 @@
+ignore:
+  - "**/main.go"
+  - "**/*_enum.go"
+  - "*_enum.go"
+coverage:
+  status:
+    project: false
+    patch: false
