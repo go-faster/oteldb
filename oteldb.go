@@ -1,2 +1,2 @@
-// Package name is a new package.
-package name
+// Package oteldb is OpenTelemetry-compatible storage.
+package oteldb
