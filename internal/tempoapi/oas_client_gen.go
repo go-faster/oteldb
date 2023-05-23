@@ -77,13 +77,13 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // Execute TraceQL query.
 //
 // GET /api/search
-func (c *Client) Search(ctx context.Context, params SearchParams) (*Search, error) {
+func (c *Client) Search(ctx context.Context, params SearchParams) (*Traces, error) {
 	res, err := c.sendSearch(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Search, err error) {
+func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Traces, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("search"),
 	}
@@ -519,13 +519,13 @@ func (c *Client) sendSearchTags(ctx context.Context) (res *TagNames, err error) 
 // Querying traces by id.
 //
 // GET /api/traces/{traceID}
-func (c *Client) TraceByID(ctx context.Context, params TraceByIDParams) (*TraceByID, error) {
+func (c *Client) TraceByID(ctx context.Context, params TraceByIDParams) (*Batches, error) {
 	res, err := c.sendTraceByID(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res *TraceByID, err error) {
+func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res *Batches, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("traceByID"),
 	}

@@ -72,7 +72,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 		return
 	}
 
-	var response *Search
+	var response *Traces
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
@@ -115,7 +115,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 		type (
 			Request  = struct{}
 			Params   = SearchParams
-			Response = *Search
+			Response = *Traces
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -518,7 +518,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	var response *TraceByID
+	var response *Batches
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
@@ -545,7 +545,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 		type (
 			Request  = struct{}
 			Params   = TraceByIDParams
-			Response = *TraceByID
+			Response = *Batches
 		)
 		response, err = middleware.HookMiddleware[
 			Request,

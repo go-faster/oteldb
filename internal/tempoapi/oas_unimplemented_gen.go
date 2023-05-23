@@ -18,7 +18,7 @@ var _ Handler = UnimplementedHandler{}
 // Execute TraceQL query.
 //
 // GET /api/search
-func (UnimplementedHandler) Search(ctx context.Context, params SearchParams) (r *Search, _ error) {
+func (UnimplementedHandler) Search(ctx context.Context, params SearchParams) (r *Traces, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -55,7 +55,7 @@ func (UnimplementedHandler) SearchTags(ctx context.Context) (r *TagNames, _ erro
 // Querying traces by id.
 //
 // GET /api/traces/{traceID}
-func (UnimplementedHandler) TraceByID(ctx context.Context, params TraceByIDParams) (r *TraceByID, _ error) {
+func (UnimplementedHandler) TraceByID(ctx context.Context, params TraceByIDParams) (r *Batches, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func encodeSearchResponse(response *Search, w http.ResponseWriter, span trace.Span) error {
+func encodeSearchResponse(response *Traces, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
@@ -63,7 +63,7 @@ func encodeSearchTagsResponse(response *TagNames, w http.ResponseWriter, span tr
 	return nil
 }
 
-func encodeTraceByIDResponse(response *TraceByID, w http.ResponseWriter, span trace.Span) error {
+func encodeTraceByIDResponse(response *Batches, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))

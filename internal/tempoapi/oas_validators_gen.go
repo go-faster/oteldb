@@ -409,31 +409,6 @@ func (s *ScopeSpans) Validate() error {
 	}
 	return nil
 }
-func (s *Search) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.Batches.Set {
-			if err := func() error {
-				if err := s.Batches.Value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "batches",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
 func (s *Span) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -647,31 +622,6 @@ func (s *TagValuesV2) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "tagValues",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-func (s *TraceByID) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.Batches.Set {
-			if err := func() error {
-				if err := s.Batches.Value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "batches",
 			Error: err,
 		})
 	}

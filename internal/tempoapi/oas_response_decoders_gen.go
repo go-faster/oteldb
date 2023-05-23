@@ -14,7 +14,7 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func decodeSearchResponse(resp *http.Response) (res *Search, _ error) {
+func decodeSearchResponse(resp *http.Response) (res *Traces, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -30,7 +30,7 @@ func decodeSearchResponse(resp *http.Response) (res *Search, _ error) {
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Search
+			var response Traces
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -346,7 +346,7 @@ func decodeSearchTagsResponse(resp *http.Response) (res *TagNames, _ error) {
 	return res, errors.Wrap(defRes, "error")
 }
 
-func decodeTraceByIDResponse(resp *http.Response) (res *TraceByID, _ error) {
+func decodeTraceByIDResponse(resp *http.Response) (res *Batches, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -362,7 +362,7 @@ func decodeTraceByIDResponse(resp *http.Response) (res *TraceByID, _ error) {
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response TraceByID
+			var response Batches
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err

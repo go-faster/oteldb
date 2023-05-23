@@ -13,7 +13,7 @@ type Handler interface {
 	// Execute TraceQL query.
 	//
 	// GET /api/search
-	Search(ctx context.Context, params SearchParams) (*Search, error)
+	Search(ctx context.Context, params SearchParams) (*Traces, error)
 	// SearchTagValues implements search_tag_values operation.
 	//
 	// This endpoint retrieves all discovered values for the given tag, which can be used in search.
@@ -38,7 +38,7 @@ type Handler interface {
 	// Querying traces by id.
 	//
 	// GET /api/traces/{traceID}
-	TraceByID(ctx context.Context, params TraceByIDParams) (*TraceByID, error)
+	TraceByID(ctx context.Context, params TraceByIDParams) (*Batches, error)
 	// NewError creates *ErrorStatusCode from error returned by handler.
 	//
 	// Used for common default response.

@@ -530,52 +530,6 @@ func (s *Link) SetDroppedAttributesCount(val OptDroppedAttributesCount) {
 	s.DroppedAttributesCount = val
 }
 
-// NewOptBatches returns new OptBatches with value set to v.
-func NewOptBatches(v Batches) OptBatches {
-	return OptBatches{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptBatches is optional Batches.
-type OptBatches struct {
-	Value Batches
-	Set   bool
-}
-
-// IsSet returns true if OptBatches was set.
-func (o OptBatches) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptBatches) Reset() {
-	var v Batches
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptBatches) SetTo(v Batches) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptBatches) Get() (v Batches, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptBatches) Or(d Batches) Batches {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptDroppedAttributesCount returns new OptDroppedAttributesCount with value set to v.
 func NewOptDroppedAttributesCount(v DroppedAttributesCount) OptDroppedAttributesCount {
 	return OptDroppedAttributesCount{
@@ -1174,52 +1128,6 @@ func (o OptTraceId) Or(d TraceId) TraceId {
 	return d
 }
 
-// NewOptTraces returns new OptTraces with value set to v.
-func NewOptTraces(v Traces) OptTraces {
-	return OptTraces{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptTraces is optional Traces.
-type OptTraces struct {
-	Value Traces
-	Set   bool
-}
-
-// IsSet returns true if OptTraces was set.
-func (o OptTraces) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptTraces) Reset() {
-	var v Traces
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptTraces) SetTo(v Traces) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptTraces) Get() (v Traces, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptTraces) Or(d Traces) Traces {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptUnixSeconds returns new OptUnixSeconds with value set to v.
 func NewOptUnixSeconds(v time.Time) OptUnixSeconds {
 	return OptUnixSeconds{
@@ -1410,20 +1318,6 @@ func (s *ScopeSpans) SetSpans(val []Span) {
 // SetSchemaUrl sets the value of SchemaUrl.
 func (s *ScopeSpans) SetSchemaUrl(val OptString) {
 	s.SchemaUrl = val
-}
-
-type Search struct {
-	Batches OptTraces `json:"batches"`
-}
-
-// GetBatches returns the value of Batches.
-func (s *Search) GetBatches() OptTraces {
-	return s.Batches
-}
-
-// SetBatches sets the value of Batches.
-func (s *Search) SetBatches(val OptTraces) {
-	s.Batches = val
 }
 
 // Ref: #/components/schemas/Span
@@ -1805,20 +1699,6 @@ func (s *TagValuesV2) GetTagValues() []TagValue {
 // SetTagValues sets the value of TagValues.
 func (s *TagValuesV2) SetTagValues(val []TagValue) {
 	s.TagValues = val
-}
-
-type TraceByID struct {
-	Batches OptBatches `json:"batches"`
-}
-
-// GetBatches returns the value of Batches.
-func (s *TraceByID) GetBatches() OptBatches {
-	return s.Batches
-}
-
-// SetBatches sets the value of Batches.
-func (s *TraceByID) SetBatches(val OptBatches) {
-	s.Batches = val
 }
 
 type TraceId []byte
