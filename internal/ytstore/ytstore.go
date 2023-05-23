@@ -51,8 +51,9 @@ func (Span) Schema() schema.Schema {
 			// FIXME(tdakkota): where is UUID?
 			{Name: "trace_id", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},
 			{Name: "id", ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
-			{Name: "start", ComplexType: schema.TypeTimestamp},
-			{Name: "end", ComplexType: schema.TypeTimestamp},
+			// Start and end are nanoseconds, so we can't use Timestamp.
+			{Name: "start", ComplexType: schema.TypeUint64},
+			{Name: "end", ComplexType: schema.TypeUint64},
 			{Name: "attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
 		},
 	}
