@@ -1,0 +1,504 @@
+openapi: 3.0.3
+info:
+  title: Grafana Tempo 'query-frontend' API
+  version: 2.1.0
+servers:
+  - url: "http://localhost:3200"
+paths:
+  /api/traces/{traceID}:
+    get:
+      operationId: traceByID
+      description: Querying traces by id.
+      parameters:
+        - name: traceID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: TraceID to query.
+        - name: start
+          in: query
+          schema:
+            type: integer
+            format: unix-seconds
+          description: Along with `end` define a time range from which traces should be returned.
+        - name: end
+          in: query
+          schema:
+            type: integer
+            format: unix-seconds
+          description: |
+            Along with `start` define a time range from which traces should be returned.
+            Providing both `start` and `end` will include traces for the specified time range only.
+            If the parameters are not provided then Tempo will check for the trace across all blocks in backend.
+            If the parameters are provided, it will only check in the blocks within the specified time range,
+            this can result in trace not being found or partial results if it does not fall in the specified time range.
+      responses:
+        200:
+          $ref: "#/components/responses/TraceByID"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/search:
+    get:
+      operationId: search
+      description: Execute TraceQL query.
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: URL-encoded TraceQL query.
+
+        - name: tags
+          in: query
+          schema:
+            type: string
+          description: |
+            logfmt encoding of any span-level or process-level attributes to filter on.
+            The value is matched as a case-insensitive substring.
+            Key-value pairs are separated by spaces.
+            If a value contains a space, it should be enclosed within double quotes.
+
+        - name: minDuration
+          in: query
+          schema:
+            type: string
+            format: duration
+          description: Find traces with at least this duration. Duration values are of the form 10s for 10 seconds, 100ms, 30m, etc.
+
+        - name: maxDuration
+          in: query
+          schema:
+            type: string
+            format: duration
+          description: Find traces with no greater than this duration. Uses the same form as `minDuration`.
+
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Limit the number of search results. Default is 20, but this is configurable in the querier. Refer to Configuration.
+
+        - name: start
+          in: query
+          schema:
+            type: integer
+            format: unix-seconds
+          description: Along with `end` define a time range from which traces should be returned.
+
+        - name: end
+          in: query
+          schema:
+            type: integer
+            format: unix-seconds
+          description: |
+            Along with `start`, define a time range from which traces should be returned.
+            Providing both `start` and `end` will change the way that Tempo searches.
+            If the parameters are not provided, then Tempo will search the recent trace data stored in the ingesters.
+            If the parameters are provided, it will search the backend as well.
+      responses:
+        200:
+          $ref: "#/components/responses/Search"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/search/tags:
+    get:
+      operationId: search_tags
+      description: This endpoint retrieves all discovered tag names that can be used in search.
+      responses:
+        200:
+          $ref: "#/components/responses/SearchTags"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/search/tag/{service_name}/values:
+    get:
+      operationId: search_tag_values
+      description: This endpoint retrieves all discovered values for the given tag, which can be used in search.
+      parameters:
+        - name: service_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Service name.
+      responses:
+        200:
+          $ref: "#/components/responses/SearchTagValues"
+        default:
+          $ref: "#/components/responses/Error"
+
+  /api/v2/search/tag/{service_name}/values:
+    get:
+      operationId: search_tag_values_v2
+      description: This endpoint retrieves all discovered values and their data types for the given TraceQL identifier.
+      parameters:
+        - name: service_name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Service name.
+      responses:
+        200:
+          $ref: "#/components/responses/SearchTagValuesV2"
+        default:
+          $ref: "#/components/responses/Error"
+
+components:
+  responses:
+    Error:
+      description: Error while processing request
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/Error"
+    TraceByID:
+      description: Query by trace ID result
+      content:
+        "application/json":
+          schema:
+            type: object
+            properties:
+              batches:
+                $ref: "#/components/schemas/Batches"
+    Search:
+      description: Search result
+      content:
+        "application/json":
+          schema:
+            type: object
+            properties:
+              batches:
+                $ref: "#/components/schemas/Traces"
+    SearchTags:
+      description: Search tags result
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/TagNames"
+    SearchTagValues:
+      description: Search tag values result
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/TagValues"
+    SearchTagValuesV2:
+      description: Search tag values result
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/TagValuesV2"
+
+  schemas:
+    Traces:
+      type: object
+      required: [traces]
+      properties:
+        traces:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceSpans"
+    TraceSearchMetadata:
+      type: object
+      properties:
+        traceID:
+          type: string
+        rootServiceName:
+          type: string
+        rootTraceName:
+          type: string
+        startTimeUnixNano:
+          type: string
+          format: unix-nano
+        durationMs:
+          type: integer
+        spanSet:
+          $ref: "#/components/schemas/TempoSpanSet"
+    TempoSpanSet:
+      type: object
+      properties:
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/TempoSpan"
+        matched:
+          type: integer
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+    TempoSpan:
+      type: object
+      properties:
+        spanID:
+          type: string
+        name:
+          type: string
+        startTimeUnixNano:
+          type: string
+          format: unix-nano
+        durationNanos:
+          type: string
+          format: int64
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+
+    Batches:
+      type: object
+      required: [batches]
+      properties:
+        batches:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceSpans"
+    ResourceSpans:
+      type: object
+      properties:
+        resource:
+          $ref: "#/components/schemas/Resource"
+        scopeSpans:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScopeSpans"
+        schemaUrl:
+          type: string
+    ScopeSpans:
+      type: object
+      properties:
+        scope:
+          $ref: "#/components/schemas/InstrumentationScope"
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Span"
+        schemaUrl:
+          type: string
+    InstrumentationScope:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+        droppedAttributesCount:
+          $ref: "#/components/schemas/DroppedAttributesCount"
+    Resource:
+      type: object
+      properties:
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+        droppedAttributesCount:
+          $ref: "#/components/schemas/DroppedAttributesCount"
+    Span:
+      type: object
+      properties:
+        traceId:
+          $ref: "#/components/schemas/TraceId"
+        spanId:
+          $ref: "#/components/schemas/SpanId"
+        traceState:
+          type: string
+        parentSpanId:
+          type: string
+          format: base64
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/SpanKind"
+        startTimeUnixNano:
+          $ref: "#/components/schemas/UnixTimeNano"
+        endTimeUnixNano:
+          $ref: "#/components/schemas/UnixTimeNano"
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+        droppedAttributesCount:
+          $ref: "#/components/schemas/DroppedAttributesCount"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        droppedEventsCount:
+          $ref: "#/components/schemas/DroppedEventsCount"
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/Link"
+        droppedLinksCount:
+          $ref: "#/components/schemas/DroppedLinksCount"
+        status:
+          $ref: "#/components/schemas/Status"
+    SpanKind:
+      type: string
+      enum:
+        - SPAN_KIND_UNSPECIFIED
+        - SPAN_KIND_INTERNAL
+        - SPAN_KIND_SERVER
+        - SPAN_KIND_CLIENT
+        - SPAN_KIND_PRODUCER
+        - SPAN_KIND_CONSUMER
+    Event:
+      type: object
+      properties:
+        timeUnixNano:
+          $ref: "#/components/schemas/UnixTimeNano"
+        name:
+          type: string
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+        droppedAttributesCount:
+          $ref: "#/components/schemas/DroppedAttributesCount"
+    Link:
+      type: object
+      properties:
+        traceId:
+          $ref: "#/components/schemas/TraceId"
+        spanId:
+          $ref: "#/components/schemas/SpanId"
+        traceState:
+          type: string
+        attributes:
+          $ref: "#/components/schemas/Attributes"
+        droppedAttributesCount:
+          $ref: "#/components/schemas/DroppedAttributesCount"
+    Status:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          $ref: "#/components/schemas/StatusCode"
+    StatusCode:
+      type: string
+      enum:
+        - STATUS_CODE_UNSET
+        - STATUS_CODE_OK
+        - STATUS_CODE_ERROR
+
+    Attributes:
+      type: array
+      items:
+        $ref: "#/components/schemas/AnyValue"
+    KeyValue:
+      type: object
+      required: [key, value]
+      properties:
+        key:
+          type: string
+        value:
+          $ref: "#/components/schemas/AnyValue"
+    AnyValue:
+      oneOf:
+        - $ref: "#/components/schemas/StringValue"
+        - $ref: "#/components/schemas/BoolValue"
+        - $ref: "#/components/schemas/IntValue"
+        - $ref: "#/components/schemas/DoubleValue"
+        - $ref: "#/components/schemas/ArrayValue"
+        - $ref: "#/components/schemas/KvlistValue"
+        - $ref: "#/components/schemas/BytesValue"
+    StringValue:
+      type: object
+      required: [stringValue]
+      properties:
+        stringValue:
+          type: string
+    BoolValue:
+      type: object
+      required: [boolValue]
+      properties:
+        boolValue:
+          type: boolean
+    IntValue:
+      type: object
+      required: [intValue]
+      properties:
+        intValue:
+          type: string
+          format: int64
+    DoubleValue:
+      type: object
+      required: [doubleValue]
+      properties:
+        doubleValue:
+          type: number
+    ArrayValue:
+      type: object
+      required: [arrayValue]
+      properties:
+        arrayValue:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnyValue"
+    KvlistValue:
+      type: object
+      required: [kvlistValue]
+      properties:
+        kvlistValue:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyValue"
+    BytesValue:
+      type: object
+      required: [bytesValue]
+      properties:
+        bytesValue:
+          type: string
+          format: base64
+    DroppedAttributesCount:
+      type: integer
+    DroppedEventsCount:
+      type: integer
+    DroppedLinksCount:
+      type: integer
+    TraceId:
+      type: string
+      format: base64
+    SpanId:
+      type: string
+      format: base64
+    UnixTimeNano:
+      type: string
+      format: unix-nano
+
+    TagNames:
+      type: object
+      required: [tagNames]
+      properties:
+        tagNames:
+          type: array
+          items:
+            type: string
+
+    TagValues:
+      type: object
+      required: [tagValues]
+      properties:
+        tagValues:
+          type: array
+          items:
+            type: string
+
+    TagValuesV2:
+      type: object
+      required: [tagValues]
+      properties:
+        tagValues:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagValue"
+
+    TagValue:
+      type: object
+      required: [type, value]
+      properties:
+        type:
+          # TODO(tdakkota): use enum?
+          type: string
+        value:
+          type: string
+
+    Error:
+      type: string
