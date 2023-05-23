@@ -161,19 +161,13 @@ components:
       content:
         "application/json":
           schema:
-            type: object
-            properties:
-              batches:
-                $ref: "#/components/schemas/Batches"
+            $ref: "#/components/schemas/Batches"
     Search:
       description: Search result
       content:
         "application/json":
           schema:
-            type: object
-            properties:
-              batches:
-                $ref: "#/components/schemas/Traces"
+            $ref: "#/components/schemas/Traces"
     SearchTags:
       description: Search tags result
       content:
