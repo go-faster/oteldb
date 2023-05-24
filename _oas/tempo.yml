@@ -289,6 +289,13 @@ components:
           $ref: "#/components/schemas/DroppedAttributesCount"
     Span:
       type: object
+      required:
+        - traceId
+        - spanId
+        - name
+        - kind
+        - startTimeUnixNano
+        - endTimeUnixNano
       properties:
         traceId:
           $ref: "#/components/schemas/TraceId"
