@@ -382,7 +382,7 @@ components:
     Attributes:
       type: array
       items:
-        $ref: "#/components/schemas/AnyValue"
+        $ref: "#/components/schemas/KeyValue"
     KeyValue:
       type: object
       required: [key, value]
