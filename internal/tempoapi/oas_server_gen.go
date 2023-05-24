@@ -38,7 +38,7 @@ type Handler interface {
 	// Querying traces by id.
 	//
 	// GET /api/traces/{traceID}
-	TraceByID(ctx context.Context, params TraceByIDParams) (*Batches, error)
+	TraceByID(ctx context.Context, params TraceByIDParams) (TraceByID, error)
 	// NewError creates *ErrorStatusCode from error returned by handler.
 	//
 	// Used for common default response.

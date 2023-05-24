@@ -4,9 +4,8 @@ package tempoapi
 
 import (
 	"fmt"
+	"io"
 	"time"
-
-	"github.com/go-faster/errors"
 )
 
 func (s *ErrorStatusCode) Error() string {
@@ -225,21 +224,6 @@ func (s *ArrayValue) SetArrayValue(val []AnyValue) {
 
 type Attributes []KeyValue
 
-// Ref: #/components/schemas/Batches
-type Batches struct {
-	Batches []ResourceSpans `json:"batches"`
-}
-
-// GetBatches returns the value of Batches.
-func (s *Batches) GetBatches() []ResourceSpans {
-	return s.Batches
-}
-
-// SetBatches sets the value of Batches.
-func (s *Batches) SetBatches(val []ResourceSpans) {
-	s.Batches = val
-}
-
 // Ref: #/components/schemas/BoolValue
 type BoolValue struct {
 	BoolValue bool `json:"boolValue"`
@@ -285,12 +269,6 @@ func (s *DoubleValue) SetDoubleValue(val float64) {
 	s.DoubleValue = val
 }
 
-type DroppedAttributesCount int
-
-type DroppedEventsCount int
-
-type DroppedLinksCount int
-
 type Error string
 
 // ErrorStatusCode wraps Error with StatusCode.
@@ -317,102 +295,6 @@ func (s *ErrorStatusCode) SetStatusCode(val int) {
 // SetResponse sets the value of Response.
 func (s *ErrorStatusCode) SetResponse(val Error) {
 	s.Response = val
-}
-
-// Ref: #/components/schemas/Event
-type Event struct {
-	TimeUnixNano           OptUnixTimeNano           `json:"timeUnixNano"`
-	Name                   OptString                 `json:"name"`
-	Attributes             *Attributes               `json:"attributes"`
-	DroppedAttributesCount OptDroppedAttributesCount `json:"droppedAttributesCount"`
-}
-
-// GetTimeUnixNano returns the value of TimeUnixNano.
-func (s *Event) GetTimeUnixNano() OptUnixTimeNano {
-	return s.TimeUnixNano
-}
-
-// GetName returns the value of Name.
-func (s *Event) GetName() OptString {
-	return s.Name
-}
-
-// GetAttributes returns the value of Attributes.
-func (s *Event) GetAttributes() *Attributes {
-	return s.Attributes
-}
-
-// GetDroppedAttributesCount returns the value of DroppedAttributesCount.
-func (s *Event) GetDroppedAttributesCount() OptDroppedAttributesCount {
-	return s.DroppedAttributesCount
-}
-
-// SetTimeUnixNano sets the value of TimeUnixNano.
-func (s *Event) SetTimeUnixNano(val OptUnixTimeNano) {
-	s.TimeUnixNano = val
-}
-
-// SetName sets the value of Name.
-func (s *Event) SetName(val OptString) {
-	s.Name = val
-}
-
-// SetAttributes sets the value of Attributes.
-func (s *Event) SetAttributes(val *Attributes) {
-	s.Attributes = val
-}
-
-// SetDroppedAttributesCount sets the value of DroppedAttributesCount.
-func (s *Event) SetDroppedAttributesCount(val OptDroppedAttributesCount) {
-	s.DroppedAttributesCount = val
-}
-
-// Ref: #/components/schemas/InstrumentationScope
-type InstrumentationScope struct {
-	Name                   OptString                 `json:"name"`
-	Version                OptString                 `json:"version"`
-	Attributes             *Attributes               `json:"attributes"`
-	DroppedAttributesCount OptDroppedAttributesCount `json:"droppedAttributesCount"`
-}
-
-// GetName returns the value of Name.
-func (s *InstrumentationScope) GetName() OptString {
-	return s.Name
-}
-
-// GetVersion returns the value of Version.
-func (s *InstrumentationScope) GetVersion() OptString {
-	return s.Version
-}
-
-// GetAttributes returns the value of Attributes.
-func (s *InstrumentationScope) GetAttributes() *Attributes {
-	return s.Attributes
-}
-
-// GetDroppedAttributesCount returns the value of DroppedAttributesCount.
-func (s *InstrumentationScope) GetDroppedAttributesCount() OptDroppedAttributesCount {
-	return s.DroppedAttributesCount
-}
-
-// SetName sets the value of Name.
-func (s *InstrumentationScope) SetName(val OptString) {
-	s.Name = val
-}
-
-// SetVersion sets the value of Version.
-func (s *InstrumentationScope) SetVersion(val OptString) {
-	s.Version = val
-}
-
-// SetAttributes sets the value of Attributes.
-func (s *InstrumentationScope) SetAttributes(val *Attributes) {
-	s.Attributes = val
-}
-
-// SetDroppedAttributesCount sets the value of DroppedAttributesCount.
-func (s *InstrumentationScope) SetDroppedAttributesCount(val OptDroppedAttributesCount) {
-	s.DroppedAttributesCount = val
 }
 
 // Ref: #/components/schemas/IntValue
@@ -471,203 +353,6 @@ func (s *KvlistValue) SetKvlistValue(val []KeyValue) {
 	s.KvlistValue = val
 }
 
-// Ref: #/components/schemas/Link
-type Link struct {
-	TraceId                OptTraceId                `json:"traceId"`
-	SpanId                 OptSpanId                 `json:"spanId"`
-	TraceState             OptString                 `json:"traceState"`
-	Attributes             *Attributes               `json:"attributes"`
-	DroppedAttributesCount OptDroppedAttributesCount `json:"droppedAttributesCount"`
-}
-
-// GetTraceId returns the value of TraceId.
-func (s *Link) GetTraceId() OptTraceId {
-	return s.TraceId
-}
-
-// GetSpanId returns the value of SpanId.
-func (s *Link) GetSpanId() OptSpanId {
-	return s.SpanId
-}
-
-// GetTraceState returns the value of TraceState.
-func (s *Link) GetTraceState() OptString {
-	return s.TraceState
-}
-
-// GetAttributes returns the value of Attributes.
-func (s *Link) GetAttributes() *Attributes {
-	return s.Attributes
-}
-
-// GetDroppedAttributesCount returns the value of DroppedAttributesCount.
-func (s *Link) GetDroppedAttributesCount() OptDroppedAttributesCount {
-	return s.DroppedAttributesCount
-}
-
-// SetTraceId sets the value of TraceId.
-func (s *Link) SetTraceId(val OptTraceId) {
-	s.TraceId = val
-}
-
-// SetSpanId sets the value of SpanId.
-func (s *Link) SetSpanId(val OptSpanId) {
-	s.SpanId = val
-}
-
-// SetTraceState sets the value of TraceState.
-func (s *Link) SetTraceState(val OptString) {
-	s.TraceState = val
-}
-
-// SetAttributes sets the value of Attributes.
-func (s *Link) SetAttributes(val *Attributes) {
-	s.Attributes = val
-}
-
-// SetDroppedAttributesCount sets the value of DroppedAttributesCount.
-func (s *Link) SetDroppedAttributesCount(val OptDroppedAttributesCount) {
-	s.DroppedAttributesCount = val
-}
-
-// NewOptDroppedAttributesCount returns new OptDroppedAttributesCount with value set to v.
-func NewOptDroppedAttributesCount(v DroppedAttributesCount) OptDroppedAttributesCount {
-	return OptDroppedAttributesCount{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptDroppedAttributesCount is optional DroppedAttributesCount.
-type OptDroppedAttributesCount struct {
-	Value DroppedAttributesCount
-	Set   bool
-}
-
-// IsSet returns true if OptDroppedAttributesCount was set.
-func (o OptDroppedAttributesCount) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptDroppedAttributesCount) Reset() {
-	var v DroppedAttributesCount
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptDroppedAttributesCount) SetTo(v DroppedAttributesCount) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptDroppedAttributesCount) Get() (v DroppedAttributesCount, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptDroppedAttributesCount) Or(d DroppedAttributesCount) DroppedAttributesCount {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptDroppedEventsCount returns new OptDroppedEventsCount with value set to v.
-func NewOptDroppedEventsCount(v DroppedEventsCount) OptDroppedEventsCount {
-	return OptDroppedEventsCount{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptDroppedEventsCount is optional DroppedEventsCount.
-type OptDroppedEventsCount struct {
-	Value DroppedEventsCount
-	Set   bool
-}
-
-// IsSet returns true if OptDroppedEventsCount was set.
-func (o OptDroppedEventsCount) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptDroppedEventsCount) Reset() {
-	var v DroppedEventsCount
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptDroppedEventsCount) SetTo(v DroppedEventsCount) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptDroppedEventsCount) Get() (v DroppedEventsCount, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptDroppedEventsCount) Or(d DroppedEventsCount) DroppedEventsCount {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptDroppedLinksCount returns new OptDroppedLinksCount with value set to v.
-func NewOptDroppedLinksCount(v DroppedLinksCount) OptDroppedLinksCount {
-	return OptDroppedLinksCount{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptDroppedLinksCount is optional DroppedLinksCount.
-type OptDroppedLinksCount struct {
-	Value DroppedLinksCount
-	Set   bool
-}
-
-// IsSet returns true if OptDroppedLinksCount was set.
-func (o OptDroppedLinksCount) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptDroppedLinksCount) Reset() {
-	var v DroppedLinksCount
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptDroppedLinksCount) SetTo(v DroppedLinksCount) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptDroppedLinksCount) Get() (v DroppedLinksCount, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptDroppedLinksCount) Or(d DroppedLinksCount) DroppedLinksCount {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptDuration returns new OptDuration with value set to v.
 func NewOptDuration(v time.Duration) OptDuration {
 	return OptDuration{
@@ -708,52 +393,6 @@ func (o OptDuration) Get() (v time.Duration, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptDuration) Or(d time.Duration) time.Duration {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptInstrumentationScope returns new OptInstrumentationScope with value set to v.
-func NewOptInstrumentationScope(v InstrumentationScope) OptInstrumentationScope {
-	return OptInstrumentationScope{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptInstrumentationScope is optional InstrumentationScope.
-type OptInstrumentationScope struct {
-	Value InstrumentationScope
-	Set   bool
-}
-
-// IsSet returns true if OptInstrumentationScope was set.
-func (o OptInstrumentationScope) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptInstrumentationScope) Reset() {
-	var v InstrumentationScope
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptInstrumentationScope) SetTo(v InstrumentationScope) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptInstrumentationScope) Get() (v InstrumentationScope, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptInstrumentationScope) Or(d InstrumentationScope) InstrumentationScope {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -806,190 +445,6 @@ func (o OptInt) Or(d int) int {
 	return d
 }
 
-// NewOptResource returns new OptResource with value set to v.
-func NewOptResource(v Resource) OptResource {
-	return OptResource{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptResource is optional Resource.
-type OptResource struct {
-	Value Resource
-	Set   bool
-}
-
-// IsSet returns true if OptResource was set.
-func (o OptResource) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptResource) Reset() {
-	var v Resource
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptResource) SetTo(v Resource) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptResource) Get() (v Resource, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptResource) Or(d Resource) Resource {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptSpanId returns new OptSpanId with value set to v.
-func NewOptSpanId(v SpanId) OptSpanId {
-	return OptSpanId{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptSpanId is optional SpanId.
-type OptSpanId struct {
-	Value SpanId
-	Set   bool
-}
-
-// IsSet returns true if OptSpanId was set.
-func (o OptSpanId) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptSpanId) Reset() {
-	var v SpanId
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptSpanId) SetTo(v SpanId) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptSpanId) Get() (v SpanId, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptSpanId) Or(d SpanId) SpanId {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptStatus returns new OptStatus with value set to v.
-func NewOptStatus(v Status) OptStatus {
-	return OptStatus{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptStatus is optional Status.
-type OptStatus struct {
-	Value Status
-	Set   bool
-}
-
-// IsSet returns true if OptStatus was set.
-func (o OptStatus) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptStatus) Reset() {
-	var v Status
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptStatus) SetTo(v Status) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptStatus) Get() (v Status, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptStatus) Or(d Status) Status {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptStatusCode returns new OptStatusCode with value set to v.
-func NewOptStatusCode(v StatusCode) OptStatusCode {
-	return OptStatusCode{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptStatusCode is optional StatusCode.
-type OptStatusCode struct {
-	Value StatusCode
-	Set   bool
-}
-
-// IsSet returns true if OptStatusCode was set.
-func (o OptStatusCode) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptStatusCode) Reset() {
-	var v StatusCode
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptStatusCode) SetTo(v StatusCode) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptStatusCode) Get() (v StatusCode, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptStatusCode) Or(d StatusCode) StatusCode {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -1036,38 +491,38 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// NewOptTraceId returns new OptTraceId with value set to v.
-func NewOptTraceId(v TraceId) OptTraceId {
-	return OptTraceId{
+// NewOptStringInt64 returns new OptStringInt64 with value set to v.
+func NewOptStringInt64(v int64) OptStringInt64 {
+	return OptStringInt64{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptTraceId is optional TraceId.
-type OptTraceId struct {
-	Value TraceId
+// OptStringInt64 is optional int64.
+type OptStringInt64 struct {
+	Value int64
 	Set   bool
 }
 
-// IsSet returns true if OptTraceId was set.
-func (o OptTraceId) IsSet() bool { return o.Set }
+// IsSet returns true if OptStringInt64 was set.
+func (o OptStringInt64) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptTraceId) Reset() {
-	var v TraceId
+func (o *OptStringInt64) Reset() {
+	var v int64
 	o.Value = v
 	o.Set = false
 }
 
 // SetTo sets value to v.
-func (o *OptTraceId) SetTo(v TraceId) {
+func (o *OptStringInt64) SetTo(v int64) {
 	o.Set = true
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptTraceId) Get() (v TraceId, ok bool) {
+func (o OptStringInt64) Get() (v int64, ok bool) {
 	if !o.Set {
 		return v, false
 	}
@@ -1075,7 +530,99 @@ func (o OptTraceId) Get() (v TraceId, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptTraceId) Or(d TraceId) TraceId {
+func (o OptStringInt64) Or(d int64) int64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptStringUnixNano returns new OptStringUnixNano with value set to v.
+func NewOptStringUnixNano(v time.Time) OptStringUnixNano {
+	return OptStringUnixNano{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptStringUnixNano is optional time.Time.
+type OptStringUnixNano struct {
+	Value time.Time
+	Set   bool
+}
+
+// IsSet returns true if OptStringUnixNano was set.
+func (o OptStringUnixNano) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptStringUnixNano) Reset() {
+	var v time.Time
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptStringUnixNano) SetTo(v time.Time) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptStringUnixNano) Get() (v time.Time, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptStringUnixNano) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptTempoSpanSet returns new OptTempoSpanSet with value set to v.
+func NewOptTempoSpanSet(v TempoSpanSet) OptTempoSpanSet {
+	return OptTempoSpanSet{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTempoSpanSet is optional TempoSpanSet.
+type OptTempoSpanSet struct {
+	Value TempoSpanSet
+	Set   bool
+}
+
+// IsSet returns true if OptTempoSpanSet was set.
+func (o OptTempoSpanSet) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTempoSpanSet) Reset() {
+	var v TempoSpanSet
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTempoSpanSet) SetTo(v TempoSpanSet) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTempoSpanSet) Get() (v TempoSpanSet, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTempoSpanSet) Or(d TempoSpanSet) TempoSpanSet {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -1126,447 +673,6 @@ func (o OptUnixSeconds) Or(d time.Time) time.Time {
 		return v
 	}
 	return d
-}
-
-// NewOptUnixTimeNano returns new OptUnixTimeNano with value set to v.
-func NewOptUnixTimeNano(v UnixTimeNano) OptUnixTimeNano {
-	return OptUnixTimeNano{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptUnixTimeNano is optional UnixTimeNano.
-type OptUnixTimeNano struct {
-	Value UnixTimeNano
-	Set   bool
-}
-
-// IsSet returns true if OptUnixTimeNano was set.
-func (o OptUnixTimeNano) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptUnixTimeNano) Reset() {
-	var v UnixTimeNano
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptUnixTimeNano) SetTo(v UnixTimeNano) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptUnixTimeNano) Get() (v UnixTimeNano, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptUnixTimeNano) Or(d UnixTimeNano) UnixTimeNano {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// Ref: #/components/schemas/Resource
-type Resource struct {
-	Attributes             *Attributes               `json:"attributes"`
-	DroppedAttributesCount OptDroppedAttributesCount `json:"droppedAttributesCount"`
-}
-
-// GetAttributes returns the value of Attributes.
-func (s *Resource) GetAttributes() *Attributes {
-	return s.Attributes
-}
-
-// GetDroppedAttributesCount returns the value of DroppedAttributesCount.
-func (s *Resource) GetDroppedAttributesCount() OptDroppedAttributesCount {
-	return s.DroppedAttributesCount
-}
-
-// SetAttributes sets the value of Attributes.
-func (s *Resource) SetAttributes(val *Attributes) {
-	s.Attributes = val
-}
-
-// SetDroppedAttributesCount sets the value of DroppedAttributesCount.
-func (s *Resource) SetDroppedAttributesCount(val OptDroppedAttributesCount) {
-	s.DroppedAttributesCount = val
-}
-
-// Ref: #/components/schemas/ResourceSpans
-type ResourceSpans struct {
-	Resource   OptResource  `json:"resource"`
-	ScopeSpans []ScopeSpans `json:"scopeSpans"`
-	SchemaUrl  OptString    `json:"schemaUrl"`
-}
-
-// GetResource returns the value of Resource.
-func (s *ResourceSpans) GetResource() OptResource {
-	return s.Resource
-}
-
-// GetScopeSpans returns the value of ScopeSpans.
-func (s *ResourceSpans) GetScopeSpans() []ScopeSpans {
-	return s.ScopeSpans
-}
-
-// GetSchemaUrl returns the value of SchemaUrl.
-func (s *ResourceSpans) GetSchemaUrl() OptString {
-	return s.SchemaUrl
-}
-
-// SetResource sets the value of Resource.
-func (s *ResourceSpans) SetResource(val OptResource) {
-	s.Resource = val
-}
-
-// SetScopeSpans sets the value of ScopeSpans.
-func (s *ResourceSpans) SetScopeSpans(val []ScopeSpans) {
-	s.ScopeSpans = val
-}
-
-// SetSchemaUrl sets the value of SchemaUrl.
-func (s *ResourceSpans) SetSchemaUrl(val OptString) {
-	s.SchemaUrl = val
-}
-
-// Ref: #/components/schemas/ScopeSpans
-type ScopeSpans struct {
-	Scope     OptInstrumentationScope `json:"scope"`
-	Spans     []Span                  `json:"spans"`
-	SchemaUrl OptString               `json:"schemaUrl"`
-}
-
-// GetScope returns the value of Scope.
-func (s *ScopeSpans) GetScope() OptInstrumentationScope {
-	return s.Scope
-}
-
-// GetSpans returns the value of Spans.
-func (s *ScopeSpans) GetSpans() []Span {
-	return s.Spans
-}
-
-// GetSchemaUrl returns the value of SchemaUrl.
-func (s *ScopeSpans) GetSchemaUrl() OptString {
-	return s.SchemaUrl
-}
-
-// SetScope sets the value of Scope.
-func (s *ScopeSpans) SetScope(val OptInstrumentationScope) {
-	s.Scope = val
-}
-
-// SetSpans sets the value of Spans.
-func (s *ScopeSpans) SetSpans(val []Span) {
-	s.Spans = val
-}
-
-// SetSchemaUrl sets the value of SchemaUrl.
-func (s *ScopeSpans) SetSchemaUrl(val OptString) {
-	s.SchemaUrl = val
-}
-
-// Ref: #/components/schemas/Span
-type Span struct {
-	TraceId                TraceId                   `json:"traceId"`
-	SpanId                 SpanId                    `json:"spanId"`
-	TraceState             OptString                 `json:"traceState"`
-	ParentSpanId           []byte                    `json:"parentSpanId"`
-	Name                   string                    `json:"name"`
-	Kind                   SpanKind                  `json:"kind"`
-	StartTimeUnixNano      UnixTimeNano              `json:"startTimeUnixNano"`
-	EndTimeUnixNano        UnixTimeNano              `json:"endTimeUnixNano"`
-	Attributes             *Attributes               `json:"attributes"`
-	DroppedAttributesCount OptDroppedAttributesCount `json:"droppedAttributesCount"`
-	Events                 []Event                   `json:"events"`
-	DroppedEventsCount     OptDroppedEventsCount     `json:"droppedEventsCount"`
-	Links                  []Link                    `json:"links"`
-	DroppedLinksCount      OptDroppedLinksCount      `json:"droppedLinksCount"`
-	Status                 OptStatus                 `json:"status"`
-}
-
-// GetTraceId returns the value of TraceId.
-func (s *Span) GetTraceId() TraceId {
-	return s.TraceId
-}
-
-// GetSpanId returns the value of SpanId.
-func (s *Span) GetSpanId() SpanId {
-	return s.SpanId
-}
-
-// GetTraceState returns the value of TraceState.
-func (s *Span) GetTraceState() OptString {
-	return s.TraceState
-}
-
-// GetParentSpanId returns the value of ParentSpanId.
-func (s *Span) GetParentSpanId() []byte {
-	return s.ParentSpanId
-}
-
-// GetName returns the value of Name.
-func (s *Span) GetName() string {
-	return s.Name
-}
-
-// GetKind returns the value of Kind.
-func (s *Span) GetKind() SpanKind {
-	return s.Kind
-}
-
-// GetStartTimeUnixNano returns the value of StartTimeUnixNano.
-func (s *Span) GetStartTimeUnixNano() UnixTimeNano {
-	return s.StartTimeUnixNano
-}
-
-// GetEndTimeUnixNano returns the value of EndTimeUnixNano.
-func (s *Span) GetEndTimeUnixNano() UnixTimeNano {
-	return s.EndTimeUnixNano
-}
-
-// GetAttributes returns the value of Attributes.
-func (s *Span) GetAttributes() *Attributes {
-	return s.Attributes
-}
-
-// GetDroppedAttributesCount returns the value of DroppedAttributesCount.
-func (s *Span) GetDroppedAttributesCount() OptDroppedAttributesCount {
-	return s.DroppedAttributesCount
-}
-
-// GetEvents returns the value of Events.
-func (s *Span) GetEvents() []Event {
-	return s.Events
-}
-
-// GetDroppedEventsCount returns the value of DroppedEventsCount.
-func (s *Span) GetDroppedEventsCount() OptDroppedEventsCount {
-	return s.DroppedEventsCount
-}
-
-// GetLinks returns the value of Links.
-func (s *Span) GetLinks() []Link {
-	return s.Links
-}
-
-// GetDroppedLinksCount returns the value of DroppedLinksCount.
-func (s *Span) GetDroppedLinksCount() OptDroppedLinksCount {
-	return s.DroppedLinksCount
-}
-
-// GetStatus returns the value of Status.
-func (s *Span) GetStatus() OptStatus {
-	return s.Status
-}
-
-// SetTraceId sets the value of TraceId.
-func (s *Span) SetTraceId(val TraceId) {
-	s.TraceId = val
-}
-
-// SetSpanId sets the value of SpanId.
-func (s *Span) SetSpanId(val SpanId) {
-	s.SpanId = val
-}
-
-// SetTraceState sets the value of TraceState.
-func (s *Span) SetTraceState(val OptString) {
-	s.TraceState = val
-}
-
-// SetParentSpanId sets the value of ParentSpanId.
-func (s *Span) SetParentSpanId(val []byte) {
-	s.ParentSpanId = val
-}
-
-// SetName sets the value of Name.
-func (s *Span) SetName(val string) {
-	s.Name = val
-}
-
-// SetKind sets the value of Kind.
-func (s *Span) SetKind(val SpanKind) {
-	s.Kind = val
-}
-
-// SetStartTimeUnixNano sets the value of StartTimeUnixNano.
-func (s *Span) SetStartTimeUnixNano(val UnixTimeNano) {
-	s.StartTimeUnixNano = val
-}
-
-// SetEndTimeUnixNano sets the value of EndTimeUnixNano.
-func (s *Span) SetEndTimeUnixNano(val UnixTimeNano) {
-	s.EndTimeUnixNano = val
-}
-
-// SetAttributes sets the value of Attributes.
-func (s *Span) SetAttributes(val *Attributes) {
-	s.Attributes = val
-}
-
-// SetDroppedAttributesCount sets the value of DroppedAttributesCount.
-func (s *Span) SetDroppedAttributesCount(val OptDroppedAttributesCount) {
-	s.DroppedAttributesCount = val
-}
-
-// SetEvents sets the value of Events.
-func (s *Span) SetEvents(val []Event) {
-	s.Events = val
-}
-
-// SetDroppedEventsCount sets the value of DroppedEventsCount.
-func (s *Span) SetDroppedEventsCount(val OptDroppedEventsCount) {
-	s.DroppedEventsCount = val
-}
-
-// SetLinks sets the value of Links.
-func (s *Span) SetLinks(val []Link) {
-	s.Links = val
-}
-
-// SetDroppedLinksCount sets the value of DroppedLinksCount.
-func (s *Span) SetDroppedLinksCount(val OptDroppedLinksCount) {
-	s.DroppedLinksCount = val
-}
-
-// SetStatus sets the value of Status.
-func (s *Span) SetStatus(val OptStatus) {
-	s.Status = val
-}
-
-type SpanId []byte
-
-// Ref: #/components/schemas/SpanKind
-type SpanKind string
-
-const (
-	SpanKindSPANKINDUNSPECIFIED SpanKind = "SPAN_KIND_UNSPECIFIED"
-	SpanKindSPANKINDINTERNAL    SpanKind = "SPAN_KIND_INTERNAL"
-	SpanKindSPANKINDSERVER      SpanKind = "SPAN_KIND_SERVER"
-	SpanKindSPANKINDCLIENT      SpanKind = "SPAN_KIND_CLIENT"
-	SpanKindSPANKINDPRODUCER    SpanKind = "SPAN_KIND_PRODUCER"
-	SpanKindSPANKINDCONSUMER    SpanKind = "SPAN_KIND_CONSUMER"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s SpanKind) MarshalText() ([]byte, error) {
-	switch s {
-	case SpanKindSPANKINDUNSPECIFIED:
-		return []byte(s), nil
-	case SpanKindSPANKINDINTERNAL:
-		return []byte(s), nil
-	case SpanKindSPANKINDSERVER:
-		return []byte(s), nil
-	case SpanKindSPANKINDCLIENT:
-		return []byte(s), nil
-	case SpanKindSPANKINDPRODUCER:
-		return []byte(s), nil
-	case SpanKindSPANKINDCONSUMER:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *SpanKind) UnmarshalText(data []byte) error {
-	switch SpanKind(data) {
-	case SpanKindSPANKINDUNSPECIFIED:
-		*s = SpanKindSPANKINDUNSPECIFIED
-		return nil
-	case SpanKindSPANKINDINTERNAL:
-		*s = SpanKindSPANKINDINTERNAL
-		return nil
-	case SpanKindSPANKINDSERVER:
-		*s = SpanKindSPANKINDSERVER
-		return nil
-	case SpanKindSPANKINDCLIENT:
-		*s = SpanKindSPANKINDCLIENT
-		return nil
-	case SpanKindSPANKINDPRODUCER:
-		*s = SpanKindSPANKINDPRODUCER
-		return nil
-	case SpanKindSPANKINDCONSUMER:
-		*s = SpanKindSPANKINDCONSUMER
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
-// Ref: #/components/schemas/Status
-type Status struct {
-	Message OptString     `json:"message"`
-	Code    OptStatusCode `json:"code"`
-}
-
-// GetMessage returns the value of Message.
-func (s *Status) GetMessage() OptString {
-	return s.Message
-}
-
-// GetCode returns the value of Code.
-func (s *Status) GetCode() OptStatusCode {
-	return s.Code
-}
-
-// SetMessage sets the value of Message.
-func (s *Status) SetMessage(val OptString) {
-	s.Message = val
-}
-
-// SetCode sets the value of Code.
-func (s *Status) SetCode(val OptStatusCode) {
-	s.Code = val
-}
-
-// Ref: #/components/schemas/StatusCode
-type StatusCode string
-
-const (
-	StatusCodeSTATUSCODEUNSET StatusCode = "STATUS_CODE_UNSET"
-	StatusCodeSTATUSCODEOK    StatusCode = "STATUS_CODE_OK"
-	StatusCodeSTATUSCODEERROR StatusCode = "STATUS_CODE_ERROR"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s StatusCode) MarshalText() ([]byte, error) {
-	switch s {
-	case StatusCodeSTATUSCODEUNSET:
-		return []byte(s), nil
-	case StatusCodeSTATUSCODEOK:
-		return []byte(s), nil
-	case StatusCodeSTATUSCODEERROR:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *StatusCode) UnmarshalText(data []byte) error {
-	switch StatusCode(data) {
-	case StatusCodeSTATUSCODEUNSET:
-		*s = StatusCodeSTATUSCODEUNSET
-		return nil
-	case StatusCodeSTATUSCODEOK:
-		*s = StatusCodeSTATUSCODEOK
-		return nil
-	case StatusCodeSTATUSCODEERROR:
-		*s = StatusCodeSTATUSCODEERROR
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
 }
 
 // Ref: #/components/schemas/StringValue
@@ -1655,21 +761,197 @@ func (s *TagValuesV2) SetTagValues(val []TagValue) {
 	s.TagValues = val
 }
 
-type TraceId []byte
+// Ref: #/components/schemas/TempoSpan
+type TempoSpan struct {
+	SpanID            OptString         `json:"spanID"`
+	Name              OptString         `json:"name"`
+	StartTimeUnixNano OptStringUnixNano `json:"startTimeUnixNano"`
+	DurationNanos     OptStringInt64    `json:"durationNanos"`
+	Attributes        *Attributes       `json:"attributes"`
+}
+
+// GetSpanID returns the value of SpanID.
+func (s *TempoSpan) GetSpanID() OptString {
+	return s.SpanID
+}
+
+// GetName returns the value of Name.
+func (s *TempoSpan) GetName() OptString {
+	return s.Name
+}
+
+// GetStartTimeUnixNano returns the value of StartTimeUnixNano.
+func (s *TempoSpan) GetStartTimeUnixNano() OptStringUnixNano {
+	return s.StartTimeUnixNano
+}
+
+// GetDurationNanos returns the value of DurationNanos.
+func (s *TempoSpan) GetDurationNanos() OptStringInt64 {
+	return s.DurationNanos
+}
+
+// GetAttributes returns the value of Attributes.
+func (s *TempoSpan) GetAttributes() *Attributes {
+	return s.Attributes
+}
+
+// SetSpanID sets the value of SpanID.
+func (s *TempoSpan) SetSpanID(val OptString) {
+	s.SpanID = val
+}
+
+// SetName sets the value of Name.
+func (s *TempoSpan) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetStartTimeUnixNano sets the value of StartTimeUnixNano.
+func (s *TempoSpan) SetStartTimeUnixNano(val OptStringUnixNano) {
+	s.StartTimeUnixNano = val
+}
+
+// SetDurationNanos sets the value of DurationNanos.
+func (s *TempoSpan) SetDurationNanos(val OptStringInt64) {
+	s.DurationNanos = val
+}
+
+// SetAttributes sets the value of Attributes.
+func (s *TempoSpan) SetAttributes(val *Attributes) {
+	s.Attributes = val
+}
+
+// Ref: #/components/schemas/TempoSpanSet
+type TempoSpanSet struct {
+	Spans      []TempoSpan `json:"spans"`
+	Matched    OptInt      `json:"matched"`
+	Attributes *Attributes `json:"attributes"`
+}
+
+// GetSpans returns the value of Spans.
+func (s *TempoSpanSet) GetSpans() []TempoSpan {
+	return s.Spans
+}
+
+// GetMatched returns the value of Matched.
+func (s *TempoSpanSet) GetMatched() OptInt {
+	return s.Matched
+}
+
+// GetAttributes returns the value of Attributes.
+func (s *TempoSpanSet) GetAttributes() *Attributes {
+	return s.Attributes
+}
+
+// SetSpans sets the value of Spans.
+func (s *TempoSpanSet) SetSpans(val []TempoSpan) {
+	s.Spans = val
+}
+
+// SetMatched sets the value of Matched.
+func (s *TempoSpanSet) SetMatched(val OptInt) {
+	s.Matched = val
+}
+
+// SetAttributes sets the value of Attributes.
+func (s *TempoSpanSet) SetAttributes(val *Attributes) {
+	s.Attributes = val
+}
+
+type TraceByID struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s TraceByID) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, nil
+	}
+	return s.Data.Read(p)
+}
+
+// Ref: #/components/schemas/TraceSearchMetadata
+type TraceSearchMetadata struct {
+	TraceID           OptString         `json:"traceID"`
+	RootServiceName   OptString         `json:"rootServiceName"`
+	RootTraceName     OptString         `json:"rootTraceName"`
+	StartTimeUnixNano OptStringUnixNano `json:"startTimeUnixNano"`
+	DurationMs        OptInt            `json:"durationMs"`
+	SpanSet           OptTempoSpanSet   `json:"spanSet"`
+}
+
+// GetTraceID returns the value of TraceID.
+func (s *TraceSearchMetadata) GetTraceID() OptString {
+	return s.TraceID
+}
+
+// GetRootServiceName returns the value of RootServiceName.
+func (s *TraceSearchMetadata) GetRootServiceName() OptString {
+	return s.RootServiceName
+}
+
+// GetRootTraceName returns the value of RootTraceName.
+func (s *TraceSearchMetadata) GetRootTraceName() OptString {
+	return s.RootTraceName
+}
+
+// GetStartTimeUnixNano returns the value of StartTimeUnixNano.
+func (s *TraceSearchMetadata) GetStartTimeUnixNano() OptStringUnixNano {
+	return s.StartTimeUnixNano
+}
+
+// GetDurationMs returns the value of DurationMs.
+func (s *TraceSearchMetadata) GetDurationMs() OptInt {
+	return s.DurationMs
+}
+
+// GetSpanSet returns the value of SpanSet.
+func (s *TraceSearchMetadata) GetSpanSet() OptTempoSpanSet {
+	return s.SpanSet
+}
+
+// SetTraceID sets the value of TraceID.
+func (s *TraceSearchMetadata) SetTraceID(val OptString) {
+	s.TraceID = val
+}
+
+// SetRootServiceName sets the value of RootServiceName.
+func (s *TraceSearchMetadata) SetRootServiceName(val OptString) {
+	s.RootServiceName = val
+}
+
+// SetRootTraceName sets the value of RootTraceName.
+func (s *TraceSearchMetadata) SetRootTraceName(val OptString) {
+	s.RootTraceName = val
+}
+
+// SetStartTimeUnixNano sets the value of StartTimeUnixNano.
+func (s *TraceSearchMetadata) SetStartTimeUnixNano(val OptStringUnixNano) {
+	s.StartTimeUnixNano = val
+}
+
+// SetDurationMs sets the value of DurationMs.
+func (s *TraceSearchMetadata) SetDurationMs(val OptInt) {
+	s.DurationMs = val
+}
+
+// SetSpanSet sets the value of SpanSet.
+func (s *TraceSearchMetadata) SetSpanSet(val OptTempoSpanSet) {
+	s.SpanSet = val
+}
 
 // Ref: #/components/schemas/Traces
 type Traces struct {
-	Traces []ResourceSpans `json:"traces"`
+	Traces []TraceSearchMetadata `json:"traces"`
 }
 
 // GetTraces returns the value of Traces.
-func (s *Traces) GetTraces() []ResourceSpans {
+func (s *Traces) GetTraces() []TraceSearchMetadata {
 	return s.Traces
 }
 
 // SetTraces sets the value of Traces.
-func (s *Traces) SetTraces(val []ResourceSpans) {
+func (s *Traces) SetTraces(val []TraceSearchMetadata) {
 	s.Traces = val
 }
-
-type UnixTimeNano time.Time

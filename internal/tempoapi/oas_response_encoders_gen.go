@@ -3,6 +3,7 @@
 package tempoapi
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/go-faster/errors"
@@ -63,14 +64,13 @@ func encodeSearchTagsResponse(response *TagNames, w http.ResponseWriter, span tr
 	return nil
 }
 
-func encodeTraceByIDResponse(response *Batches, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
+func encodeTraceByIDResponse(response TraceByID, w http.ResponseWriter, span trace.Span) error {
+	w.Header().Set("Content-Type", "application/protobuf")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
-	response.Encode(e)
-	if _, err := e.WriteTo(w); err != nil {
+	writer := w
+	if _, err := io.Copy(writer, response); err != nil {
 		return errors.Wrap(err, "write")
 	}
 	return nil

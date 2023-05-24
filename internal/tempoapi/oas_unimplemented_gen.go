@@ -55,7 +55,7 @@ func (UnimplementedHandler) SearchTags(ctx context.Context) (r *TagNames, _ erro
 // Querying traces by id.
 //
 // GET /api/traces/{traceID}
-func (UnimplementedHandler) TraceByID(ctx context.Context, params TraceByIDParams) (r *Batches, _ error) {
+func (UnimplementedHandler) TraceByID(ctx context.Context, params TraceByIDParams) (r TraceByID, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
