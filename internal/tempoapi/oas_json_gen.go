@@ -269,7 +269,7 @@ func (s *ArrayValue) UnmarshalJSON(data []byte) error {
 
 // Encode encodes Attributes as json.
 func (s Attributes) Encode(e *jx.Encoder) {
-	unwrapped := []AnyValue(s)
+	unwrapped := []KeyValue(s)
 
 	e.ArrStart()
 	for _, elem := range unwrapped {
@@ -283,11 +283,11 @@ func (s *Attributes) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Attributes to nil")
 	}
-	var unwrapped []AnyValue
+	var unwrapped []KeyValue
 	if err := func() error {
-		unwrapped = make([]AnyValue, 0)
+		unwrapped = make([]KeyValue, 0)
 		if err := d.Arr(func(d *jx.Decoder) error {
-			var elem AnyValue
+			var elem KeyValue
 			if err := elem.Decode(d); err != nil {
 				return err
 			}
@@ -1747,39 +1747,6 @@ func (s *OptSpanId) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes SpanKind as json.
-func (o OptSpanKind) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	e.Str(string(o.Value))
-}
-
-// Decode decodes SpanKind from json.
-func (o *OptSpanKind) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptSpanKind to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptSpanKind) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptSpanKind) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes Status as json.
 func (o OptStatus) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -2255,16 +2222,12 @@ func (s *Span) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *Span) encodeFields(e *jx.Encoder) {
 	{
-		if s.TraceId.Set {
-			e.FieldStart("traceId")
-			s.TraceId.Encode(e)
-		}
+		e.FieldStart("traceId")
+		s.TraceId.Encode(e)
 	}
 	{
-		if s.SpanId.Set {
-			e.FieldStart("spanId")
-			s.SpanId.Encode(e)
-		}
+		e.FieldStart("spanId")
+		s.SpanId.Encode(e)
 	}
 	{
 		if s.TraceState.Set {
@@ -2277,28 +2240,20 @@ func (s *Span) encodeFields(e *jx.Encoder) {
 		e.Base64(s.ParentSpanId)
 	}
 	{
-		if s.Name.Set {
-			e.FieldStart("name")
-			s.Name.Encode(e)
-		}
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
-		if s.Kind.Set {
-			e.FieldStart("kind")
-			s.Kind.Encode(e)
-		}
+		e.FieldStart("kind")
+		s.Kind.Encode(e)
 	}
 	{
-		if s.StartTimeUnixNano.Set {
-			e.FieldStart("startTimeUnixNano")
-			s.StartTimeUnixNano.Encode(e)
-		}
+		e.FieldStart("startTimeUnixNano")
+		s.StartTimeUnixNano.Encode(e)
 	}
 	{
-		if s.EndTimeUnixNano.Set {
-			e.FieldStart("endTimeUnixNano")
-			s.EndTimeUnixNano.Encode(e)
-		}
+		e.FieldStart("endTimeUnixNano")
+		s.EndTimeUnixNano.Encode(e)
 	}
 	{
 		if s.Attributes != nil {
@@ -2375,12 +2330,13 @@ func (s *Span) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Span to nil")
 	}
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "traceId":
+			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				s.TraceId.Reset()
 				if err := s.TraceId.Decode(d); err != nil {
 					return err
 				}
@@ -2389,8 +2345,8 @@ func (s *Span) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"traceId\"")
 			}
 		case "spanId":
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.SpanId.Reset()
 				if err := s.SpanId.Decode(d); err != nil {
 					return err
 				}
@@ -2420,9 +2376,11 @@ func (s *Span) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"parentSpanId\"")
 			}
 		case "name":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
-				s.Name.Reset()
-				if err := s.Name.Decode(d); err != nil {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -2430,8 +2388,8 @@ func (s *Span) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "kind":
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
-				s.Kind.Reset()
 				if err := s.Kind.Decode(d); err != nil {
 					return err
 				}
@@ -2440,8 +2398,8 @@ func (s *Span) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"kind\"")
 			}
 		case "startTimeUnixNano":
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
-				s.StartTimeUnixNano.Reset()
 				if err := s.StartTimeUnixNano.Decode(d); err != nil {
 					return err
 				}
@@ -2450,8 +2408,8 @@ func (s *Span) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"startTimeUnixNano\"")
 			}
 		case "endTimeUnixNano":
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
-				s.EndTimeUnixNano.Reset()
 				if err := s.EndTimeUnixNano.Decode(d); err != nil {
 					return err
 				}
@@ -2551,6 +2509,39 @@ func (s *Span) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode Span")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [2]uint8{
+		0b11110011,
+		0b00000000,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfSpan) {
+					name = jsonFieldsNameOfSpan[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 
 	return nil

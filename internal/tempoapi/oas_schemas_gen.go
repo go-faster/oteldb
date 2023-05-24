@@ -223,7 +223,7 @@ func (s *ArrayValue) SetArrayValue(val []AnyValue) {
 	s.ArrayValue = val
 }
 
-type Attributes []AnyValue
+type Attributes []KeyValue
 
 // Ref: #/components/schemas/Batches
 type Batches struct {
@@ -898,52 +898,6 @@ func (o OptSpanId) Or(d SpanId) SpanId {
 	return d
 }
 
-// NewOptSpanKind returns new OptSpanKind with value set to v.
-func NewOptSpanKind(v SpanKind) OptSpanKind {
-	return OptSpanKind{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptSpanKind is optional SpanKind.
-type OptSpanKind struct {
-	Value SpanKind
-	Set   bool
-}
-
-// IsSet returns true if OptSpanKind was set.
-func (o OptSpanKind) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptSpanKind) Reset() {
-	var v SpanKind
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptSpanKind) SetTo(v SpanKind) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptSpanKind) Get() (v SpanKind, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptSpanKind) Or(d SpanKind) SpanKind {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptStatus returns new OptStatus with value set to v.
 func NewOptStatus(v Status) OptStatus {
 	return OptStatus{
@@ -1322,14 +1276,14 @@ func (s *ScopeSpans) SetSchemaUrl(val OptString) {
 
 // Ref: #/components/schemas/Span
 type Span struct {
-	TraceId                OptTraceId                `json:"traceId"`
-	SpanId                 OptSpanId                 `json:"spanId"`
+	TraceId                TraceId                   `json:"traceId"`
+	SpanId                 SpanId                    `json:"spanId"`
 	TraceState             OptString                 `json:"traceState"`
 	ParentSpanId           []byte                    `json:"parentSpanId"`
-	Name                   OptString                 `json:"name"`
-	Kind                   OptSpanKind               `json:"kind"`
-	StartTimeUnixNano      OptUnixTimeNano           `json:"startTimeUnixNano"`
-	EndTimeUnixNano        OptUnixTimeNano           `json:"endTimeUnixNano"`
+	Name                   string                    `json:"name"`
+	Kind                   SpanKind                  `json:"kind"`
+	StartTimeUnixNano      UnixTimeNano              `json:"startTimeUnixNano"`
+	EndTimeUnixNano        UnixTimeNano              `json:"endTimeUnixNano"`
 	Attributes             *Attributes               `json:"attributes"`
 	DroppedAttributesCount OptDroppedAttributesCount `json:"droppedAttributesCount"`
 	Events                 []Event                   `json:"events"`
@@ -1340,12 +1294,12 @@ type Span struct {
 }
 
 // GetTraceId returns the value of TraceId.
-func (s *Span) GetTraceId() OptTraceId {
+func (s *Span) GetTraceId() TraceId {
 	return s.TraceId
 }
 
 // GetSpanId returns the value of SpanId.
-func (s *Span) GetSpanId() OptSpanId {
+func (s *Span) GetSpanId() SpanId {
 	return s.SpanId
 }
 
@@ -1360,22 +1314,22 @@ func (s *Span) GetParentSpanId() []byte {
 }
 
 // GetName returns the value of Name.
-func (s *Span) GetName() OptString {
+func (s *Span) GetName() string {
 	return s.Name
 }
 
 // GetKind returns the value of Kind.
-func (s *Span) GetKind() OptSpanKind {
+func (s *Span) GetKind() SpanKind {
 	return s.Kind
 }
 
 // GetStartTimeUnixNano returns the value of StartTimeUnixNano.
-func (s *Span) GetStartTimeUnixNano() OptUnixTimeNano {
+func (s *Span) GetStartTimeUnixNano() UnixTimeNano {
 	return s.StartTimeUnixNano
 }
 
 // GetEndTimeUnixNano returns the value of EndTimeUnixNano.
-func (s *Span) GetEndTimeUnixNano() OptUnixTimeNano {
+func (s *Span) GetEndTimeUnixNano() UnixTimeNano {
 	return s.EndTimeUnixNano
 }
 
@@ -1415,12 +1369,12 @@ func (s *Span) GetStatus() OptStatus {
 }
 
 // SetTraceId sets the value of TraceId.
-func (s *Span) SetTraceId(val OptTraceId) {
+func (s *Span) SetTraceId(val TraceId) {
 	s.TraceId = val
 }
 
 // SetSpanId sets the value of SpanId.
-func (s *Span) SetSpanId(val OptSpanId) {
+func (s *Span) SetSpanId(val SpanId) {
 	s.SpanId = val
 }
 
@@ -1435,22 +1389,22 @@ func (s *Span) SetParentSpanId(val []byte) {
 }
 
 // SetName sets the value of Name.
-func (s *Span) SetName(val OptString) {
+func (s *Span) SetName(val string) {
 	s.Name = val
 }
 
 // SetKind sets the value of Kind.
-func (s *Span) SetKind(val OptSpanKind) {
+func (s *Span) SetKind(val SpanKind) {
 	s.Kind = val
 }
 
 // SetStartTimeUnixNano sets the value of StartTimeUnixNano.
-func (s *Span) SetStartTimeUnixNano(val OptUnixTimeNano) {
+func (s *Span) SetStartTimeUnixNano(val UnixTimeNano) {
 	s.StartTimeUnixNano = val
 }
 
 // SetEndTimeUnixNano sets the value of EndTimeUnixNano.
-func (s *Span) SetEndTimeUnixNano(val OptUnixTimeNano) {
+func (s *Span) SetEndTimeUnixNano(val UnixTimeNano) {
 	s.EndTimeUnixNano = val
 }
 

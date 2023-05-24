@@ -412,15 +412,8 @@ func (s *ScopeSpans) Validate() error {
 func (s *Span) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Kind.Set {
-			if err := func() error {
-				if err := s.Kind.Value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
+		if err := s.Kind.Validate(); err != nil {
+			return err
 		}
 		return nil
 	}(); err != nil {
