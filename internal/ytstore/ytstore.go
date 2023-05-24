@@ -40,7 +40,7 @@ type Span struct {
 	SpanID       uint64         `yson:"span_id"`
 	ParentSpanID *uint64        `yson:"parent_span_id"`
 	Name         string         `yson:"name"`
-	Kind         int32          `yson:"name"`
+	Kind         int32          `yson:"kind"`
 	Start        uint64         `yson:"start"`
 	End          uint64         `yson:"end"`
 	IntAttrs     Attrs[int64]   `yson:"int_attrs"`
