@@ -159,9 +159,10 @@ components:
     TraceByID:
       description: Query by trace ID result
       content:
-        "application/json":
+        "application/protobuf":
           schema:
-            $ref: "#/components/schemas/Batches"
+            type: string
+            format: binary
     Search:
       description: Search result
       content:
@@ -195,7 +196,7 @@ components:
         traces:
           type: array
           items:
-            $ref: "#/components/schemas/ResourceSpans"
+            $ref: "#/components/schemas/TraceSearchMetadata"
     TraceSearchMetadata:
       type: object
       properties:
@@ -238,146 +239,6 @@ components:
           format: int64
         attributes:
           $ref: "#/components/schemas/Attributes"
-
-    Batches:
-      type: object
-      required: [batches]
-      properties:
-        batches:
-          type: array
-          items:
-            $ref: "#/components/schemas/ResourceSpans"
-    ResourceSpans:
-      type: object
-      properties:
-        resource:
-          $ref: "#/components/schemas/Resource"
-        scopeSpans:
-          type: array
-          items:
-            $ref: "#/components/schemas/ScopeSpans"
-        schemaUrl:
-          type: string
-    ScopeSpans:
-      type: object
-      properties:
-        scope:
-          $ref: "#/components/schemas/InstrumentationScope"
-        spans:
-          type: array
-          items:
-            $ref: "#/components/schemas/Span"
-        schemaUrl:
-          type: string
-    InstrumentationScope:
-      type: object
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-        attributes:
-          $ref: "#/components/schemas/Attributes"
-        droppedAttributesCount:
-          $ref: "#/components/schemas/DroppedAttributesCount"
-    Resource:
-      type: object
-      properties:
-        attributes:
-          $ref: "#/components/schemas/Attributes"
-        droppedAttributesCount:
-          $ref: "#/components/schemas/DroppedAttributesCount"
-    Span:
-      type: object
-      required:
-        - traceId
-        - spanId
-        - name
-        - kind
-        - startTimeUnixNano
-        - endTimeUnixNano
-      properties:
-        traceId:
-          $ref: "#/components/schemas/TraceId"
-        spanId:
-          $ref: "#/components/schemas/SpanId"
-        traceState:
-          type: string
-        parentSpanId:
-          type: string
-          format: base64
-        name:
-          type: string
-        kind:
-          $ref: "#/components/schemas/SpanKind"
-        startTimeUnixNano:
-          $ref: "#/components/schemas/UnixTimeNano"
-        endTimeUnixNano:
-          $ref: "#/components/schemas/UnixTimeNano"
-        attributes:
-          $ref: "#/components/schemas/Attributes"
-        droppedAttributesCount:
-          $ref: "#/components/schemas/DroppedAttributesCount"
-        events:
-          type: array
-          items:
-            $ref: "#/components/schemas/Event"
-        droppedEventsCount:
-          $ref: "#/components/schemas/DroppedEventsCount"
-        links:
-          type: array
-          items:
-            $ref: "#/components/schemas/Link"
-        droppedLinksCount:
-          $ref: "#/components/schemas/DroppedLinksCount"
-        status:
-          $ref: "#/components/schemas/Status"
-    SpanKind:
-      type: string
-      enum:
-        - SPAN_KIND_UNSPECIFIED
-        - SPAN_KIND_INTERNAL
-        - SPAN_KIND_SERVER
-        - SPAN_KIND_CLIENT
-        - SPAN_KIND_PRODUCER
-        - SPAN_KIND_CONSUMER
-    Event:
-      type: object
-      properties:
-        timeUnixNano:
-          $ref: "#/components/schemas/UnixTimeNano"
-        name:
-          type: string
-        attributes:
-          $ref: "#/components/schemas/Attributes"
-        droppedAttributesCount:
-          $ref: "#/components/schemas/DroppedAttributesCount"
-    Link:
-      type: object
-      properties:
-        traceId:
-          $ref: "#/components/schemas/TraceId"
-        spanId:
-          $ref: "#/components/schemas/SpanId"
-        traceState:
-          type: string
-        attributes:
-          $ref: "#/components/schemas/Attributes"
-        droppedAttributesCount:
-          $ref: "#/components/schemas/DroppedAttributesCount"
-    Status:
-      type: object
-      properties:
-        message:
-          type: string
-        code:
-          $ref: "#/components/schemas/StatusCode"
-    StatusCode:
-      type: string
-      enum:
-        - STATUS_CODE_UNSET
-        - STATUS_CODE_OK
-        - STATUS_CODE_ERROR
 
     Attributes:
       type: array
@@ -448,21 +309,6 @@ components:
         bytesValue:
           type: string
           format: base64
-    DroppedAttributesCount:
-      type: integer
-    DroppedEventsCount:
-      type: integer
-    DroppedLinksCount:
-      type: integer
-    TraceId:
-      type: string
-      format: base64
-    SpanId:
-      type: string
-      format: base64
-    UnixTimeNano:
-      type: string
-      format: unix-nano
 
     TagNames:
       type: object
