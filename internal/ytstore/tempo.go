@@ -44,7 +44,7 @@ var _ tempoapi.Handler = (*TempoAPI)(nil)
 // GET /api/search
 func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (*tempoapi.Traces, error) {
 	lg := zctx.From(ctx)
-	lg.Info("Get trace by ID",
+	lg.Info("Search traces",
 		zap.String("q", params.Q.Value),
 		zap.String("tags", params.Tags.Value),
 	)
@@ -130,8 +130,30 @@ func ytToOTELSpan(span Span, s ptrace.Span) {
 // GET /api/traces/{traceID}
 func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParams) (resp tempoapi.TraceByID, _ error) {
 	lg := zctx.From(ctx)
+	var (
+		start = zap.Skip()
+		end   = zap.Skip()
 
-	r, err := h.yc.SelectRows(ctx, fmt.Sprintf("* from [%s] where trace_id = %q", h.table, hexUUID(params.TraceID)), nil)
+		query = fmt.Sprintf("* from [%s] where trace_id = %q", h.table, hexUUID(params.TraceID))
+	)
+
+	if s, ok := params.Start.Get(); ok {
+		n := s.UnixNano()
+		query += fmt.Sprintf(" and start >= %d", n)
+		start = zap.Int64("start", n)
+	}
+	if s, ok := params.End.Get(); ok {
+		n := s.UnixNano()
+		query += fmt.Sprintf(" and end <= %d", n)
+		end = zap.Int64("end", n)
+	}
+	lg = lg.With(
+		zap.Stringer("look_for", params.TraceID),
+		start,
+		end,
+	)
+
+	r, err := h.yc.SelectRows(ctx, query, nil)
 	if err != nil {
 		return resp, err
 	}
@@ -179,7 +201,6 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		return ss
 	}
 
-	n := 0
 	for r.Next() {
 		var span Span
 		if err := r.Scan(&span); err != nil {
@@ -187,15 +208,11 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		}
 		s := getSpanSlice(span).AppendEmpty()
 		ytToOTELSpan(span, s)
-		n++
 	}
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Info("Get trace by ID", zap.Stringer("look_for", params.TraceID),
-		zap.Int("got", n),
-		zap.Int("span_count", traces.SpanCount()),
-	)
+	lg.Info("Get trace by ID", zap.Int("span_count", traces.SpanCount()))
 
 	m := ptrace.ProtoMarshaler{}
 	data, err := m.MarshalTraces(traces)
