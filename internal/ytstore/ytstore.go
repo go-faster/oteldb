@@ -8,8 +8,6 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
-	"go.ytsaurus.tech/yt/go/migrate"
-	"go.ytsaurus.tech/yt/go/schema"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 
@@ -22,80 +20,16 @@ var _ otelreceiver.Handler = (*Store)(nil)
 
 // Store implements ytsaurus-based trace storage.
 type Store struct {
-	yc    yt.Client
-	table ypath.Path
+	yc     yt.Client
+	tables tables
 }
 
 // NewStore creates new Store.
-func NewStore(yc yt.Client, table ypath.Path) *Store {
+func NewStore(yc yt.Client, prefix ypath.Path) *Store {
 	return &Store{
-		yc:    yc,
-		table: table,
+		yc:     yc,
+		tables: newTables(prefix),
 	}
-}
-
-// Span is a data structure for trace.
-type Span struct {
-	TraceID       string  `yson:"trace_id"`
-	SpanID        uint64  `yson:"span_id"`
-	TraceState    string  `yson:"trace_state"`
-	ParentSpanID  *uint64 `yson:"parent_span_id"`
-	Name          string  `yson:"name"`
-	Kind          int32   `yson:"kind"`
-	Start         uint64  `yson:"start"`
-	End           uint64  `yson:"end"`
-	Attrs         Attrs   `yson:"attrs"`
-	StatusCode    int32   `yson:"status_code"`
-	StatusMessage string  `yson:"status_message"`
-
-	BatchID       string `yson:"batch_id"`
-	ResourceAttrs Attrs  `yson:"resource_attrs"`
-
-	ScopeName    string `yson:"scope_name"`
-	ScopeVersion string `yson:"scope_version"`
-	ScopeAttrs   Attrs  `yson:"scope_attrs"`
-}
-
-// Schema returns table schema for this structure.
-func (Span) Schema() schema.Schema {
-	return schema.Schema{
-		UniqueKeys: true,
-		Columns: []schema.Column{
-			// FIXME(tdakkota): where is UUID?
-			{Name: "trace_id", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},
-			{Name: "span_id", ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
-			{Name: "trace_state", ComplexType: schema.TypeString},
-			{Name: "parent_span_id", ComplexType: schema.Optional{Item: schema.TypeUint64}},
-			{Name: "name", ComplexType: schema.TypeString},
-			{Name: "kind", ComplexType: schema.TypeInt32},
-			// Start and end are nanoseconds, so we can't use Timestamp.
-			{Name: "start", ComplexType: schema.TypeUint64},
-			{Name: "end", ComplexType: schema.TypeUint64},
-			{Name: "attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
-			{Name: "status_code", ComplexType: schema.TypeInt32},
-			{Name: "status_message", ComplexType: schema.TypeString},
-
-			{Name: "batch_id", ComplexType: schema.TypeString},
-			{Name: "resource_attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
-
-			{Name: "scope_name", ComplexType: schema.TypeString},
-			{Name: "scope_version", ComplexType: schema.TypeString},
-			{Name: "scope_attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
-		},
-	}
-}
-
-// Migrate setups YTSaurus tables for storage.
-func (s *Store) Migrate(ctx context.Context) error {
-	tables := map[ypath.Path]migrate.Table{
-		s.table: {
-			Schema: Span{}.Schema(),
-		},
-	}
-	if err := migrate.EnsureTables(ctx, s.yc, tables, migrate.OnConflictFail); err != nil {
-		return errors.Wrap(err, "ensure tables")
-	}
-	return nil
 }
 
 func otelToYTSpan(
@@ -137,25 +71,41 @@ func otelToYTSpan(
 
 // ConsumeTraces implements otelreceiver.Handler.
 func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
-	bw := s.yc.NewRowBatchWriter()
+	tags := map[Tag]struct{}{}
+	addTags := func(attrs pcommon.Map) {
+		attrs.Range(func(k string, v pcommon.Value) bool {
+			switch t := v.Type(); t {
+			case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
+			default:
+				tags[Tag{k, v.AsString(), int32(t)}] = struct{}{}
+			}
+			return true
+		})
+	}
 
+	bw := s.yc.NewRowBatchWriter()
 	resSpans := traces.ResourceSpans()
 	for i := 0; i < resSpans.Len(); i++ {
 		batchID := uuid.New().String()
 		resSpan := resSpans.At(i)
 		res := resSpan.Resource()
+		addTags(res.Attributes())
 
 		scopeSpans := resSpan.ScopeSpans()
 		for i := 0; i < scopeSpans.Len(); i++ {
 			scopeSpan := scopeSpans.At(i)
 			scope := scopeSpan.Scope()
+			addTags(scope.Attributes())
 
 			spans := scopeSpan.Spans()
 			for i := 0; i < spans.Len(); i++ {
-				s := otelToYTSpan(batchID, res, scope, spans.At(i))
+				span := spans.At(i)
+
+				s := otelToYTSpan(batchID, res, scope, span)
 				if err := bw.Write(s); err != nil {
-					return errors.Wrap(err, "write row")
+					return errors.Wrap(err, "write span")
 				}
+				addTags(span.Attributes())
 			}
 		}
 	}
@@ -163,8 +113,21 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	if err := bw.Commit(); err != nil {
 		return errors.Wrap(err, "commit")
 	}
-	if err := s.yc.InsertRowBatch(ctx, s.table, bw.Batch(), &yt.InsertRowsOptions{}); err != nil {
-		return errors.Wrap(err, "insert rows")
+	if err := s.yc.InsertRowBatch(ctx, s.tables.spans, bw.Batch(), &yt.InsertRowsOptions{}); err != nil {
+		return errors.Wrap(err, "insert spans")
+	}
+
+	bw = s.yc.NewRowBatchWriter()
+	for k := range tags {
+		if err := bw.Write(k); err != nil {
+			return errors.Wrap(err, "write tag")
+		}
+	}
+	if err := bw.Commit(); err != nil {
+		return errors.Wrap(err, "commit")
+	}
+	if err := s.yc.InsertRowBatch(ctx, s.tables.tags, bw.Batch(), &yt.InsertRowsOptions{}); err != nil {
+		return errors.Wrap(err, "insert spans")
 	}
 	return nil
 }

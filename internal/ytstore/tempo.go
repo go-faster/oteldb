@@ -24,15 +24,15 @@ import (
 
 // TempoAPI implements tempoapi.Handler.
 type TempoAPI struct {
-	yc    yt.Client
-	table ypath.Path
+	yc     yt.Client
+	tables tables
 }
 
 // NewTempoAPI creates new TempoAPI.
-func NewTempoAPI(yc yt.Client, table ypath.Path) *TempoAPI {
+func NewTempoAPI(yc yt.Client, prefix ypath.Path) *TempoAPI {
 	return &TempoAPI{
-		yc:    yc,
-		table: table,
+		yc:     yc,
+		tables: newTables(prefix),
 	}
 }
 
@@ -55,10 +55,37 @@ func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (*t
 //
 // This endpoint retrieves all discovered values for the given tag, which can be used in search.
 //
-// GET /api/search/tag/{service_name}/values
-func (h *TempoAPI) SearchTagValues(context.Context, tempoapi.SearchTagValuesParams) (*tempoapi.TagValues, error) {
+// GET /api/search/tag/{tag_name}/values
+func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTagValuesParams) (resp *tempoapi.TagValues, _ error) {
+	lg := zctx.From(ctx)
+
+	query := fmt.Sprintf("value from [%s] where name = %q", h.tables.tags, params.TagName)
+	r, err := h.yc.SelectRows(ctx, query, nil)
+	if err != nil {
+		return resp, err
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+
+	var values []string
+	for r.Next() {
+		var tag Tag
+		if err := r.Scan(&tag); err != nil {
+			return resp, err
+		}
+		values = append(values, tag.Value)
+	}
+	if err := r.Err(); err != nil {
+		return resp, err
+	}
+	lg.Info("Got tag values",
+		zap.String("tag_name", params.TagName),
+		zap.Int("count", len(values)),
+	)
+
 	return &tempoapi.TagValues{
-		TagValues: []string{},
+		TagValues: values,
 	}, nil
 }
 
@@ -67,10 +94,59 @@ func (h *TempoAPI) SearchTagValues(context.Context, tempoapi.SearchTagValuesPara
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
 //
-// GET /api/v2/search/tag/{service_name}/values
-func (h *TempoAPI) SearchTagValuesV2(context.Context, tempoapi.SearchTagValuesV2Params) (*tempoapi.TagValuesV2, error) {
+// GET /api/v2/search/tag/{tag_name}/values
+func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.SearchTagValuesV2Params) (resp *tempoapi.TagValuesV2, _ error) {
+	lg := zctx.From(ctx)
+
+	query := fmt.Sprintf("type, value from [%s] where name = %q", h.tables.tags, params.TagName)
+	r, err := h.yc.SelectRows(ctx, query, nil)
+	if err != nil {
+		return resp, err
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+
+	var values []tempoapi.TagValue
+	for r.Next() {
+		var tag Tag
+		if err := r.Scan(&tag); err != nil {
+			return resp, err
+		}
+
+		// TODO(tdakkota): handle duration/status and things
+		// https://github.com/grafana/tempo/blob/991d72281e5168080f426b3f1c9d5c4b88f7c460/modules/ingester/instance_search.go#L379
+		var typ string
+		switch pcommon.ValueType(tag.Type) {
+		case pcommon.ValueTypeStr:
+			typ = "string"
+		case pcommon.ValueTypeInt:
+			typ = "int"
+		case pcommon.ValueTypeDouble:
+			typ = "float"
+		case pcommon.ValueTypeBool:
+			typ = "bool"
+		case pcommon.ValueTypeBytes:
+			typ = "string"
+		case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
+			// what?
+		}
+
+		values = append(values, tempoapi.TagValue{
+			Type:  typ,
+			Value: tag.Value,
+		})
+	}
+	if err := r.Err(); err != nil {
+		return resp, err
+	}
+	lg.Info("Got tag types and values",
+		zap.String("tag_name", params.TagName),
+		zap.Int("count", len(values)),
+	)
+
 	return &tempoapi.TagValuesV2{
-		TagValues: []tempoapi.TagValue{},
+		TagValues: values,
 	}, nil
 }
 
@@ -79,9 +155,33 @@ func (h *TempoAPI) SearchTagValuesV2(context.Context, tempoapi.SearchTagValuesV2
 // This endpoint retrieves all discovered tag names that can be used in search.
 //
 // GET /api/search/tags
-func (h *TempoAPI) SearchTags(context.Context) (*tempoapi.TagNames, error) {
+func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ error) {
+	lg := zctx.From(ctx)
+
+	query := fmt.Sprintf("name from [%s]", h.tables.tags)
+	r, err := h.yc.SelectRows(ctx, query, nil)
+	if err != nil {
+		return resp, err
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+
+	var names []string
+	for r.Next() {
+		var tag Tag
+		if err := r.Scan(&tag); err != nil {
+			return resp, err
+		}
+		names = append(names, tag.Name)
+	}
+	if err := r.Err(); err != nil {
+		return resp, err
+	}
+	lg.Info("Got tag names", zap.Int("count", len(names)))
+
 	return &tempoapi.TagNames{
-		TagNames: []string{},
+		TagNames: names,
 	}, nil
 }
 
@@ -134,7 +234,7 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		start = zap.Skip()
 		end   = zap.Skip()
 
-		query = fmt.Sprintf("* from [%s] where trace_id = %q", h.table, hexUUID(params.TraceID))
+		query = fmt.Sprintf("* from [%s] where trace_id = %q", h.tables.spans, hexUUID(params.TraceID))
 	)
 
 	if s, ok := params.Start.Get(); ok {
@@ -212,7 +312,7 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Info("Get trace by ID", zap.Int("span_count", traces.SpanCount()))
+	lg.Info("Got trace by ID", zap.Int("span_count", traces.SpanCount()))
 
 	m := ptrace.ProtoMarshaler{}
 	data, err := m.MarshalTraces(traces)
