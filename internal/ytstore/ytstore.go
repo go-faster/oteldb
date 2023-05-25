@@ -36,14 +36,17 @@ func NewStore(yc yt.Client, table ypath.Path) *Store {
 
 // Span is a data structure for trace.
 type Span struct {
-	TraceID      string  `yson:"trace_id"`
-	SpanID       uint64  `yson:"span_id"`
-	ParentSpanID *uint64 `yson:"parent_span_id"`
-	Name         string  `yson:"name"`
-	Kind         int32   `yson:"kind"`
-	Start        uint64  `yson:"start"`
-	End          uint64  `yson:"end"`
-	Attrs        Attrs   `yson:"attrs"`
+	TraceID       string  `yson:"trace_id"`
+	SpanID        uint64  `yson:"span_id"`
+	TraceState    string  `yson:"trace_state"`
+	ParentSpanID  *uint64 `yson:"parent_span_id"`
+	Name          string  `yson:"name"`
+	Kind          int32   `yson:"kind"`
+	Start         uint64  `yson:"start"`
+	End           uint64  `yson:"end"`
+	Attrs         Attrs   `yson:"attrs"`
+	StatusCode    int32   `yson:"status_code"`
+	StatusMessage string  `yson:"status_message"`
 
 	BatchID       string `yson:"batch_id"`
 	ResourceAttrs Attrs  `yson:"resource_attrs"`
@@ -61,6 +64,7 @@ func (Span) Schema() schema.Schema {
 			// FIXME(tdakkota): where is UUID?
 			{Name: "trace_id", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},
 			{Name: "span_id", ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
+			{Name: "trace_state", ComplexType: schema.TypeString},
 			{Name: "parent_span_id", ComplexType: schema.Optional{Item: schema.TypeUint64}},
 			{Name: "name", ComplexType: schema.TypeString},
 			{Name: "kind", ComplexType: schema.TypeInt32},
@@ -68,6 +72,8 @@ func (Span) Schema() schema.Schema {
 			{Name: "start", ComplexType: schema.TypeUint64},
 			{Name: "end", ComplexType: schema.TypeUint64},
 			{Name: "attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
+			{Name: "status_code", ComplexType: schema.TypeInt32},
+			{Name: "status_message", ComplexType: schema.TypeString},
 
 			{Name: "batch_id", ComplexType: schema.TypeString},
 			{Name: "resource_attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
@@ -102,15 +108,19 @@ func otelToYTSpan(
 		return binary.LittleEndian.Uint64(arr[:])
 	}
 
+	status := span.Status()
 	s = Span{
 		TraceID:       span.TraceID().String(),
 		SpanID:        getSpanID(span.SpanID()),
+		TraceState:    span.TraceState().AsRaw(),
 		ParentSpanID:  nil,
 		Name:          span.Name(),
 		Kind:          int32(span.Kind()),
 		Start:         uint64(span.StartTimestamp()),
 		End:           uint64(span.EndTimestamp()),
 		Attrs:         Attrs(span.Attributes()),
+		StatusCode:    int32(status.Code()),
+		StatusMessage: status.Message(),
 		BatchID:       batchID,
 		ResourceAttrs: Attrs(res.Attributes()),
 		ScopeName:     scope.Name(),
@@ -121,6 +131,7 @@ func otelToYTSpan(
 		v := getSpanID(parent)
 		s.ParentSpanID = &v
 	}
+
 	return s
 }
 

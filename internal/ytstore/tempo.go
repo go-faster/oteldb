@@ -108,15 +108,19 @@ func ytToOTELSpan(span Span, s ptrace.Span) {
 	traceID := uuid.MustParse(span.TraceID)
 	s.SetTraceID(pcommon.TraceID(traceID))
 	s.SetSpanID(getSpanID(span.SpanID))
+	s.TraceState().FromRaw(span.TraceState)
+	if p := span.ParentSpanID; p != nil {
+		s.SetParentSpanID(getSpanID(*p))
+	}
 	s.SetName(span.Name)
 	s.SetKind(ptrace.SpanKind(span.Kind))
 	s.SetStartTimestamp(pcommon.Timestamp(span.Start))
 	s.SetEndTimestamp(pcommon.Timestamp(span.End))
-
-	if p := span.ParentSpanID; p != nil {
-		s.SetParentSpanID(getSpanID(*p))
-	}
 	pcommon.Map(span.Attrs).CopyTo(s.Attributes())
+
+	status := s.Status()
+	status.SetCode(ptrace.StatusCode(span.StatusCode))
+	status.SetMessage(span.StatusMessage)
 }
 
 // TraceByID implements traceByID operation.
