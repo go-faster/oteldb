@@ -405,23 +405,23 @@ func decodeSearchParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 // SearchTagValuesParams is parameters of search_tag_values operation.
 type SearchTagValuesParams struct {
-	// Service name.
-	ServiceName string
+	// Tag name.
+	TagName string
 }
 
 func unpackSearchTagValuesParams(packed middleware.Parameters) (params SearchTagValuesParams) {
 	{
 		key := middleware.ParameterKey{
-			Name: "service_name",
+			Name: "tag_name",
 			In:   "path",
 		}
-		params.ServiceName = packed[key].(string)
+		params.TagName = packed[key].(string)
 	}
 	return params
 }
 
 func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Request) (params SearchTagValuesParams, _ error) {
-	// Decode path: service_name.
+	// Decode path: tag_name.
 	if err := func() error {
 		param := args[0]
 		if argsEscaped {
@@ -433,7 +433,7 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "service_name",
+				Param:   "tag_name",
 				Value:   param,
 				Style:   uri.PathStyleSimple,
 				Explode: false,
@@ -450,7 +450,7 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 					return err
 				}
 
-				params.ServiceName = c
+				params.TagName = c
 				return nil
 			}(); err != nil {
 				return err
@@ -461,7 +461,7 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "service_name",
+			Name: "tag_name",
 			In:   "path",
 			Err:  err,
 		}
@@ -471,23 +471,23 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 
 // SearchTagValuesV2Params is parameters of search_tag_values_v2 operation.
 type SearchTagValuesV2Params struct {
-	// Service name.
-	ServiceName string
+	// Tag name.
+	TagName string
 }
 
 func unpackSearchTagValuesV2Params(packed middleware.Parameters) (params SearchTagValuesV2Params) {
 	{
 		key := middleware.ParameterKey{
-			Name: "service_name",
+			Name: "tag_name",
 			In:   "path",
 		}
-		params.ServiceName = packed[key].(string)
+		params.TagName = packed[key].(string)
 	}
 	return params
 }
 
 func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Request) (params SearchTagValuesV2Params, _ error) {
-	// Decode path: service_name.
+	// Decode path: tag_name.
 	if err := func() error {
 		param := args[0]
 		if argsEscaped {
@@ -499,7 +499,7 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "service_name",
+				Param:   "tag_name",
 				Value:   param,
 				Style:   uri.PathStyleSimple,
 				Explode: false,
@@ -516,7 +516,7 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 					return err
 				}
 
-				params.ServiceName = c
+				params.TagName = c
 				return nil
 			}(); err != nil {
 				return err
@@ -527,7 +527,7 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "service_name",
+			Name: "tag_name",
 			In:   "path",
 			Err:  err,
 		}

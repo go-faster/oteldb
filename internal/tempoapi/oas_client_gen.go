@@ -269,7 +269,7 @@ func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Trac
 //
 // This endpoint retrieves all discovered values for the given tag, which can be used in search.
 //
-// GET /api/search/tag/{service_name}/values
+// GET /api/search/tag/{tag_name}/values
 func (c *Client) SearchTagValues(ctx context.Context, params SearchTagValuesParams) (*TagValues, error) {
 	res, err := c.sendSearchTagValues(ctx, params)
 	_ = res
@@ -312,14 +312,14 @@ func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValues
 	var pathParts [3]string
 	pathParts[0] = "/api/search/tag/"
 	{
-		// Encode "service_name" parameter.
+		// Encode "tag_name" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "service_name",
+			Param:   "tag_name",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.StringToString(params.ServiceName))
+			return e.EncodeValue(conv.StringToString(params.TagName))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}
@@ -359,7 +359,7 @@ func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValues
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
 //
-// GET /api/v2/search/tag/{service_name}/values
+// GET /api/v2/search/tag/{tag_name}/values
 func (c *Client) SearchTagValuesV2(ctx context.Context, params SearchTagValuesV2Params) (*TagValuesV2, error) {
 	res, err := c.sendSearchTagValuesV2(ctx, params)
 	_ = res
@@ -402,14 +402,14 @@ func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValu
 	var pathParts [3]string
 	pathParts[0] = "/api/v2/search/tag/"
 	{
-		// Encode "service_name" parameter.
+		// Encode "tag_name" parameter.
 		e := uri.NewPathEncoder(uri.PathEncoderConfig{
-			Param:   "service_name",
+			Param:   "tag_name",
 			Style:   uri.PathStyleSimple,
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.StringToString(params.ServiceName))
+			return e.EncodeValue(conv.StringToString(params.TagName))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}

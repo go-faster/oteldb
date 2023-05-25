@@ -158,12 +158,12 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 //
 // This endpoint retrieves all discovered values for the given tag, which can be used in search.
 //
-// GET /api/search/tag/{service_name}/values
+// GET /api/search/tag/{tag_name}/values
 func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("search_tag_values"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/search/tag/{service_name}/values"),
+		semconv.HTTPRouteKey.String("/api/search/tag/{tag_name}/values"),
 	}
 
 	// Start a span for this request.
@@ -215,9 +215,9 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
-					Name: "service_name",
+					Name: "tag_name",
 					In:   "path",
-				}: params.ServiceName,
+				}: params.TagName,
 			},
 			Raw: r,
 		}
@@ -269,12 +269,12 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
 //
-// GET /api/v2/search/tag/{service_name}/values
+// GET /api/v2/search/tag/{tag_name}/values
 func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("search_tag_values_v2"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v2/search/tag/{service_name}/values"),
+		semconv.HTTPRouteKey.String("/api/v2/search/tag/{tag_name}/values"),
 	}
 
 	// Start a span for this request.
@@ -326,9 +326,9 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
-					Name: "service_name",
+					Name: "tag_name",
 					In:   "path",
-				}: params.ServiceName,
+				}: params.TagName,
 			},
 			Raw: r,
 		}

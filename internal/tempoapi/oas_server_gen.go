@@ -18,14 +18,14 @@ type Handler interface {
 	//
 	// This endpoint retrieves all discovered values for the given tag, which can be used in search.
 	//
-	// GET /api/search/tag/{service_name}/values
+	// GET /api/search/tag/{tag_name}/values
 	SearchTagValues(ctx context.Context, params SearchTagValuesParams) (*TagValues, error)
 	// SearchTagValuesV2 implements search_tag_values_v2 operation.
 	//
 	// This endpoint retrieves all discovered values and their data types for the given TraceQL
 	// identifier.
 	//
-	// GET /api/v2/search/tag/{service_name}/values
+	// GET /api/v2/search/tag/{tag_name}/values
 	SearchTagValuesV2(ctx context.Context, params SearchTagValuesV2Params) (*TagValuesV2, error)
 	// SearchTags implements search_tags operation.
 	//

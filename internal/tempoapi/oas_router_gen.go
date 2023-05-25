@@ -91,7 +91,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							break
 						}
 
-						// Param: "service_name"
+						// Param: "tag_name"
 						// Match until "/"
 						idx := strings.IndexByte(elem, '/')
 						if idx < 0 {
@@ -177,7 +177,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 
-				// Param: "service_name"
+				// Param: "tag_name"
 				// Match until "/"
 				idx := strings.IndexByte(elem, '/')
 				if idx < 0 {
@@ -331,7 +331,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							break
 						}
 
-						// Param: "service_name"
+						// Param: "tag_name"
 						// Match until "/"
 						idx := strings.IndexByte(elem, '/')
 						if idx < 0 {
@@ -357,7 +357,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf: SearchTagValues
 									r.name = "SearchTagValues"
 									r.operationID = "search_tag_values"
-									r.pathPattern = "/api/search/tag/{service_name}/values"
+									r.pathPattern = "/api/search/tag/{tag_name}/values"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -422,7 +422,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 
-				// Param: "service_name"
+				// Param: "tag_name"
 				// Match until "/"
 				idx := strings.IndexByte(elem, '/')
 				if idx < 0 {
@@ -448,7 +448,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf: SearchTagValuesV2
 							r.name = "SearchTagValuesV2"
 							r.operationID = "search_tag_values_v2"
-							r.pathPattern = "/api/v2/search/tag/{service_name}/values"
+							r.pathPattern = "/api/v2/search/tag/{tag_name}/values"
 							r.args = args
 							r.count = 1
 							return r, true
