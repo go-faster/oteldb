@@ -1,81 +1,186 @@
 package ytstore
 
 import (
-	"reflect"
-
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.ytsaurus.tech/yt/go/yson"
 )
 
-// KeyValue is an Attrs entry.
-type KeyValue[V any] struct {
-	Key   string `yson:"key"`
-	Value V      `yson:"value"`
-}
+// Attrs is a YSON wrapper for attributes.
+type Attrs pcommon.Map
 
 var (
-	_ yson.StreamUnmarshaler = (*KeyValue[int64])(nil)
-	_ yson.StreamMarshaler   = KeyValue[int64]{}
+	_ yson.StreamMarshaler   = Attrs{}
+	_ yson.StreamUnmarshaler = (*Attrs)(nil)
 )
 
-// UnmarshalYSON implements yson.StreamUnmarshaler.
-func (kv *KeyValue[V]) UnmarshalYSON(r *yson.Reader) error {
-	switch e, err := r.Next(true); {
-	case err != nil:
-		return err
-	case e != yson.EventBeginList:
-		return &yson.TypeError{UserType: reflect.TypeOf(kv), YSONType: r.Type()}
-	}
-
-	{
-		if ok, err := r.NextListItem(); err != nil {
-			return err
-		} else if !ok {
-			return errors.New("missing key")
-		}
-
-		switch e, err := r.Next(true); {
-		case err != nil:
-			return err
-		case e != yson.EventLiteral:
-			return &yson.TypeError{UserType: reflect.TypeOf(kv), YSONType: r.Type()}
-		}
-		kv.Key = r.String()
-	}
-	{
-		if ok, err := r.NextListItem(); err != nil {
-			return err
-		} else if !ok {
-			return errors.Errorf("missing value for key %q", kv.Key)
-		}
-
-		raw, err := r.NextRawValue()
-		if err != nil {
-			return errors.Wrap(err, "get value")
-		}
-		if err := yson.Unmarshal(raw, &kv.Value); err != nil {
-			return errors.Wrap(err, "unmarshal value")
-		}
-	}
-
-	switch e, err := r.Next(false); {
-	case err != nil:
-		return err
-	case e != yson.EventEndList:
-		panic("invalid decoder state")
-	}
-
+// MarshalYSON implemenets yson.StreamMarshaler.
+func (m Attrs) MarshalYSON(w *yson.Writer) error {
+	otelMapToYSON(w, pcommon.Map(m))
 	return nil
 }
 
-// MarshalYSON implements yson.StreamMarshaler.
-func (kv KeyValue[V]) MarshalYSON(w *yson.Writer) error {
-	w.BeginList()
-	w.String(kv.Key)
-	w.Any(kv.Value)
-	w.EndList()
-	return w.Err()
+// UnmarshalYSON implemenets yson.StreamUnmarshaler.
+func (m *Attrs) UnmarshalYSON(r *yson.Reader) error {
+	nm := pcommon.NewMap()
+	*m = Attrs(nm)
+	return ysonToOTELMap(r, nm)
 }
 
-// Attrs represent attributes map.
-type Attrs[V any] []KeyValue[V]
+func otelMapToYSON(w *yson.Writer, kv pcommon.Map) {
+	w.BeginMap()
+	kv.Range(func(k string, v pcommon.Value) bool {
+		w.MapKeyString(k)
+		otelValueToYSON(w, v)
+		return true
+	})
+	w.EndMap()
+}
+
+func otelValueToYSON(w *yson.Writer, attr pcommon.Value) {
+	w.BeginMap()
+	switch attr.Type() {
+	case pcommon.ValueTypeStr:
+		w.MapKeyString("stringValue")
+		w.String(attr.Str())
+	case pcommon.ValueTypeBool:
+		w.MapKeyString("boolValue")
+		w.Bool(attr.Bool())
+	case pcommon.ValueTypeInt:
+		w.MapKeyString("intValue")
+		w.Int64(attr.Int())
+	case pcommon.ValueTypeDouble:
+		w.MapKeyString("doubleValue")
+		w.Float64(attr.Double())
+	case pcommon.ValueTypeMap:
+		w.MapKeyString("kvlistValue")
+		otelMapToYSON(w, attr.Map())
+	case pcommon.ValueTypeSlice:
+		w.MapKeyString("arrayValue")
+		w.BeginList()
+		s := attr.Slice()
+		for i := 0; i < s.Len(); i++ {
+			otelValueToYSON(w, s.At(i))
+		}
+		w.EndList()
+	case pcommon.ValueTypeBytes:
+		w.MapKeyString("bytesValue")
+		w.Bytes(attr.Bytes().AsRaw())
+	}
+	w.EndMap()
+}
+
+func ysonToOTELMap(r *yson.Reader, kv pcommon.Map) error {
+	if err := ysonNext(r, yson.EventBeginMap, true); err != nil {
+		return err
+	}
+
+	for {
+		ok, err := r.NextKey()
+		if err != nil {
+			return err
+		}
+		if !ok {
+			break
+		}
+		key := r.String()
+
+		val := kv.PutEmpty(key)
+		if err := ysonToOTELValue(r, val); err != nil {
+			return err
+		}
+	}
+
+	return ysonNext(r, yson.EventEndMap, true)
+}
+
+func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
+	consumeLiteral := func(typ yson.Type) error {
+		if err := ysonNext(r, yson.EventLiteral, false); err != nil {
+			return err
+		}
+		if got := r.Type(); got != typ {
+			return errors.Errorf("expected typ %s, got %s", typ, got)
+		}
+		return nil
+	}
+
+	if err := ysonNext(r, yson.EventBeginMap, true); err != nil {
+		return err
+	}
+
+	switch ok, err := r.NextKey(); {
+	case err != nil:
+		return err
+	case !ok:
+		return errors.New("value has no key")
+	}
+	key := r.String()
+
+	switch key {
+	case "stringValue":
+		if err := consumeLiteral(yson.TypeString); err != nil {
+			return err
+		}
+		val.SetStr(r.String())
+	case "boolValue":
+		if err := consumeLiteral(yson.TypeBool); err != nil {
+			return err
+		}
+		val.SetBool(r.Bool())
+	case "intValue":
+		if err := consumeLiteral(yson.TypeInt64); err != nil {
+			return err
+		}
+		val.SetInt(r.Int64())
+	case "doubleValue":
+		if err := consumeLiteral(yson.TypeFloat64); err != nil {
+			return err
+		}
+		val.SetDouble(r.Float64())
+	case "kvlistValue":
+		if err := ysonToOTELMap(r, val.SetEmptyMap()); err != nil {
+			return err
+		}
+	case "arrayValue":
+		if err := ysonNext(r, yson.EventBeginList, true); err != nil {
+			return err
+		}
+
+		s := val.SetEmptySlice()
+		for {
+			ok, err := r.NextListItem()
+			if err != nil {
+				return err
+			}
+			if !ok {
+				break
+			}
+
+			if err := ysonToOTELValue(r, s.AppendEmpty()); err != nil {
+				return err
+			}
+		}
+
+		return ysonNext(r, yson.EventEndList, true)
+	case "bytesValue":
+		if err := consumeLiteral(yson.TypeString); err != nil {
+			return err
+		}
+		val.SetEmptyBytes().Append(r.Bytes()...)
+	default:
+		return errors.Errorf("unexpected field %q", key)
+	}
+	return ysonNext(r, yson.EventEndMap, true)
+}
+
+func ysonNext(r *yson.Reader, expect yson.Event, attrs bool) error {
+	switch got, err := r.Next(attrs); {
+	case err != nil:
+		return err
+	case expect != got:
+		return errors.Errorf("expected event %v, got %v", expect, got)
+	default:
+		return nil
+	}
+}
