@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -14,6 +15,7 @@ import (
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
@@ -62,8 +64,26 @@ func main() {
 
 		tablePath := ypath.Path("//oteldb").Child("traces")
 		store := ytstore.NewStore(yc, tablePath)
-		if err := store.Migrate(ctx); err != nil {
-			return errors.Wrap(err, "migrate")
+
+		{
+			migrateBackoff := backoff.NewExponentialBackOff()
+			migrateBackoff.InitialInterval = 2 * time.Second
+			migrateBackoff.MaxElapsedTime = time.Minute
+
+			if err := backoff.Retry(func() error {
+				err := store.Migrate(ctx)
+				if err != nil {
+					lg.Error("Migration failed", zap.Error(err))
+					// FIXME(tdakkota): client does not return a proper error to check
+					//  the error message and there is no specific ErrorCode for this error.
+					if !strings.Contains(err.Error(), "no healthy tablet cells") {
+						return backoff.Permanent(err)
+					}
+				}
+				return err
+			}, migrateBackoff); err != nil {
+				return errors.Wrap(err, "migrate")
+			}
 		}
 
 		recv, err := otelreceiver.NewReceiver(store, otelreceiver.ReceiverConfig{})
