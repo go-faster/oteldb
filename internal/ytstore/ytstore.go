@@ -72,6 +72,9 @@ func otelToYTSpan(
 // ConsumeTraces implements otelreceiver.Handler.
 func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	tags := map[Tag]struct{}{}
+	addName := func(s string) {
+		tags[Tag{"name", s, int32(pcommon.ValueTypeStr)}] = struct{}{}
+	}
 	addTags := func(attrs pcommon.Map) {
 		attrs.Range(func(k string, v pcommon.Value) bool {
 			switch t := v.Type(); t {
@@ -100,6 +103,8 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 			spans := scopeSpan.Spans()
 			for i := 0; i < spans.Len(); i++ {
 				span := spans.At(i)
+				// Add span name as well. For some reason, Grafana is looking for it too.
+				addName(span.Name())
 
 				s := otelToYTSpan(batchID, res, scope, span)
 				if err := bw.Write(s); err != nil {
