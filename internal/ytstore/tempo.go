@@ -116,7 +116,7 @@ func ytToOTELSpan(span Span, s ptrace.Span) {
 	if p := span.ParentSpanID; p != nil {
 		s.SetParentSpanID(getSpanID(*p))
 	}
-	// TODO(tdakkota): map other as well.
+	pcommon.Map(span.Attrs).CopyTo(s.Attributes())
 }
 
 // TraceByID implements traceByID operation.
