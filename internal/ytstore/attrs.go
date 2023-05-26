@@ -55,6 +55,7 @@ func otelValueToYSON(w *yson.Writer, attr pcommon.Value) {
 	w.Int64(int64(t))
 	switch t {
 	case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
+		w.String("")
 	default:
 		w.String(attr.AsString())
 	}
