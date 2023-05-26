@@ -9,7 +9,7 @@ require (
 	github.com/go-faster/sdk v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ogen-go/ogen v0.67.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	go.opentelemetry.io/collector v0.78.2
 	go.opentelemetry.io/collector/component v0.78.2
 	go.opentelemetry.io/collector/confmap v0.78.2
@@ -18,10 +18,10 @@ require (
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0012
 	go.opentelemetry.io/collector/receiver v0.78.2
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.78.2
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.41.1
-	go.opentelemetry.io/otel v1.15.1
-	go.opentelemetry.io/otel/metric v0.38.1
-	go.opentelemetry.io/otel/trace v1.15.1
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
+	go.opentelemetry.io/otel v1.16.0
+	go.opentelemetry.io/otel/metric v1.16.0
+	go.opentelemetry.io/otel/trace v1.16.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
 	go.ytsaurus.tech/library/go/core/log v0.0.2
