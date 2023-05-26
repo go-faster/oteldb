@@ -26,7 +26,7 @@ require (
 	go.uber.org/zap v1.24.0
 	go.ytsaurus.tech/library/go/core/log v0.0.2
 	go.ytsaurus.tech/yt/go v0.0.4
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.2.0
 )
 
 require (
