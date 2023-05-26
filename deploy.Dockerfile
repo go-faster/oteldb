@@ -1,5 +1,5 @@
 FROM gcr.io/distroless/static
 
-ADD bot /usr/local/bin/oteldb
+ADD oteldb /usr/local/bin/oteldb
 
 ENTRYPOINT ["oteldb"]
