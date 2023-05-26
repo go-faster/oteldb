@@ -169,7 +169,6 @@ func (s *KvlistValue) Validate() error {
 	}
 	return nil
 }
-
 func (s *TagNames) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -253,6 +252,9 @@ func (s *TempoSpan) Validate() error {
 func (s *TempoSpanSet) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
+		if s.Spans == nil {
+			return errors.New("nil is invalid value")
+		}
 		var failures []validate.FieldError
 		for i, elem := range s.Spans {
 			if err := func() error {
@@ -304,15 +306,8 @@ func (s *TempoSpanSet) Validate() error {
 func (s *TraceSearchMetadata) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.SpanSet.Set {
-			if err := func() error {
-				if err := s.SpanSet.Value.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
+		if err := s.SpanSet.Validate(); err != nil {
+			return err
 		}
 		return nil
 	}(); err != nil {

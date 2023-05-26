@@ -5,7 +5,6 @@ package tempoapi
 import (
 	"math/bits"
 	"strconv"
-	"time"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
@@ -993,144 +992,6 @@ func (s *OptInt) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes string as json.
-func (o OptString) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	e.Str(string(o.Value))
-}
-
-// Decode decodes string from json.
-func (o *OptString) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptString to nil")
-	}
-	o.Set = true
-	v, err := d.Str()
-	if err != nil {
-		return err
-	}
-	o.Value = string(v)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptString) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptString) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes int64 as json.
-func (o OptStringInt64) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	json.EncodeStringInt64(e, o.Value)
-}
-
-// Decode decodes int64 from json.
-func (o *OptStringInt64) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptStringInt64 to nil")
-	}
-	o.Set = true
-	v, err := json.DecodeStringInt64(d)
-	if err != nil {
-		return err
-	}
-	o.Value = v
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptStringInt64) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptStringInt64) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes time.Time as json.
-func (o OptStringUnixNano) Encode(e *jx.Encoder, format func(*jx.Encoder, time.Time)) {
-	if !o.Set {
-		return
-	}
-	format(e, o.Value)
-}
-
-// Decode decodes time.Time from json.
-func (o *OptStringUnixNano) Decode(d *jx.Decoder, format func(*jx.Decoder) (time.Time, error)) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptStringUnixNano to nil")
-	}
-	o.Set = true
-	v, err := format(d)
-	if err != nil {
-		return err
-	}
-	o.Value = v
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptStringUnixNano) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e, json.EncodeStringUnixNano)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptStringUnixNano) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d, json.DecodeStringUnixNano)
-}
-
-// Encode encodes TempoSpanSet as json.
-func (o OptTempoSpanSet) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes TempoSpanSet from json.
-func (o *OptTempoSpanSet) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptTempoSpanSet to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptTempoSpanSet) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptTempoSpanSet) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode implements json.Marshaler.
 func (s *StringValue) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -1672,28 +1533,20 @@ func (s *TempoSpan) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *TempoSpan) encodeFields(e *jx.Encoder) {
 	{
-		if s.SpanID.Set {
-			e.FieldStart("spanID")
-			s.SpanID.Encode(e)
-		}
+		e.FieldStart("spanID")
+		e.Str(s.SpanID)
 	}
 	{
-		if s.Name.Set {
-			e.FieldStart("name")
-			s.Name.Encode(e)
-		}
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
-		if s.StartTimeUnixNano.Set {
-			e.FieldStart("startTimeUnixNano")
-			s.StartTimeUnixNano.Encode(e, json.EncodeStringUnixNano)
-		}
+		e.FieldStart("startTimeUnixNano")
+		json.EncodeStringUnixNano(e, s.StartTimeUnixNano)
 	}
 	{
-		if s.DurationNanos.Set {
-			e.FieldStart("durationNanos")
-			s.DurationNanos.Encode(e)
-		}
+		e.FieldStart("durationNanos")
+		json.EncodeStringInt64(e, s.DurationNanos)
 	}
 	{
 		if s.Attributes != nil {
@@ -1716,13 +1569,16 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode TempoSpan to nil")
 	}
+	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "spanID":
+			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				s.SpanID.Reset()
-				if err := s.SpanID.Decode(d); err != nil {
+				v, err := d.Str()
+				s.SpanID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -1730,9 +1586,11 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"spanID\"")
 			}
 		case "name":
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.Name.Reset()
-				if err := s.Name.Decode(d); err != nil {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -1740,9 +1598,11 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "startTimeUnixNano":
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				s.StartTimeUnixNano.Reset()
-				if err := s.StartTimeUnixNano.Decode(d, json.DecodeStringUnixNano); err != nil {
+				v, err := json.DecodeStringUnixNano(d)
+				s.StartTimeUnixNano = v
+				if err != nil {
 					return err
 				}
 				return nil
@@ -1750,9 +1610,11 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"startTimeUnixNano\"")
 			}
 		case "durationNanos":
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				s.DurationNanos.Reset()
-				if err := s.DurationNanos.Decode(d); err != nil {
+				v, err := json.DecodeStringInt64(d)
+				s.DurationNanos = v
+				if err != nil {
 					return err
 				}
 				return nil
@@ -1777,6 +1639,38 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode TempoSpan")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00001111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfTempoSpan) {
+					name = jsonFieldsNameOfTempoSpan[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 
 	return nil
@@ -1805,14 +1699,12 @@ func (s *TempoSpanSet) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *TempoSpanSet) encodeFields(e *jx.Encoder) {
 	{
-		if s.Spans != nil {
-			e.FieldStart("spans")
-			e.ArrStart()
-			for _, elem := range s.Spans {
-				elem.Encode(e)
-			}
-			e.ArrEnd()
+		e.FieldStart("spans")
+		e.ArrStart()
+		for _, elem := range s.Spans {
+			elem.Encode(e)
 		}
+		e.ArrEnd()
 	}
 	{
 		if s.Matched.Set {
@@ -1839,10 +1731,12 @@ func (s *TempoSpanSet) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode TempoSpanSet to nil")
 	}
+	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "spans":
+			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				s.Spans = make([]TempoSpan, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -1888,6 +1782,38 @@ func (s *TempoSpanSet) Decode(d *jx.Decoder) error {
 	}); err != nil {
 		return errors.Wrap(err, "decode TempoSpanSet")
 	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000001,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfTempoSpanSet) {
+					name = jsonFieldsNameOfTempoSpanSet[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
 
 	return nil
 }
@@ -1915,40 +1841,28 @@ func (s *TraceSearchMetadata) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *TraceSearchMetadata) encodeFields(e *jx.Encoder) {
 	{
-		if s.TraceID.Set {
-			e.FieldStart("traceID")
-			s.TraceID.Encode(e)
-		}
+		e.FieldStart("traceID")
+		e.Str(s.TraceID)
 	}
 	{
-		if s.RootServiceName.Set {
-			e.FieldStart("rootServiceName")
-			s.RootServiceName.Encode(e)
-		}
+		e.FieldStart("rootServiceName")
+		e.Str(s.RootServiceName)
 	}
 	{
-		if s.RootTraceName.Set {
-			e.FieldStart("rootTraceName")
-			s.RootTraceName.Encode(e)
-		}
+		e.FieldStart("rootTraceName")
+		e.Str(s.RootTraceName)
 	}
 	{
-		if s.StartTimeUnixNano.Set {
-			e.FieldStart("startTimeUnixNano")
-			s.StartTimeUnixNano.Encode(e, json.EncodeStringUnixNano)
-		}
+		e.FieldStart("startTimeUnixNano")
+		json.EncodeStringUnixNano(e, s.StartTimeUnixNano)
 	}
 	{
-		if s.DurationMs.Set {
-			e.FieldStart("durationMs")
-			s.DurationMs.Encode(e)
-		}
+		e.FieldStart("durationMs")
+		e.Int(s.DurationMs)
 	}
 	{
-		if s.SpanSet.Set {
-			e.FieldStart("spanSet")
-			s.SpanSet.Encode(e)
-		}
+		e.FieldStart("spanSet")
+		s.SpanSet.Encode(e)
 	}
 }
 
@@ -1966,13 +1880,16 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode TraceSearchMetadata to nil")
 	}
+	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "traceID":
+			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				s.TraceID.Reset()
-				if err := s.TraceID.Decode(d); err != nil {
+				v, err := d.Str()
+				s.TraceID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -1980,9 +1897,11 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"traceID\"")
 			}
 		case "rootServiceName":
+			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.RootServiceName.Reset()
-				if err := s.RootServiceName.Decode(d); err != nil {
+				v, err := d.Str()
+				s.RootServiceName = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -1990,9 +1909,11 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"rootServiceName\"")
 			}
 		case "rootTraceName":
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				s.RootTraceName.Reset()
-				if err := s.RootTraceName.Decode(d); err != nil {
+				v, err := d.Str()
+				s.RootTraceName = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -2000,9 +1921,11 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"rootTraceName\"")
 			}
 		case "startTimeUnixNano":
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				s.StartTimeUnixNano.Reset()
-				if err := s.StartTimeUnixNano.Decode(d, json.DecodeStringUnixNano); err != nil {
+				v, err := json.DecodeStringUnixNano(d)
+				s.StartTimeUnixNano = v
+				if err != nil {
 					return err
 				}
 				return nil
@@ -2010,9 +1933,11 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"startTimeUnixNano\"")
 			}
 		case "durationMs":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
-				s.DurationMs.Reset()
-				if err := s.DurationMs.Decode(d); err != nil {
+				v, err := d.Int()
+				s.DurationMs = int(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -2020,8 +1945,8 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"durationMs\"")
 			}
 		case "spanSet":
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
-				s.SpanSet.Reset()
 				if err := s.SpanSet.Decode(d); err != nil {
 					return err
 				}
@@ -2035,6 +1960,38 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode TraceSearchMetadata")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00111111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfTraceSearchMetadata) {
+					name = jsonFieldsNameOfTraceSearchMetadata[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 
 	return nil

@@ -491,144 +491,6 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-// NewOptStringInt64 returns new OptStringInt64 with value set to v.
-func NewOptStringInt64(v int64) OptStringInt64 {
-	return OptStringInt64{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptStringInt64 is optional int64.
-type OptStringInt64 struct {
-	Value int64
-	Set   bool
-}
-
-// IsSet returns true if OptStringInt64 was set.
-func (o OptStringInt64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptStringInt64) Reset() {
-	var v int64
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptStringInt64) SetTo(v int64) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptStringInt64) Get() (v int64, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptStringInt64) Or(d int64) int64 {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptStringUnixNano returns new OptStringUnixNano with value set to v.
-func NewOptStringUnixNano(v time.Time) OptStringUnixNano {
-	return OptStringUnixNano{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptStringUnixNano is optional time.Time.
-type OptStringUnixNano struct {
-	Value time.Time
-	Set   bool
-}
-
-// IsSet returns true if OptStringUnixNano was set.
-func (o OptStringUnixNano) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptStringUnixNano) Reset() {
-	var v time.Time
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptStringUnixNano) SetTo(v time.Time) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptStringUnixNano) Get() (v time.Time, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptStringUnixNano) Or(d time.Time) time.Time {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptTempoSpanSet returns new OptTempoSpanSet with value set to v.
-func NewOptTempoSpanSet(v TempoSpanSet) OptTempoSpanSet {
-	return OptTempoSpanSet{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptTempoSpanSet is optional TempoSpanSet.
-type OptTempoSpanSet struct {
-	Value TempoSpanSet
-	Set   bool
-}
-
-// IsSet returns true if OptTempoSpanSet was set.
-func (o OptTempoSpanSet) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptTempoSpanSet) Reset() {
-	var v TempoSpanSet
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptTempoSpanSet) SetTo(v TempoSpanSet) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptTempoSpanSet) Get() (v TempoSpanSet, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptTempoSpanSet) Or(d TempoSpanSet) TempoSpanSet {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptUnixSeconds returns new OptUnixSeconds with value set to v.
 func NewOptUnixSeconds(v time.Time) OptUnixSeconds {
 	return OptUnixSeconds{
@@ -763,30 +625,30 @@ func (s *TagValuesV2) SetTagValues(val []TagValue) {
 
 // Ref: #/components/schemas/TempoSpan
 type TempoSpan struct {
-	SpanID            OptString         `json:"spanID"`
-	Name              OptString         `json:"name"`
-	StartTimeUnixNano OptStringUnixNano `json:"startTimeUnixNano"`
-	DurationNanos     OptStringInt64    `json:"durationNanos"`
-	Attributes        *Attributes       `json:"attributes"`
+	SpanID            string      `json:"spanID"`
+	Name              string      `json:"name"`
+	StartTimeUnixNano time.Time   `json:"startTimeUnixNano"`
+	DurationNanos     int64       `json:"durationNanos"`
+	Attributes        *Attributes `json:"attributes"`
 }
 
 // GetSpanID returns the value of SpanID.
-func (s *TempoSpan) GetSpanID() OptString {
+func (s *TempoSpan) GetSpanID() string {
 	return s.SpanID
 }
 
 // GetName returns the value of Name.
-func (s *TempoSpan) GetName() OptString {
+func (s *TempoSpan) GetName() string {
 	return s.Name
 }
 
 // GetStartTimeUnixNano returns the value of StartTimeUnixNano.
-func (s *TempoSpan) GetStartTimeUnixNano() OptStringUnixNano {
+func (s *TempoSpan) GetStartTimeUnixNano() time.Time {
 	return s.StartTimeUnixNano
 }
 
 // GetDurationNanos returns the value of DurationNanos.
-func (s *TempoSpan) GetDurationNanos() OptStringInt64 {
+func (s *TempoSpan) GetDurationNanos() int64 {
 	return s.DurationNanos
 }
 
@@ -796,22 +658,22 @@ func (s *TempoSpan) GetAttributes() *Attributes {
 }
 
 // SetSpanID sets the value of SpanID.
-func (s *TempoSpan) SetSpanID(val OptString) {
+func (s *TempoSpan) SetSpanID(val string) {
 	s.SpanID = val
 }
 
 // SetName sets the value of Name.
-func (s *TempoSpan) SetName(val OptString) {
+func (s *TempoSpan) SetName(val string) {
 	s.Name = val
 }
 
 // SetStartTimeUnixNano sets the value of StartTimeUnixNano.
-func (s *TempoSpan) SetStartTimeUnixNano(val OptStringUnixNano) {
+func (s *TempoSpan) SetStartTimeUnixNano(val time.Time) {
 	s.StartTimeUnixNano = val
 }
 
 // SetDurationNanos sets the value of DurationNanos.
-func (s *TempoSpan) SetDurationNanos(val OptStringInt64) {
+func (s *TempoSpan) SetDurationNanos(val int64) {
 	s.DurationNanos = val
 }
 
@@ -873,71 +735,71 @@ func (s TraceByID) Read(p []byte) (n int, err error) {
 
 // Ref: #/components/schemas/TraceSearchMetadata
 type TraceSearchMetadata struct {
-	TraceID           OptString         `json:"traceID"`
-	RootServiceName   OptString         `json:"rootServiceName"`
-	RootTraceName     OptString         `json:"rootTraceName"`
-	StartTimeUnixNano OptStringUnixNano `json:"startTimeUnixNano"`
-	DurationMs        OptInt            `json:"durationMs"`
-	SpanSet           OptTempoSpanSet   `json:"spanSet"`
+	TraceID           string       `json:"traceID"`
+	RootServiceName   string       `json:"rootServiceName"`
+	RootTraceName     string       `json:"rootTraceName"`
+	StartTimeUnixNano time.Time    `json:"startTimeUnixNano"`
+	DurationMs        int          `json:"durationMs"`
+	SpanSet           TempoSpanSet `json:"spanSet"`
 }
 
 // GetTraceID returns the value of TraceID.
-func (s *TraceSearchMetadata) GetTraceID() OptString {
+func (s *TraceSearchMetadata) GetTraceID() string {
 	return s.TraceID
 }
 
 // GetRootServiceName returns the value of RootServiceName.
-func (s *TraceSearchMetadata) GetRootServiceName() OptString {
+func (s *TraceSearchMetadata) GetRootServiceName() string {
 	return s.RootServiceName
 }
 
 // GetRootTraceName returns the value of RootTraceName.
-func (s *TraceSearchMetadata) GetRootTraceName() OptString {
+func (s *TraceSearchMetadata) GetRootTraceName() string {
 	return s.RootTraceName
 }
 
 // GetStartTimeUnixNano returns the value of StartTimeUnixNano.
-func (s *TraceSearchMetadata) GetStartTimeUnixNano() OptStringUnixNano {
+func (s *TraceSearchMetadata) GetStartTimeUnixNano() time.Time {
 	return s.StartTimeUnixNano
 }
 
 // GetDurationMs returns the value of DurationMs.
-func (s *TraceSearchMetadata) GetDurationMs() OptInt {
+func (s *TraceSearchMetadata) GetDurationMs() int {
 	return s.DurationMs
 }
 
 // GetSpanSet returns the value of SpanSet.
-func (s *TraceSearchMetadata) GetSpanSet() OptTempoSpanSet {
+func (s *TraceSearchMetadata) GetSpanSet() TempoSpanSet {
 	return s.SpanSet
 }
 
 // SetTraceID sets the value of TraceID.
-func (s *TraceSearchMetadata) SetTraceID(val OptString) {
+func (s *TraceSearchMetadata) SetTraceID(val string) {
 	s.TraceID = val
 }
 
 // SetRootServiceName sets the value of RootServiceName.
-func (s *TraceSearchMetadata) SetRootServiceName(val OptString) {
+func (s *TraceSearchMetadata) SetRootServiceName(val string) {
 	s.RootServiceName = val
 }
 
 // SetRootTraceName sets the value of RootTraceName.
-func (s *TraceSearchMetadata) SetRootTraceName(val OptString) {
+func (s *TraceSearchMetadata) SetRootTraceName(val string) {
 	s.RootTraceName = val
 }
 
 // SetStartTimeUnixNano sets the value of StartTimeUnixNano.
-func (s *TraceSearchMetadata) SetStartTimeUnixNano(val OptStringUnixNano) {
+func (s *TraceSearchMetadata) SetStartTimeUnixNano(val time.Time) {
 	s.StartTimeUnixNano = val
 }
 
 // SetDurationMs sets the value of DurationMs.
-func (s *TraceSearchMetadata) SetDurationMs(val OptInt) {
+func (s *TraceSearchMetadata) SetDurationMs(val int) {
 	s.DurationMs = val
 }
 
 // SetSpanSet sets the value of SpanSet.
-func (s *TraceSearchMetadata) SetSpanSet(val OptTempoSpanSet) {
+func (s *TraceSearchMetadata) SetSpanSet(val TempoSpanSet) {
 	s.SpanSet = val
 }
 
