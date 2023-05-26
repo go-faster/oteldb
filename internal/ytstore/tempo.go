@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -33,6 +34,13 @@ func NewTempoAPI(yc yt.Client, prefix ypath.Path) *TempoAPI {
 }
 
 var _ tempoapi.Handler = (*TempoAPI)(nil)
+
+// Echo request for testing, issued by Grafana.
+//
+// GET /api/echo
+func (h *TempoAPI) Echo(ctx context.Context) (tempoapi.EchoOK, error) {
+	return tempoapi.EchoOK{Data: strings.NewReader("echo")}, nil
+}
 
 // Search implements search operation.
 // Execute TraceQL query.

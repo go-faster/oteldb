@@ -13,6 +13,15 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// Echo implements echo operation.
+//
+// Echo request for testing, issued by Grafana.
+//
+// GET /api/echo
+func (UnimplementedHandler) Echo(ctx context.Context) (r EchoOK, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // Search implements search operation.
 //
 // Execute TraceQL query.

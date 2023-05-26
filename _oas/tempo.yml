@@ -5,6 +5,20 @@ info:
 servers:
   - url: "http://localhost:3200"
 paths:
+  /api/echo:
+    get:
+      operationId: echo
+      description: Echo request for testing, issued by Grafana.
+      responses:
+        '200':
+          description: Should return echo string
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: echo
+        default:
+          $ref: "#/components/responses/Error"
   /api/traces/{traceID}:
     get:
       operationId: traceByID

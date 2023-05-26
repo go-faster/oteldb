@@ -55,6 +55,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			switch elem[0] {
+			case 'e': // Prefix: "echo"
+				if l := len("echo"); len(elem) >= l && elem[0:l] == "echo" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleEchoRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
 			case 's': // Prefix: "search"
 				if l := len("search"); len(elem) >= l && elem[0:l] == "search" {
 					elem = elem[l:]
@@ -292,6 +310,27 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				break
 			}
 			switch elem[0] {
+			case 'e': // Prefix: "echo"
+				if l := len("echo"); len(elem) >= l && elem[0:l] == "echo" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: Echo
+						r.name = "Echo"
+						r.operationID = "echo"
+						r.pathPattern = "/api/echo"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
 			case 's': // Prefix: "search"
 				if l := len("search"); len(elem) >= l && elem[0:l] == "search" {
 					elem = elem[l:]

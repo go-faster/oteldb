@@ -8,6 +8,12 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// Echo implements echo operation.
+	//
+	// Echo request for testing, issued by Grafana.
+	//
+	// GET /api/echo
+	Echo(ctx context.Context) (EchoOK, error)
 	// Search implements search operation.
 	//
 	// Execute TraceQL query.

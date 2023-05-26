@@ -269,6 +269,20 @@ func (s *DoubleValue) SetDoubleValue(val float64) {
 	s.DoubleValue = val
 }
 
+type EchoOK struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s EchoOK) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, nil
+	}
+	return s.Data.Read(p)
+}
+
 type Error string
 
 // ErrorStatusCode wraps Error with StatusCode.
