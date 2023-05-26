@@ -23,7 +23,6 @@ import (
 
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -150,8 +149,8 @@ func NewReceiver[H Handler](handle H, cfg ReceiverConfig) (*Receiver[H], error) 
 	ctx := context.Background()
 	params := receiver.CreateSettings{TelemetrySettings: component.TelemetrySettings{
 		Logger:         cfg.Logger,
-		TracerProvider: trace.NewNoopTracerProvider(),
-		MeterProvider:  noop.NewMeterProvider(),
+		TracerProvider: cfg.TracerProvider,
+		MeterProvider:  cfg.MeterProvider,
 	}}
 
 	for componentID, cfg := range conf.Receivers {
