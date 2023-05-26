@@ -26,5 +26,5 @@ spec:
       targetPort: 4318
       name: otlp-http
   selector:
-    app: bot
+    app: oteldb
   sessionAffinity: None
