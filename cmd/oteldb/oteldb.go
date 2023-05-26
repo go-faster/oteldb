@@ -34,8 +34,8 @@ func setupTempo(
 	tempo := ytstore.NewTempoAPI(yc, table)
 
 	s, err := tempoapi.NewServer(tempo,
-		tempoapi.WithMeterProvider(m.MeterProvider()),
 		tempoapi.WithTracerProvider(m.TracerProvider()),
+		tempoapi.WithMeterProvider(m.MeterProvider()),
 	)
 	if err != nil {
 		return nil, err
@@ -47,8 +47,8 @@ func setupTempo(
 		s.ServeHTTP(w, req)
 	})
 	h = otelhttp.NewHandler(h, "",
-		otelhttp.WithMeterProvider(m.MeterProvider()),
 		otelhttp.WithTracerProvider(m.TracerProvider()),
+		otelhttp.WithMeterProvider(m.MeterProvider()),
 	)
 	return h, nil
 }
@@ -86,7 +86,11 @@ func main() {
 			}
 		}
 
-		recv, err := otelreceiver.NewReceiver(store, otelreceiver.ReceiverConfig{})
+		recv, err := otelreceiver.NewReceiver(store, otelreceiver.ReceiverConfig{
+			Logger:         lg.Named("receiver"),
+			TracerProvider: m.TracerProvider(),
+			MeterProvider:  m.MeterProvider(),
+		})
 		if err != nil {
 			return errors.Wrap(err, "create OTEL receiver")
 		}

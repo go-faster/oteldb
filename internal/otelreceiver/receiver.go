@@ -15,12 +15,14 @@ import (
 	"go.opentelemetry.io/collector/otelcol"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/receiver"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/errors"
 
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -57,13 +59,21 @@ var defaultReceivers = map[string]interface{}{
 
 // ReceiverConfig is a config struct for Receiver.
 type ReceiverConfig struct {
-	OTELConfig map[string]any
-	Logger     *zap.Logger
+	OTELConfig     map[string]any
+	TracerProvider trace.TracerProvider
+	MeterProvider  metric.MeterProvider
+	Logger         *zap.Logger
 }
 
 func (cfg *ReceiverConfig) setDefaults() {
 	if cfg.OTELConfig == nil {
 		cfg.OTELConfig = defaultReceivers
+	}
+	if cfg.TracerProvider == nil {
+		cfg.TracerProvider = otel.GetTracerProvider()
+	}
+	if cfg.MeterProvider == nil {
+		cfg.MeterProvider = otel.GetMeterProvider()
 	}
 	if cfg.Logger == nil {
 		cfg.Logger = zap.NewNop()
