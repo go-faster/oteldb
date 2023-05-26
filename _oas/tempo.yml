@@ -37,6 +37,8 @@ paths:
       responses:
         200:
           $ref: "#/components/responses/TraceByID"
+        404:
+          $ref: "#/components/responses/TraceByIDNotFound"
         default:
           $ref: "#/components/responses/Error"
 
@@ -163,6 +165,8 @@ components:
           schema:
             type: string
             format: binary
+    TraceByIDNotFound:
+      description: Trace not found
     Search:
       description: Search result
       content:
