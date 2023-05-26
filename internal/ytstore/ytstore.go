@@ -44,8 +44,8 @@ func otelToYTSpan(
 
 	status := span.Status()
 	s = Span{
-		TraceID:       span.TraceID().String(),
-		SpanID:        getSpanID(span.SpanID()),
+		TraceID:       TraceID(span.TraceID()),
+		SpanID:        SpanID(span.SpanID()),
 		TraceState:    span.TraceState().AsRaw(),
 		ParentSpanID:  nil,
 		Name:          span.Name(),

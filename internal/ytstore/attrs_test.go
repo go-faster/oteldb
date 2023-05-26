@@ -8,7 +8,7 @@ import (
 	"go.ytsaurus.tech/yt/go/yson"
 )
 
-func TestYSON(t *testing.T) {
+func TestAttrsYSON(t *testing.T) {
 	attrs := pcommon.NewMap()
 
 	attrs.PutStr("str", "string")

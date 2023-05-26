@@ -11,8 +11,8 @@ import (
 
 // Span is a data structure for span.
 type Span struct {
-	TraceID       string  `yson:"trace_id"`
-	SpanID        uint64  `yson:"span_id"`
+	TraceID       TraceID `yson:"trace_id"`
+	SpanID        SpanID  `yson:"span_id"`
 	TraceState    string  `yson:"trace_state"`
 	ParentSpanID  *uint64 `yson:"parent_span_id"`
 	Name          string  `yson:"name"`
@@ -37,7 +37,7 @@ func (Span) Schema() schema.Schema {
 		UniqueKeys: true,
 		Columns: []schema.Column{
 			// FIXME(tdakkota): where is UUID?
-			{Name: "trace_id", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},
+			{Name: "trace_id", ComplexType: schema.TypeBytes, SortOrder: schema.SortAscending},
 			{Name: "span_id", ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
 			{Name: "trace_state", ComplexType: schema.TypeString},
 			{Name: "parent_span_id", ComplexType: schema.Optional{Item: schema.TypeUint64}},

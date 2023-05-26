@@ -6,15 +6,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
-
-	"github.com/google/uuid"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
@@ -185,19 +182,6 @@ func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ e
 	}, nil
 }
 
-type hexUUID uuid.UUID
-
-func (h hexUUID) String() string {
-	const hextable = "0123456789abcdef"
-	var sb strings.Builder
-	sb.Grow(32)
-	for _, c := range h {
-		sb.WriteByte(hextable[c>>4])
-		sb.WriteByte(hextable[c&0x0f])
-	}
-	return sb.String()
-}
-
 func ytToOTELSpan(span Span, s ptrace.Span) {
 	getSpanID := func(v uint64) (spanID [8]byte) {
 		binary.LittleEndian.PutUint64(spanID[:], v)
@@ -205,9 +189,8 @@ func ytToOTELSpan(span Span, s ptrace.Span) {
 	}
 
 	// FIXME(tdakkota): probably, we can just implement YSON (en/de)coder for UUID.
-	traceID := uuid.MustParse(span.TraceID)
-	s.SetTraceID(pcommon.TraceID(traceID))
-	s.SetSpanID(getSpanID(span.SpanID))
+	s.SetTraceID(pcommon.TraceID(span.TraceID))
+	s.SetSpanID(pcommon.SpanID(span.SpanID))
 	s.TraceState().FromRaw(span.TraceState)
 	if p := span.ParentSpanID; p != nil {
 		s.SetParentSpanID(getSpanID(*p))
@@ -234,7 +217,7 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		start = zap.Skip()
 		end   = zap.Skip()
 
-		query = fmt.Sprintf("* from [%s] where trace_id = %q", h.tables.spans, hexUUID(params.TraceID))
+		query = fmt.Sprintf("* from [%s] where trace_id = %q", h.tables.spans, params.TraceID[:])
 	)
 
 	if s, ok := params.Start.Get(); ok {

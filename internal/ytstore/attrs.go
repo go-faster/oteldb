@@ -95,16 +95,6 @@ func ysonToOTELMap(r *yson.Reader, kv pcommon.Map) error {
 }
 
 func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
-	consumeLiteral := func(typ yson.Type) error {
-		if err := ysonNext(r, yson.EventLiteral, false); err != nil {
-			return err
-		}
-		if got := r.Type(); got != typ {
-			return errors.Errorf("expected typ %s, got %s", typ, got)
-		}
-		return nil
-	}
-
 	if err := ysonNext(r, yson.EventBeginMap, true); err != nil {
 		return err
 	}
@@ -119,22 +109,22 @@ func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
 
 	switch key {
 	case "stringValue":
-		if err := consumeLiteral(yson.TypeString); err != nil {
+		if err := consumeYsonLiteral(r, yson.TypeString); err != nil {
 			return err
 		}
 		val.SetStr(r.String())
 	case "boolValue":
-		if err := consumeLiteral(yson.TypeBool); err != nil {
+		if err := consumeYsonLiteral(r, yson.TypeBool); err != nil {
 			return err
 		}
 		val.SetBool(r.Bool())
 	case "intValue":
-		if err := consumeLiteral(yson.TypeInt64); err != nil {
+		if err := consumeYsonLiteral(r, yson.TypeInt64); err != nil {
 			return err
 		}
 		val.SetInt(r.Int64())
 	case "doubleValue":
-		if err := consumeLiteral(yson.TypeFloat64); err != nil {
+		if err := consumeYsonLiteral(r, yson.TypeFloat64); err != nil {
 			return err
 		}
 		val.SetDouble(r.Float64())
@@ -164,7 +154,7 @@ func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
 
 		return ysonNext(r, yson.EventEndList, true)
 	case "bytesValue":
-		if err := consumeLiteral(yson.TypeString); err != nil {
+		if err := consumeYsonLiteral(r, yson.TypeString); err != nil {
 			return err
 		}
 		val.SetEmptyBytes().Append(r.Bytes()...)
@@ -172,6 +162,16 @@ func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
 		return errors.Errorf("unexpected field %q", key)
 	}
 	return ysonNext(r, yson.EventEndMap, true)
+}
+
+func consumeYsonLiteral(r *yson.Reader, typ yson.Type) error {
+	if err := ysonNext(r, yson.EventLiteral, false); err != nil {
+		return err
+	}
+	if got := r.Type(); got != typ {
+		return errors.Errorf("expected typ %s, got %s", typ, got)
+	}
+	return nil
 }
 
 func ysonNext(r *yson.Reader, expect yson.Event, attrs bool) error {
