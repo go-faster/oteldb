@@ -519,13 +519,13 @@ func (c *Client) sendSearchTags(ctx context.Context) (res *TagNames, err error) 
 // Querying traces by id.
 //
 // GET /api/traces/{traceID}
-func (c *Client) TraceByID(ctx context.Context, params TraceByIDParams) (TraceByID, error) {
+func (c *Client) TraceByID(ctx context.Context, params TraceByIDParams) (TraceByIDRes, error) {
 	res, err := c.sendTraceByID(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res TraceByID, err error) {
+func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res TraceByIDRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("traceByID"),
 	}

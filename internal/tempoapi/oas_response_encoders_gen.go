@@ -64,16 +64,28 @@ func encodeSearchTagsResponse(response *TagNames, w http.ResponseWriter, span tr
 	return nil
 }
 
-func encodeTraceByIDResponse(response TraceByID, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/protobuf")
-	w.WriteHeader(200)
-	span.SetStatus(codes.Ok, http.StatusText(200))
+func encodeTraceByIDResponse(response TraceByIDRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *TraceByID:
+		w.Header().Set("Content-Type", "application/protobuf")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
 
-	writer := w
-	if _, err := io.Copy(writer, response); err != nil {
-		return errors.Wrap(err, "write")
+		writer := w
+		if _, err := io.Copy(writer, response); err != nil {
+			return errors.Wrap(err, "write")
+		}
+		return nil
+
+	case *TraceByIDNotFound:
+		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
 	}
-	return nil
 }
 
 func encodeErrorResponse(response *ErrorStatusCode, w http.ResponseWriter, span trace.Span) error {

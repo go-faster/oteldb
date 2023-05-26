@@ -733,6 +733,13 @@ func (s TraceByID) Read(p []byte) (n int, err error) {
 	return s.Data.Read(p)
 }
 
+func (*TraceByID) traceByIDRes() {}
+
+// Ref: #/components/responses/TraceByIDNotFound
+type TraceByIDNotFound struct{}
+
+func (*TraceByIDNotFound) traceByIDRes() {}
+
 // Ref: #/components/schemas/TraceSearchMetadata
 type TraceSearchMetadata struct {
 	TraceID           string       `json:"traceID"`

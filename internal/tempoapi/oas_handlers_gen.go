@@ -518,7 +518,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
-	var response TraceByID
+	var response TraceByIDRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
@@ -545,7 +545,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 		type (
 			Request  = struct{}
 			Params   = TraceByIDParams
-			Response = TraceByID
+			Response = TraceByIDRes
 		)
 		response, err = middleware.HookMiddleware[
 			Request,

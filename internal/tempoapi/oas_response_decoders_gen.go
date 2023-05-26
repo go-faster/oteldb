@@ -347,7 +347,7 @@ func decodeSearchTagsResponse(resp *http.Response) (res *TagNames, _ error) {
 	return res, errors.Wrap(defRes, "error")
 }
 
-func decodeTraceByIDResponse(resp *http.Response) (res TraceByID, _ error) {
+func decodeTraceByIDResponse(resp *http.Response) (res TraceByIDRes, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -364,10 +364,13 @@ func decodeTraceByIDResponse(resp *http.Response) (res TraceByID, _ error) {
 			}
 
 			response := TraceByID{Data: bytes.NewReader(b)}
-			return response, nil
+			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
 		}
+	case 404:
+		// Code 404.
+		return &TraceByIDNotFound{}, nil
 	}
 	// Convenient error response.
 	defRes, err := func() (res *ErrorStatusCode, err error) {
