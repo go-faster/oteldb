@@ -9,7 +9,7 @@ require (
 	github.com/go-faster/sdk v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ogen-go/ogen v0.67.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	go.opentelemetry.io/collector v0.78.2
 	go.opentelemetry.io/collector/component v0.78.2
 	go.opentelemetry.io/collector/confmap v0.78.2
