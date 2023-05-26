@@ -49,25 +49,28 @@ func otelMapToYSON(w *yson.Writer, kv pcommon.Map) {
 }
 
 func otelValueToYSON(w *yson.Writer, attr pcommon.Value) {
-	w.BeginMap()
-	switch attr.Type() {
+	w.BeginList()
+	t := attr.Type()
+
+	w.Int64(int64(t))
+	switch t {
+	case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
+	default:
+		w.String(attr.AsString())
+	}
+
+	switch t {
 	case pcommon.ValueTypeStr:
-		w.MapKeyString("stringValue")
 		w.String(attr.Str())
 	case pcommon.ValueTypeBool:
-		w.MapKeyString("boolValue")
 		w.Bool(attr.Bool())
 	case pcommon.ValueTypeInt:
-		w.MapKeyString("intValue")
 		w.Int64(attr.Int())
 	case pcommon.ValueTypeDouble:
-		w.MapKeyString("doubleValue")
 		w.Float64(attr.Double())
 	case pcommon.ValueTypeMap:
-		w.MapKeyString("kvlistValue")
 		otelMapToYSON(w, attr.Map())
 	case pcommon.ValueTypeSlice:
-		w.MapKeyString("arrayValue")
 		w.BeginList()
 		s := attr.Slice()
 		for i := 0; i < s.Len(); i++ {
@@ -75,10 +78,9 @@ func otelValueToYSON(w *yson.Writer, attr pcommon.Value) {
 		}
 		w.EndList()
 	case pcommon.ValueTypeBytes:
-		w.MapKeyString("bytesValue")
 		w.Bytes(attr.Bytes().AsRaw())
 	}
-	w.EndMap()
+	w.EndList()
 }
 
 func ysonToOTELMap(r *yson.Reader, kv pcommon.Map) error {
@@ -106,44 +108,64 @@ func ysonToOTELMap(r *yson.Reader, kv pcommon.Map) error {
 }
 
 func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
-	if err := ysonNext(r, yson.EventBeginMap, true); err != nil {
+	if err := ysonNext(r, yson.EventBeginList, true); err != nil {
 		return err
 	}
 
-	switch ok, err := r.NextKey(); {
+	switch ok, err := r.NextListItem(); {
 	case err != nil:
 		return err
 	case !ok:
-		return errors.New("value has no key")
+		return errors.New("attr has no type")
 	}
-	key := r.String()
+	if err := consumeYsonLiteral(r, yson.TypeInt64); err != nil {
+		return err
+	}
+	t := pcommon.ValueType(r.Int64())
 
-	switch key {
-	case "stringValue":
+	switch ok, err := r.NextListItem(); {
+	case err != nil:
+		return err
+	case !ok:
+		return errors.New("attr has no stringified value")
+	}
+	// Just consume it, we don't need it anyway.
+	if _, err := r.NextRawValue(); err != nil {
+		return err
+	}
+
+	switch ok, err := r.NextListItem(); {
+	case err != nil:
+		return err
+	case !ok:
+		return errors.New("attr has no value")
+	}
+	switch t {
+	case pcommon.ValueTypeStr:
 		if err := consumeYsonLiteral(r, yson.TypeString); err != nil {
 			return err
 		}
 		val.SetStr(r.String())
-	case "boolValue":
+	case pcommon.ValueTypeBool:
 		if err := consumeYsonLiteral(r, yson.TypeBool); err != nil {
 			return err
 		}
 		val.SetBool(r.Bool())
-	case "intValue":
+	case pcommon.ValueTypeInt:
 		if err := consumeYsonLiteral(r, yson.TypeInt64); err != nil {
 			return err
 		}
 		val.SetInt(r.Int64())
-	case "doubleValue":
+	case pcommon.ValueTypeDouble:
 		if err := consumeYsonLiteral(r, yson.TypeFloat64); err != nil {
 			return err
 		}
 		val.SetDouble(r.Float64())
-	case "kvlistValue":
+	case pcommon.ValueTypeMap:
 		if err := ysonToOTELMap(r, val.SetEmptyMap()); err != nil {
 			return err
 		}
-	case "arrayValue":
+	case pcommon.ValueTypeSlice:
 		if err := ysonNext(r, yson.EventBeginList, true); err != nil {
 			return err
 		}
@@ -163,16 +185,18 @@ func ysonToOTELValue(r *yson.Reader, val pcommon.Value) error {
 			}
 		}
 
-		return ysonNext(r, yson.EventEndList, true)
-	case "bytesValue":
+		if err := ysonNext(r, yson.EventEndList, true); err != nil {
+			return err
+		}
+	case pcommon.ValueTypeBytes:
 		if err := consumeYsonLiteral(r, yson.TypeString); err != nil {
 			return err
 		}
 		val.SetEmptyBytes().Append(r.Bytes()...)
 	default:
-		return errors.Errorf("unexpected field %q", key)
+		return errors.Errorf("unexpected type %d", t)
 	}
-	return ysonNext(r, yson.EventEndMap, true)
+	return ysonNext(r, yson.EventEndList, true)
 }
 
 func consumeYsonLiteral(r *yson.Reader, typ yson.Type) error {
@@ -186,11 +210,36 @@ func consumeYsonLiteral(r *yson.Reader, typ yson.Type) error {
 }
 
 func ysonNext(r *yson.Reader, expect yson.Event, attrs bool) error {
+	ysonEventName := func(e yson.Event) string {
+		switch e {
+		case yson.EventBeginList:
+			return "EventBeginList"
+		case yson.EventEndList:
+			return "EventEndList"
+		case yson.EventBeginAttrs:
+			return "EventBeginAttrs"
+		case yson.EventEndAttrs:
+			return "EventEndAttrs"
+		case yson.EventBeginMap:
+			return "EventBeginMap"
+		case yson.EventEndMap:
+			return "EventEndMap"
+		case yson.EventLiteral:
+			return "EventLiteral"
+		case yson.EventKey:
+			return "EventKey"
+		case yson.EventEOF:
+			return "EventEOF"
+		default:
+			return "Unknown"
+		}
+	}
+
 	switch got, err := r.Next(attrs); {
 	case err != nil:
 		return err
 	case expect != got:
-		return errors.Errorf("expected event %v, got %v", expect, got)
+		return errors.Errorf("expected event %s, got %s", ysonEventName(expect), ysonEventName(got))
 	default:
 		return nil
 	}
