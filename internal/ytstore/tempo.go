@@ -38,7 +38,7 @@ var _ tempoapi.Handler = (*TempoAPI)(nil)
 // Echo request for testing, issued by Grafana.
 //
 // GET /api/echo
-func (h *TempoAPI) Echo(ctx context.Context) (tempoapi.EchoOK, error) {
+func (h *TempoAPI) Echo(_ context.Context) (tempoapi.EchoOK, error) {
 	return tempoapi.EchoOK{Data: strings.NewReader("echo")}, nil
 }
 
