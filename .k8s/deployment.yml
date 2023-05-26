@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: faster
+  name: oteldb
+  labels:
+    app: oteldb
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oteldb
+  template:
+    metadata:
+      labels:
+        app: oteldb
+        service.opentelemetry.io/name: go-faster.oteldb
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8090'
+    spec:
+      containers:
+        - name: oteldb
+          image: ghcr.io/go-faster/bot:main
+          ports:
+            - containerPort: 8090
+              protocol: TCP
+              name: metrics
+            - containerPort: 3200
+              protocol: TCP
+              name: tempo-http
+            - containerPort: 4317
+              protocol: TCP
+              name: otlp-grpc
+            - containerPort: 4318
+              protocol: TCP
+              name: otlp-http
+          resources:
+            requests:
+              cpu: 500m
+              memory: 256M
+            limits:
+              cpu: "3"
+              memory: 512M
+          env:
+            - name: GOMEMLIMIT
+              value: "512MiB"
+            - name: GOMAXPROCS
+              value: "2"
+            - name: OTEL_METRICS_EXPORTER
+              value: "prometheus"
+            - name: OTEL_EXPORTER_PROMETHEUS_PORT
+              value: "8090"
+            - name: OTEL_EXPORTER_PROMETHEUS_HOST
+              value: "0.0.0.0"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=go-faster.oteldb"
+            - name: OTEL_LOG_LEVEL
+              value: "DEBUG"
+            - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+              value: "grpc"
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: "http://localhost:4317"
+            - name: YT_PROXY
+              value: http-proxies.yt.svc.cluster.local
+            - name: YT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: oteldb
+                  key: YT_TOKEN
