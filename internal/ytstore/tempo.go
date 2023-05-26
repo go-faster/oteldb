@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/go-logfmt/logfmt"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
@@ -42,17 +45,262 @@ func (h *TempoAPI) Echo(_ context.Context) (tempoapi.EchoOK, error) {
 	return tempoapi.EchoOK{Data: strings.NewReader("echo")}, nil
 }
 
+func (h TempoAPI) querySpans(ctx context.Context, query string, cb func(Span) error) error {
+	r, err := h.yc.SelectRows(ctx, query, nil)
+	if err != nil {
+		return errors.Wrap(err, "select")
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+	for r.Next() {
+		var span Span
+		if err := r.Scan(&span); err != nil {
+			return errors.Wrap(err, "scan")
+		}
+		if err := cb(span); err != nil {
+			return errors.Wrap(err, "callback")
+		}
+	}
+	if err := r.Err(); err != nil {
+		return errors.Wrap(err, "iter err")
+	}
+	return nil
+}
+
+func ytToTempoSpan(span Span) (s tempoapi.TempoSpan) {
+	s = tempoapi.TempoSpan{
+		SpanID:            span.SpanID.Hex(),
+		Name:              span.Name,
+		StartTimeUnixNano: time.Unix(0, int64(span.Start)),
+		DurationNanos:     int64(span.End - span.Start),
+		Attributes:        &tempoapi.Attributes{},
+	}
+	ytToTempoAttrs(s.Attributes, span.Attrs)
+
+	return s
+}
+
+func ytToTempoAttrs(to *tempoapi.Attributes, from Attrs) {
+	var convertValue func(val pcommon.Value) (r tempoapi.AnyValue)
+	convertValue = func(val pcommon.Value) (r tempoapi.AnyValue) {
+		switch val.Type() {
+		case pcommon.ValueTypeStr:
+			r.SetStringValue(tempoapi.StringValue{StringValue: val.Str()})
+		case pcommon.ValueTypeBool:
+			r.SetBoolValue(tempoapi.BoolValue{BoolValue: val.Bool()})
+		case pcommon.ValueTypeInt:
+			r.SetIntValue(tempoapi.IntValue{IntValue: val.Int()})
+		case pcommon.ValueTypeDouble:
+			r.SetDoubleValue(tempoapi.DoubleValue{DoubleValue: val.Double()})
+		case pcommon.ValueTypeMap:
+			m := tempoapi.KvlistValue{}
+			val.Map().Range(func(k string, v pcommon.Value) bool {
+				m.KvlistValue = append(m.KvlistValue, tempoapi.KeyValue{
+					Key:   k,
+					Value: convertValue(v),
+				})
+				return true
+			})
+			r.SetKvlistValue(m)
+		case pcommon.ValueTypeSlice:
+			a := tempoapi.ArrayValue{}
+			ss := val.Slice()
+			for i := 0; i < ss.Len(); i++ {
+				v := ss.At(i)
+				a.ArrayValue = append(a.ArrayValue, convertValue(v))
+			}
+			r.SetArrayValue(a)
+		case pcommon.ValueTypeBytes:
+			r.SetBytesValue(tempoapi.BytesValue{BytesValue: val.Bytes().AsRaw()})
+		default:
+			r.Type = tempoapi.StringValueAnyValue
+		}
+		return r
+	}
+
+	pcommon.Map(from).Range(func(k string, v pcommon.Value) bool {
+		*to = append(*to, tempoapi.KeyValue{
+			Key:   k,
+			Value: convertValue(v),
+		})
+		return true
+	})
+}
+
+func fillTraceMetadataFromParentSpan(m *tempoapi.TraceSearchMetadata, span Span) {
+	ss := &m.SpanSet
+
+	m.RootTraceName = span.Name
+	if attr, ok := pcommon.Map(span.ResourceAttrs).Get("service.name"); ok {
+		m.RootServiceName = attr.AsString()
+	}
+	var (
+		start = time.Unix(0, int64(span.Start))
+		end   = time.Unix(0, int64(span.End))
+	)
+
+	m.StartTimeUnixNano = start
+	m.DurationMs = int(end.Sub(start).Milliseconds())
+	ytToTempoAttrs(ss.Attributes, span.ScopeAttrs)
+	ytToTempoAttrs(ss.Attributes, span.ResourceAttrs)
+}
+
+func (h *TempoAPI) searchTags(ctx context.Context, params tempoapi.SearchParams) (map[TraceID]tempoapi.TraceSearchMetadata, error) {
+	lg := zctx.From(ctx)
+
+	var query strings.Builder
+	fmt.Fprintf(&query, "* from [%s] where true", h.tables.spans)
+	if s, ok := params.Start.Get(); ok {
+		n := s.UnixNano()
+		fmt.Fprintf(&query, " and start >= %d", n)
+	}
+	if s, ok := params.End.Get(); ok {
+		n := s.UnixNano()
+		fmt.Fprintf(&query, " and end <= %d", n)
+	}
+	if d, ok := params.MinDuration.Get(); ok {
+		n := d.Nanoseconds()
+		fmt.Fprintf(&query, " and (end-start) => %d", n)
+	}
+	if d, ok := params.MaxDuration.Get(); ok {
+		n := d.Nanoseconds()
+		fmt.Fprintf(&query, " and (end-start) <= %d", n)
+	}
+	if tags, ok := params.Tags.Get(); ok {
+		d := logfmt.NewDecoder(strings.NewReader(tags))
+		for d.ScanRecord() {
+			for d.ScanKeyval() {
+				if string(d.Key()) == "name" {
+					fmt.Fprintf(&query, " and name = %q", d.Value())
+					continue
+				}
+
+				query.WriteString(" and (")
+				for i, column := range []string{
+					"attrs",
+					"scope_attrs",
+					"resource_attrs",
+				} {
+					if i != 0 {
+						query.WriteString(" or ")
+					}
+					yp := append([]byte{'/'}, d.Key()...)
+					yp = append(yp, "/1"...)
+					fmt.Fprintf(&query, "try_get_string(%s, %q) = %q", column, yp, d.Value())
+				}
+				query.WriteByte(')')
+			}
+		}
+		if err := d.Err(); err != nil {
+			return nil, errors.Wrap(err, "parse tags")
+		}
+	}
+	fmt.Fprintf(&query, " limit %d", params.Limit.Or(20))
+
+	lg.Debug("Search traces",
+		zap.Stringer("query", &query),
+	)
+	r, err := h.yc.SelectRows(ctx, query.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+
+	metadatas := map[TraceID]tempoapi.TraceSearchMetadata{}
+	for r.Next() {
+		var span Span
+		if err := r.Scan(&span); err != nil {
+			return nil, err
+		}
+		traceID := span.TraceID
+
+		m, ok := metadatas[traceID]
+		if !ok {
+			m = tempoapi.TraceSearchMetadata{
+				TraceID: traceID.Hex(),
+			}
+		}
+		ss := &m.SpanSet
+		if attrs := ss.Attributes; attrs == nil {
+			ss.Attributes = new(tempoapi.Attributes)
+		}
+
+		if span.ParentSpanID.IsEmpty() {
+			fillTraceMetadataFromParentSpan(&m, span)
+		}
+		ss.Spans = append(ss.Spans, ytToTempoSpan(span))
+
+		metadatas[traceID] = m
+	}
+	if err := r.Err(); err != nil {
+		return nil, err
+	}
+
+	return metadatas, nil
+}
+
+func (h *TempoAPI) queryParentSpans(ctx context.Context, metadatas map[TraceID]tempoapi.TraceSearchMetadata) error {
+	traces := map[TraceID]struct{}{}
+
+	for id, m := range metadatas {
+		if m.StartTimeUnixNano.IsZero() {
+			traces[id] = struct{}{}
+		}
+	}
+	if len(traces) == 0 {
+		return nil
+	}
+
+	var query strings.Builder
+	fmt.Fprintf(&query, "* from [%s] where is_null(parent_span_id) and trace_id in (", h.tables.spans)
+	n := 0
+	for id := range traces {
+		if n != 0 {
+			query.WriteByte(',')
+		}
+		fmt.Fprintf(&query, "%q", id)
+		n++
+	}
+	query.WriteByte(')')
+
+	zctx.From(ctx).Debug("Query missing parent spans",
+		zap.Stringer("query", &query),
+		zap.Int("count", len(traces)),
+	)
+
+	return h.querySpans(ctx, query.String(), func(span Span) error {
+		traceID := span.TraceID
+		m := metadatas[traceID]
+		fillTraceMetadataFromParentSpan(&m, span)
+		metadatas[traceID] = m
+
+		return nil
+	})
+}
+
 // Search implements search operation.
 // Execute TraceQL query.
 //
 // GET /api/search
-func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (*tempoapi.Traces, error) {
-	lg := zctx.From(ctx)
-	lg.Debug("Search traces",
+func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (resp *tempoapi.Traces, _ error) {
+	ctx = zctx.With(ctx,
 		zap.String("q", params.Q.Value),
 		zap.String("tags", params.Tags.Value),
 	)
-	return &tempoapi.Traces{}, nil
+
+	metadatas, err := h.searchTags(ctx, params)
+	if err != nil {
+		return resp, errors.Wrap(err, "search tags")
+	}
+	if err := h.queryParentSpans(ctx, metadatas); err != nil {
+		return resp, errors.Wrap(err, "query missing parent spans")
+	}
+	return &tempoapi.Traces{
+		Traces: maps.Values(metadatas),
+	}, nil
 }
 
 // SearchTagValues implements search_tag_values operation.
@@ -238,14 +486,6 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		end,
 	)
 
-	r, err := h.yc.SelectRows(ctx, query, nil)
-	if err != nil {
-		return resp, err
-	}
-	defer func() {
-		_ = r.Close()
-	}()
-
 	type spanKey struct {
 		batchID      string
 		scopeName    string
@@ -286,15 +526,11 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		return ss
 	}
 
-	for r.Next() {
-		var span Span
-		if err := r.Scan(&span); err != nil {
-			return resp, err
-		}
+	if err := h.querySpans(ctx, query, func(span Span) error {
 		s := getSpanSlice(span).AppendEmpty()
 		ytToOTELSpan(span, s)
-	}
-	if err := r.Err(); err != nil {
+		return nil
+	}); err != nil {
 		return resp, err
 	}
 
