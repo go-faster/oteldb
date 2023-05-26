@@ -3,7 +3,6 @@ package ytstore
 
 import (
 	"context"
-	"encoding/binary"
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -38,16 +37,12 @@ func otelToYTSpan(
 	scope pcommon.InstrumentationScope,
 	span ptrace.Span,
 ) (s Span) {
-	getSpanID := func(arr pcommon.SpanID) uint64 {
-		return binary.LittleEndian.Uint64(arr[:])
-	}
-
 	status := span.Status()
 	s = Span{
 		TraceID:       TraceID(span.TraceID()),
 		SpanID:        SpanID(span.SpanID()),
 		TraceState:    span.TraceState().AsRaw(),
-		ParentSpanID:  nil,
+		ParentSpanID:  SpanID(span.ParentSpanID()),
 		Name:          span.Name(),
 		Kind:          int32(span.Kind()),
 		Start:         uint64(span.StartTimestamp()),
@@ -60,10 +55,6 @@ func otelToYTSpan(
 		ScopeName:     scope.Name(),
 		ScopeVersion:  scope.Version(),
 		ScopeAttrs:    Attrs(scope.Attributes()),
-	}
-	if parent := span.ParentSpanID(); !parent.IsEmpty() {
-		v := getSpanID(parent)
-		s.ParentSpanID = &v
 	}
 
 	return s

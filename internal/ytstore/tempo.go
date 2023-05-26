@@ -3,7 +3,6 @@ package ytstore
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"net/http"
 
@@ -183,17 +182,12 @@ func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ e
 }
 
 func ytToOTELSpan(span Span, s ptrace.Span) {
-	getSpanID := func(v uint64) (spanID [8]byte) {
-		binary.LittleEndian.PutUint64(spanID[:], v)
-		return spanID
-	}
-
 	// FIXME(tdakkota): probably, we can just implement YSON (en/de)coder for UUID.
 	s.SetTraceID(pcommon.TraceID(span.TraceID))
 	s.SetSpanID(pcommon.SpanID(span.SpanID))
 	s.TraceState().FromRaw(span.TraceState)
-	if p := span.ParentSpanID; p != nil {
-		s.SetParentSpanID(getSpanID(*p))
+	if p := span.ParentSpanID; !p.IsEmpty() {
+		s.SetParentSpanID(pcommon.SpanID(p))
 	}
 	s.SetName(span.Name)
 	s.SetKind(ptrace.SpanKind(span.Kind))

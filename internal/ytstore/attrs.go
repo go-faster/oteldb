@@ -1,9 +1,10 @@
 package ytstore
 
 import (
-	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.ytsaurus.tech/yt/go/yson"
+
+	"github.com/go-faster/errors"
 )
 
 // Attrs is a YSON wrapper for attributes.

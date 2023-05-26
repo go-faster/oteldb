@@ -3,10 +3,11 @@ package ytstore
 import (
 	"context"
 
-	"github.com/go-faster/errors"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/schema"
 	"go.ytsaurus.tech/yt/go/ypath"
+
+	"github.com/go-faster/errors"
 )
 
 // Span is a data structure for span.
@@ -14,7 +15,7 @@ type Span struct {
 	TraceID       TraceID `yson:"trace_id"`
 	SpanID        SpanID  `yson:"span_id"`
 	TraceState    string  `yson:"trace_state"`
-	ParentSpanID  *uint64 `yson:"parent_span_id"`
+	ParentSpanID  SpanID  `yson:"parent_span_id"`
 	Name          string  `yson:"name"`
 	Kind          int32   `yson:"kind"`
 	Start         uint64  `yson:"start"`

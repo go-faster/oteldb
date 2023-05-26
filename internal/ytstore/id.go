@@ -4,8 +4,10 @@ import (
 	"encoding/binary"
 	"strings"
 
-	"github.com/go-faster/errors"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.ytsaurus.tech/yt/go/yson"
+
+	"github.com/go-faster/errors"
 )
 
 // TraceID is OpenTelemetry trace ID.
@@ -58,6 +60,11 @@ var (
 	_ yson.StreamUnmarshaler = (*SpanID)(nil)
 )
 
+// IsEmpty returns true if span ID is empty.
+func (id SpanID) IsEmpty() bool {
+	return pcommon.SpanID(id).IsEmpty()
+}
+
 // Hex returns a hex representation of SpanID.
 func (id SpanID) Hex() string {
 	const hextable = "0123456789abcdef"
@@ -72,16 +79,29 @@ func (id SpanID) Hex() string {
 
 // MarshalYSON implemenets yson.StreamMarshaler.
 func (id SpanID) MarshalYSON(w *yson.Writer) error {
-	w.Uint64(binary.LittleEndian.Uint64(id[:]))
+	if id.IsEmpty() {
+		w.Entity()
+	} else {
+		w.Uint64(binary.LittleEndian.Uint64(id[:]))
+	}
 	return nil
 }
 
 // UnmarshalYSON implemenets yson.StreamUnmarshaler.
 func (id *SpanID) UnmarshalYSON(r *yson.Reader) error {
-	if err := consumeYsonLiteral(r, yson.TypeUint64); err != nil {
+	if err := ysonNext(r, yson.EventLiteral, false); err != nil {
 		return err
 	}
-	v := r.Uint64()
-	binary.LittleEndian.PutUint64(id[:], v)
-	return nil
+	switch got := r.Type(); got {
+	case yson.TypeEntity:
+		// It's null
+		*id = SpanID{}
+		return nil
+	case yson.TypeUint64:
+		v := r.Uint64()
+		binary.LittleEndian.PutUint64(id[:], v)
+		return nil
+	default:
+		return errors.Errorf("expected %s or %s, got %s", yson.TypeEntity, yson.TypeUint64, got)
+	}
 }

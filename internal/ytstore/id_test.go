@@ -1,6 +1,7 @@
 package ytstore
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -34,15 +35,26 @@ var testSpanID = SpanID{
 }
 
 func TestSpanIDYSON(t *testing.T) {
-	id := testSpanID
+	tests := []struct {
+		ID SpanID
+	}{
+		{testSpanID},
+		{SpanID{}},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			id := tt.ID
 
-	data, err := yson.Marshal(id)
-	require.NoError(t, err)
+			data, err := yson.Marshal(id)
+			require.NoError(t, err)
 
-	var id2 SpanID
-	require.NoError(t, yson.Unmarshal(data, &id2))
+			var id2 SpanID
+			require.NoError(t, yson.Unmarshal(data, &id2))
 
-	require.Equal(t, id, id2)
+			require.Equal(t, id, id2)
+		})
+	}
 }
 
 func TestSpanID_Hex(t *testing.T) {
