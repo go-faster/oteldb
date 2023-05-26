@@ -199,6 +199,13 @@ components:
             $ref: "#/components/schemas/TraceSearchMetadata"
     TraceSearchMetadata:
       type: object
+      required:
+        - traceID
+        - rootServiceName
+        - rootTraceName
+        - startTimeUnixNano
+        - durationMs
+        - spanSet
       properties:
         traceID:
           type: string
@@ -215,6 +222,8 @@ components:
           $ref: "#/components/schemas/TempoSpanSet"
     TempoSpanSet:
       type: object
+      required:
+        - spans
       properties:
         spans:
           type: array
@@ -226,6 +235,11 @@ components:
           $ref: "#/components/schemas/Attributes"
     TempoSpan:
       type: object
+      required:
+        - spanID
+        - name
+        - startTimeUnixNano
+        - durationNanos
       properties:
         spanID:
           type: string
