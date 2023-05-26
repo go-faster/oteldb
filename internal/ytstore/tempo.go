@@ -199,7 +199,7 @@ func ytToOTELSpan(span Span, s ptrace.Span) {
 	s.SetKind(ptrace.SpanKind(span.Kind))
 	s.SetStartTimestamp(pcommon.Timestamp(span.Start))
 	s.SetEndTimestamp(pcommon.Timestamp(span.End))
-	pcommon.Map(span.Attrs).CopyTo(s.Attributes())
+	span.Attrs.CopyTo(s.Attributes())
 
 	status := s.Status()
 	status.SetCode(ptrace.StatusCode(span.StatusCode))
@@ -271,13 +271,13 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 			resSpans[s.BatchID] = resSpan
 		}
 		res := resSpan.Resource()
-		pcommon.Map(s.ResourceAttrs).CopyTo(res.Attributes())
+		s.ResourceAttrs.CopyTo(res.Attributes())
 
 		scopeSpan := resSpan.ScopeSpans().AppendEmpty()
 		scope := scopeSpan.Scope()
 		scope.SetName(s.ScopeName)
 		scope.SetVersion(s.ScopeVersion)
-		pcommon.Map(s.ScopeAttrs).CopyTo(scope.Attributes())
+		s.ScopeAttrs.CopyTo(scope.Attributes())
 
 		ss = scopeSpan.Spans()
 		scopeSpans[k] = ss

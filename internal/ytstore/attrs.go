@@ -16,8 +16,18 @@ var (
 
 // MarshalYSON implemenets yson.StreamMarshaler.
 func (m Attrs) MarshalYSON(w *yson.Writer) error {
-	otelMapToYSON(w, pcommon.Map(m))
+	otelMapToYSON(w, m.AsMap())
 	return nil
+}
+
+// AsMap returns Attrs as pcommon.Map.
+func (m Attrs) AsMap() pcommon.Map {
+	return pcommon.Map(m)
+}
+
+// CopyTo copies all attributes from m to target.
+func (m Attrs) CopyTo(target pcommon.Map) {
+	m.AsMap().CopyTo(target)
 }
 
 // UnmarshalYSON implemenets yson.StreamUnmarshaler.
