@@ -41,6 +41,7 @@ services:
       - OTEL_METRICS_EXPORTER=prometheus
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
     ports:
       # - "14268:14268" # jaeger ingest
       - "3200:3200"   # tempo REST API
