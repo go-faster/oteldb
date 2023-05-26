@@ -44,7 +44,7 @@ var _ tempoapi.Handler = (*TempoAPI)(nil)
 // GET /api/search
 func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (*tempoapi.Traces, error) {
 	lg := zctx.From(ctx)
-	lg.Info("Search traces",
+	lg.Debug("Search traces",
 		zap.String("q", params.Q.Value),
 		zap.String("tags", params.Tags.Value),
 	)
@@ -79,7 +79,7 @@ func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTa
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Info("Got tag values",
+	lg.Debug("Got tag values",
 		zap.String("tag_name", params.TagName),
 		zap.Int("count", len(values)),
 	)
@@ -140,7 +140,7 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Info("Got tag types and values",
+	lg.Debug("Got tag types and values",
 		zap.String("tag_name", params.TagName),
 		zap.Int("count", len(values)),
 	)
@@ -178,7 +178,7 @@ func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ e
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Info("Got tag names", zap.Int("count", len(names)))
+	lg.Debug("Got tag names", zap.Int("count", len(names)))
 
 	return &tempoapi.TagNames{
 		TagNames: names,
@@ -312,7 +312,7 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Info("Got trace by ID", zap.Int("span_count", traces.SpanCount()))
+	lg.Debug("Got trace by ID", zap.Int("span_count", traces.SpanCount()))
 
 	m := ptrace.ProtoMarshaler{}
 	data, err := m.MarshalTraces(traces)
