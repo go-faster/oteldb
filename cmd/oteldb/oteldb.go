@@ -56,7 +56,7 @@ func setupTempo(
 func main() {
 	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		yc, err := ythttp.NewClient(&yt.Config{
-			Logger: &ytzap.Logger{L: zctx.From(ctx)},
+			Logger: &ytzap.Logger{L: lg.Named("yc")},
 		})
 		if err != nil {
 			return errors.Wrap(err, "yt")
