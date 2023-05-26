@@ -211,7 +211,7 @@ func ytToOTELSpan(span Span, s ptrace.Span) {
 // Querying traces by id.
 //
 // GET /api/traces/{traceID}
-func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParams) (resp tempoapi.TraceByID, _ error) {
+func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParams) (resp tempoapi.TraceByIDRes, _ error) {
 	lg := zctx.From(ctx)
 	var (
 		start = zap.Skip()
@@ -295,14 +295,19 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 	if err := r.Err(); err != nil {
 		return resp, err
 	}
-	lg.Debug("Got trace by ID", zap.Int("span_count", traces.SpanCount()))
+
+	spanCount := traces.SpanCount()
+	lg.Debug("Got trace by ID", zap.Int("span_count", spanCount))
+	if spanCount < 1 {
+		return &tempoapi.TraceByIDNotFound{}, nil
+	}
 
 	m := ptrace.ProtoMarshaler{}
 	data, err := m.MarshalTraces(traces)
 	if err != nil {
 		return resp, errors.Wrap(err, "marshal traces")
 	}
-	return tempoapi.TraceByID{Data: bytes.NewReader(data)}, nil
+	return &tempoapi.TraceByID{Data: bytes.NewReader(data)}, nil
 }
 
 // NewError creates *ErrorStatusCode from error returned by handler.
