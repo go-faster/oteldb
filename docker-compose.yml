@@ -37,6 +37,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - YT_PROXY=ytbackend:80
+      - OTEL_LOG_LEVEL=debug
       - METRICS_ADDR=:3201
       - OTEL_METRICS_EXPORTER=prometheus
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
