@@ -4,15 +4,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.ytsaurus.tech/yt/go/yson"
 )
 
-func TestTraceIDYSON(t *testing.T) {
-	id := TraceID{
-		10, 20, 30, 40, 50, 60, 70, 80,
-		80, 70, 60, 50, 40, 30, 20, 10,
-	}
+var testTraceID = TraceID{
+	10, 20, 30, 40, 50, 60, 70, 80,
+	80, 70, 60, 50, 40, 30, 20, 10,
+}
 
+func TestTraceIDYSON(t *testing.T) {
+	id := testTraceID
 	data, err := yson.Marshal(id)
 	require.NoError(t, err)
 
@@ -22,8 +24,17 @@ func TestTraceIDYSON(t *testing.T) {
 	require.Equal(t, id, id2)
 }
 
+func TestTraceID_Hex(t *testing.T) {
+	id := testTraceID
+	require.Equal(t, id.Hex(), pcommon.TraceID(id[:]).String())
+}
+
+var testSpanID = SpanID{
+	10, 20, 30, 40, 50, 60, 70, 80,
+}
+
 func TestSpanIDYSON(t *testing.T) {
-	id := SpanID{10, 20, 30, 40, 50, 60, 70, 80}
+	id := testSpanID
 
 	data, err := yson.Marshal(id)
 	require.NoError(t, err)
@@ -32,4 +43,9 @@ func TestSpanIDYSON(t *testing.T) {
 	require.NoError(t, yson.Unmarshal(data, &id2))
 
 	require.Equal(t, id, id2)
+}
+
+func TestSpanID_Hex(t *testing.T) {
+	id := testSpanID
+	require.Equal(t, id.Hex(), pcommon.SpanID(id[:]).String())
 }

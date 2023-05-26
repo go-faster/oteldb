@@ -2,6 +2,7 @@ package ytstore
 
 import (
 	"encoding/binary"
+	"strings"
 
 	"github.com/go-faster/errors"
 	"go.ytsaurus.tech/yt/go/yson"
@@ -14,6 +15,18 @@ var (
 	_ yson.StreamMarshaler   = TraceID{}
 	_ yson.StreamUnmarshaler = (*TraceID)(nil)
 )
+
+// Hex returns a hex representation of TraceID.
+func (id TraceID) Hex() string {
+	const hextable = "0123456789abcdef"
+	var sb strings.Builder
+	sb.Grow(len(id) * 2)
+	for _, c := range id {
+		sb.WriteByte(hextable[c>>4])
+		sb.WriteByte(hextable[c&0x0f])
+	}
+	return sb.String()
+}
 
 // MarshalYSON implemenets yson.StreamMarshaler.
 func (id TraceID) MarshalYSON(w *yson.Writer) error {
@@ -44,6 +57,18 @@ var (
 	_ yson.StreamMarshaler   = SpanID{}
 	_ yson.StreamUnmarshaler = (*SpanID)(nil)
 )
+
+// Hex returns a hex representation of SpanID.
+func (id SpanID) Hex() string {
+	const hextable = "0123456789abcdef"
+	var sb strings.Builder
+	sb.Grow(len(id) * 2)
+	for _, c := range id {
+		sb.WriteByte(hextable[c>>4])
+		sb.WriteByte(hextable[c&0x0f])
+	}
+	return sb.String()
+}
 
 // MarshalYSON implemenets yson.StreamMarshaler.
 func (id SpanID) MarshalYSON(w *yson.Writer) error {
