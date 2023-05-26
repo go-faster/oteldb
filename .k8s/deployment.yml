@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: oteldb
-          image: ghcr.io/go-faster/bot:main
+          image: ghcr.io/go-faster/oteldb:main
           ports:
             - containerPort: 8090
               protocol: TCP
