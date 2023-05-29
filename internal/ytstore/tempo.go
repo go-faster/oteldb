@@ -142,6 +142,9 @@ func fillTraceMetadataFromParentSpan(m *tempoapi.TraceSearchMetadata, span Span)
 
 	m.StartTimeUnixNano = start
 	m.DurationMs = int(end.Sub(start).Milliseconds())
+	if ss.Attributes == nil {
+		ss.Attributes = new(tempoapi.Attributes)
+	}
 	ytToTempoAttrs(ss.Attributes, span.ScopeAttrs)
 	ytToTempoAttrs(ss.Attributes, span.ResourceAttrs)
 }
@@ -224,9 +227,6 @@ func (h *TempoAPI) searchTags(ctx context.Context, params tempoapi.SearchParams)
 			}
 		}
 		ss := &m.SpanSet
-		if attrs := ss.Attributes; attrs == nil {
-			ss.Attributes = new(tempoapi.Attributes)
-		}
 
 		if span.ParentSpanID.IsEmpty() {
 			fillTraceMetadataFromParentSpan(&m, span)
