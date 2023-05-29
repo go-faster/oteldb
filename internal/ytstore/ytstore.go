@@ -109,7 +109,11 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	if err := bw.Commit(); err != nil {
 		return errors.Wrap(err, "commit")
 	}
-	if err := s.yc.InsertRowBatch(ctx, s.tables.spans, bw.Batch(), &yt.InsertRowsOptions{}); err != nil {
+
+	update := true
+	if err := s.yc.InsertRowBatch(ctx, s.tables.spans, bw.Batch(), &yt.InsertRowsOptions{
+		Update: &update,
+	}); err != nil {
 		return errors.Wrap(err, "insert spans")
 	}
 
