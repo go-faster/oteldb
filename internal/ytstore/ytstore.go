@@ -123,7 +123,7 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 		return errors.Wrap(err, "commit")
 	}
 	if err := s.yc.InsertRowBatch(ctx, s.tables.tags, bw.Batch(), &yt.InsertRowsOptions{}); err != nil {
-		return errors.Wrap(err, "insert spans")
+		return errors.Wrap(err, "insert tags")
 	}
 	return nil
 }
