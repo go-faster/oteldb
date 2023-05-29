@@ -164,7 +164,7 @@ func (h *TempoAPI) searchTags(ctx context.Context, params tempoapi.SearchParams)
 	}
 	if d, ok := params.MinDuration.Get(); ok {
 		n := d.Nanoseconds()
-		fmt.Fprintf(&query, " and (end-start) => %d", n)
+		fmt.Fprintf(&query, " and (end-start) >= %d", n)
 	}
 	if d, ok := params.MaxDuration.Get(); ok {
 		n := d.Nanoseconds()
