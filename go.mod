@@ -26,7 +26,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
 	go.ytsaurus.tech/library/go/core/log v0.0.2
-	go.ytsaurus.tech/yt/go v0.0.4
+	go.ytsaurus.tech/yt/go v0.0.5
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/sync v0.2.0
 )
