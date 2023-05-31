@@ -31,35 +31,6 @@ func NewStore(yc yt.Client, prefix ypath.Path) *Store {
 	}
 }
 
-func otelToYTSpan(
-	batchID string,
-	res pcommon.Resource,
-	scope pcommon.InstrumentationScope,
-	span ptrace.Span,
-) (s Span) {
-	status := span.Status()
-	s = Span{
-		TraceID:       TraceID(span.TraceID()),
-		SpanID:        SpanID(span.SpanID()),
-		TraceState:    span.TraceState().AsRaw(),
-		ParentSpanID:  SpanID(span.ParentSpanID()),
-		Name:          span.Name(),
-		Kind:          int32(span.Kind()),
-		Start:         uint64(span.StartTimestamp()),
-		End:           uint64(span.EndTimestamp()),
-		Attrs:         Attrs(span.Attributes()),
-		StatusCode:    int32(status.Code()),
-		StatusMessage: status.Message(),
-		BatchID:       batchID,
-		ResourceAttrs: Attrs(res.Attributes()),
-		ScopeName:     scope.Name(),
-		ScopeVersion:  scope.Version(),
-		ScopeAttrs:    Attrs(scope.Attributes()),
-	}
-
-	return s
-}
-
 // ConsumeTraces implements otelreceiver.Handler.
 func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	tags := map[Tag]struct{}{}
@@ -97,7 +68,7 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 				// Add span name as well. For some reason, Grafana is looking for it too.
 				addName(span.Name())
 
-				s := otelToYTSpan(batchID, res, scope, span)
+				s := NewSpanFromOTEL(batchID, res, scope, span)
 				if err := bw.Write(s); err != nil {
 					return errors.Wrap(err, "write span")
 				}

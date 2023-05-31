@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/go-logfmt/logfmt"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -68,87 +67,6 @@ func (h TempoAPI) querySpans(ctx context.Context, query string, cb func(Span) er
 	return nil
 }
 
-func ytToTempoSpan(span Span) (s tempoapi.TempoSpan) {
-	s = tempoapi.TempoSpan{
-		SpanID:            span.SpanID.Hex(),
-		Name:              span.Name,
-		StartTimeUnixNano: time.Unix(0, int64(span.Start)),
-		DurationNanos:     int64(span.End - span.Start),
-		Attributes:        &tempoapi.Attributes{},
-	}
-	ytToTempoAttrs(s.Attributes, span.Attrs)
-
-	return s
-}
-
-func ytToTempoAttrs(to *tempoapi.Attributes, from Attrs) {
-	var convertValue func(val pcommon.Value) (r tempoapi.AnyValue)
-	convertValue = func(val pcommon.Value) (r tempoapi.AnyValue) {
-		switch val.Type() {
-		case pcommon.ValueTypeStr:
-			r.SetStringValue(tempoapi.StringValue{StringValue: val.Str()})
-		case pcommon.ValueTypeBool:
-			r.SetBoolValue(tempoapi.BoolValue{BoolValue: val.Bool()})
-		case pcommon.ValueTypeInt:
-			r.SetIntValue(tempoapi.IntValue{IntValue: val.Int()})
-		case pcommon.ValueTypeDouble:
-			r.SetDoubleValue(tempoapi.DoubleValue{DoubleValue: val.Double()})
-		case pcommon.ValueTypeMap:
-			m := tempoapi.KvlistValue{}
-			val.Map().Range(func(k string, v pcommon.Value) bool {
-				m.KvlistValue = append(m.KvlistValue, tempoapi.KeyValue{
-					Key:   k,
-					Value: convertValue(v),
-				})
-				return true
-			})
-			r.SetKvlistValue(m)
-		case pcommon.ValueTypeSlice:
-			a := tempoapi.ArrayValue{}
-			ss := val.Slice()
-			for i := 0; i < ss.Len(); i++ {
-				v := ss.At(i)
-				a.ArrayValue = append(a.ArrayValue, convertValue(v))
-			}
-			r.SetArrayValue(a)
-		case pcommon.ValueTypeBytes:
-			r.SetBytesValue(tempoapi.BytesValue{BytesValue: val.Bytes().AsRaw()})
-		default:
-			r.Type = tempoapi.StringValueAnyValue
-		}
-		return r
-	}
-
-	pcommon.Map(from).Range(func(k string, v pcommon.Value) bool {
-		*to = append(*to, tempoapi.KeyValue{
-			Key:   k,
-			Value: convertValue(v),
-		})
-		return true
-	})
-}
-
-func fillTraceMetadataFromParentSpan(m *tempoapi.TraceSearchMetadata, span Span) {
-	ss := &m.SpanSet
-
-	m.RootTraceName = span.Name
-	if attr, ok := pcommon.Map(span.ResourceAttrs).Get("service.name"); ok {
-		m.RootServiceName = attr.AsString()
-	}
-	var (
-		start = time.Unix(0, int64(span.Start))
-		end   = time.Unix(0, int64(span.End))
-	)
-
-	m.StartTimeUnixNano = start
-	m.DurationMs = int(end.Sub(start).Milliseconds())
-	if ss.Attributes == nil {
-		ss.Attributes = new(tempoapi.Attributes)
-	}
-	ytToTempoAttrs(ss.Attributes, span.ScopeAttrs)
-	ytToTempoAttrs(ss.Attributes, span.ResourceAttrs)
-}
-
 func (h *TempoAPI) searchTags(ctx context.Context, params tempoapi.SearchParams) (map[TraceID]tempoapi.TraceSearchMetadata, error) {
 	lg := zctx.From(ctx)
 
@@ -204,42 +122,11 @@ func (h *TempoAPI) searchTags(ctx context.Context, params tempoapi.SearchParams)
 	lg.Debug("Search traces",
 		zap.Stringer("query", &query),
 	)
-	r, err := h.yc.SelectRows(ctx, query.String(), nil)
-	if err != nil {
+	var c metadataCollector
+	if err := h.querySpans(ctx, query.String(), c.AddSpan); err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = r.Close()
-	}()
-
-	metadatas := map[TraceID]tempoapi.TraceSearchMetadata{}
-	for r.Next() {
-		var span Span
-		if err := r.Scan(&span); err != nil {
-			return nil, err
-		}
-		traceID := span.TraceID
-
-		m, ok := metadatas[traceID]
-		if !ok {
-			m = tempoapi.TraceSearchMetadata{
-				TraceID: traceID.Hex(),
-			}
-		}
-		ss := &m.SpanSet
-
-		if span.ParentSpanID.IsEmpty() {
-			fillTraceMetadataFromParentSpan(&m, span)
-		}
-		ss.Spans = append(ss.Spans, ytToTempoSpan(span))
-
-		metadatas[traceID] = m
-	}
-	if err := r.Err(); err != nil {
-		return nil, err
-	}
-
-	return metadatas, nil
+	return c.Result(), nil
 }
 
 func (h *TempoAPI) queryParentSpans(ctx context.Context, metadatas map[TraceID]tempoapi.TraceSearchMetadata) error {
@@ -274,9 +161,8 @@ func (h *TempoAPI) queryParentSpans(ctx context.Context, metadatas map[TraceID]t
 	return h.querySpans(ctx, query.String(), func(span Span) error {
 		traceID := span.TraceID
 		m := metadatas[traceID]
-		fillTraceMetadataFromParentSpan(&m, span)
+		span.FillTraceMetadata(&m)
 		metadatas[traceID] = m
-
 		return nil
 	})
 }
@@ -437,25 +323,6 @@ func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ e
 	}, nil
 }
 
-func ytToOTELSpan(span Span, s ptrace.Span) {
-	// FIXME(tdakkota): probably, we can just implement YSON (en/de)coder for UUID.
-	s.SetTraceID(pcommon.TraceID(span.TraceID))
-	s.SetSpanID(pcommon.SpanID(span.SpanID))
-	s.TraceState().FromRaw(span.TraceState)
-	if p := span.ParentSpanID; !p.IsEmpty() {
-		s.SetParentSpanID(pcommon.SpanID(p))
-	}
-	s.SetName(span.Name)
-	s.SetKind(ptrace.SpanKind(span.Kind))
-	s.SetStartTimestamp(pcommon.Timestamp(span.Start))
-	s.SetEndTimestamp(pcommon.Timestamp(span.End))
-	span.Attrs.CopyTo(s.Attributes())
-
-	status := s.Status()
-	status.SetCode(ptrace.StatusCode(span.StatusCode))
-	status.SetMessage(span.StatusMessage)
-}
-
 // TraceByID implements traceByID operation.
 //
 // Querying traces by id.
@@ -486,55 +353,13 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 		end,
 	)
 
-	type spanKey struct {
-		batchID      string
-		scopeName    string
-		scopeVersion string
-	}
-
-	traces := ptrace.NewTraces()
-	resSpans := map[string]ptrace.ResourceSpans{}
-	scopeSpans := map[spanKey]ptrace.SpanSlice{}
-	getSpanSlice := func(s Span) ptrace.SpanSlice {
-		k := spanKey{
-			batchID:      s.BatchID,
-			scopeName:    s.ScopeName,
-			scopeVersion: s.ScopeVersion,
-		}
-
-		ss, ok := scopeSpans[k]
-		if ok {
-			return ss
-		}
-
-		resSpan, ok := resSpans[s.BatchID]
-		if !ok {
-			resSpan = traces.ResourceSpans().AppendEmpty()
-			resSpans[s.BatchID] = resSpan
-		}
-		res := resSpan.Resource()
-		s.ResourceAttrs.CopyTo(res.Attributes())
-
-		scopeSpan := resSpan.ScopeSpans().AppendEmpty()
-		scope := scopeSpan.Scope()
-		scope.SetName(s.ScopeName)
-		scope.SetVersion(s.ScopeVersion)
-		s.ScopeAttrs.CopyTo(scope.Attributes())
-
-		ss = scopeSpan.Spans()
-		scopeSpans[k] = ss
-		return ss
-	}
-
-	if err := h.querySpans(ctx, query, func(span Span) error {
-		s := getSpanSlice(span).AppendEmpty()
-		ytToOTELSpan(span, s)
-		return nil
-	}); err != nil {
+	var c batchCollector
+	if err := h.querySpans(ctx, query, c.AddSpan); err != nil {
 		return resp, err
 	}
-
+	traces := c.Result()
 	spanCount := traces.SpanCount()
+
 	lg.Debug("Got trace by ID", zap.Int("span_count", spanCount))
 	if spanCount < 1 {
 		return &tempoapi.TraceByIDNotFound{}, nil
