@@ -3,8 +3,9 @@ package ytstore
 import (
 	"time"
 
-	"github.com/go-faster/oteldb/internal/tempoapi"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+
+	"github.com/go-faster/oteldb/internal/tempoapi"
 )
 
 // FillTraceMetadata files TraceSearchMetadata fields using span.
