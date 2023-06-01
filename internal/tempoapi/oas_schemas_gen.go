@@ -278,7 +278,7 @@ type EchoOK struct {
 // Kept to satisfy the io.Reader interface.
 func (s EchoOK) Read(p []byte) (n int, err error) {
 	if s.Data == nil {
-		return 0, nil
+		return 0, io.EOF
 	}
 	return s.Data.Read(p)
 }
@@ -742,7 +742,7 @@ type TraceByID struct {
 // Kept to satisfy the io.Reader interface.
 func (s TraceByID) Read(p []byte) (n int, err error) {
 	if s.Data == nil {
-		return 0, nil
+		return 0, io.EOF
 	}
 	return s.Data.Read(p)
 }
