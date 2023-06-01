@@ -268,6 +268,7 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 			typ = "string"
 		case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
 			// what?
+			continue
 		}
 
 		values = append(values, tempoapi.TagValue{
