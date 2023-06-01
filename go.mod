@@ -10,6 +10,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ogen-go/ogen v0.68.3
+	github.com/prometheus/common v0.44.0
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/collector v0.78.2
 	go.opentelemetry.io/collector/component v0.78.2
@@ -29,6 +30,8 @@ require (
 	go.ytsaurus.tech/yt/go v0.0.5
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/sync v0.2.0
+	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -75,7 +78,6 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/client_golang v1.15.1 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
-	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.10.0 // indirect
 	github.com/prometheus/statsd_exporter v0.22.7 // indirect
 	github.com/rs/cors v1.9.0 // indirect
@@ -127,6 +129,4 @@ require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

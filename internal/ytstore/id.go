@@ -60,6 +60,11 @@ var (
 	_ yson.StreamUnmarshaler = (*SpanID)(nil)
 )
 
+// AsUint64 returns SpanID as uint64.
+func (id SpanID) AsUint64() uint64 {
+	return binary.LittleEndian.Uint64(id[:])
+}
+
 // IsEmpty returns true if span ID is empty.
 func (id SpanID) IsEmpty() bool {
 	return pcommon.SpanID(id).IsEmpty()
@@ -82,7 +87,7 @@ func (id SpanID) MarshalYSON(w *yson.Writer) error {
 	if id.IsEmpty() {
 		w.Entity()
 	} else {
-		w.Uint64(binary.LittleEndian.Uint64(id[:]))
+		w.Uint64(id.AsUint64())
 	}
 	return nil
 }
