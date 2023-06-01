@@ -81,10 +81,15 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 		return errors.Wrap(err, "commit")
 	}
 
-	update := true
-	if err := s.yc.InsertRowBatch(ctx, s.tables.spans, bw.Batch(), &yt.InsertRowsOptions{
-		Update: &update,
-	}); err != nil {
+	var (
+		atomicity     = yt.AtomicityNone
+		update        = true
+		insertOptions = &yt.InsertRowsOptions{
+			Atomicity: &atomicity,
+			Update:    &update,
+		}
+	)
+	if err := s.yc.InsertRowBatch(ctx, s.tables.spans, bw.Batch(), insertOptions); err != nil {
 		return errors.Wrap(err, "insert spans")
 	}
 
@@ -97,7 +102,7 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	if err := bw.Commit(); err != nil {
 		return errors.Wrap(err, "commit")
 	}
-	if err := s.yc.InsertRowBatch(ctx, s.tables.tags, bw.Batch(), &yt.InsertRowsOptions{}); err != nil {
+	if err := s.yc.InsertRowBatch(ctx, s.tables.tags, bw.Batch(), insertOptions); err != nil {
 		return errors.Wrap(err, "insert tags")
 	}
 	return nil
