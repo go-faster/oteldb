@@ -19,6 +19,7 @@ import (
 	"github.com/go-faster/sdk/zctx"
 
 	"github.com/go-faster/oteldb/internal/tempoapi"
+	"github.com/go-faster/oteldb/internal/ytquery"
 )
 
 // TempoAPI implements tempoapi.Handler.
@@ -333,28 +334,30 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 	var (
 		start = zap.Skip()
 		end   = zap.Skip()
-
-		query = fmt.Sprintf("* from [%s] where trace_id = %q", h.tables.spans, params.TraceID[:])
 	)
 
+	preds := ytquery.Eq("trace_id", TraceID(params.TraceID))
 	if s, ok := params.Start.Get(); ok {
 		n := s.UnixNano()
-		query += fmt.Sprintf(" and start >= %d", n)
+		preds = ytquery.And(preds, ytquery.Ge("start", n))
 		start = zap.Int64("start", n)
 	}
 	if s, ok := params.End.Get(); ok {
 		n := s.UnixNano()
-		query += fmt.Sprintf(" and end <= %d", n)
+		preds = ytquery.And(preds, ytquery.Le("end", n))
 		end = zap.Int64("end", n)
 	}
+
+	query := ytquery.Table(h.tables.spans).
+		Select().
+		Where(preds)
 	lg = lg.With(
 		zap.Stringer("look_for", params.TraceID),
 		start,
 		end,
 	)
-
 	var c batchCollector
-	if err := h.querySpans(ctx, query, c.AddSpan); err != nil {
+	if err := ytquery.Query(ctx, h.yc, query, c.AddSpan); err != nil {
 		return resp, err
 	}
 	traces := c.Result()
