@@ -82,11 +82,9 @@ func (s *Store) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	}
 
 	var (
-		atomicity     = yt.AtomicityNone
 		update        = true
 		insertOptions = &yt.InsertRowsOptions{
-			Atomicity: &atomicity,
-			Update:    &update,
+			Update: &update,
 		}
 	)
 	if err := s.yc.InsertRowBatch(ctx, s.tables.spans, bw.Batch(), insertOptions); err != nil {
