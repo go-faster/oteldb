@@ -148,7 +148,7 @@ func NewReceiver[H Handler](handle H, cfg ReceiverConfig) (*Receiver[H], error) 
 
 	ctx := context.Background()
 	params := receiver.CreateSettings{TelemetrySettings: component.TelemetrySettings{
-		Logger:         cfg.Logger,
+		Logger:         cfg.Logger.Named("otel"),
 		TracerProvider: cfg.TracerProvider,
 		MeterProvider:  cfg.MeterProvider,
 	}}
