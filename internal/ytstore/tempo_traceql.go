@@ -170,63 +170,34 @@ func (c *conditionCollector) justRetrive(cond traceql.Condition) error {
 }
 
 func (h *TempoAPI) executeQL(ctx context.Context, params tempoapi.SearchParams) (map[TraceID]tempoapi.TraceSearchMetadata, error) {
+	ctx = zctx.With(ctx, zap.String("traceql", params.Q.Value))
+
 	pipeline, err := traceql.ParseQuery(params.Q.Value)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse query")
 	}
-	req := traceql.CreateFetchSpansRequest(params, pipeline)
 
-	var query strings.Builder
-	fmt.Fprintf(&query, "* from [%s] where true", h.tables.spans)
-	if s, ok := params.Start.Get(); ok {
-		n := s.UnixNano()
-		fmt.Fprintf(&query, " and start >= %d", n)
-	}
-	if s, ok := params.End.Get(); ok {
-		n := s.UnixNano()
-		fmt.Fprintf(&query, " and end <= %d", n)
-	}
-	if d, ok := params.MinDuration.Get(); ok {
-		n := d.Nanoseconds()
-		fmt.Fprintf(&query, " and (end-start) >= %d", n)
-	}
-	if d, ok := params.MaxDuration.Get(); ok {
-		n := d.Nanoseconds()
-		fmt.Fprintf(&query, " and (end-start) <= %d", n)
+	query, err := h.queryTraceIDs(ctx, params, pipeline)
+	if err != nil {
+		return nil, errors.Wrap(err, "generate traceIDs query")
 	}
 
-	query.WriteString(" and (\n")
-	op := "or"
-	if req.AllConditions {
-		op = "and"
-	}
-	c := conditionCollector{
-		logicOp: op,
-		query:   &query,
-	}
-	for _, cond := range req.Conditions {
-		if err := c.addQueryCondition(cond); err != nil {
-			return nil, errors.Wrap(err, "add condition")
-		}
-	}
-	query.WriteString("\n)")
-
-	zctx.From(ctx).Debug("Execute TraceQL query",
-		zap.String("traceql", params.Q.Value),
-		zap.Stringer("query", &query),
+	lg := zctx.From(ctx)
+	lg.Debug("Query spans for TraceQL",
+		zap.String("query", query),
 	)
 	spansets := map[TraceID]*traceql.Spanset{}
-	if err := h.querySpans(ctx, query.String(), func(s Span) error {
+	if err := h.querySpans(ctx, query, func(s Span) error {
 		traceID := s.TraceID
 
 		spanset, ok := spansets[traceID]
 		if !ok {
 			spanset = new(traceql.Spanset)
+			spanset.TraceID = traceID
 			spansets[traceID] = spanset
 		}
 
 		if s.ParentSpanID.IsEmpty() {
-			spanset.TraceID = s.TraceID
 			spanset.RootSpanName = s.Name
 			if attr, ok := pcommon.Map(s.ResourceAttrs).Get("service.name"); ok {
 				spanset.RootServiceName = attr.AsString()
@@ -260,4 +231,95 @@ outer:
 		}
 	}
 	return metadatas, nil
+}
+
+func (h *TempoAPI) queryTraceIDs(ctx context.Context, params tempoapi.SearchParams, pipeline traceql.Pipeline) (spanQuery string, _ error) {
+	req := traceql.CreateFetchSpansRequest(params, pipeline)
+
+	lg := zctx.From(ctx)
+
+	var query strings.Builder
+	fmt.Fprintf(&query, "trace_id from [%s] where true", h.tables.spans)
+	if s, ok := params.Start.Get(); ok {
+		n := s.UnixNano()
+		fmt.Fprintf(&query, " and start >= %d", n)
+	}
+	if s, ok := params.End.Get(); ok {
+		n := s.UnixNano()
+		fmt.Fprintf(&query, " and end <= %d", n)
+	}
+	if d, ok := params.MinDuration.Get(); ok {
+		n := d.Nanoseconds()
+		fmt.Fprintf(&query, " and (end-start) >= %d", n)
+	}
+	if d, ok := params.MaxDuration.Get(); ok {
+		n := d.Nanoseconds()
+		fmt.Fprintf(&query, " and (end-start) <= %d", n)
+	}
+
+	query.WriteString(" and (\n")
+	op := "or"
+	if req.AllConditions {
+		op = "and"
+	}
+	c := conditionCollector{
+		logicOp: op,
+		query:   &query,
+	}
+	for _, cond := range req.Conditions {
+		if err := c.addQueryCondition(cond); err != nil {
+			return "", errors.Wrap(err, "add condition")
+		}
+	}
+	query.WriteString("\n)")
+
+	lg.Debug("Query trace IDs for TraceQL",
+		zap.Stringer("query", &query),
+	)
+
+	r, err := h.yc.SelectRows(ctx, query.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+
+	var (
+		sb   strings.Builder
+		n    = 0
+		seen = map[TraceID]struct{}{}
+
+		limit = params.Limit.Or(20)
+	)
+	fmt.Fprintf(&sb, "* from [%s] where trace_id in (", h.tables.spans)
+	for r.Next() {
+		var t struct {
+			TraceID TraceID `yson:"trace_id"`
+		}
+		if err := r.Scan(&t); err != nil {
+			return "", err
+		}
+
+		if _, ok := seen[t.TraceID]; ok {
+			continue
+		}
+		seen[t.TraceID] = struct{}{}
+		if len(seen) >= limit {
+			// FIXME: can we just break?
+			continue
+		}
+
+		if n != 0 {
+			sb.WriteByte(',')
+		}
+		fmt.Fprintf(&sb, "%q", t.TraceID[:])
+		n++
+	}
+	sb.WriteByte(')')
+
+	if err := r.Err(); err != nil {
+		return "", err
+	}
+	return sb.String(), nil
 }
