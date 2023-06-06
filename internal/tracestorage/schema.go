@@ -1,39 +1,36 @@
-package ytstore
+package tracestorage
 
 import (
-	"context"
-
-	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/schema"
-	"go.ytsaurus.tech/yt/go/ypath"
-
-	"github.com/go-faster/errors"
 )
+
+// Timestamp is a tracestorage timestamp.
+type Timestamp = uint64
 
 // Span is a data structure for span.
 type Span struct {
-	TraceID       TraceID `yson:"trace_id"`
-	SpanID        SpanID  `yson:"span_id"`
-	TraceState    string  `yson:"trace_state"`
-	ParentSpanID  SpanID  `yson:"parent_span_id"`
-	Name          string  `yson:"name"`
-	Kind          int32   `yson:"kind"`
-	Start         uint64  `yson:"start"`
-	End           uint64  `yson:"end"`
-	Attrs         Attrs   `yson:"attrs"`
-	StatusCode    int32   `yson:"status_code"`
-	StatusMessage string  `yson:"status_message"`
+	TraceID       TraceID   `json:"trace_id" yson:"trace_id"`
+	SpanID        SpanID    `json:"span_id" yson:"span_id"`
+	TraceState    string    `json:"trace_state" yson:"trace_state"`
+	ParentSpanID  SpanID    `json:"parent_span_id" yson:"parent_span_id"`
+	Name          string    `json:"name" yson:"name"`
+	Kind          int32     `json:"kind" yson:"kind"`
+	Start         Timestamp `json:"start" yson:"start"`
+	End           Timestamp `json:"end" yson:"end"`
+	Attrs         Attrs     `json:"attrs" yson:"attrs"`
+	StatusCode    int32     `json:"status_code" yson:"status_code"`
+	StatusMessage string    `json:"status_message" yson:"status_message"`
 
-	BatchID       string `yson:"batch_id"`
-	ResourceAttrs Attrs  `yson:"resource_attrs"`
+	BatchID       string `json:"batch_id" yson:"batch_id"`
+	ResourceAttrs Attrs  `json:"resource_attrs" yson:"resource_attrs"`
 
-	ScopeName    string `yson:"scope_name"`
-	ScopeVersion string `yson:"scope_version"`
-	ScopeAttrs   Attrs  `yson:"scope_attrs"`
+	ScopeName    string `json:"scope_name" yson:"scope_name"`
+	ScopeVersion string `json:"scope_version" yson:"scope_version"`
+	ScopeAttrs   Attrs  `json:"scope_attrs" yson:"scope_attrs"`
 }
 
-// Schema returns table schema for this structure.
-func (Span) Schema() schema.Schema {
+// YTSchema returns YTsaurus table schema for this structure.
+func (Span) YTSchema() schema.Schema {
 	return schema.Schema{
 		UniqueKeys: true,
 		Columns: []schema.Column{
@@ -68,8 +65,8 @@ type Tag struct {
 	Type  int32  `yson:"type"`
 }
 
-// Schema returns table schema for this structure.
-func (Tag) Schema() schema.Schema {
+// YTSchema returns YTsaurus table schema for this structure.
+func (Tag) YTSchema() schema.Schema {
 	return schema.Schema{
 		UniqueKeys: true,
 		Columns: []schema.Column{
@@ -78,32 +75,4 @@ func (Tag) Schema() schema.Schema {
 			{Name: "type", ComplexType: schema.TypeInt32},
 		},
 	}
-}
-
-type tables struct {
-	spans ypath.Path
-	tags  ypath.Path
-}
-
-func newTables(prefix ypath.Path) tables {
-	return tables{
-		spans: prefix.Child("spans"),
-		tags:  prefix.Child("tags"),
-	}
-}
-
-// Migrate setups YTSaurus tables for storage.
-func (s *Store) Migrate(ctx context.Context) error {
-	tables := map[ypath.Path]migrate.Table{
-		s.tables.spans: {
-			Schema: Span{}.Schema(),
-		},
-		s.tables.tags: {
-			Schema: Tag{}.Schema(),
-		},
-	}
-	if err := migrate.EnsureTables(ctx, s.yc, tables, migrate.OnConflictFail); err != nil {
-		return errors.Wrap(err, "ensure tables")
-	}
-	return nil
 }

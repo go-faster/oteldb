@@ -1,4 +1,4 @@
-package ytstore
+package tracestorage
 
 import (
 	"encoding/binary"

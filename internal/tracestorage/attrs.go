@@ -1,4 +1,4 @@
-package ytstore
+package tracestorage
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"

@@ -1,4 +1,4 @@
-package ytstore
+package tracestorage
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -53,76 +53,4 @@ func (span Span) FillOTELSpan(s ptrace.Span) {
 	status := s.Status()
 	status.SetCode(ptrace.StatusCode(span.StatusCode))
 	status.SetMessage(span.StatusMessage)
-}
-
-type spanKey struct {
-	batchID      string
-	scopeName    string
-	scopeVersion string
-}
-
-type batchCollector struct {
-	traces     ptrace.Traces
-	resSpans   map[string]ptrace.ResourceSpans
-	scopeSpans map[spanKey]ptrace.SpanSlice
-}
-
-func (b *batchCollector) init() {
-	var zeroTraces ptrace.Traces
-	if b.traces == zeroTraces {
-		b.traces = ptrace.NewTraces()
-	}
-	if b.resSpans == nil {
-		b.resSpans = make(map[string]ptrace.ResourceSpans)
-	}
-	if b.scopeSpans == nil {
-		b.scopeSpans = make(map[spanKey]ptrace.SpanSlice)
-	}
-}
-
-func (b *batchCollector) getSpanSlice(s Span) ptrace.SpanSlice {
-	b.init()
-
-	k := spanKey{
-		batchID:      s.BatchID,
-		scopeName:    s.ScopeName,
-		scopeVersion: s.ScopeVersion,
-	}
-
-	ss, ok := b.scopeSpans[k]
-	if ok {
-		return ss
-	}
-
-	resSpan, ok := b.resSpans[s.BatchID]
-	if !ok {
-		resSpan = b.traces.ResourceSpans().AppendEmpty()
-		b.resSpans[s.BatchID] = resSpan
-	}
-	res := resSpan.Resource()
-	s.ResourceAttrs.CopyTo(res.Attributes())
-
-	scopeSpan := resSpan.ScopeSpans().AppendEmpty()
-	scope := scopeSpan.Scope()
-	scope.SetName(s.ScopeName)
-	scope.SetVersion(s.ScopeVersion)
-	s.ScopeAttrs.CopyTo(scope.Attributes())
-
-	ss = scopeSpan.Spans()
-	b.scopeSpans[k] = ss
-	return ss
-}
-
-func (b *batchCollector) AddSpan(span Span) error {
-	s := b.getSpanSlice(span).AppendEmpty()
-	span.FillOTELSpan(s)
-	return nil
-}
-
-func (b *batchCollector) Result() ptrace.Traces {
-	var zeroTraces ptrace.Traces
-	if b.traces == zeroTraces {
-		b.traces = ptrace.NewTraces()
-	}
-	return b.traces
 }

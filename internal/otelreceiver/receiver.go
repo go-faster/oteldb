@@ -26,14 +26,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// Handler is a trace handler.
-type Handler interface {
+// Consumer is a trace consumer.
+type Consumer interface {
 	ConsumeTraces(ctx context.Context, td ptrace.Traces) error
 }
 
 // Receiver is a OpenTelemetry-compatible trace receiver.
-type Receiver[H Handler] struct {
-	handle    H
+type Receiver[C Consumer] struct {
+	consumer  C
 	receivers []receiver.Traces
 
 	fatal     chan struct{}
@@ -79,13 +79,13 @@ func (cfg *ReceiverConfig) setDefaults() {
 	}
 }
 
-// NewReceiver setups trace handler.
-func NewReceiver[H Handler](handle H, cfg ReceiverConfig) (*Receiver[H], error) {
+// NewReceiver setups trace receiver.
+func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 	cfg.setDefaults()
-	shim := &Receiver[H]{
-		handle: handle,
-		fatal:  make(chan struct{}),
-		logger: cfg.Logger.Named("handler"),
+	shim := &Receiver[C]{
+		consumer: c,
+		fatal:    make(chan struct{}),
+		logger:   cfg.Logger.Named("shim"),
 	}
 
 	// load config
@@ -141,19 +141,13 @@ func NewReceiver[H Handler](handle H, cfg ReceiverConfig) (*Receiver[H], error) 
 		return nil, err
 	}
 
-	traceConsumer, err := consumer.NewTraces(shim.handle.ConsumeTraces)
+	traceConsumer, err := consumer.NewTraces(shim.consumer.ConsumeTraces)
 	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.Background()
-	params := receiver.CreateSettings{TelemetrySettings: component.TelemetrySettings{
-		Logger:         cfg.Logger.Named("otel"),
-		TracerProvider: cfg.TracerProvider,
-		MeterProvider:  cfg.MeterProvider,
-	}}
-
-	for componentID, cfg := range conf.Receivers {
+	for componentID, componentCfg := range conf.Receivers {
 		factoryBase := receiverFactories[componentID.Type()]
 		if factoryBase == nil {
 			return nil, errors.Errorf("receiver factory not found for type: %s", componentID.Type())
@@ -162,31 +156,43 @@ func NewReceiver[H Handler](handle H, cfg ReceiverConfig) (*Receiver[H], error) 
 		// Make sure that the headers are added to context. Required for Authentication.
 		switch componentID.Type() {
 		case "otlp":
-			otlpRecvCfg := cfg.(*otlpreceiver.Config)
+			otlpRecvCfg := componentCfg.(*otlpreceiver.Config)
 
 			if otlpRecvCfg.HTTP != nil {
 				otlpRecvCfg.HTTP.IncludeMetadata = true
-				cfg = otlpRecvCfg
+				componentCfg = otlpRecvCfg
 			}
 
 		case "jaeger":
 			// FIXME(tdakkota): For now, we support only OTLP.
 
-			// jaegerRecvCfg := cfg.(*jaegerreceiver.Config)
+			// jaegerRecvCfg := componentCfg.(*jaegerreceiver.Config)
 			// if jaegerRecvCfg.ThriftHTTP != nil {
 			// 	jaegerRecvCfg.ThriftHTTP.IncludeMetadata = true
 			// }
-			// cfg = jaegerRecvCfg
+			// componentCfg = jaegerRecvCfg
 
 		case "zipkin":
 			// FIXME(tdakkota): For now, we support only OTLP.
 
-			// zipkinRecvCfg := cfg.(*zipkinreceiver.Config)
+			// zipkinRecvCfg := componentCfg.(*zipkinreceiver.Config)
 			// zipkinRecvCfg.HTTPServerSettings.IncludeMetadata = true
-			// cfg = zipkinRecvCfg
+			// componentCfg = zipkinRecvCfg
 		}
 
-		recv, err := factoryBase.CreateTracesReceiver(ctx, params, cfg, traceConsumer)
+		logger := cfg.Logger
+		if name := string(componentID.Type()); name != "" {
+			logger = logger.Named(name)
+		}
+		params := receiver.CreateSettings{
+			TelemetrySettings: component.TelemetrySettings{
+				Logger:         logger,
+				TracerProvider: cfg.TracerProvider,
+				MeterProvider:  cfg.MeterProvider,
+			},
+		}
+
+		recv, err := factoryBase.CreateTracesReceiver(ctx, params, componentCfg, traceConsumer)
 		if err != nil {
 			return nil, err
 		}
@@ -235,7 +241,7 @@ func shutdown(receivers []receiver.Traces) error {
 
 func (r *Receiver[H]) consume(ctx context.Context, traces ptrace.Traces) error {
 	// TODO(tdakkota): instrument?
-	if err := r.handle.ConsumeTraces(ctx, traces); err != nil {
+	if err := r.consumer.ConsumeTraces(ctx, traces); err != nil {
 		r.logger.Error("Consume failed", zap.Error(err))
 	}
 	return nil
