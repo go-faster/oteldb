@@ -6,16 +6,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-faster/oteldb/integration/tempoe2e"
-	"github.com/go-faster/oteldb/internal/tempoapi"
-	"github.com/go-faster/oteldb/internal/tempohandler"
-	"github.com/go-faster/oteldb/internal/tracestorage"
-	"github.com/go-faster/oteldb/internal/ytstorage"
 	"github.com/stretchr/testify/require"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
+
+	"github.com/go-faster/oteldb/integration/tempoe2e"
+	"github.com/go-faster/oteldb/internal/tempoapi"
+	"github.com/go-faster/oteldb/internal/tempohandler"
+	"github.com/go-faster/oteldb/internal/tracestorage"
+	"github.com/go-faster/oteldb/internal/ytstorage"
 )
 
 func readBatchSet(p string) (s tempoe2e.BatchSet, _ error) {
@@ -30,8 +31,8 @@ func readBatchSet(p string) (s tempoe2e.BatchSet, _ error) {
 }
 
 func setupDB(
-	t *testing.T,
 	ctx context.Context,
+	t *testing.T,
 	set tempoe2e.BatchSet,
 	inserter tracestorage.Inserter,
 	querier tracestorage.Querier,
@@ -76,7 +77,7 @@ func TestYT(t *testing.T) {
 
 	inserter := ytstorage.NewInserter(yc, tables)
 	querier := ytstorage.NewYTQLQuerier(yc, tables)
-	c := setupDB(t, ctx, set, inserter, querier)
+	c := setupDB(ctx, t, set, inserter, querier)
 
 	t.Run("SearchTags", func(t *testing.T) {
 		a := require.New(t)
