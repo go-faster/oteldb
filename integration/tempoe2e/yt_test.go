@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
+	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
@@ -58,6 +60,7 @@ func setupDB(
 
 func TestYT(t *testing.T) {
 	ctx := context.Background()
+	logger := zaptest.NewLogger(t)
 
 	proxy := os.Getenv("E2E_YT_PROXY")
 	if proxy == "" {
@@ -65,7 +68,8 @@ func TestYT(t *testing.T) {
 	}
 
 	yc, err := ythttp.NewClient(&yt.Config{
-		Proxy: proxy,
+		Proxy:  proxy,
+		Logger: &ytzap.Logger{L: logger.Named("yc")},
 	})
 	require.NoError(t, err)
 
