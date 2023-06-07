@@ -1,4 +1,4 @@
-package ytstore
+package tracestorage
 
 import (
 	"time"
@@ -15,7 +15,7 @@ func (span Span) FillTraceMetadata(m *tempoapi.TraceSearchMetadata) {
 	ss := &m.SpanSet
 
 	m.RootTraceName = span.Name
-	if attr, ok := pcommon.Map(span.ResourceAttrs).Get("service.name"); ok {
+	if attr, ok := span.ResourceAttrs.AsMap().Get("service.name"); ok {
 		m.RootServiceName = attr.AsString()
 	}
 	var (
@@ -90,41 +90,4 @@ func ytToTempoAttrs(to *tempoapi.Attributes, from Attrs) {
 		})
 		return true
 	})
-}
-
-type metadataCollector struct {
-	metadatas map[TraceID]tempoapi.TraceSearchMetadata
-}
-
-func (b *metadataCollector) init() {
-	if b.metadatas == nil {
-		b.metadatas = make(map[TraceID]tempoapi.TraceSearchMetadata)
-	}
-}
-
-func (b *metadataCollector) AddSpan(span Span) error {
-	b.init()
-
-	traceID := span.TraceID
-	m, ok := b.metadatas[traceID]
-	if !ok {
-		m = tempoapi.TraceSearchMetadata{
-			TraceID: traceID.Hex(),
-		}
-	}
-	ss := &m.SpanSet
-
-	if span.ParentSpanID.IsEmpty() {
-		span.FillTraceMetadata(&m)
-	}
-	ss.Spans = append(ss.Spans, span.AsTempoSpan())
-
-	// Put modified struct back to map.
-	b.metadatas[traceID] = m
-	return nil
-}
-
-func (b *metadataCollector) Result() map[TraceID]tempoapi.TraceSearchMetadata {
-	b.init()
-	return b.metadatas
 }
