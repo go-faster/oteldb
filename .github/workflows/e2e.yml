@@ -1,0 +1,50 @@
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Get Go environment
+        id: go-env
+        shell: bash
+        run: |
+          echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
+          echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
+
+      - name: Set up cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.cache }}
+            ${{ env.modcache }}
+          key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-go-
+
+      - name: Run YTSaurus container
+        run: |
+          docker run -d -p8000:80 ytsaurus/local:stable \
+            --fqdn "localhost" \
+            --proxy-config "{address_resolver={enable_ipv4=%true;enable_ipv6=%false;};coordinator={public_fqdn=\"localhost:8000\"}}" \
+            --rpc-proxy-count "0" \
+            --rpc-proxy-port "8002"
+
+      - name: Run test
+        env:
+          E2E_YT_PROXY: localhost:8000
+        run: go test -v -timeout 15m ./integration/...
