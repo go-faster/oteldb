@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-faster/errors"
 	"go.ytsaurus.tech/yt/go/yt"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -95,12 +96,13 @@ func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, op
 }
 
 // TagNames returns all available tag names.
-func (q *YTQLQuerier) TagNames(ctx context.Context) (names []string, _ error) {
+func (q *YTQLQuerier) TagNames(ctx context.Context) ([]string, error) {
 	query := fmt.Sprintf("name from [%s]", q.tables.tags)
+	names := map[string]struct{}{}
 	err := queryRows(ctx, q.yc, query, func(tag tracestorage.Tag) {
-		names = append(names, tag.Name)
+		names[tag.Name] = struct{}{}
 	})
-	return names, err
+	return maps.Keys(names), err
 }
 
 // TagValues returns all available tag values for given tag.
