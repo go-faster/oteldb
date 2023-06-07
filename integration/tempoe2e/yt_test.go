@@ -73,7 +73,7 @@ func TestYT(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tables := ytstorage.NewTables(ypath.Path("//tmp").Child("oteldb").Child("traces"))
+	tables := ytstorage.NewTables(ypath.Path("//oteldb-test").Child("traces"))
 	require.NoError(t, tables.Migrate(ctx, yc, migrate.OnConflictDrop(ctx, yc)))
 
 	set, err := readBatchSet("_testdata/traces.json")
