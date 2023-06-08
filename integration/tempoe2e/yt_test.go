@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
@@ -69,7 +70,9 @@ func TestYT(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tables := ytstorage.NewTables(ypath.Path("//oteldb-test").Child("traces"))
+	rootPath := ypath.Path("//oteldb-test-" + uuid.NewString()).Child("traces")
+	t.Logf("Test path: %s", rootPath)
+	tables := ytstorage.NewTables(rootPath)
 	require.NoError(t, tables.Migrate(ctx, yc, migrate.OnConflictDrop(ctx, yc)))
 
 	set, err := readBatchSet("_testdata/traces.json")
@@ -82,11 +85,28 @@ func TestYT(t *testing.T) {
 	t.Run("SearchTags", func(t *testing.T) {
 		a := require.New(t)
 
-		tags, err := c.SearchTags(ctx)
+		r, err := c.SearchTags(ctx)
 		a.NoError(err)
-		a.Len(tags.TagNames, len(set.Tags))
-		for _, tagName := range tags.TagNames {
+		a.Len(r.TagNames, len(set.Tags))
+		for _, tagName := range r.TagNames {
 			a.Contains(set.Tags, tagName)
+		}
+	})
+	t.Run("SearchTagValues", func(t *testing.T) {
+		a := require.New(t)
+
+		for tagName, tags := range set.Tags {
+			tagValues := map[string]struct{}{}
+			for _, t := range tags {
+				tagValues[t.Value] = struct{}{}
+			}
+
+			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{TagName: tagName})
+			a.NoError(err)
+			a.Len(r.TagValues, len(tagValues))
+			for _, val := range r.TagValues {
+				a.Contains(tagValues, val.Value)
+			}
 		}
 	})
 }
