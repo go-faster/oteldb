@@ -36,13 +36,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-go-
 
-      - name: Run YTSaurus container
+      - name: Run test containers
         run: |
-          docker run -d -p8000:80 ytsaurus/local:stable \
-            --fqdn "localhost" \
-            --proxy-config "{address_resolver={enable_ipv4=%true;enable_ipv6=%false;};coordinator={public_fqdn=\"localhost:8000\"}}" \
-            --rpc-proxy-count "0" \
-            --rpc-proxy-port "8002"
+          ./dev/ci/run_containers.sh
 
       - name: Run test
         env:
