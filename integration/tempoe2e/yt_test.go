@@ -18,6 +18,7 @@ import (
 )
 
 func TestYT(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	proxy := os.Getenv("E2E_YT_PROXY")

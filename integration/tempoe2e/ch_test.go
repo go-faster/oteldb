@@ -19,6 +19,7 @@ import (
 )
 
 func TestCH(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	dsn := os.Getenv("E2E_CH_DSN")
