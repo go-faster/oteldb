@@ -2,12 +2,14 @@ package tempoe2e_test
 
 import (
 	"context"
+	"io"
 	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
@@ -108,5 +110,43 @@ func TestYT(t *testing.T) {
 				a.Contains(tagValues, val.Value)
 			}
 		}
+	})
+	t.Run("TraceByID", func(t *testing.T) {
+		t.Run("Query", func(t *testing.T) {
+			a := require.New(t)
+
+			for traceID, trace := range set.Traces {
+				r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: uuid.UUID(traceID)})
+				a.NoError(err)
+				a.IsType(&tempoapi.TraceByID{}, r)
+
+				data, err := io.ReadAll(r.(*tempoapi.TraceByID))
+				a.NoError(err)
+
+				var u ptrace.ProtoUnmarshaler
+				resp, err := u.UnmarshalTraces(data)
+				a.NoError(err)
+
+				a.Equal(resp.SpanCount(), len(trace.Spanset))
+				resSpans := resp.ResourceSpans()
+				for i := 0; i < resSpans.Len(); i++ {
+					scopeSpans := resSpans.At(i).ScopeSpans()
+					for i := 0; i < scopeSpans.Len(); i++ {
+						spans := scopeSpans.At(i).Spans()
+						for i := 0; i < spans.Len(); i++ {
+							span := spans.At(i)
+							a.Contains(trace.Spanset, span.SpanID())
+						}
+					}
+				}
+			}
+		})
+
+		t.Run("NotFound", func(t *testing.T) {
+			a := require.New(t)
+			r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: uuid.New()})
+			a.NoError(err)
+			a.IsType(&tempoapi.TraceByIDNotFound{}, r)
+		})
 	})
 }

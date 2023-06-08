@@ -16,6 +16,7 @@ import (
 type BatchSet struct {
 	Batches []ptrace.Traces
 	Tags    map[string][]tracestorage.Tag
+	Traces  map[pcommon.TraceID]Trace
 }
 
 // ParseBatchSet parses JSON batches from given reader.
@@ -60,9 +61,32 @@ func (s *BatchSet) addBatch(raw ptrace.Traces) {
 				// Add span name as well. For some reason, Grafana is looking for it too.
 				s.addName(span.Name())
 				s.addTags(span.Attributes())
+				s.addSpan(span)
 			}
 		}
 	}
+}
+
+func (s *BatchSet) addSpan(span ptrace.Span) {
+	if s.Traces == nil {
+		s.Traces = map[pcommon.TraceID]Trace{}
+	}
+
+	traceID := span.TraceID()
+	t, ok := s.Traces[traceID]
+	if !ok {
+		t = Trace{
+			Spanset: make(map[pcommon.SpanID]ptrace.Span),
+		}
+		s.Traces[traceID] = t
+	}
+	t.Spanset[span.SpanID()] = span
+	s.Traces[traceID] = t
+}
+
+// Trace contains spanset fields to check storage behavior.
+type Trace struct {
+	Spanset map[pcommon.SpanID]ptrace.Span
 }
 
 func (s *BatchSet) addName(name string) {
