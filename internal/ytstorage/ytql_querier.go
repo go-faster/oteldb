@@ -32,33 +32,33 @@ func NewYTQLQuerier(yc yt.TabletClient, tables Tables) *YTQLQuerier {
 func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (tracestorage.Iterator[tracestorage.Span], error) {
 	var traceIDQuery strings.Builder
 
-	fmt.Fprintf(&traceIDQuery, "trace_id from [%s] where true", q.tables.spans)
+	fmt.Fprintf(&traceIDQuery, "trace_id FROM [%s] WHERE true", q.tables.spans)
 	if s := opts.Start; s != 0 {
-		fmt.Fprintf(&traceIDQuery, " and start >= %d", s)
+		fmt.Fprintf(&traceIDQuery, " AND start >= %d", s)
 	}
 	if e := opts.End; e != 0 {
-		fmt.Fprintf(&traceIDQuery, " and end <= %d", e)
+		fmt.Fprintf(&traceIDQuery, " AND end <= %d", e)
 	}
 	if d := opts.MinDuration; d != 0 {
-		fmt.Fprintf(&traceIDQuery, " and (end-start) >= %d", d)
+		fmt.Fprintf(&traceIDQuery, " AND (end-start) >= %d", d)
 	}
 	if d := opts.MaxDuration; d != 0 {
-		fmt.Fprintf(&traceIDQuery, " and (end-start) <= %d", d)
+		fmt.Fprintf(&traceIDQuery, " AND (end-start) <= %d", d)
 	}
 	for key, value := range tags {
 		if key == "name" {
-			fmt.Fprintf(&traceIDQuery, " and name = %q", value)
+			fmt.Fprintf(&traceIDQuery, " AND name = %q", value)
 			continue
 		}
 
-		traceIDQuery.WriteString(" and (")
+		traceIDQuery.WriteString(" AND (")
 		for i, column := range []string{
 			"attrs",
 			"scope_attrs",
 			"resource_attrs",
 		} {
 			if i != 0 {
-				traceIDQuery.WriteString(" or ")
+				traceIDQuery.WriteString(" OR ")
 			}
 			yp := append([]byte{'/'}, key...)
 			yp = append(yp, "/1"...)
@@ -77,7 +77,7 @@ func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, op
 
 	// Then, query all spans for each found trace ID.
 	var query strings.Builder
-	fmt.Fprintf(&query, "* from [%s] where trace_id in (", q.tables.spans)
+	fmt.Fprintf(&query, "* FROM [%s] WHERE trace_id IN (", q.tables.spans)
 	n := 0
 	for id := range traces {
 		if n != 0 {
@@ -97,7 +97,7 @@ func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, op
 
 // TagNames returns all available tag names.
 func (q *YTQLQuerier) TagNames(ctx context.Context) ([]string, error) {
-	query := fmt.Sprintf("name from [%s]", q.tables.tags)
+	query := fmt.Sprintf("name FROM [%s]", q.tables.tags)
 	names := map[string]struct{}{}
 	err := queryRows(ctx, q.yc, query, func(tag tracestorage.Tag) {
 		names[tag.Name] = struct{}{}
@@ -109,7 +109,7 @@ func (q *YTQLQuerier) TagNames(ctx context.Context) ([]string, error) {
 //
 // If there is no such tag, returns ErrNotFound.
 func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (tracestorage.Iterator[tracestorage.Tag], error) {
-	query := fmt.Sprintf("* from [%s] where name = %q", q.tables.tags, tagName)
+	query := fmt.Sprintf("* FROM [%s] WHERE name = %q", q.tables.tags, tagName)
 	r, err := q.yc.SelectRows(ctx, query, nil)
 	if err != nil {
 		return nil, err
@@ -121,13 +121,13 @@ func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (tracestora
 //
 // If there is no such trace, returns ErrNotFound.
 func (q *YTQLQuerier) TraceByID(ctx context.Context, id tracestorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
-	query := fmt.Sprintf("* from [%s] where trace_id = %q", q.tables.spans, id[:])
+	query := fmt.Sprintf("* FROM [%s] WHERE trace_id = %q", q.tables.spans, id[:])
 
 	if s := opts.Start; s != 0 {
-		query += fmt.Sprintf(" and start >= %d", s)
+		query += fmt.Sprintf(" AND start >= %d", s)
 	}
 	if e := opts.End; e != 0 {
-		query += fmt.Sprintf(" and end <= %d", e)
+		query += fmt.Sprintf(" AND end <= %d", e)
 	}
 
 	r, err := q.yc.SelectRows(ctx, query, nil)
