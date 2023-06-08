@@ -1,0 +1,75 @@
+version: "3"
+services:
+  ytbackend:
+    image: ytsaurus/local:stable
+    command:
+      - --fqdn
+      - "ytbackend"
+      - --proxy-config
+      - "{address_resolver={enable_ipv4=%true;enable_ipv6=%false;};coordinator={public_fqdn=\"ytbackend:8000\"}}"
+      - --rpc-proxy-count
+      - "0"
+      - --rpc-proxy-port
+      - "8002"
+    ports:
+      - "8000:80"   # proxy port
+      - "8002:8002" # rpc proxy port
+  ytfrontend:
+    image: ytsaurus/ui:stable
+    environment:
+     - UI_CORE_CDN=false
+     - DENY_DISPENSER_PROXY=1
+     - DENY_YQL_PROXY=1
+     - RUM_ENV=local
+
+     - PROXY=ytbackend:8000
+     - PROXY_INTERNAL=ytbackend:80
+     - APP_ENV=local
+    ports:
+      - "8001:80" # UI port
+    depends_on:
+      - ytbackend
+
+  oteldb:
+    image: go-faster/oteldb
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - YT_PROXY=ytbackend:80
+      - OTEL_LOG_LEVEL=debug
+      - METRICS_ADDR=:3201
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+    ports:
+      # - "14268:14268" # jaeger ingest
+      - "3200:3200"   # tempo REST API
+      # - "9095:9095"   # tempo gRPC API
+      - "4317:4317"   # otlp gRPC
+      - "4318:4318"   # otlp http
+    depends_on:
+      - ytbackend
+
+  # Generates traces.
+  k6-tracing:
+    image: ghcr.io/grafana/xk6-client-tracing:v0.0.2
+    environment:
+      - ENDPOINT=oteldb:4317
+    restart: always
+    depends_on:
+      - oteldb
+
+  grafana:
+    image: grafana/grafana:9.4.3
+    volumes:
+      - ../grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+      - GF_LOG_LEVEL=debug
+    ports:
+      - "3000:3000"

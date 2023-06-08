@@ -4,6 +4,16 @@ Work in progress.
 
 ## Local development
 
+Setups Grafana, oteldb, storage and trace generator.
+
+#### YTSaurus storage
+
 ```shell
-docker compose up -d
+docker compose -f dev/local/ytsaurus/docker-compose.yml up -d
+```
+
+#### Clickhouse storage
+
+```shell
+docker compose -f dev/local/clickhouse/docker-compose.yml up -d
 ```

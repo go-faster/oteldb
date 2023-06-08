@@ -1,42 +1,20 @@
 version: "3"
 services:
-  ytbackend:
-    image: ytsaurus/local:stable
-    command:
-      - --fqdn
-      - "ytbackend"
-      - --proxy-config
-      - "{address_resolver={enable_ipv4=%true;enable_ipv6=%false;};coordinator={public_fqdn=\"ytbackend:8000\"}}"
-      - --rpc-proxy-count
-      - "0"
-      - --rpc-proxy-port
-      - "8002"
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
     ports:
-      - "8000:80"   # proxy port
-      - "8002:8002" # rpc proxy port
-  ytfrontend:
-    image: ytsaurus/ui:stable
-    environment:
-     - UI_CORE_CDN=false
-     - DENY_DISPENSER_PROXY=1
-     - DENY_YQL_PROXY=1
-     - RUM_ENV=local
-
-     - PROXY=ytbackend:8000
-     - PROXY_INTERNAL=ytbackend:80
-     - APP_ENV=local
-    ports:
-      - "8001:80" # UI port
-    depends_on:
-      - ytbackend
+      - "9009:9009"
+      - "8123:8123"
+      - "9000:9000"
 
   oteldb:
     image: go-faster/oteldb
     build:
-      context: .
+      context: ../../../
       dockerfile: Dockerfile
     environment:
-      - YT_PROXY=ytbackend:80
+      - OTELDB_STORAGE=ch
+      - CH_DSN=clickhouse://clickhouse:9000
       - OTEL_LOG_LEVEL=debug
       - METRICS_ADDR=:3201
       - OTEL_METRICS_EXPORTER=prometheus
@@ -50,7 +28,7 @@ services:
       - "4317:4317"   # otlp gRPC
       - "4318:4318"   # otlp http
     depends_on:
-      - ytbackend
+      - clickhouse
 
   # Generates traces.
   k6-tracing:
@@ -64,7 +42,7 @@ services:
   grafana:
     image: grafana/grafana:9.4.3
     volumes:
-      - ./dev/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
