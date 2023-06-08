@@ -169,7 +169,7 @@ func (c *spanColumns) Append(s tracestorage.Span) {
 
 func (c *spanColumns) CollectAppend(spans []tracestorage.Span) []tracestorage.Span {
 	getSpanID := func(v uint64) (r tracestorage.SpanID) {
-		binary.BigEndian.PutUint64(r[:], v)
+		binary.LittleEndian.PutUint64(r[:], v)
 		return
 	}
 
