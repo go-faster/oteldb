@@ -6,7 +6,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -75,7 +77,17 @@ func TestYT(t *testing.T) {
 	rootPath := ypath.Path("//oteldb-test-" + uuid.NewString()).Child("traces")
 	t.Logf("Test path: %s", rootPath)
 	tables := ytstorage.NewTables(rootPath)
-	require.NoError(t, tables.Migrate(ctx, yc, migrate.OnConflictDrop(ctx, yc)))
+	{
+		migrateBackoff := backoff.NewExponentialBackOff()
+		migrateBackoff.InitialInterval = 2 * time.Second
+		migrateBackoff.MaxElapsedTime = time.Minute
+
+		if err := backoff.Retry(func() error {
+			return tables.Migrate(ctx, yc, migrate.OnConflictDrop(ctx, yc))
+		}, migrateBackoff); err != nil {
+			t.Fatalf("Migrate: %+v", err)
+		}
+	}
 
 	set, err := readBatchSet("_testdata/traces.json")
 	require.NoError(t, err)
