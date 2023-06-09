@@ -2,6 +2,7 @@ package tempoe2e_test
 
 import (
 	"context"
+	"encoding/hex"
 	"io"
 	"net/http/httptest"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/go-faster/oteldb/integration/tempoe2e"
@@ -129,6 +131,56 @@ func runTest(
 			r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: uuid.New()})
 			a.NoError(err)
 			a.IsType(&tempoapi.TraceByIDNotFound{}, r)
+		})
+	})
+	t.Run("SearchWithLogfmt", func(t *testing.T) {
+		validateMetadata := func(a *require.Assertions, metadata tempoapi.TraceSearchMetadata) {
+			a.NotEmpty(metadata.RootTraceName)
+			a.False(metadata.StartTimeUnixNano.IsZero())
+
+			traceID := uuid.MustParse(metadata.TraceID)
+			trace, ok := set.Traces[pcommon.TraceID(traceID)]
+			a.Truef(ok, "search trace %q", traceID)
+
+			spans := metadata.SpanSet.Spans
+			a.Len(spans, len(trace.Spanset))
+			for _, s := range spans {
+				r, err := hex.DecodeString(s.SpanID)
+				a.NoError(err)
+				a.Len(r, 8)
+				a.Contains(trace.Spanset, *(*pcommon.SpanID)(r), "check trace %q", traceID)
+			}
+		}
+		t.Run("Search", func(t *testing.T) {
+			a := require.New(t)
+			r, err := c.Search(ctx, tempoapi.SearchParams{
+				Tags:  tempoapi.NewOptString(`http.method=POST http.status_code=200`),
+				Limit: tempoapi.NewOptInt(1),
+			})
+			a.NoError(err)
+			a.NotEmpty(r.Traces)
+
+			for _, metadata := range r.Traces {
+				validateMetadata(a, metadata)
+			}
+		})
+		t.Run("Limit", func(t *testing.T) {
+			a := require.New(t)
+			r, err := c.Search(ctx, tempoapi.SearchParams{
+				Tags:  tempoapi.NewOptString(`http.method=GET http.status_code=200`),
+				Limit: tempoapi.NewOptInt(1),
+			})
+			a.NoError(err)
+			a.Len(r.Traces, 1)
+			validateMetadata(a, r.Traces[0])
+		})
+		t.Run("TagsNotExist", func(t *testing.T) {
+			a := require.New(t)
+			r, err := c.Search(ctx, tempoapi.SearchParams{
+				Tags: tempoapi.NewOptString(`clearly.not.exist=amongus http.method=GET`),
+			})
+			a.NoError(err)
+			a.Empty(r.Traces)
 		})
 	})
 }
