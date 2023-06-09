@@ -62,7 +62,7 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 					query.WriteString(" OR ")
 				}
 				fmt.Fprintf(&query,
-					`toString(arrayElement(%[1]s_%[2]s_keys, indexOf(%[1]s_%[2]s_keys, %[3]s))) = %[4]s`,
+					`toString(arrayElement(%[1]s_%[2]s_values, indexOf(%[1]s_%[2]s_keys, %[3]s))) = %[4]s`,
 					prefix, column, singleQuoted(key), singleQuoted(value),
 				)
 			}
