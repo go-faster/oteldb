@@ -42,3 +42,39 @@ func (i *EmptyIterator[T]) Err() error {
 func (i *EmptyIterator[T]) Close() error {
 	return nil
 }
+
+var _ Iterator[any] = (*SliceIterator[any])(nil)
+
+// SliceIterator is a slice iterator.
+type SliceIterator[T any] struct {
+	data []T
+	n    int
+}
+
+// NewSliceIterator creates new SliceIterator from given values.
+func NewSliceIterator[T any](vals []T) *SliceIterator[T] {
+	return &SliceIterator[T]{
+		data: vals,
+		n:    0,
+	}
+}
+
+// Next returns true, if there is element and fills t.
+func (i *SliceIterator[T]) Next(t *T) bool {
+	if i.n >= len(i.data) {
+		return false
+	}
+	*t = i.data[i.n]
+	i.n++
+	return true
+}
+
+// Err returns an error caused during iteration, if any.
+func (i *SliceIterator[T]) Err() error {
+	return nil
+}
+
+// Close closes iterator.
+func (i *SliceIterator[T]) Close() error {
+	return nil
+}

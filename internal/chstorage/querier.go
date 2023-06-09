@@ -84,12 +84,7 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 	if d := opts.MaxDuration; d != 0 {
 		fmt.Fprintf(&query, " AND (toUnixTimestamp64Nano(end) - toUnixTimestamp64Nano(start)) <= %d", d)
 	}
-
-	spans, err := q.querySpans(ctx, query.String())
-	if err != nil {
-		return nil, err
-	}
-	return newSliceIterator(spans), nil
+	return q.querySpans(ctx, query.String())
 }
 
 // TagNames returns all available tag names.
@@ -141,30 +136,25 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (tracestorage.I
 		return nil, errors.Wrap(err, "query")
 	}
 
-	return newSliceIterator(r), nil
+	return tracestorage.NewSliceIterator(r), nil
 }
 
 // TraceByID returns spans of given trace.
 func (q *Querier) TraceByID(ctx context.Context, id tracestorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
 	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = %s", q.tables.Spans, singleQuoted(id.Hex()))
-
 	if s := opts.Start; s != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)
 	}
 	if e := opts.End; e != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(end) <= %d", e)
 	}
-
-	spans, err := q.querySpans(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	return newSliceIterator(spans), nil
+	return q.querySpans(ctx, query)
 }
 
-func (q *Querier) querySpans(ctx context.Context, query string) (r []tracestorage.Span, _ error) {
+func (q *Querier) querySpans(ctx context.Context, query string) (tracestorage.Iterator[tracestorage.Span], error) {
 	c := newSpanColumns()
 
+	var r []tracestorage.Span
 	if err := q.ch.Do(ctx, ch.Query{
 		Body:   query,
 		Result: c.Result(),
@@ -176,39 +166,5 @@ func (q *Querier) querySpans(ctx context.Context, query string) (r []tracestorag
 		return nil, errors.Wrap(err, "query")
 	}
 
-	return r, nil
-}
-
-var _ tracestorage.Iterator[any] = (*sliceIterator[any])(nil)
-
-type sliceIterator[T any] struct {
-	n    int
-	data []T
-}
-
-func newSliceIterator[T any](vals []T) *sliceIterator[T] {
-	return &sliceIterator[T]{
-		n:    0,
-		data: vals,
-	}
-}
-
-// Next returns true, if there is element and fills t.
-func (i *sliceIterator[T]) Next(t *T) bool {
-	if i.n >= len(i.data) {
-		return false
-	}
-	*t = i.data[i.n]
-	i.n++
-	return true
-}
-
-// Err returns an error caused during iteration, if any.
-func (i *sliceIterator[T]) Err() error {
-	return nil
-}
-
-// Close closes iterator.
-func (i *sliceIterator[T]) Close() error {
-	return nil
+	return tracestorage.NewSliceIterator(r), nil
 }
