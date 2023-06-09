@@ -75,6 +75,10 @@ func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, op
 		return nil, errors.Wrap(err, "query traceIDs")
 	}
 
+	if len(traces) == 0 {
+		return &tracestorage.EmptyIterator[tracestorage.Span]{}, nil
+	}
+
 	// Then, query all spans for each found trace ID.
 	var query strings.Builder
 	fmt.Fprintf(&query, "* FROM [%s] WHERE trace_id IN (", q.tables.spans)

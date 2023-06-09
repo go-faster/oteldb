@@ -47,29 +47,6 @@ type TraceByIDOptions struct {
 	End Timestamp
 }
 
-// Iterator is an storage iterator interface.
-type Iterator[T any] interface {
-	// Next returns true, if there is element and fills t.
-	Next(t *T) bool
-	// Err returns an error caused during iteration, if any.
-	Err() error
-	// Close closes iterator.
-	Close() error
-}
-
-// ForEach calls given callback for each iterator element.
-//
-// NOTE: ForEach does not close iterator.
-func ForEach[T any](i Iterator[T], cb func(T) error) error {
-	var t T
-	for i.Next(&t) {
-		if err := cb(t); err != nil {
-			return err
-		}
-	}
-	return i.Err()
-}
-
 // Inserter is a trace storage insert interface.
 type Inserter interface {
 	// InsertSpans inserts given spans.
