@@ -13,6 +13,8 @@ jobs:
     uses: go-faster/x/.github/workflows/test.yml@main
     with:
       enable-386: false
+  cover:
+    uses: go-faster/x/.github/workflows/cover.yml@main
   lint:
     uses: go-faster/x/.github/workflows/lint.yml@main
   commit:
