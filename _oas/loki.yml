@@ -1,0 +1,229 @@
+openapi: 3.0.3
+info:
+  title: Grafana  API
+  version: 2.8.2
+servers:
+  - url: "http://localhost:3200"
+paths:
+  /loki/api/v1/query_range:
+    get:
+      operationId: QueryRange
+      description: Query range
+      parameters:
+        - $ref: '#/components/parameters/GrafanaUser'
+        - name: start
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: step
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            maximum: 5000
+            minimum: 0
+        - name: end
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: direction
+          in: query
+          schema:
+            $ref: '#/components/schemas/Direction'
+      responses:
+        "200":
+          description: Query response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        default:
+          $ref: '#/components/responses/Error'
+  /loki/api/v1/label/{name}/values:
+    get:
+      operationId: GetLabelValues
+      description: Get values of label
+      parameters:
+        - $ref: '#/components/parameters/GrafanaUser'
+        - name: start
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: end
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Label values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Values'
+        default:
+          $ref: '#/components/responses/Error'
+  /loki/api/v1/series:
+    get:
+      operationId: Series
+      description: Get series
+      parameters:
+        - name: start
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: end
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: match
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: Keys and values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Maps'
+        default:
+          $ref: '#/components/responses/Error'
+
+components:
+  parameters:
+    # TODO(ernado): extract to separate file? Same for all datasources
+    GrafanaUser:
+      name: X-Grafana-User
+      in: header
+      required: false
+      description: 'Grafana username that is passed to datasource when making requests from Grafana. Used for authentication and authorization.'
+      schema:
+        type: string
+  responses:
+    Error:
+      description: Error while processing request
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Value:
+      oneOf:
+        - type: string
+        - type: number
+    Entry:
+      type: array
+      items:
+        $ref: '#/components/schemas/Value'
+    Stream:
+      type: object
+      required:
+        - values
+      properties:
+        stream:
+          type: object
+          description: Map of labels
+          additionalProperties:
+            type: string
+        metric:
+          type: object
+          description: Map of labels
+          additionalProperties:
+            type: string
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entry'
+    Streams:
+      type: array
+      items:
+        $ref: '#/components/schemas/Stream'
+    Stats:
+      type: object
+    QueryResponseData:
+      type: object
+      required:
+        - stats
+        - resultType
+        - result
+      properties:
+        stats:
+          $ref: '#/components/schemas/Stats'
+        result:
+          $ref: '#/components/schemas/Streams'
+        resultType:
+          type: string
+          enum:
+            - streams
+            - matrix
+    QueryResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          default: success
+        data:
+          $ref: '#/components/schemas/QueryResponseData'
+    Direction:
+      type: string
+      enum:
+        - BACKWARD
+        - FORWARD
+        - backward
+        - forward
+    Values:
+      type: object
+      description: Array of strings
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          default: success
+    Maps:
+      type: object
+      description: Array of maps
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        status:
+          type: string
+          default: success
+    Error:
+      type: string

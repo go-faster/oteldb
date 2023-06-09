@@ -2,3 +2,4 @@
 package internal
 
 //go:generate go run github.com/ogen-go/ogen/cmd/ogen -v --target tempoapi --package tempoapi ../_oas/tempo.yml
+//go:generate go run github.com/ogen-go/ogen/cmd/ogen -v --target lokiapi --package lokiapi ../_oas/loki.yml
