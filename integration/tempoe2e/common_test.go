@@ -64,6 +64,10 @@ func runTest(
 ) {
 	set, err := readBatchSet("_testdata/traces.json")
 	require.NoError(t, err)
+	require.NotEmpty(t, set.Batches)
+	require.NotEmpty(t, set.Tags)
+	require.NotEmpty(t, set.Traces)
+
 	c := setupDB(ctx, t, set, inserter, querier)
 
 	t.Run("SearchTags", func(t *testing.T) {
@@ -77,6 +81,23 @@ func runTest(
 		}
 	})
 	t.Run("SearchTagValues", func(t *testing.T) {
+		a := require.New(t)
+
+		for tagName, tags := range set.Tags {
+			tagValues := map[string]struct{}{}
+			for _, t := range tags {
+				tagValues[t.Value] = struct{}{}
+			}
+
+			r, err := c.SearchTagValues(ctx, tempoapi.SearchTagValuesParams{TagName: tagName})
+			a.NoError(err)
+			a.Len(r.TagValues, len(tagValues))
+			for _, val := range r.TagValues {
+				a.Containsf(tagValues, val, "check tag %q", tagName)
+			}
+		}
+	})
+	t.Run("SearchTagValuesV2", func(t *testing.T) {
 		a := require.New(t)
 
 		for tagName, tags := range set.Tags {
@@ -118,8 +139,21 @@ func runTest(
 					for i := 0; i < scopeSpans.Len(); i++ {
 						spans := scopeSpans.At(i).Spans()
 						for i := 0; i < spans.Len(); i++ {
-							span := spans.At(i)
-							a.Contains(trace.Spanset, span.SpanID(), "check trace %q", uid)
+							gotSpan := spans.At(i)
+							spanID := gotSpan.SpanID()
+							a.Contains(trace.Spanset, spanID, "check trace %q", uid)
+							expectSpan := trace.Spanset[spanID]
+							// Ensure that spans are equal.
+							a.Equal(expectSpan.TraceID(), gotSpan.TraceID())
+							a.Equal(expectSpan.SpanID(), gotSpan.SpanID())
+							a.Equal(expectSpan.TraceState(), gotSpan.TraceState())
+							a.Equal(expectSpan.ParentSpanID(), gotSpan.ParentSpanID())
+							a.Equal(expectSpan.Name(), gotSpan.Name())
+							a.Equal(expectSpan.Kind(), gotSpan.Kind())
+							a.Equal(expectSpan.StartTimestamp(), gotSpan.StartTimestamp())
+							a.Equal(expectSpan.EndTimestamp(), gotSpan.EndTimestamp())
+							a.Equal(expectSpan.Status(), gotSpan.Status())
+							a.Equal(expectSpan.Attributes().AsRaw(), gotSpan.Attributes().AsRaw())
 						}
 					}
 				}
@@ -144,18 +178,33 @@ func runTest(
 
 			spans := metadata.SpanSet.Spans
 			a.Len(spans, len(trace.Spanset))
-			for _, s := range spans {
-				r, err := hex.DecodeString(s.SpanID)
+			for _, gotSpan := range spans {
+				r, err := hex.DecodeString(gotSpan.SpanID)
 				a.NoError(err)
+
 				a.Len(r, 8)
-				a.Contains(trace.Spanset, *(*pcommon.SpanID)(r), "check trace %q", traceID)
+				spanID := *(*pcommon.SpanID)(r)
+				a.Contains(trace.Spanset, spanID, "check trace %q", traceID)
+				expectSpan := trace.Spanset[spanID]
+
+				a.Equal(expectSpan.Name(), gotSpan.Name)
+				start := gotSpan.StartTimeUnixNano.UnixNano()
+				end := start + gotSpan.DurationNanos
+				a.Equal(int64(expectSpan.StartTimestamp()), start)
+				a.Equal(int64(expectSpan.EndTimestamp()), end)
+
+				if expectAttrs := expectSpan.Attributes(); expectAttrs.Len() > 0 {
+					// TODO(tdakkota): do a full attributes comparison.
+					a.NotNil(gotSpan.Attributes)
+					gotAttrs := *gotSpan.Attributes
+					a.Len(gotAttrs, expectAttrs.Len())
+				}
 			}
 		}
 		t.Run("Search", func(t *testing.T) {
 			a := require.New(t)
 			r, err := c.Search(ctx, tempoapi.SearchParams{
-				Tags:  tempoapi.NewOptString(`http.method=POST http.status_code=200`),
-				Limit: tempoapi.NewOptInt(1),
+				Tags: tempoapi.NewOptString(`http.method=POST http.status_code=200`),
 			})
 			a.NoError(err)
 			a.NotEmpty(r.Traces)
