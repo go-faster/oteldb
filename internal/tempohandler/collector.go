@@ -9,7 +9,6 @@ import (
 
 type metadataCollector struct {
 	limit     int
-	got       int
 	metadatas map[tracestorage.TraceID]tempoapi.TraceSearchMetadata
 }
 
@@ -21,13 +20,13 @@ func (b *metadataCollector) init() {
 
 func (b *metadataCollector) AddSpan(span tracestorage.Span) error {
 	b.init()
-	if b.got >= b.limit {
-		return nil
-	}
 
 	traceID := span.TraceID
 	m, ok := b.metadatas[traceID]
 	if !ok {
+		if len(b.metadatas) >= b.limit {
+			return nil
+		}
 		m = tempoapi.TraceSearchMetadata{
 			TraceID: traceID.Hex(),
 		}
@@ -36,7 +35,6 @@ func (b *metadataCollector) AddSpan(span tracestorage.Span) error {
 
 	if span.ParentSpanID.IsEmpty() {
 		span.FillTraceMetadata(&m)
-		b.got++
 	}
 	ss.Spans = append(ss.Spans, span.AsTempoSpan())
 
@@ -48,6 +46,7 @@ func (b *metadataCollector) AddSpan(span tracestorage.Span) error {
 func (b *metadataCollector) Result() (r []tempoapi.TraceSearchMetadata) {
 	r = make([]tempoapi.TraceSearchMetadata, 0, len(b.metadatas))
 	for _, v := range b.metadatas {
+		// Skip trace, if we have not got parent span yet.
 		if v.StartTimeUnixNano.IsZero() {
 			continue
 		}
