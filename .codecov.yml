@@ -2,7 +2,7 @@ ignore:
   - "**/main.go"
   - "**/*_enum.go"
   - "*_enum.go"
-  - "*_gen.go"
+  - "**/*_gen.go"
 coverage:
   status:
     project: false
