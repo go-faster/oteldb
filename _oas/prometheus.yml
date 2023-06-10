@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Prometheus API
+  version: 2.44.0
+externalDocs:
+  description: Prometheus documentation
+  url: https://prometheus.io/docs/prometheus/latest/querying/api/
+servers:
+  - url: "http://localhost:3200"
+paths:
+  /api/v1/query:
+    description: Instant queries
+    get:
+      operationId: getQuery
+      description: Query Prometheus
+      parameters:
+        - in: query
+          required: true
+          name: query
+          schema:
+            type: string
+      responses:
+        default:
+          $ref: '#/components/responses/Error'
+        200:
+         description: Query response
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/InstantQueryResponse'
+    post:
+      operationId: postQuery
+      description: Query Prometheus
+      responses:
+        default:
+          $ref: '#/components/responses/Error'
+        200:
+          description: Query response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstantQueryResponse'
+components:
+  responses:
+    Error:
+      description: Error while processing request
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Matrix:
+      type: object
+      properties:
+        resultType:
+          type: string
+    # {
+    #   "resultType": "matrix" | "vector" | "scalar" | "string",
+    #   "result": <value>
+    # }
+    # ???
+    InstantQueryData:
+      discriminator:
+        propertyName: resultType
+        mapping:
+          matrix: Matrix
+      oneOf:
+        - $ref: '#/components/schemas/Matrix'
+    InstantQueryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        data:
+          $ref: '#/components/schemas/InstantQueryData'
+    Error:
+      type: string
