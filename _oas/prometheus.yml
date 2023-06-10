@@ -51,6 +51,7 @@ components:
   schemas:
     Matrix:
       type: object
+      required: [resultType]
       properties:
         resultType:
           type: string
@@ -68,6 +69,7 @@ components:
         - $ref: '#/components/schemas/Matrix'
     InstantQueryResponse:
       type: object
+      required: [status, data]
       properties:
         status:
           type: string
