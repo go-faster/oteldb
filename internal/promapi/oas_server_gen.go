@@ -13,17 +13,17 @@ type Handler interface {
 	// Query Prometheus.
 	//
 	// GET /api/v1/query
-	GetQuery(ctx context.Context, params GetQueryParams) (*InstantQueryResponse, error)
+	GetQuery(ctx context.Context, params GetQueryParams) (*Success, error)
 	// PostQuery implements postQuery operation.
 	//
 	// Query Prometheus.
 	//
 	// POST /api/v1/query
-	PostQuery(ctx context.Context) (*InstantQueryResponse, error)
-	// NewError creates *ErrorStatusCode from error returned by handler.
+	PostQuery(ctx context.Context) (*Success, error)
+	// NewError creates *FailStatusCode from error returned by handler.
 	//
 	// Used for common default response.
-	NewError(ctx context.Context, err error) *ErrorStatusCode
+	NewError(ctx context.Context, err error) *FailStatusCode
 }
 
 // Server implements http server based on OpenAPI v3 specification and

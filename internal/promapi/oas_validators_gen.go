@@ -10,21 +10,191 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func (s InstantQueryData) Validate() error {
+func (s Data) Validate() error {
 	switch s.Type {
-	case MatrixInstantQueryData:
-		return nil // no validation needed
-	case VectorInstantQueryData:
+	case MatrixData:
+		if err := s.Matrix.Validate(); err != nil {
+			return err
+		}
+		return nil
+	case VectorData:
 		if err := s.Vector.Validate(); err != nil {
 			return err
 		}
 		return nil
+	case ScalarData:
+		if err := s.Scalar.Validate(); err != nil {
+			return err
+		}
+		return nil
+	case StringData:
+		return nil // no validation needed
 	default:
 		return errors.Errorf("invalid type %q", s.Type)
 	}
 }
 
-func (s *InstantQueryResponse) Validate() error {
+func (s *Fail) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.ErrorType.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "errorType",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if s.Data.Set {
+			if err := func() error {
+				if err := s.Data.Value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "data",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s FailErrorType) Validate() error {
+	switch s {
+	case "timeout":
+		return nil
+	case "canceled":
+		return nil
+	case "execution":
+		return nil
+	case "bad_data":
+		return nil
+	case "internal":
+		return nil
+	case "unavailable":
+		return nil
+	case "not_found":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+func (s *FailStatusCode) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Response.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "Response",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s *Matrix) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Result == nil {
+			return errors.New("nil is invalid value")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Result {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s *MatrixResultItem) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		var failures []validate.FieldError
+		for i, elem := range s.Values {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "values",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *Scalar) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s *Success) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {

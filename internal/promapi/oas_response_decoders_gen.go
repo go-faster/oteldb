@@ -14,7 +14,7 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func decodeGetQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ error) {
+func decodeGetQueryResponse(resp *http.Response) (res *Success, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -30,7 +30,7 @@ func decodeGetQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ e
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InstantQueryResponse
+			var response Success
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -53,7 +53,7 @@ func decodeGetQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ e
 		}
 	}
 	// Convenient error response.
-	defRes, err := func() (res *ErrorStatusCode, err error) {
+	defRes, err := func() (res *FailStatusCode, err error) {
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 		if err != nil {
 			return res, errors.Wrap(err, "parse media type")
@@ -66,7 +66,7 @@ func decodeGetQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ e
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Error
+			var response Fail
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -83,7 +83,7 @@ func decodeGetQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ e
 				}
 				return res, err
 			}
-			return &ErrorStatusCode{
+			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
 				Response:   response,
 			}, nil
@@ -97,7 +97,7 @@ func decodeGetQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ e
 	return res, errors.Wrap(defRes, "error")
 }
 
-func decodePostQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ error) {
+func decodePostQueryResponse(resp *http.Response) (res *Success, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -113,7 +113,7 @@ func decodePostQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ 
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InstantQueryResponse
+			var response Success
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -136,7 +136,7 @@ func decodePostQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ 
 		}
 	}
 	// Convenient error response.
-	defRes, err := func() (res *ErrorStatusCode, err error) {
+	defRes, err := func() (res *FailStatusCode, err error) {
 		ct, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 		if err != nil {
 			return res, errors.Wrap(err, "parse media type")
@@ -149,7 +149,7 @@ func decodePostQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ 
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Error
+			var response Fail
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -166,7 +166,7 @@ func decodePostQueryResponse(resp *http.Response) (res *InstantQueryResponse, _ 
 				}
 				return res, err
 			}
-			return &ErrorStatusCode{
+			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
 				Response:   response,
 			}, nil

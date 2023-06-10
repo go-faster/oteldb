@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func encodeGetQueryResponse(response *InstantQueryResponse, w http.ResponseWriter, span trace.Span) error {
+func encodeGetQueryResponse(response *Success, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
@@ -24,7 +24,7 @@ func encodeGetQueryResponse(response *InstantQueryResponse, w http.ResponseWrite
 	return nil
 }
 
-func encodePostQueryResponse(response *InstantQueryResponse, w http.ResponseWriter, span trace.Span) error {
+func encodePostQueryResponse(response *Success, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
@@ -37,7 +37,7 @@ func encodePostQueryResponse(response *InstantQueryResponse, w http.ResponseWrit
 	return nil
 }
 
-func encodeErrorResponse(response *ErrorStatusCode, w http.ResponseWriter, span trace.Span) error {
+func encodeErrorResponse(response *FailStatusCode, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	code := response.StatusCode
 	if code == 0 {

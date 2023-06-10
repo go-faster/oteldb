@@ -27,7 +27,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstantQueryResponse'
+                $ref: '#/components/schemas/Success'
     post:
       operationId: postQuery
       description: Query Prometheus
@@ -39,7 +39,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InstantQueryResponse'
+                $ref: '#/components/schemas/Success'
 components:
   responses:
     Error:
@@ -47,8 +47,24 @@ components:
       content:
         "application/json":
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/Fail"
   schemas:
+    Scalar:
+      type: object
+      required: [resultType, result]
+      properties:
+        resultType:
+          type: string
+        result:
+          $ref: '#/components/schemas/Value'
+    String:
+      type: object
+      required: [resultType, result]
+      properties:
+        resultType:
+          type: string
+        result:
+          type: string
     Vector:
       type: object
       required: [resultType, result]
@@ -69,24 +85,37 @@ components:
                 $ref: '#/components/schemas/Value'
     Matrix:
       type: object
-      required: [resultType]
+      required: [resultType, result]
       properties:
         resultType:
           type: string
-    # {
-    #   "resultType": "matrix" | "vector" | "scalar" | "string",
-    #   "result": <value>
-    # }
-    # ???
-    InstantQueryData:
+        result:
+          type: array
+          items:
+            type: object
+            required: [metric, value]
+            properties:
+              metric:
+                type: object
+                additionalProperties:
+                  type: string
+              values:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Value'
+    Data:
       discriminator:
         propertyName: resultType
         mapping:
           matrix: Matrix
           vector: Vector
+          scalar: Scalar
+          string: String
       oneOf:
         - $ref: '#/components/schemas/Matrix'
         - $ref: '#/components/schemas/Vector'
+        - $ref: '#/components/schemas/Scalar'
+        - $ref: '#/components/schemas/String'
     Value:
       type: array
       items:
@@ -98,13 +127,42 @@ components:
       description: >-
         The first item in the array MUST be an integer,
         and the second item MUST be a string.
-    InstantQueryResponse:
+    Fail:
+      type: object
+      required: [status, error, errorType]
+      description: 'May still contain data'
+      properties:
+        status:
+          type: string
+          default: 'error'
+        error:
+          type: string
+        errorType:
+          type: string
+          enum:
+            - 'timeout'
+            - 'canceled'
+            - 'execution'
+            - 'bad_data'
+            - 'internal'
+            - 'unavailable'
+            - 'not_found'
+        data:
+          $ref: '#/components/schemas/Data'
+    Success:
       type: object
       required: [status, data]
       properties:
         status:
           type: string
+          default: 'success'
+          description: Always 'success'
+        warnings:
+          description: >-
+            Only if there were warnings while executing the request.
+            There will still be data in the data field.
+          type: array
+          items:
+            type: string
         data:
-          $ref: '#/components/schemas/InstantQueryData'
-    Error:
-      type: string
+          $ref: '#/components/schemas/Data'

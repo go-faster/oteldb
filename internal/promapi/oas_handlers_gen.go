@@ -72,7 +72,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 		return
 	}
 
-	var response *InstantQueryResponse
+	var response *Success
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
@@ -91,7 +91,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 		type (
 			Request  = struct{}
 			Params   = GetQueryParams
-			Response = *InstantQueryResponse
+			Response = *Success
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -111,7 +111,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 	}
 	if err != nil {
 		recordError("Internal", err)
-		if errRes, ok := errors.Into[*ErrorStatusCode](err); ok {
+		if errRes, ok := errors.Into[*FailStatusCode](err); ok {
 			encodeErrorResponse(errRes, w, span)
 			return
 		}
@@ -168,7 +168,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 		err error
 	)
 
-	var response *InstantQueryResponse
+	var response *Success
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
@@ -182,7 +182,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 		type (
 			Request  = struct{}
 			Params   = struct{}
-			Response = *InstantQueryResponse
+			Response = *Success
 		)
 		response, err = middleware.HookMiddleware[
 			Request,
@@ -202,7 +202,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 	}
 	if err != nil {
 		recordError("Internal", err)
-		if errRes, ok := errors.Into[*ErrorStatusCode](err); ok {
+		if errRes, ok := errors.Into[*FailStatusCode](err); ok {
 			encodeErrorResponse(errRes, w, span)
 			return
 		}

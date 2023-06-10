@@ -18,7 +18,7 @@ var _ Handler = UnimplementedHandler{}
 // Query Prometheus.
 //
 // GET /api/v1/query
-func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams) (r *InstantQueryResponse, _ error) {
+func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams) (r *Success, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -27,14 +27,14 @@ func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams)
 // Query Prometheus.
 //
 // POST /api/v1/query
-func (UnimplementedHandler) PostQuery(ctx context.Context) (r *InstantQueryResponse, _ error) {
+func (UnimplementedHandler) PostQuery(ctx context.Context) (r *Success, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// NewError creates *ErrorStatusCode from error returned by handler.
+// NewError creates *FailStatusCode from error returned by handler.
 //
 // Used for common default response.
-func (UnimplementedHandler) NewError(ctx context.Context, err error) (r *ErrorStatusCode) {
-	r = new(ErrorStatusCode)
+func (UnimplementedHandler) NewError(ctx context.Context, err error) (r *FailStatusCode) {
+	r = new(FailStatusCode)
 	return r
 }

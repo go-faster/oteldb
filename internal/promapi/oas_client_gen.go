@@ -26,7 +26,7 @@ type Client struct {
 	baseClient
 }
 type errorHandler interface {
-	NewError(ctx context.Context, err error) *ErrorStatusCode
+	NewError(ctx context.Context, err error) *FailStatusCode
 }
 
 var _ Handler = struct {
@@ -77,13 +77,13 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // Query Prometheus.
 //
 // GET /api/v1/query
-func (c *Client) GetQuery(ctx context.Context, params GetQueryParams) (*InstantQueryResponse, error) {
+func (c *Client) GetQuery(ctx context.Context, params GetQueryParams) (*Success, error) {
 	res, err := c.sendGetQuery(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *InstantQueryResponse, err error) {
+func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *Success, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQuery"),
 	}
@@ -165,13 +165,13 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 // Query Prometheus.
 //
 // POST /api/v1/query
-func (c *Client) PostQuery(ctx context.Context) (*InstantQueryResponse, error) {
+func (c *Client) PostQuery(ctx context.Context) (*Success, error) {
 	res, err := c.sendPostQuery(ctx)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendPostQuery(ctx context.Context) (res *InstantQueryResponse, err error) {
+func (c *Client) sendPostQuery(ctx context.Context) (res *Success, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQuery"),
 	}
