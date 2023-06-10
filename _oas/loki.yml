@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Grafana  API
+  title: Grafana Loki API
   version: 2.8.2
 servers:
   - url: "http://localhost:3200"
