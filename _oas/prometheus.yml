@@ -23,11 +23,11 @@ paths:
         default:
           $ref: '#/components/responses/Error'
         200:
-         description: Query response
-         content:
-           application/json:
-             schema:
-               $ref: '#/components/schemas/InstantQueryResponse'
+          description: Query response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstantQueryResponse'
     post:
       operationId: postQuery
       description: Query Prometheus
@@ -49,6 +49,24 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
   schemas:
+    Vector:
+      type: object
+      required: [resultType, result]
+      properties:
+        resultType:
+          type: string
+        result:
+          type: array
+          items:
+            type: object
+            required: [metric, value]
+            properties:
+              metric:
+                type: object
+                additionalProperties:
+                  type: string
+              value:
+                $ref: '#/components/schemas/Value'
     Matrix:
       type: object
       required: [resultType]
@@ -65,8 +83,21 @@ components:
         propertyName: resultType
         mapping:
           matrix: Matrix
+          vector: Vector
       oneOf:
         - $ref: '#/components/schemas/Matrix'
+        - $ref: '#/components/schemas/Vector'
+    Value:
+      type: array
+      items:
+        oneOf:
+          - type: integer
+          - type: string
+      minItems: 2
+      maxItems: 2
+      description: >-
+        The first item in the array MUST be an integer,
+        and the second item MUST be a string.
     InstantQueryResponse:
       type: object
       required: [status, data]

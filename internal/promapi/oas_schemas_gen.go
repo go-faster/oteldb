@@ -43,6 +43,7 @@ func (s *ErrorStatusCode) SetResponse(val Error) {
 type InstantQueryData struct {
 	Type   InstantQueryDataType // switch on this field
 	Matrix Matrix
+	Vector Vector
 }
 
 // InstantQueryDataType is oneOf type of InstantQueryData.
@@ -51,10 +52,14 @@ type InstantQueryDataType string
 // Possible values for InstantQueryDataType.
 const (
 	MatrixInstantQueryData InstantQueryDataType = "Matrix"
+	VectorInstantQueryData InstantQueryDataType = "Vector"
 )
 
 // IsMatrix reports whether InstantQueryData is Matrix.
 func (s InstantQueryData) IsMatrix() bool { return s.Type == MatrixInstantQueryData }
+
+// IsVector reports whether InstantQueryData is Vector.
+func (s InstantQueryData) IsVector() bool { return s.Type == VectorInstantQueryData }
 
 // SetMatrix sets InstantQueryData to Matrix.
 func (s *InstantQueryData) SetMatrix(v Matrix) {
@@ -74,6 +79,27 @@ func (s InstantQueryData) GetMatrix() (v Matrix, ok bool) {
 func NewMatrixInstantQueryData(v Matrix) InstantQueryData {
 	var s InstantQueryData
 	s.SetMatrix(v)
+	return s
+}
+
+// SetVector sets InstantQueryData to Vector.
+func (s *InstantQueryData) SetVector(v Vector) {
+	s.Type = VectorInstantQueryData
+	s.Vector = v
+}
+
+// GetVector returns Vector and true boolean if InstantQueryData is Vector.
+func (s InstantQueryData) GetVector() (v Vector, ok bool) {
+	if !s.IsVector() {
+		return v, false
+	}
+	return s.Vector, true
+}
+
+// NewVectorInstantQueryData returns new InstantQueryData from Vector.
+func NewVectorInstantQueryData(v Vector) InstantQueryData {
+	var s InstantQueryData
+	s.SetVector(v)
 	return s
 }
 
@@ -105,3 +131,120 @@ func (s *InstantQueryResponse) SetData(val InstantQueryData) {
 
 // Ref: #/components/schemas/Matrix
 type Matrix struct{}
+
+type Value []ValueItem
+
+// ValueItem represents sum type.
+type ValueItem struct {
+	Type   ValueItemType // switch on this field
+	Int    int
+	String string
+}
+
+// ValueItemType is oneOf type of ValueItem.
+type ValueItemType string
+
+// Possible values for ValueItemType.
+const (
+	IntValueItem    ValueItemType = "int"
+	StringValueItem ValueItemType = "string"
+)
+
+// IsInt reports whether ValueItem is int.
+func (s ValueItem) IsInt() bool { return s.Type == IntValueItem }
+
+// IsString reports whether ValueItem is string.
+func (s ValueItem) IsString() bool { return s.Type == StringValueItem }
+
+// SetInt sets ValueItem to int.
+func (s *ValueItem) SetInt(v int) {
+	s.Type = IntValueItem
+	s.Int = v
+}
+
+// GetInt returns int and true boolean if ValueItem is int.
+func (s ValueItem) GetInt() (v int, ok bool) {
+	if !s.IsInt() {
+		return v, false
+	}
+	return s.Int, true
+}
+
+// NewIntValueItem returns new ValueItem from int.
+func NewIntValueItem(v int) ValueItem {
+	var s ValueItem
+	s.SetInt(v)
+	return s
+}
+
+// SetString sets ValueItem to string.
+func (s *ValueItem) SetString(v string) {
+	s.Type = StringValueItem
+	s.String = v
+}
+
+// GetString returns string and true boolean if ValueItem is string.
+func (s ValueItem) GetString() (v string, ok bool) {
+	if !s.IsString() {
+		return v, false
+	}
+	return s.String, true
+}
+
+// NewStringValueItem returns new ValueItem from string.
+func NewStringValueItem(v string) ValueItem {
+	var s ValueItem
+	s.SetString(v)
+	return s
+}
+
+// Ref: #/components/schemas/Vector
+type Vector struct {
+	Result []VectorResultItem `json:"result"`
+}
+
+// GetResult returns the value of Result.
+func (s *Vector) GetResult() []VectorResultItem {
+	return s.Result
+}
+
+// SetResult sets the value of Result.
+func (s *Vector) SetResult(val []VectorResultItem) {
+	s.Result = val
+}
+
+type VectorResultItem struct {
+	Metric VectorResultItemMetric `json:"metric"`
+	Value  Value                  `json:"value"`
+}
+
+// GetMetric returns the value of Metric.
+func (s *VectorResultItem) GetMetric() VectorResultItemMetric {
+	return s.Metric
+}
+
+// GetValue returns the value of Value.
+func (s *VectorResultItem) GetValue() Value {
+	return s.Value
+}
+
+// SetMetric sets the value of Metric.
+func (s *VectorResultItem) SetMetric(val VectorResultItemMetric) {
+	s.Metric = val
+}
+
+// SetValue sets the value of Value.
+func (s *VectorResultItem) SetValue(val Value) {
+	s.Value = val
+}
+
+type VectorResultItemMetric map[string]string
+
+func (s *VectorResultItemMetric) init() VectorResultItemMetric {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
