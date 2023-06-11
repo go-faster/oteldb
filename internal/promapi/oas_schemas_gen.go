@@ -438,9 +438,9 @@ type Value []ValueItem
 
 // ValueItem represents sum type.
 type ValueItem struct {
-	Type   ValueItemType // switch on this field
-	Int    int
-	String string
+	Type    ValueItemType // switch on this field
+	Float64 float64
+	String  string
 }
 
 // ValueItemType is oneOf type of ValueItem.
@@ -448,34 +448,34 @@ type ValueItemType string
 
 // Possible values for ValueItemType.
 const (
-	IntValueItem    ValueItemType = "int"
-	StringValueItem ValueItemType = "string"
+	Float64ValueItem ValueItemType = "float64"
+	StringValueItem  ValueItemType = "string"
 )
 
-// IsInt reports whether ValueItem is int.
-func (s ValueItem) IsInt() bool { return s.Type == IntValueItem }
+// IsFloat64 reports whether ValueItem is float64.
+func (s ValueItem) IsFloat64() bool { return s.Type == Float64ValueItem }
 
 // IsString reports whether ValueItem is string.
 func (s ValueItem) IsString() bool { return s.Type == StringValueItem }
 
-// SetInt sets ValueItem to int.
-func (s *ValueItem) SetInt(v int) {
-	s.Type = IntValueItem
-	s.Int = v
+// SetFloat64 sets ValueItem to float64.
+func (s *ValueItem) SetFloat64(v float64) {
+	s.Type = Float64ValueItem
+	s.Float64 = v
 }
 
-// GetInt returns int and true boolean if ValueItem is int.
-func (s ValueItem) GetInt() (v int, ok bool) {
-	if !s.IsInt() {
+// GetFloat64 returns float64 and true boolean if ValueItem is float64.
+func (s ValueItem) GetFloat64() (v float64, ok bool) {
+	if !s.IsFloat64() {
 		return v, false
 	}
-	return s.Int, true
+	return s.Float64, true
 }
 
-// NewIntValueItem returns new ValueItem from int.
-func NewIntValueItem(v int) ValueItem {
+// NewFloat64ValueItem returns new ValueItem from float64.
+func NewFloat64ValueItem(v float64) ValueItem {
 	var s ValueItem
-	s.SetInt(v)
+	s.SetFloat64(v)
 	return s
 }
 

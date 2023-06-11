@@ -225,8 +225,39 @@ func (s Value) Validate() error {
 	}).ValidateLength(len(alias)); err != nil {
 		return errors.Wrap(err, "array")
 	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
 	return nil
 }
+func (s ValueItem) Validate() error {
+	switch s.Type {
+	case Float64ValueItem:
+		if err := (validate.Float{}).Validate(float64(s.Float64)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	case StringValueItem:
+		return nil // no validation needed
+	default:
+		return errors.Errorf("invalid type %q", s.Type)
+	}
+}
+
 func (s *Vector) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {

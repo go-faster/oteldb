@@ -1024,8 +1024,8 @@ func (s *Value) UnmarshalJSON(data []byte) error {
 // Encode encodes ValueItem as json.
 func (s ValueItem) Encode(e *jx.Encoder) {
 	switch s.Type {
-	case IntValueItem:
-		e.Int(s.Int)
+	case Float64ValueItem:
+		e.Float64(s.Float64)
 	case StringValueItem:
 		e.Str(s.String)
 	}
@@ -1039,12 +1039,12 @@ func (s *ValueItem) Decode(d *jx.Decoder) error {
 	// Sum type type_discriminator.
 	switch t := d.Next(); t {
 	case jx.Number:
-		v, err := d.Int()
-		s.Int = int(v)
+		v, err := d.Float64()
+		s.Float64 = float64(v)
 		if err != nil {
 			return err
 		}
-		s.Type = IntValueItem
+		s.Type = Float64ValueItem
 	case jx.String:
 		v, err := d.Str()
 		s.String = string(v)

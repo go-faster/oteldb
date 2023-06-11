@@ -120,7 +120,7 @@ components:
       type: array
       items:
         oneOf:
-          - type: integer
+          - type: number
           - type: string
       minItems: 2
       maxItems: 2

@@ -164,12 +164,12 @@ func (s *Value) SetFake() {
 
 // SetFake set fake values.
 func (s *ValueItem) SetFake() {
-	var variant int
+	var variant float64
 
 	{
-		variant = int(0)
+		variant = float64(0)
 	}
-	s.SetInt(variant)
+	s.SetFloat64(variant)
 }
 
 // SetFake set fake values.
