@@ -84,6 +84,10 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 					Name: "query",
 					In:   "query",
 				}: params.Query,
+				{
+					Name: "time",
+					In:   "query",
+				}: params.Time,
 			},
 			Raw: r,
 		}

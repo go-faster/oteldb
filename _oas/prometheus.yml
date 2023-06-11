@@ -19,6 +19,13 @@ paths:
           name: query
           schema:
             type: string
+        - in: query
+          required: false
+          name: time
+          description: Evaluation timestamp
+          schema:
+            type: string
+            description: rfc3339 or unix timestamp
       responses:
         default:
           $ref: '#/components/responses/Error'

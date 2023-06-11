@@ -136,6 +136,23 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 			return res, errors.Wrap(err, "encode query")
 		}
 	}
+	{
+		// Encode "time" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "time",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Time.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
 	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"

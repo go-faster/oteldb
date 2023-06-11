@@ -15,6 +15,8 @@ import (
 // GetQueryParams is parameters of getQuery operation.
 type GetQueryParams struct {
 	Query string
+	// Evaluation timestamp.
+	Time OptString
 }
 
 func unpackGetQueryParams(packed middleware.Parameters) (params GetQueryParams) {
@@ -24,6 +26,15 @@ func unpackGetQueryParams(packed middleware.Parameters) (params GetQueryParams) 
 			In:   "query",
 		}
 		params.Query = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "time",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Time = v.(OptString)
+		}
 	}
 	return params
 }
@@ -62,6 +73,47 @@ func decodeGetQueryParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "query",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: time.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "time",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotTimeVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotTimeVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Time.SetTo(paramsDotTimeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "time",
 			In:   "query",
 			Err:  err,
 		}
