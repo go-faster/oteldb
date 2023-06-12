@@ -10,7 +10,7 @@ require (
 	github.com/go-faster/sdk v0.7.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
-	github.com/ogen-go/ogen v0.68.4
+	github.com/ogen-go/ogen v0.68.6
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/collector v0.79.0
 	go.opentelemetry.io/collector/component v0.79.0
