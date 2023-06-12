@@ -90,7 +90,7 @@ func TestPrometheusOAS(t *testing.T) {
 			Query: "go_info{}",
 		})
 		require.NoError(t, err, "api query")
-		require.True(t, res.Data.IsVector(), "sould be scalar")
+		require.True(t, res.Data.IsVector(), "should be scalar")
 		printJSON(t, res.Data, "blank query result")
 	}
 
