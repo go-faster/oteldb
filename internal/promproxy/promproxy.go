@@ -33,7 +33,7 @@ func (s Server) GetQuery(ctx context.Context, params promapi.GetQueryParams) (*p
 	return s.api.GetQuery(ctx, params)
 }
 
-// PostQuery invokes postQuery operation.
+// PostQuery implements postQuery operation.
 //
 // Query Prometheus.
 //
