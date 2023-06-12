@@ -41,15 +41,10 @@ type Receiver[C Consumer] struct {
 	logger    *zap.Logger
 }
 
-var defaultReceivers = map[string]interface{}{
-	// "jaeger": map[string]interface{}{
-	// 	"protocols": map[string]interface{}{
-	// 		"grpc":        nil,
-	// 		"thrift_http": nil,
-	// 	},
+var defaultReceivers = map[string]any{
 	// },
-	"otlp": map[string]interface{}{
-		"protocols": map[string]interface{}{
+	"otlp": map[string]any{
+		"protocols": map[string]any{
 			"grpc": nil,
 			"http": nil,
 		},
@@ -88,14 +83,7 @@ func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 		logger:   cfg.Logger.Named("shim"),
 	}
 
-	// load config
-	receiverFactories, err := receiver.MakeFactoryMap(
-		otlpreceiver.NewFactory(),
-		// jaegerreceiver.NewFactory(),
-		// zipkinreceiver.NewFactory(),
-		// opencensusreceiver.NewFactory(),
-		// kafkareceiver.NewFactory(),
-	)
+	receiverFactories, err := receiver.MakeFactoryMap(otlpreceiver.NewFactory())
 	if err != nil {
 		return nil, err
 	}
@@ -154,30 +142,13 @@ func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 		}
 
 		// Make sure that the headers are added to context. Required for Authentication.
-		switch componentID.Type() {
-		case "otlp":
+		if componentID.Type() == "otlp" {
 			otlpRecvCfg := componentCfg.(*otlpreceiver.Config)
 
 			if otlpRecvCfg.HTTP != nil {
 				otlpRecvCfg.HTTP.IncludeMetadata = true
 				componentCfg = otlpRecvCfg
 			}
-
-		case "jaeger":
-			// FIXME(tdakkota): For now, we support only OTLP.
-
-			// jaegerRecvCfg := componentCfg.(*jaegerreceiver.Config)
-			// if jaegerRecvCfg.ThriftHTTP != nil {
-			// 	jaegerRecvCfg.ThriftHTTP.IncludeMetadata = true
-			// }
-			// componentCfg = jaegerRecvCfg
-
-		case "zipkin":
-			// FIXME(tdakkota): For now, we support only OTLP.
-
-			// zipkinRecvCfg := componentCfg.(*zipkinreceiver.Config)
-			// zipkinRecvCfg.HTTPServerSettings.IncludeMetadata = true
-			// componentCfg = zipkinRecvCfg
 		}
 
 		logger := cfg.Logger
