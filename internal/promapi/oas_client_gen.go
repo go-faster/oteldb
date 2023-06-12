@@ -91,8 +91,9 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 	// Run stopwatch.
 	startTime := time.Now()
 	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, elapsedDuration.Microseconds(), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
@@ -196,8 +197,9 @@ func (c *Client) sendPostQuery(ctx context.Context) (res *Success, err error) {
 	// Run stopwatch.
 	startTime := time.Now()
 	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, elapsedDuration.Microseconds(), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
