@@ -29,6 +29,9 @@ func main() {
 			promapi.WithTracerProvider(m.TracerProvider()),
 			promapi.WithMeterProvider(m.MeterProvider()),
 		)
+		if err != nil {
+			return errors.Wrap(err, "create prometheus server")
+		}
 		addr := os.Getenv("HTTP_ADDR")
 		if addr == "" {
 			// Default Prometheus port.

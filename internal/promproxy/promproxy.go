@@ -19,19 +19,33 @@ func NewServer(api *promapi.Client) *Server {
 	}
 }
 
+// Server implement proxy server.
 type Server struct {
 	api *promapi.Client
 }
 
+// GetQuery implements getQuery operation.
+//
+// Query Prometheus.
+//
+// GET /api/v1/query
 func (s Server) GetQuery(ctx context.Context, params promapi.GetQueryParams) (*promapi.Success, error) {
 	return s.api.GetQuery(ctx, params)
 }
 
+// PostQuery invokes postQuery operation.
+//
+// Query Prometheus.
+//
+// POST /api/v1/query
 func (s Server) PostQuery(ctx context.Context) (*promapi.Success, error) {
 	return s.api.PostQuery(ctx)
 }
 
-func (s Server) NewError(ctx context.Context, err error) *promapi.FailStatusCode {
+// NewError creates *FailStatusCode from error returned by handler.
+//
+// Used for common default response.
+func (s Server) NewError(_ context.Context, err error) *promapi.FailStatusCode {
 	if v, ok := errors.Into[*promapi.FailStatusCode](err); ok {
 		// Pass as-is.
 		return v
