@@ -126,14 +126,12 @@ components:
     Value:
       type: array
       items:
-        oneOf:
-          - type: number
-          - type: string
-      minItems: 2
-      maxItems: 2
-      description: >-
-        The first item in the array MUST be an integer,
-        and the second item MUST be a string.
+        - type: number
+          description: float64 timestamp
+          x-ogen-name: T
+        - type: string
+          description: value
+          x-ogen-name: V
     Fail:
       type: object
       required: [status, error, errorType]

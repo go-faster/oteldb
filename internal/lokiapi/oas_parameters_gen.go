@@ -506,7 +506,7 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 				return err
 			}
 			if err := func() error {
-				if params.Limit.Set {
+				if value, ok := params.Limit.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -517,7 +517,7 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Limit.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -612,9 +612,9 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 				return err
 			}
 			if err := func() error {
-				if params.Direction.Set {
+				if value, ok := params.Direction.Get(); ok {
 					if err := func() error {
-						if err := params.Direction.Value.Validate(); err != nil {
+						if err := value.Validate(); err != nil {
 							return err
 						}
 						return nil

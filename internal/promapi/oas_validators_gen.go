@@ -48,9 +48,9 @@ func (s *Fail) Validate() error {
 		})
 	}
 	if err := func() error {
-		if s.Data.Set {
+		if value, ok := s.Data.Get(); ok {
 			if err := func() error {
-				if err := s.Data.Value.Validate(); err != nil {
+				if err := value.Validate(); err != nil {
 					return err
 				}
 				return nil
@@ -212,52 +212,24 @@ func (s *Success) Validate() error {
 	}
 	return nil
 }
-func (s Value) Validate() error {
-	alias := ([]ValueItem)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
-	}
-	if err := (validate.Array{
-		MinLength:    2,
-		MinLengthSet: true,
-		MaxLength:    2,
-		MaxLengthSet: true,
-	}).ValidateLength(len(alias)); err != nil {
-		return errors.Wrap(err, "array")
-	}
+func (s *Value) Validate() error {
 	var failures []validate.FieldError
-	for i, elem := range alias {
-		if err := func() error {
-			if err := elem.Validate(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			failures = append(failures, validate.FieldError{
-				Name:  fmt.Sprintf("[%d]", i),
-				Error: err,
-			})
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
 		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
+			Error: err,
+		})
 	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
-func (s ValueItem) Validate() error {
-	switch s.Type {
-	case Float64ValueItem:
-		if err := (validate.Float{}).Validate(float64(s.Float64)); err != nil {
-			return errors.Wrap(err, "float")
-		}
-		return nil
-	case StringValueItem:
-		return nil // no validation needed
-	default:
-		return errors.Errorf("invalid type %q", s.Type)
-	}
-}
-
 func (s *Vector) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {

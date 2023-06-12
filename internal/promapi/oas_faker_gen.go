@@ -148,28 +148,16 @@ func (s *Success) SetFake() {
 
 // SetFake set fake values.
 func (s *Value) SetFake() {
-	var unwrapped []ValueItem
 	{
-		unwrapped = nil
-		for i := 0; i < 2; i++ {
-			var elem ValueItem
-			{
-				elem.SetFake()
-			}
-			unwrapped = append(unwrapped, elem)
+		{
+			s.T = float64(0)
 		}
 	}
-	*s = Value(unwrapped)
-}
-
-// SetFake set fake values.
-func (s *ValueItem) SetFake() {
-	var variant float64
-
 	{
-		variant = float64(0)
+		{
+			s.V = "string"
+		}
 	}
-	s.SetFloat64(variant)
 }
 
 // SetFake set fake values.

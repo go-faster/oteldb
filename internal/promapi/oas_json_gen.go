@@ -372,6 +372,8 @@ func (s *Matrix) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
+		case "resultType":
+			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -677,6 +679,8 @@ func (s *Scalar) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
+		case "resultType":
+			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -773,6 +777,8 @@ func (s *String) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
+		case "resultType":
+			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -971,15 +977,23 @@ func (s *Success) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes Value as json.
-func (s Value) Encode(e *jx.Encoder) {
-	unwrapped := []ValueItem(s)
-
+// Encode implements json.Marshaler.
+func (s *Value) Encode(e *jx.Encoder) {
 	e.ArrStart()
-	for _, elem := range unwrapped {
-		elem.Encode(e)
-	}
+	s.encodeTuple(e)
 	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *Value) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		e.Float64(elem)
+	}
+	{
+		elem := s.V
+		e.Str(elem)
+	}
 }
 
 // Decode decodes Value from json.
@@ -987,29 +1001,39 @@ func (s *Value) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Value to nil")
 	}
-	var unwrapped []ValueItem
-	if err := func() error {
-		unwrapped = make([]ValueItem, 0)
-		if err := d.Arr(func(d *jx.Decoder) error {
-			var elem ValueItem
-			if err := elem.Decode(d); err != nil {
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Float64()
+			s.T = float64(v)
+			if err != nil {
 				return err
 			}
-			unwrapped = append(unwrapped, elem)
 			return nil
-		}); err != nil {
-			return err
+		case 1:
+			n++
+			v, err := d.Str()
+			s.V = string(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
 		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
+	}); err != nil {
+		return err
 	}
-	*s = Value(unwrapped)
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
+	}
 	return nil
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s Value) MarshalJSON() ([]byte, error) {
+func (s *Value) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
@@ -1017,56 +1041,6 @@ func (s Value) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *Value) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ValueItem as json.
-func (s ValueItem) Encode(e *jx.Encoder) {
-	switch s.Type {
-	case Float64ValueItem:
-		e.Float64(s.Float64)
-	case StringValueItem:
-		e.Str(s.String)
-	}
-}
-
-// Decode decodes ValueItem from json.
-func (s *ValueItem) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode ValueItem to nil")
-	}
-	// Sum type type_discriminator.
-	switch t := d.Next(); t {
-	case jx.Number:
-		v, err := d.Float64()
-		s.Float64 = float64(v)
-		if err != nil {
-			return err
-		}
-		s.Type = Float64ValueItem
-	case jx.String:
-		v, err := d.Str()
-		s.String = string(v)
-		if err != nil {
-			return err
-		}
-		s.Type = StringValueItem
-	default:
-		return errors.Errorf("unexpected json type %q", t)
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s ValueItem) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ValueItem) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -1121,6 +1095,8 @@ func (s *Vector) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
+		case "resultType":
+			return d.Skip()
 		default:
 			return d.Skip()
 		}

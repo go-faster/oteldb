@@ -480,70 +480,30 @@ func (s *Success) SetData(val Data) {
 	s.Data = val
 }
 
-type Value []ValueItem
-
-// ValueItem represents sum type.
-type ValueItem struct {
-	Type    ValueItemType // switch on this field
-	Float64 float64
-	String  string
+// Ref: #/components/schemas/Value
+type Value struct {
+	T float64
+	V string
 }
 
-// ValueItemType is oneOf type of ValueItem.
-type ValueItemType string
-
-// Possible values for ValueItemType.
-const (
-	Float64ValueItem ValueItemType = "float64"
-	StringValueItem  ValueItemType = "string"
-)
-
-// IsFloat64 reports whether ValueItem is float64.
-func (s ValueItem) IsFloat64() bool { return s.Type == Float64ValueItem }
-
-// IsString reports whether ValueItem is string.
-func (s ValueItem) IsString() bool { return s.Type == StringValueItem }
-
-// SetFloat64 sets ValueItem to float64.
-func (s *ValueItem) SetFloat64(v float64) {
-	s.Type = Float64ValueItem
-	s.Float64 = v
+// GetT returns the value of T.
+func (s *Value) GetT() float64 {
+	return s.T
 }
 
-// GetFloat64 returns float64 and true boolean if ValueItem is float64.
-func (s ValueItem) GetFloat64() (v float64, ok bool) {
-	if !s.IsFloat64() {
-		return v, false
-	}
-	return s.Float64, true
+// GetV returns the value of V.
+func (s *Value) GetV() string {
+	return s.V
 }
 
-// NewFloat64ValueItem returns new ValueItem from float64.
-func NewFloat64ValueItem(v float64) ValueItem {
-	var s ValueItem
-	s.SetFloat64(v)
-	return s
+// SetT sets the value of T.
+func (s *Value) SetT(val float64) {
+	s.T = val
 }
 
-// SetString sets ValueItem to string.
-func (s *ValueItem) SetString(v string) {
-	s.Type = StringValueItem
-	s.String = v
-}
-
-// GetString returns string and true boolean if ValueItem is string.
-func (s ValueItem) GetString() (v string, ok bool) {
-	if !s.IsString() {
-		return v, false
-	}
-	return s.String, true
-}
-
-// NewStringValueItem returns new ValueItem from string.
-func NewStringValueItem(v string) ValueItem {
-	var s ValueItem
-	s.SetString(v)
-	return s
+// SetV sets the value of V.
+func (s *Value) SetV(val string) {
+	s.V = val
 }
 
 // Ref: #/components/schemas/Vector
