@@ -36,9 +36,13 @@ func printJSON(t *testing.T, v jxEncode, name string) {
 var prometheusConfig []byte
 
 func TestPrometheusOAS(t *testing.T) {
-	ctx := context.Background()
-	// Provide config to prometheus testcontainer.
+	if os.Getenv("E2E") == "" {
+		t.Skip("Set E2E env to run")
+	}
 
+	ctx := context.Background()
+
+	// Provide config to prometheus testcontainer.
 	dir := t.TempDir()
 	configPath := filepath.Join(dir, "prometheus.yml")
 	require.NoError(t, os.WriteFile(configPath, prometheusConfig, 0644))
