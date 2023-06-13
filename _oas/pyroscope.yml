@@ -1,0 +1,372 @@
+openapi: 3.0.3
+info:
+  title: Grafana Pyroscope API
+  version: 1.0
+externalDocs:
+  description: Pyroscope HTTP API reference
+  url: https://pyroscope.io/docs/server-api-reference/
+servers:
+  - url: "http://localhost:4040"
+paths:
+  /labels:
+    get:
+      operationId: labels
+      description: Returns list of labels.
+      parameters:
+        - name: from
+          description: |
+            Start of time range in `attime` format.
+            For now, Pyroscope ignores parameter, if `query` is not set.
+          in: query
+          schema:
+            type: string
+        - name: until
+          description: |
+            End of time range in `attime` format.
+            For now, Pyroscope ignores parameter, if `query` is not set.
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: query
+          description: FrameQL query.
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Labels
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Labels"
+        default:
+          $ref: "#/components/responses/Error"
+  /label-values:
+    get:
+      operationId: labelValues
+      description: Returns list of label values.
+      parameters:
+        - name: label
+          description: Label to lookup values.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: from
+          description: |
+            Start of time range in `attime` format.
+            For now, Pyroscope ignores parameter, if `query` is not set.
+          in: query
+          schema:
+            type: string
+        - name: until
+          description: |
+            End of time range in `attime` format.
+            For now, Pyroscope ignores parameter, if `query` is not set.
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: query
+          description: FrameQL query.
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Label values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelValues"
+        default:
+          $ref: "#/components/responses/Error"
+  /render:
+    get:
+      operationId: render
+      description: |
+        Renders given query.
+        One of `query` or `key` is required.
+      parameters:
+        - name: from
+          description: Start of time range in `attime` format.
+          in: query
+          schema:
+            type: string
+        - name: until
+          description: End of time range in `attime` format.
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: query
+          description: FrameQL query.
+          in: query
+          schema:
+            type: string
+        - name: name
+          description: |
+            Segment key.
+            See https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/storage/segment/key.go#L36-L36.
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: groupBy
+          in: query
+          schema:
+            type: string
+        - name: maxNodes
+          in: query
+          schema:
+            type: integer
+        - name: format
+          description: Response format.
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - "json"
+              - "pprof"
+              - "collapsed"
+              - "html"
+      responses:
+        "200":
+          description: Render
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Render"
+        default:
+          $ref: "#/components/responses/Error"
+  /api/apps:
+    get:
+      operationId: getApps
+      description: |
+        Returns list of application metadata.
+        Used by Grafana to test connection to Pyroscope.
+      responses:
+        "200":
+          description: Label values
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApplicationMetadata"
+        default:
+          $ref: "#/components/responses/Error"
+components:
+  responses:
+    Error:
+      description: Error while processing request
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Render:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/server/render.go#L57-L61
+      # FIXME(tdakkota): render handler package adds and overrides some fields.
+      $ref: "#/components/schemas/FlamebearerProfile"
+    FlamebearerProfile:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/structs/flamebearer/flamebearer.go#L19-L24
+      # FIXME(tdakkota): also contains version and telemetry data, which we ignore for now.
+      $ref: "#/components/schemas/FlamebearerProfileV1"
+    FlamebearerProfileV1:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/structs/flamebearer/flamebearer.go#L47-L77
+      type: object
+      required: [flamebearer, metadata]
+      properties:
+        flamebearer:
+          $ref: "#/components/schemas/FlamebearerV1"
+        metadata:
+          $ref: "#/components/schemas/FlamebearerMetadataV1"
+        timeline:
+          $ref: "#/components/schemas/FlamebearerTimelineV1"
+        groups:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/FlamebearerTimelineV1"
+        heatmap:
+          $ref: "#/components/schemas/Heatmap"
+        leftTicks:
+          type: integer
+          format: uint64
+        rightTicks:
+          type: integer
+          format: uint64
+    FlamebearerV1:
+      type: object
+      required: [names, levels, numTicks, maxSelf]
+      properties:
+        names:
+          description: Names is the sequence of symbol names.
+          type: array
+          items:
+            type: string
+        levels:
+          description: |
+            Levels contains the flamebearer nodes. Each level represents a row in the flamegraph.
+            For each row / level, there's a sequence of values. These values are grouped in chunks
+            which size depend on the flamebearer format: 4 for "single", 7 for "double".
+            For "single" format, each chunk has the following data:
+                i+0 = x offset (prefix sum of the level total values), delta encoded.
+                i+1 = total samples (including the samples in its children nodes).
+                i+2 = self samples (excluding the samples in its children nodes).
+                i+3 = index in names array
+
+            For "double" format, each chunk has the following data:
+                i+0 = x offset (prefix sum of the level total values), delta encoded, base / left tree.
+                i+1 = total samples (including the samples in its children nodes)   , base / left tree.
+                i+2 = self samples (excluding the samples in its children nodes)    , base / left tree.
+                i+3 = x offset (prefix sum of the level total values), delta encoded, diff / right tree.
+                i+4 = total samples (including the samples in its children nodes)   , diff / right tree.
+                i+5 = self samples (excluding the samples in its children nodes)    , diff / right tree.
+                i+6 = index in the names array
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        numTicks:
+          type: integer
+        maxSelf:
+          type: integer
+    FlamebearerMetadataV1:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/structs/flamebearer/flamebearer.go#L79-L91
+      type: object
+      required: [format]
+      properties:
+        name:
+          type: string
+        spyName:
+          type: string
+        sampleRate:
+          type: integer
+          format: uint32
+        units:
+          type: string
+          enum:
+            - "samples"
+            - "objects"
+            - "goroutines"
+            - "bytes"
+            - "lock_nanoseconds"
+            - "lock_samples"
+        format:
+          type: string
+    FlamebearerTimelineV1:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/structs/flamebearer/flamebearer.go#L93-L104
+      type: object
+      required: [startTime, samples, durationDelta]
+      properties:
+        startTime:
+          description: |
+            Time at which the timeline starts, as a Unix timestamp.
+          type: integer
+          format: int64
+        samples:
+          description: |
+            A sequence of samples starting at startTime, spaced by durationDelta seconds
+          type: array
+          items:
+            type: integer
+            format: uint64
+        durationDelta:
+          description: |
+            Time delta between samples, in seconds.
+          type: integer
+          format: int64
+        watermarks:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+    Heatmap:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/structs/flamebearer/flamebearer.go#L106-L129
+      type: object
+      nullable: true
+      properties:
+        values:
+          description: |
+            Values matrix contain values that indicate count of value occurrences,
+            satisfying boundaries of X and Y bins: [StartTime:EndTime) and (MinValue:MaxValue].
+            A value can be accessed via Values[x][y], where:
+              0 <= x < TimeBuckets, and
+              0 <= y < ValueBuckets.
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+              format: uint64
+        timeBuckets:
+          description: |
+            TimeBuckets denote number of bins on X axis.
+            Length of Values array.
+          type: integer
+          format: int64
+        valueBuckets:
+          description: |
+            ValueBuckets denote number of bins on Y axis.
+            Length of any item in the Values array.
+          type: integer
+          format: int64
+        startTime:
+          type: integer
+          description: |
+            StartTime and EndTime indicate boundaries of X axis: [StartTime:EndTime).
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+        minValue:
+          type: integer
+          description: |
+            MinValue and MaxValue indicate boundaries of Y axis: (MinValue:MaxValue].
+          format: uint64
+        maxValue:
+          type: integer
+          format: uint64
+        minDepth:
+          description: |
+            MinDepth and MaxDepth indicate boundaries of Z axis: [MinDepth:MaxDepth].
+            MinDepth is the minimal non-zero value that can be found in Values.
+          type: integer
+          format: uint64
+        maxDepth:
+          type: integer
+          format: uint64
+    ApplicationMetadata:
+      # https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/model/appmetadata/application_metadata.go#L5-L13
+      type: object
+      properties:
+        name:
+          type: string
+        spyName:
+          type: string
+        sampleRate:
+          type: integer
+          format: uint32
+        units:
+          type: string
+          enum:
+            - "samples"
+            - "objects"
+            - "goroutines"
+            - "bytes"
+            - "lock_nanoseconds"
+            - "lock_samples"
+    LabelValues:
+      type: array
+      items:
+        type: string
+    Labels:
+      type: array
+      items:
+        type: string
+    Error:
+      type: string
