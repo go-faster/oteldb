@@ -94,6 +94,10 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 					In:   "query",
 				}: params.End,
 				{
+					Name: "since",
+					In:   "query",
+				}: params.Since,
+				{
 					Name: "name",
 					In:   "path",
 				}: params.Name,
@@ -347,6 +351,10 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 					Name: "end",
 					In:   "query",
 				}: params.End,
+				{
+					Name: "since",
+					In:   "query",
+				}: params.Since,
 				{
 					Name: "match",
 					In:   "query",

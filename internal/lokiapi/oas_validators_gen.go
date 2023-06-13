@@ -67,6 +67,21 @@ func (s *Maps) Validate() error {
 	return nil
 }
 
+func (s PrometheusDuration) Validate() error {
+	alias := (string)(s)
+	if err := (validate.String{
+		MinLength:    0,
+		MinLengthSet: false,
+		MaxLength:    0,
+		MaxLengthSet: false,
+		Email:        false,
+		Hostname:     false,
+		Regex:        regexMap["^[0-9]+[smhdwy]$"],
+	}).Validate(string(alias)); err != nil {
+		return errors.Wrap(err, "string")
+	}
+	return nil
+}
 func (s *QueryResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
