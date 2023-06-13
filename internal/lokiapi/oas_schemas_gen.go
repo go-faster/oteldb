@@ -88,6 +88,33 @@ func (s *ErrorStatusCode) SetResponse(val Error) {
 	s.Response = val
 }
 
+// Array of label names.
+// Ref: #/components/schemas/Labels
+type Labels struct {
+	Data   []string `json:"data"`
+	Status string   `json:"status"`
+}
+
+// GetData returns the value of Data.
+func (s *Labels) GetData() []string {
+	return s.Data
+}
+
+// GetStatus returns the value of Status.
+func (s *Labels) GetStatus() string {
+	return s.Status
+}
+
+// SetData sets the value of Data.
+func (s *Labels) SetData(val []string) {
+	s.Data = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Labels) SetStatus(val string) {
+	s.Status = val
+}
+
 // Array of maps.
 // Ref: #/components/schemas/Maps
 type Maps struct {

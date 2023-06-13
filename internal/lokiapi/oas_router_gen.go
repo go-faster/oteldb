@@ -55,28 +55,60 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			switch elem[0] {
-			case 'l': // Prefix: "label/"
-				if l := len("label/"); len(elem) >= l && elem[0:l] == "label/" {
+			case 'l': // Prefix: "label"
+				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "name"
-				// Match until "/"
-				idx := strings.IndexByte(elem, '/')
-				if idx < 0 {
-					idx = len(elem)
-				}
-				args[0] = elem[:idx]
-				elem = elem[idx:]
-
 				if len(elem) == 0 {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/values"
-					if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+				case '/': // Prefix: "/"
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "name"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/values"
+						if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetLabelValuesRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+					}
+				case 's': // Prefix: "s"
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -86,9 +118,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						// Leaf node.
 						switch r.Method {
 						case "GET":
-							s.handleGetLabelValuesRequest([1]string{
-								args[0],
-							}, elemIsEscaped, w, r)
+							s.handleGetLabelsRequest([0]string{}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET")
 						}
@@ -213,28 +243,61 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				break
 			}
 			switch elem[0] {
-			case 'l': // Prefix: "label/"
-				if l := len("label/"); len(elem) >= l && elem[0:l] == "label/" {
+			case 'l': // Prefix: "label"
+				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "name"
-				// Match until "/"
-				idx := strings.IndexByte(elem, '/')
-				if idx < 0 {
-					idx = len(elem)
-				}
-				args[0] = elem[:idx]
-				elem = elem[idx:]
-
 				if len(elem) == 0 {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/values"
-					if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+				case '/': // Prefix: "/"
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "name"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/values"
+						if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: GetLabelValues
+								r.name = "GetLabelValues"
+								r.operationID = "GetLabelValues"
+								r.pathPattern = "/loki/api/v1/label/{name}/values"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+					}
+				case 's': // Prefix: "s"
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -243,12 +306,12 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							// Leaf: GetLabelValues
-							r.name = "GetLabelValues"
-							r.operationID = "GetLabelValues"
-							r.pathPattern = "/loki/api/v1/label/{name}/values"
+							// Leaf: GetLabels
+							r.name = "GetLabels"
+							r.operationID = "GetLabels"
+							r.pathPattern = "/loki/api/v1/labels"
 							r.args = args
-							r.count = 1
+							r.count = 0
 							return r, true
 						default:
 							return

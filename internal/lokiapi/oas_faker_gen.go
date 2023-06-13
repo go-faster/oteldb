@@ -32,6 +32,27 @@ func (s *Error) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Labels) SetFake() {
+	{
+		{
+			s.Data = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Data = append(s.Data, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Status = "string"
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *Maps) SetFake() {
 	{
 		{
