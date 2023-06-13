@@ -9,6 +9,8 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
@@ -19,15 +21,36 @@ import (
 
 func TestYT(t *testing.T) {
 	t.Parallel()
+	if os.Getenv("E2E") == "" {
+		t.Skip("Set E2E env to run")
+	}
 	ctx := context.Background()
 
-	proxy := os.Getenv("E2E_YT_PROXY")
-	if proxy == "" {
-		t.Skip("Set E2E_YT_PROXY to run")
+	req := testcontainers.ContainerRequest{
+		Name:         "oteldb-e2e-ytsaurus",
+		Image:        "ytsaurus/local:stable",
+		ExposedPorts: []string{"80/tcp"},
+		Cmd: []string{
+			`--fqdn`, `localhost`,
+			`--proxy-config`, `{address_resolver={enable_ipv4=%true;enable_ipv6=%false;};coordinator={public_fqdn="localhost:8000"}}`,
+			`--rpc-proxy-count`, `0`,
+			`--rpc-proxy-port`, `8002`,
+		},
+		WaitingFor: wait.ForLog("Local YT started"),
 	}
+	ytContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+		Logger:           testcontainers.TestLogger(t),
+		Reuse:            true,
+	})
+	require.NoError(t, err, "container start")
+
+	endpoint, err := ytContainer.Endpoint(ctx, "")
+	require.NoError(t, err, "container endpoint")
 
 	yc, err := ythttp.NewClient(&yt.Config{
-		Proxy: proxy,
+		Proxy: endpoint,
 	})
 	require.NoError(t, err)
 

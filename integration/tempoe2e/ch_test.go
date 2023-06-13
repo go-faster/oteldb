@@ -2,7 +2,6 @@ package tempoe2e_test
 
 import (
 	"context"
-	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -14,30 +13,38 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
 
 	"github.com/go-faster/oteldb/internal/chstorage"
 )
 
 func TestCH(t *testing.T) {
 	t.Parallel()
+	if os.Getenv("E2E") == "" {
+		t.Skip("Set E2E env to run")
+	}
 	ctx := context.Background()
 
-	dsn := os.Getenv("E2E_CH_DSN")
-	if dsn == "" {
-		t.Skip("Set E2E_CH_DSN to run")
+	req := testcontainers.ContainerRequest{
+		Name:         "oteldb-e2e-clickhouse",
+		Image:        "clickhouse/clickhouse-server:23.4",
+		ExposedPorts: []string{"8123/tcp", "9000/tcp"},
 	}
+	chContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+		Logger:           testcontainers.TestLogger(t),
+		Reuse:            true,
+	})
+	require.NoError(t, err, "container start")
 
-	u, err := url.Parse(dsn)
-	require.NoError(t, err)
+	endpoint, err := chContainer.PortEndpoint(ctx, "9000", "")
+	require.NoError(t, err, "container endpoint")
 
-	pass, _ := u.User.Password()
 	opts := ch.Options{
-		Address:  u.Host,
-		Database: strings.TrimPrefix(u.Path, "/"),
-		User:     u.User.Username(),
-		Password: pass,
+		Address:  endpoint,
+		Database: "default",
 	}
-
 	connectBackoff := backoff.NewExponentialBackOff()
 	connectBackoff.InitialInterval = 2 * time.Second
 	connectBackoff.MaxElapsedTime = time.Minute
