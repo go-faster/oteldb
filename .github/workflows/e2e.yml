@@ -45,4 +45,5 @@ jobs:
           E2E_YT_PROXY: "localhost:8000"
           E2E_CH_DSN: "clickhouse://localhost:9000/default"
           E2E: "1"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
         run: go test -v -timeout 15m ./integration/...

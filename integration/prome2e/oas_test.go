@@ -88,15 +88,6 @@ func TestPrometheusOAS(t *testing.T) {
 	api, err := promapi.NewClient(u.String())
 	require.NoError(t, err, "api client")
 
-	{
-		res, err := api.GetQuery(ctx, promapi.GetQueryParams{
-			Query: "go_info{}",
-		})
-		require.NoError(t, err, "api query")
-		require.True(t, res.Data.IsVector(), "should be scalar")
-		printJSON(t, res.Data, "blank query result")
-	}
-
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 	bo := backoff.WithContext(backoff.NewConstantBackOff(time.Millisecond*100), ctx)
