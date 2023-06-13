@@ -15,31 +15,52 @@ paths:
       parameters:
         - $ref: "#/components/parameters/GrafanaUser"
         - name: start
+          description: |
+            The start time for the query as a nanosecond Unix epoch or another supported format.
+            Defaults to one hour ago.
           in: query
           schema:
             type: integer
             format: int64
         - name: query
+          description: The LogQL query to perform.
           in: query
           required: true
           schema:
             type: string
         - name: step
+          description: |
+            Query resolution step width in `duration` format or float number of seconds.
+            `duration` refers to Prometheus duration strings of the form `[0-9]+[smhdwy]`.
+            For example, `5m` refers to a duration of 5 minutes.
+            Defaults to a dynamic value based on start and end.
+            Only applies to query types which produce a matrix response.
           in: query
           schema:
-            type: string
+            $ref: "#/components/schemas/PrometheusDuration"
         - name: limit
+          description: |
+            The max number of entries to return.
+            It defaults to `100`.
+            Only applies to query types which produce a stream (log lines) response.
           in: query
           schema:
             type: integer
             maximum: 5000
             minimum: 0
         - name: end
+          description: |
+            The end time for the query as a nanosecond Unix epoch or another supported format.
+            Defaults to now.
           in: query
           schema:
             type: integer
             format: int64
         - name: direction
+          description: |
+            Determines the sort order of logs.
+            Supported values are `forward` or `backward`.
+            Defaults to `backward`.
           in: query
           schema:
             $ref: "#/components/schemas/Direction"
@@ -59,16 +80,31 @@ paths:
       parameters:
         - $ref: "#/components/parameters/GrafanaUser"
         - name: start
+          description: |
+            The start time for the query as a nanosecond Unix epoch.
+            Defaults to 6 hours ago.
           in: query
           schema:
             type: integer
             format: int64
         - name: end
+          description: |
+            The end time for the query as a nanosecond Unix epoch.
+            Defaults to now.
           in: query
           schema:
             type: integer
             format: int64
+        - name: since
+          description: |
+            A `duration` used to calculate `start` relative to `end`.
+            If `end` is in the future, `start` is calculated as this duration before now.
+            Any value specified for start supersedes this parameter.
+          in: query
+          schema:
+            $ref: "#/components/schemas/PrometheusDuration"
         - name: name
+          description: Label name.
           in: path
           required: true
           schema:
@@ -97,6 +133,14 @@ paths:
           schema:
             type: integer
             format: int64
+        - name: since
+          description: |
+            A `duration` used to calculate `start` relative to `end`.
+            If `end` is in the future, `start` is calculated as this duration before now.
+            Any value specified for start supersedes this parameter.
+          in: query
+          schema:
+            $ref: "#/components/schemas/PrometheusDuration"
         - name: match
           in: query
           schema:
@@ -198,6 +242,9 @@ components:
         - FORWARD
         - backward
         - forward
+    PrometheusDuration:
+      type: string
+      pattern: "^[0-9]+[smhdwy]$"
     Values:
       type: object
       description: Array of strings
