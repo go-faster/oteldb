@@ -14,6 +14,13 @@ type Handler interface {
 	//
 	// GET /loki/api/v1/label/{name}/values
 	GetLabelValues(ctx context.Context, params GetLabelValuesParams) (*Values, error)
+	// GetLabels implements GetLabels operation.
+	//
+	// Get labels.
+	// Used by Grafana to test connection to Loki.
+	//
+	// GET /loki/api/v1/labels
+	GetLabels(ctx context.Context, params GetLabelsParams) (*Labels, error)
 	// QueryRange implements QueryRange operation.
 	//
 	// Query range.

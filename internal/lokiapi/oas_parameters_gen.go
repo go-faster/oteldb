@@ -20,9 +20,21 @@ type GetLabelValuesParams struct {
 	// Grafana username that is passed to datasource when making requests from Grafana. Used for
 	// authentication and authorization.
 	XGrafanaUser OptString
-	Start        OptInt64
-	End          OptInt64
-	Name         string
+	// The start time for the query as a nanosecond Unix epoch.
+	// Defaults to 6 hours ago.
+	Start OptInt64
+	// The end time for the query as a nanosecond Unix epoch.
+	// Defaults to now.
+	End OptInt64
+	// A `duration` used to calculate `start` relative to `end`.
+	// If `end` is in the future, `start` is calculated as this duration before now.
+	// Any value specified for start supersedes this parameter.
+	Since OptPrometheusDuration
+	// A set of log stream selector that selects the streams to match and return label values for
+	// `{name}`.
+	Query OptString
+	// Label name.
+	Name string
 }
 
 func unpackGetLabelValuesParams(packed middleware.Parameters) (params GetLabelValuesParams) {
@@ -51,6 +63,24 @@ func unpackGetLabelValuesParams(packed middleware.Parameters) (params GetLabelVa
 		}
 		if v, ok := packed[key]; ok {
 			params.End = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "since",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Since = v.(OptPrometheusDuration)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "query",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Query = v.(OptString)
 		}
 	}
 	{
@@ -187,6 +217,110 @@ func decodeGetLabelValuesParams(args [1]string, argsEscaped bool, r *http.Reques
 			Err:  err,
 		}
 	}
+	// Decode query: since.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "since",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSinceVal PrometheusDuration
+				if err := func() error {
+					var paramsDotSinceValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotSinceValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotSinceVal = PrometheusDuration(paramsDotSinceValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Since.SetTo(paramsDotSinceVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Since.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "since",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: query.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "query",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotQueryVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotQueryVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Query.SetTo(paramsDotQueryVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "query",
+			In:   "query",
+			Err:  err,
+		}
+	}
 	// Decode path: name.
 	if err := func() error {
 		param := args[0]
@@ -235,17 +369,280 @@ func decodeGetLabelValuesParams(args [1]string, argsEscaped bool, r *http.Reques
 	return params, nil
 }
 
+// GetLabelsParams is parameters of GetLabels operation.
+type GetLabelsParams struct {
+	// Grafana username that is passed to datasource when making requests from Grafana. Used for
+	// authentication and authorization.
+	XGrafanaUser OptString
+	// The start time for the query as a nanosecond Unix epoch.
+	// Defaults to 6 hours ago.
+	Start OptInt64
+	// The end time for the query as a nanosecond Unix epoch.
+	// Defaults to now.
+	End OptInt64
+	// A `duration` used to calculate `start` relative to `end`.
+	// If `end` is in the future, `start` is calculated as this duration before now.
+	// Any value specified for start supersedes this parameter.
+	Since OptPrometheusDuration
+}
+
+func unpackGetLabelsParams(packed middleware.Parameters) (params GetLabelsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "X-Grafana-User",
+			In:   "header",
+		}
+		if v, ok := packed[key]; ok {
+			params.XGrafanaUser = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "since",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Since = v.(OptPrometheusDuration)
+		}
+	}
+	return params
+}
+
+func decodeGetLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetLabelsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
+	// Decode header: X-Grafana-User.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "X-Grafana-User",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotXGrafanaUserVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotXGrafanaUserVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.XGrafanaUser.SetTo(paramsDotXGrafanaUserVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "X-Grafana-User",
+			In:   "header",
+			Err:  err,
+		}
+	}
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal int64
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt64(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStartVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start.SetTo(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal int64
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt64(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEndVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: since.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "since",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSinceVal PrometheusDuration
+				if err := func() error {
+					var paramsDotSinceValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotSinceValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotSinceVal = PrometheusDuration(paramsDotSinceValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Since.SetTo(paramsDotSinceVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Since.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "since",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // QueryRangeParams is parameters of QueryRange operation.
 type QueryRangeParams struct {
 	// Grafana username that is passed to datasource when making requests from Grafana. Used for
 	// authentication and authorization.
 	XGrafanaUser OptString
-	Start        OptInt64
-	Query        string
-	Step         OptString
-	Limit        OptInt
-	End          OptInt64
-	Direction    OptDirection
+	// The start time for the query as a nanosecond Unix epoch or another supported format.
+	// Defaults to one hour ago.
+	Start OptInt64
+	// The LogQL query to perform.
+	Query string
+	// Query resolution step width in `duration` format or float number of seconds.
+	// `duration` refers to Prometheus duration strings of the form `[0-9]+[smhdwy]`.
+	// For example, `5m` refers to a duration of 5 minutes.
+	// Defaults to a dynamic value based on start and end.
+	// Only applies to query types which produce a matrix response.
+	Step OptPrometheusDuration
+	// The max number of entries to return.
+	// It defaults to `100`.
+	// Only applies to query types which produce a stream (log lines) response.
+	Limit OptInt
+	// The end time for the query as a nanosecond Unix epoch or another supported format.
+	// Defaults to now.
+	End OptInt64
+	// Determines the sort order of logs.
+	// Supported values are `forward` or `backward`.
+	// Defaults to `backward`.
+	Direction OptDirection
 }
 
 func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangeParams) {
@@ -280,7 +677,7 @@ func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangePara
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Step = v.(OptString)
+			params.Step = v.(OptPrometheusDuration)
 		}
 	}
 	{
@@ -442,19 +839,26 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotStepVal string
+				var paramsDotStepVal PrometheusDuration
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotStepValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStepValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotStepVal = c
+					paramsDotStepVal = PrometheusDuration(paramsDotStepValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -462,6 +866,21 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 				params.Step.SetTo(paramsDotStepVal)
 				return nil
 			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Step.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
 				return err
 			}
 		}
@@ -642,6 +1061,10 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 type SeriesParams struct {
 	Start OptInt64
 	End   OptInt64
+	// A `duration` used to calculate `start` relative to `end`.
+	// If `end` is in the future, `start` is calculated as this duration before now.
+	// Any value specified for start supersedes this parameter.
+	Since OptPrometheusDuration
 	Match []string
 }
 
@@ -662,6 +1085,15 @@ func unpackSeriesParams(packed middleware.Parameters) (params SeriesParams) {
 		}
 		if v, ok := packed[key]; ok {
 			params.End = v.(OptInt64)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "since",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Since = v.(OptPrometheusDuration)
 		}
 	}
 	{
@@ -756,6 +1188,69 @@ func decodeSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (para
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: since.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "since",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSinceVal PrometheusDuration
+				if err := func() error {
+					var paramsDotSinceValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotSinceValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotSinceVal = PrometheusDuration(paramsDotSinceValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Since.SetTo(paramsDotSinceVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Since.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "since",
 			In:   "query",
 			Err:  err,
 		}

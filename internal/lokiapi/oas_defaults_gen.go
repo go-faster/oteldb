@@ -3,6 +3,14 @@
 package lokiapi
 
 // setDefaults set default value of fields.
+func (s *Labels) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}
+
+// setDefaults set default value of fields.
 func (s *Maps) setDefaults() {
 	{
 		val := string("success")

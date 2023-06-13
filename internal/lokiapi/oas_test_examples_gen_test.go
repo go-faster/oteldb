@@ -35,6 +35,18 @@ func TestError_EncodeDecode(t *testing.T) {
 	var typ2 Error
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestLabels_EncodeDecode(t *testing.T) {
+	var typ Labels
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Labels
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestMaps_EncodeDecode(t *testing.T) {
 	var typ Maps
 	typ.SetFake()

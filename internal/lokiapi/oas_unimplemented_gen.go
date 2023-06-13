@@ -22,6 +22,16 @@ func (UnimplementedHandler) GetLabelValues(ctx context.Context, params GetLabelV
 	return r, ht.ErrNotImplemented
 }
 
+// GetLabels implements GetLabels operation.
+//
+// Get labels.
+// Used by Grafana to test connection to Loki.
+//
+// GET /loki/api/v1/labels
+func (UnimplementedHandler) GetLabels(ctx context.Context, params GetLabelsParams) (r *Labels, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // QueryRange implements QueryRange operation.
 //
 // Query range.

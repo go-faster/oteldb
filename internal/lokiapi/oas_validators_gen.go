@@ -48,6 +48,24 @@ func (s Entry) Validate() error {
 	}
 	return nil
 }
+func (s *Labels) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Data == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "data",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
 func (s *Maps) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -67,6 +85,21 @@ func (s *Maps) Validate() error {
 	return nil
 }
 
+func (s PrometheusDuration) Validate() error {
+	alias := (string)(s)
+	if err := (validate.String{
+		MinLength:    0,
+		MinLengthSet: false,
+		MaxLength:    0,
+		MaxLengthSet: false,
+		Email:        false,
+		Hostname:     false,
+		Regex:        regexMap["^[0-9]+[smhdwy]$"],
+	}).Validate(string(alias)); err != nil {
+		return errors.Wrap(err, "string")
+	}
+	return nil
+}
 func (s *QueryResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {

@@ -88,6 +88,33 @@ func (s *ErrorStatusCode) SetResponse(val Error) {
 	s.Response = val
 }
 
+// Array of label names.
+// Ref: #/components/schemas/Labels
+type Labels struct {
+	Data   []string `json:"data"`
+	Status string   `json:"status"`
+}
+
+// GetData returns the value of Data.
+func (s *Labels) GetData() []string {
+	return s.Data
+}
+
+// GetStatus returns the value of Status.
+func (s *Labels) GetStatus() string {
+	return s.Status
+}
+
+// SetData sets the value of Data.
+func (s *Labels) SetData(val []string) {
+	s.Data = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Labels) SetStatus(val string) {
+	s.Status = val
+}
+
 // Array of maps.
 // Ref: #/components/schemas/Maps
 type Maps struct {
@@ -264,6 +291,52 @@ func (o OptInt64) Or(d int64) int64 {
 	return d
 }
 
+// NewOptPrometheusDuration returns new OptPrometheusDuration with value set to v.
+func NewOptPrometheusDuration(v PrometheusDuration) OptPrometheusDuration {
+	return OptPrometheusDuration{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPrometheusDuration is optional PrometheusDuration.
+type OptPrometheusDuration struct {
+	Value PrometheusDuration
+	Set   bool
+}
+
+// IsSet returns true if OptPrometheusDuration was set.
+func (o OptPrometheusDuration) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPrometheusDuration) Reset() {
+	var v PrometheusDuration
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPrometheusDuration) SetTo(v PrometheusDuration) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPrometheusDuration) Get() (v PrometheusDuration, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPrometheusDuration) Or(d PrometheusDuration) PrometheusDuration {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptStreamMetric returns new OptStreamMetric with value set to v.
 func NewOptStreamMetric(v StreamMetric) OptStreamMetric {
 	return OptStreamMetric{
@@ -401,6 +474,8 @@ func (o OptString) Or(d string) string {
 	}
 	return d
 }
+
+type PrometheusDuration string
 
 // Ref: #/components/schemas/QueryResponse
 type QueryResponse struct {

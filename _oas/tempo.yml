@@ -2,6 +2,9 @@ openapi: 3.0.3
 info:
   title: Grafana Tempo 'query-frontend' API
   version: 2.1.0
+externalDocs:
+  description: Tempo API reference
+  url: https://grafana.com/docs/tempo/latest/api_docs
 servers:
   - url: "http://localhost:3200"
 paths:
@@ -10,7 +13,7 @@ paths:
       operationId: echo
       description: Echo request for testing, issued by Grafana.
       responses:
-        '200':
+        "200":
           description: Should return echo string
           content:
             text/plain:
