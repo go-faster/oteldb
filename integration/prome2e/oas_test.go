@@ -48,6 +48,7 @@ func TestPrometheusOAS(t *testing.T) {
 	require.NoError(t, os.WriteFile(configPath, prometheusConfig, 0644))
 
 	req := testcontainers.ContainerRequest{
+		Name:         "oteldb-e2e-prom",
 		Image:        "prom/prometheus:v2.44.0",
 		ExposedPorts: []string{"9090/tcp"},
 		Cmd: []string{
@@ -72,11 +73,9 @@ func TestPrometheusOAS(t *testing.T) {
 		ContainerRequest: req,
 		Started:          true,
 		Logger:           testcontainers.TestLogger(t),
+		Reuse:            true,
 	})
 	require.NoError(t, err, "container start")
-	t.Cleanup(func() {
-		require.NoError(t, promContainer.Terminate(context.Background()), "container terminate")
-	})
 
 	endpoint, err := promContainer.Endpoint(ctx, "")
 	require.NoError(t, err, "container endpoint")
