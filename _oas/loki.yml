@@ -73,6 +73,47 @@ paths:
                 $ref: "#/components/schemas/QueryResponse"
         default:
           $ref: "#/components/responses/Error"
+  /loki/api/v1/labels:
+    get:
+      operationId: GetLabels
+      description: |
+        Get labels.
+        Used by Grafana to test connection to Loki.
+      parameters:
+        - $ref: "#/components/parameters/GrafanaUser"
+        - name: start
+          description: |
+            The start time for the query as a nanosecond Unix epoch.
+            Defaults to 6 hours ago.
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: end
+          description: |
+            The end time for the query as a nanosecond Unix epoch.
+            Defaults to now.
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: since
+          description: |
+            A `duration` used to calculate `start` relative to `end`.
+            If `end` is in the future, `start` is calculated as this duration before now.
+            Any value specified for start supersedes this parameter.
+          in: query
+          schema:
+            $ref: "#/components/schemas/PrometheusDuration"
+      responses:
+        "200":
+          description: Label names
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Labels"
+        default:
+          $ref: "#/components/responses/Error"
   /loki/api/v1/label/{name}/values:
     get:
       operationId: GetLabelValues
@@ -103,6 +144,12 @@ paths:
           in: query
           schema:
             $ref: "#/components/schemas/PrometheusDuration"
+        - name: query
+          description: |
+            A set of log stream selector that selects the streams to match and return label values for `{name}`.
+          in: query
+          schema:
+            type: string
         - name: name
           description: Label name.
           in: path
@@ -245,6 +292,20 @@ components:
     PrometheusDuration:
       type: string
       pattern: "^[0-9]+[smhdwy]$"
+    Labels:
+      type: object
+      description: Array of label names
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          default: success
     Values:
       type: object
       description: Array of strings
