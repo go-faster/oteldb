@@ -157,7 +157,7 @@ func (s *services) Loki(m *app.Metrics) error {
 
 var _ http.RoundTripper = (*pyroscopeTransport)(nil)
 
-// pyroscopeTransport overrides Content-Type for some endpoints
+// pyroscopeTransport overrides Content-Type for some endpoints.
 //
 // See https://github.com/grafana/pyroscope/pull/1969.
 type pyroscopeTransport struct {
@@ -221,6 +221,34 @@ func (s *services) Pyroscope(m *app.Metrics) error {
 	})
 }
 
+var _ http.RoundTripper = (*tempoTransport)(nil)
+
+// tempoTransport sets Accept for some endpoints.
+//
+// FIXME(tdakkota): probably, we need to add an Accept header.
+type tempoTransport struct {
+	next http.RoundTripper
+}
+
+func (t *tempoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	next := t.next
+	if next == nil {
+		next = http.DefaultTransport
+	}
+
+	if strings.Contains(req.URL.Path, "api/traces/") {
+		if req.Header.Get("Accept") == "" {
+			req.Header.Set("Accept", "application/protobuf")
+		}
+	}
+
+	resp, err := next.RoundTrip(req)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
 func (s *services) Tempo(m *app.Metrics) error {
 	const (
 		prefix      = "TEMPO"
@@ -234,6 +262,9 @@ func (s *services) Tempo(m *app.Metrics) error {
 	client, err := tempoapi.NewClient(upstreamURL,
 		tempoapi.WithTracerProvider(m.TracerProvider()),
 		tempoapi.WithMeterProvider(m.MeterProvider()),
+		tempoapi.WithClient(&http.Client{
+			Transport: &tempoTransport{},
+		}),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
