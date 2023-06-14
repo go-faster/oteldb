@@ -258,19 +258,19 @@ components:
     QueryResponseData:
       type: object
       required:
-        - stats
         - resultType
         - result
+        - stats
       properties:
-        stats:
-          $ref: "#/components/schemas/Stats"
-        result:
-          $ref: "#/components/schemas/Streams"
         resultType:
           type: string
           enum:
             - streams
             - matrix
+        result:
+          $ref: "#/components/schemas/Streams"
+        stats:
+          $ref: "#/components/schemas/Stats"
     QueryResponse:
       type: object
       required:
