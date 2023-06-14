@@ -225,8 +225,6 @@ components:
         - rootServiceName
         - rootTraceName
         - startTimeUnixNano
-        - durationMs
-        - spanSet
       properties:
         traceID:
           type: string
