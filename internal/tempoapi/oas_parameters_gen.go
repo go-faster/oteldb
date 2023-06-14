@@ -617,9 +617,9 @@ func decodeTraceByIDParams(args [1]string, argsEscaped bool, r *http.Request) (p
 			}
 			if err := func() error {
 				if err := (validate.String{
-					MinLength:    16,
+					MinLength:    32,
 					MinLengthSet: true,
-					MaxLength:    16,
+					MaxLength:    32,
 					MaxLengthSet: true,
 					Email:        false,
 					Hostname:     false,
