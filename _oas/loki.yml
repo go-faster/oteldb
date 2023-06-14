@@ -291,7 +291,7 @@ components:
         - forward
     PrometheusDuration:
       type: string
-      pattern: "^[0-9]+[smhdwy]$"
+      pattern: "^[0-9smhdwy]+$"
     Labels:
       type: object
       description: Array of label names
