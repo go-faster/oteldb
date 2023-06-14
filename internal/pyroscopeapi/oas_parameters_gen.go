@@ -18,10 +18,10 @@ type LabelValuesParams struct {
 	Label string
 	// Start of time range in `attime` format.
 	// For now, Pyroscope ignores parameter, if `query` is not set.
-	From OptString
+	From OptAtTime
 	// End of time range in `attime` format.
 	// For now, Pyroscope ignores parameter, if `query` is not set.
-	Until OptInt64
+	Until OptAtTime
 	// FrameQL query.
 	Query OptString
 }
@@ -40,7 +40,7 @@ func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesPa
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.From = v.(OptString)
+			params.From = v.(OptAtTime)
 		}
 	}
 	{
@@ -49,7 +49,7 @@ func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesPa
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Until = v.(OptInt64)
+			params.Until = v.(OptAtTime)
 		}
 	}
 	{
@@ -112,19 +112,26 @@ func decodeLabelValuesParams(args [0]string, argsEscaped bool, r *http.Request) 
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotFromVal string
+				var paramsDotFromVal AtTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotFromValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotFromValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotFromVal = c
+					paramsDotFromVal = AtTime(paramsDotFromValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -153,19 +160,26 @@ func decodeLabelValuesParams(args [0]string, argsEscaped bool, r *http.Request) 
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotUntilVal int64
+				var paramsDotUntilVal AtTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotUntilValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotUntilValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotUntilVal = c
+					paramsDotUntilVal = AtTime(paramsDotUntilValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -232,10 +246,10 @@ func decodeLabelValuesParams(args [0]string, argsEscaped bool, r *http.Request) 
 type LabelsParams struct {
 	// Start of time range in `attime` format.
 	// For now, Pyroscope ignores parameter, if `query` is not set.
-	From OptString
+	From OptAtTime
 	// End of time range in `attime` format.
 	// For now, Pyroscope ignores parameter, if `query` is not set.
-	Until OptInt64
+	Until OptAtTime
 	// FrameQL query.
 	Query OptString
 }
@@ -247,7 +261,7 @@ func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.From = v.(OptString)
+			params.From = v.(OptAtTime)
 		}
 	}
 	{
@@ -256,7 +270,7 @@ func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Until = v.(OptInt64)
+			params.Until = v.(OptAtTime)
 		}
 	}
 	{
@@ -283,19 +297,26 @@ func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotFromVal string
+				var paramsDotFromVal AtTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotFromValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotFromValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotFromVal = c
+					paramsDotFromVal = AtTime(paramsDotFromValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -324,19 +345,26 @@ func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotUntilVal int64
+				var paramsDotUntilVal AtTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotUntilValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotUntilValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotUntilVal = c
+					paramsDotUntilVal = AtTime(paramsDotUntilValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -402,16 +430,16 @@ func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (para
 // RenderParams is parameters of render operation.
 type RenderParams struct {
 	// Start of time range in `attime` format.
-	From OptString
+	From OptAtTime
 	// End of time range in `attime` format.
-	Until OptInt64
+	Until OptAtTime
 	// FrameQL query.
 	Query OptString
 	// Segment key.
 	// See https://github.
 	// com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/storage/segment/key.
 	// go#L36-L36.
-	Name     string
+	Name     OptString
 	GroupBy  OptString
 	MaxNodes OptInt
 	// Response format.
@@ -425,7 +453,7 @@ func unpackRenderParams(packed middleware.Parameters) (params RenderParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.From = v.(OptString)
+			params.From = v.(OptAtTime)
 		}
 	}
 	{
@@ -434,7 +462,7 @@ func unpackRenderParams(packed middleware.Parameters) (params RenderParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Until = v.(OptInt64)
+			params.Until = v.(OptAtTime)
 		}
 	}
 	{
@@ -451,7 +479,9 @@ func unpackRenderParams(packed middleware.Parameters) (params RenderParams) {
 			Name: "name",
 			In:   "query",
 		}
-		params.Name = packed[key].(string)
+		if v, ok := packed[key]; ok {
+			params.Name = v.(OptString)
+		}
 	}
 	{
 		key := middleware.ParameterKey{
@@ -493,19 +523,26 @@ func decodeRenderParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotFromVal string
+				var paramsDotFromVal AtTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotFromValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotFromValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotFromVal = c
+					paramsDotFromVal = AtTime(paramsDotFromValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -534,19 +571,26 @@ func decodeRenderParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotUntilVal int64
+				var paramsDotUntilVal AtTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotUntilValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotUntilValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotUntilVal = c
+					paramsDotUntilVal = AtTime(paramsDotUntilValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -616,23 +660,28 @@ func decodeRenderParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				val, err := d.DecodeValue()
-				if err != nil {
+				var paramsDotNameVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNameVal = c
+					return nil
+				}(); err != nil {
 					return err
 				}
-
-				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
-
-				params.Name = c
+				params.Name.SetTo(paramsDotNameVal)
 				return nil
 			}); err != nil {
 				return err
 			}
-		} else {
-			return validate.ErrFieldRequired
 		}
 		return nil
 	}(); err != nil {

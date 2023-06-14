@@ -117,6 +117,8 @@ func (s *ApplicationMetadataUnits) UnmarshalText(data []byte) error {
 	}
 }
 
+type AtTime string
+
 type Error string
 
 // ErrorStatusCode wraps Error with StatusCode.
@@ -640,6 +642,52 @@ func (o OptApplicationMetadataUnits) Get() (v ApplicationMetadataUnits, ok bool)
 
 // Or returns value if set, or given parameter if does not.
 func (o OptApplicationMetadataUnits) Or(d ApplicationMetadataUnits) ApplicationMetadataUnits {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAtTime returns new OptAtTime with value set to v.
+func NewOptAtTime(v AtTime) OptAtTime {
+	return OptAtTime{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAtTime is optional AtTime.
+type OptAtTime struct {
+	Value AtTime
+	Set   bool
+}
+
+// IsSet returns true if OptAtTime was set.
+func (o OptAtTime) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAtTime) Reset() {
+	var v AtTime
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAtTime) SetTo(v AtTime) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAtTime) Get() (v AtTime, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAtTime) Or(d AtTime) AtTime {
 	if v, ok := o.Get(); ok {
 		return v
 	}

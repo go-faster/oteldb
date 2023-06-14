@@ -219,7 +219,10 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.From.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -236,7 +239,10 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Until.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -345,7 +351,10 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Label
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.From.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -362,7 +371,10 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Label
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Until.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -472,7 +484,10 @@ func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *Flam
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.From.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -489,7 +504,10 @@ func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *Flam
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Until.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -522,7 +540,10 @@ func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *Flam
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.Name))
+			if val, ok := params.Name.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode query")
 		}
