@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -154,6 +155,31 @@ func (s *services) Loki(m *app.Metrics) error {
 	})
 }
 
+var _ http.RoundTripper = (*pyroscopeTransport)(nil)
+
+// pyroscopeTransport overrides Content-Type for some endpoints
+//
+// See https://github.com/grafana/pyroscope/pull/1969.
+type pyroscopeTransport struct {
+	next http.RoundTripper
+}
+
+func (t *pyroscopeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	next := t.next
+	if next == nil {
+		next = http.DefaultTransport
+	}
+
+	resp, err := next.RoundTrip(req)
+	if err != nil {
+		return resp, err
+	}
+	if last := path.Base(req.URL.Path); last == "labels" || last == "label-values" {
+		resp.Header.Set("Content-Type", "application/json")
+	}
+	return resp, nil
+}
+
 func (s *services) Pyroscope(m *app.Metrics) error {
 	const (
 		prefix      = "PYROSCOPE"
@@ -167,6 +193,9 @@ func (s *services) Pyroscope(m *app.Metrics) error {
 	client, err := pyroscopeapi.NewClient(upstreamURL,
 		pyroscopeapi.WithTracerProvider(m.TracerProvider()),
 		pyroscopeapi.WithMeterProvider(m.MeterProvider()),
+		pyroscopeapi.WithClient(&http.Client{
+			Transport: &pyroscopeTransport{},
+		}),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
