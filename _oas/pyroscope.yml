@@ -109,7 +109,6 @@ paths:
           description: |
             Segment key.
             See https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/storage/segment/key.go#L36-L36.
-          required: true
           in: query
           schema:
             type: string
