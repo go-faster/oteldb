@@ -29,6 +29,7 @@ func (b *metadataCollector) AddSpan(span tracestorage.Span) error {
 		}
 		m = tempoapi.TraceSearchMetadata{
 			TraceID: traceID.Hex(),
+			SpanSet: tempoapi.NewOptTempoSpanSet(tempoapi.TempoSpanSet{}),
 		}
 	}
 	ss := &m.SpanSet
@@ -36,7 +37,7 @@ func (b *metadataCollector) AddSpan(span tracestorage.Span) error {
 	if span.ParentSpanID.IsEmpty() {
 		span.FillTraceMetadata(&m)
 	}
-	ss.Spans = append(ss.Spans, span.AsTempoSpan())
+	ss.Value.Spans = append(ss.Value.Spans, span.AsTempoSpan())
 
 	// Put modified struct back to map.
 	b.metadatas[traceID] = m

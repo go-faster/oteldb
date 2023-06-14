@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -121,7 +122,7 @@ func runTest(
 			for traceID, trace := range set.Traces {
 				uid := uuid.UUID(traceID)
 
-				r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: uid})
+				r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: tracestorage.TraceID(traceID).Hex()})
 				a.NoError(err)
 				a.IsType(&tempoapi.TraceByID{}, r)
 
@@ -162,7 +163,7 @@ func runTest(
 
 		t.Run("NotFound", func(t *testing.T) {
 			a := require.New(t)
-			r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: uuid.New()})
+			r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: strings.Repeat("0", 16*2)})
 			a.NoError(err)
 			a.IsType(&tempoapi.TraceByIDNotFound{}, r)
 		})
@@ -176,7 +177,7 @@ func runTest(
 			trace, ok := set.Traces[pcommon.TraceID(traceID)]
 			a.Truef(ok, "search trace %q", traceID)
 
-			spans := metadata.SpanSet.Spans
+			spans := metadata.SpanSet.Value.Spans
 			a.Len(spans, len(trace.Spanset))
 			for _, gotSpan := range spans {
 				r, err := hex.DecodeString(gotSpan.SpanID)

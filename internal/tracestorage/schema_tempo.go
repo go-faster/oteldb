@@ -12,7 +12,7 @@ import (
 //
 // The span should be a parent span.
 func (span Span) FillTraceMetadata(m *tempoapi.TraceSearchMetadata) {
-	ss := &m.SpanSet
+	ss := &m.SpanSet.Value
 
 	m.RootTraceName = span.Name
 	if attr, ok := span.ResourceAttrs.AsMap().Get("service.name"); ok {
@@ -24,7 +24,7 @@ func (span Span) FillTraceMetadata(m *tempoapi.TraceSearchMetadata) {
 	)
 
 	m.StartTimeUnixNano = start
-	m.DurationMs = int(end.Sub(start).Milliseconds())
+	m.DurationMs.SetTo(int(end.Sub(start).Milliseconds()))
 	if ss.Attributes == nil {
 		ss.Attributes = new(tempoapi.Attributes)
 	}
