@@ -32,7 +32,8 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
+            minLength: 16
+            maxLength: 16
           description: TraceID to query.
         - name: start
           in: query
