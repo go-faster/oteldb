@@ -1,0 +1,74 @@
+// Package pyroproxy provides Pyroscope proxy for observability and research.
+package pyroproxy
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/go-faster/errors"
+
+	"github.com/go-faster/oteldb/internal/pyroscopeapi"
+)
+
+var _ pyroscopeapi.Handler = &Server{}
+
+// NewServer initializes new proxy Server from openapi client.
+func NewServer(api *pyroscopeapi.Client) *Server {
+	return &Server{api: api}
+}
+
+// Server implement proxy server.
+type Server struct {
+	api *pyroscopeapi.Client
+}
+
+// GetApps implements getApps operation.
+// Returns list of application metadata.
+// Used by Grafana to test connection to Pyroscope.
+//
+// GET /api/apps
+func (s *Server) GetApps(ctx context.Context) ([]pyroscopeapi.ApplicationMetadata, error) {
+	return s.api.GetApps(ctx)
+}
+
+// LabelValues implements labelValues operation.
+//
+// Returns list of label values.
+//
+// GET /label-values
+func (s *Server) LabelValues(ctx context.Context, params pyroscopeapi.LabelValuesParams) (pyroscopeapi.LabelValues, error) {
+	return s.api.LabelValues(ctx, params)
+}
+
+// Labels implements labels operation.
+//
+// Returns list of labels.
+//
+// GET /labels
+func (s *Server) Labels(ctx context.Context, params pyroscopeapi.LabelsParams) (pyroscopeapi.Labels, error) {
+	return s.api.Labels(ctx, params)
+}
+
+// Render implements render operation.
+//
+// Renders given query.
+// One of `query` or `key` is required.
+//
+// GET /render
+func (s *Server) Render(ctx context.Context, params pyroscopeapi.RenderParams) (*pyroscopeapi.FlamebearerProfileV1, error) {
+	return s.api.Render(ctx, params)
+}
+
+// NewError creates *ErrorStatusCode from error returned by handler.
+//
+// Used for common default response.
+func (s *Server) NewError(_ context.Context, err error) *pyroscopeapi.ErrorStatusCode {
+	if v, ok := errors.Into[*pyroscopeapi.ErrorStatusCode](err); ok {
+		// Pass as-is.
+		return v
+	}
+	return &pyroscopeapi.ErrorStatusCode{
+		StatusCode: http.StatusInternalServerError,
+		Response:   pyroscopeapi.Error(err.Error()),
+	}
+}
