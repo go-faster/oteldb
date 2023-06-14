@@ -17,7 +17,7 @@ import (
 )
 
 var regexMap = map[string]ogenregex.Regexp{
-	"^[0-9]+[smhdwy]$": ogenregex.MustCompile("^[0-9]+[smhdwy]$"),
+	"^[0-9smhdwy]+$": ogenregex.MustCompile("^[0-9smhdwy]+$"),
 }
 var (
 	// Allocate option closure once.

@@ -598,23 +598,23 @@ func (s *QueryResponseData) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *QueryResponseData) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("stats")
-		s.Stats.Encode(e)
+		e.FieldStart("resultType")
+		s.ResultType.Encode(e)
 	}
 	{
 		e.FieldStart("result")
 		s.Result.Encode(e)
 	}
 	{
-		e.FieldStart("resultType")
-		s.ResultType.Encode(e)
+		e.FieldStart("stats")
+		s.Stats.Encode(e)
 	}
 }
 
 var jsonFieldsNameOfQueryResponseData = [3]string{
-	0: "stats",
+	0: "resultType",
 	1: "result",
-	2: "resultType",
+	2: "stats",
 }
 
 // Decode decodes QueryResponseData from json.
@@ -626,15 +626,15 @@ func (s *QueryResponseData) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "stats":
+		case "resultType":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				if err := s.Stats.Decode(d); err != nil {
+				if err := s.ResultType.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"stats\"")
+				return errors.Wrap(err, "decode field \"resultType\"")
 			}
 		case "result":
 			requiredBitSet[0] |= 1 << 1
@@ -646,15 +646,15 @@ func (s *QueryResponseData) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
-		case "resultType":
+		case "stats":
 			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				if err := s.ResultType.Decode(d); err != nil {
+				if err := s.Stats.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"resultType\"")
+				return errors.Wrap(err, "decode field \"stats\"")
 			}
 		default:
 			return d.Skip()

@@ -505,19 +505,9 @@ func (s *QueryResponse) SetData(val QueryResponseData) {
 
 // Ref: #/components/schemas/QueryResponseData
 type QueryResponseData struct {
-	Stats      Stats                       `json:"stats"`
-	Result     Streams                     `json:"result"`
 	ResultType QueryResponseDataResultType `json:"resultType"`
-}
-
-// GetStats returns the value of Stats.
-func (s *QueryResponseData) GetStats() Stats {
-	return s.Stats
-}
-
-// GetResult returns the value of Result.
-func (s *QueryResponseData) GetResult() Streams {
-	return s.Result
+	Result     Streams                     `json:"result"`
+	Stats      Stats                       `json:"stats"`
 }
 
 // GetResultType returns the value of ResultType.
@@ -525,9 +515,19 @@ func (s *QueryResponseData) GetResultType() QueryResponseDataResultType {
 	return s.ResultType
 }
 
-// SetStats sets the value of Stats.
-func (s *QueryResponseData) SetStats(val Stats) {
-	s.Stats = val
+// GetResult returns the value of Result.
+func (s *QueryResponseData) GetResult() Streams {
+	return s.Result
+}
+
+// GetStats returns the value of Stats.
+func (s *QueryResponseData) GetStats() Stats {
+	return s.Stats
+}
+
+// SetResultType sets the value of ResultType.
+func (s *QueryResponseData) SetResultType(val QueryResponseDataResultType) {
+	s.ResultType = val
 }
 
 // SetResult sets the value of Result.
@@ -535,9 +535,9 @@ func (s *QueryResponseData) SetResult(val Streams) {
 	s.Result = val
 }
 
-// SetResultType sets the value of ResultType.
-func (s *QueryResponseData) SetResultType(val QueryResponseDataResultType) {
-	s.ResultType = val
+// SetStats sets the value of Stats.
+func (s *QueryResponseData) SetStats(val Stats) {
+	s.Stats = val
 }
 
 type QueryResponseDataResultType string

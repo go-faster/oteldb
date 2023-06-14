@@ -94,7 +94,7 @@ func (s PrometheusDuration) Validate() error {
 		MaxLengthSet: false,
 		Email:        false,
 		Hostname:     false,
-		Regex:        regexMap["^[0-9]+[smhdwy]$"],
+		Regex:        regexMap["^[0-9smhdwy]+$"],
 	}).Validate(string(alias)); err != nil {
 		return errors.Wrap(err, "string")
 	}
@@ -121,17 +121,6 @@ func (s *QueryResponse) Validate() error {
 func (s *QueryResponseData) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := s.Result.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "result",
-			Error: err,
-		})
-	}
-	if err := func() error {
 		if err := s.ResultType.Validate(); err != nil {
 			return err
 		}
@@ -139,6 +128,17 @@ func (s *QueryResponseData) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "resultType",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
 			Error: err,
 		})
 	}

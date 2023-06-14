@@ -120,7 +120,7 @@ func (s *QueryResponse) SetFake() {
 func (s *QueryResponseData) SetFake() {
 	{
 		{
-			s.Stats.SetFake()
+			s.ResultType.SetFake()
 		}
 	}
 	{
@@ -130,7 +130,7 @@ func (s *QueryResponseData) SetFake() {
 	}
 	{
 		{
-			s.ResultType.SetFake()
+			s.Stats.SetFake()
 		}
 	}
 }

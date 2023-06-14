@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/google/uuid"
 
 	"github.com/ogen-go/ogen/conv"
 	"github.com/ogen-go/ogen/middleware"
@@ -538,7 +537,7 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 // TraceByIDParams is parameters of traceByID operation.
 type TraceByIDParams struct {
 	// TraceID to query.
-	TraceID uuid.UUID
+	TraceID string
 	// Along with `end` define a time range from which traces should be returned.
 	Start OptUnixSeconds
 	// Along with `start` define a time range from which traces should be returned.
@@ -557,7 +556,7 @@ func unpackTraceByIDParams(packed middleware.Parameters) (params TraceByIDParams
 			Name: "traceID",
 			In:   "path",
 		}
-		params.TraceID = packed[key].(uuid.UUID)
+		params.TraceID = packed[key].(string)
 	}
 	{
 		key := middleware.ParameterKey{
@@ -606,12 +605,28 @@ func decodeTraceByIDParams(args [1]string, argsEscaped bool, r *http.Request) (p
 					return err
 				}
 
-				c, err := conv.ToUUID(val)
+				c, err := conv.ToString(val)
 				if err != nil {
 					return err
 				}
 
 				params.TraceID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+			if err := func() error {
+				if err := (validate.String{
+					MinLength:    16,
+					MinLengthSet: true,
+					MaxLength:    16,
+					MaxLengthSet: true,
+					Email:        false,
+					Hostname:     false,
+					Regex:        nil,
+				}).Validate(string(params.TraceID)); err != nil {
+					return errors.Wrap(err, "string")
+				}
 				return nil
 			}(); err != nil {
 				return err

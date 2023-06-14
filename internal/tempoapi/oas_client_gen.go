@@ -644,7 +644,7 @@ func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res
 			Explode: false,
 		})
 		if err := func() error {
-			return e.EncodeValue(conv.UUIDToString(params.TraceID))
+			return e.EncodeValue(conv.StringToString(params.TraceID))
 		}(); err != nil {
 			return res, errors.Wrap(err, "encode path")
 		}

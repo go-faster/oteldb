@@ -170,6 +170,7 @@ func (s *KvlistValue) Validate() error {
 	}
 	return nil
 }
+
 func (s *TagNames) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -307,8 +308,15 @@ func (s *TempoSpanSet) Validate() error {
 func (s *TraceSearchMetadata) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := s.SpanSet.Validate(); err != nil {
-			return err
+		if value, ok := s.SpanSet.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
 		}
 		return nil
 	}(); err != nil {

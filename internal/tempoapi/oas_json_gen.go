@@ -992,6 +992,39 @@ func (s *OptInt) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes TempoSpanSet as json.
+func (o OptTempoSpanSet) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes TempoSpanSet from json.
+func (o *OptTempoSpanSet) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptTempoSpanSet to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptTempoSpanSet) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptTempoSpanSet) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *StringValue) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -1857,12 +1890,16 @@ func (s *TraceSearchMetadata) encodeFields(e *jx.Encoder) {
 		json.EncodeStringUnixNano(e, s.StartTimeUnixNano)
 	}
 	{
-		e.FieldStart("durationMs")
-		e.Int(s.DurationMs)
+		if s.DurationMs.Set {
+			e.FieldStart("durationMs")
+			s.DurationMs.Encode(e)
+		}
 	}
 	{
-		e.FieldStart("spanSet")
-		s.SpanSet.Encode(e)
+		if s.SpanSet.Set {
+			e.FieldStart("spanSet")
+			s.SpanSet.Encode(e)
+		}
 	}
 }
 
@@ -1933,11 +1970,9 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"startTimeUnixNano\"")
 			}
 		case "durationMs":
-			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
-				v, err := d.Int()
-				s.DurationMs = int(v)
-				if err != nil {
+				s.DurationMs.Reset()
+				if err := s.DurationMs.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -1945,8 +1980,8 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"durationMs\"")
 			}
 		case "spanSet":
-			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
+				s.SpanSet.Reset()
 				if err := s.SpanSet.Decode(d); err != nil {
 					return err
 				}
@@ -1964,7 +1999,7 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00111111,
+		0b00001111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

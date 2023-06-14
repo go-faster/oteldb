@@ -505,6 +505,52 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// NewOptTempoSpanSet returns new OptTempoSpanSet with value set to v.
+func NewOptTempoSpanSet(v TempoSpanSet) OptTempoSpanSet {
+	return OptTempoSpanSet{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTempoSpanSet is optional TempoSpanSet.
+type OptTempoSpanSet struct {
+	Value TempoSpanSet
+	Set   bool
+}
+
+// IsSet returns true if OptTempoSpanSet was set.
+func (o OptTempoSpanSet) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTempoSpanSet) Reset() {
+	var v TempoSpanSet
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTempoSpanSet) SetTo(v TempoSpanSet) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTempoSpanSet) Get() (v TempoSpanSet, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTempoSpanSet) Or(d TempoSpanSet) TempoSpanSet {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptUnixSeconds returns new OptUnixSeconds with value set to v.
 func NewOptUnixSeconds(v time.Time) OptUnixSeconds {
 	return OptUnixSeconds{
@@ -756,12 +802,12 @@ func (*TraceByIDNotFound) traceByIDRes() {}
 
 // Ref: #/components/schemas/TraceSearchMetadata
 type TraceSearchMetadata struct {
-	TraceID           string       `json:"traceID"`
-	RootServiceName   string       `json:"rootServiceName"`
-	RootTraceName     string       `json:"rootTraceName"`
-	StartTimeUnixNano time.Time    `json:"startTimeUnixNano"`
-	DurationMs        int          `json:"durationMs"`
-	SpanSet           TempoSpanSet `json:"spanSet"`
+	TraceID           string          `json:"traceID"`
+	RootServiceName   string          `json:"rootServiceName"`
+	RootTraceName     string          `json:"rootTraceName"`
+	StartTimeUnixNano time.Time       `json:"startTimeUnixNano"`
+	DurationMs        OptInt          `json:"durationMs"`
+	SpanSet           OptTempoSpanSet `json:"spanSet"`
 }
 
 // GetTraceID returns the value of TraceID.
@@ -785,12 +831,12 @@ func (s *TraceSearchMetadata) GetStartTimeUnixNano() time.Time {
 }
 
 // GetDurationMs returns the value of DurationMs.
-func (s *TraceSearchMetadata) GetDurationMs() int {
+func (s *TraceSearchMetadata) GetDurationMs() OptInt {
 	return s.DurationMs
 }
 
 // GetSpanSet returns the value of SpanSet.
-func (s *TraceSearchMetadata) GetSpanSet() TempoSpanSet {
+func (s *TraceSearchMetadata) GetSpanSet() OptTempoSpanSet {
 	return s.SpanSet
 }
 
@@ -815,12 +861,12 @@ func (s *TraceSearchMetadata) SetStartTimeUnixNano(val time.Time) {
 }
 
 // SetDurationMs sets the value of DurationMs.
-func (s *TraceSearchMetadata) SetDurationMs(val int) {
+func (s *TraceSearchMetadata) SetDurationMs(val OptInt) {
 	s.DurationMs = val
 }
 
 // SetSpanSet sets the value of SpanSet.
-func (s *TraceSearchMetadata) SetSpanSet(val TempoSpanSet) {
+func (s *TraceSearchMetadata) SetSpanSet(val OptTempoSpanSet) {
 	s.SpanSet = val
 }
 
