@@ -19,15 +19,14 @@ paths:
             For now, Pyroscope ignores parameter, if `query` is not set.
           in: query
           schema:
-            type: string
+            $ref: "#/components/schemas/AtTime"
         - name: until
           description: |
             End of time range in `attime` format.
             For now, Pyroscope ignores parameter, if `query` is not set.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/AtTime"
         - name: query
           description: FrameQL query.
           in: query
@@ -59,15 +58,14 @@ paths:
             For now, Pyroscope ignores parameter, if `query` is not set.
           in: query
           schema:
-            type: string
+            $ref: "#/components/schemas/AtTime"
         - name: until
           description: |
             End of time range in `attime` format.
             For now, Pyroscope ignores parameter, if `query` is not set.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/AtTime"
         - name: query
           description: FrameQL query.
           in: query
@@ -93,13 +91,12 @@ paths:
           description: Start of time range in `attime` format.
           in: query
           schema:
-            type: string
+            $ref: "#/components/schemas/AtTime"
         - name: until
           description: End of time range in `attime` format.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/AtTime"
         - name: query
           description: FrameQL query.
           in: query
@@ -367,5 +364,7 @@ components:
       type: array
       items:
         type: string
+    AtTime:
+      type: string
     Error:
       type: string
