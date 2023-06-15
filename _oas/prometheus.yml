@@ -72,7 +72,7 @@ paths:
         - name: timeout
           description: Evaluation timeout.
           in: query
-          required: true
+          required: false
           schema:
             $ref: "#/components/schemas/PrometheusDuration"
       responses:
