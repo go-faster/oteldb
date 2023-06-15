@@ -615,22 +615,6 @@ func decodeTraceByIDParams(args [1]string, argsEscaped bool, r *http.Request) (p
 			}(); err != nil {
 				return err
 			}
-			if err := func() error {
-				if err := (validate.String{
-					MinLength:    32,
-					MinLengthSet: true,
-					MaxLength:    32,
-					MaxLengthSet: true,
-					Email:        false,
-					Hostname:     false,
-					Regex:        nil,
-				}).Validate(string(params.TraceID)); err != nil {
-					return errors.Wrap(err, "string")
-				}
-				return nil
-			}(); err != nil {
-				return err
-			}
 		} else {
 			return validate.ErrFieldRequired
 		}
