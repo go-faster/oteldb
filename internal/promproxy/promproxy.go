@@ -78,6 +78,14 @@ func (s *Server) GetRules(ctx context.Context, params promapi.GetRulesParams) (*
 	return s.api.GetRules(ctx, params)
 }
 
+// GetSeries implements getSeries operation.
+// Query Prometheus.
+//
+// GET /api/v1/series
+func (s *Server) GetSeries(ctx context.Context, params promapi.GetSeriesParams) (*promapi.SeriesResponse, error) {
+	return s.api.GetSeries(ctx, params)
+}
+
 // PostLabels implements postLabels operation.
 //
 // POST /api/v1/labels
@@ -110,6 +118,15 @@ func (s *Server) PostQueryExemplars(ctx context.Context) (*promapi.QueryExemplar
 // POST /api/v1/query_range
 func (s *Server) PostQueryRange(ctx context.Context) (*promapi.QueryResponse, error) {
 	return s.api.PostQueryRange(ctx)
+}
+
+// PostSeries implements postSeries operation.
+//
+// Query Prometheus.
+//
+// POST /api/v1/series
+func (s *Server) PostSeries(ctx context.Context) (*promapi.SeriesResponse, error) {
+	return s.api.PostSeries(ctx)
 }
 
 // NewError creates *FailStatusCode from error returned by handler.
