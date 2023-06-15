@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
 	"github.com/go-logfmt/logfmt"
-	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
+
+	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -216,12 +216,12 @@ func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ e
 func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParams) (resp tempoapi.TraceByIDRes, _ error) {
 	lg := zctx.From(ctx)
 
-	traceID, err := uuid.Parse(params.TraceID)
+	traceID, err := tracestorage.ParseTraceID(params.TraceID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid traceID %q", params.TraceID)
 	}
 
-	iter, err := h.q.TraceByID(ctx, tracestorage.TraceID(traceID), tracestorage.TraceByIDOptions{
+	iter, err := h.q.TraceByID(ctx, traceID, tracestorage.TraceByIDOptions{
 		Start: timeToTimestamp(params.Start),
 		End:   timeToTimestamp(params.End),
 	})
