@@ -11,7 +11,47 @@ func (s *Fail) setDefaults() {
 }
 
 // setDefaults set default value of fields.
-func (s *Success) setDefaults() {
+func (s *LabelValuesResponse) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}
+
+// setDefaults set default value of fields.
+func (s *LabelsResponse) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}
+
+// setDefaults set default value of fields.
+func (s *MetadataResponse) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}
+
+// setDefaults set default value of fields.
+func (s *QueryExemplarsResponse) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}
+
+// setDefaults set default value of fields.
+func (s *QueryResponse) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}
+
+// setDefaults set default value of fields.
+func (s *RulesResponse) setDefaults() {
 	{
 		val := string("success")
 		s.Status = val

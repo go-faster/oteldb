@@ -13,12 +13,65 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// GetLabelValues implements getLabelValues operation.
+//
+// GET /api/v1/label/{label}/values
+func (UnimplementedHandler) GetLabelValues(ctx context.Context, params GetLabelValuesParams) (r *LabelValuesResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetLabels implements getLabels operation.
+//
+// GET /api/v1/labels
+func (UnimplementedHandler) GetLabels(ctx context.Context, params GetLabelsParams) (r *LabelsResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetMetadata implements getMetadata operation.
+//
+// GET /api/v1/metadata
+func (UnimplementedHandler) GetMetadata(ctx context.Context, params GetMetadataParams) (r *MetadataResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetQuery implements getQuery operation.
 //
 // Query Prometheus.
 //
 // GET /api/v1/query
-func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams) (r *Success, _ error) {
+func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams) (r *QueryResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetQueryExemplars implements getQueryExemplars operation.
+//
+// Query Prometheus.
+//
+// GET /api/v1/query_examplars
+func (UnimplementedHandler) GetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (r *QueryExemplarsResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetQueryRange implements getQueryRange operation.
+//
+// Query Prometheus.
+//
+// GET /api/v1/query_range
+func (UnimplementedHandler) GetQueryRange(ctx context.Context, params GetQueryRangeParams) (r *QueryResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetRules implements getRules operation.
+//
+// GET /api/v1/rules
+func (UnimplementedHandler) GetRules(ctx context.Context, params GetRulesParams) (r *RulesResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PostLabels implements postLabels operation.
+//
+// POST /api/v1/labels
+func (UnimplementedHandler) PostLabels(ctx context.Context) (r *LabelsResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -27,7 +80,25 @@ func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams)
 // Query Prometheus.
 //
 // POST /api/v1/query
-func (UnimplementedHandler) PostQuery(ctx context.Context) (r *Success, _ error) {
+func (UnimplementedHandler) PostQuery(ctx context.Context) (r *QueryResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PostQueryExemplars implements postQueryExemplars operation.
+//
+// Query Prometheus.
+//
+// POST /api/v1/query_examplars
+func (UnimplementedHandler) PostQueryExemplars(ctx context.Context) (r *QueryExemplarsResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PostQueryRange implements postQueryRange operation.
+//
+// Query Prometheus.
+//
+// POST /api/v1/query_range
+func (UnimplementedHandler) PostQueryRange(ctx context.Context) (r *QueryResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

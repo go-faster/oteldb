@@ -35,6 +35,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.notFound(w, r)
 		return
 	}
+	args := [1]string{}
 
 	// Static code generated router with unwrapped path search.
 	switch {
@@ -43,25 +44,199 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/api/v1/query"
-			if l := len("/api/v1/query"); len(elem) >= l && elem[0:l] == "/api/v1/query" {
+		case '/': // Prefix: "/api/v1/"
+			if l := len("/api/v1/"); len(elem) >= l && elem[0:l] == "/api/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				// Leaf node.
-				switch r.Method {
-				case "GET":
-					s.handleGetQueryRequest([0]string{}, elemIsEscaped, w, r)
-				case "POST":
-					s.handlePostQueryRequest([0]string{}, elemIsEscaped, w, r)
-				default:
-					s.notAllowed(w, r, "GET,POST")
+				break
+			}
+			switch elem[0] {
+			case 'l': // Prefix: "label"
+				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
+					elem = elem[l:]
+				} else {
+					break
 				}
 
-				return
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/"
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "label"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/values"
+						if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetLabelValuesRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+					}
+				case 's': // Prefix: "s"
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetLabelsRequest([0]string{}, elemIsEscaped, w, r)
+						case "POST":
+							s.handlePostLabelsRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET,POST")
+						}
+
+						return
+					}
+				}
+			case 'm': // Prefix: "metadata"
+				if l := len("metadata"); len(elem) >= l && elem[0:l] == "metadata" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGetMetadataRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+			case 'q': // Prefix: "query"
+				if l := len("query"); len(elem) >= l && elem[0:l] == "query" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch r.Method {
+					case "GET":
+						s.handleGetQueryRequest([0]string{}, elemIsEscaped, w, r)
+					case "POST":
+						s.handlePostQueryRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET,POST")
+					}
+
+					return
+				}
+				switch elem[0] {
+				case '_': // Prefix: "_"
+					if l := len("_"); len(elem) >= l && elem[0:l] == "_" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'e': // Prefix: "examplars"
+						if l := len("examplars"); len(elem) >= l && elem[0:l] == "examplars" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetQueryExemplarsRequest([0]string{}, elemIsEscaped, w, r)
+							case "POST":
+								s.handlePostQueryExemplarsRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET,POST")
+							}
+
+							return
+						}
+					case 'r': // Prefix: "range"
+						if l := len("range"); len(elem) >= l && elem[0:l] == "range" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleGetQueryRangeRequest([0]string{}, elemIsEscaped, w, r)
+							case "POST":
+								s.handlePostQueryRangeRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET,POST")
+							}
+
+							return
+						}
+					}
+				}
+			case 'r': // Prefix: "rules"
+				if l := len("rules"); len(elem) >= l && elem[0:l] == "rules" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGetRulesRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
 			}
 		}
 	}
@@ -74,7 +249,7 @@ type Route struct {
 	operationID string
 	pathPattern string
 	count       int
-	args        [0]string
+	args        [1]string
 }
 
 // Name returns ogen operation name.
@@ -132,33 +307,240 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/api/v1/query"
-			if l := len("/api/v1/query"); len(elem) >= l && elem[0:l] == "/api/v1/query" {
+		case '/': // Prefix: "/api/v1/"
+			if l := len("/api/v1/"); len(elem) >= l && elem[0:l] == "/api/v1/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch method {
-				case "GET":
-					// Leaf: GetQuery
-					r.name = "GetQuery"
-					r.operationID = "getQuery"
-					r.pathPattern = "/api/v1/query"
-					r.args = args
-					r.count = 0
-					return r, true
-				case "POST":
-					// Leaf: PostQuery
-					r.name = "PostQuery"
-					r.operationID = "postQuery"
-					r.pathPattern = "/api/v1/query"
-					r.args = args
-					r.count = 0
-					return r, true
-				default:
-					return
+				break
+			}
+			switch elem[0] {
+			case 'l': // Prefix: "label"
+				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					break
+				}
+				switch elem[0] {
+				case '/': // Prefix: "/"
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "label"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/values"
+						if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: GetLabelValues
+								r.name = "GetLabelValues"
+								r.operationID = "getLabelValues"
+								r.pathPattern = "/api/v1/label/{label}/values"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+					}
+				case 's': // Prefix: "s"
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							// Leaf: GetLabels
+							r.name = "GetLabels"
+							r.operationID = "getLabels"
+							r.pathPattern = "/api/v1/labels"
+							r.args = args
+							r.count = 0
+							return r, true
+						case "POST":
+							// Leaf: PostLabels
+							r.name = "PostLabels"
+							r.operationID = "postLabels"
+							r.pathPattern = "/api/v1/labels"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+				}
+			case 'm': // Prefix: "metadata"
+				if l := len("metadata"); len(elem) >= l && elem[0:l] == "metadata" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: GetMetadata
+						r.name = "GetMetadata"
+						r.operationID = "getMetadata"
+						r.pathPattern = "/api/v1/metadata"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+			case 'q': // Prefix: "query"
+				if l := len("query"); len(elem) >= l && elem[0:l] == "query" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						r.name = "GetQuery"
+						r.operationID = "getQuery"
+						r.pathPattern = "/api/v1/query"
+						r.args = args
+						r.count = 0
+						return r, true
+					case "POST":
+						r.name = "PostQuery"
+						r.operationID = "postQuery"
+						r.pathPattern = "/api/v1/query"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+				switch elem[0] {
+				case '_': // Prefix: "_"
+					if l := len("_"); len(elem) >= l && elem[0:l] == "_" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'e': // Prefix: "examplars"
+						if l := len("examplars"); len(elem) >= l && elem[0:l] == "examplars" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: GetQueryExemplars
+								r.name = "GetQueryExemplars"
+								r.operationID = "getQueryExemplars"
+								r.pathPattern = "/api/v1/query_examplars"
+								r.args = args
+								r.count = 0
+								return r, true
+							case "POST":
+								// Leaf: PostQueryExemplars
+								r.name = "PostQueryExemplars"
+								r.operationID = "postQueryExemplars"
+								r.pathPattern = "/api/v1/query_examplars"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+					case 'r': // Prefix: "range"
+						if l := len("range"); len(elem) >= l && elem[0:l] == "range" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: GetQueryRange
+								r.name = "GetQueryRange"
+								r.operationID = "getQueryRange"
+								r.pathPattern = "/api/v1/query_range"
+								r.args = args
+								r.count = 0
+								return r, true
+							case "POST":
+								// Leaf: PostQueryRange
+								r.name = "PostQueryRange"
+								r.operationID = "postQueryRange"
+								r.pathPattern = "/api/v1/query_range"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+					}
+				}
+			case 'r': // Prefix: "rules"
+				if l := len("rules"); len(elem) >= l && elem[0:l] == "rules" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: GetRules
+						r.name = "GetRules"
+						r.operationID = "getRules"
+						r.pathPattern = "/api/v1/rules"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
 				}
 			}
 		}

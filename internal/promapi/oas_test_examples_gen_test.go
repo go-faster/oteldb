@@ -23,6 +23,42 @@ func TestData_EncodeDecode(t *testing.T) {
 	var typ2 Data
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestExemplar_EncodeDecode(t *testing.T) {
+	var typ Exemplar
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Exemplar
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestExemplars_EncodeDecode(t *testing.T) {
+	var typ Exemplars
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Exemplars
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestExemplarsSet_EncodeDecode(t *testing.T) {
+	var typ ExemplarsSet
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 ExemplarsSet
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestFail_EncodeDecode(t *testing.T) {
 	var typ Fail
 	typ.SetFake()
@@ -45,6 +81,68 @@ func TestFailErrorType_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 FailErrorType
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestLabelSet_EncodeDecode(t *testing.T) {
+	var typ LabelSet
+	typ = make(LabelSet)
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 LabelSet
+	typ2 = make(LabelSet)
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestLabelValues_EncodeDecode(t *testing.T) {
+	var typ LabelValues
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 LabelValues
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestLabelValuesResponse_EncodeDecode(t *testing.T) {
+	var typ LabelValuesResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 LabelValuesResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestLabels_EncodeDecode(t *testing.T) {
+	var typ Labels
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Labels
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestLabelsResponse_EncodeDecode(t *testing.T) {
+	var typ LabelsResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 LabelsResponse
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestMatrix_EncodeDecode(t *testing.T) {
@@ -85,6 +183,128 @@ func TestMatrixResultItemMetric_EncodeDecode(t *testing.T) {
 	typ2 = make(MatrixResultItemMetric)
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestMetadata_EncodeDecode(t *testing.T) {
+	var typ Metadata
+	typ = make(Metadata)
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Metadata
+	typ2 = make(Metadata)
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestMetadataItemItem_EncodeDecode(t *testing.T) {
+	var typ MetadataItemItem
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 MetadataItemItem
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestMetadataItemItemType_EncodeDecode(t *testing.T) {
+	var typ MetadataItemItemType
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 MetadataItemItemType
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestMetadataResponse_EncodeDecode(t *testing.T) {
+	var typ MetadataResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 MetadataResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestQueryExemplarsResponse_EncodeDecode(t *testing.T) {
+	var typ QueryExemplarsResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 QueryExemplarsResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestQueryResponse_EncodeDecode(t *testing.T) {
+	var typ QueryResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 QueryResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestRule_EncodeDecode(t *testing.T) {
+	var typ Rule
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Rule
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestRuleGroup_EncodeDecode(t *testing.T) {
+	var typ RuleGroup
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 RuleGroup
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestRules_EncodeDecode(t *testing.T) {
+	var typ Rules
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Rules
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestRulesResponse_EncodeDecode(t *testing.T) {
+	var typ RulesResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 RulesResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestScalar_EncodeDecode(t *testing.T) {
 	var typ Scalar
 	typ.SetFake()
@@ -107,18 +327,6 @@ func TestString_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 String
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
-func TestSuccess_EncodeDecode(t *testing.T) {
-	var typ Success
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 Success
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestValue_EncodeDecode(t *testing.T) {

@@ -4,6 +4,8 @@ package promapi
 
 import (
 	"fmt"
+
+	"github.com/go-faster/jx"
 )
 
 // SetFake set fake values.
@@ -14,6 +16,62 @@ func (s *Data) SetFake() {
 		variant.SetFake()
 	}
 	s.SetMatrix(variant)
+}
+
+// SetFake set fake values.
+func (s *Exemplar) SetFake() {
+	{
+		{
+			s.Labels.SetFake()
+		}
+	}
+	{
+		{
+			s.Value.SetFake()
+		}
+	}
+	{
+		{
+			s.Timestamp.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Exemplars) SetFake() {
+	var unwrapped []ExemplarsSet
+	{
+		unwrapped = nil
+		for i := 0; i < 0; i++ {
+			var elem ExemplarsSet
+			{
+				elem.SetFake()
+			}
+			unwrapped = append(unwrapped, elem)
+		}
+	}
+	*s = Exemplars(unwrapped)
+}
+
+// SetFake set fake values.
+func (s *ExemplarsSet) SetFake() {
+	{
+		{
+			s.SeriesLabels.SetFake()
+		}
+	}
+	{
+		{
+			s.Exemplars = nil
+			for i := 0; i < 0; i++ {
+				var elem Exemplar
+				{
+					elem.SetFake()
+				}
+				s.Exemplars = append(s.Exemplars, elem)
+			}
+		}
+	}
 }
 
 // SetFake set fake values.
@@ -43,6 +101,101 @@ func (s *Fail) SetFake() {
 // SetFake set fake values.
 func (s *FailErrorType) SetFake() {
 	*s = FailErrorTypeTimeout
+}
+
+// SetFake set fake values.
+func (s *LabelSet) SetFake() {
+	var (
+		elem string
+		m    map[string]string = s.init()
+	)
+	for i := 0; i < 0; i++ {
+		m[fmt.Sprintf("fake%d", i)] = elem
+	}
+}
+
+// SetFake set fake values.
+func (s *LabelValues) SetFake() {
+	var unwrapped []string
+	{
+		unwrapped = nil
+		for i := 0; i < 0; i++ {
+			var elem string
+			{
+				elem = "string"
+			}
+			unwrapped = append(unwrapped, elem)
+		}
+	}
+	*s = LabelValues(unwrapped)
+}
+
+// SetFake set fake values.
+func (s *LabelValuesResponse) SetFake() {
+	{
+		{
+			s.Status = "string"
+		}
+	}
+	{
+		{
+			s.Warnings = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Warnings = append(s.Warnings, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Data.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Labels) SetFake() {
+	var unwrapped []string
+	{
+		unwrapped = nil
+		for i := 0; i < 0; i++ {
+			var elem string
+			{
+				elem = "string"
+			}
+			unwrapped = append(unwrapped, elem)
+		}
+	}
+	*s = Labels(unwrapped)
+}
+
+// SetFake set fake values.
+func (s *LabelsResponse) SetFake() {
+	{
+		{
+			s.Status = "string"
+		}
+	}
+	{
+		{
+			s.Warnings = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Warnings = append(s.Warnings, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Data.SetFake()
+		}
+	}
 }
 
 // SetFake set fake values.
@@ -94,34 +247,42 @@ func (s *MatrixResultItemMetric) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *OptData) SetFake() {
-	var elem Data
-	{
-		elem.SetFake()
+func (s *Metadata) SetFake() {
+	var (
+		elem []MetadataItemItem
+		m    map[string][]MetadataItemItem = s.init()
+	)
+	for i := 0; i < 0; i++ {
+		m[fmt.Sprintf("fake%d", i)] = elem
 	}
-	s.SetTo(elem)
 }
 
 // SetFake set fake values.
-func (s *Scalar) SetFake() {
+func (s *MetadataItemItem) SetFake() {
 	{
 		{
-			s.Result.SetFake()
+			s.Type.SetFake()
+		}
+	}
+	{
+		{
+			s.Help.SetFake()
+		}
+	}
+	{
+		{
+			s.Unit.SetFake()
 		}
 	}
 }
 
 // SetFake set fake values.
-func (s *String) SetFake() {
-	{
-		{
-			s.Result = "string"
-		}
-	}
+func (s *MetadataItemItemType) SetFake() {
+	*s = MetadataItemItemTypeCounter
 }
 
 // SetFake set fake values.
-func (s *Success) SetFake() {
+func (s *MetadataResponse) SetFake() {
 	{
 		{
 			s.Status = "string"
@@ -142,6 +303,229 @@ func (s *Success) SetFake() {
 	{
 		{
 			s.Data.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *OptData) SetFake() {
+	var elem Data
+	{
+		elem.SetFake()
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptFloat64) SetFake() {
+	var elem float64
+	{
+		elem = float64(0)
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptInt) SetFake() {
+	var elem int
+	{
+		elem = int(0)
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptInt64) SetFake() {
+	var elem int64
+	{
+		elem = int64(0)
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptLabelSet) SetFake() {
+	var elem LabelSet
+	{
+		elem.SetFake()
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptMetadataItemItemType) SetFake() {
+	var elem MetadataItemItemType
+	{
+		elem.SetFake()
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptString) SetFake() {
+	var elem string
+	{
+		elem = "string"
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *QueryExemplarsResponse) SetFake() {
+	{
+		{
+			s.Status = "string"
+		}
+	}
+	{
+		{
+			s.Warnings = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Warnings = append(s.Warnings, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Data.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *QueryResponse) SetFake() {
+	{
+		{
+			s.Status = "string"
+		}
+	}
+	{
+		{
+			s.Warnings = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Warnings = append(s.Warnings, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Data.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Rule) SetFake() {
+	var unwrapped jx.Raw
+	{
+		unwrapped = []byte("null")
+	}
+	*s = Rule(unwrapped)
+}
+
+// SetFake set fake values.
+func (s *RuleGroup) SetFake() {
+	{
+		{
+			s.Name.SetFake()
+		}
+	}
+	{
+		{
+			s.File.SetFake()
+		}
+	}
+	{
+		{
+			s.Rules = nil
+			for i := 0; i < 0; i++ {
+				var elem Rule
+				{
+					elem.SetFake()
+				}
+				s.Rules = append(s.Rules, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Internal.SetFake()
+		}
+	}
+	{
+		{
+			s.Limit.SetFake()
+		}
+	}
+	{
+		{
+			s.EvaluationTime.SetFake()
+		}
+	}
+	{
+		{
+			s.LastEvaluation.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Rules) SetFake() {
+	{
+		{
+			s.Groups.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *RulesResponse) SetFake() {
+	{
+		{
+			s.Status = "string"
+		}
+	}
+	{
+		{
+			s.Warnings = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Warnings = append(s.Warnings, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Data.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Scalar) SetFake() {
+	{
+		{
+			s.Result.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *String) SetFake() {
+	{
+		{
+			s.Result = "string"
 		}
 	}
 }
