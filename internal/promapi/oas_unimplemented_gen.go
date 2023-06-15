@@ -68,6 +68,15 @@ func (UnimplementedHandler) GetRules(ctx context.Context, params GetRulesParams)
 	return r, ht.ErrNotImplemented
 }
 
+// GetSeries implements getSeries operation.
+//
+// Query Prometheus.
+//
+// GET /api/v1/series
+func (UnimplementedHandler) GetSeries(ctx context.Context, params GetSeriesParams) (r *SeriesResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PostLabels implements postLabels operation.
 //
 // POST /api/v1/labels
@@ -99,6 +108,15 @@ func (UnimplementedHandler) PostQueryExemplars(ctx context.Context) (r *QueryExe
 //
 // POST /api/v1/query_range
 func (UnimplementedHandler) PostQueryRange(ctx context.Context) (r *QueryResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PostSeries implements postSeries operation.
+//
+// Query Prometheus.
+//
+// POST /api/v1/series
+func (UnimplementedHandler) PostSeries(ctx context.Context) (r *SeriesResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

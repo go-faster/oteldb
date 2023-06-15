@@ -1389,3 +1389,190 @@ func decodeGetRulesParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 	}
 	return params, nil
 }
+
+// GetSeriesParams is parameters of getSeries operation.
+type GetSeriesParams struct {
+	// Start timestamp.
+	Start PrometheusTimestamp
+	// End timestamp.
+	End PrometheusTimestamp
+	// Repeated series selector argument that selects the series from which to read the label names.
+	Match []string
+}
+
+func unpackGetSeriesParams(packed middleware.Parameters) (params GetSeriesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		params.Start = packed[key].(PrometheusTimestamp)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		params.End = packed[key].(PrometheusTimestamp)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "match[]",
+			In:   "query",
+		}
+		params.Match = packed[key].([]string)
+	}
+	return params
+}
+
+func decodeGetSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (params GetSeriesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStartVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start = PrometheusTimestamp(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEndVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End = PrometheusTimestamp(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: match[].
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "match[]",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				return d.DecodeArray(func(d uri.Decoder) error {
+					var paramsDotMatchVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotMatchVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					params.Match = append(params.Match, paramsDotMatchVal)
+					return nil
+				})
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if params.Match == nil {
+					return errors.New("nil is invalid value")
+				}
+				if err := (validate.Array{
+					MinLength:    1,
+					MinLengthSet: true,
+					MaxLength:    0,
+					MaxLengthSet: false,
+				}).ValidateLength(len(params.Match)); err != nil {
+					return errors.Wrap(err, "array")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "match[]",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}

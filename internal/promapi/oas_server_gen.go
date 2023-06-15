@@ -42,6 +42,12 @@ type Handler interface {
 	//
 	// GET /api/v1/rules
 	GetRules(ctx context.Context, params GetRulesParams) (*RulesResponse, error)
+	// GetSeries implements getSeries operation.
+	//
+	// Query Prometheus.
+	//
+	// GET /api/v1/series
+	GetSeries(ctx context.Context, params GetSeriesParams) (*SeriesResponse, error)
 	// PostLabels implements postLabels operation.
 	//
 	// POST /api/v1/labels
@@ -64,6 +70,12 @@ type Handler interface {
 	//
 	// POST /api/v1/query_range
 	PostQueryRange(ctx context.Context) (*QueryResponse, error)
+	// PostSeries implements postSeries operation.
+	//
+	// Query Prometheus.
+	//
+	// POST /api/v1/series
+	PostSeries(ctx context.Context) (*SeriesResponse, error)
 	// NewError creates *FailStatusCode from error returned by handler.
 	//
 	// Used for common default response.

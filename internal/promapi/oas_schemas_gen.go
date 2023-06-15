@@ -1318,6 +1318,47 @@ func (s *Scalar) SetResult(val Value) {
 	s.Result = val
 }
 
+type Series []LabelSet
+
+type SeriesResponse struct {
+	// Always 'success'.
+	Status string `json:"status"`
+	// Only if there were warnings while executing the request. There will still be data in the data
+	// field.
+	Warnings []string `json:"warnings"`
+	Data     Series   `json:"data"`
+}
+
+// GetStatus returns the value of Status.
+func (s *SeriesResponse) GetStatus() string {
+	return s.Status
+}
+
+// GetWarnings returns the value of Warnings.
+func (s *SeriesResponse) GetWarnings() []string {
+	return s.Warnings
+}
+
+// GetData returns the value of Data.
+func (s *SeriesResponse) GetData() Series {
+	return s.Data
+}
+
+// SetStatus sets the value of Status.
+func (s *SeriesResponse) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetWarnings sets the value of Warnings.
+func (s *SeriesResponse) SetWarnings(val []string) {
+	s.Warnings = val
+}
+
+// SetData sets the value of Data.
+func (s *SeriesResponse) SetData(val Series) {
+	s.Data = val
+}
+
 // Ref: #/components/schemas/String
 type String struct {
 	Result string `json:"result"`

@@ -57,3 +57,11 @@ func (s *RulesResponse) setDefaults() {
 		s.Status = val
 	}
 }
+
+// setDefaults set default value of fields.
+func (s *SeriesResponse) setDefaults() {
+	{
+		val := string("success")
+		s.Status = val
+	}
+}

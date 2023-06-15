@@ -317,6 +317,30 @@ func TestScalar_EncodeDecode(t *testing.T) {
 	var typ2 Scalar
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestSeries_EncodeDecode(t *testing.T) {
+	var typ Series
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Series
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestSeriesResponse_EncodeDecode(t *testing.T) {
+	var typ SeriesResponse
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 SeriesResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestString_EncodeDecode(t *testing.T) {
 	var typ String
 	typ.SetFake()

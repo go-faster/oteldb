@@ -237,6 +237,26 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 					return
 				}
+			case 's': // Prefix: "series"
+				if l := len("series"); len(elem) >= l && elem[0:l] == "series" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGetSeriesRequest([0]string{}, elemIsEscaped, w, r)
+					case "POST":
+						s.handlePostSeriesRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET,POST")
+					}
+
+					return
+				}
 			}
 		}
 	}
@@ -535,6 +555,35 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = "GetRules"
 						r.operationID = "getRules"
 						r.pathPattern = "/api/v1/rules"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+			case 's': // Prefix: "series"
+				if l := len("series"); len(elem) >= l && elem[0:l] == "series" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: GetSeries
+						r.name = "GetSeries"
+						r.operationID = "getSeries"
+						r.pathPattern = "/api/v1/series"
+						r.args = args
+						r.count = 0
+						return r, true
+					case "POST":
+						// Leaf: PostSeries
+						r.name = "PostSeries"
+						r.operationID = "postSeries"
+						r.pathPattern = "/api/v1/series"
 						r.args = args
 						r.count = 0
 						return r, true

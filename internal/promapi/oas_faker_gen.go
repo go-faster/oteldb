@@ -522,6 +522,48 @@ func (s *Scalar) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Series) SetFake() {
+	var unwrapped []LabelSet
+	{
+		unwrapped = nil
+		for i := 0; i < 0; i++ {
+			var elem LabelSet
+			{
+				elem.SetFake()
+			}
+			unwrapped = append(unwrapped, elem)
+		}
+	}
+	*s = Series(unwrapped)
+}
+
+// SetFake set fake values.
+func (s *SeriesResponse) SetFake() {
+	{
+		{
+			s.Status = "string"
+		}
+	}
+	{
+		{
+			s.Warnings = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Warnings = append(s.Warnings, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Data.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *String) SetFake() {
 	{
 		{
