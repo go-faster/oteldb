@@ -943,6 +943,52 @@ func (o OptMetadataItemItemType) Or(d MetadataItemItemType) MetadataItemItemType
 	return d
 }
 
+// NewOptPrometheusDuration returns new OptPrometheusDuration with value set to v.
+func NewOptPrometheusDuration(v PrometheusDuration) OptPrometheusDuration {
+	return OptPrometheusDuration{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPrometheusDuration is optional PrometheusDuration.
+type OptPrometheusDuration struct {
+	Value PrometheusDuration
+	Set   bool
+}
+
+// IsSet returns true if OptPrometheusDuration was set.
+func (o OptPrometheusDuration) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPrometheusDuration) Reset() {
+	var v PrometheusDuration
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPrometheusDuration) SetTo(v PrometheusDuration) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPrometheusDuration) Get() (v PrometheusDuration, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPrometheusDuration) Or(d PrometheusDuration) PrometheusDuration {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptPrometheusTimestamp returns new OptPrometheusTimestamp with value set to v.
 func NewOptPrometheusTimestamp(v PrometheusTimestamp) OptPrometheusTimestamp {
 	return OptPrometheusTimestamp{
