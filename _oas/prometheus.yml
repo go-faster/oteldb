@@ -125,6 +125,46 @@ paths:
           $ref: "#/components/responses/QueryExemplarsResponse"
         default:
           $ref: "#/components/responses/Error"
+  /api/v1/series:
+    description: Returns the list of time series that match a certain label set.
+    get:
+      operationId: getSeries
+      description: Query Prometheus
+      parameters:
+        - name: start
+          description: Start timestamp.
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/PrometheusTimestamp"
+        - name: end
+          description: End timestamp.
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/PrometheusTimestamp"
+        - name: match[]
+          description: Repeated series selector argument that selects the series from which to read the label names.
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            minItems: 1
+      responses:
+        200:
+          $ref: "#/components/responses/SeriesResponse"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: postSeries
+      description: Query Prometheus
+      responses:
+        200:
+          $ref: "#/components/responses/SeriesResponse"
+        default:
+          $ref: "#/components/responses/Error"
   /api/v1/labels:
     description: Returns a list of label names.
     get:
@@ -314,6 +354,27 @@ components:
                   type: string
               data:
                 $ref: "#/components/schemas/Exemplars"
+    SeriesResponse:
+      description: Series list
+      content:
+        "application/json":
+          schema:
+            type: object
+            required: [status, data]
+            properties:
+              status:
+                type: string
+                default: "success"
+                description: Always 'success'
+              warnings:
+                description: >-
+                  Only if there were warnings while executing the request.
+                  There will still be data in the data field.
+                type: array
+                items:
+                  type: string
+              data:
+                $ref: "#/components/schemas/Series"
     LabelsResponse:
       description: Labels list
       content:
@@ -505,6 +566,11 @@ components:
         timestamp:
           type: integer
           format: int64
+
+    Series:
+      type: array
+      items:
+        $ref: "#/components/schemas/LabelSet"
 
     Labels:
       type: array
