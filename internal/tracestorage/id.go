@@ -8,10 +8,40 @@ import (
 	"go.ytsaurus.tech/yt/go/yson"
 
 	"github.com/go-faster/errors"
+	"github.com/google/uuid"
 )
 
 // TraceID is OpenTelemetry trace ID.
 type TraceID [16]byte
+
+// ParseTraceID parses trace ID from given string.
+//
+// Deals with missing leading zeroes.
+func ParseTraceID(input string) (_ TraceID, err error) {
+	var id uuid.UUID
+
+	if len(input) >= 32 {
+		// Normal UUID.
+		id, err = uuid.Parse(input)
+	} else {
+		// UUID without leading zeroes.
+		var hex [32]byte
+		// FIXME(tdakkota): probably, it's faster to define some variable with zeroes
+		// 	and just copy it.
+		for i := range hex {
+			hex[i] = '0'
+		}
+		// Copy input to the end of hex array.
+		//
+		//  00000000000000000000000000000000 <- hex, len = 32
+		//    b78e08df6f20dc3ad29d3915beab75 <- input, len = 30
+		//  00b78e08df6f20dc3ad29d3915beab75 <- copy(hex[32-30:], input)
+		//
+		copy(hex[len(hex)-len(input):], input)
+		id, err = uuid.ParseBytes(hex[:])
+	}
+	return TraceID(id), err
+}
 
 var (
 	_ yson.StreamMarshaler   = TraceID{}
