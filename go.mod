@@ -30,7 +30,7 @@ require (
 	go.ytsaurus.tech/library/go/core/log v0.0.2
 	go.ytsaurus.tech/yt/go v0.0.5
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
-	golang.org/x/sync v0.2.0
+	golang.org/x/sync v0.3.0
 )
 
 require (
