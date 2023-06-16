@@ -22,25 +22,25 @@ type Server struct {
 	api *lokiapi.Client
 }
 
-// GetLabelValues implements GetLabelValues operation.
+// LabelValues implements labelValues operation.
 // Get values of label.
 //
 // GET /loki/api/v1/label/{name}/values
-func (s *Server) GetLabelValues(ctx context.Context, params lokiapi.GetLabelValuesParams) (*lokiapi.Values, error) {
-	return s.api.GetLabelValues(ctx, params)
+func (s *Server) LabelValues(ctx context.Context, params lokiapi.LabelValuesParams) (*lokiapi.Values, error) {
+	return s.api.LabelValues(ctx, params)
 }
 
-// GetLabels implements GetLabels operation.
+// Labels implements labels operation.
 //
 // Get labels.
 // Used by Grafana to test connection to Loki.
 //
 // GET /loki/api/v1/labels
-func (s *Server) GetLabels(ctx context.Context, params lokiapi.GetLabelsParams) (*lokiapi.Labels, error) {
-	return s.api.GetLabels(ctx, params)
+func (s *Server) Labels(ctx context.Context, params lokiapi.LabelsParams) (*lokiapi.Labels, error) {
+	return s.api.Labels(ctx, params)
 }
 
-// QueryRange implements QueryRange operation.
+// QueryRange implements queryRange operation.
 //
 // Query range.
 //
@@ -49,7 +49,7 @@ func (s *Server) QueryRange(ctx context.Context, params lokiapi.QueryRangeParams
 	return s.api.QueryRange(ctx, params)
 }
 
-// Series implements Series operation.
+// Series implements series operation.
 //
 // Get series.
 //
