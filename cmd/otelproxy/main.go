@@ -5,14 +5,15 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"time"
 
-	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/app"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/app"
 
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokiproxy"
@@ -25,15 +26,16 @@ import (
 )
 
 type service struct {
-	addr    string
-	name    string
-	handler http.Handler
+	addr      string
+	name      string
+	handler   http.Handler
+	findRoute RouteFinder
 }
 
-func (s service) Run(ctx context.Context, lg *zap.Logger) error {
+func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 	httpServer := &http.Server{
 		Addr:              s.addr,
-		Handler:           s.handler,
+		Handler:           ServiceMiddleware(s, lg, m),
 		ReadHeaderTimeout: 15 * time.Second,
 	}
 	lg.Info("Starting HTTP server",
@@ -92,6 +94,7 @@ func (s *services) Prometheus(m *app.Metrics) error {
 	client, err := promapi.NewClient(upstreamURL,
 		promapi.WithTracerProvider(m.TracerProvider()),
 		promapi.WithMeterProvider(m.MeterProvider()),
+		promapi.WithClient(s.httpClient(nil, m)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
@@ -111,9 +114,10 @@ func (s *services) Prometheus(m *app.Metrics) error {
 	}
 
 	return s.addService(addr, service{
-		addr:    addr,
-		name:    strings.ToLower(prefix),
-		handler: server,
+		addr:      addr,
+		name:      strings.ToLower(prefix),
+		handler:   server,
+		findRoute: makeRouteFinder[promapi.Route](server),
 	})
 }
 
@@ -130,6 +134,7 @@ func (s *services) Loki(m *app.Metrics) error {
 	client, err := lokiapi.NewClient(upstreamURL,
 		lokiapi.WithTracerProvider(m.TracerProvider()),
 		lokiapi.WithMeterProvider(m.MeterProvider()),
+		lokiapi.WithClient(s.httpClient(nil, m)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
@@ -149,35 +154,11 @@ func (s *services) Loki(m *app.Metrics) error {
 	}
 
 	return s.addService(addr, service{
-		addr:    addr,
-		name:    strings.ToLower(prefix),
-		handler: server,
+		addr:      addr,
+		name:      strings.ToLower(prefix),
+		handler:   server,
+		findRoute: makeRouteFinder[lokiapi.Route](server),
 	})
-}
-
-var _ http.RoundTripper = (*pyroscopeTransport)(nil)
-
-// pyroscopeTransport overrides Content-Type for some endpoints.
-//
-// See https://github.com/grafana/pyroscope/pull/1969.
-type pyroscopeTransport struct {
-	next http.RoundTripper
-}
-
-func (t *pyroscopeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	next := t.next
-	if next == nil {
-		next = http.DefaultTransport
-	}
-
-	resp, err := next.RoundTrip(req)
-	if err != nil {
-		return resp, err
-	}
-	if last := path.Base(req.URL.Path); last == "labels" || last == "label-values" {
-		resp.Header.Set("Content-Type", "application/json")
-	}
-	return resp, nil
 }
 
 func (s *services) Pyroscope(m *app.Metrics) error {
@@ -193,9 +174,7 @@ func (s *services) Pyroscope(m *app.Metrics) error {
 	client, err := pyroscopeapi.NewClient(upstreamURL,
 		pyroscopeapi.WithTracerProvider(m.TracerProvider()),
 		pyroscopeapi.WithMeterProvider(m.MeterProvider()),
-		pyroscopeapi.WithClient(&http.Client{
-			Transport: &pyroscopeTransport{},
-		}),
+		pyroscopeapi.WithClient(s.httpClient(newPyroscopeTransport, m)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
@@ -215,38 +194,11 @@ func (s *services) Pyroscope(m *app.Metrics) error {
 	}
 
 	return s.addService(addr, service{
-		addr:    addr,
-		name:    strings.ToLower(prefix),
-		handler: server,
+		addr:      addr,
+		name:      strings.ToLower(prefix),
+		handler:   server,
+		findRoute: makeRouteFinder[pyroscopeapi.Route](server),
 	})
-}
-
-var _ http.RoundTripper = (*tempoTransport)(nil)
-
-// tempoTransport sets Accept for some endpoints.
-//
-// FIXME(tdakkota): probably, we need to add an Accept header.
-type tempoTransport struct {
-	next http.RoundTripper
-}
-
-func (t *tempoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	next := t.next
-	if next == nil {
-		next = http.DefaultTransport
-	}
-
-	if strings.Contains(req.URL.Path, "api/traces/") {
-		if req.Header.Get("Accept") == "" {
-			req.Header.Set("Accept", "application/protobuf")
-		}
-	}
-
-	resp, err := next.RoundTrip(req)
-	if err != nil {
-		return resp, err
-	}
-	return resp, nil
 }
 
 func (s *services) Tempo(m *app.Metrics) error {
@@ -262,9 +214,7 @@ func (s *services) Tempo(m *app.Metrics) error {
 	client, err := tempoapi.NewClient(upstreamURL,
 		tempoapi.WithTracerProvider(m.TracerProvider()),
 		tempoapi.WithMeterProvider(m.MeterProvider()),
-		tempoapi.WithClient(&http.Client{
-			Transport: &tempoTransport{},
-		}),
+		tempoapi.WithClient(s.httpClient(newTempoTransport, m)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
@@ -284,10 +234,24 @@ func (s *services) Tempo(m *app.Metrics) error {
 	}
 
 	return s.addService(addr, service{
-		addr:    addr,
-		name:    strings.ToLower(prefix),
-		handler: server,
+		addr:      addr,
+		name:      strings.ToLower(prefix),
+		handler:   server,
+		findRoute: makeRouteFinder[tempoapi.Route](server),
 	})
+}
+
+func (s *services) httpClient(wrap TransportMiddleware, m *app.Metrics) *http.Client {
+	transport := http.DefaultTransport
+	if wrap != nil {
+		transport = wrap(transport)
+	}
+	return &http.Client{
+		Transport: otelhttp.NewTransport(transport,
+			otelhttp.WithTracerProvider(m.TracerProvider()),
+			otelhttp.WithMeterProvider(m.MeterProvider()),
+		),
+	}
 }
 
 func main() {
@@ -314,7 +278,7 @@ func main() {
 			s := s
 			lg := lg.Named(s.name)
 			g.Go(func() error {
-				return s.Run(ctx, lg)
+				return s.Run(ctx, lg, m)
 			})
 		}
 		return g.Wait()
