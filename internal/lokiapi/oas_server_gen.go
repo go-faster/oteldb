@@ -8,26 +8,26 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// GetLabelValues implements GetLabelValues operation.
+	// LabelValues implements labelValues operation.
 	//
 	// Get values of label.
 	//
 	// GET /loki/api/v1/label/{name}/values
-	GetLabelValues(ctx context.Context, params GetLabelValuesParams) (*Values, error)
-	// GetLabels implements GetLabels operation.
+	LabelValues(ctx context.Context, params LabelValuesParams) (*Values, error)
+	// Labels implements labels operation.
 	//
 	// Get labels.
 	// Used by Grafana to test connection to Loki.
 	//
 	// GET /loki/api/v1/labels
-	GetLabels(ctx context.Context, params GetLabelsParams) (*Labels, error)
-	// QueryRange implements QueryRange operation.
+	Labels(ctx context.Context, params LabelsParams) (*Labels, error)
+	// QueryRange implements queryRange operation.
 	//
 	// Query range.
 	//
 	// GET /loki/api/v1/query_range
 	QueryRange(ctx context.Context, params QueryRangeParams) (*QueryResponse, error)
-	// Series implements Series operation.
+	// Series implements series operation.
 	//
 	// Get series.
 	//

@@ -14,7 +14,7 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func decodeGetLabelValuesResponse(resp *http.Response) (res *Values, _ error) {
+func decodeLabelValuesResponse(resp *http.Response) (res *Values, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.
@@ -97,7 +97,7 @@ func decodeGetLabelValuesResponse(resp *http.Response) (res *Values, _ error) {
 	return res, errors.Wrap(defRes, "error")
 }
 
-func decodeGetLabelsResponse(resp *http.Response) (res *Labels, _ error) {
+func decodeLabelsResponse(resp *http.Response) (res *Labels, _ error) {
 	switch resp.StatusCode {
 	case 200:
 		// Code 200.

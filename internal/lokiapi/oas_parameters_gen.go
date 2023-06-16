@@ -15,8 +15,8 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// GetLabelValuesParams is parameters of GetLabelValues operation.
-type GetLabelValuesParams struct {
+// LabelValuesParams is parameters of labelValues operation.
+type LabelValuesParams struct {
 	// Grafana username that is passed to datasource when making requests from Grafana. Used for
 	// authentication and authorization.
 	XGrafanaUser OptString
@@ -37,7 +37,7 @@ type GetLabelValuesParams struct {
 	Name string
 }
 
-func unpackGetLabelValuesParams(packed middleware.Parameters) (params GetLabelValuesParams) {
+func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "X-Grafana-User",
@@ -93,7 +93,7 @@ func unpackGetLabelValuesParams(packed middleware.Parameters) (params GetLabelVa
 	return params
 }
 
-func decodeGetLabelValuesParams(args [1]string, argsEscaped bool, r *http.Request) (params GetLabelValuesParams, _ error) {
+func decodeLabelValuesParams(args [1]string, argsEscaped bool, r *http.Request) (params LabelValuesParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	h := uri.NewHeaderDecoder(r.Header)
 	// Decode header: X-Grafana-User.
@@ -369,8 +369,8 @@ func decodeGetLabelValuesParams(args [1]string, argsEscaped bool, r *http.Reques
 	return params, nil
 }
 
-// GetLabelsParams is parameters of GetLabels operation.
-type GetLabelsParams struct {
+// LabelsParams is parameters of labels operation.
+type LabelsParams struct {
 	// Grafana username that is passed to datasource when making requests from Grafana. Used for
 	// authentication and authorization.
 	XGrafanaUser OptString
@@ -386,7 +386,7 @@ type GetLabelsParams struct {
 	Since OptPrometheusDuration
 }
 
-func unpackGetLabelsParams(packed middleware.Parameters) (params GetLabelsParams) {
+func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "X-Grafana-User",
@@ -426,7 +426,7 @@ func unpackGetLabelsParams(packed middleware.Parameters) (params GetLabelsParams
 	return params
 }
 
-func decodeGetLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (params GetLabelsParams, _ error) {
+func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (params LabelsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	h := uri.NewHeaderDecoder(r.Header)
 	// Decode header: X-Grafana-User.
@@ -616,7 +616,7 @@ func decodeGetLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (p
 	return params, nil
 }
 
-// QueryRangeParams is parameters of QueryRange operation.
+// QueryRangeParams is parameters of queryRange operation.
 type QueryRangeParams struct {
 	// Grafana username that is passed to datasource when making requests from Grafana. Used for
 	// authentication and authorization.
@@ -1057,7 +1057,7 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 	return params, nil
 }
 
-// SeriesParams is parameters of Series operation.
+// SeriesParams is parameters of series operation.
 type SeriesParams struct {
 	Start OptInt64
 	End   OptInt64

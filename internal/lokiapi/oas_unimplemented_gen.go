@@ -13,26 +13,26 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// GetLabelValues implements GetLabelValues operation.
+// LabelValues implements labelValues operation.
 //
 // Get values of label.
 //
 // GET /loki/api/v1/label/{name}/values
-func (UnimplementedHandler) GetLabelValues(ctx context.Context, params GetLabelValuesParams) (r *Values, _ error) {
+func (UnimplementedHandler) LabelValues(ctx context.Context, params LabelValuesParams) (r *Values, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// GetLabels implements GetLabels operation.
+// Labels implements labels operation.
 //
 // Get labels.
 // Used by Grafana to test connection to Loki.
 //
 // GET /loki/api/v1/labels
-func (UnimplementedHandler) GetLabels(ctx context.Context, params GetLabelsParams) (r *Labels, _ error) {
+func (UnimplementedHandler) Labels(ctx context.Context, params LabelsParams) (r *Labels, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
-// QueryRange implements QueryRange operation.
+// QueryRange implements queryRange operation.
 //
 // Query range.
 //
@@ -41,7 +41,7 @@ func (UnimplementedHandler) QueryRange(ctx context.Context, params QueryRangePar
 	return r, ht.ErrNotImplemented
 }
 
-// Series implements Series operation.
+// Series implements series operation.
 //
 // Get series.
 //

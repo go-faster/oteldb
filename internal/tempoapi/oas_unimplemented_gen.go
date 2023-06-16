@@ -31,7 +31,7 @@ func (UnimplementedHandler) Search(ctx context.Context, params SearchParams) (r 
 	return r, ht.ErrNotImplemented
 }
 
-// SearchTagValues implements search_tag_values operation.
+// SearchTagValues implements searchTagValues operation.
 //
 // This endpoint retrieves all discovered values for the given tag, which can be used in search.
 //
@@ -40,7 +40,7 @@ func (UnimplementedHandler) SearchTagValues(ctx context.Context, params SearchTa
 	return r, ht.ErrNotImplemented
 }
 
-// SearchTagValuesV2 implements search_tag_values_v2 operation.
+// SearchTagValuesV2 implements searchTagValuesV2 operation.
 //
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
@@ -50,7 +50,7 @@ func (UnimplementedHandler) SearchTagValuesV2(ctx context.Context, params Search
 	return r, ht.ErrNotImplemented
 }
 
-// SearchTags implements search_tags operation.
+// SearchTags implements searchTags operation.
 //
 // This endpoint retrieves all discovered tag names that can be used in search.
 //

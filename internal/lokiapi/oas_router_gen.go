@@ -97,7 +97,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							// Leaf node.
 							switch r.Method {
 							case "GET":
-								s.handleGetLabelValuesRequest([1]string{
+								s.handleLabelValuesRequest([1]string{
 									args[0],
 								}, elemIsEscaped, w, r)
 							default:
@@ -118,7 +118,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						// Leaf node.
 						switch r.Method {
 						case "GET":
-							s.handleGetLabelsRequest([0]string{}, elemIsEscaped, w, r)
+							s.handleLabelsRequest([0]string{}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET")
 						}
@@ -284,9 +284,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						if len(elem) == 0 {
 							switch method {
 							case "GET":
-								// Leaf: GetLabelValues
-								r.name = "GetLabelValues"
-								r.operationID = "GetLabelValues"
+								// Leaf: LabelValues
+								r.name = "LabelValues"
+								r.operationID = "labelValues"
 								r.pathPattern = "/loki/api/v1/label/{name}/values"
 								r.args = args
 								r.count = 1
@@ -306,9 +306,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							// Leaf: GetLabels
-							r.name = "GetLabels"
-							r.operationID = "GetLabels"
+							// Leaf: Labels
+							r.name = "Labels"
+							r.operationID = "labels"
 							r.pathPattern = "/loki/api/v1/labels"
 							r.args = args
 							r.count = 0
@@ -330,7 +330,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: QueryRange
 						r.name = "QueryRange"
-						r.operationID = "QueryRange"
+						r.operationID = "queryRange"
 						r.pathPattern = "/loki/api/v1/query_range"
 						r.args = args
 						r.count = 0
@@ -351,7 +351,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: Series
 						r.name = "Series"
-						r.operationID = "Series"
+						r.operationID = "series"
 						r.pathPattern = "/loki/api/v1/series"
 						r.args = args
 						r.count = 0

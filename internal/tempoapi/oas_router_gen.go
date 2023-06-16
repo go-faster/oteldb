@@ -395,7 +395,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "GET":
 									// Leaf: SearchTagValues
 									r.name = "SearchTagValues"
-									r.operationID = "search_tag_values"
+									r.operationID = "searchTagValues"
 									r.pathPattern = "/api/search/tag/{tag_name}/values"
 									r.args = args
 									r.count = 1
@@ -417,7 +417,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								// Leaf: SearchTags
 								r.name = "SearchTags"
-								r.operationID = "search_tags"
+								r.operationID = "searchTags"
 								r.pathPattern = "/api/search/tags"
 								r.args = args
 								r.count = 0
@@ -486,7 +486,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: SearchTagValuesV2
 							r.name = "SearchTagValuesV2"
-							r.operationID = "search_tag_values_v2"
+							r.operationID = "searchTagValuesV2"
 							r.pathPattern = "/api/v2/search/tag/{tag_name}/values"
 							r.args = args
 							r.count = 1

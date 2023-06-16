@@ -72,20 +72,20 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 	return u
 }
 
-// GetLabelValues invokes GetLabelValues operation.
+// LabelValues invokes labelValues operation.
 //
 // Get values of label.
 //
 // GET /loki/api/v1/label/{name}/values
-func (c *Client) GetLabelValues(ctx context.Context, params GetLabelValuesParams) (*Values, error) {
-	res, err := c.sendGetLabelValues(ctx, params)
+func (c *Client) LabelValues(ctx context.Context, params LabelValuesParams) (*Values, error) {
+	res, err := c.sendLabelValues(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesParams) (res *Values, err error) {
+func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) (res *Values, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("GetLabelValues"),
+		otelogen.OperationID("labelValues"),
 	}
 
 	// Run stopwatch.
@@ -100,7 +100,7 @@ func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesPa
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetLabelValues",
+	ctx, span := c.cfg.Tracer.Start(ctx, "LabelValues",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -246,7 +246,7 @@ func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesPa
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeGetLabelValuesResponse(resp)
+	result, err := decodeLabelValuesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -254,21 +254,21 @@ func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesPa
 	return result, nil
 }
 
-// GetLabels invokes GetLabels operation.
+// Labels invokes labels operation.
 //
 // Get labels.
 // Used by Grafana to test connection to Loki.
 //
 // GET /loki/api/v1/labels
-func (c *Client) GetLabels(ctx context.Context, params GetLabelsParams) (*Labels, error) {
-	res, err := c.sendGetLabels(ctx, params)
+func (c *Client) Labels(ctx context.Context, params LabelsParams) (*Labels, error) {
+	res, err := c.sendLabels(ctx, params)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res *Labels, err error) {
+func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labels, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("GetLabels"),
+		otelogen.OperationID("labels"),
 	}
 
 	// Run stopwatch.
@@ -283,7 +283,7 @@ func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetLabels",
+	ctx, span := c.cfg.Tracer.Start(ctx, "Labels",
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -393,7 +393,7 @@ func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res
 	defer resp.Body.Close()
 
 	stage = "DecodeResponse"
-	result, err := decodeGetLabelsResponse(resp)
+	result, err := decodeLabelsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -401,7 +401,7 @@ func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res
 	return result, nil
 }
 
-// QueryRange invokes QueryRange operation.
+// QueryRange invokes queryRange operation.
 //
 // Query range.
 //
@@ -414,7 +414,7 @@ func (c *Client) QueryRange(ctx context.Context, params QueryRangeParams) (*Quer
 
 func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("QueryRange"),
+		otelogen.OperationID("queryRange"),
 	}
 
 	// Run stopwatch.
@@ -595,7 +595,7 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 	return result, nil
 }
 
-// Series invokes Series operation.
+// Series invokes series operation.
 //
 // Get series.
 //
@@ -608,7 +608,7 @@ func (c *Client) Series(ctx context.Context, params SeriesParams) (*Maps, error)
 
 func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("Series"),
+		otelogen.OperationID("series"),
 	}
 
 	// Run stopwatch.

@@ -20,20 +20,20 @@ import (
 	"github.com/ogen-go/ogen/otelogen"
 )
 
-// handleGetLabelValuesRequest handles GetLabelValues operation.
+// handleLabelValuesRequest handles labelValues operation.
 //
 // Get values of label.
 //
 // GET /loki/api/v1/label/{name}/values
-func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleLabelValuesRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("GetLabelValues"),
+		otelogen.OperationID("labelValues"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/label/{name}/values"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetLabelValues",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "LabelValues",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -58,11 +58,11 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetLabelValues",
-			ID:   "GetLabelValues",
+			Name: "LabelValues",
+			ID:   "labelValues",
 		}
 	)
-	params, err := decodeGetLabelValuesParams(args, argsEscaped, r)
+	params, err := decodeLabelValuesParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -77,8 +77,8 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
-			OperationName: "GetLabelValues",
-			OperationID:   "GetLabelValues",
+			OperationName: "LabelValues",
+			OperationID:   "labelValues",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
@@ -111,7 +111,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 
 		type (
 			Request  = struct{}
-			Params   = GetLabelValuesParams
+			Params   = LabelValuesParams
 			Response = *Values
 		)
 		response, err = middleware.HookMiddleware[
@@ -121,14 +121,14 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 		](
 			m,
 			mreq,
-			unpackGetLabelValuesParams,
+			unpackLabelValuesParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetLabelValues(ctx, params)
+				response, err = s.h.LabelValues(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetLabelValues(ctx, params)
+		response, err = s.h.LabelValues(ctx, params)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -144,28 +144,28 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 		return
 	}
 
-	if err := encodeGetLabelValuesResponse(response, w, span); err != nil {
+	if err := encodeLabelValuesResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		s.cfg.ErrorHandler(ctx, w, r, err)
 		return
 	}
 }
 
-// handleGetLabelsRequest handles GetLabels operation.
+// handleLabelsRequest handles labels operation.
 //
 // Get labels.
 // Used by Grafana to test connection to Loki.
 //
 // GET /loki/api/v1/labels
-func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("GetLabels"),
+		otelogen.OperationID("labels"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/labels"),
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetLabels",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "Labels",
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -190,11 +190,11 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetLabels",
-			ID:   "GetLabels",
+			Name: "Labels",
+			ID:   "labels",
 		}
 	)
-	params, err := decodeGetLabelsParams(args, argsEscaped, r)
+	params, err := decodeLabelsParams(args, argsEscaped, r)
 	if err != nil {
 		err = &ogenerrors.DecodeParamsError{
 			OperationContext: opErrContext,
@@ -209,8 +209,8 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:       ctx,
-			OperationName: "GetLabels",
-			OperationID:   "GetLabels",
+			OperationName: "Labels",
+			OperationID:   "labels",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
@@ -235,7 +235,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 
 		type (
 			Request  = struct{}
-			Params   = GetLabelsParams
+			Params   = LabelsParams
 			Response = *Labels
 		)
 		response, err = middleware.HookMiddleware[
@@ -245,14 +245,14 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 		](
 			m,
 			mreq,
-			unpackGetLabelsParams,
+			unpackLabelsParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.GetLabels(ctx, params)
+				response, err = s.h.Labels(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.GetLabels(ctx, params)
+		response, err = s.h.Labels(ctx, params)
 	}
 	if err != nil {
 		recordError("Internal", err)
@@ -268,21 +268,21 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 		return
 	}
 
-	if err := encodeGetLabelsResponse(response, w, span); err != nil {
+	if err := encodeLabelsResponse(response, w, span); err != nil {
 		recordError("EncodeResponse", err)
 		s.cfg.ErrorHandler(ctx, w, r, err)
 		return
 	}
 }
 
-// handleQueryRangeRequest handles QueryRange operation.
+// handleQueryRangeRequest handles queryRange operation.
 //
 // Query range.
 //
 // GET /loki/api/v1/query_range
 func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("QueryRange"),
+		otelogen.OperationID("queryRange"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/query_range"),
 	}
@@ -314,7 +314,7 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "QueryRange",
-			ID:   "QueryRange",
+			ID:   "queryRange",
 		}
 	)
 	params, err := decodeQueryRangeParams(args, argsEscaped, r)
@@ -333,7 +333,7 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 		mreq := middleware.Request{
 			Context:       ctx,
 			OperationName: "QueryRange",
-			OperationID:   "QueryRange",
+			OperationID:   "queryRange",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
@@ -410,14 +410,14 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 	}
 }
 
-// handleSeriesRequest handles Series operation.
+// handleSeriesRequest handles series operation.
 //
 // Get series.
 //
 // GET /loki/api/v1/series
 func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("Series"),
+		otelogen.OperationID("series"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/series"),
 	}
@@ -449,7 +449,7 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "Series",
-			ID:   "Series",
+			ID:   "series",
 		}
 	)
 	params, err := decodeSeriesParams(args, argsEscaped, r)
@@ -468,7 +468,7 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 		mreq := middleware.Request{
 			Context:       ctx,
 			OperationName: "Series",
-			OperationID:   "Series",
+			OperationID:   "series",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{

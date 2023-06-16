@@ -402,7 +402,7 @@ func decodeSearchParams(args [0]string, argsEscaped bool, r *http.Request) (para
 	return params, nil
 }
 
-// SearchTagValuesParams is parameters of search_tag_values operation.
+// SearchTagValuesParams is parameters of searchTagValues operation.
 type SearchTagValuesParams struct {
 	// Tag name.
 	TagName string
@@ -468,7 +468,7 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 	return params, nil
 }
 
-// SearchTagValuesV2Params is parameters of search_tag_values_v2 operation.
+// SearchTagValuesV2Params is parameters of searchTagValuesV2 operation.
 type SearchTagValuesV2Params struct {
 	// Tag name.
 	TagName string

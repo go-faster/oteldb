@@ -337,7 +337,7 @@ func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Trac
 	return result, nil
 }
 
-// SearchTagValues invokes search_tag_values operation.
+// SearchTagValues invokes searchTagValues operation.
 //
 // This endpoint retrieves all discovered values for the given tag, which can be used in search.
 //
@@ -350,7 +350,7 @@ func (c *Client) SearchTagValues(ctx context.Context, params SearchTagValuesPara
 
 func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValuesParams) (res *TagValues, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("search_tag_values"),
+		otelogen.OperationID("searchTagValues"),
 	}
 
 	// Run stopwatch.
@@ -427,7 +427,7 @@ func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValues
 	return result, nil
 }
 
-// SearchTagValuesV2 invokes search_tag_values_v2 operation.
+// SearchTagValuesV2 invokes searchTagValuesV2 operation.
 //
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
@@ -441,7 +441,7 @@ func (c *Client) SearchTagValuesV2(ctx context.Context, params SearchTagValuesV2
 
 func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValuesV2Params) (res *TagValuesV2, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("search_tag_values_v2"),
+		otelogen.OperationID("searchTagValuesV2"),
 	}
 
 	// Run stopwatch.
@@ -518,7 +518,7 @@ func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValu
 	return result, nil
 }
 
-// SearchTags invokes search_tags operation.
+// SearchTags invokes searchTags operation.
 //
 // This endpoint retrieves all discovered tag names that can be used in search.
 //
@@ -531,7 +531,7 @@ func (c *Client) SearchTags(ctx context.Context) (*TagNames, error) {
 
 func (c *Client) sendSearchTags(ctx context.Context) (res *TagNames, err error) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("search_tags"),
+		otelogen.OperationID("searchTags"),
 	}
 
 	// Run stopwatch.

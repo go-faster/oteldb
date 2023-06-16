@@ -247,14 +247,14 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 }
 
-// handleSearchTagValuesRequest handles search_tag_values operation.
+// handleSearchTagValuesRequest handles searchTagValues operation.
 //
 // This endpoint retrieves all discovered values for the given tag, which can be used in search.
 //
 // GET /api/search/tag/{tag_name}/values
 func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("search_tag_values"),
+		otelogen.OperationID("searchTagValues"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/search/tag/{tag_name}/values"),
 	}
@@ -286,7 +286,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "SearchTagValues",
-			ID:   "search_tag_values",
+			ID:   "searchTagValues",
 		}
 	)
 	params, err := decodeSearchTagValuesParams(args, argsEscaped, r)
@@ -305,7 +305,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 		mreq := middleware.Request{
 			Context:       ctx,
 			OperationName: "SearchTagValues",
-			OperationID:   "search_tag_values",
+			OperationID:   "searchTagValues",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
@@ -358,7 +358,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 	}
 }
 
-// handleSearchTagValuesV2Request handles search_tag_values_v2 operation.
+// handleSearchTagValuesV2Request handles searchTagValuesV2 operation.
 //
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
@@ -366,7 +366,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 // GET /api/v2/search/tag/{tag_name}/values
 func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("search_tag_values_v2"),
+		otelogen.OperationID("searchTagValuesV2"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v2/search/tag/{tag_name}/values"),
 	}
@@ -398,7 +398,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 		err          error
 		opErrContext = ogenerrors.OperationContext{
 			Name: "SearchTagValuesV2",
-			ID:   "search_tag_values_v2",
+			ID:   "searchTagValuesV2",
 		}
 	)
 	params, err := decodeSearchTagValuesV2Params(args, argsEscaped, r)
@@ -417,7 +417,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 		mreq := middleware.Request{
 			Context:       ctx,
 			OperationName: "SearchTagValuesV2",
-			OperationID:   "search_tag_values_v2",
+			OperationID:   "searchTagValuesV2",
 			Body:          nil,
 			Params: middleware.Parameters{
 				{
@@ -470,14 +470,14 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 	}
 }
 
-// handleSearchTagsRequest handles search_tags operation.
+// handleSearchTagsRequest handles searchTags operation.
 //
 // This endpoint retrieves all discovered tag names that can be used in search.
 //
 // GET /api/search/tags
 func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
-		otelogen.OperationID("search_tags"),
+		otelogen.OperationID("searchTags"),
 		semconv.HTTPMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/search/tags"),
 	}
@@ -514,7 +514,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 		mreq := middleware.Request{
 			Context:       ctx,
 			OperationName: "SearchTags",
-			OperationID:   "search_tags",
+			OperationID:   "searchTags",
 			Body:          nil,
 			Params:        middleware.Parameters{},
 			Raw:           r,
