@@ -36,7 +36,7 @@ func (span Span) FillTraceMetadata(m *tempoapi.TraceSearchMetadata) {
 func (span Span) AsTempoSpan() (s tempoapi.TempoSpan) {
 	s = tempoapi.TempoSpan{
 		SpanID:            span.SpanID.Hex(),
-		Name:              span.Name,
+		Name:              tempoapi.NewOptString(span.Name),
 		StartTimeUnixNano: time.Unix(0, int64(span.Start)),
 		DurationNanos:     int64(span.End - span.Start),
 		Attributes:        &tempoapi.Attributes{},

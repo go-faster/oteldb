@@ -188,7 +188,7 @@ func runTest(
 				a.Contains(trace.Spanset, spanID, "check trace %q", traceID)
 				expectSpan := trace.Spanset[spanID]
 
-				a.Equal(expectSpan.Name(), gotSpan.Name)
+				a.Equal(expectSpan.Name(), gotSpan.Name.Or(""))
 				start := gotSpan.StartTimeUnixNano.UnixNano()
 				end := start + gotSpan.DurationNanos
 				a.Equal(int64(expectSpan.StartTimestamp()), start)
