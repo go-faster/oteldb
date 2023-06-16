@@ -220,8 +220,6 @@ components:
       type: object
       required:
         - traceID
-        - rootServiceName
-        - rootTraceName
         - startTimeUnixNano
       properties:
         traceID:
