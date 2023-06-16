@@ -619,23 +619,25 @@ components:
       additionalProperties:
         type: array
         items:
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-                - "counter"
-                - "gauge"
-                - "histogram"
-                - "gaugehistogram"
-                - "summary"
-                - "info"
-                - "stateset"
-                - "unknown"
-            help:
-              type: string
-            unit:
-              type: string
+          $ref: "#/components/schemas/MetricMetadata"
+    MetricMetadata:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - "counter"
+            - "gauge"
+            - "histogram"
+            - "gaugehistogram"
+            - "summary"
+            - "info"
+            - "stateset"
+            - "unknown"
+        help:
+          type: string
+        unit:
+          type: string
 
     Fail:
       type: object
