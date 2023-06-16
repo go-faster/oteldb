@@ -686,7 +686,7 @@ func (s *TagValuesV2) SetTagValues(val []TagValue) {
 // Ref: #/components/schemas/TempoSpan
 type TempoSpan struct {
 	SpanID            string      `json:"spanID"`
-	Name              string      `json:"name"`
+	Name              OptString   `json:"name"`
 	StartTimeUnixNano time.Time   `json:"startTimeUnixNano"`
 	DurationNanos     int64       `json:"durationNanos"`
 	Attributes        *Attributes `json:"attributes"`
@@ -698,7 +698,7 @@ func (s *TempoSpan) GetSpanID() string {
 }
 
 // GetName returns the value of Name.
-func (s *TempoSpan) GetName() string {
+func (s *TempoSpan) GetName() OptString {
 	return s.Name
 }
 
@@ -723,7 +723,7 @@ func (s *TempoSpan) SetSpanID(val string) {
 }
 
 // SetName sets the value of Name.
-func (s *TempoSpan) SetName(val string) {
+func (s *TempoSpan) SetName(val OptString) {
 	s.Name = val
 }
 

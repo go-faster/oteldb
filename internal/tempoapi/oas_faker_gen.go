@@ -133,6 +133,15 @@ func (s *OptInt) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *OptString) SetFake() {
+	var elem string
+	{
+		elem = "string"
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
 func (s *OptTempoSpanSet) SetFake() {
 	var elem TempoSpanSet
 	{
@@ -221,7 +230,7 @@ func (s *TempoSpan) SetFake() {
 	}
 	{
 		{
-			s.Name = "string"
+			s.Name.SetFake()
 		}
 	}
 	{

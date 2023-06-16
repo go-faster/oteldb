@@ -992,6 +992,41 @@ func (s *OptInt) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes string as json.
+func (o OptString) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes string from json.
+func (o *OptString) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptString to nil")
+	}
+	o.Set = true
+	v, err := d.Str()
+	if err != nil {
+		return err
+	}
+	o.Value = string(v)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptString) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptString) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes TempoSpanSet as json.
 func (o OptTempoSpanSet) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -1131,12 +1166,14 @@ func (s *TagNames) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *TagNames) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("tagNames")
-		e.ArrStart()
-		for _, elem := range s.TagNames {
-			e.Str(elem)
+		if s.TagNames != nil {
+			e.FieldStart("tagNames")
+			e.ArrStart()
+			for _, elem := range s.TagNames {
+				e.Str(elem)
+			}
+			e.ArrEnd()
 		}
-		e.ArrEnd()
 	}
 }
 
@@ -1149,12 +1186,10 @@ func (s *TagNames) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode TagNames to nil")
 	}
-	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "tagNames":
-			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				s.TagNames = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -1179,38 +1214,6 @@ func (s *TagNames) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode TagNames")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00000001,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfTagNames) {
-					name = jsonFieldsNameOfTagNames[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 
 	return nil
@@ -1352,12 +1355,14 @@ func (s *TagValues) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *TagValues) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("tagValues")
-		e.ArrStart()
-		for _, elem := range s.TagValues {
-			e.Str(elem)
+		if s.TagValues != nil {
+			e.FieldStart("tagValues")
+			e.ArrStart()
+			for _, elem := range s.TagValues {
+				e.Str(elem)
+			}
+			e.ArrEnd()
 		}
-		e.ArrEnd()
 	}
 }
 
@@ -1370,12 +1375,10 @@ func (s *TagValues) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode TagValues to nil")
 	}
-	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "tagValues":
-			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				s.TagValues = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -1400,38 +1403,6 @@ func (s *TagValues) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode TagValues")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00000001,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfTagValues) {
-					name = jsonFieldsNameOfTagValues[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 
 	return nil
@@ -1460,12 +1431,14 @@ func (s *TagValuesV2) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *TagValuesV2) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("tagValues")
-		e.ArrStart()
-		for _, elem := range s.TagValues {
-			elem.Encode(e)
+		if s.TagValues != nil {
+			e.FieldStart("tagValues")
+			e.ArrStart()
+			for _, elem := range s.TagValues {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
 		}
-		e.ArrEnd()
 	}
 }
 
@@ -1478,12 +1451,10 @@ func (s *TagValuesV2) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode TagValuesV2 to nil")
 	}
-	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "tagValues":
-			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				s.TagValues = make([]TagValue, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -1506,38 +1477,6 @@ func (s *TagValuesV2) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode TagValuesV2")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00000001,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfTagValuesV2) {
-					name = jsonFieldsNameOfTagValuesV2[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 
 	return nil
@@ -1570,8 +1509,10 @@ func (s *TempoSpan) encodeFields(e *jx.Encoder) {
 		e.Str(s.SpanID)
 	}
 	{
-		e.FieldStart("name")
-		e.Str(s.Name)
+		if s.Name.Set {
+			e.FieldStart("name")
+			s.Name.Encode(e)
+		}
 	}
 	{
 		e.FieldStart("startTimeUnixNano")
@@ -1619,11 +1560,9 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"spanID\"")
 			}
 		case "name":
-			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				v, err := d.Str()
-				s.Name = string(v)
-				if err != nil {
+				s.Name.Reset()
+				if err := s.Name.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -1676,7 +1615,7 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00001101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2055,12 +1994,14 @@ func (s *Traces) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *Traces) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("traces")
-		e.ArrStart()
-		for _, elem := range s.Traces {
-			elem.Encode(e)
+		if s.Traces != nil {
+			e.FieldStart("traces")
+			e.ArrStart()
+			for _, elem := range s.Traces {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
 		}
-		e.ArrEnd()
 	}
 }
 
@@ -2073,12 +2014,10 @@ func (s *Traces) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Traces to nil")
 	}
-	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
 		case "traces":
-			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				s.Traces = make([]TraceSearchMetadata, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -2101,38 +2040,6 @@ func (s *Traces) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode Traces")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00000001,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfTraces) {
-					name = jsonFieldsNameOfTraces[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 
 	return nil

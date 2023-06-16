@@ -171,60 +171,6 @@ func (s *KvlistValue) Validate() error {
 	return nil
 }
 
-func (s *TagNames) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.TagNames == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "tagNames",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-func (s *TagValues) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.TagValues == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "tagValues",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-func (s *TagValuesV2) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.TagValues == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "tagValues",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
 func (s *TempoSpan) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -333,9 +279,6 @@ func (s *TraceSearchMetadata) Validate() error {
 func (s *Traces) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Traces == nil {
-			return errors.New("nil is invalid value")
-		}
 		var failures []validate.FieldError
 		for i, elem := range s.Traces {
 			if err := func() error {
