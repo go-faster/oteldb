@@ -211,7 +211,6 @@ components:
   schemas:
     Traces:
       type: object
-      required: [traces]
       properties:
         traces:
           type: array
@@ -255,7 +254,6 @@ components:
       type: object
       required:
         - spanID
-        - name
         - startTimeUnixNano
         - durationNanos
       properties:
@@ -344,7 +342,6 @@ components:
 
     TagNames:
       type: object
-      required: [tagNames]
       properties:
         tagNames:
           type: array
@@ -353,7 +350,6 @@ components:
 
     TagValues:
       type: object
-      required: [tagValues]
       properties:
         tagValues:
           type: array
@@ -362,7 +358,6 @@ components:
 
     TagValuesV2:
       type: object
-      required: [tagValues]
       properties:
         tagValues:
           type: array
