@@ -14,9 +14,9 @@ import (
 func (span Span) FillTraceMetadata(m *tempoapi.TraceSearchMetadata) {
 	ss := &m.SpanSet.Value
 
-	m.RootTraceName = span.Name
+	m.RootTraceName.SetTo(span.Name)
 	if attr, ok := span.ResourceAttrs.AsMap().Get("service.name"); ok {
-		m.RootServiceName = attr.AsString()
+		m.RootServiceName.SetTo(attr.AsString())
 	}
 	var (
 		start = time.Unix(0, int64(span.Start))
