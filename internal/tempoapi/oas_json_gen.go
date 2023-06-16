@@ -1817,12 +1817,16 @@ func (s *TraceSearchMetadata) encodeFields(e *jx.Encoder) {
 		e.Str(s.TraceID)
 	}
 	{
-		e.FieldStart("rootServiceName")
-		e.Str(s.RootServiceName)
+		if s.RootServiceName.Set {
+			e.FieldStart("rootServiceName")
+			s.RootServiceName.Encode(e)
+		}
 	}
 	{
-		e.FieldStart("rootTraceName")
-		e.Str(s.RootTraceName)
+		if s.RootTraceName.Set {
+			e.FieldStart("rootTraceName")
+			s.RootTraceName.Encode(e)
+		}
 	}
 	{
 		e.FieldStart("startTimeUnixNano")
@@ -1873,11 +1877,9 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"traceID\"")
 			}
 		case "rootServiceName":
-			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				v, err := d.Str()
-				s.RootServiceName = string(v)
-				if err != nil {
+				s.RootServiceName.Reset()
+				if err := s.RootServiceName.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -1885,11 +1887,9 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"rootServiceName\"")
 			}
 		case "rootTraceName":
-			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				v, err := d.Str()
-				s.RootTraceName = string(v)
-				if err != nil {
+				s.RootTraceName.Reset()
+				if err := s.RootTraceName.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -1938,7 +1938,7 @@ func (s *TraceSearchMetadata) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00001001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

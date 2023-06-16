@@ -285,12 +285,12 @@ func (s *TraceSearchMetadata) SetFake() {
 	}
 	{
 		{
-			s.RootServiceName = "string"
+			s.RootServiceName.SetFake()
 		}
 	}
 	{
 		{
-			s.RootTraceName = "string"
+			s.RootTraceName.SetFake()
 		}
 	}
 	{

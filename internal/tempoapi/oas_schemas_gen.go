@@ -803,8 +803,8 @@ func (*TraceByIDNotFound) traceByIDRes() {}
 // Ref: #/components/schemas/TraceSearchMetadata
 type TraceSearchMetadata struct {
 	TraceID           string          `json:"traceID"`
-	RootServiceName   string          `json:"rootServiceName"`
-	RootTraceName     string          `json:"rootTraceName"`
+	RootServiceName   OptString       `json:"rootServiceName"`
+	RootTraceName     OptString       `json:"rootTraceName"`
 	StartTimeUnixNano time.Time       `json:"startTimeUnixNano"`
 	DurationMs        OptInt          `json:"durationMs"`
 	SpanSet           OptTempoSpanSet `json:"spanSet"`
@@ -816,12 +816,12 @@ func (s *TraceSearchMetadata) GetTraceID() string {
 }
 
 // GetRootServiceName returns the value of RootServiceName.
-func (s *TraceSearchMetadata) GetRootServiceName() string {
+func (s *TraceSearchMetadata) GetRootServiceName() OptString {
 	return s.RootServiceName
 }
 
 // GetRootTraceName returns the value of RootTraceName.
-func (s *TraceSearchMetadata) GetRootTraceName() string {
+func (s *TraceSearchMetadata) GetRootTraceName() OptString {
 	return s.RootTraceName
 }
 
@@ -846,12 +846,12 @@ func (s *TraceSearchMetadata) SetTraceID(val string) {
 }
 
 // SetRootServiceName sets the value of RootServiceName.
-func (s *TraceSearchMetadata) SetRootServiceName(val string) {
+func (s *TraceSearchMetadata) SetRootServiceName(val OptString) {
 	s.RootServiceName = val
 }
 
 // SetRootTraceName sets the value of RootTraceName.
-func (s *TraceSearchMetadata) SetRootTraceName(val string) {
+func (s *TraceSearchMetadata) SetRootTraceName(val OptString) {
 	s.RootTraceName = val
 }
 
