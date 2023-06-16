@@ -88,7 +88,7 @@ paths:
           $ref: "#/components/responses/QueryResponse"
         default:
           $ref: "#/components/responses/Error"
-  /api/v1/query_examplars:
+  /api/v1/query_exemplars:
     description: Returns a list of exemplars for a valid PromQL query for a specific time range
     get:
       operationId: getQueryExemplars
