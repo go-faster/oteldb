@@ -124,7 +124,7 @@ paths:
 
   /api/search/tags:
     get:
-      operationId: search_tags
+      operationId: searchTags
       description: This endpoint retrieves all discovered tag names that can be used in search.
       responses:
         200:
@@ -134,7 +134,7 @@ paths:
 
   /api/search/tag/{tag_name}/values:
     get:
-      operationId: search_tag_values
+      operationId: searchTagValues
       description: This endpoint retrieves all discovered values for the given tag, which can be used in search.
       parameters:
         - name: tag_name
@@ -151,7 +151,7 @@ paths:
 
   /api/v2/search/tag/{tag_name}/values:
     get:
-      operationId: search_tag_values_v2
+      operationId: searchTagValuesV2
       description: This endpoint retrieves all discovered values and their data types for the given TraceQL identifier.
       parameters:
         - name: tag_name

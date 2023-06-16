@@ -10,7 +10,7 @@ servers:
 paths:
   /loki/api/v1/query_range:
     get:
-      operationId: QueryRange
+      operationId: queryRange
       description: Query range
       parameters:
         - $ref: "#/components/parameters/GrafanaUser"
@@ -75,7 +75,7 @@ paths:
           $ref: "#/components/responses/Error"
   /loki/api/v1/labels:
     get:
-      operationId: GetLabels
+      operationId: labels
       description: |
         Get labels.
         Used by Grafana to test connection to Loki.
@@ -116,7 +116,7 @@ paths:
           $ref: "#/components/responses/Error"
   /loki/api/v1/label/{name}/values:
     get:
-      operationId: GetLabelValues
+      operationId: labelValues
       description: Get values of label
       parameters:
         - $ref: "#/components/parameters/GrafanaUser"
@@ -167,7 +167,7 @@ paths:
           $ref: "#/components/responses/Error"
   /loki/api/v1/series:
     get:
-      operationId: Series
+      operationId: series
       description: Get series
       parameters:
         - name: start
