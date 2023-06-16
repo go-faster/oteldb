@@ -357,7 +357,25 @@ func (s Metadata) Validate() error {
 	}
 	return nil
 }
-func (s *MetadataItemItem) Validate() error {
+func (s *MetadataResponse) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Data.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "data",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s *MetricMetadata) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Type.Get(); ok {
@@ -382,7 +400,7 @@ func (s *MetadataItemItem) Validate() error {
 	}
 	return nil
 }
-func (s MetadataItemItemType) Validate() error {
+func (s MetricMetadataType) Validate() error {
 	switch s {
 	case "counter":
 		return nil
@@ -403,24 +421,6 @@ func (s MetadataItemItemType) Validate() error {
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
-}
-func (s *MetadataResponse) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Data.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "data",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
 }
 
 func (s *QueryExemplarsResponse) Validate() error {

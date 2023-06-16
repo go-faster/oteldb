@@ -47,7 +47,7 @@ func (UnimplementedHandler) GetQuery(ctx context.Context, params GetQueryParams)
 //
 // Query Prometheus.
 //
-// GET /api/v1/query_examplars
+// GET /api/v1/query_exemplars
 func (UnimplementedHandler) GetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (r *QueryExemplarsResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
@@ -97,7 +97,7 @@ func (UnimplementedHandler) PostQuery(ctx context.Context) (r *QueryResponse, _ 
 //
 // Query Prometheus.
 //
-// POST /api/v1/query_examplars
+// POST /api/v1/query_exemplars
 func (UnimplementedHandler) PostQueryExemplars(ctx context.Context) (r *QueryExemplarsResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }

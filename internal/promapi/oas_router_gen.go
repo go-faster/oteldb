@@ -177,8 +177,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 					switch elem[0] {
-					case 'e': // Prefix: "examplars"
-						if l := len("examplars"); len(elem) >= l && elem[0:l] == "examplars" {
+					case 'e': // Prefix: "exemplars"
+						if l := len("exemplars"); len(elem) >= l && elem[0:l] == "exemplars" {
 							elem = elem[l:]
 						} else {
 							break
@@ -481,8 +481,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						break
 					}
 					switch elem[0] {
-					case 'e': // Prefix: "examplars"
-						if l := len("examplars"); len(elem) >= l && elem[0:l] == "examplars" {
+					case 'e': // Prefix: "exemplars"
+						if l := len("exemplars"); len(elem) >= l && elem[0:l] == "exemplars" {
 							elem = elem[l:]
 						} else {
 							break
@@ -494,7 +494,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf: GetQueryExemplars
 								r.name = "GetQueryExemplars"
 								r.operationID = "getQueryExemplars"
-								r.pathPattern = "/api/v1/query_examplars"
+								r.pathPattern = "/api/v1/query_exemplars"
 								r.args = args
 								r.count = 0
 								return r, true
@@ -502,7 +502,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf: PostQueryExemplars
 								r.name = "PostQueryExemplars"
 								r.operationID = "postQueryExemplars"
-								r.pathPattern = "/api/v1/query_examplars"
+								r.pathPattern = "/api/v1/query_exemplars"
 								r.args = args
 								r.count = 0
 								return r, true

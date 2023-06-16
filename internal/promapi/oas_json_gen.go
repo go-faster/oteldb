@@ -1316,11 +1316,11 @@ func (s *Metadata) Decode(d *jx.Decoder) error {
 	}
 	m := s.init()
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem []MetadataItemItem
+		var elem []MetricMetadata
 		if err := func() error {
-			elem = make([]MetadataItemItem, 0)
+			elem = make([]MetricMetadata, 0)
 			if err := d.Arr(func(d *jx.Decoder) error {
-				var elemElem MetadataItemItem
+				var elemElem MetricMetadata
 				if err := elemElem.Decode(d); err != nil {
 					return err
 				}
@@ -1351,155 +1351,6 @@ func (s Metadata) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *Metadata) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s *MetadataItemItem) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *MetadataItemItem) encodeFields(e *jx.Encoder) {
-	{
-		if s.Type.Set {
-			e.FieldStart("type")
-			s.Type.Encode(e)
-		}
-	}
-	{
-		if s.Help.Set {
-			e.FieldStart("help")
-			s.Help.Encode(e)
-		}
-	}
-	{
-		if s.Unit.Set {
-			e.FieldStart("unit")
-			s.Unit.Encode(e)
-		}
-	}
-}
-
-var jsonFieldsNameOfMetadataItemItem = [3]string{
-	0: "type",
-	1: "help",
-	2: "unit",
-}
-
-// Decode decodes MetadataItemItem from json.
-func (s *MetadataItemItem) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode MetadataItemItem to nil")
-	}
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "type":
-			if err := func() error {
-				s.Type.Reset()
-				if err := s.Type.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"type\"")
-			}
-		case "help":
-			if err := func() error {
-				s.Help.Reset()
-				if err := s.Help.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"help\"")
-			}
-		case "unit":
-			if err := func() error {
-				s.Unit.Reset()
-				if err := s.Unit.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"unit\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode MetadataItemItem")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *MetadataItemItem) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *MetadataItemItem) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes MetadataItemItemType as json.
-func (s MetadataItemItemType) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes MetadataItemItemType from json.
-func (s *MetadataItemItemType) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode MetadataItemItemType to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch MetadataItemItemType(v) {
-	case MetadataItemItemTypeCounter:
-		*s = MetadataItemItemTypeCounter
-	case MetadataItemItemTypeGauge:
-		*s = MetadataItemItemTypeGauge
-	case MetadataItemItemTypeHistogram:
-		*s = MetadataItemItemTypeHistogram
-	case MetadataItemItemTypeGaugehistogram:
-		*s = MetadataItemItemTypeGaugehistogram
-	case MetadataItemItemTypeSummary:
-		*s = MetadataItemItemTypeSummary
-	case MetadataItemItemTypeInfo:
-		*s = MetadataItemItemTypeInfo
-	case MetadataItemItemTypeStateset:
-		*s = MetadataItemItemTypeStateset
-	case MetadataItemItemTypeUnknown:
-		*s = MetadataItemItemTypeUnknown
-	default:
-		*s = MetadataItemItemType(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s MetadataItemItemType) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *MetadataItemItemType) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -1642,6 +1493,155 @@ func (s *MetadataResponse) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *MetadataResponse) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *MetricMetadata) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *MetricMetadata) encodeFields(e *jx.Encoder) {
+	{
+		if s.Type.Set {
+			e.FieldStart("type")
+			s.Type.Encode(e)
+		}
+	}
+	{
+		if s.Help.Set {
+			e.FieldStart("help")
+			s.Help.Encode(e)
+		}
+	}
+	{
+		if s.Unit.Set {
+			e.FieldStart("unit")
+			s.Unit.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfMetricMetadata = [3]string{
+	0: "type",
+	1: "help",
+	2: "unit",
+}
+
+// Decode decodes MetricMetadata from json.
+func (s *MetricMetadata) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode MetricMetadata to nil")
+	}
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "type":
+			if err := func() error {
+				s.Type.Reset()
+				if err := s.Type.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"type\"")
+			}
+		case "help":
+			if err := func() error {
+				s.Help.Reset()
+				if err := s.Help.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"help\"")
+			}
+		case "unit":
+			if err := func() error {
+				s.Unit.Reset()
+				if err := s.Unit.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"unit\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode MetricMetadata")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *MetricMetadata) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *MetricMetadata) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes MetricMetadataType as json.
+func (s MetricMetadataType) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes MetricMetadataType from json.
+func (s *MetricMetadataType) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode MetricMetadataType to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch MetricMetadataType(v) {
+	case MetricMetadataTypeCounter:
+		*s = MetricMetadataTypeCounter
+	case MetricMetadataTypeGauge:
+		*s = MetricMetadataTypeGauge
+	case MetricMetadataTypeHistogram:
+		*s = MetricMetadataTypeHistogram
+	case MetricMetadataTypeGaugehistogram:
+		*s = MetricMetadataTypeGaugehistogram
+	case MetricMetadataTypeSummary:
+		*s = MetricMetadataTypeSummary
+	case MetricMetadataTypeInfo:
+		*s = MetricMetadataTypeInfo
+	case MetricMetadataTypeStateset:
+		*s = MetricMetadataTypeStateset
+	case MetricMetadataTypeUnknown:
+		*s = MetricMetadataTypeUnknown
+	default:
+		*s = MetricMetadataType(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s MetricMetadataType) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *MetricMetadataType) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -1818,18 +1818,18 @@ func (s *OptLabelSet) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes MetadataItemItemType as json.
-func (o OptMetadataItemItemType) Encode(e *jx.Encoder) {
+// Encode encodes MetricMetadataType as json.
+func (o OptMetricMetadataType) Encode(e *jx.Encoder) {
 	if !o.Set {
 		return
 	}
 	e.Str(string(o.Value))
 }
 
-// Decode decodes MetadataItemItemType from json.
-func (o *OptMetadataItemItemType) Decode(d *jx.Decoder) error {
+// Decode decodes MetricMetadataType from json.
+func (o *OptMetricMetadataType) Decode(d *jx.Decoder) error {
 	if o == nil {
-		return errors.New("invalid: unable to decode OptMetadataItemItemType to nil")
+		return errors.New("invalid: unable to decode OptMetricMetadataType to nil")
 	}
 	o.Set = true
 	if err := o.Value.Decode(d); err != nil {
@@ -1839,14 +1839,14 @@ func (o *OptMetadataItemItemType) Decode(d *jx.Decoder) error {
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s OptMetadataItemItemType) MarshalJSON() ([]byte, error) {
+func (s OptMetricMetadataType) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
 }
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptMetadataItemItemType) UnmarshalJSON(data []byte) error {
+func (s *OptMetricMetadataType) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -197,30 +197,6 @@ func TestMetadata_EncodeDecode(t *testing.T) {
 	typ2 = make(Metadata)
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
-func TestMetadataItemItem_EncodeDecode(t *testing.T) {
-	var typ MetadataItemItem
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 MetadataItemItem
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
-func TestMetadataItemItemType_EncodeDecode(t *testing.T) {
-	var typ MetadataItemItemType
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 MetadataItemItemType
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
 func TestMetadataResponse_EncodeDecode(t *testing.T) {
 	var typ MetadataResponse
 	typ.SetFake()
@@ -231,6 +207,30 @@ func TestMetadataResponse_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 MetadataResponse
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestMetricMetadata_EncodeDecode(t *testing.T) {
+	var typ MetricMetadata
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 MetricMetadata
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestMetricMetadataType_EncodeDecode(t *testing.T) {
+	var typ MetricMetadataType
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 MetricMetadataType
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestQueryExemplarsResponse_EncodeDecode(t *testing.T) {

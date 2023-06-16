@@ -494,12 +494,12 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 //
 // Query Prometheus.
 //
-// GET /api/v1/query_examplars
+// GET /api/v1/query_exemplars
 func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryExemplars"),
 		semconv.HTTPMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/query_examplars"),
+		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
 	}
 
 	// Start a span for this request.
@@ -1162,12 +1162,12 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 //
 // Query Prometheus.
 //
-// POST /api/v1/query_examplars
+// POST /api/v1/query_exemplars
 func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryExemplars"),
 		semconv.HTTPMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/api/v1/query_examplars"),
+		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
 	}
 
 	// Start a span for this request.

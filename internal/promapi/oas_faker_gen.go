@@ -249,36 +249,12 @@ func (s *MatrixResultItemMetric) SetFake() {
 // SetFake set fake values.
 func (s *Metadata) SetFake() {
 	var (
-		elem []MetadataItemItem
-		m    map[string][]MetadataItemItem = s.init()
+		elem []MetricMetadata
+		m    map[string][]MetricMetadata = s.init()
 	)
 	for i := 0; i < 0; i++ {
 		m[fmt.Sprintf("fake%d", i)] = elem
 	}
-}
-
-// SetFake set fake values.
-func (s *MetadataItemItem) SetFake() {
-	{
-		{
-			s.Type.SetFake()
-		}
-	}
-	{
-		{
-			s.Help.SetFake()
-		}
-	}
-	{
-		{
-			s.Unit.SetFake()
-		}
-	}
-}
-
-// SetFake set fake values.
-func (s *MetadataItemItemType) SetFake() {
-	*s = MetadataItemItemTypeCounter
 }
 
 // SetFake set fake values.
@@ -305,6 +281,30 @@ func (s *MetadataResponse) SetFake() {
 			s.Data.SetFake()
 		}
 	}
+}
+
+// SetFake set fake values.
+func (s *MetricMetadata) SetFake() {
+	{
+		{
+			s.Type.SetFake()
+		}
+	}
+	{
+		{
+			s.Help.SetFake()
+		}
+	}
+	{
+		{
+			s.Unit.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *MetricMetadataType) SetFake() {
+	*s = MetricMetadataTypeCounter
 }
 
 // SetFake set fake values.
@@ -353,8 +353,8 @@ func (s *OptLabelSet) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *OptMetadataItemItemType) SetFake() {
-	var elem MetadataItemItemType
+func (s *OptMetricMetadataType) SetFake() {
+	var elem MetricMetadataType
 	{
 		elem.SetFake()
 	}

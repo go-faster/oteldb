@@ -30,7 +30,7 @@ type Handler interface {
 	//
 	// Query Prometheus.
 	//
-	// GET /api/v1/query_examplars
+	// GET /api/v1/query_exemplars
 	GetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (*QueryExemplarsResponse, error)
 	// GetQueryRange implements getQueryRange operation.
 	//
@@ -62,7 +62,7 @@ type Handler interface {
 	//
 	// Query Prometheus.
 	//
-	// POST /api/v1/query_examplars
+	// POST /api/v1/query_exemplars
 	PostQueryExemplars(ctx context.Context) (*QueryExemplarsResponse, error)
 	// PostQueryRange implements postQueryRange operation.
 	//

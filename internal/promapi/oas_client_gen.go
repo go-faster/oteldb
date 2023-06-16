@@ -600,7 +600,7 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 //
 // Query Prometheus.
 //
-// GET /api/v1/query_examplars
+// GET /api/v1/query_exemplars
 func (c *Client) GetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (*QueryExemplarsResponse, error) {
 	res, err := c.sendGetQueryExemplars(ctx, params)
 	_ = res
@@ -642,7 +642,7 @@ func (c *Client) sendGetQueryExemplars(ctx context.Context, params GetQueryExemp
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/api/v1/query_examplars"
+	pathParts[0] = "/api/v1/query_exemplars"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeQueryParams"
@@ -1308,7 +1308,7 @@ func (c *Client) sendPostQuery(ctx context.Context) (res *QueryResponse, err err
 //
 // Query Prometheus.
 //
-// POST /api/v1/query_examplars
+// POST /api/v1/query_exemplars
 func (c *Client) PostQueryExemplars(ctx context.Context) (*QueryExemplarsResponse, error) {
 	res, err := c.sendPostQueryExemplars(ctx)
 	_ = res
@@ -1350,7 +1350,7 @@ func (c *Client) sendPostQueryExemplars(ctx context.Context) (res *QueryExemplar
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/api/v1/query_examplars"
+	pathParts[0] = "/api/v1/query_exemplars"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"

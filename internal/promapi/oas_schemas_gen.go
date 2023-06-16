@@ -512,120 +512,15 @@ func (s *MatrixResultItemMetric) init() MatrixResultItemMetric {
 }
 
 // Ref: #/components/schemas/Metadata
-type Metadata map[string][]MetadataItemItem
+type Metadata map[string][]MetricMetadata
 
 func (s *Metadata) init() Metadata {
 	m := *s
 	if m == nil {
-		m = map[string][]MetadataItemItem{}
+		m = map[string][]MetricMetadata{}
 		*s = m
 	}
 	return m
-}
-
-type MetadataItemItem struct {
-	Type OptMetadataItemItemType `json:"type"`
-	Help OptString               `json:"help"`
-	Unit OptString               `json:"unit"`
-}
-
-// GetType returns the value of Type.
-func (s *MetadataItemItem) GetType() OptMetadataItemItemType {
-	return s.Type
-}
-
-// GetHelp returns the value of Help.
-func (s *MetadataItemItem) GetHelp() OptString {
-	return s.Help
-}
-
-// GetUnit returns the value of Unit.
-func (s *MetadataItemItem) GetUnit() OptString {
-	return s.Unit
-}
-
-// SetType sets the value of Type.
-func (s *MetadataItemItem) SetType(val OptMetadataItemItemType) {
-	s.Type = val
-}
-
-// SetHelp sets the value of Help.
-func (s *MetadataItemItem) SetHelp(val OptString) {
-	s.Help = val
-}
-
-// SetUnit sets the value of Unit.
-func (s *MetadataItemItem) SetUnit(val OptString) {
-	s.Unit = val
-}
-
-type MetadataItemItemType string
-
-const (
-	MetadataItemItemTypeCounter        MetadataItemItemType = "counter"
-	MetadataItemItemTypeGauge          MetadataItemItemType = "gauge"
-	MetadataItemItemTypeHistogram      MetadataItemItemType = "histogram"
-	MetadataItemItemTypeGaugehistogram MetadataItemItemType = "gaugehistogram"
-	MetadataItemItemTypeSummary        MetadataItemItemType = "summary"
-	MetadataItemItemTypeInfo           MetadataItemItemType = "info"
-	MetadataItemItemTypeStateset       MetadataItemItemType = "stateset"
-	MetadataItemItemTypeUnknown        MetadataItemItemType = "unknown"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s MetadataItemItemType) MarshalText() ([]byte, error) {
-	switch s {
-	case MetadataItemItemTypeCounter:
-		return []byte(s), nil
-	case MetadataItemItemTypeGauge:
-		return []byte(s), nil
-	case MetadataItemItemTypeHistogram:
-		return []byte(s), nil
-	case MetadataItemItemTypeGaugehistogram:
-		return []byte(s), nil
-	case MetadataItemItemTypeSummary:
-		return []byte(s), nil
-	case MetadataItemItemTypeInfo:
-		return []byte(s), nil
-	case MetadataItemItemTypeStateset:
-		return []byte(s), nil
-	case MetadataItemItemTypeUnknown:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *MetadataItemItemType) UnmarshalText(data []byte) error {
-	switch MetadataItemItemType(data) {
-	case MetadataItemItemTypeCounter:
-		*s = MetadataItemItemTypeCounter
-		return nil
-	case MetadataItemItemTypeGauge:
-		*s = MetadataItemItemTypeGauge
-		return nil
-	case MetadataItemItemTypeHistogram:
-		*s = MetadataItemItemTypeHistogram
-		return nil
-	case MetadataItemItemTypeGaugehistogram:
-		*s = MetadataItemItemTypeGaugehistogram
-		return nil
-	case MetadataItemItemTypeSummary:
-		*s = MetadataItemItemTypeSummary
-		return nil
-	case MetadataItemItemTypeInfo:
-		*s = MetadataItemItemTypeInfo
-		return nil
-	case MetadataItemItemTypeStateset:
-		*s = MetadataItemItemTypeStateset
-		return nil
-	case MetadataItemItemTypeUnknown:
-		*s = MetadataItemItemTypeUnknown
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
 }
 
 type MetadataResponse struct {
@@ -665,6 +560,112 @@ func (s *MetadataResponse) SetWarnings(val []string) {
 // SetData sets the value of Data.
 func (s *MetadataResponse) SetData(val Metadata) {
 	s.Data = val
+}
+
+// Ref: #/components/schemas/MetricMetadata
+type MetricMetadata struct {
+	Type OptMetricMetadataType `json:"type"`
+	Help OptString             `json:"help"`
+	Unit OptString             `json:"unit"`
+}
+
+// GetType returns the value of Type.
+func (s *MetricMetadata) GetType() OptMetricMetadataType {
+	return s.Type
+}
+
+// GetHelp returns the value of Help.
+func (s *MetricMetadata) GetHelp() OptString {
+	return s.Help
+}
+
+// GetUnit returns the value of Unit.
+func (s *MetricMetadata) GetUnit() OptString {
+	return s.Unit
+}
+
+// SetType sets the value of Type.
+func (s *MetricMetadata) SetType(val OptMetricMetadataType) {
+	s.Type = val
+}
+
+// SetHelp sets the value of Help.
+func (s *MetricMetadata) SetHelp(val OptString) {
+	s.Help = val
+}
+
+// SetUnit sets the value of Unit.
+func (s *MetricMetadata) SetUnit(val OptString) {
+	s.Unit = val
+}
+
+type MetricMetadataType string
+
+const (
+	MetricMetadataTypeCounter        MetricMetadataType = "counter"
+	MetricMetadataTypeGauge          MetricMetadataType = "gauge"
+	MetricMetadataTypeHistogram      MetricMetadataType = "histogram"
+	MetricMetadataTypeGaugehistogram MetricMetadataType = "gaugehistogram"
+	MetricMetadataTypeSummary        MetricMetadataType = "summary"
+	MetricMetadataTypeInfo           MetricMetadataType = "info"
+	MetricMetadataTypeStateset       MetricMetadataType = "stateset"
+	MetricMetadataTypeUnknown        MetricMetadataType = "unknown"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MetricMetadataType) MarshalText() ([]byte, error) {
+	switch s {
+	case MetricMetadataTypeCounter:
+		return []byte(s), nil
+	case MetricMetadataTypeGauge:
+		return []byte(s), nil
+	case MetricMetadataTypeHistogram:
+		return []byte(s), nil
+	case MetricMetadataTypeGaugehistogram:
+		return []byte(s), nil
+	case MetricMetadataTypeSummary:
+		return []byte(s), nil
+	case MetricMetadataTypeInfo:
+		return []byte(s), nil
+	case MetricMetadataTypeStateset:
+		return []byte(s), nil
+	case MetricMetadataTypeUnknown:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MetricMetadataType) UnmarshalText(data []byte) error {
+	switch MetricMetadataType(data) {
+	case MetricMetadataTypeCounter:
+		*s = MetricMetadataTypeCounter
+		return nil
+	case MetricMetadataTypeGauge:
+		*s = MetricMetadataTypeGauge
+		return nil
+	case MetricMetadataTypeHistogram:
+		*s = MetricMetadataTypeHistogram
+		return nil
+	case MetricMetadataTypeGaugehistogram:
+		*s = MetricMetadataTypeGaugehistogram
+		return nil
+	case MetricMetadataTypeSummary:
+		*s = MetricMetadataTypeSummary
+		return nil
+	case MetricMetadataTypeInfo:
+		*s = MetricMetadataTypeInfo
+		return nil
+	case MetricMetadataTypeStateset:
+		*s = MetricMetadataTypeStateset
+		return nil
+	case MetricMetadataTypeUnknown:
+		*s = MetricMetadataTypeUnknown
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // NewOptData returns new OptData with value set to v.
@@ -897,38 +898,38 @@ func (o OptLabelSet) Or(d LabelSet) LabelSet {
 	return d
 }
 
-// NewOptMetadataItemItemType returns new OptMetadataItemItemType with value set to v.
-func NewOptMetadataItemItemType(v MetadataItemItemType) OptMetadataItemItemType {
-	return OptMetadataItemItemType{
+// NewOptMetricMetadataType returns new OptMetricMetadataType with value set to v.
+func NewOptMetricMetadataType(v MetricMetadataType) OptMetricMetadataType {
+	return OptMetricMetadataType{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptMetadataItemItemType is optional MetadataItemItemType.
-type OptMetadataItemItemType struct {
-	Value MetadataItemItemType
+// OptMetricMetadataType is optional MetricMetadataType.
+type OptMetricMetadataType struct {
+	Value MetricMetadataType
 	Set   bool
 }
 
-// IsSet returns true if OptMetadataItemItemType was set.
-func (o OptMetadataItemItemType) IsSet() bool { return o.Set }
+// IsSet returns true if OptMetricMetadataType was set.
+func (o OptMetricMetadataType) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptMetadataItemItemType) Reset() {
-	var v MetadataItemItemType
+func (o *OptMetricMetadataType) Reset() {
+	var v MetricMetadataType
 	o.Value = v
 	o.Set = false
 }
 
 // SetTo sets value to v.
-func (o *OptMetadataItemItemType) SetTo(v MetadataItemItemType) {
+func (o *OptMetricMetadataType) SetTo(v MetricMetadataType) {
 	o.Set = true
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptMetadataItemItemType) Get() (v MetadataItemItemType, ok bool) {
+func (o OptMetricMetadataType) Get() (v MetricMetadataType, ok bool) {
 	if !o.Set {
 		return v, false
 	}
@@ -936,7 +937,7 @@ func (o OptMetadataItemItemType) Get() (v MetadataItemItemType, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptMetadataItemItemType) Or(d MetadataItemItemType) MetadataItemItemType {
+func (o OptMetricMetadataType) Or(d MetricMetadataType) MetricMetadataType {
 	if v, ok := o.Get(); ok {
 		return v
 	}
