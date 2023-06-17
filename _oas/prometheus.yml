@@ -624,7 +624,9 @@ components:
       required: [groups]
       properties:
         groups:
-          $ref: "#/components/schemas/RuleGroup"
+          type: array
+          items:
+            $ref: "#/components/schemas/RuleGroup"
     RuleGroup:
       type: object
       properties:
