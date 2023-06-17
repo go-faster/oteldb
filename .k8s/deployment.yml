@@ -98,9 +98,15 @@ spec:
             - containerPort: 8090
               protocol: TCP
               name: metrics
-            - containerPort: 8080
+            - containerPort: 9090
               protocol: TCP
-              name: http
+              name: prometheus
+            - containerPort: 3100
+              protocol: TCP
+              name: loki
+            - containerPort: 3200
+              protocol: TCP
+              name: tempo
           resources:
             requests:
               cpu: 500m

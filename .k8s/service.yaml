@@ -28,3 +28,68 @@ spec:
   selector:
     app: oteldb
   sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: faster
+  name: otelproxy
+  labels:
+    app: otelproxy
+    prometheus: "true"
+spec:
+  ports:
+    - port: 8090
+      protocol: TCP
+      targetPort: 8090
+      name: metrics
+  selector:
+    app: otelproxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: faster
+  name: tempo
+  labels:
+    app: otelproxy
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: tempo
+      name: http
+  selector:
+    app: otelproxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: faster
+  name: loki
+  labels:
+    app: otelproxy
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: loki
+      name: http
+  selector:
+    app: otelproxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: faster
+  name: prometheus
+  labels:
+    app: otelproxy
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: prometheus
+      name: http
+  selector:
+    app: otelproxy
