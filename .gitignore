@@ -16,3 +16,6 @@
 
 secret.yml
 secret.yaml
+
+/oteldb
+/otelproxy

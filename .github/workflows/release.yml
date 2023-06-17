@@ -68,7 +68,9 @@ jobs:
       - name: Go build
         env:
           CGO_ENABLED: 0
-        run: go build -v ./cmd/*
+        run: |
+          go build -v ./cmd/oteldb
+          go build -v ./cmd/otelproxy
 
       - name: Base image
         uses: docker/build-push-action@v4
