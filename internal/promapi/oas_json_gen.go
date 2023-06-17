@@ -2399,7 +2399,11 @@ func (s *Rules) Encode(e *jx.Encoder) {
 func (s *Rules) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("groups")
-		s.Groups.Encode(e)
+		e.ArrStart()
+		for _, elem := range s.Groups {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
 	}
 }
 
@@ -2419,7 +2423,15 @@ func (s *Rules) Decode(d *jx.Decoder) error {
 		case "groups":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				if err := s.Groups.Decode(d); err != nil {
+				s.Groups = make([]RuleGroup, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem RuleGroup
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Groups = append(s.Groups, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil

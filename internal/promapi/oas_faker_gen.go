@@ -481,7 +481,14 @@ func (s *RuleGroup) SetFake() {
 func (s *Rules) SetFake() {
 	{
 		{
-			s.Groups.SetFake()
+			s.Groups = nil
+			for i := 0; i < 0; i++ {
+				var elem RuleGroup
+				{
+					elem.SetFake()
+				}
+				s.Groups = append(s.Groups, elem)
+			}
 		}
 	}
 }

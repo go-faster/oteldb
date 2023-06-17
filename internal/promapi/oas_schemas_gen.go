@@ -1396,16 +1396,16 @@ func (s *RuleGroup) SetLastEvaluation(val OptString) {
 
 // Ref: #/components/schemas/Rules
 type Rules struct {
-	Groups RuleGroup `json:"groups"`
+	Groups []RuleGroup `json:"groups"`
 }
 
 // GetGroups returns the value of Groups.
-func (s *Rules) GetGroups() RuleGroup {
+func (s *Rules) GetGroups() []RuleGroup {
 	return s.Groups
 }
 
 // SetGroups sets the value of Groups.
-func (s *Rules) SetGroups(val RuleGroup) {
+func (s *Rules) SetGroups(val []RuleGroup) {
 	s.Groups = val
 }
 
