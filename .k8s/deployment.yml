@@ -129,3 +129,9 @@ spec:
               value: "service.name=go-faster.otelproxy"
             - name: OTEL_LOG_LEVEL
               value: "DEBUG"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.monitoring.svc.cluster.local:4317"
