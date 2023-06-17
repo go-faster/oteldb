@@ -109,6 +109,12 @@ spec:
               cpu: 1500m
               memory: 256M
           env:
+            - name: PROMETHEUS_URL
+              value: http://vmselect-cluster.monitoring.svc.cluster.local:8481/select/0/prometheus/
+            - name: LOKI_URL
+              value: http://loki-gateway.monitoring.svc.cluster.local
+            - name: TEMPO_URL
+              value: http://tempo-gateway.monitoring.svc.cluster.local
             - name: GOMEMLIMIT
               value: "256MiB"
             - name: GOMAXPROCS
