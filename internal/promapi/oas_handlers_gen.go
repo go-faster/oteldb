@@ -1102,8 +1102,22 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "PostQuery",
+			ID:   "postQuery",
+		}
 	)
+	params, err := decodePostQueryParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
 
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
@@ -1112,13 +1126,22 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 			OperationName: "PostQuery",
 			OperationID:   "postQuery",
 			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Params: middleware.Parameters{
+				{
+					Name: "query",
+					In:   "query",
+				}: params.Query,
+				{
+					Name: "time",
+					In:   "query",
+				}: params.Time,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = PostQueryParams
 			Response = *QueryResponse
 		)
 		response, err = middleware.HookMiddleware[
@@ -1128,14 +1151,14 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 		](
 			m,
 			mreq,
-			nil,
+			unpackPostQueryParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.PostQuery(ctx)
+				response, err = s.h.PostQuery(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.PostQuery(ctx)
+		response, err = s.h.PostQuery(ctx, params)
 	}
 	if err != nil {
 		recordError("Internal", err)

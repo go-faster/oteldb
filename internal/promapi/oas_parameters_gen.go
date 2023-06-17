@@ -1576,3 +1576,120 @@ func decodeGetSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (p
 	}
 	return params, nil
 }
+
+// PostQueryParams is parameters of postQuery operation.
+type PostQueryParams struct {
+	// Prometheus expression query string.
+	Query string
+	// Evaluation timestamp.
+	Time OptPrometheusTimestamp
+}
+
+func unpackPostQueryParams(packed middleware.Parameters) (params PostQueryParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "query",
+			In:   "query",
+		}
+		params.Query = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "time",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Time = v.(OptPrometheusTimestamp)
+		}
+	}
+	return params
+}
+
+func decodePostQueryParams(args [0]string, argsEscaped bool, r *http.Request) (params PostQueryParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: query.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "query",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Query = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "query",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: time.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "time",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotTimeVal PrometheusTimestamp
+				if err := func() error {
+					var paramsDotTimeValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotTimeValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotTimeVal = PrometheusTimestamp(paramsDotTimeValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Time.SetTo(paramsDotTimeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "time",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}

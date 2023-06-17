@@ -89,7 +89,7 @@ func (UnimplementedHandler) PostLabels(ctx context.Context) (r *LabelsResponse, 
 // Query Prometheus.
 //
 // POST /api/v1/query
-func (UnimplementedHandler) PostQuery(ctx context.Context) (r *QueryResponse, _ error) {
+func (UnimplementedHandler) PostQuery(ctx context.Context, params PostQueryParams) (r *QueryResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
