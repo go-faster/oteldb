@@ -98,8 +98,8 @@ func (s *Server) PostLabels(ctx context.Context) (*promapi.LabelsResponse, error
 // Query Prometheus.
 //
 // POST /api/v1/query
-func (s *Server) PostQuery(ctx context.Context, params promapi.PostQueryParams) (*promapi.QueryResponse, error) {
-	return s.api.PostQuery(ctx, params)
+func (s *Server) PostQuery(ctx context.Context, req *promapi.QueryForm) (*promapi.QueryResponse, error) {
+	return s.api.PostQuery(ctx, req)
 }
 
 // PostQueryExemplars implements postQueryExemplars operation.

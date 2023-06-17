@@ -33,17 +33,12 @@ paths:
     post:
       operationId: postQuery
       description: Query Prometheus
-      parameters:
-        - name: query
-          description: Prometheus expression query string.
-          in: query
-          schema:
-            type: string
-        - name: time
-          description: Evaluation timestamp
-          in: query
-          schema:
-            $ref: "#/components/schemas/PrometheusTimestamp"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QueryForm'
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -477,6 +472,14 @@ components:
           schema:
             $ref: "#/components/schemas/Fail"
   schemas:
+    QueryForm:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+        time:
+          $ref: "#/components/schemas/PrometheusTimestamp"
     Scalar:
       type: object
       required: [resultType, result]

@@ -1238,13 +1238,13 @@ func (c *Client) sendPostLabels(ctx context.Context) (res *LabelsResponse, err e
 // Query Prometheus.
 //
 // POST /api/v1/query
-func (c *Client) PostQuery(ctx context.Context, params PostQueryParams) (*QueryResponse, error) {
-	res, err := c.sendPostQuery(ctx, params)
+func (c *Client) PostQuery(ctx context.Context, request *QueryForm) (*QueryResponse, error) {
+	res, err := c.sendPostQuery(ctx, request)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendPostQuery(ctx context.Context, params PostQueryParams) (res *QueryResponse, err error) {
+func (c *Client) sendPostQuery(ctx context.Context, request *QueryForm) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQuery"),
 	}
@@ -1282,51 +1282,13 @@ func (c *Client) sendPostQuery(ctx context.Context, params PostQueryParams) (res
 	pathParts[0] = "/api/v1/query"
 	uri.AddPathParts(u, pathParts[:]...)
 
-	stage = "EncodeQueryParams"
-	q := uri.NewQueryEncoder()
-	{
-		// Encode "query" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "query",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Query.Get(); ok {
-				return e.EncodeValue(conv.StringToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	{
-		// Encode "time" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "time",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Time.Get(); ok {
-				if unwrapped := string(val); true {
-					return e.EncodeValue(conv.StringToString(unwrapped))
-				}
-				return nil
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	u.RawQuery = q.Values().Encode()
-
 	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePostQueryRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "SendRequest"

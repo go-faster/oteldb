@@ -57,7 +57,7 @@ type Handler interface {
 	// Query Prometheus.
 	//
 	// POST /api/v1/query
-	PostQuery(ctx context.Context, params PostQueryParams) (*QueryResponse, error)
+	PostQuery(ctx context.Context, req *QueryForm) (*QueryResponse, error)
 	// PostQueryExemplars implements postQueryExemplars operation.
 	//
 	// Query Prometheus.

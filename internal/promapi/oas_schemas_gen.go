@@ -1125,6 +1125,32 @@ func (s *QueryExemplarsResponse) SetData(val Exemplars) {
 	s.Data = val
 }
 
+// Ref: #/components/schemas/QueryForm
+type QueryForm struct {
+	Query string                 `json:"query"`
+	Time  OptPrometheusTimestamp `json:"time"`
+}
+
+// GetQuery returns the value of Query.
+func (s *QueryForm) GetQuery() string {
+	return s.Query
+}
+
+// GetTime returns the value of Time.
+func (s *QueryForm) GetTime() OptPrometheusTimestamp {
+	return s.Time
+}
+
+// SetQuery sets the value of Query.
+func (s *QueryForm) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetTime sets the value of Time.
+func (s *QueryForm) SetTime(val OptPrometheusTimestamp) {
+	s.Time = val
+}
+
 type QueryResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
