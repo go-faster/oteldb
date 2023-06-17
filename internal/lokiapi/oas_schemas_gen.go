@@ -16,8 +16,6 @@ func (s *ErrorStatusCode) Error() string {
 type Direction string
 
 const (
-	DirectionBACKWARD Direction = "BACKWARD"
-	DirectionFORWARD  Direction = "FORWARD"
 	DirectionBackward Direction = "backward"
 	DirectionForward  Direction = "forward"
 )
@@ -25,10 +23,6 @@ const (
 // MarshalText implements encoding.TextMarshaler.
 func (s Direction) MarshalText() ([]byte, error) {
 	switch s {
-	case DirectionBACKWARD:
-		return []byte(s), nil
-	case DirectionFORWARD:
-		return []byte(s), nil
 	case DirectionBackward:
 		return []byte(s), nil
 	case DirectionForward:
@@ -41,12 +35,6 @@ func (s Direction) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (s *Direction) UnmarshalText(data []byte) error {
 	switch Direction(data) {
-	case DirectionBACKWARD:
-		*s = DirectionBACKWARD
-		return nil
-	case DirectionFORWARD:
-		*s = DirectionFORWARD
-		return nil
 	case DirectionBackward:
 		*s = DirectionBackward
 		return nil

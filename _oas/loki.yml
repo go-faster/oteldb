@@ -285,8 +285,6 @@ components:
     Direction:
       type: string
       enum:
-        - BACKWARD
-        - FORWARD
         - backward
         - forward
     PrometheusDuration:

@@ -12,10 +12,6 @@ import (
 
 func (s Direction) Validate() error {
 	switch s {
-	case "BACKWARD":
-		return nil
-	case "FORWARD":
-		return nil
 	case "backward":
 		return nil
 	case "forward":
