@@ -1158,7 +1158,7 @@ func decodeGetQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request
 type GetRulesParams struct {
 	// Return only the alerting rules (e.g. type=alert) or the recording rules (e.g. type=record).
 	// When the parameter is absent or empty, no filtering is done.
-	Type GetRulesType
+	Type OptGetRulesType
 	// Only return rules with the given rule name.
 	// If the parameter is repeated, rules with any of the provided names are returned.
 	// If we've filtered out all the rules of a group, the group is not returned.
@@ -1180,7 +1180,9 @@ func unpackGetRulesParams(packed middleware.Parameters) (params GetRulesParams) 
 			Name: "type",
 			In:   "query",
 		}
-		params.Type = packed[key].(GetRulesType)
+		if v, ok := packed[key]; ok {
+			params.Type = v.(OptGetRulesType)
+		}
 	}
 	{
 		key := middleware.ParameterKey{
@@ -1224,31 +1226,43 @@ func decodeGetRulesParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				val, err := d.DecodeValue()
-				if err != nil {
+				var paramsDotTypeVal GetRulesType
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotTypeVal = GetRulesType(c)
+					return nil
+				}(); err != nil {
 					return err
 				}
-
-				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
-
-				params.Type = GetRulesType(c)
+				params.Type.SetTo(paramsDotTypeVal)
 				return nil
 			}); err != nil {
 				return err
 			}
 			if err := func() error {
-				if err := params.Type.Validate(); err != nil {
-					return err
+				if value, ok := params.Type.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
 				}
 				return nil
 			}(); err != nil {
 				return err
 			}
-		} else {
-			return validate.ErrFieldRequired
 		}
 		return nil
 	}(); err != nil {

@@ -760,6 +760,52 @@ func (o OptFloat64) Or(d float64) float64 {
 	return d
 }
 
+// NewOptGetRulesType returns new OptGetRulesType with value set to v.
+func NewOptGetRulesType(v GetRulesType) OptGetRulesType {
+	return OptGetRulesType{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptGetRulesType is optional GetRulesType.
+type OptGetRulesType struct {
+	Value GetRulesType
+	Set   bool
+}
+
+// IsSet returns true if OptGetRulesType was set.
+func (o OptGetRulesType) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptGetRulesType) Reset() {
+	var v GetRulesType
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptGetRulesType) SetTo(v GetRulesType) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptGetRulesType) Get() (v GetRulesType, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptGetRulesType) Or(d GetRulesType) GetRulesType {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt returns new OptInt with value set to v.
 func NewOptInt(v int) OptInt {
 	return OptInt{

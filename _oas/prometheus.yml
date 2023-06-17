@@ -254,7 +254,7 @@ paths:
             Return only the alerting rules (e.g. type=alert) or the recording rules (e.g. type=record).
             When the parameter is absent or empty, no filtering is done.
           in: query
-          required: true
+          required: false
           schema:
             type: string
             enum: ["alert", "record"]
