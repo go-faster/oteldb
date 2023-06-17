@@ -1580,7 +1580,7 @@ func decodeGetSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (p
 // PostQueryParams is parameters of postQuery operation.
 type PostQueryParams struct {
 	// Prometheus expression query string.
-	Query string
+	Query OptString
 	// Evaluation timestamp.
 	Time OptPrometheusTimestamp
 }
@@ -1591,7 +1591,9 @@ func unpackPostQueryParams(packed middleware.Parameters) (params PostQueryParams
 			Name: "query",
 			In:   "query",
 		}
-		params.Query = packed[key].(string)
+		if v, ok := packed[key]; ok {
+			params.Query = v.(OptString)
+		}
 	}
 	{
 		key := middleware.ParameterKey{
@@ -1617,23 +1619,28 @@ func decodePostQueryParams(args [0]string, argsEscaped bool, r *http.Request) (p
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				val, err := d.DecodeValue()
-				if err != nil {
+				var paramsDotQueryVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotQueryVal = c
+					return nil
+				}(); err != nil {
 					return err
 				}
-
-				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
-
-				params.Query = c
+				params.Query.SetTo(paramsDotQueryVal)
 				return nil
 			}); err != nil {
 				return err
 			}
-		} else {
-			return validate.ErrFieldRequired
 		}
 		return nil
 	}(); err != nil {

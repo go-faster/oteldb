@@ -37,7 +37,6 @@ paths:
         - name: query
           description: Prometheus expression query string.
           in: query
-          required: true
           schema:
             type: string
         - name: time

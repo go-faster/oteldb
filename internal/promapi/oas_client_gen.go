@@ -1293,7 +1293,10 @@ func (c *Client) sendPostQuery(ctx context.Context, params PostQueryParams) (res
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			return e.EncodeValue(conv.StringToString(params.Query))
+			if val, ok := params.Query.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode query")
 		}
