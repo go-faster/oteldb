@@ -50,7 +50,14 @@ func ServiceMiddleware(s service, lg *zap.Logger, m *app.Metrics) http.Handler {
 		)
 		s.handler.ServeHTTP(w, r)
 	})
+	spanFormatter := func(operation string, r *http.Request) string {
+		if route, ok := s.findRoute(r.Method, r.URL); ok {
+			return fmt.Sprintf("%s.%s", operation, route.OperationID())
+		}
+		return operation
+	}
 	return otelhttp.NewHandler(h, fmt.Sprintf("%s.request", s.name),
+		otelhttp.WithSpanNameFormatter(spanFormatter),
 		otelhttp.WithTracerProvider(m.TracerProvider()),
 		otelhttp.WithMeterProvider(m.MeterProvider()),
 		otelhttp.WithServerName(s.name),
