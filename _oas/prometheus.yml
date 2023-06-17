@@ -89,6 +89,12 @@ paths:
     post:
       operationId: postQueryRange
       description: Query Prometheus
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QueryRangeForm'
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -479,6 +485,24 @@ components:
         query:
           type: string
         time:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+    QueryRangeForm:
+      type: object
+      required: [query, start, end, step]
+      properties:
+        query:
+          type: string
+          description: Prometheus expression query string.
+        time:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        start:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        end:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        step:
+          type: string
+          description: Query resolution step width in duration format or float number of seconds.
+        timeout:
           $ref: "#/components/schemas/PrometheusTimestamp"
     Scalar:
       type: object

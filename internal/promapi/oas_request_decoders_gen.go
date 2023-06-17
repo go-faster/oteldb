@@ -122,3 +122,245 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 		return req, close, validate.InvalidContentType(ct)
 	}
 }
+
+func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
+	req *QueryRangeForm,
+	close func() error,
+	rerr error,
+) {
+	var closers []func() error
+	close = func() error {
+		var merr error
+		// Close in reverse order, to match defer behavior.
+		for i := len(closers) - 1; i >= 0; i-- {
+			c := closers[i]
+			merr = multierr.Append(merr, c())
+		}
+		return merr
+	}
+	defer func() {
+		if rerr != nil {
+			rerr = multierr.Append(rerr, close())
+		}
+	}()
+	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil {
+		return req, close, errors.Wrap(err, "parse media type")
+	}
+	switch {
+	case ct == "application/x-www-form-urlencoded":
+		if r.ContentLength == 0 {
+			return req, close, validate.ErrBodyRequired
+		}
+		form, err := ht.ParseForm(r)
+		if err != nil {
+			return req, close, errors.Wrap(err, "parse form")
+		}
+
+		var request QueryRangeForm
+		q := uri.NewQueryDecoder(form)
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "query",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					request.Query = c
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"query\"")
+				}
+			} else {
+				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "time",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotTimeVal PrometheusTimestamp
+					if err := func() error {
+						var requestDotTimeValVal string
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToString(val)
+							if err != nil {
+								return err
+							}
+
+							requestDotTimeValVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						requestDotTimeVal = PrometheusTimestamp(requestDotTimeValVal)
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.Time.SetTo(requestDotTimeVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"time\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "start",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotStartVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotStartVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.Start = PrometheusTimestamp(requestDotStartVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"start\"")
+				}
+			} else {
+				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "end",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotEndVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotEndVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.End = PrometheusTimestamp(requestDotEndVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"end\"")
+				}
+			} else {
+				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "step",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					request.Step = c
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"step\"")
+				}
+			} else {
+				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "timeout",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotTimeoutVal PrometheusTimestamp
+					if err := func() error {
+						var requestDotTimeoutValVal string
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToString(val)
+							if err != nil {
+								return err
+							}
+
+							requestDotTimeoutValVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						requestDotTimeoutVal = PrometheusTimestamp(requestDotTimeoutValVal)
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.Timeout.SetTo(requestDotTimeoutVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"timeout\"")
+				}
+			}
+		}
+		return &request, close, nil
+	default:
+		return req, close, validate.InvalidContentType(ct)
+	}
+}

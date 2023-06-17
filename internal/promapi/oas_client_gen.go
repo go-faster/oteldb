@@ -1383,13 +1383,13 @@ func (c *Client) sendPostQueryExemplars(ctx context.Context) (res *QueryExemplar
 // Query Prometheus.
 //
 // POST /api/v1/query_range
-func (c *Client) PostQueryRange(ctx context.Context) (*QueryResponse, error) {
-	res, err := c.sendPostQueryRange(ctx)
+func (c *Client) PostQueryRange(ctx context.Context, request *QueryRangeForm) (*QueryResponse, error) {
+	res, err := c.sendPostQueryRange(ctx, request)
 	_ = res
 	return res, err
 }
 
-func (c *Client) sendPostQueryRange(ctx context.Context) (res *QueryResponse, err error) {
+func (c *Client) sendPostQueryRange(ctx context.Context, request *QueryRangeForm) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryRange"),
 	}
@@ -1431,6 +1431,9 @@ func (c *Client) sendPostQueryRange(ctx context.Context) (res *QueryResponse, er
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePostQueryRangeRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "SendRequest"

@@ -1151,6 +1151,78 @@ func (s *QueryForm) SetTime(val OptPrometheusTimestamp) {
 	s.Time = val
 }
 
+// Ref: #/components/schemas/QueryRangeForm
+type QueryRangeForm struct {
+	// Prometheus expression query string.
+	Query string                 `json:"query"`
+	Time  OptPrometheusTimestamp `json:"time"`
+	Start PrometheusTimestamp    `json:"start"`
+	End   PrometheusTimestamp    `json:"end"`
+	// Query resolution step width in duration format or float number of seconds.
+	Step    string                 `json:"step"`
+	Timeout OptPrometheusTimestamp `json:"timeout"`
+}
+
+// GetQuery returns the value of Query.
+func (s *QueryRangeForm) GetQuery() string {
+	return s.Query
+}
+
+// GetTime returns the value of Time.
+func (s *QueryRangeForm) GetTime() OptPrometheusTimestamp {
+	return s.Time
+}
+
+// GetStart returns the value of Start.
+func (s *QueryRangeForm) GetStart() PrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *QueryRangeForm) GetEnd() PrometheusTimestamp {
+	return s.End
+}
+
+// GetStep returns the value of Step.
+func (s *QueryRangeForm) GetStep() string {
+	return s.Step
+}
+
+// GetTimeout returns the value of Timeout.
+func (s *QueryRangeForm) GetTimeout() OptPrometheusTimestamp {
+	return s.Timeout
+}
+
+// SetQuery sets the value of Query.
+func (s *QueryRangeForm) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetTime sets the value of Time.
+func (s *QueryRangeForm) SetTime(val OptPrometheusTimestamp) {
+	s.Time = val
+}
+
+// SetStart sets the value of Start.
+func (s *QueryRangeForm) SetStart(val PrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *QueryRangeForm) SetEnd(val PrometheusTimestamp) {
+	s.End = val
+}
+
+// SetStep sets the value of Step.
+func (s *QueryRangeForm) SetStep(val string) {
+	s.Step = val
+}
+
+// SetTimeout sets the value of Timeout.
+func (s *QueryRangeForm) SetTimeout(val OptPrometheusTimestamp) {
+	s.Timeout = val
+}
+
 type QueryResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`

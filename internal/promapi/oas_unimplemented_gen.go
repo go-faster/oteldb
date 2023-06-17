@@ -107,7 +107,7 @@ func (UnimplementedHandler) PostQueryExemplars(ctx context.Context) (r *QueryExe
 // Query Prometheus.
 //
 // POST /api/v1/query_range
-func (UnimplementedHandler) PostQueryRange(ctx context.Context) (r *QueryResponse, _ error) {
+func (UnimplementedHandler) PostQueryRange(ctx context.Context, req *QueryRangeForm) (r *QueryResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
