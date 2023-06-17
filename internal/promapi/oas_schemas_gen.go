@@ -4,13 +4,236 @@ package promapi
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/jx"
 )
 
 func (s *FailStatusCode) Error() string {
 	return fmt.Sprintf("code %d: %+v", s.StatusCode, s.Response)
+}
+
+// Ref: #/components/schemas/Alert
+type Alert struct {
+	Labels      LabelSet    `json:"labels"`
+	Annotations LabelSet    `json:"annotations"`
+	State       string      `json:"state"`
+	ActiveAt    OptDateTime `json:"activeAt"`
+	Value       string      `json:"value"`
+}
+
+// GetLabels returns the value of Labels.
+func (s *Alert) GetLabels() LabelSet {
+	return s.Labels
+}
+
+// GetAnnotations returns the value of Annotations.
+func (s *Alert) GetAnnotations() LabelSet {
+	return s.Annotations
+}
+
+// GetState returns the value of State.
+func (s *Alert) GetState() string {
+	return s.State
+}
+
+// GetActiveAt returns the value of ActiveAt.
+func (s *Alert) GetActiveAt() OptDateTime {
+	return s.ActiveAt
+}
+
+// GetValue returns the value of Value.
+func (s *Alert) GetValue() string {
+	return s.Value
+}
+
+// SetLabels sets the value of Labels.
+func (s *Alert) SetLabels(val LabelSet) {
+	s.Labels = val
+}
+
+// SetAnnotations sets the value of Annotations.
+func (s *Alert) SetAnnotations(val LabelSet) {
+	s.Annotations = val
+}
+
+// SetState sets the value of State.
+func (s *Alert) SetState(val string) {
+	s.State = val
+}
+
+// SetActiveAt sets the value of ActiveAt.
+func (s *Alert) SetActiveAt(val OptDateTime) {
+	s.ActiveAt = val
+}
+
+// SetValue sets the value of Value.
+func (s *Alert) SetValue(val string) {
+	s.Value = val
+}
+
+// Ref: #/components/schemas/AlertingRule
+type AlertingRule struct {
+	State          OptAlertingRuleState `json:"state"`
+	Name           string               `json:"name"`
+	Query          string               `json:"query"`
+	Duration       string               `json:"duration"`
+	Labels         LabelSet             `json:"labels"`
+	Annotations    LabelSet             `json:"annotations"`
+	Alerts         []Alert              `json:"alerts"`
+	Health         RuleHealth           `json:"health"`
+	LastError      string               `json:"lastError"`
+	EvaluationTime float64              `json:"evaluationTime"`
+	LastEvaluation time.Time            `json:"lastEvaluation"`
+}
+
+// GetState returns the value of State.
+func (s *AlertingRule) GetState() OptAlertingRuleState {
+	return s.State
+}
+
+// GetName returns the value of Name.
+func (s *AlertingRule) GetName() string {
+	return s.Name
+}
+
+// GetQuery returns the value of Query.
+func (s *AlertingRule) GetQuery() string {
+	return s.Query
+}
+
+// GetDuration returns the value of Duration.
+func (s *AlertingRule) GetDuration() string {
+	return s.Duration
+}
+
+// GetLabels returns the value of Labels.
+func (s *AlertingRule) GetLabels() LabelSet {
+	return s.Labels
+}
+
+// GetAnnotations returns the value of Annotations.
+func (s *AlertingRule) GetAnnotations() LabelSet {
+	return s.Annotations
+}
+
+// GetAlerts returns the value of Alerts.
+func (s *AlertingRule) GetAlerts() []Alert {
+	return s.Alerts
+}
+
+// GetHealth returns the value of Health.
+func (s *AlertingRule) GetHealth() RuleHealth {
+	return s.Health
+}
+
+// GetLastError returns the value of LastError.
+func (s *AlertingRule) GetLastError() string {
+	return s.LastError
+}
+
+// GetEvaluationTime returns the value of EvaluationTime.
+func (s *AlertingRule) GetEvaluationTime() float64 {
+	return s.EvaluationTime
+}
+
+// GetLastEvaluation returns the value of LastEvaluation.
+func (s *AlertingRule) GetLastEvaluation() time.Time {
+	return s.LastEvaluation
+}
+
+// SetState sets the value of State.
+func (s *AlertingRule) SetState(val OptAlertingRuleState) {
+	s.State = val
+}
+
+// SetName sets the value of Name.
+func (s *AlertingRule) SetName(val string) {
+	s.Name = val
+}
+
+// SetQuery sets the value of Query.
+func (s *AlertingRule) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetDuration sets the value of Duration.
+func (s *AlertingRule) SetDuration(val string) {
+	s.Duration = val
+}
+
+// SetLabels sets the value of Labels.
+func (s *AlertingRule) SetLabels(val LabelSet) {
+	s.Labels = val
+}
+
+// SetAnnotations sets the value of Annotations.
+func (s *AlertingRule) SetAnnotations(val LabelSet) {
+	s.Annotations = val
+}
+
+// SetAlerts sets the value of Alerts.
+func (s *AlertingRule) SetAlerts(val []Alert) {
+	s.Alerts = val
+}
+
+// SetHealth sets the value of Health.
+func (s *AlertingRule) SetHealth(val RuleHealth) {
+	s.Health = val
+}
+
+// SetLastError sets the value of LastError.
+func (s *AlertingRule) SetLastError(val string) {
+	s.LastError = val
+}
+
+// SetEvaluationTime sets the value of EvaluationTime.
+func (s *AlertingRule) SetEvaluationTime(val float64) {
+	s.EvaluationTime = val
+}
+
+// SetLastEvaluation sets the value of LastEvaluation.
+func (s *AlertingRule) SetLastEvaluation(val time.Time) {
+	s.LastEvaluation = val
+}
+
+type AlertingRuleState string
+
+const (
+	AlertingRuleStatePending  AlertingRuleState = "pending"
+	AlertingRuleStateFiring   AlertingRuleState = "firing"
+	AlertingRuleStateInactive AlertingRuleState = "inactive"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AlertingRuleState) MarshalText() ([]byte, error) {
+	switch s {
+	case AlertingRuleStatePending:
+		return []byte(s), nil
+	case AlertingRuleStateFiring:
+		return []byte(s), nil
+	case AlertingRuleStateInactive:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AlertingRuleState) UnmarshalText(data []byte) error {
+	switch AlertingRuleState(data) {
+	case AlertingRuleStatePending:
+		*s = AlertingRuleStatePending
+		return nil
+	case AlertingRuleStateFiring:
+		*s = AlertingRuleStateFiring
+		return nil
+	case AlertingRuleStateInactive:
+		*s = AlertingRuleStateInactive
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/Data
@@ -668,6 +891,52 @@ func (s *MetricMetadataType) UnmarshalText(data []byte) error {
 	}
 }
 
+// NewOptAlertingRuleState returns new OptAlertingRuleState with value set to v.
+func NewOptAlertingRuleState(v AlertingRuleState) OptAlertingRuleState {
+	return OptAlertingRuleState{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAlertingRuleState is optional AlertingRuleState.
+type OptAlertingRuleState struct {
+	Value AlertingRuleState
+	Set   bool
+}
+
+// IsSet returns true if OptAlertingRuleState was set.
+func (o OptAlertingRuleState) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAlertingRuleState) Reset() {
+	var v AlertingRuleState
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAlertingRuleState) SetTo(v AlertingRuleState) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAlertingRuleState) Get() (v AlertingRuleState, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAlertingRuleState) Or(d AlertingRuleState) AlertingRuleState {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptData returns new OptData with value set to v.
 func NewOptData(v Data) OptData {
 	return OptData{
@@ -708,6 +977,52 @@ func (o OptData) Get() (v Data, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptData) Or(d Data) Data {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDateTime returns new OptDateTime with value set to v.
+func NewOptDateTime(v time.Time) OptDateTime {
+	return OptDateTime{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDateTime is optional time.Time.
+type OptDateTime struct {
+	Value time.Time
+	Set   bool
+}
+
+// IsSet returns true if OptDateTime was set.
+func (o OptDateTime) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDateTime) Reset() {
+	var v time.Time
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDateTime) SetTo(v time.Time) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDateTime) Get() (v time.Time, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDateTime) Or(d time.Time) time.Time {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -1308,7 +1623,151 @@ func (s *QueryResponse) SetData(val Data) {
 	s.Data = val
 }
 
-type Rule jx.Raw
+// Ref: #/components/schemas/RecordingRule
+type RecordingRule struct {
+	Name           string     `json:"name"`
+	Query          string     `json:"query"`
+	Labels         LabelSet   `json:"labels"`
+	Health         RuleHealth `json:"health"`
+	LastError      string     `json:"lastError"`
+	EvaluationTime time.Time  `json:"evaluationTime"`
+	LastEvaluation float64    `json:"lastEvaluation"`
+}
+
+// GetName returns the value of Name.
+func (s *RecordingRule) GetName() string {
+	return s.Name
+}
+
+// GetQuery returns the value of Query.
+func (s *RecordingRule) GetQuery() string {
+	return s.Query
+}
+
+// GetLabels returns the value of Labels.
+func (s *RecordingRule) GetLabels() LabelSet {
+	return s.Labels
+}
+
+// GetHealth returns the value of Health.
+func (s *RecordingRule) GetHealth() RuleHealth {
+	return s.Health
+}
+
+// GetLastError returns the value of LastError.
+func (s *RecordingRule) GetLastError() string {
+	return s.LastError
+}
+
+// GetEvaluationTime returns the value of EvaluationTime.
+func (s *RecordingRule) GetEvaluationTime() time.Time {
+	return s.EvaluationTime
+}
+
+// GetLastEvaluation returns the value of LastEvaluation.
+func (s *RecordingRule) GetLastEvaluation() float64 {
+	return s.LastEvaluation
+}
+
+// SetName sets the value of Name.
+func (s *RecordingRule) SetName(val string) {
+	s.Name = val
+}
+
+// SetQuery sets the value of Query.
+func (s *RecordingRule) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetLabels sets the value of Labels.
+func (s *RecordingRule) SetLabels(val LabelSet) {
+	s.Labels = val
+}
+
+// SetHealth sets the value of Health.
+func (s *RecordingRule) SetHealth(val RuleHealth) {
+	s.Health = val
+}
+
+// SetLastError sets the value of LastError.
+func (s *RecordingRule) SetLastError(val string) {
+	s.LastError = val
+}
+
+// SetEvaluationTime sets the value of EvaluationTime.
+func (s *RecordingRule) SetEvaluationTime(val time.Time) {
+	s.EvaluationTime = val
+}
+
+// SetLastEvaluation sets the value of LastEvaluation.
+func (s *RecordingRule) SetLastEvaluation(val float64) {
+	s.LastEvaluation = val
+}
+
+// Ref: #/components/schemas/Rule
+// Rule represents sum type.
+type Rule struct {
+	Type          RuleType // switch on this field
+	AlertingRule  AlertingRule
+	RecordingRule RecordingRule
+}
+
+// RuleType is oneOf type of Rule.
+type RuleType string
+
+// Possible values for RuleType.
+const (
+	AlertingRuleRule  RuleType = "AlertingRule"
+	RecordingRuleRule RuleType = "RecordingRule"
+)
+
+// IsAlertingRule reports whether Rule is AlertingRule.
+func (s Rule) IsAlertingRule() bool { return s.Type == AlertingRuleRule }
+
+// IsRecordingRule reports whether Rule is RecordingRule.
+func (s Rule) IsRecordingRule() bool { return s.Type == RecordingRuleRule }
+
+// SetAlertingRule sets Rule to AlertingRule.
+func (s *Rule) SetAlertingRule(v AlertingRule) {
+	s.Type = AlertingRuleRule
+	s.AlertingRule = v
+}
+
+// GetAlertingRule returns AlertingRule and true boolean if Rule is AlertingRule.
+func (s Rule) GetAlertingRule() (v AlertingRule, ok bool) {
+	if !s.IsAlertingRule() {
+		return v, false
+	}
+	return s.AlertingRule, true
+}
+
+// NewAlertingRuleRule returns new Rule from AlertingRule.
+func NewAlertingRuleRule(v AlertingRule) Rule {
+	var s Rule
+	s.SetAlertingRule(v)
+	return s
+}
+
+// SetRecordingRule sets Rule to RecordingRule.
+func (s *Rule) SetRecordingRule(v RecordingRule) {
+	s.Type = RecordingRuleRule
+	s.RecordingRule = v
+}
+
+// GetRecordingRule returns RecordingRule and true boolean if Rule is RecordingRule.
+func (s Rule) GetRecordingRule() (v RecordingRule, ok bool) {
+	if !s.IsRecordingRule() {
+		return v, false
+	}
+	return s.RecordingRule, true
+}
+
+// NewRecordingRuleRule returns new Rule from RecordingRule.
+func NewRecordingRuleRule(v RecordingRule) Rule {
+	var s Rule
+	s.SetRecordingRule(v)
+	return s
+}
 
 // Ref: #/components/schemas/RuleGroup
 type RuleGroup struct {
@@ -1392,6 +1851,46 @@ func (s *RuleGroup) SetEvaluationTime(val OptFloat64) {
 // SetLastEvaluation sets the value of LastEvaluation.
 func (s *RuleGroup) SetLastEvaluation(val OptString) {
 	s.LastEvaluation = val
+}
+
+// Ref: #/components/schemas/RuleHealth
+type RuleHealth string
+
+const (
+	RuleHealthUnknown RuleHealth = "unknown"
+	RuleHealthOk      RuleHealth = "ok"
+	RuleHealthErr     RuleHealth = "err"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s RuleHealth) MarshalText() ([]byte, error) {
+	switch s {
+	case RuleHealthUnknown:
+		return []byte(s), nil
+	case RuleHealthOk:
+		return []byte(s), nil
+	case RuleHealthErr:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *RuleHealth) UnmarshalText(data []byte) error {
+	switch RuleHealth(data) {
+	case RuleHealthUnknown:
+		*s = RuleHealthUnknown
+		return nil
+	case RuleHealthOk:
+		*s = RuleHealthOk
+		return nil
+	case RuleHealthErr:
+		*s = RuleHealthErr
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/Rules

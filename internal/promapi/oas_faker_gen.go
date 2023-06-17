@@ -4,9 +4,108 @@ package promapi
 
 import (
 	"fmt"
-
-	"github.com/go-faster/jx"
+	"time"
 )
+
+// SetFake set fake values.
+func (s *Alert) SetFake() {
+	{
+		{
+			s.Labels.SetFake()
+		}
+	}
+	{
+		{
+			s.Annotations.SetFake()
+		}
+	}
+	{
+		{
+			s.State = "string"
+		}
+	}
+	{
+		{
+			s.ActiveAt.SetFake()
+		}
+	}
+	{
+		{
+			s.Value = "string"
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *AlertingRule) SetFake() {
+	{
+		{
+			s.State.SetFake()
+		}
+	}
+	{
+		{
+			s.Name = "string"
+		}
+	}
+	{
+		{
+			s.Query = "string"
+		}
+	}
+	{
+		{
+			s.Duration = "string"
+		}
+	}
+	{
+		{
+			s.Labels.SetFake()
+		}
+	}
+	{
+		{
+			s.Annotations.SetFake()
+		}
+	}
+	{
+		{
+			s.Alerts = nil
+			for i := 0; i < 0; i++ {
+				var elem Alert
+				{
+					elem.SetFake()
+				}
+				s.Alerts = append(s.Alerts, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Health.SetFake()
+		}
+	}
+	{
+		{
+			s.LastError = "string"
+		}
+	}
+	{
+		{
+			s.EvaluationTime = float64(0)
+		}
+	}
+	{
+		{
+			s.LastEvaluation = time.Now()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *AlertingRuleState) SetFake() {
+	*s = AlertingRuleStatePending
+}
 
 // SetFake set fake values.
 func (s *Data) SetFake() {
@@ -308,10 +407,28 @@ func (s *MetricMetadataType) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *OptAlertingRuleState) SetFake() {
+	var elem AlertingRuleState
+	{
+		elem.SetFake()
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
 func (s *OptData) SetFake() {
 	var elem Data
 	{
 		elem.SetFake()
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptDateTime) SetFake() {
+	var elem time.Time
+	{
+		elem = time.Now()
 	}
 	s.SetTo(elem)
 }
@@ -423,12 +540,52 @@ func (s *QueryResponse) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *Rule) SetFake() {
-	var unwrapped jx.Raw
+func (s *RecordingRule) SetFake() {
 	{
-		unwrapped = []byte("null")
+		{
+			s.Name = "string"
+		}
 	}
-	*s = Rule(unwrapped)
+	{
+		{
+			s.Query = "string"
+		}
+	}
+	{
+		{
+			s.Labels.SetFake()
+		}
+	}
+	{
+		{
+			s.Health.SetFake()
+		}
+	}
+	{
+		{
+			s.LastError = "string"
+		}
+	}
+	{
+		{
+			s.EvaluationTime = time.Now()
+		}
+	}
+	{
+		{
+			s.LastEvaluation = float64(0)
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Rule) SetFake() {
+	var variant AlertingRule
+
+	{
+		variant.SetFake()
+	}
+	s.SetAlertingRule(variant)
 }
 
 // SetFake set fake values.
@@ -475,6 +632,11 @@ func (s *RuleGroup) SetFake() {
 			s.LastEvaluation.SetFake()
 		}
 	}
+}
+
+// SetFake set fake values.
+func (s *RuleHealth) SetFake() {
+	*s = RuleHealthUnknown
 }
 
 // SetFake set fake values.

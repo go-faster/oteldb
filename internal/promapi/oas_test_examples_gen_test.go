@@ -11,6 +11,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAlert_EncodeDecode(t *testing.T) {
+	var typ Alert
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Alert
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestAlertingRule_EncodeDecode(t *testing.T) {
+	var typ AlertingRule
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 AlertingRule
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestAlertingRuleState_EncodeDecode(t *testing.T) {
+	var typ AlertingRuleState
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 AlertingRuleState
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestData_EncodeDecode(t *testing.T) {
 	var typ Data
 	typ.SetFake()
@@ -257,6 +293,18 @@ func TestQueryResponse_EncodeDecode(t *testing.T) {
 	var typ2 QueryResponse
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestRecordingRule_EncodeDecode(t *testing.T) {
+	var typ RecordingRule
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 RecordingRule
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestRule_EncodeDecode(t *testing.T) {
 	var typ Rule
 	typ.SetFake()
@@ -279,6 +327,18 @@ func TestRuleGroup_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 RuleGroup
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestRuleHealth_EncodeDecode(t *testing.T) {
+	var typ RuleHealth
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 RuleHealth
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestRules_EncodeDecode(t *testing.T) {

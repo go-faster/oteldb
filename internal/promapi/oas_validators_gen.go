@@ -10,6 +10,76 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+func (s *AlertingRule) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if value, ok := s.State.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "state",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if s.Alerts == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "alerts",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := s.Health.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "health",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.EvaluationTime)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "evaluationTime",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s AlertingRuleState) Validate() error {
+	switch s {
+	case "pending":
+		return nil
+	case "firing":
+		return nil
+	case "inactive":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
 func (s Data) Validate() error {
 	switch s.Type {
 	case MatrixData:
@@ -459,8 +529,79 @@ func (s *QueryResponse) Validate() error {
 	}
 	return nil
 }
+func (s *RecordingRule) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Health.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "health",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.LastEvaluation)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "lastEvaluation",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s Rule) Validate() error {
+	switch s.Type {
+	case AlertingRuleRule:
+		if err := s.AlertingRule.Validate(); err != nil {
+			return err
+		}
+		return nil
+	case RecordingRuleRule:
+		if err := s.RecordingRule.Validate(); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.Errorf("invalid type %q", s.Type)
+	}
+}
+
 func (s *RuleGroup) Validate() error {
 	var failures []validate.FieldError
+	if err := func() error {
+		var failures []validate.FieldError
+		for i, elem := range s.Rules {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "rules",
+			Error: err,
+		})
+	}
 	if err := func() error {
 		if value, ok := s.Internal.Get(); ok {
 			if err := func() error {
@@ -501,6 +642,18 @@ func (s *RuleGroup) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
+}
+func (s RuleHealth) Validate() error {
+	switch s {
+	case "unknown":
+		return nil
+	case "ok":
+		return nil
+	case "err":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
 }
 func (s *Rules) Validate() error {
 	var failures []validate.FieldError
