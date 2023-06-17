@@ -652,8 +652,115 @@ components:
           type: string
     # FIXME(tdakkota): complete definition
     # See https://github.com/prometheus/prometheus/blob/f399f386cef3b19c48157e9678a4f50997db3f41/web/api/v1/api.go#L1279.
-    Rule: {}
-
+    Rule:
+      discriminator:
+        propertyName: type
+        mapping:
+          alerting: AlertingRule
+          recording: RecordingRule
+      oneOf:
+        - $ref: "#/components/schemas/AlertingRule"
+        - $ref: "#/components/schemas/RecordingRule"
+    Alert:
+      type: object
+      required:
+          - labels
+          - annotations
+          - state
+          - value
+      properties:
+        labels:
+          $ref: "#/components/schemas/LabelSet"
+        annotations:
+          $ref: "#/components/schemas/LabelSet"
+        state:
+          type: string
+        activeAt:
+          type: string
+          format: date-time
+        value:
+          type: string
+    RuleHealth:
+      type: string
+      enum:
+        - unknown
+        - ok
+        - err
+    AlertingRule:
+      type: object
+      required:
+        - type
+        - name
+        - query
+        - duration
+        - labels
+        - annotations
+        - alerts
+        - health
+        - lastError
+        - evaluationTime
+        - lastEvaluation
+      properties:
+        state:
+          type: string
+          enum:
+            - pending
+            - firing
+            - inactive
+        name:
+          type: string
+        query:
+          type: string
+        duration:
+          type: string
+        labels:
+          $ref: "#/components/schemas/LabelSet"
+        annotations:
+          $ref: "#/components/schemas/LabelSet"
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+        health:
+          $ref: "#/components/schemas/RuleHealth"
+        lastError:
+          type: string
+        evaluationTime:
+          type: number
+        lastEvaluation:
+          type: string
+          format: date-time
+        type:
+          type: string
+    RecordingRule:
+      type: object
+      required:
+        - type
+        - name
+        - query
+        - labels
+        - health
+        - lastError
+        - evaluationTime
+        - lastEvaluation
+      properties:
+        name:
+          type: string
+        query:
+          type: string
+        labels:
+          $ref: "#/components/schemas/LabelSet"
+        health:
+          $ref: "#/components/schemas/RuleHealth"
+        lastError:
+          type: string
+        evaluationTime:
+          type: string
+          format: date-time
+        lastEvaluation:
+          type: number
+        type:
+          type: string
     Metadata:
       type: object
       additionalProperties:
