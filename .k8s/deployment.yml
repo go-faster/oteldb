@@ -7,8 +7,6 @@ metadata:
   labels:
     app: oteldb
 spec:
-  strategy:
-    type: Recreate
   replicas: 1
   selector:
     matchLabels:
@@ -71,3 +69,57 @@ spec:
                 secretKeyRef:
                   name: oteldb
                   key: YT_TOKEN
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: faster
+  name: otelproxy
+  labels:
+    app: otelproxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otelproxy
+  template:
+    metadata:
+      labels:
+        app: otelproxy
+        service.opentelemetry.io/name: go-faster.otelproxy
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8090'
+    spec:
+      containers:
+        - name: oteldb
+          image: ghcr.io/go-faster/oteldb/proxy:main
+          ports:
+            - containerPort: 8090
+              protocol: TCP
+              name: metrics
+            - containerPort: 8080
+              protocol: TCP
+              name: http
+          resources:
+            requests:
+              cpu: 500m
+              memory: 128M
+            limits:
+              cpu: 1500m
+              memory: 256M
+          env:
+            - name: GOMEMLIMIT
+              value: "256MiB"
+            - name: GOMAXPROCS
+              value: "2"
+            - name: OTEL_METRICS_EXPORTER
+              value: "prometheus"
+            - name: OTEL_EXPORTER_PROMETHEUS_PORT
+              value: "8090"
+            - name: OTEL_EXPORTER_PROMETHEUS_HOST
+              value: "0.0.0.0"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=go-faster.otelproxy"
+            - name: OTEL_LOG_LEVEL
+              value: "DEBUG"
