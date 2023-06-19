@@ -11,6 +11,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ogen-go/ogen v0.69.1
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.20.1
 	go.opentelemetry.io/collector v0.79.0
@@ -23,6 +24,7 @@ require (
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.79.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
+	go.opentelemetry.io/otel/bridge/opentracing v1.16.0
 	go.opentelemetry.io/otel/metric v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
 	go.uber.org/multierr v1.11.0
@@ -92,7 +94,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
-	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect

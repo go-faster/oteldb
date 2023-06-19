@@ -11,7 +11,9 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/opentracing/opentracing-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	otelBridge "go.opentelemetry.io/otel/bridge/opentracing"
 	"go.uber.org/zap"
 	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
 	"go.ytsaurus.tech/yt/go/migrate"
@@ -156,6 +158,15 @@ func main() {
 
 			storageType = strings.ToLower(os.Getenv("OTELDB_STORAGE"))
 		)
+		{
+			// Setting OpenTelemetry/OpenTracing Bridge.
+			// https://github.com/open-telemetry/opentelemetry-go/tree/main/bridge/opentracing#opentelemetryopentracing-bridge
+			otelTracer := m.TracerProvider().Tracer("yt")
+			bridgeTracer, wrapperTracerProvider := otelBridge.NewTracerPair(otelTracer)
+			opentracing.SetGlobalTracer(bridgeTracer)
+
+			_ = wrapperTracerProvider // should we use it?
+		}
 		switch storageType {
 		case "ch":
 			inserter, querier, err = setupCH(ctx, os.Getenv("CH_DSN"), lg, m)
