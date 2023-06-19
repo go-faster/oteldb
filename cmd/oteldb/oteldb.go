@@ -73,7 +73,7 @@ func setupCH(
 	ctx context.Context,
 	dsn string,
 	lg *zap.Logger,
-	m *app.Metrics,
+	m Metrics,
 ) (tracestorage.Inserter, tracestorage.Querier, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {
@@ -128,7 +128,7 @@ func setupCH(
 func setupTempo(
 	q tracestorage.Querier,
 	lg *zap.Logger,
-	m *app.Metrics,
+	m Metrics,
 ) (http.Handler, error) {
 	tempo := tempohandler.NewTempoAPI(q)
 
@@ -153,22 +153,24 @@ func setupTempo(
 }
 
 func main() {
-	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+	app.Run(func(ctx context.Context, lg *zap.Logger, metrics *app.Metrics) error {
 		var (
 			inserter tracestorage.Inserter
 			querier  tracestorage.Querier
 			err      error
 
 			storageType = strings.ToLower(os.Getenv("OTELDB_STORAGE"))
+			m           = NewMetricsOverride(metrics)
 		)
 		{
 			// Setting OpenTelemetry/OpenTracing Bridge.
 			// https://github.com/open-telemetry/opentelemetry-go/tree/main/bridge/opentracing#opentelemetryopentracing-bridge
-			otelTracer := m.TracerProvider().Tracer("yt")
+			otelTracer := metrics.TracerProvider().Tracer("yt")
 			bridgeTracer, wrapperTracerProvider := otelBridge.NewTracerPair(otelTracer)
 			opentracing.SetGlobalTracer(bridgeTracer)
 
-			_ = wrapperTracerProvider // should we use it?
+			// Override for context propagation.
+			m = m.WithTracerProvider(wrapperTracerProvider)
 		}
 		switch storageType {
 		case "ch":
