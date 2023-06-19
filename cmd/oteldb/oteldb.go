@@ -89,6 +89,9 @@ func setupCH(
 		Password:       pass,
 		MeterProvider:  m.MeterProvider(),
 		TracerProvider: m.TracerProvider(),
+
+		// Capture query body and other parameters.
+		OpenTelemetryInstrumentation: true,
 	}
 
 	// First thing that every Yandex employee do is forgetting how to setup
