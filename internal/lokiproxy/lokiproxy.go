@@ -58,6 +58,15 @@ func (s *Server) Series(ctx context.Context, params lokiapi.SeriesParams) (*loki
 	return s.api.Series(ctx, params)
 }
 
+// Push implements push operation.
+//
+// Push data.
+//
+// GET /loki/api/v1/push
+func (s *Server) Push(ctx context.Context, req lokiapi.PushReq) error {
+	return s.api.Push(ctx, req)
+}
+
 // NewError creates *ErrorStatusCode from error returned by handler.
 //
 // Used for common default response.
