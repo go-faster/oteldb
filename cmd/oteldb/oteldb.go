@@ -13,6 +13,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/opentracing/opentracing-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 	otelBridge "go.opentelemetry.io/otel/bridge/opentracing"
 	"go.uber.org/zap"
 	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
@@ -170,6 +171,7 @@ func main() {
 			opentracing.SetGlobalTracer(bridgeTracer)
 
 			// Override for context propagation.
+			otel.SetTracerProvider(wrapperTracerProvider)
 			m = m.WithTracerProvider(wrapperTracerProvider)
 		}
 		switch storageType {
