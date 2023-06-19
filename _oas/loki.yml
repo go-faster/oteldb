@@ -203,7 +203,25 @@ paths:
                 $ref: "#/components/schemas/Maps"
         default:
           $ref: "#/components/responses/Error"
-
+  /loki/api/v1/push:
+    post:
+      operationId: push
+      description: Push data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Push"
+          application/x-protobuf:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "204":
+          description: Successful push
+        default:
+          $ref: "#/components/responses/Error"
 components:
   parameters:
     # TODO(ernado): extract to separate file? Same for all datasources
@@ -334,5 +352,33 @@ components:
         status:
           type: string
           default: success
+    Push:
+      type: object
+      properties:
+        streams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Stream"
+    PushStream:
+      type: object
+      properties:
+        stream:
+          $ref: "#/components/schemas/LabelSet"
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/PushStreamEntry"
+    PushStreamEntry:
+      type: object
+      properties:
+        line:
+          type: string
+        ts:
+          type: string
+          format: unix-nano
+    LabelSet:
+      type: object
+      additionalProperties:
+        type: string
     Error:
       type: string
