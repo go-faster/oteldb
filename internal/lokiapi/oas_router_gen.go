@@ -126,6 +126,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 				}
+			case 'p': // Prefix: "push"
+				if l := len("push"); len(elem) >= l && elem[0:l] == "push" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handlePushRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
 			case 'q': // Prefix: "query_range"
 				if l := len("query_range"); len(elem) >= l && elem[0:l] == "query_range" {
 					elem = elem[l:]
@@ -316,6 +334,27 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						default:
 							return
 						}
+					}
+				}
+			case 'p': // Prefix: "push"
+				if l := len("push"); len(elem) >= l && elem[0:l] == "push" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "POST":
+						// Leaf: Push
+						r.name = "Push"
+						r.operationID = "push"
+						r.pathPattern = "/loki/api/v1/push"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
 					}
 				}
 			case 'q': // Prefix: "query_range"

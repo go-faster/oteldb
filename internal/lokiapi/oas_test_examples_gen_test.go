@@ -73,6 +73,18 @@ func TestMapsDataItem_EncodeDecode(t *testing.T) {
 	typ2 = make(MapsDataItem)
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestPush_EncodeDecode(t *testing.T) {
+	var typ Push
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Push
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestQueryResponse_EncodeDecode(t *testing.T) {
 	var typ QueryResponse
 	typ.SetFake()

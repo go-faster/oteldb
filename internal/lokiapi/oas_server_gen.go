@@ -21,6 +21,12 @@ type Handler interface {
 	//
 	// GET /loki/api/v1/labels
 	Labels(ctx context.Context, params LabelsParams) (*Labels, error)
+	// Push implements push operation.
+	//
+	// Push data.
+	//
+	// POST /loki/api/v1/push
+	Push(ctx context.Context, req PushReq) error
 	// QueryRange implements queryRange operation.
 	//
 	// Query range.

@@ -32,6 +32,15 @@ func (UnimplementedHandler) Labels(ctx context.Context, params LabelsParams) (r 
 	return r, ht.ErrNotImplemented
 }
 
+// Push implements push operation.
+//
+// Push data.
+//
+// POST /loki/api/v1/push
+func (UnimplementedHandler) Push(ctx context.Context, req PushReq) error {
+	return ht.ErrNotImplemented
+}
+
 // QueryRange implements queryRange operation.
 //
 // Query range.

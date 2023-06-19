@@ -103,6 +103,22 @@ func (s *OptStreamStream) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Push) SetFake() {
+	{
+		{
+			s.Streams = nil
+			for i := 0; i < 0; i++ {
+				var elem Stream
+				{
+					elem.SetFake()
+				}
+				s.Streams = append(s.Streams, elem)
+			}
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *QueryResponse) SetFake() {
 	{
 		{

@@ -4,6 +4,7 @@ package lokiapi
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/go-faster/errors"
 )
@@ -464,6 +465,42 @@ func (o OptString) Or(d string) string {
 }
 
 type PrometheusDuration string
+
+// Ref: #/components/schemas/Push
+type Push struct {
+	Streams []Stream `json:"streams"`
+}
+
+// GetStreams returns the value of Streams.
+func (s *Push) GetStreams() []Stream {
+	return s.Streams
+}
+
+// SetStreams sets the value of Streams.
+func (s *Push) SetStreams(val []Stream) {
+	s.Streams = val
+}
+
+func (*Push) pushReq() {}
+
+// PushNoContent is response for Push operation.
+type PushNoContent struct{}
+
+type PushReqApplicationXProtobuf struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s PushReqApplicationXProtobuf) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+func (*PushReqApplicationXProtobuf) pushReq() {}
 
 // Ref: #/components/schemas/QueryResponse
 type QueryResponse struct {

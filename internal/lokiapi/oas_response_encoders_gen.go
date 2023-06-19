@@ -37,6 +37,13 @@ func encodeLabelsResponse(response *Labels, w http.ResponseWriter, span trace.Sp
 	return nil
 }
 
+func encodePushResponse(response *PushNoContent, w http.ResponseWriter, span trace.Span) error {
+	w.WriteHeader(204)
+	span.SetStatus(codes.Ok, http.StatusText(204))
+
+	return nil
+}
+
 func encodeQueryRangeResponse(response *QueryResponse, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)

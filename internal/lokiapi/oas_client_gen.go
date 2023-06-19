@@ -401,6 +401,96 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 	return result, nil
 }
 
+// Push invokes push operation.
+//
+// Push data.
+//
+// POST /loki/api/v1/push
+func (c *Client) Push(ctx context.Context, request PushReq) error {
+	res, err := c.sendPush(ctx, request)
+	_ = res
+	return err
+}
+
+func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoContent, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("push"),
+	}
+	// Validate request before sending.
+	switch request := request.(type) {
+	case *Push:
+		if err := func() error {
+			if err := request.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "validate")
+		}
+	case *PushReqApplicationXProtobuf:
+		// Validation is not required for this type.
+	default:
+		return res, errors.Errorf("unexpected request type: %T", request)
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "Push",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/loki/api/v1/push"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePushRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodePushResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // QueryRange invokes queryRange operation.
 //
 // Query range.
