@@ -25,6 +25,8 @@ type jxEncode interface {
 }
 
 func printJSON(t *testing.T, v jxEncode, name string) {
+	t.Helper()
+
 	var e jx.Encoder
 	e.SetIdent(2)
 	v.Encode(&e)
