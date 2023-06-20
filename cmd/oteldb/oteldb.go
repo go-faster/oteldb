@@ -149,6 +149,13 @@ func setupTempo(
 	h = otelhttp.NewHandler(h, "",
 		otelhttp.WithTracerProvider(m.TracerProvider()),
 		otelhttp.WithMeterProvider(m.MeterProvider()),
+		otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
+			op, ok := s.FindRoute(r.Method, r.URL.Path)
+			if ok {
+				return "http." + op.OperationID()
+			}
+			return operation
+		}),
 	)
 	return h, nil
 }
