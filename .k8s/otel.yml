@@ -105,7 +105,7 @@ spec:
     spec:
       containers:
       - command:
-          - "/otelcol"
+          - "/otelcontribcol"
           - "--config=/conf/otel-collector-config.yaml"
         image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest
         name: otel-collector
