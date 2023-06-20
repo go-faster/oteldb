@@ -11,7 +11,7 @@ env:
   KUBECTL_VERSION: v1.27.1
 
 jobs:
-  deploy:
+  oteldb:
     environment: prod
     runs-on: ubuntu-latest
     permissions:
@@ -122,3 +122,55 @@ jobs:
         run: |
           /tmp/kubectl apply -f .k8s/deployment.release.yml -f .k8s/service.yaml
           /tmp/kubectl -n faster rollout status deployment oteldb otelproxy --timeout=10m
+  otel:
+    environment: prod
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      KUBECONFIG: /tmp/kubeconfig
+
+    # Skip deploy commit message contains #skip
+    if: ${{ !contains(github.event.head_commit.message, '!skip') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: docker/setup-buildx-action@v2
+
+      - name: Docker log in
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up kubectl cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/kubectl
+          key: kubectl-${{ env.KUBECTL_VERSION }}
+
+      - name: Check kubectl
+        id: "kubectl"
+        uses: andstor/file-existence-action@v2
+        with:
+          files: /tmp/kubectl
+
+      - name: Download kubectl
+        if: steps.kubectl.outputs.files_exists != 'true'
+        run: |
+          wget -O /tmp/kubectl "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+          chmod +x /tmp/kubectl
+
+      - name: Setup kubeconfig
+        env:
+          KUBE: ${{ secrets.KUBE }}
+        run: .k8s/kubeconfig.sh
+
+      - name: Deploy
+        run: |
+          /tmp/kubectl apply -f .k8s/otel.yml
+          /tmp/kubectl -n faster rollout status deployment otel-collector
