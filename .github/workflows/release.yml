@@ -172,5 +172,5 @@ jobs:
 
       - name: Deploy
         run: |
-          /tmp/kubectl apply -f .k8s/otel.yml
-          /tmp/kubectl -n faster rollout status deployment otel-collector
+          /tmp/kubectl -n monitoring apply -f .k8s/otel.yml
+          /tmp/kubectl -n monitoring rollout status deployment otel-collector
