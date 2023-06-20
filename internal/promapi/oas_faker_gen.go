@@ -750,7 +750,7 @@ func (s *Value) SetFake() {
 	}
 	{
 		{
-			s.V = "string"
+			s.V = float64(0)
 		}
 	}
 }

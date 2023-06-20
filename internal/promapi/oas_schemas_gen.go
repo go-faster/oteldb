@@ -2021,7 +2021,7 @@ func (s *String) SetResult(val string) {
 // Ref: #/components/schemas/Value
 type Value struct {
 	T float64
-	V string
+	V float64
 }
 
 // GetT returns the value of T.
@@ -2030,7 +2030,7 @@ func (s *Value) GetT() float64 {
 }
 
 // GetV returns the value of V.
-func (s *Value) GetV() string {
+func (s *Value) GetV() float64 {
 	return s.V
 }
 
@@ -2040,7 +2040,7 @@ func (s *Value) SetT(val float64) {
 }
 
 // SetV sets the value of V.
-func (s *Value) SetV(val string) {
+func (s *Value) SetV(val float64) {
 	s.V = val
 }
 

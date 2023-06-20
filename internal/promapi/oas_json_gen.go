@@ -3866,7 +3866,7 @@ func (s *Value) encodeTuple(e *jx.Encoder) {
 	}
 	{
 		elem := s.V
-		e.Str(elem)
+		json.EncodeStringFloat64(e, elem)
 	}
 }
 
@@ -3888,8 +3888,8 @@ func (s *Value) Decode(d *jx.Decoder) error {
 			return nil
 		case 1:
 			n++
-			v, err := d.Str()
-			s.V = string(v)
+			v, err := json.DecodeStringFloat64(d)
+			s.V = v
 			if err != nil {
 				return err
 			}
