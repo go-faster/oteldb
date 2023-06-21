@@ -103,12 +103,9 @@ paths:
           schema:
             type: string
         - name: name
-          description: |
-            Segment key.
-            See https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/storage/segment/key.go#L36-L36.
           in: query
           schema:
-            type: string
+            $ref: "#/components/schemas/SegmentKey"
         - name: groupBy
           in: query
           schema:
@@ -154,6 +151,88 @@ paths:
                   $ref: "#/components/schemas/ApplicationMetadata"
         default:
           $ref: "#/components/responses/Error"
+  /ingest:
+    post:
+      operationId: ingest
+      description: Push data to Pyroscope.
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/SegmentKey"
+        - name: from
+          description: |
+            Start of time range in `attime` format.
+            Defaults to now.
+          in: query
+          schema:
+            $ref: "#/components/schemas/AtTime"
+        - name: until
+          description: |
+            End of time range in `attime` format.
+            Defaults to now.
+          in: query
+          schema:
+            $ref: "#/components/schemas/AtTime"
+        - name: sampleRate
+          description: |
+            Sample rate.
+            Defaults to `100`.
+
+            NOTE: Pyroscope ignores parameter if it is invalid
+          in: query
+          default: 100
+          schema:
+            type: integer
+            format: uint32
+        - name: spyName
+          in: query
+          default: "unknown"
+          schema:
+            type: string
+        - name: units
+          description: |
+            Could be
+            - `samples`
+            - `objects`
+            - `goroutines`
+            - `bytes`
+            - `lock_nanoseconds`
+            - `lock_samples`
+            but Pyroscope does not check it, so we don't either.
+          in: query
+          default: "samples"
+          schema:
+            type: string
+        - name: aggregationType
+          description: |
+            Could be
+            - `average`
+            - `sum`
+            but Pyroscope does not check it, so we don't either.
+          in: query
+          default: "sum"
+          schema:
+            type: string
+        - name: format
+          description: Input format.
+          in: query
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          "*/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: OK
+        default:
+          $ref: "#/components/responses/Error"
+
 components:
   responses:
     Error:
@@ -366,5 +445,10 @@ components:
         type: string
     AtTime:
       type: string
+    SegmentKey:
+      type: string
+      description: |
+        Segment key, whatever it is.
+        See https://github.com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/storage/segment/key.go#L36-L36.
     Error:
       type: string
