@@ -31,6 +31,15 @@ func (s *Server) GetApps(ctx context.Context) ([]pyroscopeapi.ApplicationMetadat
 	return s.api.GetApps(ctx)
 }
 
+// Ingest implements ingest operation.
+//
+// Push data to Pyroscope.
+//
+// POST /ingest
+func (s *Server) Ingest(ctx context.Context, req *pyroscopeapi.IngestReqWithContentType, params pyroscopeapi.IngestParams) error {
+	return s.api.Ingest(ctx, req, params)
+}
+
 // LabelValues implements labelValues operation.
 //
 // Returns list of label values.
