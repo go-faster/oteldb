@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/promapi"
 )
@@ -132,7 +134,8 @@ func (s *Server) PostSeries(ctx context.Context) (*promapi.SeriesResponse, error
 // NewError creates *FailStatusCode from error returned by handler.
 //
 // Used for common default response.
-func (s Server) NewError(_ context.Context, err error) *promapi.FailStatusCode {
+func (s Server) NewError(ctx context.Context, err error) *promapi.FailStatusCode {
+	zctx.From(ctx).Error("API Error", zap.Error(err))
 	if v, ok := errors.Into[*promapi.FailStatusCode](err); ok {
 		// Pass as-is.
 		return v

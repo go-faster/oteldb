@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/tempoapi"
 )
@@ -79,7 +81,8 @@ func (s *Server) TraceByID(ctx context.Context, params tempoapi.TraceByIDParams)
 // NewError creates *ErrorStatusCode from error returned by handler.
 //
 // Used for common default response.
-func (s *Server) NewError(_ context.Context, err error) *tempoapi.ErrorStatusCode {
+func (s *Server) NewError(ctx context.Context, err error) *tempoapi.ErrorStatusCode {
+	zctx.From(ctx).Error("API Error", zap.Error(err))
 	if v, ok := errors.Into[*tempoapi.ErrorStatusCode](err); ok {
 		// Pass as-is.
 		return v

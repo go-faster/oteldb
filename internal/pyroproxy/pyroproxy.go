@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/pyroscopeapi"
 )
@@ -71,7 +73,8 @@ func (s *Server) Render(ctx context.Context, params pyroscopeapi.RenderParams) (
 // NewError creates *ErrorStatusCode from error returned by handler.
 //
 // Used for common default response.
-func (s *Server) NewError(_ context.Context, err error) *pyroscopeapi.ErrorStatusCode {
+func (s *Server) NewError(ctx context.Context, err error) *pyroscopeapi.ErrorStatusCode {
+	zctx.From(ctx).Error("API Error", zap.Error(err))
 	if v, ok := errors.Into[*pyroscopeapi.ErrorStatusCode](err); ok {
 		// Pass as-is.
 		return v
