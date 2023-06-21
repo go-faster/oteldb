@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/oteldb/internal/pyroscopeapi"
 	"github.com/pyroscope-io/client/upstream"
 	"github.com/pyroscope-io/client/upstream/remote"
 	"github.com/stretchr/testify/require"
+
+	"github.com/go-faster/oteldb/internal/pyroscopeapi"
 )
 
 type ingestInput struct {
