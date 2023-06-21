@@ -12,6 +12,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/ogen-go/ogen v0.70.0
 	github.com/opentracing/opentracing-go v1.2.0
+	github.com/pyroscope-io/client v0.7.1
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.20.1
 	go.opentelemetry.io/collector v0.79.0
