@@ -12,6 +12,461 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+// IngestParams is parameters of ingest operation.
+type IngestParams struct {
+	Name SegmentKey
+	// Start of time range in `attime` format.
+	// Defaults to now.
+	From OptAtTime
+	// End of time range in `attime` format.
+	// Defaults to now.
+	Until OptAtTime
+	// Sample rate.
+	// Defaults to `100`.
+	// NOTE: Pyroscope ignores parameter if it is invalid.
+	SampleRate OptUint32
+	SpyName    OptString
+	// Could be
+	// - `samples`
+	// - `objects`
+	// - `goroutines`
+	// - `bytes`
+	// - `lock_nanoseconds`
+	// - `lock_samples`
+	// but Pyroscope does not check it, so we don't either.
+	Units OptString
+	// Could be
+	// - `average`
+	// - `sum`
+	// but Pyroscope does not check it, so we don't either.
+	AggregationType OptString
+	// Input format.
+	Format OptString
+}
+
+func unpackIngestParams(packed middleware.Parameters) (params IngestParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "name",
+			In:   "query",
+		}
+		params.Name = packed[key].(SegmentKey)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "from",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.From = v.(OptAtTime)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "until",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Until = v.(OptAtTime)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "sampleRate",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.SampleRate = v.(OptUint32)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "spyName",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.SpyName = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "units",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Units = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "aggregationType",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.AggregationType = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "format",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Format = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeIngestParams(args [0]string, argsEscaped bool, r *http.Request) (params IngestParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: name.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "name",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotNameVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNameVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Name = SegmentKey(paramsDotNameVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "name",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: from.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "from",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotFromVal AtTime
+				if err := func() error {
+					var paramsDotFromValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotFromValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotFromVal = AtTime(paramsDotFromValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.From.SetTo(paramsDotFromVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "from",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: until.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "until",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotUntilVal AtTime
+				if err := func() error {
+					var paramsDotUntilValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotUntilValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotUntilVal = AtTime(paramsDotUntilValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Until.SetTo(paramsDotUntilVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "until",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: sampleRate.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "sampleRate",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSampleRateVal uint32
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUint32(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotSampleRateVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.SampleRate.SetTo(paramsDotSampleRateVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "sampleRate",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: spyName.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "spyName",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSpyNameVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotSpyNameVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.SpyName.SetTo(paramsDotSpyNameVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "spyName",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: units.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "units",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotUnitsVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotUnitsVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Units.SetTo(paramsDotUnitsVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "units",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: aggregationType.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "aggregationType",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotAggregationTypeVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAggregationTypeVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AggregationType.SetTo(paramsDotAggregationTypeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "aggregationType",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: format.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "format",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotFormatVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotFormatVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Format.SetTo(paramsDotFormatVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "format",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // LabelValuesParams is parameters of labelValues operation.
 type LabelValuesParams struct {
 	// Label to lookup values.
@@ -434,12 +889,8 @@ type RenderParams struct {
 	// End of time range in `attime` format.
 	Until OptAtTime
 	// FrameQL query.
-	Query OptString
-	// Segment key.
-	// See https://github.
-	// com/grafana/pyroscope/blob/e1c9c18fa0c9398f07a2d1184d5de02a270872cd/pkg/storage/segment/key.
-	// go#L36-L36.
-	Name     OptString
+	Query    OptString
+	Name     OptSegmentKey
 	GroupBy  OptString
 	MaxNodes OptInt
 	// Response format.
@@ -480,7 +931,7 @@ func unpackRenderParams(packed middleware.Parameters) (params RenderParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Name = v.(OptString)
+			params.Name = v.(OptSegmentKey)
 		}
 	}
 	{
@@ -660,19 +1111,26 @@ func decodeRenderParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotNameVal string
+				var paramsDotNameVal SegmentKey
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotNameValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotNameValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotNameVal = c
+					paramsDotNameVal = SegmentKey(paramsDotNameValVal)
 					return nil
 				}(); err != nil {
 					return err

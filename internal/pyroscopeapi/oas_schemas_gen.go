@@ -4,6 +4,7 @@ package pyroscopeapi
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/go-faster/errors"
 )
@@ -598,6 +599,49 @@ func (s *Heatmap) SetMaxDepth(val OptUint64) {
 	s.MaxDepth = val
 }
 
+// IngestOK is response for Ingest operation.
+type IngestOK struct{}
+
+type IngestReq struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s IngestReq) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// IngestReqWithContentType wraps IngestReq with Content-Type.
+type IngestReqWithContentType struct {
+	ContentType string
+	Content     IngestReq
+}
+
+// GetContentType returns the value of ContentType.
+func (s *IngestReqWithContentType) GetContentType() string {
+	return s.ContentType
+}
+
+// GetContent returns the value of Content.
+func (s *IngestReqWithContentType) GetContent() IngestReq {
+	return s.Content
+}
+
+// SetContentType sets the value of ContentType.
+func (s *IngestReqWithContentType) SetContentType(val string) {
+	s.ContentType = val
+}
+
+// SetContent sets the value of Content.
+func (s *IngestReqWithContentType) SetContent(val IngestReq) {
+	s.Content = val
+}
+
 type LabelValues []string
 
 type Labels []string
@@ -1033,6 +1077,52 @@ func (o OptNilHeatmap) Or(d Heatmap) Heatmap {
 	return d
 }
 
+// NewOptSegmentKey returns new OptSegmentKey with value set to v.
+func NewOptSegmentKey(v SegmentKey) OptSegmentKey {
+	return OptSegmentKey{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSegmentKey is optional SegmentKey.
+type OptSegmentKey struct {
+	Value SegmentKey
+	Set   bool
+}
+
+// IsSet returns true if OptSegmentKey was set.
+func (o OptSegmentKey) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSegmentKey) Reset() {
+	var v SegmentKey
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSegmentKey) SetTo(v SegmentKey) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSegmentKey) Get() (v SegmentKey, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSegmentKey) Or(d SegmentKey) SegmentKey {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -1215,3 +1305,5 @@ func (s *RenderFormat) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+type SegmentKey string

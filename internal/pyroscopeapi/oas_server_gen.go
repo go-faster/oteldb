@@ -15,6 +15,12 @@ type Handler interface {
 	//
 	// GET /api/apps
 	GetApps(ctx context.Context) ([]ApplicationMetadata, error)
+	// Ingest implements ingest operation.
+	//
+	// Push data to Pyroscope.
+	//
+	// POST /ingest
+	Ingest(ctx context.Context, req *IngestReqWithContentType, params IngestParams) error
 	// LabelValues implements labelValues operation.
 	//
 	// Returns list of label values.

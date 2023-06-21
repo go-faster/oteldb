@@ -113,6 +113,160 @@ func (s *Server) handleGetAppsRequest(args [0]string, argsEscaped bool, w http.R
 	}
 }
 
+// handleIngestRequest handles ingest operation.
+//
+// Push data to Pyroscope.
+//
+// POST /ingest
+func (s *Server) handleIngestRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("ingest"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/ingest"),
+	}
+
+	// Start a span for this request.
+	ctx, span := s.cfg.Tracer.Start(r.Context(), "Ingest",
+		trace.WithAttributes(otelAttrs...),
+		serverSpanKind,
+	)
+	defer span.End()
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		elapsedDuration := time.Since(startTime)
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		s.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	s.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	var (
+		recordError = func(stage string, err error) {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "Ingest",
+			ID:   "ingest",
+		}
+	)
+	params, err := decodeIngestParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	request, close, err := s.decodeIngestRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
+
+	var response *IngestOK
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:       ctx,
+			OperationName: "Ingest",
+			OperationID:   "ingest",
+			Body:          request,
+			Params: middleware.Parameters{
+				{
+					Name: "name",
+					In:   "query",
+				}: params.Name,
+				{
+					Name: "from",
+					In:   "query",
+				}: params.From,
+				{
+					Name: "until",
+					In:   "query",
+				}: params.Until,
+				{
+					Name: "sampleRate",
+					In:   "query",
+				}: params.SampleRate,
+				{
+					Name: "spyName",
+					In:   "query",
+				}: params.SpyName,
+				{
+					Name: "units",
+					In:   "query",
+				}: params.Units,
+				{
+					Name: "aggregationType",
+					In:   "query",
+				}: params.AggregationType,
+				{
+					Name: "format",
+					In:   "query",
+				}: params.Format,
+			},
+			Raw: r,
+		}
+
+		type (
+			Request  = *IngestReqWithContentType
+			Params   = IngestParams
+			Response = *IngestOK
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			unpackIngestParams,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				err = s.h.Ingest(ctx, request, params)
+				return response, err
+			},
+		)
+	} else {
+		err = s.h.Ingest(ctx, request, params)
+	}
+	if err != nil {
+		recordError("Internal", err)
+		if errRes, ok := errors.Into[*ErrorStatusCode](err); ok {
+			encodeErrorResponse(errRes, w, span)
+			return
+		}
+		if errors.Is(err, ht.ErrNotImplemented) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+			return
+		}
+		encodeErrorResponse(s.h.NewError(ctx, err), w, span)
+		return
+	}
+
+	if err := encodeIngestResponse(response, w, span); err != nil {
+		recordError("EncodeResponse", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+}
+
 // handleLabelValuesRequest handles labelValues operation.
 //
 // Returns list of label values.

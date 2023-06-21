@@ -23,6 +23,15 @@ func (UnimplementedHandler) GetApps(ctx context.Context) (r []ApplicationMetadat
 	return r, ht.ErrNotImplemented
 }
 
+// Ingest implements ingest operation.
+//
+// Push data to Pyroscope.
+//
+// POST /ingest
+func (UnimplementedHandler) Ingest(ctx context.Context, req *IngestReqWithContentType, params IngestParams) error {
+	return ht.ErrNotImplemented
+}
+
 // LabelValues implements labelValues operation.
 //
 // Returns list of label values.

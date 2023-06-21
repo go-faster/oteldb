@@ -72,6 +72,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 					return
 				}
+			case 'i': // Prefix: "ingest"
+				if l := len("ingest"); len(elem) >= l && elem[0:l] == "ingest" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handleIngestRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
 			case 'l': // Prefix: "label"
 				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
 					elem = elem[l:]
@@ -233,6 +251,27 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = "GetApps"
 						r.operationID = "getApps"
 						r.pathPattern = "/api/apps"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+			case 'i': // Prefix: "ingest"
+				if l := len("ingest"); len(elem) >= l && elem[0:l] == "ingest" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "POST":
+						// Leaf: Ingest
+						r.name = "Ingest"
+						r.operationID = "ingest"
+						r.pathPattern = "/ingest"
 						r.args = args
 						r.count = 0
 						return r, true

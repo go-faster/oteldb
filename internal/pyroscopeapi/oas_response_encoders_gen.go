@@ -28,6 +28,13 @@ func encodeGetAppsResponse(response []ApplicationMetadata, w http.ResponseWriter
 	return nil
 }
 
+func encodeIngestResponse(response *IngestOK, w http.ResponseWriter, span trace.Span) error {
+	w.WriteHeader(200)
+	span.SetStatus(codes.Ok, http.StatusText(200))
+
+	return nil
+}
+
 func encodeLabelValuesResponse(response LabelValues, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
