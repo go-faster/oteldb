@@ -30,6 +30,31 @@ func NewSpanFromOTEL(
 		ScopeName:     scope.Name(),
 		ScopeVersion:  scope.Version(),
 		ScopeAttrs:    Attrs(scope.Attributes()),
+		Events:        nil,
+		Links:         nil,
+	}
+	if events := span.Events(); events.Len() > 0 {
+		s.Events = make([]Event, 0, events.Len())
+		for i := 0; i < events.Len(); i++ {
+			event := events.At(i)
+			s.Events = append(s.Events, Event{
+				Timestamp: uint64(event.Timestamp()),
+				Name:      event.Name(),
+				Attrs:     Attrs(event.Attributes()),
+			})
+		}
+	}
+	if links := span.Links(); links.Len() > 0 {
+		s.Links = make([]Link, 0, links.Len())
+		for i := 0; i < links.Len(); i++ {
+			link := links.At(i)
+			s.Links = append(s.Links, Link{
+				TraceID:    TraceID(link.TraceID()),
+				SpanID:     SpanID(link.SpanID()),
+				TraceState: link.TraceState().AsRaw(),
+				Attrs:      Attrs(link.Attributes()),
+			})
+		}
 	}
 
 	return s

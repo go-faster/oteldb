@@ -27,35 +27,79 @@ type Span struct {
 	ScopeName    string `json:"scope_name" yson:"scope_name"`
 	ScopeVersion string `json:"scope_version" yson:"scope_version"`
 	ScopeAttrs   Attrs  `json:"scope_attrs" yson:"scope_attrs"`
+
+	Events []Event `json:"events" yson:"events"`
+	Links  []Link  `json:"links" yson:"links"`
 }
 
 // YTSchema returns YTsaurus table schema for this structure.
 func (Span) YTSchema() schema.Schema {
+	var (
+		traceIDType = schema.TypeBytes
+		spanIDType  = schema.TypeUint64
+		tsType      = schema.TypeUint64
+		attrsType   = schema.Optional{Item: schema.TypeAny}
+
+		eventType = schema.Struct{
+			Members: []schema.StructMember{
+				{Name: "timestamp", Type: tsType},
+				{Name: "name", Type: schema.TypeString},
+				{Name: "attrs", Type: attrsType},
+			},
+		}
+		linkType = schema.Struct{
+			Members: []schema.StructMember{
+				{Name: "trace_id", Type: traceIDType},
+				{Name: "span_id", Type: spanIDType},
+				{Name: "trace_state", Type: schema.TypeString},
+				{Name: "attrs", Type: attrsType},
+			},
+		}
+	)
+
 	return schema.Schema{
 		UniqueKeys: true,
 		Columns: []schema.Column{
 			// FIXME(tdakkota): where is UUID?
-			{Name: "trace_id", ComplexType: schema.TypeBytes, SortOrder: schema.SortAscending},
-			{Name: "span_id", ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
+			{Name: "trace_id", ComplexType: traceIDType, SortOrder: schema.SortAscending},
+			{Name: "span_id", ComplexType: spanIDType, SortOrder: schema.SortAscending},
 			{Name: "trace_state", ComplexType: schema.TypeString},
-			{Name: "parent_span_id", ComplexType: schema.Optional{Item: schema.TypeUint64}},
+			{Name: "parent_span_id", ComplexType: schema.Optional{Item: spanIDType}},
 			{Name: "name", ComplexType: schema.TypeString},
 			{Name: "kind", ComplexType: schema.TypeInt32},
 			// Start and end are nanoseconds, so we can't use Timestamp.
-			{Name: "start", ComplexType: schema.TypeUint64},
-			{Name: "end", ComplexType: schema.TypeUint64},
-			{Name: "attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
+			{Name: "start", ComplexType: tsType},
+			{Name: "end", ComplexType: tsType},
+			{Name: "attrs", ComplexType: attrsType},
 			{Name: "status_code", ComplexType: schema.TypeInt32},
 			{Name: "status_message", ComplexType: schema.TypeString},
 
 			{Name: "batch_id", ComplexType: schema.TypeString},
-			{Name: "resource_attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
+			{Name: "resource_attrs", ComplexType: attrsType},
 
 			{Name: "scope_name", ComplexType: schema.TypeString},
 			{Name: "scope_version", ComplexType: schema.TypeString},
-			{Name: "scope_attrs", ComplexType: schema.Optional{Item: schema.TypeAny}},
+			{Name: "scope_attrs", ComplexType: attrsType},
+
+			{Name: "events", ComplexType: schema.List{Item: eventType}},
+			{Name: "links", ComplexType: schema.List{Item: linkType}},
 		},
 	}
+}
+
+// Event is a Span event.
+type Event struct {
+	Timestamp Timestamp `json:"timestamp" yson:"timestamp"`
+	Name      string    `json:"name" yson:"name"`
+	Attrs     Attrs     `json:"attrs" yson:"attrs"`
+}
+
+// Link is a Span link.
+type Link struct {
+	TraceID    TraceID `json:"trace_id" yson:"trace_id"`
+	SpanID     SpanID  `json:"span_id" yson:"span_id"`
+	TraceState string  `json:"trace_state" yson:"trace_state"`
+	Attrs      Attrs   `json:"attrs" yson:"attrs"`
 }
 
 // Tag is a data structure for tag.
