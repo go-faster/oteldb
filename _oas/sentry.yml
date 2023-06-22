@@ -1,0 +1,525 @@
+openapi: 3.0.3
+info:
+  title: Sentry API
+  version: 0.22.0
+servers:
+  - url: "http://localhost:8000/api/{projectID}"
+    x-ogen-server-name: SentryURL
+    variables:
+      projectID:
+        default: unknown
+paths:
+  /envelope:
+    post:
+      operationId: envelope
+      description: Sentry push
+      requestBody:
+        required: true
+        content:
+          "*/*":
+            schema:
+              type: string
+              format: binary
+      responses:
+        200:
+          description: OK
+        default:
+          $ref: "#/components/responses/Error"
+  /dummy:
+    get:
+      operationId: dummy
+      description: Dummy endpoint to generate schema definitions.
+      responses:
+        200:
+          description: OK
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/Event"
+        default:
+          $ref: "#/components/responses/Error"
+components:
+  responses:
+    Error:
+      description: Error while processing request
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Event:
+      type: object
+      description: |
+        Event is the fundamental data structure that is sent to Sentry.
+        See [this](https://develop.sentry.dev/sdk/event-payloads).
+      required: [event_id, timestamp, platform]
+      properties:
+        breadcrumbs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Breadcrumb"
+        contexts:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Context"
+        dist:
+          type: string
+        environment:
+          type: string
+        event_id:
+          $ref: "#/components/schemas/EventID"
+        extra:
+          type: object
+          additionalProperties: {}
+        fingerprint:
+          type: array
+          items:
+            type: string
+        level:
+          $ref: "#/components/schemas/Level"
+        message:
+          type: string
+        platform:
+          type: string
+        release:
+          type: string
+        sdk:
+          $ref: "#/components/schemas/SdkInfo"
+        server_name:
+          type: string
+        threads:
+          type: array
+          items:
+            $ref: "#/components/schemas/Thread"
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+        timestamp:
+          $ref: "#/components/schemas/Timestamp"
+        transaction:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+        logger:
+          type: string
+        modules:
+          type: object
+          additionalProperties:
+            type: string
+        request:
+          $ref: "#/components/schemas/Request"
+        exception:
+          type: array
+          items:
+            $ref: "#/components/schemas/Exception"
+        debug_meta:
+          $ref: "#/components/schemas/DebugMeta"
+        # The fields below are only relevant for transactions.
+        # FIXME(tdakkota): use an oneOf?
+        type:
+          type: string
+        start_timestamp:
+          $ref: "#/components/schemas/Timestamp"
+        spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Span"
+        transaction_info:
+          $ref: "#/components/schemas/TransactionInfo"
+    Breadcrumb:
+      type: object
+      description: |
+        Breadcrumb specifies an application event that occurred before a Sentry event.
+        An event may contain one or more breadcrumbs.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/breadcrumbs).
+      properties:
+        type:
+          type: string
+        category:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties: {}
+        level:
+          $ref: "#/components/schemas/Level"
+        timestamp:
+          $ref: "#/components/schemas/Timestamp"
+    Context:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/contexts/).
+      additionalProperties: {}
+    EventID:
+      type: string
+      pattern: "[0-9a-f]{32}"
+    Level:
+      type: string
+    SdkInfo:
+      type: object
+      description: |
+        SdkInfo contains all metadata about about the SDK being used.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/sdk/).
+      required: [version]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        integrations:
+          type: array
+          items:
+            type: string
+        packages:
+          type: array
+          items:
+            $ref: "#/components/schemas/SdkPackage"
+    SdkPackage:
+      type: object
+      description: |
+        SdkPackage describes a package that was installed.
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+    Thread:
+      type: object
+      description: |
+        Thread specifies threads that were running at the time of an event.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/threads/).
+      required: [id]
+      properties:
+        id:
+          type: string
+        crashed:
+          type: boolean
+        current:
+          type: boolean
+        main:
+          type: boolean
+        name:
+          type: string
+        state:
+          type: string
+        held_locks:
+          type: object
+          additionalProperties: {}
+    Stacktrace:
+      type: object
+      properties:
+        frames:
+          type: array
+          items:
+            $ref: "#/components/schemas/Frame"
+        registers:
+          type: object
+          additionalProperties:
+            type: string
+    Frame:
+      type: object
+      description:
+        Frame represents a function call and it's metadata. Frames are associated with a Stacktrace.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/stacktrace/).
+      properties:
+        function:
+          type: string
+        symbol:
+          type: string
+        module:
+          type: string
+        filename:
+          type: string
+        abs_path:
+          type: string
+        lineno:
+          type: integer
+        colno:
+          type: integer
+        pre_context:
+          type: array
+          items:
+            type: string
+        context_line:
+          type: string
+        post_context:
+          type: array
+          items:
+            type: string
+        in_app:
+          type: boolean
+        vars:
+          type: object
+          additionalProperties: {}
+        package:
+          type: string
+        instruction_addr:
+          type: string
+        addr_mode:
+          type: string
+        symbol_addr:
+          type: string
+        image_addr:
+          type: string
+        platform:
+          type: string
+        stack_start:
+          type: boolean
+    User:
+      type: object
+      description: |
+        User describes the user associated with an Event. If this is used, at least
+        an ID or an IP address should be provided.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/user/).
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        ip_address:
+          type: string
+        username:
+          type: string
+        name:
+          type: string
+        segment:
+          type: string
+      additionalProperties: {}
+    Request:
+      type: object
+      description: |
+        Request contains information on a HTTP request related to the event.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/request/).
+      properties:
+        url:
+          type: string
+        method:
+          type: string
+        data:
+          type: string
+        query_string:
+          type: string
+        cookies:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        env:
+          type: object
+          additionalProperties:
+            type: string
+    Exception:
+      type: object
+      description: |
+        Exception specifies an error that occurred.
+
+        See [this](https://develop.sentry.dev/sdk/event-payloads/exception/).
+      required: [type, value]
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+        module:
+          type: string
+        thread_id:
+          type: string
+        stacktrace:
+          $ref: "#/components/schemas/Stacktrace"
+        mechanism:
+          $ref: "#/components/schemas/Mechanism"
+    Mechanism:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/exception/#exception-mechanism).
+      required: [type]
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        help_link:
+          type: string
+        handled:
+          type: boolean
+        synthetic:
+          type: boolean
+        meta:
+          type: object
+          properties:
+            signal:
+              $ref: "#/components/schemas/Signal"
+            mach_exception:
+              $ref: "#/components/schemas/MachException"
+            ns_error:
+              $ref: "#/components/schemas/NSError"
+            errno:
+              $ref: "#/components/schemas/Errno"
+        data:
+          type: object
+          additionalProperties: {}
+    Signal:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/exception/#signal).
+      required: [number]
+      properties:
+        number:
+          type: integer
+        code:
+          type: integer
+        name:
+          type: string
+        code_name:
+          type: string
+    MachException:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/exception/#mach_exception).
+      required: [exception, code, subcode]
+      properties:
+        exception:
+          type: integer
+        code:
+          type: integer
+        subcode:
+          type: integer
+        name:
+          type: string
+    NSError:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/exception/#ns_error).
+      required: [code]
+      properties:
+        code:
+          type: integer
+        domain:
+          type: string
+    Errno:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/exception/#errno).
+      required: [number]
+      properties:
+        number:
+          type: integer
+        name:
+          type: string
+    DebugMeta:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/debugmeta).
+      properties:
+        sdk_info:
+          $ref: "#/components/schemas/DebugMetaSdkInfo"
+        images:
+          $ref: "#/components/schemas/DebugImage"
+    DebugMetaSdkInfo:
+      type: object
+      properties:
+        sdk_name:
+          type: string
+        version_major:
+          type: integer
+        version_minor:
+          type: integer
+        version_patchlevel:
+          type: integer
+    DebugImage:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/debugmeta#debug-images).
+      # FIXME(tdakkota): use an oneOf?
+      required: [type]
+      properties:
+        type:
+          # all
+          type: string
+        image_addr:
+          # macho,elf,pe
+          type: string
+        image_size:
+          # macho,elf,pe
+          type: integer
+        debug_id:
+          # macho,elf,pe,wasm,sourcemap
+          type: string
+        debug_file:
+          # macho,elf,pe,wasm
+          type: string
+        code_id:
+          # macho,elf,pe,wasm
+          type: string
+        code_file:
+          # macho,elf,pe,wasm,sourcemap
+          type: string
+        image_vmaddr:
+          # macho,elf,pe
+          type: string
+        arch:
+          # macho,elf,pe
+          type: string
+        uuid:
+          # proguard
+          type: string
+    Span:
+      type: object
+      description: |
+        See [this](https://develop.sentry.dev/sdk/event-payloads/span).
+      required: [trace_id, span_id, start_timestamp, timestamp]
+      properties:
+        trace_id:
+          $ref: "#/components/schemas/TraceID"
+        span_id:
+          $ref: "#/components/schemas/SpanID"
+        parent_span_id:
+          $ref: "#/components/schemas/SpanID"
+        name:
+          type: string
+        op:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+        start_timestamp:
+          $ref: "#/components/schemas/Timestamp"
+        timestamp:
+          $ref: "#/components/schemas/Timestamp"
+        data:
+          type: object
+          additionalProperties: {}
+    TraceID:
+      type: string
+      pattern: "[[:xdigit:]]{32}"
+    SpanID:
+      type: string
+      pattern: "[[:xdigit:]]{16}"
+    TransactionInfo:
+      type: object
+      required: [source]
+      properties:
+        source:
+          $ref: "#/components/schemas/TransactionSource"
+    TransactionSource:
+      type: string
+      # FIXME(tdakkota): use enum from https://develop.sentry.dev/sdk/event-payloads/transaction/#transaction-annotations?
+    Timestamp:
+      type: string
+      format: date-time
+    Error:
+      type: string
