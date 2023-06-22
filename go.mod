@@ -3,7 +3,7 @@ module github.com/go-faster/oteldb
 go 1.20
 
 require (
-	github.com/ClickHouse/ch-go v0.56.1
+	github.com/ClickHouse/ch-go v0.57.0
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/go-faster/errors v0.6.1
 	github.com/go-faster/jx v1.0.0
@@ -98,7 +98,7 @@ require (
 	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
-	github.com/pierrec/lz4/v4 v4.1.17 // indirect
+	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
