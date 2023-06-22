@@ -23,7 +23,7 @@ require (
 	go.opentelemetry.io/collector/extension v0.80.0
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0013
 	go.opentelemetry.io/collector/receiver v0.80.0
-	go.opentelemetry.io/collector/receiver/otlpreceiver v0.79.0
+	go.opentelemetry.io/collector/receiver/otlpreceiver v0.80.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/bridge/opentracing v1.16.0
