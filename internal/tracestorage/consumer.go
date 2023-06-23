@@ -7,11 +7,7 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
-
-	"github.com/go-faster/oteldb/internal/otelreceiver"
 )
-
-var _ otelreceiver.Consumer = (*Consumer)(nil)
 
 // Consumer consumes given traces and inserts them using given Inserter.
 type Consumer struct {

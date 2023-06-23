@@ -13,6 +13,8 @@ import (
 	"go.opentelemetry.io/collector/exporter/exportertest"
 	"go.opentelemetry.io/collector/extension"
 	"go.opentelemetry.io/collector/otelcol"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/otel"
@@ -26,15 +28,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// Consumer is a trace consumer.
-type Consumer interface {
-	ConsumeTraces(ctx context.Context, td ptrace.Traces) error
-}
-
 // Receiver is a OpenTelemetry-compatible trace receiver.
-type Receiver[C Consumer] struct {
-	consumer  C
-	receivers []receiver.Traces
+type Receiver struct {
+	receivers []component.Component
 
 	fatal     chan struct{}
 	fatalOnce sync.Once
@@ -42,7 +38,6 @@ type Receiver[C Consumer] struct {
 }
 
 var defaultReceivers = map[string]any{
-	// },
 	"otlp": map[string]any{
 		"protocols": map[string]any{
 			"grpc": nil,
@@ -75,12 +70,11 @@ func (cfg *ReceiverConfig) setDefaults() {
 }
 
 // NewReceiver setups trace receiver.
-func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
+func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 	cfg.setDefaults()
-	shim := &Receiver[C]{
-		consumer: c,
-		fatal:    make(chan struct{}),
-		logger:   cfg.Logger.Named("shim"),
+	shim := &Receiver{
+		fatal:  make(chan struct{}),
+		logger: cfg.Logger.Named("shim"),
 	}
 
 	receiverFactories, err := receiver.MakeFactoryMap(otlpreceiver.NewFactory())
@@ -94,6 +88,65 @@ func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 		receivers = append(receivers, k)
 	}
 
+	var (
+		tracesConsumer  consumer.Traces
+		metricsConsumer consumer.Metrics
+		logsConsumer    consumer.Logs
+
+		pipelines = map[string]any{}
+	)
+	if impl := consumers.Traces; impl != nil {
+		tracesConsumer, err = consumer.NewTraces(func(ctx context.Context, ld ptrace.Traces) error {
+			if err := impl.ConsumeTraces(ctx, ld); err != nil {
+				shim.logger.Error("Consume traces", zap.Error(err))
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "create traces consumer")
+		}
+
+		pipelines["traces"] = map[string]any{
+			"exporters": []string{"nop"}, // nop exporter to avoid errors
+			"receivers": receivers,
+		}
+	}
+	if impl := consumers.Metrics; impl != nil {
+		metricsConsumer, err = consumer.NewMetrics(func(ctx context.Context, ld pmetric.Metrics) error {
+			if err := impl.ConsumeMetrics(ctx, ld); err != nil {
+				shim.logger.Error("Consume metrics", zap.Error(err))
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "create metrics consumer")
+		}
+
+		pipelines["metrics"] = map[string]any{
+			"exporters": []string{"nop"}, // nop exporter to avoid errors
+			"receivers": receivers,
+		}
+	}
+	if impl := consumers.Logs; impl != nil {
+		logsConsumer, err = consumer.NewLogs(func(ctx context.Context, ld plog.Logs) error {
+			if err := impl.ConsumeLogs(ctx, ld); err != nil {
+				shim.logger.Error("Consume logs", zap.Error(err))
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "create logs consumer")
+		}
+
+		pipelines["logs"] = map[string]any{
+			"exporters": []string{"nop"}, // nop exporter to avoid errors
+			"receivers": receivers,
+		}
+	}
+	if len(pipelines) == 0 {
+		return nil, errors.New("at least one consumer must be set")
+	}
+
 	// Creates a config provider with the given config map.
 	// The provider will be used to retrieve the actual config for the pipeline (although we only need the receivers).
 	pro, err := otelcol.NewConfigProvider(otelcol.ConfigProviderSettings{
@@ -105,12 +158,7 @@ func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 					"nop": map[string]any{},
 				},
 				"service": map[string]any{
-					"pipelines": map[string]any{
-						"traces": map[string]any{
-							"exporters": []string{"nop"}, // nop exporter to avoid errors
-							"receivers": receivers,
-						},
-					},
+					"pipelines": pipelines,
 				},
 			}}},
 		},
@@ -125,11 +173,6 @@ func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 		Receivers: receiverFactories,
 		Exporters: map[component.Type]exporter.Factory{"nop": exportertest.NewNopFactory()}, // nop exporter to avoid errors
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	traceConsumer, err := consumer.NewTraces(shim.consumer.ConsumeTraces)
 	if err != nil {
 		return nil, err
 	}
@@ -155,28 +198,72 @@ func NewReceiver[C Consumer](c C, cfg ReceiverConfig) (*Receiver[C], error) {
 		if name := string(componentID.Type()); name != "" {
 			logger = logger.Named(name)
 		}
-		params := receiver.CreateSettings{
-			TelemetrySettings: component.TelemetrySettings{
-				Logger:         logger,
-				TracerProvider: cfg.TracerProvider,
-				MeterProvider:  cfg.MeterProvider,
-			},
-		}
 
-		recv, err := factoryBase.CreateTracesReceiver(ctx, params, componentCfg, traceConsumer)
-		if err != nil {
-			return nil, err
-		}
+		if c := tracesConsumer; c != nil {
+			params := receiver.CreateSettings{
+				TelemetrySettings: component.TelemetrySettings{
+					Logger:         logger.Named("traces"),
+					TracerProvider: cfg.TracerProvider,
+					MeterProvider:  cfg.MeterProvider,
+				},
+			}
 
-		shim.receivers = append(shim.receivers, recv)
+			recv, err := factoryBase.CreateTracesReceiver(ctx, params, componentCfg, c)
+			if err != nil {
+				if errors.Is(err, component.ErrDataTypeIsNotSupported) {
+					continue
+				}
+				return nil, errors.Wrap(err, "create traces receiver")
+			}
+
+			shim.receivers = append(shim.receivers, recv)
+		}
+		if c := metricsConsumer; c != nil {
+			params := receiver.CreateSettings{
+				TelemetrySettings: component.TelemetrySettings{
+					Logger:         logger.Named("metrics"),
+					TracerProvider: cfg.TracerProvider,
+					MeterProvider:  cfg.MeterProvider,
+				},
+			}
+
+			recv, err := factoryBase.CreateMetricsReceiver(ctx, params, componentCfg, c)
+			if err != nil {
+				if errors.Is(err, component.ErrDataTypeIsNotSupported) {
+					continue
+				}
+				return nil, errors.Wrap(err, "create metrics receiver")
+			}
+
+			shim.receivers = append(shim.receivers, recv)
+		}
+		if c := logsConsumer; c != nil {
+			params := receiver.CreateSettings{
+				TelemetrySettings: component.TelemetrySettings{
+					Logger:         logger.Named("logs"),
+					TracerProvider: cfg.TracerProvider,
+					MeterProvider:  cfg.MeterProvider,
+				},
+			}
+
+			recv, err := factoryBase.CreateLogsReceiver(ctx, params, componentCfg, c)
+			if err != nil {
+				if errors.Is(err, component.ErrDataTypeIsNotSupported) {
+					continue
+				}
+				return nil, errors.Wrap(err, "create logs receiver")
+			}
+
+			shim.receivers = append(shim.receivers, recv)
+		}
 	}
 
 	return shim, nil
 }
 
 // Run setups corresponding listeners.
-func (r *Receiver[H]) Run(ctx context.Context) (rerr error) {
-	var running []receiver.Traces
+func (r *Receiver) Run(ctx context.Context) (rerr error) {
+	var running []component.Component
 	defer func() {
 		multierr.AppendInto(&rerr, shutdown(running))
 	}()
@@ -196,7 +283,7 @@ func (r *Receiver[H]) Run(ctx context.Context) (rerr error) {
 	return nil
 }
 
-func shutdown(receivers []receiver.Traces) error {
+func shutdown(receivers []component.Component) error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -210,16 +297,8 @@ func shutdown(receivers []receiver.Traces) error {
 	return multierr.Combine(errs...)
 }
 
-func (r *Receiver[H]) consume(ctx context.Context, traces ptrace.Traces) error {
-	// TODO(tdakkota): instrument?
-	if err := r.consumer.ConsumeTraces(ctx, traces); err != nil {
-		r.logger.Error("Consume failed", zap.Error(err))
-	}
-	return nil
-}
-
 // ReportFatalError implements component.Host
-func (r *Receiver[H]) ReportFatalError(err error) {
+func (r *Receiver) ReportFatalError(err error) {
 	r.logger.Error("Fatal receiver error", zap.Error(err))
 	r.fatalOnce.Do(func() {
 		close(r.fatal)
@@ -227,14 +306,14 @@ func (r *Receiver[H]) ReportFatalError(err error) {
 }
 
 // GetFactory implements component.Host
-func (r *Receiver[H]) GetFactory(component.Kind, component.Type) component.Factory {
+func (r *Receiver) GetFactory(component.Kind, component.Type) component.Factory {
 	return nil
 }
 
 // GetExtensions implements component.Host
-func (r *Receiver[H]) GetExtensions() map[component.ID]extension.Extension { return nil }
+func (r *Receiver) GetExtensions() map[component.ID]extension.Extension { return nil }
 
 // GetExporters implements component.Host
-func (r *Receiver[H]) GetExporters() map[component.DataType]map[component.ID]component.Component {
+func (r *Receiver) GetExporters() map[component.DataType]map[component.ID]component.Component {
 	return nil
 }

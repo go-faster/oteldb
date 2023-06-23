@@ -198,12 +198,16 @@ func main() {
 			return errors.Wrap(err, "create Tempo API")
 		}
 
-		c := tracestorage.NewConsumer(inserter)
-		recv, err := otelreceiver.NewReceiver(c, otelreceiver.ReceiverConfig{
-			Logger:         lg.Named("receiver"),
-			TracerProvider: m.TracerProvider(),
-			MeterProvider:  m.MeterProvider(),
-		})
+		recv, err := otelreceiver.NewReceiver(
+			otelreceiver.Consumers{
+				Traces: tracestorage.NewConsumer(inserter),
+			},
+			otelreceiver.ReceiverConfig{
+				Logger:         lg.Named("receiver"),
+				TracerProvider: m.TracerProvider(),
+				MeterProvider:  m.MeterProvider(),
+			},
+		)
 		if err != nil {
 			return errors.Wrap(err, "create OTEL receiver")
 		}
