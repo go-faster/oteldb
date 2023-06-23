@@ -30,7 +30,7 @@ func NewInserter(c *chpool.Pool, tables Tables) *Inserter {
 func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) error {
 	c := newSpanColumns()
 	for _, s := range spans {
-		c.Append(s)
+		c.AddRow(s)
 	}
 	input := c.Input()
 	return i.ch.Do(ctx, ch.Query{

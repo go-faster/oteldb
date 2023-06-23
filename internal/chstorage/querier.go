@@ -159,7 +159,7 @@ func (q *Querier) querySpans(ctx context.Context, query string) (tracestorage.It
 		Body:   query,
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			r = c.CollectAppend(r)
+			r = c.ReadRowsTo(r)
 			return nil
 		},
 	}); err != nil {
