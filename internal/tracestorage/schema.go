@@ -4,9 +4,6 @@ import (
 	"go.ytsaurus.tech/yt/go/schema"
 )
 
-// Timestamp is a tracestorage timestamp.
-type Timestamp = uint64
-
 // Span is a data structure for span.
 type Span struct {
 	TraceID       TraceID   `json:"trace_id" yson:"trace_id"`

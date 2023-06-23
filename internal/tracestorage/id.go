@@ -90,9 +90,20 @@ var (
 	_ yson.StreamUnmarshaler = (*SpanID)(nil)
 )
 
+// SpanIDFromUint64 creates new SpanID from uint64.
+func SpanIDFromUint64(v uint64) (r SpanID) {
+	binary.LittleEndian.PutUint64(r[:], v)
+	return r
+}
+
 // IsEmpty returns true if span ID is empty.
 func (id SpanID) IsEmpty() bool {
 	return pcommon.SpanID(id).IsEmpty()
+}
+
+// AsUint64 returns span ID as LittleEndian uint64.
+func (id SpanID) AsUint64() uint64 {
+	return binary.LittleEndian.Uint64(id[:])
 }
 
 // Hex returns a hex representation of SpanID.

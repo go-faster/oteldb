@@ -20,8 +20,8 @@ func NewSpanFromOTEL(
 		ParentSpanID:  SpanID(span.ParentSpanID()),
 		Name:          span.Name(),
 		Kind:          int32(span.Kind()),
-		Start:         uint64(span.StartTimestamp()),
-		End:           uint64(span.EndTimestamp()),
+		Start:         span.StartTimestamp(),
+		End:           span.EndTimestamp(),
 		Attrs:         Attrs(span.Attributes()),
 		StatusCode:    int32(status.Code()),
 		StatusMessage: status.Message(),
@@ -38,7 +38,7 @@ func NewSpanFromOTEL(
 		for i := 0; i < events.Len(); i++ {
 			event := events.At(i)
 			s.Events = append(s.Events, Event{
-				Timestamp: uint64(event.Timestamp()),
+				Timestamp: event.Timestamp(),
 				Name:      event.Name(),
 				Attrs:     Attrs(event.Attributes()),
 			})
@@ -71,8 +71,8 @@ func (span Span) FillOTELSpan(s ptrace.Span) {
 	}
 	s.SetName(span.Name)
 	s.SetKind(ptrace.SpanKind(span.Kind))
-	s.SetStartTimestamp(pcommon.Timestamp(span.Start))
-	s.SetEndTimestamp(pcommon.Timestamp(span.End))
+	s.SetStartTimestamp(span.Start)
+	s.SetEndTimestamp(span.End)
 	span.Attrs.CopyTo(s.Attributes())
 
 	status := s.Status()
