@@ -15,14 +15,32 @@ var testTraceID = TraceID{
 }
 
 func TestTraceIDYSON(t *testing.T) {
-	id := testTraceID
-	data, err := yson.Marshal(id)
-	require.NoError(t, err)
+	tests := []struct {
+		ID TraceID
+	}{
+		{testTraceID},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			id := tt.ID
 
-	var id2 TraceID
-	require.NoError(t, yson.Unmarshal(data, &id2))
+			data, err := yson.Marshal(id)
+			require.NoError(t, err)
 
-	require.Equal(t, id, id2)
+			var id2 TraceID
+			require.NoError(t, yson.Unmarshal(data, &id2))
+
+			require.Equal(t, id, id2)
+		})
+	}
+	t.Run("NilCheck", func(t *testing.T) {
+		var idNil *TraceID
+		require.EqualError(t,
+			idNil.UnmarshalYSON(yson.NewReader(nil)),
+			"can't unmarshal to (*tracestorage.TraceID)(nil)",
+		)
+	})
 }
 
 func TestTraceID_Hex(t *testing.T) {
@@ -55,6 +73,13 @@ func TestSpanIDYSON(t *testing.T) {
 			require.Equal(t, id, id2)
 		})
 	}
+	t.Run("NilCheck", func(t *testing.T) {
+		var idNil *SpanID
+		require.EqualError(t,
+			idNil.UnmarshalYSON(yson.NewReader(nil)),
+			"can't unmarshal to (*tracestorage.SpanID)(nil)",
+		)
+	})
 }
 
 func TestSpanID_Hex(t *testing.T) {

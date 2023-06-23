@@ -68,6 +68,9 @@ func (id TraceID) MarshalYSON(w *yson.Writer) error {
 
 // UnmarshalYSON implemenets yson.StreamUnmarshaler.
 func (id *TraceID) UnmarshalYSON(r *yson.Reader) error {
+	if id == nil {
+		return errors.Errorf("can't unmarshal to %#v", id)
+	}
 	if err := consumeYsonLiteral(r, yson.TypeString); err != nil {
 		return err
 	}
@@ -123,13 +126,16 @@ func (id SpanID) MarshalYSON(w *yson.Writer) error {
 	if id.IsEmpty() {
 		w.Entity()
 	} else {
-		w.Uint64(binary.LittleEndian.Uint64(id[:]))
+		w.Uint64(id.AsUint64())
 	}
 	return nil
 }
 
 // UnmarshalYSON implemenets yson.StreamUnmarshaler.
 func (id *SpanID) UnmarshalYSON(r *yson.Reader) error {
+	if id == nil {
+		return errors.Errorf("can't unmarshal to %#v", id)
+	}
 	if err := ysonNext(r, yson.EventLiteral, false); err != nil {
 		return err
 	}
@@ -139,8 +145,7 @@ func (id *SpanID) UnmarshalYSON(r *yson.Reader) error {
 		*id = SpanID{}
 		return nil
 	case yson.TypeUint64:
-		v := r.Uint64()
-		binary.LittleEndian.PutUint64(id[:], v)
+		*id = SpanIDFromUint64(r.Uint64())
 		return nil
 	default:
 		return errors.Errorf("expected %s or %s, got %s", yson.TypeEntity, yson.TypeUint64, got)
