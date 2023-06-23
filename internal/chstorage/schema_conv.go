@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/go-faster/oteldb/internal/tracestorage"
 	"golang.org/x/exp/constraints"
+
+	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 func getSpanID(v uint64) (r tracestorage.SpanID) {
