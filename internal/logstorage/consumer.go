@@ -3,7 +3,7 @@ package logstorage
 import (
 	"context"
 
-	"github.com/pkg/errors"
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 )
