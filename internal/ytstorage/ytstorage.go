@@ -9,20 +9,25 @@ import (
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 
+	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 // Tables define table paths.
 type Tables struct {
-	spans ypath.Path
-	tags  ypath.Path
+	spans     ypath.Path
+	tags      ypath.Path
+	logs      ypath.Path
+	logLabels ypath.Path
 }
 
 // NewTables creates new Tables with given path prefix.
 func NewTables(prefix ypath.Path) Tables {
 	return Tables{
-		spans: prefix.Child("spans"),
-		tags:  prefix.Child("tags"),
+		spans:     prefix.Child("spans"),
+		tags:      prefix.Child("tags"),
+		logs:      prefix.Child("logs"),
+		logLabels: prefix.Child("log_labels"),
 	}
 }
 
@@ -35,6 +40,12 @@ func (s *Tables) Migrate(ctx context.Context, yc yt.Client, onConflict migrate.C
 		},
 		s.tags: {
 			Schema: tracestorage.Tag{}.YTSchema(),
+		},
+		s.logs: {
+			Schema: logstorage.Record{}.YTSchema(),
+		},
+		s.logLabels: {
+			Schema: logstorage.Label{}.YTSchema(),
 		},
 	}
 	if err := migrate.EnsureTables(ctx, yc, tables, onConflict); err != nil {
