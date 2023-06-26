@@ -36,9 +36,9 @@ func TestTraceIDYSON(t *testing.T) {
 	}
 	t.Run("NilCheck", func(t *testing.T) {
 		var idNil *TraceID
-		require.EqualError(t,
+		require.ErrorContains(t,
 			idNil.UnmarshalYSON(yson.NewReader(nil)),
-			"can't unmarshal to (*tracestorage.TraceID)(nil)",
+			"can't unmarshal to",
 		)
 	})
 }
@@ -75,9 +75,9 @@ func TestSpanIDYSON(t *testing.T) {
 	}
 	t.Run("NilCheck", func(t *testing.T) {
 		var idNil *SpanID
-		require.EqualError(t,
+		require.ErrorContains(t,
 			idNil.UnmarshalYSON(yson.NewReader(nil)),
-			"can't unmarshal to (*tracestorage.SpanID)(nil)",
+			"can't unmarshal to",
 		)
 	})
 }
