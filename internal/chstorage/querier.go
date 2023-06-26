@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-faster/errors"
 
+	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -32,7 +33,7 @@ func NewQuerier(c *chpool.Pool, tables Tables) *Querier {
 }
 
 // SearchTags performs search by given tags.
-func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (iterators.Iterator[tracestorage.Span], error) {
 	var query strings.Builder
 	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
 		SELECT trace_id FROM %#[1]q WHERE true
@@ -108,7 +109,7 @@ func (q *Querier) TagNames(ctx context.Context) (r []string, _ error) {
 }
 
 // TagValues returns all available tag values for given tag.
-func (q *Querier) TagValues(ctx context.Context, tagName string) (tracestorage.Iterator[tracestorage.Tag], error) {
+func (q *Querier) TagValues(ctx context.Context, tagName string) (iterators.Iterator[tracestorage.Tag], error) {
 	var (
 		value     proto.ColStr
 		valueType proto.ColEnum8
@@ -137,11 +138,11 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (tracestorage.I
 		return nil, errors.Wrap(err, "query")
 	}
 
-	return tracestorage.NewSliceIterator(r), nil
+	return iterators.Slice(r), nil
 }
 
 // TraceByID returns spans of given trace.
-func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (iterators.Iterator[tracestorage.Span], error) {
 	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = %s", q.tables.Spans, singleQuoted(id.Hex()))
 	if s := opts.Start; s != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)
@@ -152,7 +153,7 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 	return q.querySpans(ctx, query)
 }
 
-func (q *Querier) querySpans(ctx context.Context, query string) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Iterator[tracestorage.Span], error) {
 	c := newSpanColumns()
 
 	var r []tracestorage.Span
@@ -167,5 +168,5 @@ func (q *Querier) querySpans(ctx context.Context, query string) (tracestorage.It
 		return nil, errors.Wrap(err, "query")
 	}
 
-	return tracestorage.NewSliceIterator(r), nil
+	return iterators.Slice(r), nil
 }

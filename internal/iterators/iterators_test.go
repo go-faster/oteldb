@@ -1,4 +1,4 @@
-package tracestorage
+package iterators
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 
 func TestEmptyIterator(t *testing.T) {
 	a := require.New(t)
-	ei := &EmptyIterator[int]{}
+	ei := Empty[int]()
 
 	a.NoError(ForEach[int](ei, func(int) error {
 		a.Fail("Must not be called")
@@ -31,7 +31,7 @@ func TestSliceIterator(t *testing.T) {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			a := require.New(t)
-			si := NewSliceIterator(tt.values)
+			si := Slice(tt.values)
 
 			got := make([]int, 0, len(tt.values))
 			a.NoError(ForEach[int](si, func(v int) error {

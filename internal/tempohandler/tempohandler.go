@@ -1,4 +1,4 @@
-// Package tempohandler provides TempoAPI implementation.
+// Package tempohandler provides Tempo API implementation.
 package tempohandler
 
 import (
@@ -16,6 +16,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 
+	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -77,7 +78,7 @@ func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (re
 	c := metadataCollector{
 		limit: params.Limit.Or(20),
 	}
-	if err := tracestorage.ForEach(i, c.AddSpan); err != nil {
+	if err := iterators.ForEach(i, c.AddSpan); err != nil {
 		return nil, errors.Wrap(err, "map spans")
 	}
 
@@ -118,7 +119,7 @@ func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTa
 	}()
 
 	var values []string
-	if err := tracestorage.ForEach(iter, func(tag tracestorage.Tag) error {
+	if err := iterators.ForEach(iter, func(tag tracestorage.Tag) error {
 		values = append(values, tag.Value)
 		return nil
 	}); err != nil {
@@ -152,7 +153,7 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 	}()
 
 	var values []tempoapi.TagValue
-	if err := tracestorage.ForEach(iter, func(tag tracestorage.Tag) error {
+	if err := iterators.ForEach(iter, func(tag tracestorage.Tag) error {
 		// TODO(tdakkota): handle duration/status and things
 		// https://github.com/grafana/tempo/blob/991d72281e5168080f426b3f1c9d5c4b88f7c460/modules/ingester/instance_search.go#L379
 		var typ string
@@ -234,7 +235,7 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 	}()
 
 	var c batchCollector
-	if err := tracestorage.ForEach(iter, c.AddSpan); err != nil {
+	if err := iterators.ForEach(iter, c.AddSpan); err != nil {
 		return nil, errors.Wrap(err, "map spans")
 	}
 

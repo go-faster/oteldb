@@ -1,4 +1,5 @@
-package tracestorage
+// Package iterators define storage iterator interfaces and some utilities.
+package iterators
 
 // Iterator is an storage iterator interface.
 type Iterator[T any] interface {
@@ -28,6 +29,11 @@ var _ Iterator[any] = (*EmptyIterator[any])(nil)
 // EmptyIterator returns zero elements.
 type EmptyIterator[T any] struct{}
 
+// Empty creates new empty iterator
+func Empty[T any]() *EmptyIterator[T] {
+	return &EmptyIterator[T]{}
+}
+
 // Next returns true, if there is element and fills t.
 func (i *EmptyIterator[T]) Next(*T) bool {
 	return false
@@ -51,8 +57,8 @@ type SliceIterator[T any] struct {
 	n    int
 }
 
-// NewSliceIterator creates new SliceIterator from given values.
-func NewSliceIterator[T any](vals []T) *SliceIterator[T] {
+// Slice creates new SliceIterator from given values.
+func Slice[T any](vals []T) *SliceIterator[T] {
 	return &SliceIterator[T]{
 		data: vals,
 		n:    0,

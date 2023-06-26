@@ -9,6 +9,7 @@ import (
 	"go.ytsaurus.tech/yt/go/yt"
 	"golang.org/x/exp/maps"
 
+	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -30,7 +31,7 @@ func NewYTQLQuerier(yc yt.TabletClient, tables Tables) *YTQLQuerier {
 }
 
 // SearchTags performs search by given tags.
-func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (iterators.Iterator[tracestorage.Span], error) {
 	var traceIDQuery strings.Builder
 
 	fmt.Fprintf(&traceIDQuery, "trace_id FROM [%s] WHERE true", q.tables.spans)
@@ -77,7 +78,7 @@ func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, op
 	}
 
 	if len(traces) == 0 {
-		return &tracestorage.EmptyIterator[tracestorage.Span]{}, nil
+		return iterators.Empty[tracestorage.Span](), nil
 	}
 
 	// Then, query all spans for each found trace ID.
@@ -113,7 +114,7 @@ func (q *YTQLQuerier) TagNames(ctx context.Context) ([]string, error) {
 // TagValues returns all available tag values for given tag.
 //
 // If there is no such tag, returns ErrNotFound.
-func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (tracestorage.Iterator[tracestorage.Tag], error) {
+func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (iterators.Iterator[tracestorage.Tag], error) {
 	query := fmt.Sprintf("* FROM [%s] WHERE name = %q", q.tables.tags, tagName)
 	r, err := q.yc.SelectRows(ctx, query, nil)
 	if err != nil {
@@ -125,7 +126,7 @@ func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (tracestora
 // TraceByID returns spans of given trace.
 //
 // If there is no such trace, returns ErrNotFound.
-func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (iterators.Iterator[tracestorage.Span], error) {
 	query := fmt.Sprintf("* FROM [%s] WHERE trace_id = %q", q.tables.spans, id[:])
 
 	if s := opts.Start; s != 0 {
@@ -142,7 +143,7 @@ func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opt
 	return &ytIterator[tracestorage.Span]{reader: r}, nil
 }
 
-var _ tracestorage.Iterator[any] = (*ytIterator[any])(nil)
+var _ iterators.Iterator[any] = (*ytIterator[any])(nil)
 
 type ytIterator[T any] struct {
 	reader yt.TableReader

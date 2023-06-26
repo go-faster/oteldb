@@ -5,21 +5,22 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // Querier is a trace storage query interface.
 type Querier interface {
 	// SearchTags performs search by given tags.
-	SearchTags(ctx context.Context, tags map[string]string, opts SearchTagsOptions) (Iterator[Span], error)
+	SearchTags(ctx context.Context, tags map[string]string, opts SearchTagsOptions) (iterators.Iterator[Span], error)
 
 	// TagNames returns all available tag names.
 	TagNames(ctx context.Context) ([]string, error)
 	// TagValues returns all available tag values for given tag.
-	TagValues(ctx context.Context, tagName string) (Iterator[Tag], error)
+	TagValues(ctx context.Context, tagName string) (iterators.Iterator[Tag], error)
 
 	// TraceByID returns spans of given trace.
-	TraceByID(ctx context.Context, id otelstorage.TraceID, opts TraceByIDOptions) (Iterator[Span], error)
+	TraceByID(ctx context.Context, id otelstorage.TraceID, opts TraceByIDOptions) (iterators.Iterator[Span], error)
 }
 
 // SearchTagsOptions defines options for SearchTags method.
