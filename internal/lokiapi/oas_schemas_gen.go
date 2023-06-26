@@ -104,6 +104,8 @@ func (s *Labels) SetStatus(val string) {
 	s.Status = val
 }
 
+type LokiTime string
+
 // Array of maps.
 // Ref: #/components/schemas/Maps
 type Maps struct {
@@ -234,38 +236,38 @@ func (o OptInt) Or(d int) int {
 	return d
 }
 
-// NewOptInt64 returns new OptInt64 with value set to v.
-func NewOptInt64(v int64) OptInt64 {
-	return OptInt64{
+// NewOptLokiTime returns new OptLokiTime with value set to v.
+func NewOptLokiTime(v LokiTime) OptLokiTime {
+	return OptLokiTime{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptInt64 is optional int64.
-type OptInt64 struct {
-	Value int64
+// OptLokiTime is optional LokiTime.
+type OptLokiTime struct {
+	Value LokiTime
 	Set   bool
 }
 
-// IsSet returns true if OptInt64 was set.
-func (o OptInt64) IsSet() bool { return o.Set }
+// IsSet returns true if OptLokiTime was set.
+func (o OptLokiTime) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptInt64) Reset() {
-	var v int64
+func (o *OptLokiTime) Reset() {
+	var v LokiTime
 	o.Value = v
 	o.Set = false
 }
 
 // SetTo sets value to v.
-func (o *OptInt64) SetTo(v int64) {
+func (o *OptLokiTime) SetTo(v LokiTime) {
 	o.Set = true
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptInt64) Get() (v int64, ok bool) {
+func (o OptLokiTime) Get() (v LokiTime, ok bool) {
 	if !o.Set {
 		return v, false
 	}
@@ -273,7 +275,7 @@ func (o OptInt64) Get() (v int64, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptInt64) Or(d int64) int64 {
+func (o OptLokiTime) Or(d LokiTime) LokiTime {
 	if v, ok := o.Get(); ok {
 		return v
 	}

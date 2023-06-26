@@ -152,7 +152,10 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Start.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -169,7 +172,10 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.End.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -316,7 +322,10 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Start.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -333,7 +342,10 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.End.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -552,7 +564,30 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Start.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "end" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.End.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -604,23 +639,6 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Limit.Get(); ok {
 				return e.EncodeValue(conv.IntToString(val))
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
-	{
-		// Encode "end" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "end",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.End.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
 			}
 			return nil
 		}); err != nil {
@@ -746,7 +764,10 @@ func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.Start.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -763,7 +784,10 @@ func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			if val, ok := params.End.Get(); ok {
-				return e.EncodeValue(conv.Int64ToString(val))
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {

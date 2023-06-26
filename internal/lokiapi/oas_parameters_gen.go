@@ -22,10 +22,10 @@ type LabelValuesParams struct {
 	XGrafanaUser OptString
 	// The start time for the query as a nanosecond Unix epoch.
 	// Defaults to 6 hours ago.
-	Start OptInt64
+	Start OptLokiTime
 	// The end time for the query as a nanosecond Unix epoch.
 	// Defaults to now.
-	End OptInt64
+	End OptLokiTime
 	// A `duration` used to calculate `start` relative to `end`.
 	// If `end` is in the future, `start` is calculated as this duration before now.
 	// Any value specified for start supersedes this parameter.
@@ -53,7 +53,7 @@ func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesPa
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Start = v.(OptInt64)
+			params.Start = v.(OptLokiTime)
 		}
 	}
 	{
@@ -62,7 +62,7 @@ func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesPa
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.End = v.(OptInt64)
+			params.End = v.(OptLokiTime)
 		}
 	}
 	{
@@ -145,19 +145,26 @@ func decodeLabelValuesParams(args [1]string, argsEscaped bool, r *http.Request) 
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotStartVal int64
+				var paramsDotStartVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotStartValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStartValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotStartVal = c
+					paramsDotStartVal = LokiTime(paramsDotStartValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -186,19 +193,26 @@ func decodeLabelValuesParams(args [1]string, argsEscaped bool, r *http.Request) 
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotEndVal int64
+				var paramsDotEndVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotEndValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEndValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotEndVal = c
+					paramsDotEndVal = LokiTime(paramsDotEndValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -376,10 +390,10 @@ type LabelsParams struct {
 	XGrafanaUser OptString
 	// The start time for the query as a nanosecond Unix epoch.
 	// Defaults to 6 hours ago.
-	Start OptInt64
+	Start OptLokiTime
 	// The end time for the query as a nanosecond Unix epoch.
 	// Defaults to now.
-	End OptInt64
+	End OptLokiTime
 	// A `duration` used to calculate `start` relative to `end`.
 	// If `end` is in the future, `start` is calculated as this duration before now.
 	// Any value specified for start supersedes this parameter.
@@ -402,7 +416,7 @@ func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Start = v.(OptInt64)
+			params.Start = v.(OptLokiTime)
 		}
 	}
 	{
@@ -411,7 +425,7 @@ func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.End = v.(OptInt64)
+			params.End = v.(OptLokiTime)
 		}
 	}
 	{
@@ -478,19 +492,26 @@ func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotStartVal int64
+				var paramsDotStartVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotStartValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStartValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotStartVal = c
+					paramsDotStartVal = LokiTime(paramsDotStartValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -519,19 +540,26 @@ func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotEndVal int64
+				var paramsDotEndVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotEndValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEndValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotEndVal = c
+					paramsDotEndVal = LokiTime(paramsDotEndValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -623,7 +651,10 @@ type QueryRangeParams struct {
 	XGrafanaUser OptString
 	// The start time for the query as a nanosecond Unix epoch or another supported format.
 	// Defaults to one hour ago.
-	Start OptInt64
+	Start OptLokiTime
+	// The end time for the query as a nanosecond Unix epoch or another supported format.
+	// Defaults to now.
+	End OptLokiTime
 	// The LogQL query to perform.
 	Query string
 	// Query resolution step width in `duration` format or float number of seconds.
@@ -636,9 +667,6 @@ type QueryRangeParams struct {
 	// It defaults to `100`.
 	// Only applies to query types which produce a stream (log lines) response.
 	Limit OptInt
-	// The end time for the query as a nanosecond Unix epoch or another supported format.
-	// Defaults to now.
-	End OptInt64
 	// Determines the sort order of logs.
 	// Supported values are `forward` or `backward`.
 	// Defaults to `backward`.
@@ -661,7 +689,16 @@ func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangePara
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Start = v.(OptInt64)
+			params.Start = v.(OptLokiTime)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptLokiTime)
 		}
 	}
 	{
@@ -687,15 +724,6 @@ func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangePara
 		}
 		if v, ok := packed[key]; ok {
 			params.Limit = v.(OptInt)
-		}
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "end",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.End = v.(OptInt64)
 		}
 	}
 	{
@@ -762,19 +790,26 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotStartVal int64
+				var paramsDotStartVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotStartValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStartValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotStartVal = c
+					paramsDotStartVal = LokiTime(paramsDotStartValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -789,6 +824,54 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal LokiTime
+				if err := func() error {
+					var paramsDotEndValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEndValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotEndVal = LokiTime(paramsDotEndValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
 			In:   "query",
 			Err:  err,
 		}
@@ -957,47 +1040,6 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 			Err:  err,
 		}
 	}
-	// Decode query: end.
-	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "end",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotEndVal int64
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotEndVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.End.SetTo(paramsDotEndVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "end",
-			In:   "query",
-			Err:  err,
-		}
-	}
 	// Decode query: direction.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
@@ -1059,8 +1101,8 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 
 // SeriesParams is parameters of series operation.
 type SeriesParams struct {
-	Start OptInt64
-	End   OptInt64
+	Start OptLokiTime
+	End   OptLokiTime
 	// A `duration` used to calculate `start` relative to `end`.
 	// If `end` is in the future, `start` is calculated as this duration before now.
 	// Any value specified for start supersedes this parameter.
@@ -1075,7 +1117,7 @@ func unpackSeriesParams(packed middleware.Parameters) (params SeriesParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Start = v.(OptInt64)
+			params.Start = v.(OptLokiTime)
 		}
 	}
 	{
@@ -1084,7 +1126,7 @@ func unpackSeriesParams(packed middleware.Parameters) (params SeriesParams) {
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.End = v.(OptInt64)
+			params.End = v.(OptLokiTime)
 		}
 	}
 	{
@@ -1120,19 +1162,26 @@ func decodeSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotStartVal int64
+				var paramsDotStartVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotStartValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStartValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotStartVal = c
+					paramsDotStartVal = LokiTime(paramsDotStartValVal)
 					return nil
 				}(); err != nil {
 					return err
@@ -1161,19 +1210,26 @@ func decodeSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotEndVal int64
+				var paramsDotEndVal LokiTime
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotEndValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEndValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToInt64(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotEndVal = c
+					paramsDotEndVal = LokiTime(paramsDotEndValVal)
 					return nil
 				}(); err != nil {
 					return err

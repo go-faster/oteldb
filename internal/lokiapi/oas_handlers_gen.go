@@ -456,6 +456,10 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 					In:   "query",
 				}: params.Start,
 				{
+					Name: "end",
+					In:   "query",
+				}: params.End,
+				{
 					Name: "query",
 					In:   "query",
 				}: params.Query,
@@ -467,10 +471,6 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 					Name: "limit",
 					In:   "query",
 				}: params.Limit,
-				{
-					Name: "end",
-					In:   "query",
-				}: params.End,
 				{
 					Name: "direction",
 					In:   "query",
