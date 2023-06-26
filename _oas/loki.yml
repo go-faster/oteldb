@@ -20,8 +20,14 @@ paths:
             Defaults to one hour ago.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
+        - name: end
+          description: |
+            The end time for the query as a nanosecond Unix epoch or another supported format.
+            Defaults to now.
+          in: query
+          schema:
+            $ref: "#/components/schemas/LokiTime"
         - name: query
           description: The LogQL query to perform.
           in: query
@@ -48,14 +54,6 @@ paths:
             type: integer
             maximum: 5000
             minimum: 0
-        - name: end
-          description: |
-            The end time for the query as a nanosecond Unix epoch or another supported format.
-            Defaults to now.
-          in: query
-          schema:
-            type: integer
-            format: int64
         - name: direction
           description: |
             Determines the sort order of logs.
@@ -87,16 +85,14 @@ paths:
             Defaults to 6 hours ago.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
         - name: end
           description: |
             The end time for the query as a nanosecond Unix epoch.
             Defaults to now.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
         - name: since
           description: |
             A `duration` used to calculate `start` relative to `end`.
@@ -126,16 +122,14 @@ paths:
             Defaults to 6 hours ago.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
         - name: end
           description: |
             The end time for the query as a nanosecond Unix epoch.
             Defaults to now.
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
         - name: since
           description: |
             A `duration` used to calculate `start` relative to `end`.
@@ -173,13 +167,11 @@ paths:
         - name: start
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
         - name: end
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: "#/components/schemas/LokiTime"
         - name: since
           description: |
             A `duration` used to calculate `start` relative to `end`.
@@ -305,6 +297,8 @@ components:
       enum:
         - backward
         - forward
+    LokiTime:
+      type: string
     PrometheusDuration:
       type: string
       pattern: "^[0-9smhdwy]+$"
