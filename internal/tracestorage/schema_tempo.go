@@ -5,6 +5,7 @@ import (
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 )
 
@@ -45,7 +46,7 @@ func (span Span) AsTempoSpan() (s tempoapi.TempoSpan) {
 	return s
 }
 
-func ytToTempoAttrs(to *tempoapi.Attributes, from Attrs) {
+func ytToTempoAttrs(to *tempoapi.Attributes, from otelstorage.Attrs) {
 	var convertValue func(val pcommon.Value) (r tempoapi.AnyValue)
 	convertValue = func(val pcommon.Value) (r tempoapi.AnyValue) {
 		switch val.Type() {

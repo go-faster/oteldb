@@ -3,6 +3,8 @@ package tracestorage
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // NewSpanFromOTEL creates new Span.
@@ -14,22 +16,22 @@ func NewSpanFromOTEL(
 ) (s Span) {
 	status := span.Status()
 	s = Span{
-		TraceID:       TraceID(span.TraceID()),
-		SpanID:        SpanID(span.SpanID()),
+		TraceID:       otelstorage.TraceID(span.TraceID()),
+		SpanID:        otelstorage.SpanID(span.SpanID()),
 		TraceState:    span.TraceState().AsRaw(),
-		ParentSpanID:  SpanID(span.ParentSpanID()),
+		ParentSpanID:  otelstorage.SpanID(span.ParentSpanID()),
 		Name:          span.Name(),
 		Kind:          int32(span.Kind()),
 		Start:         span.StartTimestamp(),
 		End:           span.EndTimestamp(),
-		Attrs:         Attrs(span.Attributes()),
+		Attrs:         otelstorage.Attrs(span.Attributes()),
 		StatusCode:    int32(status.Code()),
 		StatusMessage: status.Message(),
 		BatchID:       batchID,
-		ResourceAttrs: Attrs(res.Attributes()),
+		ResourceAttrs: otelstorage.Attrs(res.Attributes()),
 		ScopeName:     scope.Name(),
 		ScopeVersion:  scope.Version(),
-		ScopeAttrs:    Attrs(scope.Attributes()),
+		ScopeAttrs:    otelstorage.Attrs(scope.Attributes()),
 		Events:        nil,
 		Links:         nil,
 	}
@@ -40,7 +42,7 @@ func NewSpanFromOTEL(
 			s.Events = append(s.Events, Event{
 				Timestamp: event.Timestamp(),
 				Name:      event.Name(),
-				Attrs:     Attrs(event.Attributes()),
+				Attrs:     otelstorage.Attrs(event.Attributes()),
 			})
 		}
 	}
@@ -49,10 +51,10 @@ func NewSpanFromOTEL(
 		for i := 0; i < links.Len(); i++ {
 			link := links.At(i)
 			s.Links = append(s.Links, Link{
-				TraceID:    TraceID(link.TraceID()),
-				SpanID:     SpanID(link.SpanID()),
+				TraceID:    otelstorage.TraceID(link.TraceID()),
+				SpanID:     otelstorage.SpanID(link.SpanID()),
 				TraceState: link.TraceState().AsRaw(),
-				Attrs:      Attrs(link.Attributes()),
+				Attrs:      otelstorage.Attrs(link.Attributes()),
 			})
 		}
 	}

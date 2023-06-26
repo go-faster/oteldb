@@ -9,6 +9,7 @@ import (
 	"go.ytsaurus.tech/yt/go/yt"
 	"golang.org/x/exp/maps"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -68,7 +69,7 @@ func (q *YTQLQuerier) SearchTags(ctx context.Context, tags map[string]string, op
 	}
 
 	// Query trace IDs first.
-	traces := map[tracestorage.TraceID]struct{}{}
+	traces := map[otelstorage.TraceID]struct{}{}
 	if err := queryRows(ctx, q.yc, traceIDQuery.String(), func(s tracestorage.Span) {
 		traces[s.TraceID] = struct{}{}
 	}); err != nil {
@@ -124,7 +125,7 @@ func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (tracestora
 // TraceByID returns spans of given trace.
 //
 // If there is no such trace, returns ErrNotFound.
-func (q *YTQLQuerier) TraceByID(ctx context.Context, id tracestorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
 	query := fmt.Sprintf("* FROM [%s] WHERE trace_id = %q", q.tables.spans, id[:])
 
 	if s := opts.Start; s != 0 {

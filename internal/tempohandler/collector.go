@@ -3,18 +3,19 @@ package tempohandler
 import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 type metadataCollector struct {
 	limit     int
-	metadatas map[tracestorage.TraceID]tempoapi.TraceSearchMetadata
+	metadatas map[otelstorage.TraceID]tempoapi.TraceSearchMetadata
 }
 
 func (b *metadataCollector) init() {
 	if b.metadatas == nil {
-		b.metadatas = make(map[tracestorage.TraceID]tempoapi.TraceSearchMetadata)
+		b.metadatas = make(map[otelstorage.TraceID]tempoapi.TraceSearchMetadata)
 	}
 }
 

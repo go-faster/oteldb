@@ -16,6 +16,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -216,7 +217,7 @@ func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ e
 func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParams) (resp tempoapi.TraceByIDRes, _ error) {
 	lg := zctx.From(ctx)
 
-	traceID, err := tracestorage.ParseTraceID(params.TraceID)
+	traceID, err := otelstorage.ParseTraceID(params.TraceID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid traceID %q", params.TraceID)
 	}
@@ -263,10 +264,10 @@ func (h *TempoAPI) NewError(_ context.Context, err error) *tempoapi.ErrorStatusC
 	}
 }
 
-func timeToTimestamp[O interface{ Get() (time.Time, bool) }](o O) tracestorage.Timestamp {
+func timeToTimestamp[O interface{ Get() (time.Time, bool) }](o O) otelstorage.Timestamp {
 	t, ok := o.Get()
 	if !ok {
 		return 0
 	}
-	return tracestorage.Timestamp(t.UnixNano())
+	return otelstorage.NewTimestampFromTime(t)
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-faster/errors"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -140,7 +141,7 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (tracestorage.I
 }
 
 // TraceByID returns spans of given trace.
-func (q *Querier) TraceByID(ctx context.Context, id tracestorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
+func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (tracestorage.Iterator[tracestorage.Span], error) {
 	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = %s", q.tables.Spans, singleQuoted(id.Hex()))
 	if s := opts.Start; s != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/exp/constraints"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -226,14 +227,14 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) []tracestorage.Span {
 	for i := 0; i < c.traceID.Rows(); i++ {
 		spans = append(spans, tracestorage.Span{
-			TraceID:       tracestorage.TraceID(c.traceID.Row(i)),
-			SpanID:        tracestorage.SpanIDFromUint64(c.spanID.Row(i)),
+			TraceID:       otelstorage.TraceID(c.traceID.Row(i)),
+			SpanID:        otelstorage.SpanIDFromUint64(c.spanID.Row(i)),
 			TraceState:    c.traceState.Row(i),
-			ParentSpanID:  tracestorage.SpanIDFromUint64(c.parentSpanID.Row(i)),
+			ParentSpanID:  otelstorage.SpanIDFromUint64(c.parentSpanID.Row(i)),
 			Name:          c.name.Row(i),
 			Kind:          int32(c.kind.Row(i)),
-			Start:         tracestorage.NewTimestampFromTime(c.start.Row(i)),
-			End:           tracestorage.NewTimestampFromTime(c.end.Row(i)),
+			Start:         otelstorage.NewTimestampFromTime(c.start.Row(i)),
+			End:           otelstorage.NewTimestampFromTime(c.end.Row(i)),
 			Attrs:         c.spanAttrs.Row(i),
 			StatusCode:    c.statusCode.Row(i),
 			StatusMessage: c.statusMessage.Row(i),
@@ -296,7 +297,7 @@ func (c *eventsColumns) Row(row int) (events []tracestorage.Event) {
 	for i := 0; i < l; i++ {
 		events = append(events, tracestorage.Event{
 			Name:      names[i],
-			Timestamp: tracestorage.NewTimestampFromTime(timestamps[i]),
+			Timestamp: otelstorage.NewTimestampFromTime(timestamps[i]),
 			Attrs:     attrs[i],
 		})
 	}
@@ -355,8 +356,8 @@ func (c *linksColumns) Row(row int) (links []tracestorage.Link) {
 	)
 	for i := 0; i < l; i++ {
 		links = append(links, tracestorage.Link{
-			TraceID:    tracestorage.TraceID(traceIDs[i]),
-			SpanID:     tracestorage.SpanIDFromUint64(spanIDs[i]),
+			TraceID:    otelstorage.TraceID(traceIDs[i]),
+			SpanID:     otelstorage.SpanIDFromUint64(spanIDs[i]),
 			TraceState: tracestates[i],
 			Attrs:      attrs[i],
 		})

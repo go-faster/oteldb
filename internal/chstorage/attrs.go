@@ -4,7 +4,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/go-faster/oteldb/internal/tracestorage"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 type chArrAttrCollector struct {
@@ -20,7 +20,7 @@ type chArrAttrCollector struct {
 	BytesValues [][]string
 }
 
-func (c *chArrAttrCollector) Append(attrs tracestorage.Attrs) {
+func (c *chArrAttrCollector) Append(attrs otelstorage.Attrs) {
 	var (
 		strKeys     []string
 		strValues   []string
@@ -112,7 +112,7 @@ func newChArrAttrs() chArrAttrs {
 	}
 }
 
-func (c *chArrAttrs) Row(row int) (result []tracestorage.Attrs) {
+func (c *chArrAttrs) Row(row int) (result []otelstorage.Attrs) {
 	var (
 		rowStrKeys     = c.StrKeys.Row(row)
 		rowStrValues   = c.StrValues.Row(row)
@@ -156,7 +156,7 @@ func (c *chArrAttrs) Row(row int) (result []tracestorage.Attrs) {
 			data := m.PutEmptyBytes(key)
 			data.FromRaw([]byte(bytesValues[i]))
 		}
-		result = append(result, tracestorage.Attrs(m))
+		result = append(result, otelstorage.Attrs(m))
 	}
 	return result
 }
@@ -189,7 +189,7 @@ func newChAttrs() chAttrs {
 	}
 }
 
-func (c *chAttrs) Append(attrs tracestorage.Attrs) {
+func (c *chAttrs) Append(attrs otelstorage.Attrs) {
 	var (
 		strKeys     []string
 		strValues   []string
@@ -236,7 +236,7 @@ func (c *chAttrs) Append(attrs tracestorage.Attrs) {
 	c.BytesValues.Append(bytesValues)
 }
 
-func (c *chAttrs) Row(row int) tracestorage.Attrs {
+func (c *chAttrs) Row(row int) otelstorage.Attrs {
 	m := pcommon.NewMap()
 
 	var (
@@ -269,5 +269,5 @@ func (c *chAttrs) Row(row int) tracestorage.Attrs {
 		data.FromRaw([]byte(bytesValues[i]))
 	}
 
-	return tracestorage.Attrs(m)
+	return otelstorage.Attrs(m)
 }

@@ -1,4 +1,4 @@
-package tracestorage
+package otelstorage
 
 import (
 	"time"

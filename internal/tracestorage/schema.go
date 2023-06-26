@@ -2,28 +2,30 @@ package tracestorage
 
 import (
 	"go.ytsaurus.tech/yt/go/schema"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // Span is a data structure for span.
 type Span struct {
-	TraceID       TraceID   `json:"trace_id" yson:"trace_id"`
-	SpanID        SpanID    `json:"span_id" yson:"span_id"`
-	TraceState    string    `json:"trace_state" yson:"trace_state"`
-	ParentSpanID  SpanID    `json:"parent_span_id" yson:"parent_span_id"`
-	Name          string    `json:"name" yson:"name"`
-	Kind          int32     `json:"kind" yson:"kind"`
-	Start         Timestamp `json:"start" yson:"start"`
-	End           Timestamp `json:"end" yson:"end"`
-	Attrs         Attrs     `json:"attrs" yson:"attrs"`
-	StatusCode    int32     `json:"status_code" yson:"status_code"`
-	StatusMessage string    `json:"status_message" yson:"status_message"`
+	TraceID       otelstorage.TraceID   `json:"trace_id" yson:"trace_id"`
+	SpanID        otelstorage.SpanID    `json:"span_id" yson:"span_id"`
+	TraceState    string                `json:"trace_state" yson:"trace_state"`
+	ParentSpanID  otelstorage.SpanID    `json:"parent_span_id" yson:"parent_span_id"`
+	Name          string                `json:"name" yson:"name"`
+	Kind          int32                 `json:"kind" yson:"kind"`
+	Start         otelstorage.Timestamp `json:"start" yson:"start"`
+	End           otelstorage.Timestamp `json:"end" yson:"end"`
+	Attrs         otelstorage.Attrs     `json:"attrs" yson:"attrs"`
+	StatusCode    int32                 `json:"status_code" yson:"status_code"`
+	StatusMessage string                `json:"status_message" yson:"status_message"`
 
-	BatchID       string `json:"batch_id" yson:"batch_id"`
-	ResourceAttrs Attrs  `json:"resource_attrs" yson:"resource_attrs"`
+	BatchID       string            `json:"batch_id" yson:"batch_id"`
+	ResourceAttrs otelstorage.Attrs `json:"resource_attrs" yson:"resource_attrs"`
 
-	ScopeName    string `json:"scope_name" yson:"scope_name"`
-	ScopeVersion string `json:"scope_version" yson:"scope_version"`
-	ScopeAttrs   Attrs  `json:"scope_attrs" yson:"scope_attrs"`
+	ScopeName    string            `json:"scope_name" yson:"scope_name"`
+	ScopeVersion string            `json:"scope_version" yson:"scope_version"`
+	ScopeAttrs   otelstorage.Attrs `json:"scope_attrs" yson:"scope_attrs"`
 
 	Events []Event `json:"events" yson:"events"`
 	Links  []Link  `json:"links" yson:"links"`
@@ -86,24 +88,24 @@ func (Span) YTSchema() schema.Schema {
 
 // Event is a Span event.
 type Event struct {
-	Timestamp Timestamp `json:"timestamp" yson:"timestamp"`
-	Name      string    `json:"name" yson:"name"`
-	Attrs     Attrs     `json:"attrs" yson:"attrs"`
+	Timestamp otelstorage.Timestamp `json:"timestamp" yson:"timestamp"`
+	Name      string                `json:"name" yson:"name"`
+	Attrs     otelstorage.Attrs     `json:"attrs" yson:"attrs"`
 }
 
 // Link is a Span link.
 type Link struct {
-	TraceID    TraceID `json:"trace_id" yson:"trace_id"`
-	SpanID     SpanID  `json:"span_id" yson:"span_id"`
-	TraceState string  `json:"trace_state" yson:"trace_state"`
-	Attrs      Attrs   `json:"attrs" yson:"attrs"`
+	TraceID    otelstorage.TraceID `json:"trace_id" yson:"trace_id"`
+	SpanID     otelstorage.SpanID  `json:"span_id" yson:"span_id"`
+	TraceState string              `json:"trace_state" yson:"trace_state"`
+	Attrs      otelstorage.Attrs   `json:"attrs" yson:"attrs"`
 }
 
 // Tag is a data structure for tag.
 type Tag struct {
-	Name  string `yson:"name"`
-	Value string `yson:"value"`
-	Type  int32  `yson:"type"`
+	Name  string `json:"name" yson:"name"`
+	Value string `json:"value" yson:"value"`
+	Type  int32  `json:"type" yson:"type"`
 }
 
 // YTSchema returns YTsaurus table schema for this structure.

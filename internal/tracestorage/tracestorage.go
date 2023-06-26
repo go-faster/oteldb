@@ -4,6 +4,8 @@ package tracestorage
 import (
 	"context"
 	"time"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // Querier is a trace storage query interface.
@@ -17,7 +19,7 @@ type Querier interface {
 	TagValues(ctx context.Context, tagName string) (Iterator[Tag], error)
 
 	// TraceByID returns spans of given trace.
-	TraceByID(ctx context.Context, id TraceID, opts TraceByIDOptions) (Iterator[Span], error)
+	TraceByID(ctx context.Context, id otelstorage.TraceID, opts TraceByIDOptions) (Iterator[Span], error)
 }
 
 // SearchTagsOptions defines options for SearchTags method.
@@ -28,11 +30,11 @@ type SearchTagsOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start Timestamp
+	Start otelstorage.Timestamp
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End Timestamp
+	End otelstorage.Timestamp
 }
 
 // TraceByIDOptions defines options for TraceByID method.
@@ -40,11 +42,11 @@ type TraceByIDOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start Timestamp
+	Start otelstorage.Timestamp
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End Timestamp
+	End otelstorage.Timestamp
 }
 
 // Inserter is a trace storage insert interface.

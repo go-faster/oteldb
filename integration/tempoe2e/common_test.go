@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/go-faster/oteldb/integration/tempoe2e"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tempohandler"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -122,7 +123,7 @@ func runTest(
 			for traceID, trace := range set.Traces {
 				uid := uuid.UUID(traceID)
 
-				r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: tracestorage.TraceID(traceID).Hex()})
+				r, err := c.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: otelstorage.TraceID(traceID).Hex()})
 				a.NoError(err)
 				a.IsType(&tempoapi.TraceByID{}, r)
 
