@@ -10,6 +10,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -112,8 +113,6 @@ func (q *YTQLQuerier) TagNames(ctx context.Context) ([]string, error) {
 }
 
 // TagValues returns all available tag values for given tag.
-//
-// If there is no such tag, returns ErrNotFound.
 func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (iterators.Iterator[tracestorage.Tag], error) {
 	query := fmt.Sprintf("* FROM [%s] WHERE name = %q", q.tables.tags, tagName)
 	r, err := q.yc.SelectRows(ctx, query, nil)
@@ -124,8 +123,6 @@ func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (iterators.
 }
 
 // TraceByID returns spans of given trace.
-//
-// If there is no such trace, returns ErrNotFound.
 func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (iterators.Iterator[tracestorage.Span], error) {
 	query := fmt.Sprintf("* FROM [%s] WHERE trace_id = %q", q.tables.spans, id[:])
 
@@ -141,6 +138,26 @@ func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opt
 		return nil, err
 	}
 	return &ytIterator[tracestorage.Span]{reader: r}, nil
+}
+
+// LabelNames returns all available label names.
+func (q *YTQLQuerier) LabelNames(ctx context.Context) ([]string, error) {
+	query := fmt.Sprintf("name FROM [%s]", q.tables.logLabels)
+	names := map[string]struct{}{}
+	err := queryRows(ctx, q.yc, query, func(label logstorage.Label) {
+		names[label.Name] = struct{}{}
+	})
+	return maps.Keys(names), err
+}
+
+// LabelValues returns all available label values for given label.
+func (q *YTQLQuerier) LabelValues(ctx context.Context, labelName string) (iterators.Iterator[logstorage.Label], error) {
+	query := fmt.Sprintf("* FROM [%s] WHERE name = %q", q.tables.logLabels, labelName)
+	r, err := q.yc.SelectRows(ctx, query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &ytIterator[logstorage.Label]{reader: r}, nil
 }
 
 var _ iterators.Iterator[any] = (*ytIterator[any])(nil)
