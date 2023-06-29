@@ -182,7 +182,7 @@ func parseTimestamp(lt lokiapi.LokiTime, def time.Time) (time.Time, error) {
 // Push data.
 //
 // POST /loki/api/v1/push
-func (h *LokiAPI) Push(ctx context.Context, req lokiapi.PushReq) error {
+func (h *LokiAPI) Push(context.Context, lokiapi.PushReq) error {
 	return ht.ErrNotImplemented
 }
 
@@ -191,7 +191,7 @@ func (h *LokiAPI) Push(ctx context.Context, req lokiapi.PushReq) error {
 // Query range.
 //
 // GET /loki/api/v1/query_range
-func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParams) (*lokiapi.QueryResponse, error) {
+func (h *LokiAPI) QueryRange(context.Context, lokiapi.QueryRangeParams) (*lokiapi.QueryResponse, error) {
 	return nil, ht.ErrNotImplemented
 }
 
@@ -200,14 +200,14 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 // Get series.
 //
 // GET /loki/api/v1/series
-func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lokiapi.Maps, error) {
+func (h *LokiAPI) Series(context.Context, lokiapi.SeriesParams) (*lokiapi.Maps, error) {
 	return nil, ht.ErrNotImplemented
 }
 
 // NewError creates *ErrorStatusCode from error returned by handler.
 //
 // Used for common default response.
-func (h *LokiAPI) NewError(ctx context.Context, err error) *lokiapi.ErrorStatusCode {
+func (h *LokiAPI) NewError(_ context.Context, err error) *lokiapi.ErrorStatusCode {
 	return &lokiapi.ErrorStatusCode{
 		StatusCode: http.StatusBadRequest,
 		Response:   lokiapi.Error(err.Error()),
