@@ -1,25 +1,29 @@
 package logql
 
-// CmpOp defines comparison operation.
-type CmpOp int
+// BinOp defines binary operation.
+type BinOp int
 
 const (
-	CmpEq CmpOp = iota + 1
-	CmpNotEq
-	CmpGt
-	CmpGte
-	CmpLt
-	CmpLte
-	CmpRe
-	CmpNotRe
-)
-
-// LogOp defines logic operation.
-type LogOp int
-
-const (
-	LogOpAnd LogOp = iota + 1
-	LogOpOr
+	// Logical ops.
+	OpAnd BinOp = iota + 1
+	OpOr
+	OpUnless
+	// Math ops.
+	OpAdd
+	OpSub
+	OpMul
+	OpDiv
+	OpMod
+	OpPow
+	// Comparison ops.
+	OpEq
+	OpNotEq
+	OpRe
+	OpNotRe
+	OpGt
+	OpGte
+	OpLt
+	OpLte
 )
 
 // RangeOp defines range aggregation operation.

@@ -113,13 +113,13 @@ func (p *parser) parseLineFilter() (f *LineFilter, err error) {
 	f = new(LineFilter)
 	switch t.Type {
 	case lexer.PipeExact: // "|="
-		f.Op = CmpEq
+		f.Op = OpEq
 	case lexer.PipeMatch: // "|~"
-		f.Op = CmpRe
+		f.Op = OpRe
 	case lexer.NotEq: // "!="
-		f.Op = CmpNotEq
+		f.Op = OpNotEq
 	case lexer.NotRe: // "!~"
-		f.Op = CmpNotRe
+		f.Op = OpNotRe
 	default:
 		return nil, p.unexpectedToken(t)
 	}
@@ -184,28 +184,28 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 
 		pred = &LabelPredicateParen{X: lp}
 	case lexer.Ident:
-		var op CmpOp
+		var op BinOp
 
 		opTok := p.next()
 		switch opTok.Type {
 		case lexer.Eq:
-			op = CmpEq
+			op = OpEq
 		case lexer.CmpEq:
-			op = CmpEq
+			op = OpEq
 		case lexer.NotEq:
-			op = CmpNotEq
+			op = OpNotEq
 		case lexer.Re:
-			op = CmpRe
+			op = OpRe
 		case lexer.NotRe:
-			op = CmpNotRe
+			op = OpNotRe
 		case lexer.Gt:
-			op = CmpGt
+			op = OpGt
 		case lexer.Gte:
-			op = CmpGte
+			op = OpGte
 		case lexer.Lt:
-			op = CmpLt
+			op = OpLt
 		case lexer.Lte:
-			op = CmpLte
+			op = OpLte
 		default:
 			return nil, p.unexpectedToken(opTok)
 		}
@@ -290,15 +290,15 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 		return nil, p.unexpectedToken(t)
 	}
 
-	var binOp LogOp
+	var binOp BinOp
 	switch nextTok := p.next(); nextTok.Type {
 	case lexer.Ident:
 		p.unread()
-		binOp = LogOpAnd
+		binOp = OpAnd
 	case lexer.Comma, lexer.And:
-		binOp = LogOpAnd
+		binOp = OpAnd
 	case lexer.Or:
-		binOp = LogOpOr
+		binOp = OpOr
 	default:
 		p.unread()
 		return pred, nil

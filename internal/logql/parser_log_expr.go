@@ -63,13 +63,13 @@ func (p *parser) parseLabelMatcher() (m LabelMatcher, err error) {
 
 	switch t := p.next(); t.Type {
 	case lexer.Eq:
-		m.Op = CmpEq
+		m.Op = OpEq
 	case lexer.NotEq:
-		m.Op = CmpNotEq
+		m.Op = OpNotEq
 	case lexer.Re:
-		m.Op = CmpRe
+		m.Op = OpRe
 	case lexer.NotRe:
-		m.Op = CmpNotRe
+		m.Op = OpNotRe
 	default:
 		return m, p.unexpectedToken(t)
 	}

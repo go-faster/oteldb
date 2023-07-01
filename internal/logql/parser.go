@@ -97,15 +97,3 @@ func (p *parser) parseBytes() (uint64, error) {
 	}
 	return humanize.ParseBytes(text)
 }
-
-func parseWithParen[T any, F ~func(p *parser) (T, error)](p *parser, f F) (T, error) {
-	val, err := f(p)
-	if err != nil {
-		return val, err
-	}
-
-	if err := p.consume(lexer.CloseParen); err != nil {
-		return val, err
-	}
-	return val, err
-}

@@ -6,7 +6,7 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
-func (p *parser) parseMetricExpr() (MetricExpr, error) {
+func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 	switch t := p.peek(); t.Type {
 	case lexer.CountOverTime,
 		lexer.Rate,
@@ -290,7 +290,7 @@ func (p *parser) parseVectorExpr() (ve *VectorExpr, err error) {
 	return ve, nil
 }
 
-func (p *parser) parseGrouping() (g *Grouping, _ error) {
+func (p *parser) parseGrouping() (g *Grouping, err error) {
 	g = new(Grouping)
 	switch t := p.next(); t.Type {
 	case lexer.By:
@@ -301,6 +301,12 @@ func (p *parser) parseGrouping() (g *Grouping, _ error) {
 		return nil, p.unexpectedToken(t)
 	}
 
+	g.Labels, err = p.parseLabels()
+	return g, err
+}
+
+// parseLabels parses a possibly empty parenthesized list of comma-separated labels.
+func (p *parser) parseLabels() (labels []Label, _ error) {
 	if err := p.consume(lexer.OpenParen); err != nil {
 		return nil, err
 	}
@@ -308,7 +314,7 @@ func (p *parser) parseGrouping() (g *Grouping, _ error) {
 	// Empty grouping.
 	if t := p.peek(); t.Type == lexer.CloseParen {
 		p.next()
-		return g, nil
+		return labels, nil
 	}
 
 	for {
@@ -316,11 +322,11 @@ func (p *parser) parseGrouping() (g *Grouping, _ error) {
 		if err != nil {
 			return nil, err
 		}
-		g.Labels = append(g.Labels, label)
+		labels = append(labels, label)
 
 		switch t := p.next(); t.Type {
 		case lexer.CloseParen:
-			return g, nil
+			return labels, nil
 		case lexer.Comma:
 		default:
 			return nil, p.unexpectedToken(t)

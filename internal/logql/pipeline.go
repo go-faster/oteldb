@@ -23,7 +23,7 @@ func (*DistinctFilter) pipelineStage()         {}
 
 // LineFilter is a line filter (`|=`, `!=`, `=~`, `!~`).
 type LineFilter struct {
-	Op    CmpOp
+	Op    BinOp // OpEq, OpNotEq, OpRe, OpNotRe
 	Value string
 }
 
@@ -87,7 +87,7 @@ type LabelPredicate interface {
 // LabelPredicateBinOp defines a logical operation between predicates.
 type LabelPredicateBinOp struct {
 	Left  LabelPredicate
-	Op    LogOp
+	Op    BinOp // OpAnd, OpOr
 	Right LabelPredicate
 }
 
@@ -109,28 +109,28 @@ func (*IPFilter) labelPredicate()            {}
 // IPFilter is a IP filtering predicate (`addr == ip("127.0.0.1")`).
 type IPFilter struct {
 	Label Label
-	Op    CmpOp
+	Op    BinOp // OpEq, OpNotEq
 	Value string
 }
 
 // DurationFilter is a duration filtering predicate (`elapsed > 10s`).
 type DurationFilter struct {
 	Label Label
-	Op    CmpOp
+	Op    BinOp // OpEq, OpNotEq, OpLt, OpLte, OpGt, OpGte
 	Value time.Duration
 }
 
 // BytesFilter is a byte size filtering predicate (`size > 10gb`).
 type BytesFilter struct {
 	Label Label
-	Op    CmpOp
+	Op    BinOp // OpEq, OpNotEq, OpLt, OpLte, OpGt, OpGte
 	Value uint64
 }
 
 // NumberFilter is a number filtering predicate (`status >= 400`).
 type NumberFilter struct {
 	Label Label
-	Op    CmpOp
+	Op    BinOp // OpEq, OpNotEq, OpLt, OpLte, OpGt, OpGte
 	// FIXME(tdakkota): add integer field?
 	Value float64
 }
@@ -154,21 +154,19 @@ type LabelFormatLabel struct {
 	Value Label
 }
 
-// DropLabelsExpr drops given labels in a pipeline.
+// DropLabelsExpr drops given labels in a pipeline (i.e. deny list).
 type DropLabelsExpr struct {
 	Labels   []Label
 	Matchers []LabelMatcher
 }
 
-// KeepLabelsExpr keeps given labels in a pipeline (I guess?).
-//
-// FIXME(tdakkota): this stage is undocumented.
+// KeepLabelsExpr drops any label except given in a pipeline (i.e. allow list).
 type KeepLabelsExpr struct {
 	Labels   []Label
 	Matchers []LabelMatcher
 }
 
-// DistinctFilter filters only unique lines with given labels (I guess?).
+// DistinctFilter filters out lines with duplicate label values.
 //
 // FIXME(tdakkota): this stage is undocumented.
 type DistinctFilter struct {

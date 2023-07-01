@@ -18,6 +18,6 @@ type Selector struct {
 // LabelMatcher is label matching predicate.
 type LabelMatcher struct {
 	Label Label
-	Op    CmpOp
+	Op    BinOp // OpEq, OpNotEq, OpRe, OpNotRe
 	Value string
 }

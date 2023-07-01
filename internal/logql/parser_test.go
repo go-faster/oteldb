@@ -19,12 +19,13 @@ func TestParse(t *testing.T) {
 		wantErr bool
 	}{
 		{`{}`, &LogExpr{}, false},
+		{`({})`, &ParenExpr{X: &LogExpr{}}, false},
 		{
 			`{foo="bar"}`,
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpEq, "bar"},
+						{"foo", OpEq, "bar"},
 					},
 				},
 			},
@@ -35,7 +36,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpEq, "bar"},
+						{"foo", OpEq, "bar"},
 					},
 				},
 			},
@@ -46,7 +47,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpNotEq, "bar"},
+						{"foo", OpNotEq, "bar"},
 					},
 				},
 			},
@@ -57,7 +58,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpNotEq, "bar"},
+						{"foo", OpNotEq, "bar"},
 					},
 				},
 			},
@@ -68,7 +69,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpRe, "bar"},
+						{"foo", OpRe, "bar"},
 					},
 				},
 			},
@@ -79,7 +80,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpNotRe, "bar"},
+						{"foo", OpNotRe, "bar"},
 					},
 				},
 			},
@@ -90,8 +91,8 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", CmpNotRe, "bar"},
-						{"foo2", CmpRe, "amongus"},
+						{"foo", OpNotRe, "bar"},
+						{"foo2", OpRe, "amongus"},
 					},
 				},
 			},
@@ -99,10 +100,12 @@ func TestParse(t *testing.T) {
 		},
 		{
 			`( {foo = "bar"} )`,
-			&LogExpr{
-				Sel: Selector{
-					Matchers: []LabelMatcher{
-						{"foo", CmpEq, "bar"},
+			&ParenExpr{
+				X: &LogExpr{
+					Sel: Selector{
+						Matchers: []LabelMatcher{
+							{"foo", OpEq, "bar"},
+						},
 					},
 				},
 			},
@@ -112,7 +115,7 @@ func TestParse(t *testing.T) {
 			"{} |= `foo`",
 			&LogExpr{
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: CmpEq, Value: "foo"},
+					&LineFilter{Op: OpEq, Value: "foo"},
 				},
 			},
 			false,
@@ -126,30 +129,32 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"instance", CmpRe, "kafka-1"},
-						{"name", CmpEq, "kafka"},
+						{"instance", OpRe, "kafka-1"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: CmpEq, Value: "bad"},
-					&LineFilter{Op: CmpRe, Value: "error"},
-					&LineFilter{Op: CmpNotEq, Value: "good"},
-					&LineFilter{Op: CmpNotRe, Value: "exception"},
+					&LineFilter{Op: OpEq, Value: "bad"},
+					&LineFilter{Op: OpRe, Value: "error"},
+					&LineFilter{Op: OpNotEq, Value: "good"},
+					&LineFilter{Op: OpNotRe, Value: "exception"},
 				},
 			},
 			false,
 		},
 		{
 			`( {instance=~"kafka-1",name="kafka"} |= "bad" )`,
-			&LogExpr{
-				Sel: Selector{
-					Matchers: []LabelMatcher{
-						{"instance", CmpRe, "kafka-1"},
-						{"name", CmpEq, "kafka"},
+			&ParenExpr{
+				X: &LogExpr{
+					Sel: Selector{
+						Matchers: []LabelMatcher{
+							{"instance", OpRe, "kafka-1"},
+							{"name", OpEq, "kafka"},
+						},
 					},
-				},
-				Pipeline: []PipelineStage{
-					&LineFilter{Op: CmpEq, Value: "bad"},
+					Pipeline: []PipelineStage{
+						&LineFilter{Op: OpEq, Value: "bad"},
+					},
 				},
 			},
 			false,
@@ -167,11 +172,11 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"name", CmpEq, "kafka"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: CmpEq, Value: "bad"},
+					&LineFilter{Op: OpEq, Value: "bad"},
 					&LogfmtExpressionParser{},
 					&JSONExpressionParser{},
 					&RegexpLabelParser{Regexp: ".*"},
@@ -194,11 +199,11 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"name", CmpEq, "kafka"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: CmpEq, Value: "bad"},
+					&LineFilter{Op: OpEq, Value: "bad"},
 					&JSONExpressionParser{},
 					&JSONExpressionParser{
 						Labels: []Label{
@@ -208,14 +213,14 @@ func TestParse(t *testing.T) {
 					},
 					&JSONExpressionParser{
 						Exprs: []LabelExtractionExpr{
-							{Label: "foo", EqTo: "10"},
-							{Label: "bar", EqTo: "sus"},
+							{"foo", "10"},
+							{"bar", "sus"},
 						},
 					},
 					&LogfmtExpressionParser{
 						Exprs: []LabelExtractionExpr{
-							{Label: "foo", EqTo: "10"},
-							{Label: "bar", EqTo: "sus"},
+							{"foo", "10"},
+							{"bar", "sus"},
 						},
 					},
 				},
@@ -234,7 +239,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"name", CmpEq, "kafka"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -246,25 +251,25 @@ func TestParse(t *testing.T) {
 					},
 					&KeepLabelsExpr{
 						Matchers: []LabelMatcher{
-							{Label: "foo", Op: CmpRe, Value: "bar"},
+							{"foo", OpRe, "bar"},
 						},
 					},
 					&KeepLabelsExpr{
 						Matchers: []LabelMatcher{
-							{Label: "foo", Op: CmpRe, Value: "bar"},
-							{Label: "foo2", Op: CmpRe, Value: "baz"},
+							{"foo", OpRe, "bar"},
+							{"foo2", OpRe, "baz"},
 						},
 					},
 					&DropLabelsExpr{
 						Labels: []Label{"foo", "foo3"},
 						Matchers: []LabelMatcher{
-							{Label: "foo2", Op: CmpRe, Value: "bar"},
+							{"foo2", OpRe, "bar"},
 						},
 					},
 					&KeepLabelsExpr{
 						Labels: []Label{"foo2", "foo3"},
 						Matchers: []LabelMatcher{
-							{Label: "foo", Op: CmpNotRe, Value: "bar"},
+							{"foo", OpNotRe, "bar"},
 						},
 					},
 				},
@@ -280,7 +285,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"name", CmpEq, "kafka"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -315,7 +320,7 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"name", CmpEq, "kafka"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -343,73 +348,41 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"instance", CmpRe, "kafka-1"},
-						{"name", CmpEq, "kafka"},
+						{"instance", OpRe, "kafka-1"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
 					&LabelFilter{
-						Pred: &NumberFilter{
-							Label: "status",
-							Op:    CmpEq,
-							Value: 200,
-						},
+						Pred: &NumberFilter{"status", OpEq, 200},
 					},
 					&LabelFilter{
 						Pred: &LabelPredicateParen{
-							X: &LabelMatcher{
-								Label: "service",
-								Op:    CmpEq,
-								Value: "sus1",
-							},
+							X: &LabelMatcher{"service", OpEq, "sus1"},
 						},
 					},
 					&LabelFilter{
 						Pred: &LabelPredicateBinOp{
-							Left: &LabelMatcher{
-								Label: "service",
-								Op:    CmpEq,
-								Value: "sus2",
-							},
-							Op: LogOpAnd,
-							Right: &LabelMatcher{
-								Label: "request",
-								Op:    CmpNotEq,
-								Value: "GET",
-							},
+							Left:  &LabelMatcher{"service", OpEq, "sus2"},
+							Op:    OpAnd,
+							Right: &LabelMatcher{"request", OpNotEq, "GET"},
 						},
 					},
 					&LabelFilter{
 						Pred: &LabelPredicateBinOp{
-							Left: &LabelMatcher{
-								Label: "service",
-								Op:    CmpEq,
-								Value: "sus3",
-							},
-							Op: LogOpAnd,
-							Right: &LabelMatcher{
-								Label: "request",
-								Op:    CmpNotEq,
-								Value: "POST",
-							},
+							Left:  &LabelMatcher{"service", OpEq, "sus3"},
+							Op:    OpAnd,
+							Right: &LabelMatcher{"request", OpNotEq, "POST"},
 						},
 					},
 					&LabelFilter{
 						Pred: &LabelPredicateParen{
 							X: &LabelPredicateBinOp{
 								Left: &LabelPredicateParen{
-									X: &LabelMatcher{
-										Label: "service",
-										Op:    CmpEq,
-										Value: "sus4",
-									},
+									X: &LabelMatcher{"service", OpEq, "sus4"},
 								},
-								Op: LogOpAnd,
-								Right: &LabelMatcher{
-									Label: "request",
-									Op:    CmpNotEq,
-									Value: "PUT",
-								},
+								Op:    OpAnd,
+								Right: &LabelMatcher{"request", OpNotEq, "PUT"},
 							},
 						},
 					},
@@ -424,40 +397,24 @@ func TestParse(t *testing.T) {
 			&LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"instance", CmpRe, "kafka-1"},
-						{"name", CmpEq, "kafka"},
+						{"instance", OpRe, "kafka-1"},
+						{"name", OpEq, "kafka"},
 					},
 				},
 				Pipeline: []PipelineStage{
 					&LabelFilter{
 						Pred: &LabelPredicateBinOp{
-							Left: &DurationFilter{
-								Label: "duration",
-								Op:    CmpGte,
-								Value: 20 * time.Millisecond,
-							},
-							Op: LogOpOr,
+							Left: &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
+							Op:   OpOr,
 							Right: &LabelPredicateBinOp{
-								Left: &BytesFilter{
-									Label: "size",
-									Op:    CmpEq,
-									Value: 20 * 1000, // 20kb
-								},
-								Op: LogOpAnd,
-								Right: &LabelMatcher{
-									Label: "method",
-									Op:    CmpNotRe,
-									Value: "2..",
-								},
+								Left:  &BytesFilter{"size", OpEq, 20 * 1000}, // 20kb
+								Op:    OpAnd,
+								Right: &LabelMatcher{"method", OpNotRe, "2.."},
 							},
 						},
 					},
 					&LabelFilter{
-						Pred: &IPFilter{
-							Label: "ip",
-							Op:    CmpEq,
-							Value: "127.0.0.1",
-						},
+						Pred: &IPFilter{"ip", OpEq, "127.0.0.1"},
 					},
 				},
 			},
@@ -467,13 +424,13 @@ func TestParse(t *testing.T) {
 		// Metric queries.
 		// Range aggregation.
 		{
-			`count_over_time({job="mysql"}[5m] offset 15m)`,
+			`count_over_time( ({job="mysql"})[5m] offset 15m)`,
 			&RangeAggregationExpr{
 				Op: RangeOpCount,
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", CmpEq, "mysql"},
+							{"job", OpEq, "mysql"},
 						},
 					},
 					Range: 5 * time.Minute,
@@ -491,7 +448,7 @@ func TestParse(t *testing.T) {
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", CmpEq, "mysql"},
+							{"job", OpEq, "mysql"},
 						},
 					},
 					Range: 5 * time.Hour,
@@ -510,11 +467,11 @@ func TestParse(t *testing.T) {
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", CmpEq, "mysql"},
+							{"job", OpEq, "mysql"},
 						},
 					},
 					Pipeline: []PipelineStage{
-						&LineFilter{Op: CmpEq, Value: "error"},
+						&LineFilter{Op: OpEq, Value: "error"},
 						&LogfmtExpressionParser{},
 					},
 					Range: 5 * time.Hour,
@@ -534,11 +491,11 @@ func TestParse(t *testing.T) {
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", CmpEq, "mysql"},
+							{"job", OpEq, "mysql"},
 						},
 					},
 					Pipeline: []PipelineStage{
-						&LineFilter{Op: CmpEq, Value: "error"},
+						&LineFilter{Op: OpEq, Value: "error"},
 					},
 					Unwrap: &UnwrapExpr{
 						Label: "duration",
@@ -555,17 +512,17 @@ func TestParse(t *testing.T) {
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", CmpEq, "mysql"},
+							{"job", OpEq, "mysql"},
 						},
 					},
 					Pipeline: []PipelineStage{
-						&LineFilter{Op: CmpEq, Value: "error"},
+						&LineFilter{Op: OpEq, Value: "error"},
 					},
 					Unwrap: &UnwrapExpr{
 						Op:    "duration",
 						Label: "bytes",
 						Filters: []LabelMatcher{
-							{Label: "foo", Op: CmpEq, Value: "bar"},
+							{"foo", OpEq, "bar"},
 						},
 					},
 					Range: 5 * time.Hour,
@@ -575,6 +532,28 @@ func TestParse(t *testing.T) {
 		},
 		// Vector aggregation.
 		{
+			`sum(3.14, rate({job="mysql"}[1m])) without ()`,
+			&VectorAggregationExpr{
+				Op: VectorOpSum,
+				Expr: &RangeAggregationExpr{
+					Op: RangeOpRate,
+					Range: LogRangeExpr{
+						Sel: Selector{
+							Matchers: []LabelMatcher{
+								{"job", OpEq, "mysql"},
+							},
+						},
+						Range: 1 * time.Minute,
+					},
+				},
+				Parameter: ptrTo(3.14),
+				Grouping: &Grouping{
+					Op: GroupingOpWithout,
+				},
+			},
+			false,
+		},
+		{
 			`sum by (host) (rate({job="mysql"} |= "error" != "timeout" | json | duration > 10s [1m]))`,
 			&VectorAggregationExpr{
 				Op: VectorOpSum,
@@ -583,19 +562,15 @@ func TestParse(t *testing.T) {
 					Range: LogRangeExpr{
 						Sel: Selector{
 							Matchers: []LabelMatcher{
-								{"job", CmpEq, "mysql"},
+								{"job", OpEq, "mysql"},
 							},
 						},
 						Pipeline: []PipelineStage{
-							&LineFilter{Op: CmpEq, Value: "error"},
-							&LineFilter{Op: CmpNotEq, Value: "timeout"},
+							&LineFilter{Op: OpEq, Value: "error"},
+							&LineFilter{Op: OpNotEq, Value: "timeout"},
 							&JSONExpressionParser{},
 							&LabelFilter{
-								Pred: &DurationFilter{
-									Label: "duration",
-									Op:    CmpGt,
-									Value: 10 * time.Second,
-								},
+								Pred: &DurationFilter{"duration", OpGt, 10 * time.Second},
 							},
 						},
 						Range: 1 * time.Minute,
@@ -652,15 +627,131 @@ func TestParse(t *testing.T) {
 			},
 			false,
 		},
+		// Binary op.
+		{
+			`10.0 + 10.0`,
+			&BinOpExpr{
+				Left:  &LiteralExpr{Value: 10.0},
+				Op:    OpAdd,
+				Right: &LiteralExpr{Value: 10.0},
+			},
+			false,
+		},
+		{
+			`(2+2)*2`,
+			&BinOpExpr{
+				Left: &ParenExpr{
+					X: &BinOpExpr{
+						Left:  &LiteralExpr{Value: 2},
+						Op:    OpAdd,
+						Right: &LiteralExpr{Value: 2},
+					},
+				},
+				Op:    OpMul,
+				Right: &LiteralExpr{Value: 2},
+			},
+			false,
+		},
+		{
+			`2+2*2`,
+			&BinOpExpr{
+				Left: &LiteralExpr{Value: 2},
+				Op:   OpAdd,
+				Right: &BinOpExpr{
+					Left:  &LiteralExpr{Value: 2},
+					Op:    OpMul,
+					Right: &LiteralExpr{Value: 2},
+				},
+			},
+			false,
+		},
+		{
+			`1+2*3/4%5`,
+			&BinOpExpr{
+				Left: &LiteralExpr{Value: 1},
+				Op:   OpAdd,
+				Right: &BinOpExpr{
+					Left: &LiteralExpr{Value: 2},
+					Op:   OpMul,
+					Right: &BinOpExpr{
+						Left: &LiteralExpr{Value: 3},
+						Op:   OpDiv,
+						Right: &BinOpExpr{
+							Left:  &LiteralExpr{Value: 4},
+							Op:    OpMod,
+							Right: &LiteralExpr{Value: 5},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			`10.0 and bool 10.0`,
+			&BinOpExpr{
+				Left: &LiteralExpr{Value: 10.0},
+				Op:   OpAnd,
+				Modifier: BinOpModifier{
+					ReturnBool: true,
+				},
+				Right: &LiteralExpr{Value: 10.0},
+			},
+			false,
+		},
+		{
+			`vector(0) and on () vector(0)`,
+			&BinOpExpr{
+				Left: &VectorExpr{},
+				Op:   OpAnd,
+				Modifier: BinOpModifier{
+					Op: "on",
+				},
+				Right: &VectorExpr{},
+			},
+			false,
+		},
+		{
+			`vector(0) and ignoring (foo) group_left vector(0)`,
+			&BinOpExpr{
+				Left: &VectorExpr{},
+				Op:   OpAnd,
+				Modifier: BinOpModifier{
+					Op:       "ignoring",
+					OpLabels: []Label{"foo"},
+					Group:    "left",
+				},
+				Right: &VectorExpr{},
+			},
+			false,
+		},
+		{
+			`vector(0) and bool ignoring (foo, bar) group_right () vector(0)`,
+			&BinOpExpr{
+				Left: &VectorExpr{},
+				Op:   OpAnd,
+				Modifier: BinOpModifier{
+					Op:         "ignoring",
+					OpLabels:   []Label{"foo", "bar"},
+					Group:      "right",
+					ReturnBool: true,
+				},
+				Right: &VectorExpr{},
+			},
+			false,
+		},
 
 		{"{", nil, true},
 		{"{foo}", nil, true},
 		{"{foo =}", nil, true},
 		{`{foo == "bar"}`, nil, true},
 		{`{foo = bar}`, nil, true},
+		{`{foo = "bar"} | addr == ip(`, nil, true},
+		{`{foo = "bar"} | addr == ip()`, nil, true},
 		{`{foo = "bar"} | addr >= ip("127.0.0.1")`, nil, true},
 		{`{foo = "bar"} | foo == "bar"`, nil, true},
 		{`{foo = "bar"} | status = 10`, nil, true},
+		{`{foo = "bar"} | status = 10s`, nil, true},
+		{`{foo = "bar"} | status = 10b`, nil, true},
 	}
 	for i, tt := range tests {
 		tt := tt
