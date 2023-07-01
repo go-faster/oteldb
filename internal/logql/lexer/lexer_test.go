@@ -33,6 +33,17 @@ func TestTokenize(t *testing.T) {
 			false,
 		},
 		{
+			`{http.method =~ "(GET|POST)"}`,
+			[]Token{
+				{Type: OpenBrace, Text: "{"},
+				{Type: Ident, Text: "http.method"},
+				{Type: Re, Text: "=~"},
+				{Type: String, Text: "(GET|POST)"},
+				{Type: CloseBrace, Text: "}"},
+			},
+			false,
+		},
+		{
 			`{duration =~ "bar"} | duration > 10 and duration(duration) > 10`,
 			[]Token{
 				{Type: OpenBrace, Text: "{"},

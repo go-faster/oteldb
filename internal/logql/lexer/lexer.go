@@ -23,6 +23,11 @@ type lexer struct {
 func Tokenize(s string) ([]Token, error) {
 	l := lexer{}
 	l.scanner.Init(strings.NewReader(s))
+	l.scanner.IsIdentRune = func(ch rune, i int) bool {
+		return ch == '_' || unicode.IsLetter(ch) ||
+			(unicode.IsDigit(ch) && i > 0) ||
+			(ch == '.' && i > 0) // allow dot if it is not the first character of token
+	}
 	l.scanner.Error = func(s *scanner.Scanner, msg string) {
 		l.err = errors.Errorf("scanner error: %s", msg)
 	}
