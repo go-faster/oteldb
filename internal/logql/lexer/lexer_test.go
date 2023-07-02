@@ -14,6 +14,34 @@ func TestTokenize(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			`3h`,
+			[]Token{
+				{Type: Duration, Text: "3h"},
+			},
+			false,
+		},
+		{
+			`3h2m1.99s`,
+			[]Token{
+				{Type: Duration, Text: "3h2m1.99s"},
+			},
+			false,
+		},
+		{
+			`32kb`,
+			[]Token{
+				{Type: Bytes, Text: "32kb"},
+			},
+			false,
+		},
+		{
+			`32.4kb`,
+			[]Token{
+				{Type: Bytes, Text: "32.4kb"},
+			},
+			false,
+		},
+		{
 			`{}`,
 			[]Token{
 				{Type: OpenBrace, Text: "{"},

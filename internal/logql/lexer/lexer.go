@@ -113,7 +113,7 @@ func scanDuration(s *scanner.Scanner, number string) (string, error) {
 
 	for {
 		ch := s.Peek()
-		if !isDurationRune(ch) {
+		if !isDigit(ch) && !isDurationRune(ch) && ch != '.' {
 			break
 		}
 		sb.WriteRune(ch)
@@ -134,13 +134,17 @@ func isDurationRune(r rune) bool {
 	}
 }
 
+func isDigit(r rune) bool {
+	return r >= '0' && r <= '9'
+}
+
 func scanBytes(s *scanner.Scanner, number string) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(number)
 
 	for {
 		ch := s.Peek()
-		if !isBytesRune(ch) {
+		if !isDigit(ch) && !isBytesRune(ch) && ch != '.' {
 			break
 		}
 		sb.WriteRune(ch)
