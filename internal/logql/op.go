@@ -63,11 +63,3 @@ const (
 	VectorOpSort
 	VectorOpSortDesc
 )
-
-// GroupingOp defines grouping operation.
-type GroupingOp int
-
-const (
-	GroupingOpBy GroupingOp = iota + 1
-	GroupingOpWithout
-)

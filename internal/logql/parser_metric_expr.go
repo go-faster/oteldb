@@ -294,9 +294,8 @@ func (p *parser) parseGrouping() (g *Grouping, err error) {
 	g = new(Grouping)
 	switch t := p.next(); t.Type {
 	case lexer.By:
-		g.Op = GroupingOpBy
 	case lexer.Without:
-		g.Op = GroupingOpWithout
+		g.Without = true
 	default:
 		return nil, p.unexpectedToken(t)
 	}

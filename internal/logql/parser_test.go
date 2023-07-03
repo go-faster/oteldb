@@ -466,8 +466,8 @@ var tests = []TestCase{
 				Range: 5 * time.Hour,
 			},
 			Grouping: &Grouping{
-				Op:     GroupingOpWithout,
-				Labels: []Label{"foo"},
+				Labels:  []Label{"foo"},
+				Without: true,
 			},
 		},
 		false,
@@ -490,7 +490,6 @@ var tests = []TestCase{
 			},
 			Parameter: ptrTo(10.0),
 			Grouping: &Grouping{
-				Op:     GroupingOpBy,
 				Labels: []Label{"bar", "foo"},
 			},
 		},
@@ -586,7 +585,7 @@ var tests = []TestCase{
 			},
 			Parameter: ptrTo(3.14),
 			Grouping: &Grouping{
-				Op: GroupingOpWithout,
+				Without: true,
 			},
 		},
 		false,
@@ -615,7 +614,6 @@ var tests = []TestCase{
 				},
 			},
 			Grouping: &Grouping{
-				Op:     GroupingOpBy,
 				Labels: []Label{"host"},
 			},
 		},

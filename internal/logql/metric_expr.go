@@ -57,6 +57,6 @@ type VectorExpr struct {
 
 // Grouping is a grouping clause.
 type Grouping struct {
-	Op     GroupingOp
-	Labels []Label
+	Labels  []Label
+	Without bool
 }
