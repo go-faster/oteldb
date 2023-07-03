@@ -101,6 +101,44 @@ const (
 	RangeOpAbsent
 )
 
+// String implements fmt.Stringer.
+func (op RangeOp) String() string {
+	switch op {
+	case RangeOpCount:
+		return "count_over_time"
+	case RangeOpRate:
+		return "rate"
+	case RangeOpRateCounter:
+		return "rate_counter"
+	case RangeOpBytes:
+		return "bytes_over_time"
+	case RangeOpBytesRate:
+		return "bytes_rate"
+	case RangeOpAvg:
+		return "avg_over_time"
+	case RangeOpSum:
+		return "sum_over_time"
+	case RangeOpMin:
+		return "min_over_time"
+	case RangeOpMax:
+		return "max_over_time"
+	case RangeOpStdvar:
+		return "stdvar_over_time"
+	case RangeOpStddev:
+		return "stddev_over_time"
+	case RangeOpQuantile:
+		return "quantile_over_time"
+	case RangeOpFirst:
+		return "first_over_time"
+	case RangeOpLast:
+		return "last_over_time"
+	case RangeOpAbsent:
+		return "absent_over_time"
+	default:
+		return fmt.Sprintf("<unknown range op %d>", op)
+	}
+}
+
 // VectorOp defines vector aggregation operation.
 type VectorOp int
 
@@ -117,3 +155,33 @@ const (
 	VectorOpSort
 	VectorOpSortDesc
 )
+
+// String implements fmt.Stringer.
+func (op VectorOp) String() string {
+	switch op {
+	case VectorOpSum:
+		return "sum"
+	case VectorOpAvg:
+		return "avg"
+	case VectorOpCount:
+		return "count"
+	case VectorOpMax:
+		return "max"
+	case VectorOpMin:
+		return "min"
+	case VectorOpStddev:
+		return "stddev"
+	case VectorOpStdvar:
+		return "stdvar"
+	case VectorOpBottomk:
+		return "bottomk"
+	case VectorOpTopk:
+		return "topk"
+	case VectorOpSort:
+		return "sort"
+	case VectorOpSortDesc:
+		return "sort_desc"
+	default:
+		return fmt.Sprintf("<unknown vector op %d>", op)
+	}
+}

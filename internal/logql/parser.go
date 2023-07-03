@@ -82,6 +82,14 @@ func (p *parser) parseNumber() (float64, error) {
 	return strconv.ParseFloat(text, 64)
 }
 
+func (p *parser) parseInt() (int, error) {
+	text, err := p.consumeText(lexer.Number)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(text)
+}
+
 func (p *parser) parseDuration() (time.Duration, error) {
 	text, err := p.consumeText(lexer.Duration)
 	if err != nil {

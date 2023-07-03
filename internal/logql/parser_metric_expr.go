@@ -116,7 +116,8 @@ func (p *parser) parseRangeAggregationExpr() (e *RangeAggregationExpr, _ error) 
 		}
 	}
 
-	return e, nil
+	err = e.validate()
+	return e, err
 }
 
 func (p *parser) parseVectorAggregationExpr() (e *VectorAggregationExpr, err error) {
@@ -152,7 +153,7 @@ func (p *parser) parseVectorAggregationExpr() (e *VectorAggregationExpr, err err
 		}
 
 		if t := p.peek(); t.Type == lexer.Number {
-			param, err := p.parseNumber()
+			param, err := p.parseInt()
 			if err != nil {
 				return err
 			}
@@ -179,8 +180,9 @@ func (p *parser) parseVectorAggregationExpr() (e *VectorAggregationExpr, err err
 			return nil, err
 		}
 
-		err = parseMetricExpr()
-		return e, err
+		if err := parseMetricExpr(); err != nil {
+			return nil, err
+		}
 	case lexer.OpenParen:
 		if err := parseMetricExpr(); err != nil {
 			return nil, err
@@ -193,11 +195,12 @@ func (p *parser) parseVectorAggregationExpr() (e *VectorAggregationExpr, err err
 				return nil, err
 			}
 		}
-
-		return e, nil
 	default:
 		return nil, p.unexpectedToken(t)
 	}
+
+	err = e.validate()
+	return e, err
 }
 
 func (p *parser) parseLiteralExpr() (*LiteralExpr, error) {

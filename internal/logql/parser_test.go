@@ -454,7 +454,7 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`avg_over_time({ job = "mysql" }[5h]) without (foo)`,
+		`avg_over_time({ job = "mysql" }[5h] | unwrap label) without (foo)`,
 		&RangeAggregationExpr{
 			Op: RangeOpAvg,
 			Range: LogRangeExpr{
@@ -462,6 +462,9 @@ var tests = []TestCase{
 					Matchers: []LabelMatcher{
 						{"job", OpEq, "mysql"},
 					},
+				},
+				Unwrap: &UnwrapExpr{
+					Label: "label",
 				},
 				Range: 5 * time.Hour,
 			},
@@ -473,9 +476,9 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`avg_over_time(10, { job = "mysql" }[5h] |= "error" | logfmt) by (bar,foo)`,
+		`quantile_over_time(10, { job = "mysql" }[5h] |= "error" | logfmt | unwrap label) by (bar,foo)`,
 		&RangeAggregationExpr{
-			Op: RangeOpAvg,
+			Op: RangeOpQuantile,
 			Range: LogRangeExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
@@ -485,6 +488,9 @@ var tests = []TestCase{
 				Pipeline: []PipelineStage{
 					&LineFilter{Op: OpEq, Value: "error"},
 					&LogfmtExpressionParser{},
+				},
+				Unwrap: &UnwrapExpr{
+					Label: "label",
 				},
 				Range: 5 * time.Hour,
 			},
@@ -569,9 +575,9 @@ var tests = []TestCase{
 	},
 	// Vector aggregation.
 	{
-		`sum(3.14, rate({job="mysql"}[1m])) without ()`,
+		`topk(1, rate({job="mysql"}[1m])) without ()`,
 		&VectorAggregationExpr{
-			Op: VectorOpSum,
+			Op: VectorOpTopk,
 			Expr: &RangeAggregationExpr{
 				Op: RangeOpRate,
 				Range: LogRangeExpr{
@@ -583,7 +589,7 @@ var tests = []TestCase{
 					Range: 1 * time.Minute,
 				},
 			},
-			Parameter: ptrTo(3.14),
+			Parameter: ptrTo(1),
 			Grouping: &Grouping{
 				Without: true,
 			},
@@ -591,7 +597,7 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`sum by (host) (rate({job="mysql"} |= "error" != "timeout" | json | duration > 10s [1m]))`,
+		`sum by (host) (rate({job="mysql"} |= "error" != "timeout" | json | duration > 10s | unwrap label [1m]))`,
 		&VectorAggregationExpr{
 			Op: VectorOpSum,
 			Expr: &RangeAggregationExpr{
@@ -609,6 +615,9 @@ var tests = []TestCase{
 						&LabelFilter{
 							Pred: &DurationFilter{"duration", OpGt, 10 * time.Second},
 						},
+					},
+					Unwrap: &UnwrapExpr{
+						Label: "label",
 					},
 					Range: 1 * time.Minute,
 				},
@@ -923,6 +932,8 @@ var tests = []TestCase{
 	{`{foo == "bar"}`, nil, true},
 	{`{foo = bar}`, nil, true},
 	{`{foo = "bar"} | addr == ip(`, nil, true},
+	{`avg(`, nil, true},
+	{`avg_over_time(`, nil, true},
 	{`avg_over_time({}[5])`, nil, true},
 	{`avg_over_time({}[5h] | unwrap "foo")`, nil, true},
 	{`avg_over_time({} | unwrap "foo" [5h])`, nil, true},
@@ -953,6 +964,24 @@ var tests = []TestCase{
 	{`{} and 1`, nil, true},
 	{`{} or 1`, nil, true},
 	{`{} unless 1`, nil, true},
+
+	// Parameter is required.
+	{`quantile_over_time({}[5h])`, nil, true},
+	{`topk(rate({job="mysql"}[1m]))`, nil, true},
+	// Parameter is not allowed.
+	{`avg_over_time(0, {}[5h])`, nil, true},
+	{`count_over_time(0, {}[5h] | unwrap label)`, nil, true},
+	{`count(1, rate({job="mysql"}[1m]))`, nil, true},
+	// Invalid parameter.
+	{`topk(0, rate({job="mysql"}[1m]))`, nil, true},
+	{`topk(-1, rate({job="mysql"}[1m]))`, nil, true},
+	{`topk(1.1, rate({job="mysql"}[1m]))`, nil, true},
+	// Grouping is not allowed.
+	{`rate({}[5h]) by ()`, nil, true},
+	// Unwrap expression is required.
+	{`avg_over_time({}[5h])`, nil, true},
+	// Unwrap expression is not allowed.
+	{`bytes_rate({}[5h] | unwrap label)`, nil, true},
 }
 
 func TestParse(t *testing.T) {
@@ -967,7 +996,7 @@ func TestParse(t *testing.T) {
 
 			got, err := Parse(tt.input)
 			if tt.wantErr {
-				require.Error(t, err)
+				require.Error(t, err, "err: %+v", err)
 				return
 			}
 			require.NoError(t, err)
