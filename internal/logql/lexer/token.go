@@ -209,7 +209,6 @@ var tokens = map[string]TokenType{
 	"drop":         Drop,
 	"keep":         Keep,
 
-	"range":              Range,
 	"rate":               Rate,
 	"rate_counter":       RateCounter,
 	"count_over_time":    CountOverTime,
