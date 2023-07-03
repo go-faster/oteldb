@@ -497,6 +497,32 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`avg_over_time({}[5h] | unwrap duration)`,
+		&RangeAggregationExpr{
+			Op: RangeOpAvg,
+			Range: LogRangeExpr{
+				Unwrap: &UnwrapExpr{
+					Label: "duration",
+				},
+				Range: 5 * time.Hour,
+			},
+		},
+		false,
+	},
+	{
+		`avg_over_time({} | unwrap duration [5h])`,
+		&RangeAggregationExpr{
+			Op: RangeOpAvg,
+			Range: LogRangeExpr{
+				Unwrap: &UnwrapExpr{
+					Label: "duration",
+				},
+				Range: 5 * time.Hour,
+			},
+		},
+		false,
+	},
+	{
 		`avg_over_time({ job = "mysql" }[5h] |= "error" | unwrap duration)`,
 		&RangeAggregationExpr{
 			Op: RangeOpAvg,
@@ -899,8 +925,24 @@ var tests = []TestCase{
 	{`{foo == "bar"}`, nil, true},
 	{`{foo = bar}`, nil, true},
 	{`{foo = "bar"} | addr == ip(`, nil, true},
+	{`avg_over_time({}[5])`, nil, true},
+	{`avg_over_time({}[5h] | unwrap "foo")`, nil, true},
+	{`avg_over_time({} | unwrap "foo" [5h])`, nil, true},
+	{`avg_over_time({}[10h] offset "foo")`, nil, true},
+	{`avg_over_time({} | json [10h] offset "foo")`, nil, true},
+	{`{foo = "bar"} | "bar"`, nil, true},
+	// Missing identifier.
+	{`{foo = "bar"} | json bar,`, nil, true},
+	{`{foo = "bar"} | logfmt bar,`, nil, true},
+	{`{foo = "bar"} | label_format`, nil, true},
+	{`{foo = "bar"} | label_format foo=`, nil, true},
+	// Missing string value.
+	{`{foo = "bar"} | json bar=`, nil, true},
+	{`{foo = "bar"} | regexp`, nil, true},
+	{`{foo = "bar"} | pattern`, nil, true},
+	{`{foo = "bar"} | line_format`, nil, true},
 	{`{foo = "bar"} | addr == ip()`, nil, true},
-	// Invalid operation.
+	// Invalid comparison operation.
 	{`{foo = "bar"} | addr >= ip("127.0.0.1")`, nil, true},
 	{`{foo = "bar"} | foo == "bar"`, nil, true},
 	{`{foo = "bar"} | status = 10`, nil, true},
