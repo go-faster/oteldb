@@ -1,6 +1,10 @@
 package logql
 
-import "github.com/go-faster/oteldb/internal/logql/lexer"
+import (
+	"github.com/go-faster/errors"
+
+	"github.com/go-faster/oteldb/internal/logql/lexer"
+)
 
 func (p *parser) parseExpr() (expr Expr, err error) {
 	switch t := p.peek(); t.Type {
@@ -74,6 +78,15 @@ func (p *parser) parseExpr() (expr Expr, err error) {
 	right, err := p.parseExpr()
 	if err != nil {
 		return nil, err
+	}
+
+	if binOp.IsLogic() {
+		if v, ok := expr.(*LiteralExpr); ok {
+			return nil, errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, binOp)
+		}
+		if v, ok := right.(*LiteralExpr); ok {
+			return nil, errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, binOp)
+		}
 	}
 
 	return &BinOpExpr{Left: expr, Op: binOp, Modifier: modifier, Right: right}, nil

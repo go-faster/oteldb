@@ -821,14 +821,14 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`10.0 and bool 10.0`,
+		`vector(0) and bool vector(0)`,
 		&BinOpExpr{
-			Left: &LiteralExpr{Value: 10.0},
+			Left: &VectorExpr{},
 			Op:   OpAnd,
 			Modifier: BinOpModifier{
 				ReturnBool: true,
 			},
-			Right: &LiteralExpr{Value: 10.0},
+			Right: &VectorExpr{},
 		},
 		false,
 	},
@@ -946,6 +946,13 @@ var tests = []TestCase{
 	{`{foo = "bar"} | status = 10`, nil, true},
 	{`{foo = "bar"} | status = 10s`, nil, true},
 	{`{foo = "bar"} | status = 10b`, nil, true},
+	// Invalid logical operation.
+	{`1 and {}`, nil, true},
+	{`1 or {}`, nil, true},
+	{`1 unless {}`, nil, true},
+	{`{} and 1`, nil, true},
+	{`{} or 1`, nil, true},
+	{`{} unless 1`, nil, true},
 }
 
 func TestParse(t *testing.T) {

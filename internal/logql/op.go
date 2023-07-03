@@ -1,5 +1,7 @@
 package logql
 
+import "fmt"
+
 // BinOp defines binary operation.
 type BinOp int
 
@@ -25,6 +27,58 @@ const (
 	OpLt
 	OpLte
 )
+
+// String implements fmt.Stringer.
+func (op BinOp) String() string {
+	switch op {
+	case OpAnd:
+		return "and"
+	case OpOr:
+		return "or"
+	case OpUnless:
+		return "unless"
+	case OpAdd:
+		return "+"
+	case OpSub:
+		return "-"
+	case OpMul:
+		return "*"
+	case OpDiv:
+		return "/"
+	case OpMod:
+		return "%"
+	case OpPow:
+		return "^"
+	case OpEq:
+		return "="
+	case OpNotEq:
+		return "!="
+	case OpRe:
+		return "=~"
+	case OpNotRe:
+		return "!~"
+	case OpGt:
+		return "<"
+	case OpGte:
+		return "<="
+	case OpLt:
+		return ">"
+	case OpLte:
+		return ">="
+	default:
+		return fmt.Sprintf("<unknown op %d>", op)
+	}
+}
+
+// IsLogic returns whether operation is logical.
+func (op BinOp) IsLogic() bool {
+	switch op {
+	case OpAnd, OpOr, OpUnless:
+		return true
+	default:
+		return false
+	}
+}
 
 // RangeOp defines range aggregation operation.
 type RangeOp int
