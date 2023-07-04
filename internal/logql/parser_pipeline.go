@@ -38,7 +38,6 @@ func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err er
 				if err != nil {
 					return stages, err
 				}
-				// FIXME(tdakkota): parse regexp?
 				stages = append(stages, p)
 			case lexer.Pattern:
 				pattern, err := p.parseString()
