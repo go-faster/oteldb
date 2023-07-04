@@ -292,15 +292,9 @@ components:
         - values
       properties:
         stream:
-          type: object
-          description: Map of labels
-          additionalProperties:
-            type: string
+          $ref: "#/components/schemas/LabelSet"
         metric:
-          type: object
-          description: Map of labels
-          additionalProperties:
-            type: string
+          $ref: "#/components/schemas/LabelSet"
         values:
           type: array
           items:
