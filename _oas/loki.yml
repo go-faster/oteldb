@@ -8,6 +8,52 @@ externalDocs:
 servers:
   - url: "http://localhost:3100"
 paths:
+  /loki/api/v1/query:
+    get:
+      operationId: query
+      description: Query
+      parameters:
+        - $ref: "#/components/parameters/GrafanaUser"
+        - name: query
+          description: The LogQL query to perform.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          description: |
+            The max number of entries to return.
+            It defaults to `100`.
+            Only applies to query types which produce a stream (log lines) response.
+          in: query
+          schema:
+            type: integer
+            maximum: 5000
+            minimum: 0
+        - name: time
+          description: |
+            The evaluation time for the query as a nanosecond Unix epoch or another supported format.
+            Defaults to now.
+          in: query
+          schema:
+            $ref: "#/components/schemas/LokiTime"
+        - name: direction
+          description: |
+            Determines the sort order of logs.
+            Supported values are `forward` or `backward`.
+            Defaults to `backward`.
+          in: query
+          schema:
+            $ref: "#/components/schemas/Direction"
+      responses:
+        "200":
+          description: Query response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueryResponse"
+        default:
+          $ref: "#/components/responses/Error"
   /loki/api/v1/query_range:
     get:
       operationId: queryRange
