@@ -1,9 +1,12 @@
 package lexer
 
+import "text/scanner"
+
 // Token is a LogQL token.
 type Token struct {
 	Type TokenType
 	Text string
+	Pos  scanner.Position
 }
 
 // TokenType defines LogQL token type.

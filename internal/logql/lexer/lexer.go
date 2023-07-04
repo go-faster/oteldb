@@ -21,6 +21,8 @@ type lexer struct {
 
 // TokenizeOptions is a Tokenize options structure.
 type TokenizeOptions struct {
+	// Filename sets filename for the scanner.
+	Filename string
 	// AllowDots allows dots in identifiers.
 	AllowDots bool
 }
@@ -29,6 +31,7 @@ type TokenizeOptions struct {
 func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 	l := lexer{}
 	l.scanner.Init(strings.NewReader(s))
+	l.scanner.Filename = opts.Filename
 	if opts.AllowDots {
 		l.scanner.IsIdentRune = func(ch rune, i int) bool {
 			return ch == '_' || unicode.IsLetter(ch) ||
@@ -56,6 +59,7 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 
 func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 	tok.Text = text
+	tok.Pos = l.scanner.Position
 	switch r {
 	case scanner.Int, scanner.Float:
 		switch r := l.scanner.Peek(); {

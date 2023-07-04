@@ -3,6 +3,7 @@ package lexer
 import (
 	"fmt"
 	"testing"
+	"text/scanner"
 
 	"github.com/stretchr/testify/require"
 )
@@ -189,6 +190,11 @@ func TestTokenize(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+
+			for i := range got {
+				// Zero position before checking.
+				got[i].Pos = scanner.Position{}
+			}
 			require.Equal(t, tt.want, got)
 		})
 	}
