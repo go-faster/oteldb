@@ -77,6 +77,18 @@ func (s *ErrorStatusCode) SetResponse(val Error) {
 	s.Response = val
 }
 
+// Ref: #/components/schemas/LabelSet
+type LabelSet map[string]string
+
+func (s *LabelSet) init() LabelSet {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
 // Array of label names.
 // Ref: #/components/schemas/Labels
 type Labels struct {
@@ -236,6 +248,52 @@ func (o OptInt) Or(d int) int {
 	return d
 }
 
+// NewOptLabelSet returns new OptLabelSet with value set to v.
+func NewOptLabelSet(v LabelSet) OptLabelSet {
+	return OptLabelSet{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLabelSet is optional LabelSet.
+type OptLabelSet struct {
+	Value LabelSet
+	Set   bool
+}
+
+// IsSet returns true if OptLabelSet was set.
+func (o OptLabelSet) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLabelSet) Reset() {
+	var v LabelSet
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLabelSet) SetTo(v LabelSet) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLabelSet) Get() (v LabelSet, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLabelSet) Or(d LabelSet) LabelSet {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLokiTime returns new OptLokiTime with value set to v.
 func NewOptLokiTime(v LokiTime) OptLokiTime {
 	return OptLokiTime{
@@ -322,98 +380,6 @@ func (o OptPrometheusDuration) Get() (v PrometheusDuration, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptPrometheusDuration) Or(d PrometheusDuration) PrometheusDuration {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptStreamMetric returns new OptStreamMetric with value set to v.
-func NewOptStreamMetric(v StreamMetric) OptStreamMetric {
-	return OptStreamMetric{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptStreamMetric is optional StreamMetric.
-type OptStreamMetric struct {
-	Value StreamMetric
-	Set   bool
-}
-
-// IsSet returns true if OptStreamMetric was set.
-func (o OptStreamMetric) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptStreamMetric) Reset() {
-	var v StreamMetric
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptStreamMetric) SetTo(v StreamMetric) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptStreamMetric) Get() (v StreamMetric, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptStreamMetric) Or(d StreamMetric) StreamMetric {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptStreamStream returns new OptStreamStream with value set to v.
-func NewOptStreamStream(v StreamStream) OptStreamStream {
-	return OptStreamStream{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptStreamStream is optional StreamStream.
-type OptStreamStream struct {
-	Value StreamStream
-	Set   bool
-}
-
-// IsSet returns true if OptStreamStream was set.
-func (o OptStreamStream) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptStreamStream) Reset() {
-	var v StreamStream
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptStreamStream) SetTo(v StreamStream) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptStreamStream) Get() (v StreamStream, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptStreamStream) Or(d StreamStream) StreamStream {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -605,20 +571,18 @@ type Stats struct{}
 
 // Ref: #/components/schemas/Stream
 type Stream struct {
-	// Map of labels.
-	Stream OptStreamStream `json:"stream"`
-	// Map of labels.
-	Metric OptStreamMetric `json:"metric"`
-	Values []Entry         `json:"values"`
+	Stream OptLabelSet `json:"stream"`
+	Metric OptLabelSet `json:"metric"`
+	Values []Entry     `json:"values"`
 }
 
 // GetStream returns the value of Stream.
-func (s *Stream) GetStream() OptStreamStream {
+func (s *Stream) GetStream() OptLabelSet {
 	return s.Stream
 }
 
 // GetMetric returns the value of Metric.
-func (s *Stream) GetMetric() OptStreamMetric {
+func (s *Stream) GetMetric() OptLabelSet {
 	return s.Metric
 }
 
@@ -628,42 +592,18 @@ func (s *Stream) GetValues() []Entry {
 }
 
 // SetStream sets the value of Stream.
-func (s *Stream) SetStream(val OptStreamStream) {
+func (s *Stream) SetStream(val OptLabelSet) {
 	s.Stream = val
 }
 
 // SetMetric sets the value of Metric.
-func (s *Stream) SetMetric(val OptStreamMetric) {
+func (s *Stream) SetMetric(val OptLabelSet) {
 	s.Metric = val
 }
 
 // SetValues sets the value of Values.
 func (s *Stream) SetValues(val []Entry) {
 	s.Values = val
-}
-
-// Map of labels.
-type StreamMetric map[string]string
-
-func (s *StreamMetric) init() StreamMetric {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
-}
-
-// Map of labels.
-type StreamStream map[string]string
-
-func (s *StreamStream) init() StreamStream {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
 }
 
 type Streams []Stream

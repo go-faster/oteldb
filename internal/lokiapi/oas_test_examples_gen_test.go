@@ -35,6 +35,20 @@ func TestError_EncodeDecode(t *testing.T) {
 	var typ2 Error
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestLabelSet_EncodeDecode(t *testing.T) {
+	var typ LabelSet
+	typ = make(LabelSet)
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 LabelSet
+	typ2 = make(LabelSet)
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestLabels_EncodeDecode(t *testing.T) {
 	var typ Labels
 	typ.SetFake()
@@ -143,34 +157,6 @@ func TestStream_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 Stream
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
-func TestStreamMetric_EncodeDecode(t *testing.T) {
-	var typ StreamMetric
-	typ = make(StreamMetric)
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 StreamMetric
-	typ2 = make(StreamMetric)
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
-func TestStreamStream_EncodeDecode(t *testing.T) {
-	var typ StreamStream
-	typ = make(StreamStream)
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 StreamStream
-	typ2 = make(StreamStream)
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestStreams_EncodeDecode(t *testing.T) {

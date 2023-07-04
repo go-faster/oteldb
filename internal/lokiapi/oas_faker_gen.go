@@ -32,6 +32,17 @@ func (s *Error) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *LabelSet) SetFake() {
+	var (
+		elem string
+		m    map[string]string = s.init()
+	)
+	for i := 0; i < 0; i++ {
+		m[fmt.Sprintf("fake%d", i)] = elem
+	}
+}
+
+// SetFake set fake values.
 func (s *Labels) SetFake() {
 	{
 		{
@@ -85,17 +96,8 @@ func (s *MapsDataItem) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *OptStreamMetric) SetFake() {
-	var elem StreamMetric
-	{
-		elem.SetFake()
-	}
-	s.SetTo(elem)
-}
-
-// SetFake set fake values.
-func (s *OptStreamStream) SetFake() {
-	var elem StreamStream
+func (s *OptLabelSet) SetFake() {
+	var elem LabelSet
 	{
 		elem.SetFake()
 	}
@@ -183,28 +185,6 @@ func (s *Stream) SetFake() {
 				s.Values = append(s.Values, elem)
 			}
 		}
-	}
-}
-
-// SetFake set fake values.
-func (s *StreamMetric) SetFake() {
-	var (
-		elem string
-		m    map[string]string = s.init()
-	)
-	for i := 0; i < 0; i++ {
-		m[fmt.Sprintf("fake%d", i)] = elem
-	}
-}
-
-// SetFake set fake values.
-func (s *StreamStream) SetFake() {
-	var (
-		elem string
-		m    map[string]string = s.init()
-	)
-	for i := 0; i < 0; i++ {
-		m[fmt.Sprintf("fake%d", i)] = elem
 	}
 }
 
