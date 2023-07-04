@@ -86,13 +86,16 @@ func (p *parser) unread() {
 }
 
 func (p *parser) unexpectedToken(t lexer.Token) error {
-	return errors.Errorf("unexpected token %q", t.Type)
+	if t.Type == lexer.EOF {
+		return errors.New("unexpected EOF")
+	}
+	return errors.Errorf("unexpected token %q at %s", t.Type, t.Pos)
 }
 
 func (p *parser) consumeText(tt lexer.TokenType) (string, error) {
 	t := p.next()
 	if t.Type != tt {
-		return "", p.unexpectedToken(t)
+		return "", errors.Wrapf(p.unexpectedToken(t), "expected %q", tt)
 	}
 	return t.Text, nil
 }
