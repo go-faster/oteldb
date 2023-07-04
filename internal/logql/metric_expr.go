@@ -1,6 +1,10 @@
 package logql
 
-import "github.com/go-faster/errors"
+import (
+	"regexp"
+
+	"github.com/go-faster/errors"
+)
 
 // MetricExpr is a metric query expression.
 //
@@ -128,6 +132,7 @@ type LabelReplaceExpr struct {
 	Replacement string
 	SrcLabel    string
 	Regex       string
+	Re          *regexp.Regexp // Compiled Regex
 }
 
 // VectorExpr is a vector expression.

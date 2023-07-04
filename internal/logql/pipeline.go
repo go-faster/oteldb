@@ -26,8 +26,9 @@ func (*DistinctFilter) pipelineStage()         {}
 
 // LineFilter is a line filter (`|=`, `!=`, `=~`, `!~`).
 type LineFilter struct {
-	Op    BinOp // OpEq, OpNotEq, OpRe, OpNotRe
-	Value string
+	Op    BinOp          // OpEq, OpNotEq, OpRe, OpNotRe
+	Value string         // Equals to value or to unparsed regexp
+	Re    *regexp.Regexp // Equals to nil, if Op is not OpRe or OpNotRe
 }
 
 // JSONExpressionParser extracts and filters labels from JSON.

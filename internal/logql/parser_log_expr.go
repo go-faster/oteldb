@@ -1,6 +1,11 @@
 package logql
 
-import "github.com/go-faster/oteldb/internal/logql/lexer"
+import (
+	"regexp"
+
+	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/logql/lexer"
+)
 
 func (p *parser) parseLogExpr() (e *LogExpr, err error) {
 	e = new(LogExpr)
@@ -77,6 +82,13 @@ func (p *parser) parseLabelMatcher() (m LabelMatcher, err error) {
 	m.Value, err = p.parseString()
 	if err != nil {
 		return m, err
+	}
+	switch m.Op {
+	case OpRe, OpNotRe:
+		m.Re, err = regexp.Compile("^(?:" + m.Value + ")$")
+		if err != nil {
+			return m, errors.Wrapf(err, "invalid regex in label matcher %q", m.Value)
+		}
 	}
 	return m, nil
 }

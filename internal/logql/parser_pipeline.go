@@ -127,7 +127,19 @@ func (p *parser) parseLineFilter() (f *LineFilter, err error) {
 	}
 
 	f.Value, err = p.parseString()
-	return f, err
+	if err != nil {
+		return nil, err
+	}
+
+	switch f.Op {
+	case OpRe, OpNotRe:
+		f.Re, err = regexp.Compile(f.Value)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid regex in line filter %q", f.Value)
+		}
+	}
+
+	return f, nil
 }
 
 func (p *parser) parseLabelExtraction() (labels []Label, exprs []LabelExtractionExpr, err error) {
@@ -181,7 +193,7 @@ func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
 
 	re, err := regexp.Compile(pattern)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "invalid regex in regexp stage %q", pattern)
 	}
 
 	mapping := map[int]Label{}
@@ -260,7 +272,16 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			if err != nil {
 				return nil, err
 			}
-			pred = &LabelMatcher{Label: Label(t.Text), Op: op, Value: v}
+
+			var re *regexp.Regexp
+			switch op {
+			case OpRe, OpNotRe:
+				re, err = regexp.Compile("^(?:" + v + ")$")
+				if err != nil {
+					return nil, errors.Wrapf(err, "invalid regex in label matcher predicate %q", v)
+				}
+			}
+			pred = &LabelMatcher{Label: Label(t.Text), Op: op, Value: v, Re: re}
 		case lexer.Number:
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:

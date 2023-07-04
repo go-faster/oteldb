@@ -2,7 +2,9 @@ package logql
 
 import (
 	"math"
+	"regexp"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
@@ -266,6 +268,10 @@ func (p *parser) parseLabelReplace() (lr *LabelReplaceExpr, err error) {
 	// TODO(tdakkota): compile regex?
 	if err := readParam(&lr.Regex); err != nil {
 		return nil, err
+	}
+	lr.Re, err = regexp.Compile("^(?:" + lr.Regex + ")$")
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid regex in label_replace %q", lr.Regex)
 	}
 
 	if err := p.consume(lexer.CloseParen); err != nil {

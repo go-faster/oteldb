@@ -27,7 +27,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpEq, "bar"},
+					{"foo", OpEq, "bar", nil},
 				},
 			},
 		},
@@ -38,7 +38,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpEq, "bar"},
+					{"foo", OpEq, "bar", nil},
 				},
 			},
 		},
@@ -49,7 +49,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpEq, "bar"},
+					{"foo", OpEq, "bar", nil},
 				},
 			},
 		},
@@ -60,7 +60,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpNotEq, "bar"},
+					{"foo", OpNotEq, "bar", nil},
 				},
 			},
 		},
@@ -71,7 +71,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpNotEq, "bar"},
+					{"foo", OpNotEq, "bar", nil},
 				},
 			},
 		},
@@ -82,7 +82,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpRe, "bar"},
+					{"foo", OpRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
 				},
 			},
 		},
@@ -93,7 +93,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpNotRe, "bar"},
+					{"foo", OpNotRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
 				},
 			},
 		},
@@ -104,8 +104,8 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"foo", OpNotRe, "bar"},
-					{"foo2", OpRe, "amongus"},
+					{"foo", OpNotRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
+					{"foo2", OpRe, "amongus", regexp.MustCompile(`^(?:amongus)$`)},
 				},
 			},
 		},
@@ -117,7 +117,7 @@ var tests = []TestCase{
 			X: &LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"foo", OpEq, "bar"},
+						{"foo", OpEq, "bar", nil},
 					},
 				},
 			},
@@ -142,15 +142,15 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"instance", OpRe, "kafka-1"},
-					{"name", OpEq, "kafka"},
+					{"instance", OpRe, "kafka-1", regexp.MustCompile(`^(?:kafka-1)$`)},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
 				&LineFilter{Op: OpEq, Value: "bad"},
-				&LineFilter{Op: OpRe, Value: "error"},
+				&LineFilter{Op: OpRe, Value: "error", Re: regexp.MustCompile(`error`)},
 				&LineFilter{Op: OpNotEq, Value: "good"},
-				&LineFilter{Op: OpNotRe, Value: "exception"},
+				&LineFilter{Op: OpNotRe, Value: "exception", Re: regexp.MustCompile(`exception`)},
 			},
 		},
 		false,
@@ -161,8 +161,8 @@ var tests = []TestCase{
 			X: &LogExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"instance", OpRe, "kafka-1"},
-						{"name", OpEq, "kafka"},
+						{"instance", OpRe, "kafka-1", regexp.MustCompile(`^(?:kafka-1)$`)},
+						{"name", OpEq, "kafka", nil},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -185,7 +185,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"name", OpEq, "kafka"},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -217,7 +217,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"name", OpEq, "kafka"},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -257,7 +257,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"name", OpEq, "kafka"},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -269,25 +269,25 @@ var tests = []TestCase{
 				},
 				&KeepLabelsExpr{
 					Matchers: []LabelMatcher{
-						{"foo", OpRe, "bar"},
+						{"foo", OpRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
 					},
 				},
 				&KeepLabelsExpr{
 					Matchers: []LabelMatcher{
-						{"foo", OpRe, "bar"},
-						{"foo2", OpRe, "baz"},
+						{"foo", OpRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
+						{"foo2", OpRe, "baz", regexp.MustCompile(`^(?:baz)$`)},
 					},
 				},
 				&DropLabelsExpr{
 					Labels: []Label{"foo", "foo3"},
 					Matchers: []LabelMatcher{
-						{"foo2", OpRe, "bar"},
+						{"foo2", OpRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
 					},
 				},
 				&KeepLabelsExpr{
 					Labels: []Label{"foo2", "foo3"},
 					Matchers: []LabelMatcher{
-						{"foo", OpNotRe, "bar"},
+						{"foo", OpNotRe, "bar", regexp.MustCompile(`^(?:bar)$`)},
 					},
 				},
 			},
@@ -303,7 +303,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"name", OpEq, "kafka"},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -338,7 +338,7 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"name", OpEq, "kafka"},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -366,8 +366,8 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"instance", OpRe, "kafka-1"},
-					{"name", OpEq, "kafka"},
+					{"instance", OpRe, "kafka-1", regexp.MustCompile(`^(?:kafka-1)$`)},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -376,31 +376,31 @@ var tests = []TestCase{
 				},
 				&LabelFilter{
 					Pred: &LabelPredicateParen{
-						X: &LabelMatcher{"service", OpEq, "sus1"},
+						X: &LabelMatcher{"service", OpEq, "sus1", nil},
 					},
 				},
 				&LabelFilter{
 					Pred: &LabelPredicateBinOp{
-						Left:  &LabelMatcher{"service", OpEq, "sus2"},
+						Left:  &LabelMatcher{"service", OpEq, "sus2", nil},
 						Op:    OpAnd,
-						Right: &LabelMatcher{"request", OpNotEq, "GET"},
+						Right: &LabelMatcher{"request", OpNotEq, "GET", nil},
 					},
 				},
 				&LabelFilter{
 					Pred: &LabelPredicateBinOp{
-						Left:  &LabelMatcher{"service", OpEq, "sus3"},
+						Left:  &LabelMatcher{"service", OpEq, "sus3", nil},
 						Op:    OpAnd,
-						Right: &LabelMatcher{"request", OpNotEq, "POST"},
+						Right: &LabelMatcher{"request", OpNotEq, "POST", nil},
 					},
 				},
 				&LabelFilter{
 					Pred: &LabelPredicateParen{
 						X: &LabelPredicateBinOp{
 							Left: &LabelPredicateParen{
-								X: &LabelMatcher{"service", OpEq, "sus4"},
+								X: &LabelMatcher{"service", OpEq, "sus4", nil},
 							},
 							Op:    OpAnd,
-							Right: &LabelMatcher{"request", OpNotEq, "PUT"},
+							Right: &LabelMatcher{"request", OpNotEq, "PUT", nil},
 						},
 					},
 				},
@@ -415,8 +415,8 @@ var tests = []TestCase{
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
-					{"instance", OpRe, "kafka-1"},
-					{"name", OpEq, "kafka"},
+					{"instance", OpRe, "kafka-1", regexp.MustCompile(`^(?:kafka-1)$`)},
+					{"name", OpEq, "kafka", nil},
 				},
 			},
 			Pipeline: []PipelineStage{
@@ -427,7 +427,7 @@ var tests = []TestCase{
 						Right: &LabelPredicateBinOp{
 							Left:  &BytesFilter{"size", OpEq, 20 * 1000}, // 20kb
 							Op:    OpAnd,
-							Right: &LabelMatcher{"method", OpNotRe, "2.."},
+							Right: &LabelMatcher{"method", OpNotRe, "2..", regexp.MustCompile(`^(?:2..)$`)},
 						},
 					},
 				},
@@ -448,7 +448,7 @@ var tests = []TestCase{
 			Range: LogRangeExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"job", OpEq, "mysql"},
+						{"job", OpEq, "mysql", nil},
 					},
 				},
 				Range: 5 * time.Minute,
@@ -466,7 +466,7 @@ var tests = []TestCase{
 			Range: LogRangeExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"job", OpEq, "mysql"},
+						{"job", OpEq, "mysql", nil},
 					},
 				},
 				Unwrap: &UnwrapExpr{
@@ -488,7 +488,7 @@ var tests = []TestCase{
 			Range: LogRangeExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"job", OpEq, "mysql"},
+						{"job", OpEq, "mysql", nil},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -540,7 +540,7 @@ var tests = []TestCase{
 			Range: LogRangeExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"job", OpEq, "mysql"},
+						{"job", OpEq, "mysql", nil},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -561,7 +561,7 @@ var tests = []TestCase{
 			Range: LogRangeExpr{
 				Sel: Selector{
 					Matchers: []LabelMatcher{
-						{"job", OpEq, "mysql"},
+						{"job", OpEq, "mysql", nil},
 					},
 				},
 				Pipeline: []PipelineStage{
@@ -571,7 +571,7 @@ var tests = []TestCase{
 					Op:    "duration",
 					Label: "bytes",
 					Filters: []LabelMatcher{
-						{"foo", OpEq, "bar"},
+						{"foo", OpEq, "bar", nil},
 					},
 				},
 				Range: 5 * time.Hour,
@@ -589,7 +589,7 @@ var tests = []TestCase{
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", OpEq, "mysql"},
+							{"job", OpEq, "mysql", nil},
 						},
 					},
 					Range: 1 * time.Minute,
@@ -611,7 +611,7 @@ var tests = []TestCase{
 				Range: LogRangeExpr{
 					Sel: Selector{
 						Matchers: []LabelMatcher{
-							{"job", OpEq, "mysql"},
+							{"job", OpEq, "mysql", nil},
 						},
 					},
 					Pipeline: []PipelineStage{
@@ -645,6 +645,7 @@ var tests = []TestCase{
 			Replacement: "replacement",
 			SrcLabel:    "src",
 			Regex:       ".*",
+			Re:          regexp.MustCompile(`^(?:.*)$`),
 		},
 		false,
 	},
@@ -975,6 +976,11 @@ var tests = []TestCase{
 	// Parameter is required.
 	{`quantile_over_time({}[5h])`, nil, true},
 	{`topk(rate({job="mysql"}[1m]))`, nil, true},
+	{`label_replace()`, nil, true},
+	{`label_replace(rate({job="mysql"}[1m]))`, nil, true},
+	{`label_replace(rate({job="mysql"}[1m]), "dst")`, nil, true},
+	{`label_replace(rate({job="mysql"}[1m]), "dst", "replacement")`, nil, true},
+	{`label_replace(rate({job="mysql"}[1m]), "dst", "replacement", "src")`, nil, true},
 	// Parameter is not allowed.
 	{`avg_over_time(0, {}[5h])`, nil, true},
 	{`count_over_time(0, {}[5h] | unwrap label)`, nil, true},
@@ -992,7 +998,11 @@ var tests = []TestCase{
 	{`bytes_rate({}[5h] | unwrap label)`, nil, true},
 
 	// Invalid regexp.
+	{`{foo=~"\\"}`, nil, true},
+	{`{} |~ "\\"`, nil, true},
 	{`{} | regexp "\\"`, nil, true},
+	{`{} | foo=~"\\"`, nil, true},
+	{`label_replace(rate({job="mysql"}[1m]), "dst", "replacement", "src", "\\")`, nil, true},
 	// Duplicate capture.
 	{`{} | regexp "(?P<method>\\w+)(?P<method>\\w+)"`, nil, true},
 	// Invalid capture name.
@@ -1011,7 +1021,7 @@ func TestParse(t *testing.T) {
 
 			got, err := Parse(tt.input, ParseOptions{AllowDots: true})
 			if tt.wantErr {
-				require.Error(t, err, "err: %+v", err)
+				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
