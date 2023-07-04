@@ -138,7 +138,8 @@ var tests = []TestCase{
 				|= "bad"
 				|~ "error"
 				!= "good"
-				!~ "exception"`,
+				!~ "exception"
+				|= ip("127.0.0.1")`,
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
@@ -151,6 +152,7 @@ var tests = []TestCase{
 				&LineFilter{Op: OpRe, Value: "error", Re: regexp.MustCompile(`error`)},
 				&LineFilter{Op: OpNotEq, Value: "good"},
 				&LineFilter{Op: OpNotRe, Value: "exception", Re: regexp.MustCompile(`exception`)},
+				&LineFilter{Op: OpEq, Value: "127.0.0.1", IP: true},
 			},
 		},
 		false,
@@ -943,6 +945,7 @@ var tests = []TestCase{
 	{`label_replace(`, nil, true},
 	{`vector`, nil, true},
 	{`vector(`, nil, true},
+	{`vector(0`, nil, true},
 	{`avg`, nil, true},
 	{`avg(`, nil, true},
 	{`avg_over_time`, nil, true},
@@ -955,6 +958,8 @@ var tests = []TestCase{
 	{`{foo = "bar"} | label_format foo>`, nil, true},
 	{`{foo = "bar"} | "bar"`, nil, true},
 	{`{foo = "bar"} | unwrap label`, nil, true},
+	{`{foo = "bar"} |= foo`, nil, true},
+	{`{foo = "bar"} |= ip("foo"`, nil, true},
 	// Missing identifier.
 	{`{foo = "bar"} | json bar,`, nil, true},
 	{`{foo = "bar"} | logfmt bar,`, nil, true},
@@ -972,8 +977,10 @@ var tests = []TestCase{
 	{`{foo = "bar"} | pattern`, nil, true},
 	{`{foo = "bar"} | line_format`, nil, true},
 	{`{foo = "bar"} | addr == ip()`, nil, true},
+	{`{foo = "bar"} |= ip()`, nil, true},
 	// Invalid comparison operation.
 	{`{foo = "bar"} | addr >= ip("127.0.0.1")`, nil, true},
+	{`{foo = "bar"} |~ ip("127.0.0.1")`, nil, true},
 	{`{foo = "bar"} | foo == "bar"`, nil, true},
 	{`{foo = "bar"} | status = 10`, nil, true},
 	{`{foo = "bar"} | status = 10s`, nil, true},

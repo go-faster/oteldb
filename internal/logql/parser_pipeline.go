@@ -125,19 +125,45 @@ func (p *parser) parseLineFilter() (f *LineFilter, err error) {
 		return nil, p.unexpectedToken(t)
 	}
 
-	f.Value, err = p.parseString()
-	if err != nil {
-		return nil, err
-	}
-
-	switch f.Op {
-	case OpRe, OpNotRe:
-		f.Re, err = regexp.Compile(f.Value)
+	switch t := p.peek(); t.Type {
+	case lexer.String:
+		f.Value, err = p.parseString()
 		if err != nil {
-			return nil, errors.Wrapf(err, "invalid regex in line filter %q", f.Value)
+			return nil, err
 		}
-	}
 
+		switch f.Op {
+		case OpRe, OpNotRe:
+			f.Re, err = regexp.Compile(f.Value)
+			if err != nil {
+				return nil, errors.Wrapf(err, "invalid regex in line filter %q", f.Value)
+			}
+		}
+	case lexer.IP:
+		p.next()
+
+		switch f.Op {
+		case OpEq, OpNotEq:
+		default:
+			return nil, errors.Errorf("invalid IP line filter operation %q", f.Op)
+		}
+
+		if err := p.consume(lexer.OpenParen); err != nil {
+			return nil, err
+		}
+
+		f.Value, err = p.parseString()
+		if err != nil {
+			return nil, err
+		}
+		f.IP = true
+
+		if err := p.consume(lexer.CloseParen); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, p.unexpectedToken(t)
+	}
 	return f, nil
 }
 
