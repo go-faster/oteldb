@@ -1,6 +1,9 @@
 package logql
 
-import "time"
+import (
+	"regexp"
+	"time"
+)
 
 // PipelineStage is a LogQL pipeline stage.
 type PipelineStage interface {
@@ -51,7 +54,8 @@ type LabelExtractionExpr struct {
 
 // RegexpLabelParser extracts labels using regexp capture groups.
 type RegexpLabelParser struct {
-	Regexp string
+	Regexp  *regexp.Regexp
+	Mapping map[int]Label
 }
 
 // PatternLabelParser extracts labels using log pattern.

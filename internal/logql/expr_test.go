@@ -56,7 +56,7 @@ func TestReduceBinOp(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			expr, err := Parse(tt.input)
+			expr, err := Parse(tt.input, ParseOptions{AllowDots: true})
 			require.NoError(t, err, "invalid input")
 
 			require.IsType(t, &BinOpExpr{}, expr, "wrong expression type")

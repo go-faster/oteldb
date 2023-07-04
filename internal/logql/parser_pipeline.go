@@ -1,6 +1,8 @@
 package logql
 
 import (
+	"regexp"
+
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql/lexer"
@@ -32,12 +34,12 @@ func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err er
 				}
 				stages = append(stages, &LogfmtExpressionParser{Labels: labels, Exprs: exprs})
 			case lexer.Regexp:
-				re, err := p.parseString()
+				p, err := p.parseRegexpLabelParser()
 				if err != nil {
 					return stages, err
 				}
 				// FIXME(tdakkota): parse regexp?
-				stages = append(stages, &RegexpLabelParser{Regexp: re})
+				stages = append(stages, p)
 			case lexer.Pattern:
 				pattern, err := p.parseString()
 				if err != nil {
@@ -169,6 +171,42 @@ func (p *parser) parseLabelExtraction() (labels []Label, exprs []LabelExtraction
 			return labels, exprs, p.unexpectedToken(t)
 		}
 	}
+}
+
+func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
+	pattern, err := p.parseString()
+	if err != nil {
+		return nil, err
+	}
+
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	mapping := map[int]Label{}
+	unique := map[string]struct{}{}
+	for i, name := range re.SubexpNames() {
+		// Not capturing.
+		if name == "" {
+			continue
+		}
+
+		if _, ok := unique[name]; ok {
+			return nil, errors.Wrapf(err, "duplicate capture %q", name)
+		}
+		unique[name] = struct{}{}
+
+		if err := IsValidLabel(name, p.allowDots); err != nil {
+			return nil, errors.Wrapf(err, "invalid label name %q", name)
+		}
+		mapping[i] = Label(name)
+	}
+
+	return &RegexpLabelParser{
+		Regexp:  re,
+		Mapping: mapping,
+	}, nil
 }
 
 func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {

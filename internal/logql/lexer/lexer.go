@@ -19,14 +19,22 @@ type lexer struct {
 	err     error
 }
 
+// TokenizeOptions is a Tokenize options structure.
+type TokenizeOptions struct {
+	// AllowDots allows dots in identifiers.
+	AllowDots bool
+}
+
 // Tokenize scans given string to LogQL tokens.
-func Tokenize(s string) ([]Token, error) {
+func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 	l := lexer{}
 	l.scanner.Init(strings.NewReader(s))
-	l.scanner.IsIdentRune = func(ch rune, i int) bool {
-		return ch == '_' || unicode.IsLetter(ch) ||
-			(unicode.IsDigit(ch) && i > 0) ||
-			(ch == '.' && i > 0) // allow dot if it is not the first character of token
+	if opts.AllowDots {
+		l.scanner.IsIdentRune = func(ch rune, i int) bool {
+			return ch == '_' || unicode.IsLetter(ch) ||
+				(unicode.IsDigit(ch) && i > 0) ||
+				(ch == '.' && i > 0) // allow dot if it is not the first character of token
+		}
 	}
 	l.scanner.Error = func(s *scanner.Scanner, msg string) {
 		l.err = errors.Errorf("scanner error: %s", msg)

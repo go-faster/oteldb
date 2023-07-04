@@ -2,6 +2,7 @@ package logql
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -176,7 +177,7 @@ var tests = []TestCase{
 				|= "bad"
 				| logfmt
 				| json
-				| regexp ".*"
+				| regexp "(?P<method>\\w+)"
 				| pattern "<ip>"
 				| unpack
 				| line_format "{{ . }}"
@@ -191,7 +192,12 @@ var tests = []TestCase{
 				&LineFilter{Op: OpEq, Value: "bad"},
 				&LogfmtExpressionParser{},
 				&JSONExpressionParser{},
-				&RegexpLabelParser{Regexp: ".*"},
+				&RegexpLabelParser{
+					Regexp: regexp.MustCompile(`(?P<method>\w+)`),
+					Mapping: map[int]Label{
+						1: "method",
+					},
+				},
 				&PatternLabelParser{Pattern: "<ip>"},
 				&UnpackLabelParser{},
 				&LineFormat{Template: "{{ . }}"},
@@ -940,6 +946,7 @@ var tests = []TestCase{
 	{`avg_over_time({}[10h] offset "foo")`, nil, true},
 	{`avg_over_time({} | json [10h] offset "foo")`, nil, true},
 	{`{foo = "bar"} | "bar"`, nil, true},
+	{`{foo = "bar"} | unwrap label`, nil, true},
 	// Missing identifier.
 	{`{foo = "bar"} | json bar,`, nil, true},
 	{`{foo = "bar"} | logfmt bar,`, nil, true},
@@ -983,6 +990,13 @@ var tests = []TestCase{
 	{`avg_over_time({}[5h])`, nil, true},
 	// Unwrap expression is not allowed.
 	{`bytes_rate({}[5h] | unwrap label)`, nil, true},
+
+	// Invalid regexp.
+	{`{} | regexp "\\"`, nil, true},
+	// Duplicate capture.
+	{`{} | regexp "(?P<method>\\w+)(?P<method>\\w+)"`, nil, true},
+	// Invalid capture name.
+	{`{} | regexp "(?P<0a>\\w+)"`, nil, true},
 }
 
 func TestParse(t *testing.T) {
@@ -995,7 +1009,7 @@ func TestParse(t *testing.T) {
 				}
 			}()
 
-			got, err := Parse(tt.input)
+			got, err := Parse(tt.input, ParseOptions{AllowDots: true})
 			if tt.wantErr {
 				require.Error(t, err, "err: %+v", err)
 				return
@@ -1016,7 +1030,7 @@ func FuzzParse(f *testing.F) {
 				t.Logf("Input:\n%s", input)
 			}
 
-			_, _ = Parse(input)
+			_, _ = Parse(input, ParseOptions{AllowDots: true})
 		}()
 	})
 }
@@ -1044,7 +1058,7 @@ func TestParseSelector(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			gotSel, err := ParseSelector(tt.input)
+			gotSel, err := ParseSelector(tt.input, ParseOptions{AllowDots: true})
 			if tt.wantErr {
 				require.Error(t, err)
 				return

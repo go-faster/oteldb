@@ -183,7 +183,7 @@ func TestTokenize(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			got, err := Tokenize(tt.input)
+			got, err := Tokenize(tt.input, TokenizeOptions{AllowDots: true})
 			if tt.wantErr {
 				require.NoError(t, err)
 				return
@@ -204,7 +204,7 @@ func FuzzTokenize(f *testing.F) {
 				t.Logf("Input:\n%s", input)
 			}
 
-			_, _ = Tokenize(input)
+			_, _ = Tokenize(input, TokenizeOptions{AllowDots: true})
 		}()
 	})
 }

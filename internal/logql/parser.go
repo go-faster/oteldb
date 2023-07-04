@@ -10,26 +10,34 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
+// ParseOptions is LogQL parser options.
+type ParseOptions struct {
+	// AllowDots allows dots in identifiers.
+	AllowDots bool
+}
+
 // Parse parses LogQL query from string.
-func Parse(s string) (Expr, error) {
-	tokens, err := lexer.Tokenize(s)
+func Parse(s string, opts ParseOptions) (Expr, error) {
+	tokens, err := lexer.Tokenize(s, lexer.TokenizeOptions{AllowDots: opts.AllowDots})
 	if err != nil {
 		return nil, errors.Wrap(err, "tokenize")
 	}
 	p := parser{
-		tokens: tokens,
+		tokens:    tokens,
+		allowDots: opts.AllowDots,
 	}
 	return p.parseExpr()
 }
 
 // ParseSelector parses label selector from string.
-func ParseSelector(s string) (sel Selector, _ error) {
-	tokens, err := lexer.Tokenize(s)
+func ParseSelector(s string, opts ParseOptions) (sel Selector, _ error) {
+	tokens, err := lexer.Tokenize(s, lexer.TokenizeOptions{AllowDots: opts.AllowDots})
 	if err != nil {
 		return sel, errors.Wrap(err, "tokenize")
 	}
 	p := parser{
-		tokens: tokens,
+		tokens:    tokens,
+		allowDots: opts.AllowDots,
 	}
 
 	sel, err = p.parseSelector()
@@ -45,6 +53,8 @@ func ParseSelector(s string) (sel Selector, _ error) {
 type parser struct {
 	tokens []lexer.Token
 	pos    int
+
+	allowDots bool
 }
 
 func (p *parser) consume(tt lexer.TokenType) error {
