@@ -10,7 +10,7 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
-// Parse parses given LogQL query.
+// Parse parses LogQL query from string.
 func Parse(s string) (Expr, error) {
 	tokens, err := lexer.Tokenize(s)
 	if err != nil {
@@ -20,6 +20,26 @@ func Parse(s string) (Expr, error) {
 		tokens: tokens,
 	}
 	return p.parseExpr()
+}
+
+// ParseSelector parses label selector from string.
+func ParseSelector(s string) (sel Selector, _ error) {
+	tokens, err := lexer.Tokenize(s)
+	if err != nil {
+		return sel, errors.Wrap(err, "tokenize")
+	}
+	p := parser{
+		tokens: tokens,
+	}
+
+	sel, err = p.parseSelector()
+	if err != nil {
+		return sel, err
+	}
+	if t := p.next(); t.Type != lexer.EOF {
+		return sel, errors.Errorf("unexpected tail token %q", t.Type)
+	}
+	return sel, nil
 }
 
 type parser struct {
@@ -36,7 +56,9 @@ func (p *parser) consume(tt lexer.TokenType) error {
 
 func (p *parser) next() lexer.Token {
 	t := p.peek()
-	p.pos++
+	if t.Type != lexer.EOF {
+		p.pos++
+	}
 	return t
 }
 

@@ -1019,3 +1019,37 @@ func FuzzParse(f *testing.F) {
 		}()
 	})
 }
+
+func TestParseSelector(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantSel Selector
+		wantErr bool
+	}{
+		{`{}`, Selector{}, false},
+		{
+			`{foo="bar"}`,
+			Selector{
+				Matchers: []LabelMatcher{
+					{Label: "foo", Op: OpEq, Value: "bar"},
+				},
+			},
+			false,
+		},
+
+		{``, Selector{}, true},
+		{`{} | json`, Selector{}, true},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			gotSel, err := ParseSelector(tt.input)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.wantSel, gotSel)
+		})
+	}
+}
