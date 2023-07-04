@@ -42,6 +42,15 @@ func (s *Server) Labels(ctx context.Context, params lokiapi.LabelsParams) (*loki
 	return s.api.Labels(ctx, params)
 }
 
+// Query implements query operation.
+//
+// Query.
+//
+// GET /loki/api/v1/query
+func (s *Server) Query(ctx context.Context, params lokiapi.QueryParams) (*lokiapi.QueryResponse, error) {
+	return s.api.Query(ctx, params)
+}
+
 // QueryRange implements queryRange operation.
 //
 // Query range.

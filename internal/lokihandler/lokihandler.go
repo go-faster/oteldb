@@ -186,6 +186,15 @@ func (h *LokiAPI) Push(context.Context, lokiapi.PushReq) error {
 	return ht.ErrNotImplemented
 }
 
+// Query implements query operation.
+//
+// Query.
+//
+// GET /loki/api/v1/query
+func (h *LokiAPI) Query(context.Context, lokiapi.QueryParams) (*lokiapi.QueryResponse, error) {
+	return nil, ht.ErrNotImplemented
+}
+
 // QueryRange implements queryRange operation.
 //
 // Query range.
