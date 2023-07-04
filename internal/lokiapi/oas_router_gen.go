@@ -144,23 +144,42 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 					return
 				}
-			case 'q': // Prefix: "query_range"
-				if l := len("query_range"); len(elem) >= l && elem[0:l] == "query_range" {
+			case 'q': // Prefix: "query"
+				if l := len("query"); len(elem) >= l && elem[0:l] == "query" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
 				if len(elem) == 0 {
-					// Leaf node.
 					switch r.Method {
 					case "GET":
-						s.handleQueryRangeRequest([0]string{}, elemIsEscaped, w, r)
+						s.handleQueryRequest([0]string{}, elemIsEscaped, w, r)
 					default:
 						s.notAllowed(w, r, "GET")
 					}
 
 					return
+				}
+				switch elem[0] {
+				case '_': // Prefix: "_range"
+					if l := len("_range"); len(elem) >= l && elem[0:l] == "_range" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleQueryRangeRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "GET")
+						}
+
+						return
+					}
 				}
 			case 's': // Prefix: "series"
 				if l := len("series"); len(elem) >= l && elem[0:l] == "series" {
@@ -357,8 +376,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						return
 					}
 				}
-			case 'q': // Prefix: "query_range"
-				if l := len("query_range"); len(elem) >= l && elem[0:l] == "query_range" {
+			case 'q': // Prefix: "query"
+				if l := len("query"); len(elem) >= l && elem[0:l] == "query" {
 					elem = elem[l:]
 				} else {
 					break
@@ -367,15 +386,37 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				if len(elem) == 0 {
 					switch method {
 					case "GET":
-						// Leaf: QueryRange
-						r.name = "QueryRange"
-						r.operationID = "queryRange"
-						r.pathPattern = "/loki/api/v1/query_range"
+						r.name = "Query"
+						r.operationID = "query"
+						r.pathPattern = "/loki/api/v1/query"
 						r.args = args
 						r.count = 0
 						return r, true
 					default:
 						return
+					}
+				}
+				switch elem[0] {
+				case '_': // Prefix: "_range"
+					if l := len("_range"); len(elem) >= l && elem[0:l] == "_range" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						switch method {
+						case "GET":
+							// Leaf: QueryRange
+							r.name = "QueryRange"
+							r.operationID = "queryRange"
+							r.pathPattern = "/loki/api/v1/query_range"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
 					}
 				}
 			case 's': // Prefix: "series"

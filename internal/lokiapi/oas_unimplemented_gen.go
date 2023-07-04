@@ -41,6 +41,15 @@ func (UnimplementedHandler) Push(ctx context.Context, req PushReq) error {
 	return ht.ErrNotImplemented
 }
 
+// Query implements query operation.
+//
+// Query.
+//
+// GET /loki/api/v1/query
+func (UnimplementedHandler) Query(ctx context.Context, params QueryParams) (r *QueryResponse, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // QueryRange implements queryRange operation.
 //
 // Query range.
