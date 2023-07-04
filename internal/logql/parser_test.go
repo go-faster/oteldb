@@ -978,6 +978,7 @@ var tests = []TestCase{
 	{`topk(1.1, rate({job="mysql"}[1m]))`, nil, true},
 	// Grouping is not allowed.
 	{`rate({}[5h]) by ()`, nil, true},
+	{`sort(rate({}[5h])) by ()`, nil, true},
 	// Unwrap expression is required.
 	{`avg_over_time({}[5h])`, nil, true},
 	// Unwrap expression is not allowed.

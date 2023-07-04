@@ -106,6 +106,13 @@ func (e *VectorAggregationExpr) validate() error {
 			return errors.Errorf("parameter is not supported for operation %q", e.Op)
 		}
 	}
+
+	switch e.Op {
+	case VectorOpSort, VectorOpSortDesc:
+		if e.Grouping != nil {
+			return errors.Errorf("grouping is not supported for operation %q", e.Op)
+		}
+	}
 	return nil
 }
 
