@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/go-faster/errors"
+
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
