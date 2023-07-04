@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/go-faster/sdk/app"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
@@ -34,6 +35,10 @@ func makeRouteFinder[R Route, S OgenServer[R]](server S) RouteFinder {
 // ServiceMiddleware is a generic middleware for any service.
 func ServiceMiddleware(s service, lg *zap.Logger, m *app.Metrics) http.Handler {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Inject logger.
+		reqCtx := r.Context()
+		r = r.WithContext(zctx.Base(reqCtx, lg))
+
 		var (
 			opID   = zap.Skip()
 			opName = zap.Skip()
