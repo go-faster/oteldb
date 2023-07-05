@@ -184,13 +184,13 @@ func (p *parser) parseLabelExtraction() (labels []Label, exprs []LabelExtraction
 		case lexer.Eq:
 			p.next()
 
-			value, err := p.parseString()
+			expr, err := p.parseString()
 			if err != nil {
 				return labels, exprs, err
 			}
 			exprs = append(exprs, LabelExtractionExpr{
 				Label: label,
-				EqTo:  value,
+				Expr:  expr,
 			})
 
 			if t := p.peek(); t.Type != lexer.Comma {

@@ -36,7 +36,7 @@ type LineFilter struct {
 type JSONExpressionParser struct {
 	// Labels is a set of labels to extract.
 	Labels []Label
-	// Exprs is a set of predicates to filter.
+	// Exprs is a set of extraction expressions.
 	Exprs []LabelExtractionExpr
 }
 
@@ -44,14 +44,14 @@ type JSONExpressionParser struct {
 type LogfmtExpressionParser struct {
 	// Labels is a set of labels to extract.
 	Labels []Label
-	// Exprs is a set of predicates to filter.
+	// Exprs is a set of extraction expressions.
 	Exprs []LabelExtractionExpr
 }
 
 // LabelExtractionExpr defines label value to extract.
 type LabelExtractionExpr struct {
 	Label Label
-	EqTo  string
+	Expr  string
 }
 
 // RegexpLabelParser extracts labels using regexp capture groups.
