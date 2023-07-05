@@ -9,6 +9,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 
+	"github.com/ogen-go/ogen/json"
 	"github.com/ogen-go/ogen/validate"
 )
 
@@ -1083,13 +1084,22 @@ func (s *Streams) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes Value as json.
-func (s Value) Encode(e *jx.Encoder) {
-	switch s.Type {
-	case StringValue:
-		e.Str(s.String)
-	case Float64Value:
-		e.Float64(s.Float64)
+// Encode implements json.Marshaler.
+func (s *Value) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *Value) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		json.EncodeStringUint64(e, elem)
+	}
+	{
+		elem := s.V
+		e.Str(elem)
 	}
 }
 
@@ -1098,30 +1108,39 @@ func (s *Value) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Value to nil")
 	}
-	// Sum type type_discriminator.
-	switch t := d.Next(); t {
-	case jx.Number:
-		v, err := d.Float64()
-		s.Float64 = float64(v)
-		if err != nil {
-			return err
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := json.DecodeStringUint64(d)
+			s.T = v
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			v, err := d.Str()
+			s.V = string(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
 		}
-		s.Type = Float64Value
-	case jx.String:
-		v, err := d.Str()
-		s.String = string(v)
-		if err != nil {
-			return err
-		}
-		s.Type = StringValue
-	default:
-		return errors.Errorf("unexpected json type %q", t)
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
 	}
 	return nil
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s Value) MarshalJSON() ([]byte, error) {
+func (s *Value) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil

@@ -609,68 +609,29 @@ func (s *Stream) SetValues(val []Entry) {
 type Streams []Stream
 
 // Ref: #/components/schemas/Value
-// Value represents sum type.
 type Value struct {
-	Type    ValueType // switch on this field
-	String  string
-	Float64 float64
+	T uint64
+	V string
 }
 
-// ValueType is oneOf type of Value.
-type ValueType string
-
-// Possible values for ValueType.
-const (
-	StringValue  ValueType = "string"
-	Float64Value ValueType = "float64"
-)
-
-// IsString reports whether Value is string.
-func (s Value) IsString() bool { return s.Type == StringValue }
-
-// IsFloat64 reports whether Value is float64.
-func (s Value) IsFloat64() bool { return s.Type == Float64Value }
-
-// SetString sets Value to string.
-func (s *Value) SetString(v string) {
-	s.Type = StringValue
-	s.String = v
+// GetT returns the value of T.
+func (s *Value) GetT() uint64 {
+	return s.T
 }
 
-// GetString returns string and true boolean if Value is string.
-func (s Value) GetString() (v string, ok bool) {
-	if !s.IsString() {
-		return v, false
-	}
-	return s.String, true
+// GetV returns the value of V.
+func (s *Value) GetV() string {
+	return s.V
 }
 
-// NewStringValue returns new Value from string.
-func NewStringValue(v string) Value {
-	var s Value
-	s.SetString(v)
-	return s
+// SetT sets the value of T.
+func (s *Value) SetT(val uint64) {
+	s.T = val
 }
 
-// SetFloat64 sets Value to float64.
-func (s *Value) SetFloat64(v float64) {
-	s.Type = Float64Value
-	s.Float64 = v
-}
-
-// GetFloat64 returns float64 and true boolean if Value is float64.
-func (s Value) GetFloat64() (v float64, ok bool) {
-	if !s.IsFloat64() {
-		return v, false
-	}
-	return s.Float64, true
-}
-
-// NewFloat64Value returns new Value from float64.
-func NewFloat64Value(v float64) Value {
-	var s Value
-	s.SetFloat64(v)
-	return s
+// SetV sets the value of V.
+func (s *Value) SetV(val string) {
+	s.V = val
 }
 
 // Array of strings.

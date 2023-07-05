@@ -206,12 +206,16 @@ func (s *Streams) SetFake() {
 
 // SetFake set fake values.
 func (s *Value) SetFake() {
-	var variant string
-
 	{
-		variant = "string"
+		{
+			s.T = uint64(0)
+		}
 	}
-	s.SetString(variant)
+	{
+		{
+			s.V = "string"
+		}
+	}
 }
 
 // SetFake set fake values.
