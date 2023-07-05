@@ -22,7 +22,7 @@ func NewRecordFromOTEL(
 		SeverityText:      record.SeverityText(),
 		SeverityNumber:    record.SeverityNumber(),
 		Body:              record.Body().AsString(),
-		Attrs:             otelstorage.Attrs{},
+		Attrs:             otelstorage.Attrs(record.Attributes()),
 		ResourceAttrs:     otelstorage.Attrs(res.Attributes()),
 		ScopeName:         scope.Name(),
 		ScopeVersion:      scope.Version(),
