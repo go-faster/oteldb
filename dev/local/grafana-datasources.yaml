@@ -6,12 +6,18 @@ datasources:
     access: proxy
     orgId: 1
     url: http://oteldb:3200
-    basicAuth: false
     isDefault: true
-    version: 1
-    editable: false
-    apiVersion: 1
     uid: tempo
+    jsonData:
+      httpMethod: GET
+      serviceMap:
+        datasourceUid: prometheus
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://oteldb:3100
+    uid: loki
     jsonData:
       httpMethod: GET
       serviceMap:
