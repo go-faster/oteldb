@@ -11,18 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestEntry_EncodeDecode(t *testing.T) {
-	var typ Entry
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 Entry
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
 func TestError_EncodeDecode(t *testing.T) {
 	var typ Error
 	typ.SetFake()

@@ -47,8 +47,6 @@ func (s *Direction) UnmarshalText(data []byte) error {
 	}
 }
 
-type Entry []Value
-
 type Error string
 
 // ErrorStatusCode wraps Error with StatusCode.
@@ -573,7 +571,7 @@ type Stats struct{}
 type Stream struct {
 	Stream OptLabelSet `json:"stream"`
 	Metric OptLabelSet `json:"metric"`
-	Values []Entry     `json:"values"`
+	Values []Value     `json:"values"`
 }
 
 // GetStream returns the value of Stream.
@@ -587,7 +585,7 @@ func (s *Stream) GetMetric() OptLabelSet {
 }
 
 // GetValues returns the value of Values.
-func (s *Stream) GetValues() []Entry {
+func (s *Stream) GetValues() []Value {
 	return s.Values
 }
 
@@ -602,7 +600,7 @@ func (s *Stream) SetMetric(val OptLabelSet) {
 }
 
 // SetValues sets the value of Values.
-func (s *Stream) SetValues(val []Entry) {
+func (s *Stream) SetValues(val []Value) {
 	s.Values = val
 }
 

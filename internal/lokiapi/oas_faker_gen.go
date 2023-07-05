@@ -7,22 +7,6 @@ import (
 )
 
 // SetFake set fake values.
-func (s *Entry) SetFake() {
-	var unwrapped []Value
-	{
-		unwrapped = nil
-		for i := 0; i < 0; i++ {
-			var elem Value
-			{
-				elem.SetFake()
-			}
-			unwrapped = append(unwrapped, elem)
-		}
-	}
-	*s = Entry(unwrapped)
-}
-
-// SetFake set fake values.
 func (s *Error) SetFake() {
 	var unwrapped string
 	{
@@ -178,7 +162,7 @@ func (s *Stream) SetFake() {
 		{
 			s.Values = nil
 			for i := 0; i < 0; i++ {
-				var elem Entry
+				var elem Value
 				{
 					elem.SetFake()
 				}
