@@ -9,8 +9,8 @@ import (
 
 // Record is a log record.
 type Record struct {
-	ObservedTimestamp otelstorage.Timestamp `json:"observed_timestamp" yson:"observed_timestamp"`
 	Timestamp         otelstorage.Timestamp `json:"timestamp" yson:"timestamp"`
+	ObservedTimestamp otelstorage.Timestamp `json:"observed_timestamp" yson:"observed_timestamp"`
 	TraceID           otelstorage.TraceID   `json:"trace_id" yson:"trace_id"`
 	SpanID            otelstorage.SpanID    `json:"span_id" yson:"span_id"`
 	Flags             plog.LogRecordFlags   `json:"flags" yson:"flags"`
@@ -31,8 +31,8 @@ func (Record) YTSchema() schema.Schema {
 	return schema.Schema{
 		UniqueKeys: true,
 		Columns: []schema.Column{
-			{Name: `observed_timestamp`, ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
-			{Name: `timestamp`, ComplexType: schema.TypeUint64},
+			{Name: `timestamp`, ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
+			{Name: `observed_timestamp`, ComplexType: schema.TypeUint64},
 			{Name: `trace_id`, ComplexType: schema.TypeBytes},
 			{Name: `span_id`, ComplexType: schema.TypeUint64},
 			{Name: `flags`, ComplexType: schema.TypeUint32},
