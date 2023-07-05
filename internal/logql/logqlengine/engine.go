@@ -159,9 +159,7 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 		}
 
 		entries++
-		stream.Values = append(stream.Values, lokiapi.Entry{
-			{T: uint64(record.Timestamp), V: newLine},
-		})
+		stream.Values = append(stream.Values, lokiapi.Value{T: uint64(record.Timestamp), V: newLine})
 
 		streams[key] = stream
 	}
