@@ -47,11 +47,11 @@ func TestReduceBinOp(t *testing.T) {
 		{`2 <= 2`, 1., true},
 		{`2 <= 1`, 0., true},
 
-		{`{} + {}`, 0, false},
-		{`0 + {}`, 0, false},
-		{`{} + 0`, 0, false},
-		{`({} + {}) * 2`, 0, false},
-		{`2 * ({} + {})`, 0, false},
+		{`vector(0) + vector(0)`, 0, false},
+		{`0 + vector(0)`, 0, false},
+		{`vector(0) + 0`, 0, false},
+		{`(vector(0) + vector(0)) * 2`, 0, false},
+		{`2 * (vector(0) + vector(0))`, 0, false},
 	}
 	for i, tt := range tests {
 		tt := tt

@@ -11,6 +11,19 @@ import (
 
 func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 	switch t := p.peek(); t.Type {
+	case lexer.OpenParen:
+		p.next()
+
+		subExpr, err := p.parseExpr()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := p.consume(lexer.CloseParen); err != nil {
+			return nil, err
+		}
+
+		expr = &ParenExpr{X: subExpr}
 	case lexer.CountOverTime,
 		lexer.Rate,
 		lexer.RateCounter,
@@ -26,7 +39,10 @@ func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 		lexer.FirstOverTime,
 		lexer.LastOverTime,
 		lexer.AbsentOverTime:
-		return p.parseRangeAggregationExpr()
+		expr, err = p.parseRangeAggregationExpr()
+		if err != nil {
+			return nil, err
+		}
 	case lexer.Sum,
 		lexer.Avg,
 		lexer.Count,
@@ -38,16 +54,85 @@ func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 		lexer.Topk,
 		lexer.Sort,
 		lexer.SortDesc:
-		return p.parseVectorAggregationExpr()
+		expr, err = p.parseVectorAggregationExpr()
+		if err != nil {
+			return nil, err
+		}
 	case lexer.Number, lexer.Add, lexer.Sub:
-		return p.parseLiteralExpr()
+		expr, err = p.parseLiteralExpr()
+		if err != nil {
+			return nil, err
+		}
 	case lexer.LabelReplace:
-		return p.parseLabelReplace()
+		expr, err = p.parseLabelReplace()
+		if err != nil {
+			return nil, err
+		}
 	case lexer.Vector:
-		return p.parseVectorExpr()
+		expr, err = p.parseVectorExpr()
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, p.unexpectedToken(t)
 	}
+	var binOp BinOp
+	switch t := p.peek(); t.Type {
+	case lexer.Or:
+		binOp = OpOr
+	case lexer.And:
+		binOp = OpAnd
+	case lexer.Unless:
+		binOp = OpUnless
+	case lexer.Add:
+		binOp = OpAdd
+	case lexer.Sub:
+		binOp = OpSub
+	case lexer.Mul:
+		binOp = OpMul
+	case lexer.Div:
+		binOp = OpDiv
+	case lexer.Mod:
+		binOp = OpMod
+	case lexer.Pow:
+		binOp = OpPow
+	case lexer.CmpEq:
+		binOp = OpEq
+	case lexer.NotEq:
+		binOp = OpNotEq
+	case lexer.Gt:
+		binOp = OpGt
+	case lexer.Gte:
+		binOp = OpGte
+	case lexer.Lt:
+		binOp = OpLt
+	case lexer.Lte:
+		binOp = OpLte
+	default:
+		return expr, nil
+	}
+	p.next()
+
+	modifier, err := p.parseBinOpModifier()
+	if err != nil {
+		return nil, err
+	}
+
+	right, err := p.parseExpr()
+	if err != nil {
+		return nil, err
+	}
+
+	if binOp.IsLogic() {
+		if v, ok := expr.(*LiteralExpr); ok {
+			return nil, errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, binOp)
+		}
+		if v, ok := right.(*LiteralExpr); ok {
+			return nil, errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, binOp)
+		}
+	}
+
+	return &BinOpExpr{Left: expr, Op: binOp, Modifier: modifier, Right: right}, nil
 }
 
 func (p *parser) parseRangeAggregationExpr() (e *RangeAggregationExpr, _ error) {

@@ -1,95 +1,16 @@
 package logql
 
 import (
-	"github.com/go-faster/errors"
-
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
 func (p *parser) parseExpr() (expr Expr, err error) {
 	switch t := p.peek(); t.Type {
 	case lexer.OpenBrace:
-		expr, err = p.parseLogExpr()
-		if err != nil {
-			return nil, err
-		}
-	case lexer.OpenParen:
-		p.next()
-
-		expr, err = p.parseExpr()
-		if err != nil {
-			return nil, err
-		}
-
-		if err := p.consume(lexer.CloseParen); err != nil {
-			return nil, err
-		}
-
-		expr = &ParenExpr{X: expr}
+		return p.parseLogExpr()
 	default:
-		expr, err = p.parseMetricExpr()
-		if err != nil {
-			return nil, err
-		}
+		return p.parseMetricExpr()
 	}
-
-	var binOp BinOp
-	switch t := p.peek(); t.Type {
-	case lexer.Or:
-		binOp = OpOr
-	case lexer.And:
-		binOp = OpAnd
-	case lexer.Unless:
-		binOp = OpUnless
-	case lexer.Add:
-		binOp = OpAdd
-	case lexer.Sub:
-		binOp = OpSub
-	case lexer.Mul:
-		binOp = OpMul
-	case lexer.Div:
-		binOp = OpDiv
-	case lexer.Mod:
-		binOp = OpMod
-	case lexer.Pow:
-		binOp = OpPow
-	case lexer.CmpEq:
-		binOp = OpEq
-	case lexer.NotEq:
-		binOp = OpNotEq
-	case lexer.Gt:
-		binOp = OpGt
-	case lexer.Gte:
-		binOp = OpGte
-	case lexer.Lt:
-		binOp = OpLt
-	case lexer.Lte:
-		binOp = OpLte
-	default:
-		return expr, err
-	}
-	p.next()
-
-	modifier, err := p.parseBinOpModifier()
-	if err != nil {
-		return nil, err
-	}
-
-	right, err := p.parseExpr()
-	if err != nil {
-		return nil, err
-	}
-
-	if binOp.IsLogic() {
-		if v, ok := expr.(*LiteralExpr); ok {
-			return nil, errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, binOp)
-		}
-		if v, ok := right.(*LiteralExpr); ok {
-			return nil, errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, binOp)
-		}
-	}
-
-	return &BinOpExpr{Left: expr, Op: binOp, Modifier: modifier, Right: right}, nil
 }
 
 func (p *parser) parseBinOpModifier() (bm BinOpModifier, err error) {

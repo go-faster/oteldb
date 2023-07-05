@@ -636,6 +636,32 @@ var tests = []TestCase{
 		},
 		false,
 	},
+	{
+		`sum(vector(2)*vector(2))`,
+		&VectorAggregationExpr{
+			Op: VectorOpSum,
+			Expr: &BinOpExpr{
+				Left:  &VectorExpr{Value: 2},
+				Op:    OpMul,
+				Right: &VectorExpr{Value: 2},
+			},
+		},
+		false,
+	},
+	{
+		`sum((vector(2)*vector(2)))`,
+		&VectorAggregationExpr{
+			Op: VectorOpSum,
+			Expr: &ParenExpr{
+				X: &BinOpExpr{
+					Left:  &VectorExpr{Value: 2},
+					Op:    OpMul,
+					Right: &VectorExpr{Value: 2},
+				},
+			},
+		},
+		false,
+	},
 	// label_replace
 	{
 		`label_replace(rate({}), "dst", "replacement", "src", ".*")`,
@@ -683,38 +709,38 @@ var tests = []TestCase{
 	},
 	// Binary op.
 	{
-		`{} or {}`,
+		`vector(10) or vector(10)`,
 		&BinOpExpr{
-			Left:  &LogExpr{},
+			Left:  &VectorExpr{Value: 10},
 			Op:    OpOr,
-			Right: &LogExpr{},
+			Right: &VectorExpr{Value: 10},
 		},
 		false,
 	},
 	{
-		`({}) or ({})`,
+		`(vector(10)) or (vector(10))`,
 		&BinOpExpr{
-			Left:  &ParenExpr{X: &LogExpr{}},
+			Left:  &ParenExpr{X: &VectorExpr{Value: 10}},
 			Op:    OpOr,
-			Right: &ParenExpr{X: &LogExpr{}},
+			Right: &ParenExpr{X: &VectorExpr{Value: 10}},
 		},
 		false,
 	},
 	{
-		`{} and {}`,
+		`vector(10) and vector(10)`,
 		&BinOpExpr{
-			Left:  &LogExpr{},
+			Left:  &VectorExpr{Value: 10},
 			Op:    OpAnd,
-			Right: &LogExpr{},
+			Right: &VectorExpr{Value: 10},
 		},
 		false,
 	},
 	{
-		`{} unless {}`,
+		`vector(10) unless vector(10)`,
 		&BinOpExpr{
-			Left:  &LogExpr{},
+			Left:  &VectorExpr{Value: 10},
 			Op:    OpUnless,
-			Right: &LogExpr{},
+			Right: &VectorExpr{Value: 10},
 		},
 		false,
 	},
@@ -986,12 +1012,12 @@ var tests = []TestCase{
 	{`{foo = "bar"} | status = 10s`, nil, true},
 	{`{foo = "bar"} | status = 10b`, nil, true},
 	// Invalid logical operation.
-	{`1 and {}`, nil, true},
-	{`1 or {}`, nil, true},
-	{`1 unless {}`, nil, true},
-	{`{} and 1`, nil, true},
-	{`{} or 1`, nil, true},
-	{`{} unless 1`, nil, true},
+	{`1 and vector(1)`, nil, true},
+	{`1 or vector(1)`, nil, true},
+	{`1 unless vector(1)`, nil, true},
+	{`vector(1) and 1`, nil, true},
+	{`vector(1) or 1`, nil, true},
+	{`vector(1) unless 1`, nil, true},
 
 	// Parameter is required.
 	{`quantile_over_time({}[5h])`, nil, true},
