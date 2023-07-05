@@ -279,9 +279,15 @@ components:
             $ref: "#/components/schemas/Error"
   schemas:
     Value:
-      oneOf:
+      type: array
+      items:
         - type: string
-        - type: number
+          format: uint64
+          description: stringified nano timestamp
+          x-ogen-name: T
+        - type: string
+          description: value
+          x-ogen-name: V
     Entry:
       type: array
       items:
