@@ -178,6 +178,9 @@ var tests = []TestCase{
 		},
 		false,
 	},
+
+	// Invalid number.
+	{`0xy`, nil, true},
 }
 
 func TestTokenize(t *testing.T) {
@@ -186,7 +189,7 @@ func TestTokenize(t *testing.T) {
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			got, err := Tokenize(tt.input, TokenizeOptions{AllowDots: true})
 			if tt.wantErr {
-				require.NoError(t, err)
+				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
