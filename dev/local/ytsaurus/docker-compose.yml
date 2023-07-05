@@ -33,7 +33,7 @@ services:
   oteldb:
     image: go-faster/oteldb
     build:
-      context: .
+      context: ../../../
       dockerfile: Dockerfile
     environment:
       - YT_PROXY=ytbackend:80
@@ -44,11 +44,15 @@ services:
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
     ports:
-      # - "14268:14268" # jaeger ingest
+      # Querier ports
       - "3200:3200"   # tempo REST API
       # - "9095:9095"   # tempo gRPC API
-      - "4317:4317"   # otlp gRPC
-      - "4318:4318"   # otlp http
+      - "3100:3100"   # loki REST API
+      # - "9095:9095"   # loki gRPC API
+      # Receiver ports
+      # - "14268:14268" # jaeger ingest
+      - "4317:4317"   # otlp receiver gRPC
+      - "4318:4318"   # otlp receiver http
     depends_on:
       - ytbackend
 
@@ -63,8 +67,6 @@ services:
 
   grafana:
     image: "grafana/grafana:10.0.0"
-    volumes:
-      - ../grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
@@ -73,3 +75,6 @@ services:
       - GF_LOG_LEVEL=debug
     ports:
       - "3000:3000"
+    volumes:
+      - ../grafana.ini:/etc/grafana/grafana.ini
+      - ../grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml

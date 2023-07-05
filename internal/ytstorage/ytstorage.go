@@ -23,11 +23,13 @@ type Tables struct {
 
 // NewTables creates new Tables with given path prefix.
 func NewTables(prefix ypath.Path) Tables {
+	traces := prefix.Child("traces")
+	logs := prefix.Child("logs")
 	return Tables{
-		spans:     prefix.Child("spans"),
-		tags:      prefix.Child("tags"),
-		logs:      prefix.Child("logs"),
-		logLabels: prefix.Child("log_labels"),
+		spans:     traces.Child("spans"),
+		tags:      traces.Child("tags"),
+		logs:      logs.Child("records"),
+		logLabels: logs.Child("labels"),
 	}
 }
 

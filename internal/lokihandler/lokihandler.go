@@ -18,21 +18,25 @@ import (
 	"github.com/go-faster/sdk/zctx"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 var _ lokiapi.Handler = (*LokiAPI)(nil)
 
 // LokiAPI implements lokiapi.Handler.
 type LokiAPI struct {
-	q logstorage.Querier
+	q      logstorage.Querier
+	engine *logqlengine.Engine
 }
 
 // NewLokiAPI creates new LokiAPI.
-func NewLokiAPI(q logstorage.Querier) *LokiAPI {
+func NewLokiAPI(q logstorage.Querier, engine *logqlengine.Engine) *LokiAPI {
 	return &LokiAPI{
-		q: q,
+		q:      q,
+		engine: engine,
 	}
 }
 
@@ -191,8 +195,32 @@ func (h *LokiAPI) Push(context.Context, lokiapi.PushReq) error {
 // Query.
 //
 // GET /loki/api/v1/query
-func (h *LokiAPI) Query(context.Context, lokiapi.QueryParams) (*lokiapi.QueryResponse, error) {
-	return nil, ht.ErrNotImplemented
+func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokiapi.QueryResponse, error) {
+	lg := zctx.From(ctx)
+
+	ts, err := parseTimestamp(params.Time.Value, time.Now())
+	if err != nil {
+		return nil, errors.Wrap(err, "parse time")
+	}
+
+	streams, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
+		Direction: string(params.Direction.Or("backward")),
+		Start:     otelstorage.NewTimestampFromTime(ts),
+		End:       otelstorage.NewTimestampFromTime(ts),
+		Limit:     params.Limit.Or(100),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "eval")
+	}
+	lg.Debug("Query", zap.Int("streams", len(streams)))
+
+	return &lokiapi.QueryResponse{
+		Status: "success",
+		Data: lokiapi.QueryResponseData{
+			ResultType: lokiapi.QueryResponseDataResultTypeStreams,
+			Result:     streams,
+		},
+	}, nil
 }
 
 // QueryRange implements queryRange operation.

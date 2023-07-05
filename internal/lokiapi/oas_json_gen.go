@@ -13,56 +13,6 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// Encode encodes Entry as json.
-func (s Entry) Encode(e *jx.Encoder) {
-	unwrapped := []Value(s)
-
-	e.ArrStart()
-	for _, elem := range unwrapped {
-		elem.Encode(e)
-	}
-	e.ArrEnd()
-}
-
-// Decode decodes Entry from json.
-func (s *Entry) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode Entry to nil")
-	}
-	var unwrapped []Value
-	if err := func() error {
-		unwrapped = make([]Value, 0)
-		if err := d.Arr(func(d *jx.Decoder) error {
-			var elem Value
-			if err := elem.Decode(d); err != nil {
-				return err
-			}
-			unwrapped = append(unwrapped, elem)
-			return nil
-		}); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
-	}
-	*s = Entry(unwrapped)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s Entry) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *Entry) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes Error as json.
 func (s Error) Encode(e *jx.Encoder) {
 	unwrapped := string(s)
@@ -963,9 +913,9 @@ func (s *Stream) Decode(d *jx.Decoder) error {
 		case "values":
 			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				s.Values = make([]Entry, 0)
+				s.Values = make([]Value, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem Entry
+					var elem Value
 					if err := elem.Decode(d); err != nil {
 						return err
 					}

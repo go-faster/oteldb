@@ -28,18 +28,26 @@ type Record struct {
 
 // YTSchema returns YTsaurus table schema for this structure.
 func (Record) YTSchema() schema.Schema {
+	attrsType := schema.Optional{Item: schema.TypeAny}
+
 	return schema.Schema{
 		UniqueKeys: true,
 		Columns: []schema.Column{
 			{Name: `timestamp`, ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
 			{Name: `observed_timestamp`, ComplexType: schema.TypeUint64},
-			{Name: `trace_id`, ComplexType: schema.TypeBytes},
-			{Name: `span_id`, ComplexType: schema.TypeUint64},
+			{Name: `trace_id`, ComplexType: schema.Optional{Item: schema.TypeBytes}},
+			{Name: `span_id`, ComplexType: schema.Optional{Item: schema.TypeUint64}},
 			{Name: `flags`, ComplexType: schema.TypeUint32},
 			{Name: `severity_text`, ComplexType: schema.TypeString},
 			{Name: `severity_number`, ComplexType: schema.TypeInt32},
 			{Name: `body`, ComplexType: schema.TypeString},
-			{Name: `attrs`, ComplexType: schema.Optional{Item: schema.TypeAny}},
+			{Name: `attrs`, ComplexType: attrsType},
+
+			{Name: `resource_attrs`, ComplexType: attrsType},
+
+			{Name: "scope_name", ComplexType: schema.TypeString},
+			{Name: "scope_version", ComplexType: schema.TypeString},
+			{Name: "scope_attrs", ComplexType: attrsType},
 		},
 	}
 }

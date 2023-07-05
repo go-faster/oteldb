@@ -3,6 +3,7 @@ package logqlengine
 
 import (
 	"context"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -23,18 +24,30 @@ import (
 type Engine struct {
 	querier Querier
 
-	tracer    trace.Tracer
-	parseOpts logql.ParseOptions
+	lookbackDuration time.Duration
+	parseOpts        logql.ParseOptions
+
+	tracer trace.Tracer
 }
 
 // Options sets Engine options.
 type Options struct {
-	TracerProvider trace.TracerProvider
+	// LookbackDuration sets lookback duration for instant queries.
+	//
+	// Should be negative, otherwise default value would be used.
+	LookbackDuration time.Duration
 
+	// ParseOptions is a LogQL parser options.
 	ParseOptions logql.ParseOptions
+
+	// TracerProvider provides OpenTelemetry tracer for this engine.
+	TracerProvider trace.TracerProvider
 }
 
 func (o *Options) setDefaults() {
+	if o.LookbackDuration >= 0 {
+		o.LookbackDuration = -30 * time.Second
+	}
 	if o.TracerProvider == nil {
 		o.TracerProvider = otel.GetTracerProvider()
 	}
@@ -45,9 +58,10 @@ func NewEngine(querier Querier, opts Options) *Engine {
 	opts.setDefaults()
 
 	return &Engine{
-		querier:   querier,
-		tracer:    opts.TracerProvider.Tracer("logql.Engine"),
-		parseOpts: opts.ParseOptions,
+		querier:          querier,
+		lookbackDuration: opts.LookbackDuration,
+		parseOpts:        opts.ParseOptions,
+		tracer:           opts.TracerProvider.Tracer("logql.Engine"),
 	}
 }
 
@@ -56,10 +70,17 @@ type EvalParams struct {
 	Start     otelstorage.Timestamp
 	End       otelstorage.Timestamp
 	Direction string // forward, backward
+	Limit     int
 }
 
 // Eval parses and evaluates query.
 func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s lokiapi.Streams, rerr error) {
+	// Instant query, sub lookback duration from Start.
+	if params.Start == params.End {
+		newStart := params.Start.AsTime().Add(e.lookbackDuration)
+		params.Start = otelstorage.NewTimestampFromTime(newStart)
+	}
+
 	ctx, span := e.tracer.Start(ctx, "Eval",
 		trace.WithAttributes(
 			attribute.String("logql.query", query),
@@ -104,7 +125,8 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 	}()
 
 	var (
-		lg = zctx.From(ctx)
+		lg      = zctx.From(ctx)
+		entries int
 
 		record logstorage.Record
 		set    LabelSet
@@ -135,11 +157,13 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 				Stream: lokiapi.NewOptLabelSet(set.AsLokiAPI()),
 			}
 		}
-		stream.Values = append(stream.Values, lokiapi.Entry{
-			{T: uint64(record.Timestamp), V: newLine},
-		})
+
+		entries++
+		stream.Values = append(stream.Values, lokiapi.Value{T: uint64(record.Timestamp), V: newLine})
+
 		streams[key] = stream
 	}
 
+	lg.Debug("Eval completed", zap.Int("entries", entries))
 	return maps.Values(streams), nil
 }

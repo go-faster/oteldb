@@ -92,7 +92,7 @@ type LineFilter[M StringMatcher] struct {
 }
 
 // Process implements Processor.
-func (lf *LineFilter[M]) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (_ string, keep bool) {
+func (lf *LineFilter[M]) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (newLine string, keep bool) {
 	keep = lf.matcher.Match(line)
-	return
+	return line, keep
 }

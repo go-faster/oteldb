@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
+	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -29,7 +30,7 @@ func NewInserter(yc yt.Client, tables Tables) *Inserter {
 	}
 }
 
-func insertSlice[T any](ctx context.Context, i *Inserter, data []T) error {
+func insertSlice[T any](ctx context.Context, i *Inserter, table ypath.Path, data []T) error {
 	bw := i.yc.NewRowBatchWriter()
 
 	for _, e := range data {
@@ -47,10 +48,10 @@ func insertSlice[T any](ctx context.Context, i *Inserter, data []T) error {
 			Update: &update,
 		}
 	)
-	return i.yc.InsertRowBatch(ctx, i.tables.spans, bw.Batch(), insertOptions)
+	return i.yc.InsertRowBatch(ctx, table, bw.Batch(), insertOptions)
 }
 
-func insertSet[T comparable](ctx context.Context, i *Inserter, data map[T]struct{}) error {
+func insertSet[T comparable](ctx context.Context, i *Inserter, table ypath.Path, data map[T]struct{}) error {
 	bw := i.yc.NewRowBatchWriter()
 
 	for k := range data {
@@ -68,25 +69,25 @@ func insertSet[T comparable](ctx context.Context, i *Inserter, data map[T]struct
 			Update: &update,
 		}
 	)
-	return i.yc.InsertRowBatch(ctx, i.tables.tags, bw.Batch(), insertOptions)
+	return i.yc.InsertRowBatch(ctx, table, bw.Batch(), insertOptions)
 }
 
 // InsertSpans inserts given spans.
 func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) error {
-	return insertSlice(ctx, i, spans)
+	return insertSlice(ctx, i, i.tables.spans, spans)
 }
 
 // InsertTags insert given set of tags to the storage.
 func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]struct{}) error {
-	return insertSet(ctx, i, tags)
+	return insertSet(ctx, i, i.tables.tags, tags)
 }
 
 // InsertRecords inserts given Records.
 func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Record) error {
-	return insertSlice(ctx, i, records)
+	return insertSlice(ctx, i, i.tables.logs, records)
 }
 
 // InsertLogLabels insert given set of labels to the storage.
 func (i *Inserter) InsertLogLabels(ctx context.Context, labels map[logstorage.Label]struct{}) error {
-	return insertSet(ctx, i, labels)
+	return insertSet(ctx, i, i.tables.logLabels, labels)
 }

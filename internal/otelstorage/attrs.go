@@ -40,11 +40,13 @@ func (m *Attrs) UnmarshalYSON(r *yson.Reader) error {
 
 func otelMapToYSON(w *yson.Writer, kv pcommon.Map) {
 	w.BeginMap()
-	kv.Range(func(k string, v pcommon.Value) bool {
-		w.MapKeyString(k)
-		otelValueToYSON(w, v)
-		return true
-	})
+	if kv != (pcommon.Map{}) {
+		kv.Range(func(k string, v pcommon.Value) bool {
+			w.MapKeyString(k)
+			otelValueToYSON(w, v)
+			return true
+		})
+	}
 	w.EndMap()
 }
 
