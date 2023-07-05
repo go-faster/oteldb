@@ -17,6 +17,10 @@ spec:
       protocol: TCP
       targetPort: 3200
       name: tempo-http
+    - port: 3100
+      protocol: TCP
+      targetPort: 3100
+      name: loki-http
     - port: 4317
       protocol: TCP
       targetPort: 4317

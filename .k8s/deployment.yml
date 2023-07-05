@@ -17,8 +17,8 @@ spec:
         app: oteldb
         service.opentelemetry.io/name: go-faster.oteldb
       annotations:
-        prometheus.io/scrape: 'true'
-        prometheus.io/port: '8090'
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
     spec:
       containers:
         - name: oteldb
@@ -30,6 +30,9 @@ spec:
             - containerPort: 3200
               protocol: TCP
               name: tempo-http
+            - containerPort: 3100
+              protocol: TCP
+              name: loki-http
             - containerPort: 4317
               protocol: TCP
               name: otlp-grpc
@@ -88,8 +91,8 @@ spec:
         app: otelproxy
         service.opentelemetry.io/name: go-faster.otelproxy
       annotations:
-        prometheus.io/scrape: 'true'
-        prometheus.io/port: '8090'
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
     spec:
       containers:
         - name: oteldb
