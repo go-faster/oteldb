@@ -966,12 +966,12 @@ type QueryRangeParams struct {
 	// Grafana username that is passed to datasource when making requests from Grafana. Used for
 	// authentication and authorization.
 	XGrafanaUser OptString
-	// The start time for the query as a nanosecond Unix epoch or another supported format.
-	// Defaults to one hour ago.
-	Start OptLokiTime
-	// The end time for the query as a nanosecond Unix epoch or another supported format.
-	// Defaults to now.
-	End OptLokiTime
+	Start        OptLokiTime
+	End          OptLokiTime
+	// A `duration` used to calculate `start` relative to `end`.
+	// If `end` is in the future, `start` is calculated as this duration before now.
+	// Any value specified for start supersedes this parameter.
+	Since OptPrometheusDuration
 	// The LogQL query to perform.
 	Query string
 	// Query resolution step width in `duration` format or float number of seconds.
@@ -1016,6 +1016,15 @@ func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangePara
 		}
 		if v, ok := packed[key]; ok {
 			params.End = v.(OptLokiTime)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "since",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Since = v.(OptPrometheusDuration)
 		}
 	}
 	{
@@ -1189,6 +1198,69 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: since.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "since",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSinceVal PrometheusDuration
+				if err := func() error {
+					var paramsDotSinceValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotSinceValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotSinceVal = PrometheusDuration(paramsDotSinceValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Since.SetTo(paramsDotSinceVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Since.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "since",
 			In:   "query",
 			Err:  err,
 		}
