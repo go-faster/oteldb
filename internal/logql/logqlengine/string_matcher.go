@@ -7,7 +7,7 @@ import (
 
 // StringMatcher matches a string.
 type StringMatcher interface {
-	Match(s string) bool
+	Matcher[string]
 }
 
 // ContainsMatcher checks if a string contains value.
@@ -28,14 +28,4 @@ type RegexpMatcher struct {
 // Match implements StringMatcher.
 func (m RegexpMatcher) Match(s string) bool {
 	return m.Re.MatchString(s)
-}
-
-// NotMatcher is a NOT logical matcher.
-type NotMatcher[M StringMatcher] struct {
-	Next M
-}
-
-// Match implements StringMatcher.
-func (m NotMatcher[M]) Match(s string) bool {
-	return !m.Next.Match(s)
 }

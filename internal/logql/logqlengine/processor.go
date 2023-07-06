@@ -1,6 +1,8 @@
 package logqlengine
 
 import (
+	"fmt"
+
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
@@ -50,28 +52,11 @@ func BuildPipeline(stages ...logql.PipelineStage) (Processor, error) {
 func buildStage(stage logql.PipelineStage) (Processor, error) {
 	switch stage := stage.(type) {
 	case *logql.LineFilter:
-		switch stage.Op {
-		case logql.OpEq:
-			return &LineFilter[ContainsMatcher]{
-				matcher: ContainsMatcher{Value: stage.Value},
-			}, nil
-		case logql.OpNotEq:
-			return &LineFilter[NotMatcher[ContainsMatcher]]{
-				matcher: NotMatcher[ContainsMatcher]{Next: ContainsMatcher{Value: stage.Value}},
-			}, nil
-		case logql.OpRe:
-			return &LineFilter[RegexpMatcher]{
-				matcher: RegexpMatcher{Re: stage.Re},
-			}, nil
-		case logql.OpNotRe:
-			return &LineFilter[NotMatcher[RegexpMatcher]]{
-				matcher: NotMatcher[RegexpMatcher]{Next: RegexpMatcher{Re: stage.Re}},
-			}, nil
-		default:
-			return nil, errors.Errorf("unknown operation %q", stage.Op)
-		}
+		return buildLineFilter(stage)
+	case *logql.LabelFilter:
+		return buildLabelFilter(stage)
 	default:
-		return nil, errors.Errorf("unsupported stage %T", stage)
+		return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported stage %T", stage)}
 	}
 }
 
@@ -84,15 +69,4 @@ func (p *Pipeline) Process(ts otelstorage.Timestamp, line string, attrs LabelSet
 		}
 	}
 	return line, true
-}
-
-// LineFilter is a line matching Processor.
-type LineFilter[M StringMatcher] struct {
-	matcher M
-}
-
-// Process implements Processor.
-func (lf *LineFilter[M]) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (newLine string, keep bool) {
-	keep = lf.matcher.Match(line)
-	return line, keep
 }

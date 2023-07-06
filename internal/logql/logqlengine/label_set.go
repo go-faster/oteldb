@@ -69,6 +69,18 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 	return rerr
 }
 
+// SetError sets special error label.
+func (l *LabelSet) SetError(err error) {
+	const errorLabel = "__error__"
+	if _, ok := l.labels[errorLabel]; ok {
+		// Do not override old error.
+		return
+	}
+	if err != nil {
+		l.labels[errorLabel] = pcommon.NewValueStr(err.Error())
+	}
+}
+
 // Get returns attr value.
 func (l *LabelSet) Get(name string) (v pcommon.Value, ok bool) {
 	v, ok = l.labels[name]
