@@ -129,13 +129,13 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 	}()
 
 	var (
-		lg      = zctx.From(ctx)
-		entries int
+		lg = zctx.From(ctx)
 
 		record logstorage.Record
-		set    LabelSet
+		set    = newLabelSet()
 
 		streams = map[string]lokiapi.Stream{}
+		entries int
 	)
 	for iter.Next(&record) {
 		if entries >= params.Limit {

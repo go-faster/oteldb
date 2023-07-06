@@ -18,6 +18,12 @@ type LabelSet struct {
 	labels map[string]pcommon.Value
 }
 
+func newLabelSet() LabelSet {
+	return LabelSet{
+		labels: map[string]pcommon.Value{},
+	}
+}
+
 // AsLokiAPI returns lokiapi.LabelSet
 func (l *LabelSet) AsLokiAPI() lokiapi.LabelSet {
 	set := make(lokiapi.LabelSet, len(l.labels))
@@ -69,16 +75,9 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 	return rerr
 }
 
-// SetError sets special error label.
-func (l *LabelSet) SetError(err error) {
-	const errorLabel = "__error__"
-	if _, ok := l.labels[errorLabel]; ok {
-		// Do not override old error.
-		return
-	}
-	if err != nil {
-		l.labels[errorLabel] = pcommon.NewValueStr(err.Error())
-	}
+// Add adds new label.
+func (l *LabelSet) Add(s string, val pcommon.Value) {
+	l.labels[s] = val
 }
 
 // Get returns attr value.
@@ -94,4 +93,22 @@ func (l *LabelSet) GetString(name string) (string, bool) {
 		return v.AsString(), true
 	}
 	return "", false
+}
+
+const errorLabel = "__error__"
+
+// SetError sets special error label.
+func (l *LabelSet) SetError(err error) {
+	if _, ok := l.labels[errorLabel]; ok {
+		// Do not override old error.
+		return
+	}
+	if err != nil {
+		l.labels[errorLabel] = pcommon.NewValueStr(err.Error())
+	}
+}
+
+// GetError returns error label.
+func (l *LabelSet) GetError() (string, bool) {
+	return l.GetString(errorLabel)
 }
