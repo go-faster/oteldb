@@ -61,19 +61,21 @@ paths:
       parameters:
         - $ref: "#/components/parameters/GrafanaUser"
         - name: start
-          description: |
-            The start time for the query as a nanosecond Unix epoch or another supported format.
-            Defaults to one hour ago.
           in: query
           schema:
             $ref: "#/components/schemas/LokiTime"
         - name: end
-          description: |
-            The end time for the query as a nanosecond Unix epoch or another supported format.
-            Defaults to now.
           in: query
           schema:
             $ref: "#/components/schemas/LokiTime"
+        - name: since
+          description: |
+            A `duration` used to calculate `start` relative to `end`.
+            If `end` is in the future, `start` is calculated as this duration before now.
+            Any value specified for start supersedes this parameter.
+          in: query
+          schema:
+            $ref: "#/components/schemas/PrometheusDuration"
         - name: query
           description: The LogQL query to perform.
           in: query
