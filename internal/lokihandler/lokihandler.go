@@ -3,15 +3,10 @@ package lokihandler
 
 import (
 	"context"
-	"math"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	ht "github.com/ogen-go/ogen/http"
-	"github.com/prometheus/common/model"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/errors"
@@ -47,17 +42,20 @@ func NewLokiAPI(q logstorage.Querier, engine *logqlengine.Engine) *LokiAPI {
 func (h *LokiAPI) LabelValues(ctx context.Context, params lokiapi.LabelValuesParams) (*lokiapi.Values, error) {
 	lg := zctx.From(ctx)
 
-	opts, err := getLabelTimeRange(
+	start, end, err := parseTimeRange(
 		time.Now(),
 		params.Start,
 		params.End,
 		params.Since,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse params")
+		return nil, errors.Wrap(err, "parse time range")
 	}
 
-	iter, err := h.q.LabelValues(ctx, params.Name, opts)
+	iter, err := h.q.LabelValues(ctx, params.Name, logstorage.LabelsOptions{
+		Start: otelstorage.NewTimestampFromTime(start),
+		End:   otelstorage.NewTimestampFromTime(end),
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "query")
 	}
@@ -92,17 +90,20 @@ func (h *LokiAPI) LabelValues(ctx context.Context, params lokiapi.LabelValuesPar
 func (h *LokiAPI) Labels(ctx context.Context, params lokiapi.LabelsParams) (*lokiapi.Labels, error) {
 	lg := zctx.From(ctx)
 
-	opts, err := getLabelTimeRange(
+	start, end, err := parseTimeRange(
 		time.Now(),
 		params.Start,
 		params.End,
 		params.Since,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse params")
+		return nil, errors.Wrap(err, "parse time range")
 	}
 
-	names, err := h.q.LabelNames(ctx, opts)
+	names, err := h.q.LabelNames(ctx, logstorage.LabelsOptions{
+		Start: otelstorage.NewTimestampFromTime(start),
+		End:   otelstorage.NewTimestampFromTime(end),
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "query")
 	}
@@ -112,73 +113,6 @@ func (h *LokiAPI) Labels(ctx context.Context, params lokiapi.LabelsParams) (*lok
 		Status: "success",
 		Data:   names,
 	}, nil
-}
-
-func getLabelTimeRange(
-	now time.Time,
-	startParam lokiapi.OptLokiTime,
-	endParam lokiapi.OptLokiTime,
-	sinceParam lokiapi.OptPrometheusDuration,
-) (opts logstorage.LabelsOptions, _ error) {
-	since := 6 * time.Hour
-	if v, ok := sinceParam.Get(); ok {
-		d, err := model.ParseDuration(string(v))
-		if err != nil {
-			return opts, errors.Wrap(err, "parse since")
-		}
-		since = time.Duration(d)
-	}
-
-	endValue := endParam.Or("")
-	end, err := parseTimestamp(endValue, now)
-	if err != nil {
-		return opts, errors.Wrapf(err, "parse end %q", endValue)
-	}
-
-	// endOrNow is used to apply a default for the start time or an offset if 'since' is provided.
-	// we want to use the 'end' time so long as it's not in the future as this should provide
-	// a more intuitive experience when end time is in the future.
-	endOrNow := end
-	if end.After(now) {
-		endOrNow = now
-	}
-
-	startValue := startParam.Or("")
-	start, err := parseTimestamp(startValue, endOrNow.Add(-since))
-	if err != nil {
-		return opts, errors.Wrapf(err, "parse start %q", startValue)
-	}
-
-	return logstorage.LabelsOptions{
-		Start: pcommon.NewTimestampFromTime(start),
-		End:   pcommon.NewTimestampFromTime(end),
-	}, nil
-}
-
-func parseTimestamp(lt lokiapi.LokiTime, def time.Time) (time.Time, error) {
-	value := string(lt)
-	if value == "" {
-		return def, nil
-	}
-
-	if strings.Contains(value, ".") {
-		if t, err := strconv.ParseFloat(value, 64); err == nil {
-			s, ns := math.Modf(t)
-			ns = math.Round(ns*1000) / 1000
-			return time.Unix(int64(s), int64(ns*float64(time.Second))), nil
-		}
-	}
-	nanos, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		if ts, err := time.Parse(time.RFC3339Nano, value); err == nil {
-			return ts, nil
-		}
-		return time.Time{}, err
-	}
-	if len(value) <= 10 {
-		return time.Unix(nanos, 0), nil
-	}
-	return time.Unix(0, nanos), nil
 }
 
 // Push implements push operation.
@@ -204,9 +138,10 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 	}
 
 	streams, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
-		Direction: string(params.Direction.Or("backward")),
 		Start:     otelstorage.NewTimestampFromTime(ts),
 		End:       otelstorage.NewTimestampFromTime(ts),
+		Step:      0,
+		Direction: string(params.Direction.Or("backward")),
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
@@ -228,8 +163,43 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 // Query range.
 //
 // GET /loki/api/v1/query_range
-func (h *LokiAPI) QueryRange(context.Context, lokiapi.QueryRangeParams) (*lokiapi.QueryResponse, error) {
-	return nil, ht.ErrNotImplemented
+func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParams) (*lokiapi.QueryResponse, error) {
+	lg := zctx.From(ctx)
+
+	start, end, err := parseTimeRange(
+		time.Now(),
+		params.Start,
+		params.End,
+		params.Since,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse time range")
+	}
+
+	step, err := parseStep(params.Step, start, end)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse step")
+	}
+
+	streams, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
+		Start:     otelstorage.NewTimestampFromTime(start),
+		End:       otelstorage.NewTimestampFromTime(end),
+		Step:      step,
+		Direction: string(params.Direction.Or("backward")),
+		Limit:     params.Limit.Or(100),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "eval")
+	}
+	lg.Debug("Query range", zap.Int("streams", len(streams)))
+
+	return &lokiapi.QueryResponse{
+		Status: "success",
+		Data: lokiapi.QueryResponseData{
+			ResultType: lokiapi.QueryResponseDataResultTypeStreams,
+			Result:     streams,
+		},
+	}, nil
 }
 
 // Series implements series operation.

@@ -69,6 +69,7 @@ func NewEngine(querier Querier, opts Options) *Engine {
 type EvalParams struct {
 	Start     otelstorage.Timestamp
 	End       otelstorage.Timestamp
+	Step      time.Duration
 	Direction string // forward, backward
 	Limit     int
 }
@@ -76,7 +77,7 @@ type EvalParams struct {
 // Eval parses and evaluates query.
 func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s lokiapi.Streams, rerr error) {
 	// Instant query, sub lookback duration from Start.
-	if params.Start == params.End {
+	if params.Start == params.End && params.Step == 0 {
 		newStart := params.Start.AsTime().Add(e.lookbackDuration)
 		params.Start = otelstorage.NewTimestampFromTime(newStart)
 	}
@@ -86,6 +87,9 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 			attribute.String("logql.query", query),
 			attribute.Int64("logql.start", int64(params.Start)),
 			attribute.Int64("logql.end", int64(params.End)),
+			attribute.Int64("logql.step", int64(params.Step)),
+			attribute.String("logql.direction", query),
+			attribute.Int("logql.limit", params.Limit),
 		),
 	)
 	defer func() {
