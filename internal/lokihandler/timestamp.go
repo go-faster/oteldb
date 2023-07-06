@@ -12,6 +12,13 @@ import (
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
+// parseTimeRange parses optional parameters and returns time range
+//
+// Default values:
+//
+//   - since = 6 * time.Hour
+//   - end == now
+//   - start = end.Add(-since) if not end.After(now)
 func parseTimeRange(
 	now time.Time,
 	startParam lokiapi.OptLokiTime,
@@ -33,9 +40,6 @@ func parseTimeRange(
 		return start, end, errors.Wrapf(err, "parse end %q", endValue)
 	}
 
-	// endOrNow is used to apply a default for the start time or an offset if 'since' is provided.
-	// we want to use the 'end' time so long as it's not in the future as this should provide
-	// a more intuitive experience when end time is in the future.
 	endOrNow := end
 	if end.After(now) {
 		endOrNow = now
@@ -64,10 +68,7 @@ func parseTimestamp(lt lokiapi.LokiTime, def time.Time) (time.Time, error) {
 	}
 	nanos, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
-		if ts, err := time.Parse(time.RFC3339Nano, value); err == nil {
-			return ts, nil
-		}
-		return time.Time{}, err
+		return time.Parse(time.RFC3339Nano, value)
 	}
 	if len(value) <= 10 {
 		return time.Unix(nanos, 0), nil
