@@ -134,6 +134,10 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 		streams = map[string]lokiapi.Stream{}
 	)
 	for iter.Next(&record) {
+		if entries >= params.Limit {
+			break
+		}
+
 		if err := set.SetAttrs(
 			record.Attrs,
 			record.ScopeAttrs,
