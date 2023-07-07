@@ -26,7 +26,14 @@ const (
 	OpGte
 	OpLt
 	OpLte
+	_lastOp
 )
+
+var _ = map[bool]struct{}{
+	// Ensure that uint64 bitset can fit every Op.
+	_lastOp <= 64: {},
+	false:         {},
+}
 
 // String implements fmt.Stringer.
 func (op BinOp) String() string {

@@ -49,7 +49,7 @@ func buildLabelPredicate(pred logql.LabelPredicate) (Processor, error) {
 	case *logql.LabelPredicateParen:
 		return buildLabelPredicate(pred.X)
 	case *logql.LabelMatcher:
-		return buildLabelMatcher(pred)
+		return buildLabelMatcher(*pred)
 	case *logql.DurationFilter:
 		return buildDurationLabelFilter(pred)
 	case *logql.BytesFilter:
@@ -99,7 +99,7 @@ type LabelMatcher[M StringMatcher] struct {
 	matcher M
 }
 
-func buildLabelMatcher(pred *logql.LabelMatcher) (Processor, error) {
+func buildLabelMatcher(pred logql.LabelMatcher) (Processor, error) {
 	switch pred.Op {
 	case logql.OpEq:
 		return &LabelMatcher[ContainsMatcher]{

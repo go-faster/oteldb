@@ -22,7 +22,8 @@ import (
 
 // Engine is a LogQL evaluation engine.
 type Engine struct {
-	querier Querier
+	querier     Querier
+	querierCaps QuerierСapabilities
 
 	lookbackDuration time.Duration
 	parseOpts        logql.ParseOptions
@@ -59,6 +60,7 @@ func NewEngine(querier Querier, opts Options) *Engine {
 
 	return &Engine{
 		querier:          querier,
+		querierCaps:      querier.Сapabilities(),
 		lookbackDuration: opts.LookbackDuration,
 		parseOpts:        opts.ParseOptions,
 		tracer:           opts.TracerProvider.Tracer("logql.Engine"),
@@ -126,6 +128,11 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 }
 
 func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params EvalParams) (s lokiapi.Streams, _ error) {
+	cond, err := extractQueryConditions(e.querierCaps, expr.Sel)
+	if err != nil {
+		return s, errors.Wrap(err, "extract preconditions")
+	}
+
 	pipeline, err := BuildPipeline(expr.Pipeline...)
 	if err != nil {
 		return s, errors.Wrap(err, "build pipeline")
@@ -134,9 +141,7 @@ func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params Ev
 	iter, err := e.querier.SelectLogs(ctx,
 		params.Start,
 		params.End,
-		SelectLogsParams{
-			Labels: expr.Sel.Matchers,
-		},
+		cond.params,
 	)
 	if err != nil {
 		return s, errors.Wrap(err, "query")
@@ -169,7 +174,12 @@ func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params Ev
 			continue
 		}
 
-		newLine, keep := pipeline.Process(record.Timestamp, record.Body, set)
+		line, keep := cond.prefilter.Process(record.Timestamp, record.Body, set)
+		if !keep {
+			continue
+		}
+
+		line, keep = pipeline.Process(record.Timestamp, line, set)
 		if !keep {
 			continue
 		}
@@ -184,7 +194,7 @@ func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params Ev
 		}
 
 		entries++
-		stream.Values = append(stream.Values, lokiapi.LogEntry{T: uint64(record.Timestamp), V: newLine})
+		stream.Values = append(stream.Values, lokiapi.LogEntry{T: uint64(record.Timestamp), V: line})
 
 		streams[key] = stream
 	}
