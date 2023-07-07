@@ -57,6 +57,8 @@ func buildStage(stage logql.PipelineStage) (Processor, error) {
 		return buildLabelFilter(stage)
 	case *logql.JSONExpressionParser:
 		return buildJSONExtractor(stage)
+	case *logql.LogfmtExpressionParser:
+		return buildLogfmtExtractor(stage)
 	default:
 		return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported stage %T", stage)}
 	}

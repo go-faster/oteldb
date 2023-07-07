@@ -54,6 +54,9 @@ func (e *JSONExtractor) extractSome(line string, set LabelSet) error {
 			return nil
 		}
 		if _, ok := e.Labels[logql.Label(key)]; ok {
+			// TODO(tdakkota): try string interning
+			// TODO(tdakkota): probably, we can just use label name string
+			// 	instead of allocating a new string every time
 			set.Add(string(key), value)
 		}
 		return nil
@@ -70,6 +73,7 @@ func (e *JSONExtractor) extractAll(line string, set LabelSet) error {
 		if !ok {
 			return nil
 		}
+		// TODO(tdakkota): try string interning
 		set.Add(key, value)
 		return nil
 	})
