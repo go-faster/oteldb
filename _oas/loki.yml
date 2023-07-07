@@ -280,51 +280,6 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
   schemas:
-    Value:
-      type: array
-      items:
-        - type: string
-          format: uint64
-          description: stringified nano timestamp
-          x-ogen-name: T
-        - type: string
-          description: value
-          x-ogen-name: V
-    Stream:
-      type: object
-      required:
-        - values
-      properties:
-        stream:
-          $ref: "#/components/schemas/LabelSet"
-        metric:
-          $ref: "#/components/schemas/LabelSet"
-        values:
-          type: array
-          items:
-            $ref: "#/components/schemas/Value"
-    Streams:
-      type: array
-      items:
-        $ref: "#/components/schemas/Stream"
-    Stats:
-      type: object
-    QueryResponseData:
-      type: object
-      required:
-        - resultType
-        - result
-        - stats
-      properties:
-        resultType:
-          type: string
-          enum:
-            - streams
-            - matrix
-        result:
-          $ref: "#/components/schemas/Streams"
-        stats:
-          $ref: "#/components/schemas/Stats"
     QueryResponse:
       type: object
       required:
@@ -336,6 +291,121 @@ components:
           default: success
         data:
           $ref: "#/components/schemas/QueryResponseData"
+    QueryResponseData:
+      discriminator:
+        propertyName: resultType
+        mapping:
+          streams: "#/components/schemas/StreamsResult"
+          vector: "#/components/schemas/VectorResult"
+          matrix: "#/components/schemas/MatrixResult"
+      oneOf:
+        - $ref: "#/components/schemas/StreamsResult"
+        - $ref: "#/components/schemas/VectorResult"
+        - $ref: "#/components/schemas/MatrixResult"
+    StreamsResult:
+      type: object
+      required:
+        - resultType
+        - result
+      properties:
+        resultType:
+          type: string
+          enum:
+            - streams
+        result:
+          $ref: "#/components/schemas/Streams"
+        stats:
+          $ref: "#/components/schemas/Stats"
+    Streams:
+      type: array
+      items:
+        $ref: "#/components/schemas/Stream"
+    Stream:
+      type: object
+      required:
+        - values
+      properties:
+        stream:
+          $ref: "#/components/schemas/LabelSet"
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogEntry"
+    LogEntry:
+      type: array
+      items:
+        - type: string
+          format: uint64
+          description: stringified nano timestamp
+          x-ogen-name: T
+        - type: string
+          description: value
+          x-ogen-name: V
+    VectorResult:
+      type: object
+      required:
+        - resultType
+        - result
+      properties:
+        resultType:
+          type: string
+          enum:
+            - vector
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/Vector"
+        stats:
+          $ref: "#/components/schemas/Stats"
+    Vector:
+      type: object
+      required:
+        - value
+      properties:
+        metric:
+          $ref: "#/components/schemas/LabelSet"
+        value:
+          $ref: "#/components/schemas/PrometheusSamplePair"
+    MatrixResult:
+      type: object
+      required:
+        - resultType
+        - result
+      properties:
+        resultType:
+          type: string
+          enum:
+            - matrix
+        result:
+          $ref: "#/components/schemas/Matrix"
+        stats:
+          $ref: "#/components/schemas/Stats"
+    Matrix:
+      type: array
+      items:
+        $ref: "#/components/schemas/Series"
+    Series:
+      type: object
+      properties:
+        metric:
+          $ref: "#/components/schemas/LabelSet"
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrometheusSamplePair"
+        # TODO(tdakkota): parse histogramas too
+    PrometheusSamplePair:
+      type: array
+      items:
+        - type: number
+          format: float64
+          description: floating point unix timestamp
+          x-ogen-name: T
+        - type: string
+          description: value
+          x-ogen-name: V
+    Stats:
+      type: object
     Direction:
       type: string
       enum:
