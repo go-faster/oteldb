@@ -51,9 +51,9 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 
 			records := scopeLog.LogRecords()
 			for i := 0; i < records.Len(); i++ {
-				span := records.At(i)
-				insertBatch = append(insertBatch, NewRecordFromOTEL(res, scope, span))
-				addLabels(span.Attributes())
+				record := records.At(i)
+				insertBatch = append(insertBatch, NewRecordFromOTEL(res, scope, record))
+				addLabels(record.Attributes())
 			}
 		}
 	}
