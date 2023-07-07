@@ -56,6 +56,56 @@ func (s *Maps) Validate() error {
 	}
 	return nil
 }
+func (s Matrix) Validate() error {
+	alias := ([]Series)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s *MatrixResult) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s MatrixResultResultType) Validate() error {
+	switch s {
+	case "matrix":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
 
 func (s PrometheusDuration) Validate() error {
 	alias := (string)(s)
@@ -69,6 +119,24 @@ func (s PrometheusDuration) Validate() error {
 		Regex:        regexMap["^[0-9smhdwy]+$"],
 	}).Validate(string(alias)); err != nil {
 		return errors.Wrap(err, "string")
+	}
+	return nil
+}
+func (s *PrometheusSamplePair) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
@@ -122,27 +190,52 @@ func (s *QueryResponse) Validate() error {
 	}
 	return nil
 }
-func (s *QueryResponseData) Validate() error {
+func (s QueryResponseData) Validate() error {
+	switch s.Type {
+	case StreamsResultQueryResponseData:
+		if err := s.StreamsResult.Validate(); err != nil {
+			return err
+		}
+		return nil
+	case VectorResultQueryResponseData:
+		if err := s.VectorResult.Validate(); err != nil {
+			return err
+		}
+		return nil
+	case MatrixResultQueryResponseData:
+		if err := s.MatrixResult.Validate(); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.Errorf("invalid type %q", s.Type)
+	}
+}
+
+func (s *Series) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if err := s.ResultType.Validate(); err != nil {
-			return err
+		var failures []validate.FieldError
+		for i, elem := range s.Values {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
 		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
-			Name:  "resultType",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.Result.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "result",
+			Name:  "values",
 			Error: err,
 		})
 	}
@@ -150,16 +243,6 @@ func (s *QueryResponseData) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s QueryResponseDataResultType) Validate() error {
-	switch s {
-	case "streams":
-		return nil
-	case "matrix":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }
 func (s *Stream) Validate() error {
 	var failures []validate.FieldError
@@ -203,6 +286,32 @@ func (s Streams) Validate() error {
 	}
 	return nil
 }
+func (s *StreamsResult) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s StreamsResultResultType) Validate() error {
+	switch s {
+	case "streams":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
 func (s *Values) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -220,4 +329,65 @@ func (s *Values) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
+}
+func (s *Vector) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Value.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "value",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s *VectorResult) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Result == nil {
+			return errors.New("nil is invalid value")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Result {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s VectorResultResultType) Validate() error {
+	switch s {
+	case "vector":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
 }

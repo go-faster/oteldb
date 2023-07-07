@@ -114,6 +114,32 @@ func (s *Labels) SetStatus(val string) {
 	s.Status = val
 }
 
+// Ref: #/components/schemas/LogEntry
+type LogEntry struct {
+	T uint64
+	V string
+}
+
+// GetT returns the value of T.
+func (s *LogEntry) GetT() uint64 {
+	return s.T
+}
+
+// GetV returns the value of V.
+func (s *LogEntry) GetV() string {
+	return s.V
+}
+
+// SetT sets the value of T.
+func (s *LogEntry) SetT(val uint64) {
+	s.T = val
+}
+
+// SetV sets the value of V.
+func (s *LogEntry) SetV(val string) {
+	s.V = val
+}
+
 type LokiTime string
 
 // Array of maps.
@@ -152,6 +178,61 @@ func (s *MapsDataItem) init() MapsDataItem {
 		*s = m
 	}
 	return m
+}
+
+type Matrix []Series
+
+// Ref: #/components/schemas/MatrixResult
+type MatrixResult struct {
+	Result Matrix `json:"result"`
+	Stats  *Stats `json:"stats"`
+}
+
+// GetResult returns the value of Result.
+func (s *MatrixResult) GetResult() Matrix {
+	return s.Result
+}
+
+// GetStats returns the value of Stats.
+func (s *MatrixResult) GetStats() *Stats {
+	return s.Stats
+}
+
+// SetResult sets the value of Result.
+func (s *MatrixResult) SetResult(val Matrix) {
+	s.Result = val
+}
+
+// SetStats sets the value of Stats.
+func (s *MatrixResult) SetStats(val *Stats) {
+	s.Stats = val
+}
+
+type MatrixResultResultType string
+
+const (
+	MatrixResultResultTypeMatrix MatrixResultResultType = "matrix"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MatrixResultResultType) MarshalText() ([]byte, error) {
+	switch s {
+	case MatrixResultResultTypeMatrix:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MatrixResultResultType) UnmarshalText(data []byte) error {
+	switch MatrixResultResultType(data) {
+	case MatrixResultResultTypeMatrix:
+		*s = MatrixResultResultTypeMatrix
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // NewOptDirection returns new OptDirection with value set to v.
@@ -432,6 +513,32 @@ func (o OptString) Or(d string) string {
 
 type PrometheusDuration string
 
+// Ref: #/components/schemas/PrometheusSamplePair
+type PrometheusSamplePair struct {
+	T float64
+	V string
+}
+
+// GetT returns the value of T.
+func (s *PrometheusSamplePair) GetT() float64 {
+	return s.T
+}
+
+// GetV returns the value of V.
+func (s *PrometheusSamplePair) GetV() string {
+	return s.V
+}
+
+// SetT sets the value of T.
+func (s *PrometheusSamplePair) SetT(val float64) {
+	s.T = val
+}
+
+// SetV sets the value of V.
+func (s *PrometheusSamplePair) SetV(val string) {
+	s.V = val
+}
+
 // Ref: #/components/schemas/Push
 type Push struct {
 	Streams []Stream `json:"streams"`
@@ -495,73 +602,120 @@ func (s *QueryResponse) SetData(val QueryResponseData) {
 }
 
 // Ref: #/components/schemas/QueryResponseData
+// QueryResponseData represents sum type.
 type QueryResponseData struct {
-	ResultType QueryResponseDataResultType `json:"resultType"`
-	Result     Streams                     `json:"result"`
-	Stats      Stats                       `json:"stats"`
+	Type          QueryResponseDataType // switch on this field
+	StreamsResult StreamsResult
+	VectorResult  VectorResult
+	MatrixResult  MatrixResult
 }
 
-// GetResultType returns the value of ResultType.
-func (s *QueryResponseData) GetResultType() QueryResponseDataResultType {
-	return s.ResultType
-}
+// QueryResponseDataType is oneOf type of QueryResponseData.
+type QueryResponseDataType string
 
-// GetResult returns the value of Result.
-func (s *QueryResponseData) GetResult() Streams {
-	return s.Result
-}
-
-// GetStats returns the value of Stats.
-func (s *QueryResponseData) GetStats() Stats {
-	return s.Stats
-}
-
-// SetResultType sets the value of ResultType.
-func (s *QueryResponseData) SetResultType(val QueryResponseDataResultType) {
-	s.ResultType = val
-}
-
-// SetResult sets the value of Result.
-func (s *QueryResponseData) SetResult(val Streams) {
-	s.Result = val
-}
-
-// SetStats sets the value of Stats.
-func (s *QueryResponseData) SetStats(val Stats) {
-	s.Stats = val
-}
-
-type QueryResponseDataResultType string
-
+// Possible values for QueryResponseDataType.
 const (
-	QueryResponseDataResultTypeStreams QueryResponseDataResultType = "streams"
-	QueryResponseDataResultTypeMatrix  QueryResponseDataResultType = "matrix"
+	StreamsResultQueryResponseData QueryResponseDataType = "StreamsResult"
+	VectorResultQueryResponseData  QueryResponseDataType = "VectorResult"
+	MatrixResultQueryResponseData  QueryResponseDataType = "MatrixResult"
 )
 
-// MarshalText implements encoding.TextMarshaler.
-func (s QueryResponseDataResultType) MarshalText() ([]byte, error) {
-	switch s {
-	case QueryResponseDataResultTypeStreams:
-		return []byte(s), nil
-	case QueryResponseDataResultTypeMatrix:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
+// IsStreamsResult reports whether QueryResponseData is StreamsResult.
+func (s QueryResponseData) IsStreamsResult() bool { return s.Type == StreamsResultQueryResponseData }
+
+// IsVectorResult reports whether QueryResponseData is VectorResult.
+func (s QueryResponseData) IsVectorResult() bool { return s.Type == VectorResultQueryResponseData }
+
+// IsMatrixResult reports whether QueryResponseData is MatrixResult.
+func (s QueryResponseData) IsMatrixResult() bool { return s.Type == MatrixResultQueryResponseData }
+
+// SetStreamsResult sets QueryResponseData to StreamsResult.
+func (s *QueryResponseData) SetStreamsResult(v StreamsResult) {
+	s.Type = StreamsResultQueryResponseData
+	s.StreamsResult = v
 }
 
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *QueryResponseDataResultType) UnmarshalText(data []byte) error {
-	switch QueryResponseDataResultType(data) {
-	case QueryResponseDataResultTypeStreams:
-		*s = QueryResponseDataResultTypeStreams
-		return nil
-	case QueryResponseDataResultTypeMatrix:
-		*s = QueryResponseDataResultTypeMatrix
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
+// GetStreamsResult returns StreamsResult and true boolean if QueryResponseData is StreamsResult.
+func (s QueryResponseData) GetStreamsResult() (v StreamsResult, ok bool) {
+	if !s.IsStreamsResult() {
+		return v, false
 	}
+	return s.StreamsResult, true
+}
+
+// NewStreamsResultQueryResponseData returns new QueryResponseData from StreamsResult.
+func NewStreamsResultQueryResponseData(v StreamsResult) QueryResponseData {
+	var s QueryResponseData
+	s.SetStreamsResult(v)
+	return s
+}
+
+// SetVectorResult sets QueryResponseData to VectorResult.
+func (s *QueryResponseData) SetVectorResult(v VectorResult) {
+	s.Type = VectorResultQueryResponseData
+	s.VectorResult = v
+}
+
+// GetVectorResult returns VectorResult and true boolean if QueryResponseData is VectorResult.
+func (s QueryResponseData) GetVectorResult() (v VectorResult, ok bool) {
+	if !s.IsVectorResult() {
+		return v, false
+	}
+	return s.VectorResult, true
+}
+
+// NewVectorResultQueryResponseData returns new QueryResponseData from VectorResult.
+func NewVectorResultQueryResponseData(v VectorResult) QueryResponseData {
+	var s QueryResponseData
+	s.SetVectorResult(v)
+	return s
+}
+
+// SetMatrixResult sets QueryResponseData to MatrixResult.
+func (s *QueryResponseData) SetMatrixResult(v MatrixResult) {
+	s.Type = MatrixResultQueryResponseData
+	s.MatrixResult = v
+}
+
+// GetMatrixResult returns MatrixResult and true boolean if QueryResponseData is MatrixResult.
+func (s QueryResponseData) GetMatrixResult() (v MatrixResult, ok bool) {
+	if !s.IsMatrixResult() {
+		return v, false
+	}
+	return s.MatrixResult, true
+}
+
+// NewMatrixResultQueryResponseData returns new QueryResponseData from MatrixResult.
+func NewMatrixResultQueryResponseData(v MatrixResult) QueryResponseData {
+	var s QueryResponseData
+	s.SetMatrixResult(v)
+	return s
+}
+
+// Ref: #/components/schemas/Series
+type Series struct {
+	Metric OptLabelSet            `json:"metric"`
+	Values []PrometheusSamplePair `json:"values"`
+}
+
+// GetMetric returns the value of Metric.
+func (s *Series) GetMetric() OptLabelSet {
+	return s.Metric
+}
+
+// GetValues returns the value of Values.
+func (s *Series) GetValues() []PrometheusSamplePair {
+	return s.Values
+}
+
+// SetMetric sets the value of Metric.
+func (s *Series) SetMetric(val OptLabelSet) {
+	s.Metric = val
+}
+
+// SetValues sets the value of Values.
+func (s *Series) SetValues(val []PrometheusSamplePair) {
+	s.Values = val
 }
 
 // Ref: #/components/schemas/Stats
@@ -570,8 +724,7 @@ type Stats struct{}
 // Ref: #/components/schemas/Stream
 type Stream struct {
 	Stream OptLabelSet `json:"stream"`
-	Metric OptLabelSet `json:"metric"`
-	Values []Value     `json:"values"`
+	Values []LogEntry  `json:"values"`
 }
 
 // GetStream returns the value of Stream.
@@ -579,13 +732,8 @@ func (s *Stream) GetStream() OptLabelSet {
 	return s.Stream
 }
 
-// GetMetric returns the value of Metric.
-func (s *Stream) GetMetric() OptLabelSet {
-	return s.Metric
-}
-
 // GetValues returns the value of Values.
-func (s *Stream) GetValues() []Value {
+func (s *Stream) GetValues() []LogEntry {
 	return s.Values
 }
 
@@ -594,42 +742,64 @@ func (s *Stream) SetStream(val OptLabelSet) {
 	s.Stream = val
 }
 
-// SetMetric sets the value of Metric.
-func (s *Stream) SetMetric(val OptLabelSet) {
-	s.Metric = val
-}
-
 // SetValues sets the value of Values.
-func (s *Stream) SetValues(val []Value) {
+func (s *Stream) SetValues(val []LogEntry) {
 	s.Values = val
 }
 
 type Streams []Stream
 
-// Ref: #/components/schemas/Value
-type Value struct {
-	T uint64
-	V string
+// Ref: #/components/schemas/StreamsResult
+type StreamsResult struct {
+	Result Streams `json:"result"`
+	Stats  *Stats  `json:"stats"`
 }
 
-// GetT returns the value of T.
-func (s *Value) GetT() uint64 {
-	return s.T
+// GetResult returns the value of Result.
+func (s *StreamsResult) GetResult() Streams {
+	return s.Result
 }
 
-// GetV returns the value of V.
-func (s *Value) GetV() string {
-	return s.V
+// GetStats returns the value of Stats.
+func (s *StreamsResult) GetStats() *Stats {
+	return s.Stats
 }
 
-// SetT sets the value of T.
-func (s *Value) SetT(val uint64) {
-	s.T = val
+// SetResult sets the value of Result.
+func (s *StreamsResult) SetResult(val Streams) {
+	s.Result = val
 }
 
-// SetV sets the value of V.
-func (s *Value) SetV(val string) {
-	s.V = val
+// SetStats sets the value of Stats.
+func (s *StreamsResult) SetStats(val *Stats) {
+	s.Stats = val
+}
+
+type StreamsResultResultType string
+
+const (
+	StreamsResultResultTypeStreams StreamsResultResultType = "streams"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s StreamsResultResultType) MarshalText() ([]byte, error) {
+	switch s {
+	case StreamsResultResultTypeStreams:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *StreamsResultResultType) UnmarshalText(data []byte) error {
+	switch StreamsResultResultType(data) {
+	case StreamsResultResultTypeStreams:
+		*s = StreamsResultResultTypeStreams
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Array of strings.
@@ -657,4 +827,83 @@ func (s *Values) SetData(val []string) {
 // SetStatus sets the value of Status.
 func (s *Values) SetStatus(val string) {
 	s.Status = val
+}
+
+// Ref: #/components/schemas/Vector
+type Vector struct {
+	Metric OptLabelSet          `json:"metric"`
+	Value  PrometheusSamplePair `json:"value"`
+}
+
+// GetMetric returns the value of Metric.
+func (s *Vector) GetMetric() OptLabelSet {
+	return s.Metric
+}
+
+// GetValue returns the value of Value.
+func (s *Vector) GetValue() PrometheusSamplePair {
+	return s.Value
+}
+
+// SetMetric sets the value of Metric.
+func (s *Vector) SetMetric(val OptLabelSet) {
+	s.Metric = val
+}
+
+// SetValue sets the value of Value.
+func (s *Vector) SetValue(val PrometheusSamplePair) {
+	s.Value = val
+}
+
+// Ref: #/components/schemas/VectorResult
+type VectorResult struct {
+	Result []Vector `json:"result"`
+	Stats  *Stats   `json:"stats"`
+}
+
+// GetResult returns the value of Result.
+func (s *VectorResult) GetResult() []Vector {
+	return s.Result
+}
+
+// GetStats returns the value of Stats.
+func (s *VectorResult) GetStats() *Stats {
+	return s.Stats
+}
+
+// SetResult sets the value of Result.
+func (s *VectorResult) SetResult(val []Vector) {
+	s.Result = val
+}
+
+// SetStats sets the value of Stats.
+func (s *VectorResult) SetStats(val *Stats) {
+	s.Stats = val
+}
+
+type VectorResultResultType string
+
+const (
+	VectorResultResultTypeVector VectorResultResultType = "vector"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s VectorResultResultType) MarshalText() ([]byte, error) {
+	switch s {
+	case VectorResultResultTypeVector:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *VectorResultResultType) UnmarshalText(data []byte) error {
+	switch VectorResultResultType(data) {
+	case VectorResultResultTypeVector:
+		*s = VectorResultResultTypeVector
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }

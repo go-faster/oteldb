@@ -48,6 +48,20 @@ func (s *Labels) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *LogEntry) SetFake() {
+	{
+		{
+			s.T = uint64(0)
+		}
+	}
+	{
+		{
+			s.V = "string"
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *Maps) SetFake() {
 	{
 		{
@@ -80,12 +94,56 @@ func (s *MapsDataItem) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Matrix) SetFake() {
+	var unwrapped []Series
+	{
+		unwrapped = nil
+		for i := 0; i < 0; i++ {
+			var elem Series
+			{
+				elem.SetFake()
+			}
+			unwrapped = append(unwrapped, elem)
+		}
+	}
+	*s = Matrix(unwrapped)
+}
+
+// SetFake set fake values.
+func (s *MatrixResult) SetFake() {
+	{
+		{
+			s.Result.SetFake()
+		}
+	}
+	{
+		{ // Keep pointer nil to prevent infinite recursion.
+			s.Stats = nil
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *OptLabelSet) SetFake() {
 	var elem LabelSet
 	{
 		elem.SetFake()
 	}
 	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *PrometheusSamplePair) SetFake() {
+	{
+		{
+			s.T = float64(0)
+		}
+	}
+	{
+		{
+			s.V = "string"
+		}
+	}
 }
 
 // SetFake set fake values.
@@ -120,26 +178,33 @@ func (s *QueryResponse) SetFake() {
 
 // SetFake set fake values.
 func (s *QueryResponseData) SetFake() {
+	var variant MatrixResult
+
 	{
-		{
-			s.ResultType.SetFake()
-		}
+		variant.SetFake()
 	}
-	{
-		{
-			s.Result.SetFake()
-		}
-	}
-	{
-		{
-			s.Stats.SetFake()
-		}
-	}
+	s.SetMatrixResult(variant)
 }
 
 // SetFake set fake values.
-func (s *QueryResponseDataResultType) SetFake() {
-	*s = QueryResponseDataResultTypeStreams
+func (s *Series) SetFake() {
+	{
+		{
+			s.Metric.SetFake()
+		}
+	}
+	{
+		{
+			s.Values = nil
+			for i := 0; i < 0; i++ {
+				var elem PrometheusSamplePair
+				{
+					elem.SetFake()
+				}
+				s.Values = append(s.Values, elem)
+			}
+		}
+	}
 }
 
 // SetFake set fake values.
@@ -155,14 +220,9 @@ func (s *Stream) SetFake() {
 	}
 	{
 		{
-			s.Metric.SetFake()
-		}
-	}
-	{
-		{
 			s.Values = nil
 			for i := 0; i < 0; i++ {
-				var elem Value
+				var elem LogEntry
 				{
 					elem.SetFake()
 				}
@@ -189,15 +249,15 @@ func (s *Streams) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *Value) SetFake() {
+func (s *StreamsResult) SetFake() {
 	{
 		{
-			s.T = uint64(0)
+			s.Result.SetFake()
 		}
 	}
 	{
-		{
-			s.V = "string"
+		{ // Keep pointer nil to prevent infinite recursion.
+			s.Stats = nil
 		}
 	}
 }
@@ -219,6 +279,41 @@ func (s *Values) SetFake() {
 	{
 		{
 			s.Status = "string"
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Vector) SetFake() {
+	{
+		{
+			s.Metric.SetFake()
+		}
+	}
+	{
+		{
+			s.Value.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *VectorResult) SetFake() {
+	{
+		{
+			s.Result = nil
+			for i := 0; i < 0; i++ {
+				var elem Vector
+				{
+					elem.SetFake()
+				}
+				s.Result = append(s.Result, elem)
+			}
+		}
+	}
+	{
+		{ // Keep pointer nil to prevent infinite recursion.
+			s.Stats = nil
 		}
 	}
 }
