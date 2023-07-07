@@ -137,24 +137,21 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 		return nil, errors.Wrap(err, "parse time")
 	}
 
-	streams, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
+	data, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
 		Start:     otelstorage.NewTimestampFromTime(ts),
 		End:       otelstorage.NewTimestampFromTime(ts),
 		Step:      0,
-		Direction: string(params.Direction.Or("backward")),
+		Direction: string(params.Direction.Or(lokiapi.DirectionBackward)),
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "eval")
 	}
-	lg.Debug("Query", zap.Int("streams", len(streams)))
+	lg.Debug("Query", zap.String("type", string(data.Type)))
 
 	return &lokiapi.QueryResponse{
 		Status: "success",
-		Data: lokiapi.QueryResponseData{
-			ResultType: lokiapi.QueryResponseDataResultTypeStreams,
-			Result:     streams,
-		},
+		Data:   data,
 	}, nil
 }
 
@@ -181,24 +178,21 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 		return nil, errors.Wrap(err, "parse step")
 	}
 
-	streams, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
+	data, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
 		Start:     otelstorage.NewTimestampFromTime(start),
 		End:       otelstorage.NewTimestampFromTime(end),
 		Step:      step,
-		Direction: string(params.Direction.Or("backward")),
+		Direction: string(params.Direction.Or(lokiapi.DirectionBackward)),
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "eval")
 	}
-	lg.Debug("Query range", zap.Int("streams", len(streams)))
+	lg.Debug("Query range", zap.String("type", string(data.Type)))
 
 	return &lokiapi.QueryResponse{
 		Status: "success",
-		Data: lokiapi.QueryResponseData{
-			ResultType: lokiapi.QueryResponseDataResultTypeStreams,
-			Result:     streams,
-		},
+		Data:   data,
 	}, nil
 }
 

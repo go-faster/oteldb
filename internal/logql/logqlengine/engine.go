@@ -74,10 +74,15 @@ type EvalParams struct {
 	Limit     int
 }
 
+// IsInstant whether query is instant.
+func (p EvalParams) IsInstant() bool {
+	return p.Start == p.End && p.Step == 0
+}
+
 // Eval parses and evaluates query.
-func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s lokiapi.Streams, rerr error) {
+func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
 	// Instant query, sub lookback duration from Start.
-	if params.Start == params.End && params.Step == 0 {
+	if params.IsInstant() {
 		newStart := params.Start.AsTime().Add(e.lookbackDuration)
 		params.Start = otelstorage.NewTimestampFromTime(newStart)
 	}
@@ -101,15 +106,27 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 
 	expr, err := logql.Parse(query, e.parseOpts)
 	if err != nil {
-		return s, errors.Wrap(err, "parse")
+		return data, errors.Wrap(err, "parse")
 	}
 
-	logExpr, ok := logql.UnparenExpr(expr).(*logql.LogExpr)
-	if !ok {
-		return s, errors.Errorf("expression %T is not supported yet", expr)
-	}
+	switch expr := logql.UnparenExpr(expr).(type) {
+	case *logql.LogExpr:
+		streams, err := e.evalLogExpr(ctx, expr, params)
+		if err != nil {
+			return data, err
+		}
 
-	pipeline, err := BuildPipeline(logExpr.Pipeline...)
+		data.SetStreamsResult(lokiapi.StreamsResult{
+			Result: streams,
+		})
+		return data, nil
+	default:
+		return data, errors.Errorf("expression %T is not supported yet", expr)
+	}
+}
+
+func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params EvalParams) (s lokiapi.Streams, _ error) {
+	pipeline, err := BuildPipeline(expr.Pipeline...)
 	if err != nil {
 		return s, errors.Wrap(err, "build pipeline")
 	}
@@ -118,7 +135,7 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 		params.Start,
 		params.End,
 		SelectLogsParams{
-			Labels: logExpr.Sel.Matchers,
+			Labels: expr.Sel.Matchers,
 		},
 	)
 	if err != nil {
@@ -167,11 +184,11 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (s l
 		}
 
 		entries++
-		stream.Values = append(stream.Values, lokiapi.Value{T: uint64(record.Timestamp), V: newLine})
+		stream.Values = append(stream.Values, lokiapi.LogEntry{T: uint64(record.Timestamp), V: newLine})
 
 		streams[key] = stream
 	}
-
 	lg.Debug("Eval completed", zap.Int("entries", entries))
+
 	return maps.Values(streams), nil
 }
