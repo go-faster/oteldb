@@ -1,0 +1,1148 @@
+{
+    "status": "success",
+    "data": {
+        "resultType": "streams",
+        "result": [
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "503",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492497705984853",
+                        "{\"host\":\"231.202.175.162\", \"user-identifier\":\"parker4214\", \"datetime\":\"04/Jul/2023:17:41:36 +0000\", \"method\": \"PUT\", \"request\": \"/technologies/e-services\", \"protocol\":\"HTTP/2.0\", \"status\":503, \"bytes\":29891, \"referer\": \"https://www.directubiquitous.io/productize/end-to-end/portals/envisioneer\"}"
+                    ],
+                    [
+                        "1688492445839026939",
+                        "{\"host\":\"56.222.179.14\", \"user-identifier\":\"flatley2124\", \"datetime\":\"04/Jul/2023:17:40:44 +0000\", \"method\": \"PUT\", \"request\": \"/relationships/supply-chains\", \"protocol\":\"HTTP/1.1\", \"status\":503, \"bytes\":28425, \"referer\": \"http://www.seniorefficient.org/wireless/end-to-end/markets/partnerships\"}"
+                    ],
+                    [
+                        "1688492436815656456",
+                        "{\"host\":\"149.18.59.251\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:35 +0000\", \"method\": \"PUT\", \"request\": \"/architectures/plug-and-play/incentivize\", \"protocol\":\"HTTP/1.0\", \"status\":503, \"bytes\":8502, \"referer\": \"http://www.nationalstrategize.net/transition/platforms/revolutionize/revolutionize\"}"
+                    ],
+                    [
+                        "1688492429796693962",
+                        "{\"host\":\"244.180.71.157\", \"user-identifier\":\"powlowski7681\", \"datetime\":\"04/Jul/2023:17:40:28 +0000\", \"method\": \"PUT\", \"request\": \"/morph/real-time/web-readiness\", \"protocol\":\"HTTP/2.0\", \"status\":503, \"bytes\":17749, \"referer\": \"https://www.dynamicincubate.org/monetize/dot-com/enterprise/reintermediate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "502",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492471645412257",
+                        "{\"host\":\"209.153.56.150\", \"user-identifier\":\"turcotte3355\", \"datetime\":\"04/Jul/2023:17:41:10 +0000\", \"method\": \"PUT\", \"request\": \"/incubate/infomediaries/architect\", \"protocol\":\"HTTP/1.0\", \"status\":502, \"bytes\":16440, \"referer\": \"http://www.internationalmonetize.biz/global/synergize/wireless\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "501",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492515748215749",
+                        "{\"host\":\"255.131.135.249\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:54 +0000\", \"method\": \"PUT\", \"request\": \"/enable\", \"protocol\":\"HTTP/1.0\", \"status\":501, \"bytes\":12801, \"referer\": \"http://www.customerevolve.net/leverage\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "PUT",
+                    "http_status": "406",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492520759356540",
+                        "{\"host\":\"62.13.131.154\", \"user-identifier\":\"witting4270\", \"datetime\":\"04/Jul/2023:17:41:59 +0000\", \"method\": \"PUT\", \"request\": \"/evolve\", \"protocol\":\"HTTP/1.1\", \"status\":406, \"bytes\":22283, \"referer\": \"https://www.globalchannels.net/content/morph/viral\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "405",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT"
+                },
+                "values": [
+                    [
+                        "1688492457613495835",
+                        "{\"host\":\"143.83.52.169\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:56 +0000\", \"method\": \"PUT\", \"request\": \"/web+services/transform\", \"protocol\":\"HTTP/1.1\", \"status\":405, \"bytes\":4093, \"referer\": \"https://www.centralvalue-added.info/experiences/optimize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "404",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492522764113317",
+                        "{\"host\":\"222.171.173.90\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:42:01 +0000\", \"method\": \"PUT\", \"request\": \"/dynamic/real-time\", \"protocol\":\"HTTP/1.1\", \"status\":404, \"bytes\":11868, \"referer\": \"http://www.dynamicmatrix.info/strategize/optimize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "403",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492523766203233",
+                        "{\"host\":\"254.214.253.183\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:42:02 +0000\", \"method\": \"PUT\", \"request\": \"/generate/aggregate/integrated/one-to-one\", \"protocol\":\"HTTP/2.0\", \"status\":403, \"bytes\":23599, \"referer\": \"http://www.leadcutting-edge.com/sticky/revolutionary/sexy/recontextualize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "400",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492501714479327",
+                        "{\"host\":\"219.166.230.230\", \"user-identifier\":\"blanda4286\", \"datetime\":\"04/Jul/2023:17:41:40 +0000\", \"method\": \"PUT\", \"request\": \"/efficient/networks\", \"protocol\":\"HTTP/1.0\", \"status\":400, \"bytes\":22750, \"referer\": \"http://www.internalmagnetic.net/deploy/plug-and-play\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "PUT",
+                    "http_status": "302",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492455609331043",
+                        "{\"host\":\"157.15.55.45\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:54 +0000\", \"method\": \"PUT\", \"request\": \"/real-time\", \"protocol\":\"HTTP/1.0\", \"status\":302, \"bytes\":23371, \"referer\": \"http://www.principalcustomized.name/compelling/leading-edge/intuitive\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "301",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492450597891012",
+                        "{\"host\":\"49.39.152.103\", \"user-identifier\":\"hintz1163\", \"datetime\":\"04/Jul/2023:17:40:49 +0000\", \"method\": \"PUT\", \"request\": \"/deliverables\", \"protocol\":\"HTTP/2.0\", \"status\":301, \"bytes\":26934, \"referer\": \"https://www.legacyrevolutionize.name/aggregate/engage/cutting-edge/expedite\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "205",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492442831487198",
+                        "{\"host\":\"103.19.15.199\", \"user-identifier\":\"torphy8676\", \"datetime\":\"04/Jul/2023:17:40:41 +0000\", \"method\": \"PUT\", \"request\": \"/partnerships/web-enabled/paradigms/reinvent\", \"protocol\":\"HTTP/1.0\", \"status\":205, \"bytes\":28048, \"referer\": \"http://www.investorrecontextualize.info/real-time\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "204",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492509735712627",
+                        "{\"host\":\"28.112.8.38\", \"user-identifier\":\"schuster8476\", \"datetime\":\"04/Jul/2023:17:41:48 +0000\", \"method\": \"PUT\", \"request\": \"/24%2f365\", \"protocol\":\"HTTP/2.0\", \"status\":204, \"bytes\":18895, \"referer\": \"http://www.principalfrictionless.io/cross-media/seamless\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PUT",
+                    "http_status": "201",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492475653782607",
+                        "{\"host\":\"2.207.132.134\", \"user-identifier\":\"rath8112\", \"datetime\":\"04/Jul/2023:17:41:14 +0000\", \"method\": \"PUT\", \"request\": \"/cutting-edge/synergies/transform\", \"protocol\":\"HTTP/1.1\", \"status\":201, \"bytes\":26384, \"referer\": \"http://www.nationalinfrastructures.biz/incentivize\"}"
+                    ],
+                    [
+                        "1688492448594525121",
+                        "{\"host\":\"239.3.181.228\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:47 +0000\", \"method\": \"PUT\", \"request\": \"/out-of-the-box/deliverables\", \"protocol\":\"HTTP/1.0\", \"status\":201, \"bytes\":29015, \"referer\": \"https://www.corporateend-to-end.biz/mission-critical/scalable/extensible/solutions\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "POST",
+                    "http_status": "503",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492524768220811",
+                        "{\"host\":\"157.222.194.93\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:42:03 +0000\", \"method\": \"POST\", \"request\": \"/metrics/monetize\", \"protocol\":\"HTTP/1.1\", \"status\":503, \"bytes\":14910, \"referer\": \"http://www.dynamicrevolutionary.net/experiences/reinvent\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "416",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492511739285522",
+                        "{\"host\":\"146.223.252.99\", \"user-identifier\":\"wehner1216\", \"datetime\":\"04/Jul/2023:17:41:50 +0000\", \"method\": \"POST\", \"request\": \"/convergence\", \"protocol\":\"HTTP/1.0\", \"status\":416, \"bytes\":20991, \"referer\": \"http://www.leade-enable.info/e-tailers/experiences/unleash/technologies\"}"
+                    ],
+                    [
+                        "1688492506728084135",
+                        "{\"host\":\"204.221.86.11\", \"user-identifier\":\"little8552\", \"datetime\":\"04/Jul/2023:17:41:45 +0000\", \"method\": \"POST\", \"request\": \"/productize/leverage/cutting-edge/unleash\", \"protocol\":\"HTTP/1.0\", \"status\":416, \"bytes\":15969, \"referer\": \"https://www.dynamicvisionary.name/extensible/revolutionary/end-to-end/relationships\"}"
+                    ],
+                    [
+                        "1688492431800863931",
+                        "{\"host\":\"159.50.111.59\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:30 +0000\", \"method\": \"POST\", \"request\": \"/scale/virtual/facilitate\", \"protocol\":\"HTTP/2.0\", \"status\":416, \"bytes\":8863, \"referer\": \"http://www.corporatenetworks.net/repurpose/recontextualize/back-end\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "POST",
+                    "http_status": "406",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492507730627539",
+                        "{\"host\":\"241.193.196.28\", \"user-identifier\":\"dubuque3525\", \"datetime\":\"04/Jul/2023:17:41:46 +0000\", \"method\": \"POST\", \"request\": \"/experiences/enable/channels\", \"protocol\":\"HTTP/2.0\", \"status\":406, \"bytes\":14761, \"referer\": \"http://www.internalredefine.org/extend/innovative/recontextualize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "404",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST"
+                },
+                "values": [
+                    [
+                        "1688492456611389785",
+                        "{\"host\":\"254.71.136.32\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:55 +0000\", \"method\": \"POST\", \"request\": \"/holistic/implement/harness/wireless\", \"protocol\":\"HTTP/1.0\", \"status\":404, \"bytes\":5963, \"referer\": \"https://www.globalarchitectures.io/drive/innovate/drive\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "403",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492469641476357",
+                        "{\"host\":\"251.115.172.93\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:08 +0000\", \"method\": \"POST\", \"request\": \"/global\", \"protocol\":\"HTTP/1.0\", \"status\":403, \"bytes\":9754, \"referer\": \"http://www.customere-commerce.net/synergistic/synthesize/reinvent/partnerships\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "401",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492485675267572",
+                        "{\"host\":\"76.150.95.250\", \"user-identifier\":\"hackett4651\", \"datetime\":\"04/Jul/2023:17:41:24 +0000\", \"method\": \"POST\", \"request\": \"/relationships/bleeding-edge\", \"protocol\":\"HTTP/1.0\", \"status\":401, \"bytes\":1934, \"referer\": \"http://www.nationalorchestrate.org/enable/users/vertical/unleash\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "400",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492503720515583",
+                        "{\"host\":\"149.242.98.37\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:42 +0000\", \"method\": \"POST\", \"request\": \"/maximize/frictionless/paradigms\", \"protocol\":\"HTTP/1.1\", \"status\":400, \"bytes\":9312, \"referer\": \"https://www.districtworld-class.net/orchestrate/supply-chains/models/bricks-and-clicks\"}"
+                    ],
+                    [
+                        "1688492481665738748",
+                        "{\"host\":\"218.135.82.24\", \"user-identifier\":\"thompson5243\", \"datetime\":\"04/Jul/2023:17:41:20 +0000\", \"method\": \"POST\", \"request\": \"/drive\", \"protocol\":\"HTTP/1.0\", \"status\":400, \"bytes\":17519, \"referer\": \"https://www.corporateniches.name/plug-and-play/mindshare\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "304",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492461622865587",
+                        "{\"host\":\"82.120.183.178\", \"user-identifier\":\"shields7308\", \"datetime\":\"04/Jul/2023:17:41:00 +0000\", \"method\": \"POST\", \"request\": \"/seamless/interactive/enable/incubate\", \"protocol\":\"HTTP/1.1\", \"status\":304, \"bytes\":7497, \"referer\": \"http://www.nationalkiller.org/markets\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "POST",
+                    "http_status": "302",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492454606175477",
+                        "{\"host\":\"192.234.158.28\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:53 +0000\", \"method\": \"POST\", \"request\": \"/e-tailers\", \"protocol\":\"HTTP/1.0\", \"status\":302, \"bytes\":21255, \"referer\": \"https://www.corporatebest-of-breed.name/web-enabled\"}"
+                    ],
+                    [
+                        "1688492449595731613",
+                        "{\"host\":\"166.44.54.78\", \"user-identifier\":\"kuvalis1655\", \"datetime\":\"04/Jul/2023:17:40:48 +0000\", \"method\": \"POST\", \"request\": \"/enterprise\", \"protocol\":\"HTTP/2.0\", \"status\":302, \"bytes\":28185, \"referer\": \"https://www.investorredefine.org/deliver\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "301",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492504722677455",
+                        "{\"host\":\"198.108.110.42\", \"user-identifier\":\"mcclure4504\", \"datetime\":\"04/Jul/2023:17:41:43 +0000\", \"method\": \"POST\", \"request\": \"/incubate/models\", \"protocol\":\"HTTP/1.0\", \"status\":301, \"bytes\":17389, \"referer\": \"http://www.nationalparadigms.info/scale\"}"
+                    ],
+                    [
+                        "1688492500712249766",
+                        "{\"host\":\"209.100.213.229\", \"user-identifier\":\"thiel2235\", \"datetime\":\"04/Jul/2023:17:41:39 +0000\", \"method\": \"POST\", \"request\": \"/distributed/b2c/e-services/cultivate\", \"protocol\":\"HTTP/2.0\", \"status\":301, \"bytes\":3324, \"referer\": \"http://www.seniorvirtual.biz/compelling/brand\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "205",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492470644348741",
+                        "{\"host\":\"2.244.49.177\", \"user-identifier\":\"swaniawski7408\", \"datetime\":\"04/Jul/2023:17:41:09 +0000\", \"method\": \"POST\", \"request\": \"/integrated/dot-com/revolutionary\", \"protocol\":\"HTTP/1.1\", \"status\":205, \"bytes\":21483, \"referer\": \"http://www.investorrepurpose.name/recontextualize/benchmark\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "204"
+                },
+                "values": [
+                    [
+                        "1688492447843266698",
+                        "{\"host\":\"67.22.251.160\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:46 +0000\", \"method\": \"POST\", \"request\": \"/architect/scalable\", \"protocol\":\"HTTP/1.0\", \"status\":204, \"bytes\":28734, \"referer\": \"https://www.principalarchitect.name/iterate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "201"
+                },
+                "values": [
+                    [
+                        "1688492444836447430",
+                        "{\"host\":\"41.190.202.131\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:43 +0000\", \"method\": \"POST\", \"request\": \"/b2b/web+services\", \"protocol\":\"HTTP/1.1\", \"status\":201, \"bytes\":16026, \"referer\": \"http://www.principalbrand.com/ubiquitous/real-time\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "200",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492493696245030",
+                        "{\"host\":\"216.167.99.233\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:32 +0000\", \"method\": \"POST\", \"request\": \"/implement/clicks-and-mortar/brand\", \"protocol\":\"HTTP/2.0\", \"status\":200, \"bytes\":11808, \"referer\": \"https://www.districtimpactful.name/channels/implement/content\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "POST",
+                    "http_status": "100",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492435813067089",
+                        "{\"host\":\"178.89.221.189\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:34 +0000\", \"method\": \"POST\", \"request\": \"/frictionless/e-business/seize\", \"protocol\":\"HTTP/1.1\", \"status\":100, \"bytes\":8053, \"referer\": \"https://www.investor24/365.biz/b2c/compelling/integrate/envisioneer\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "503",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH"
+                },
+                "values": [
+                    [
+                        "1688492508733498885",
+                        "{\"host\":\"41.161.18.66\", \"user-identifier\":\"mccullough5610\", \"datetime\":\"04/Jul/2023:17:41:47 +0000\", \"method\": \"PATCH\", \"request\": \"/one-to-one\", \"protocol\":\"HTTP/1.1\", \"status\":503, \"bytes\":387, \"referer\": \"http://www.productglobal.name/strategic/synergies\"}"
+                    ],
+                    [
+                        "1688492489685709417",
+                        "{\"host\":\"248.83.15.204\", \"user-identifier\":\"wyman5171\", \"datetime\":\"04/Jul/2023:17:41:28 +0000\", \"method\": \"PATCH\", \"request\": \"/technologies/scalable/embrace/e-business\", \"protocol\":\"HTTP/1.1\", \"status\":503, \"bytes\":27496, \"referer\": \"https://www.internalmatrix.io/matrix/engage/monetize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "502",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492490689233516",
+                        "{\"host\":\"129.57.124.174\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:29 +0000\", \"method\": \"PATCH\", \"request\": \"/paradigms\", \"protocol\":\"HTTP/1.0\", \"status\":502, \"bytes\":23619, \"referer\": \"http://www.dynamicembrace.name/exploit\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "500",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH"
+                },
+                "values": [
+                    [
+                        "1688492460620788226",
+                        "{\"host\":\"180.177.52.20\", \"user-identifier\":\"daniel8256\", \"datetime\":\"04/Jul/2023:17:40:59 +0000\", \"method\": \"PATCH\", \"request\": \"/synthesize\", \"protocol\":\"HTTP/1.0\", \"status\":500, \"bytes\":3856, \"referer\": \"http://www.humanvirtual.info/dot-com/24/7\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "PATCH",
+                    "http_status": "401",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492458616649372",
+                        "{\"host\":\"156.173.247.186\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:57 +0000\", \"method\": \"PATCH\", \"request\": \"/compelling/monetize/technologies\", \"protocol\":\"HTTP/1.0\", \"status\":401, \"bytes\":26357, \"referer\": \"https://www.legacymesh.org/communities/24/365/networks/syndicate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "400",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492492694186975",
+                        "{\"host\":\"69.11.172.72\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:31 +0000\", \"method\": \"PATCH\", \"request\": \"/intuitive\", \"protocol\":\"HTTP/2.0\", \"status\":400, \"bytes\":22256, \"referer\": \"http://www.directrepurpose.info/unleash\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "PATCH",
+                    "http_status": "304",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492496703549277",
+                        "{\"host\":\"107.202.119.60\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:35 +0000\", \"method\": \"PATCH\", \"request\": \"/transition/enhance/mesh\", \"protocol\":\"HTTP/1.0\", \"status\":304, \"bytes\":13515, \"referer\": \"https://www.dynamicmission-critical.io/e-tailers/transparent/schemas\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "302",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492521762094461",
+                        "{\"host\":\"216.63.185.19\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:42:00 +0000\", \"method\": \"PATCH\", \"request\": \"/deliver/channels/real-time/impactful\", \"protocol\":\"HTTP/1.1\", \"status\":302, \"bytes\":29765, \"referer\": \"https://www.customerportals.name/optimize/incentivize/revolutionary\"}"
+                    ],
+                    [
+                        "1688492446840104933",
+                        "{\"host\":\"226.84.86.242\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:45 +0000\", \"method\": \"PATCH\", \"request\": \"/enterprise\", \"protocol\":\"HTTP/1.0\", \"status\":302, \"bytes\":16058, \"referer\": \"http://www.customermaximize.com/initiatives/intuitive/bandwidth/reinvent\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "301",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492480663542887",
+                        "{\"host\":\"239.255.249.203\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:19 +0000\", \"method\": \"PATCH\", \"request\": \"/redefine/technologies/synthesize/niches\", \"protocol\":\"HTTP/1.1\", \"status\":301, \"bytes\":4870, \"referer\": \"http://www.corporatemaximize.org/24/7/viral/repurpose\"}"
+                    ],
+                    [
+                        "1688492467637010410",
+                        "{\"host\":\"224.69.59.49\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:06 +0000\", \"method\": \"PATCH\", \"request\": \"/metrics/global/e-business/reinvent\", \"protocol\":\"HTTP/1.0\", \"status\":301, \"bytes\":18497, \"referer\": \"http://www.customergrow.net/benchmark/best-of-breed/methodologies\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "205",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492510737448580",
+                        "{\"host\":\"134.133.195.36\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:49 +0000\", \"method\": \"PATCH\", \"request\": \"/brand\", \"protocol\":\"HTTP/1.1\", \"status\":205, \"bytes\":20122, \"referer\": \"https://www.legacymodels.biz/revolutionize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "203",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492482668031116",
+                        "{\"host\":\"244.196.222.203\", \"user-identifier\":\"stiedemann6062\", \"datetime\":\"04/Jul/2023:17:41:21 +0000\", \"method\": \"PATCH\", \"request\": \"/mission-critical/intuitive\", \"protocol\":\"HTTP/1.1\", \"status\":203, \"bytes\":2443, \"referer\": \"https://www.legacysynergies.biz/streamline/engage\"}"
+                    ],
+                    [
+                        "1688492473649656851",
+                        "{\"host\":\"27.157.83.66\", \"user-identifier\":\"goyette2100\", \"datetime\":\"04/Jul/2023:17:41:12 +0000\", \"method\": \"PATCH\", \"request\": \"/value-added\", \"protocol\":\"HTTP/2.0\", \"status\":203, \"bytes\":22411, \"referer\": \"https://www.forwarde-markets.name/utilize/cross-media\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "PATCH",
+                    "http_status": "100"
+                },
+                "values": [
+                    [
+                        "1688492452602016395",
+                        "{\"host\":\"220.85.116.168\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:51 +0000\", \"method\": \"PATCH\", \"request\": \"/action-items/grow/action-items/24%2f7\", \"protocol\":\"HTTP/1.1\", \"status\":100, \"bytes\":13024, \"referer\": \"https://www.forwardvertical.net/infrastructures/e-commerce\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "504",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492512740770762",
+                        "{\"host\":\"37.51.223.180\", \"user-identifier\":\"homenick1663\", \"datetime\":\"04/Jul/2023:17:41:51 +0000\", \"method\": \"HEAD\", \"request\": \"/communities\", \"protocol\":\"HTTP/1.0\", \"status\":504, \"bytes\":25247, \"referer\": \"http://www.globalinitiatives.com/partnerships/front-end/sexy\"}"
+                    ],
+                    [
+                        "1688492498708057799",
+                        "{\"host\":\"67.2.95.54\", \"user-identifier\":\"zulauf7018\", \"datetime\":\"04/Jul/2023:17:41:37 +0000\", \"method\": \"HEAD\", \"request\": \"/envisioneer\", \"protocol\":\"HTTP/2.0\", \"status\":504, \"bytes\":10391, \"referer\": \"http://www.internalend-to-end.io/dot-com/portals\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "503",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492438820795883",
+                        "{\"host\":\"51.115.107.145\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:37 +0000\", \"method\": \"HEAD\", \"request\": \"/niches/reintermediate\", \"protocol\":\"HTTP/2.0\", \"status\":503, \"bytes\":7560, \"referer\": \"http://www.directsolutions.name/innovate/transform\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "502",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492437817535512",
+                        "{\"host\":\"252.224.129.225\", \"user-identifier\":\"hodkiewicz8105\", \"datetime\":\"04/Jul/2023:17:40:36 +0000\", \"method\": \"HEAD\", \"request\": \"/experiences/scalable/bandwidth\", \"protocol\":\"HTTP/1.1\", \"status\":502, \"bytes\":17028, \"referer\": \"http://www.humancutting-edge.info/engage/extensible/e-business\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "406",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492451599935564",
+                        "{\"host\":\"79.172.140.236\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:50 +0000\", \"method\": \"HEAD\", \"request\": \"/roi\", \"protocol\":\"HTTP/1.0\", \"status\":406, \"bytes\":23636, \"referer\": \"https://www.leadsynergistic.name/portals/engage\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "HEAD",
+                    "http_status": "405",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492439822913583",
+                        "{\"host\":\"40.120.31.14\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:38 +0000\", \"method\": \"HEAD\", \"request\": \"/front-end/repurpose/mission-critical\", \"protocol\":\"HTTP/1.0\", \"status\":405, \"bytes\":4434, \"referer\": \"https://www.internalcustomized.net/24/7/visualize/web-readiness/niches\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "403",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492466635118443",
+                        "{\"host\":\"27.254.145.116\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:05 +0000\", \"method\": \"HEAD\", \"request\": \"/initiatives/e-business/markets\", \"protocol\":\"HTTP/2.0\", \"status\":403, \"bytes\":25548, \"referer\": \"https://www.investorniches.com/enterprise/end-to-end/evolve\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "301",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492494698384262",
+                        "{\"host\":\"27.99.30.118\", \"user-identifier\":\"mcglynn3472\", \"datetime\":\"04/Jul/2023:17:41:33 +0000\", \"method\": \"HEAD\", \"request\": \"/cutting-edge\", \"protocol\":\"HTTP/1.1\", \"status\":301, \"bytes\":22382, \"referer\": \"https://www.internationalplug-and-play.org/value-added/leverage/empower/mesh\"}"
+                    ],
+                    [
+                        "1688492477658042630",
+                        "{\"host\":\"106.31.173.197\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:16 +0000\", \"method\": \"HEAD\", \"request\": \"/next-generation/interfaces/transform/bandwidth\", \"protocol\":\"HTTP/1.0\", \"status\":301, \"bytes\":10259, \"referer\": \"http://www.nationalexpedite.info/streamline/granular/one-to-one\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "205",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492433807254318",
+                        "{\"host\":\"96.254.205.27\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:32 +0000\", \"method\": \"HEAD\", \"request\": \"/portals/bricks-and-clicks\", \"protocol\":\"HTTP/1.0\", \"status\":205, \"bytes\":12336, \"referer\": \"https://www.customerseize.io/networks/experiences\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "201",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492462625981135",
+                        "{\"host\":\"178.235.40.240\", \"user-identifier\":\"murray1180\", \"datetime\":\"04/Jul/2023:17:41:01 +0000\", \"method\": \"HEAD\", \"request\": \"/grow/infomediaries/wireless/leading-edge\", \"protocol\":\"HTTP/1.0\", \"status\":201, \"bytes\":28014, \"referer\": \"http://www.corporaterich.io/enterprise/schemas/users/efficient\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "200",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD"
+                },
+                "values": [
+                    [
+                        "1688492517753529964",
+                        "{\"host\":\"172.240.212.241\", \"user-identifier\":\"kessler5143\", \"datetime\":\"04/Jul/2023:17:41:56 +0000\", \"method\": \"HEAD\", \"request\": \"/24%2f365/extend/niches/integrated\", \"protocol\":\"HTTP/1.1\", \"status\":200, \"bytes\":1366, \"referer\": \"https://www.dynamicglobal.org/brand/strategize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "HEAD",
+                    "http_status": "100"
+                },
+                "values": [
+                    [
+                        "1688492505725816054",
+                        "{\"host\":\"161.47.40.161\", \"user-identifier\":\"mcdermott5653\", \"datetime\":\"04/Jul/2023:17:41:44 +0000\", \"method\": \"HEAD\", \"request\": \"/scale/channels\", \"protocol\":\"HTTP/2.0\", \"status\":100, \"bytes\":29804, \"referer\": \"https://www.regionalharness.com/functionalities\"}"
+                    ],
+                    [
+                        "1688492468639105422",
+                        "{\"host\":\"243.252.110.13\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:07 +0000\", \"method\": \"HEAD\", \"request\": \"/content/proactive\", \"protocol\":\"HTTP/1.1\", \"status\":100, \"bytes\":23426, \"referer\": \"https://www.centralvalue-added.biz/open-source\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "503",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492483671075596",
+                        "{\"host\":\"16.209.24.116\", \"user-identifier\":\"nader1087\", \"datetime\":\"04/Jul/2023:17:41:22 +0000\", \"method\": \"GET\", \"request\": \"/real-time\", \"protocol\":\"HTTP/1.0\", \"status\":503, \"bytes\":9973, \"referer\": \"https://www.globalmatrix.org/schemas/transform\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "502"
+                },
+                "values": [
+                    [
+                        "1688492465632838586",
+                        "{\"host\":\"160.146.237.185\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:04 +0000\", \"method\": \"GET\", \"request\": \"/grow\", \"protocol\":\"HTTP/1.1\", \"status\":502, \"bytes\":27109, \"referer\": \"http://www.chiefmetrics.biz/content/best-of-breed\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "501",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET"
+                },
+                "values": [
+                    [
+                        "1688492499710098974",
+                        "{\"host\":\"249.63.67.86\", \"user-identifier\":\"nicolas3032\", \"datetime\":\"04/Jul/2023:17:41:38 +0000\", \"method\": \"GET\", \"request\": \"/extend/cultivate/bricks-and-clicks/incentivize\", \"protocol\":\"HTTP/1.1\", \"status\":501, \"bytes\":17474, \"referer\": \"https://www.dynamiccutting-edge.info/incubate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "416",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET"
+                },
+                "values": [
+                    [
+                        "1688492484673186079",
+                        "{\"host\":\"22.204.104.140\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:23 +0000\", \"method\": \"GET\", \"request\": \"/virtual\", \"protocol\":\"HTTP/1.1\", \"status\":416, \"bytes\":20904, \"referer\": \"http://www.chiefinteractive.biz/eyeballs/embrace/eyeballs/out-of-the-box\"}"
+                    ],
+                    [
+                        "1688492443833740134",
+                        "{\"host\":\"13.123.231.122\", \"user-identifier\":\"rath2072\", \"datetime\":\"04/Jul/2023:17:40:42 +0000\", \"method\": \"GET\", \"request\": \"/robust/robust/synergies/rich\", \"protocol\":\"HTTP/1.0\", \"status\":416, \"bytes\":23884, \"referer\": \"https://www.seniorcustomized.info/redefine/extend/applications/engineer\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "405",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492491691212532",
+                        "{\"host\":\"83.155.5.59\", \"user-identifier\":\"durgan8473\", \"datetime\":\"04/Jul/2023:17:41:30 +0000\", \"method\": \"GET\", \"request\": \"/dot-com\", \"protocol\":\"HTTP/1.0\", \"status\":405, \"bytes\":27758, \"referer\": \"http://www.internationalusers.name/unleash\"}"
+                    ],
+                    [
+                        "1688492463629020904",
+                        "{\"host\":\"102.208.123.211\", \"user-identifier\":\"crist3076\", \"datetime\":\"04/Jul/2023:17:41:02 +0000\", \"method\": \"GET\", \"request\": \"/granular\", \"protocol\":\"HTTP/2.0\", \"status\":405, \"bytes\":12091, \"referer\": \"https://www.seniorempower.org/front-end/dynamic/scale\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "404",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492432804075814",
+                        "{\"host\":\"120.214.21.245\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:31 +0000\", \"method\": \"GET\", \"request\": \"/morph/integrate\", \"protocol\":\"HTTP/2.0\", \"status\":404, \"bytes\":2372, \"referer\": \"http://www.districtreal-time.name/b2c\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "403",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492488682652107",
+                        "{\"host\":\"228.97.212.172\", \"user-identifier\":\"morar4338\", \"datetime\":\"04/Jul/2023:17:41:27 +0000\", \"method\": \"GET\", \"request\": \"/synergistic/dynamic\", \"protocol\":\"HTTP/1.1\", \"status\":403, \"bytes\":10720, \"referer\": \"https://www.leadfacilitate.biz/sticky/distributed/cross-platform/global\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "401",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492514746116175",
+                        "{\"host\":\"31.102.14.170\", \"user-identifier\":\"kessler6726\", \"datetime\":\"04/Jul/2023:17:41:53 +0000\", \"method\": \"GET\", \"request\": \"/target\", \"protocol\":\"HTTP/2.0\", \"status\":401, \"bytes\":244, \"referer\": \"https://www.customerrecontextualize.io/redefine/methodologies\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "400",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492478659165436",
+                        "{\"host\":\"185.56.35.101\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:17 +0000\", \"method\": \"GET\", \"request\": \"/productize/cross-media/best-of-breed/sticky\", \"protocol\":\"HTTP/1.1\", \"status\":400, \"bytes\":6701, \"referer\": \"https://www.productdrive.io/back-end\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "GET",
+                    "http_status": "205",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492434809472254",
+                        "{\"host\":\"169.239.250.37\", \"user-identifier\":\"bartoletti2366\", \"datetime\":\"04/Jul/2023:17:40:33 +0000\", \"method\": \"GET\", \"request\": \"/synergies/monetize/integrated\", \"protocol\":\"HTTP/1.1\", \"status\":205, \"bytes\":733, \"referer\": \"https://www.seniorefficient.com/mission-critical/visualize/synergistic/magnetic\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "GET",
+                    "http_status": "204",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492440825583119",
+                        "{\"host\":\"69.70.99.69\", \"user-identifier\":\"conn8087\", \"datetime\":\"04/Jul/2023:17:40:39 +0000\", \"method\": \"GET\", \"request\": \"/monetize\", \"protocol\":\"HTTP/1.1\", \"status\":204, \"bytes\":14038, \"referer\": \"http://www.principalorchestrate.net/convergence/e-commerce\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "503",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492426790782927",
+                        "{\"host\":\"254.143.26.75\", \"user-identifier\":\"quitzon3000\", \"datetime\":\"04/Jul/2023:17:40:25 +0000\", \"method\": \"DELETE\", \"request\": \"/e-enable/networks\", \"protocol\":\"HTTP/1.1\", \"status\":503, \"bytes\":9872, \"referer\": \"https://www.regionalgrow.com/strategize/disintermediate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "502",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492516750459241",
+                        "{\"host\":\"118.224.127.243\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:55 +0000\", \"method\": \"DELETE\", \"request\": \"/markets/proactive\", \"protocol\":\"HTTP/2.0\", \"status\":502, \"bytes\":14917, \"referer\": \"https://www.directcommunities.net/aggregate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_status": "501",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE"
+                },
+                "values": [
+                    [
+                        "1688492519757042649",
+                        "{\"host\":\"91.50.137.135\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:58 +0000\", \"method\": \"DELETE\", \"request\": \"/enterprise\", \"protocol\":\"HTTP/1.1\", \"status\":501, \"bytes\":5316, \"referer\": \"http://www.corporateinteractive.org/reinvent/applications/implement/out-of-the-box\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "500",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492487679953298",
+                        "{\"host\":\"126.115.139.147\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:26 +0000\", \"method\": \"DELETE\", \"request\": \"/evolve/innovative\", \"protocol\":\"HTTP/1.1\", \"status\":500, \"bytes\":18956, \"referer\": \"http://www.dynamicfacilitate.org/incubate\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "416",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492495701480753",
+                        "{\"host\":\"232.42.242.73\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:34 +0000\", \"method\": \"DELETE\", \"request\": \"/incentivize\", \"protocol\":\"HTTP/1.0\", \"status\":416, \"bytes\":10744, \"referer\": \"http://www.investormetrics.info/mission-critical\"}"
+                    ],
+                    [
+                        "1688492428795095961",
+                        "{\"host\":\"84.189.238.129\", \"user-identifier\":\"walsh7537\", \"datetime\":\"04/Jul/2023:17:40:27 +0000\", \"method\": \"DELETE\", \"request\": \"/orchestrate/proactive\", \"protocol\":\"HTTP/2.0\", \"status\":416, \"bytes\":20557, \"referer\": \"https://www.internalinnovate.com/front-end\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "DELETE",
+                    "http_status": "405",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492472647508250",
+                        "{\"host\":\"8.199.42.221\", \"user-identifier\":\"predovic6225\", \"datetime\":\"04/Jul/2023:17:41:11 +0000\", \"method\": \"DELETE\", \"request\": \"/convergence\", \"protocol\":\"HTTP/1.0\", \"status\":405, \"bytes\":11707, \"referer\": \"http://www.legacygranular.biz/synergize/interfaces/grow\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "404",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492459618703414",
+                        "{\"host\":\"7.221.221.32\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:58 +0000\", \"method\": \"DELETE\", \"request\": \"/extend/methodologies/intuitive\", \"protocol\":\"HTTP/2.0\", \"status\":404, \"bytes\":20452, \"referer\": \"https://www.humanseamless.biz/architect/enable\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "DELETE",
+                    "http_status": "401",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492518755134940",
+                        "{\"host\":\"90.215.39.40\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:57 +0000\", \"method\": \"DELETE\", \"request\": \"/whiteboard\", \"protocol\":\"HTTP/1.0\", \"status\":401, \"bytes\":12614, \"referer\": \"https://www.directweb-enabled.org/technologies/customized\"}"
+                    ],
+                    [
+                        "1688492486677515982",
+                        "{\"host\":\"47.216.248.39\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:25 +0000\", \"method\": \"DELETE\", \"request\": \"/killer\", \"protocol\":\"HTTP/2.0\", \"status\":401, \"bytes\":12786, \"referer\": \"http://www.leadoptimize.net/initiatives/ubiquitous/holistic/sexy\"}"
+                    ],
+                    [
+                        "1688492430798436579",
+                        "{\"host\":\"115.100.178.17\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:29 +0000\", \"method\": \"DELETE\", \"request\": \"/networks\", \"protocol\":\"HTTP/1.1\", \"status\":401, \"bytes\":19034, \"referer\": \"http://www.forwardmesh.net/enable/scalable\"}"
+                    ],
+                    [
+                        "1688492427791886219",
+                        "{\"host\":\"83.194.84.29\", \"user-identifier\":\"schinner1251\", \"datetime\":\"04/Jul/2023:17:40:26 +0000\", \"method\": \"DELETE\", \"request\": \"/enterprise/customized\", \"protocol\":\"HTTP/1.0\", \"status\":401, \"bytes\":19167, \"referer\": \"https://www.regionalmorph.name/monetize\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "DELETE",
+                    "http_status": "400",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492513743962581",
+                        "{\"host\":\"193.76.122.19\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:52 +0000\", \"method\": \"DELETE\", \"request\": \"/morph\", \"protocol\":\"HTTP/2.0\", \"status\":400, \"bytes\":1617, \"referer\": \"https://www.regionalgrow.io/utilize/matrix/cross-media\"}"
+                    ],
+                    [
+                        "1688492479661379366",
+                        "{\"host\":\"41.128.154.2\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:18 +0000\", \"method\": \"DELETE\", \"request\": \"/schemas\", \"protocol\":\"HTTP/1.1\", \"status\":400, \"bytes\":29682, \"referer\": \"https://www.internationalstrategic.io/cultivate/technologies/unleash\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "304",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492525769670042",
+                        "{\"host\":\"66.15.185.44\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:42:04 +0000\", \"method\": \"DELETE\", \"request\": \"/technologies\", \"protocol\":\"HTTP/1.1\", \"status\":304, \"bytes\":28261, \"referer\": \"https://www.principalinterfaces.biz/benchmark\"}"
+                    ],
+                    [
+                        "1688492474651687654",
+                        "{\"host\":\"209.165.242.201\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:13 +0000\", \"method\": \"DELETE\", \"request\": \"/orchestrate/disintermediate/interfaces\", \"protocol\":\"HTTP/2.0\", \"status\":304, \"bytes\":16930, \"referer\": \"http://www.dynamicproductize.com/incubate/user-centric/platforms\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "301",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492441829241301",
+                        "{\"host\":\"142.184.146.189\", \"user-identifier\":\"ortiz1625\", \"datetime\":\"04/Jul/2023:17:40:40 +0000\", \"method\": \"DELETE\", \"request\": \"/eyeballs/front-end\", \"protocol\":\"HTTP/1.1\", \"status\":301, \"bytes\":10039, \"referer\": \"https://www.investore-commerce.com/reintermediate/efficient\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "filename": "/var/log/generated.txt",
+                    "http_method": "DELETE",
+                    "http_status": "205",
+                    "job": "generated-logs"
+                },
+                "values": [
+                    [
+                        "1688492476655935358",
+                        "{\"host\":\"45.172.163.83\", \"user-identifier\":\"schamberger4278\", \"datetime\":\"04/Jul/2023:17:41:15 +0000\", \"method\": \"DELETE\", \"request\": \"/users/experiences/brand/back-end\", \"protocol\":\"HTTP/1.1\", \"status\":205, \"bytes\":12261, \"referer\": \"https://www.dynamicend-to-end.biz/e-markets/virtual\"}"
+                    ],
+                    [
+                        "1688492453604175824",
+                        "{\"host\":\"246.212.142.179\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:40:52 +0000\", \"method\": \"DELETE\", \"request\": \"/bleeding-edge/b2b/rich\", \"protocol\":\"HTTP/2.0\", \"status\":205, \"bytes\":8939, \"referer\": \"http://www.futureseize.io/reintermediate/magnetic\"}"
+                    ]
+                ]
+            },
+            {
+                "stream": {
+                    "http_method": "DELETE",
+                    "http_status": "204",
+                    "job": "generated-logs",
+                    "filename": "/var/log/generated.txt"
+                },
+                "values": [
+                    [
+                        "1688492502717508240",
+                        "{\"host\":\"74.132.28.156\", \"user-identifier\":\"dare8851\", \"datetime\":\"04/Jul/2023:17:41:41 +0000\", \"method\": \"DELETE\", \"request\": \"/vertical/architect\", \"protocol\":\"HTTP/1.1\", \"status\":204, \"bytes\":16586, \"referer\": \"https://www.dynamicweb-enabled.name/iterate\"}"
+                    ],
+                    [
+                        "1688492464630380123",
+                        "{\"host\":\"112.216.26.221\", \"user-identifier\":\"-\", \"datetime\":\"04/Jul/2023:17:41:03 +0000\", \"method\": \"DELETE\", \"request\": \"/vortals/action-items/platforms\", \"protocol\":\"HTTP/1.0\", \"status\":204, \"bytes\":8115, \"referer\": \"https://www.futureroi.org/orchestrate\"}"
+                    ]
+                ]
+            }
+        ]
+    }
+}
