@@ -42,6 +42,14 @@ func (q *YTQLQuerier) LabelValues(ctx context.Context, labelName string, _ logst
 
 var _ logqlengine.Querier = (*YTQLQuerier)(nil)
 
+// Сapabilities defines storage capabilities.
+func (q *YTQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
+	// FIXME(tdakkota): we don't add OpRe and OpNotRe because YT QL query executer throws an exception
+	//	when regexp function are used.
+	caps.Label.Add(logql.OpEq, logql.OpNotEq)
+	return caps
+}
+
 // SelectLogs makes a query for LogQL engine.
 func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (iterators.Iterator[logstorage.Record], error) {
 	var query strings.Builder
@@ -64,10 +72,6 @@ func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Tim
 				fmt.Fprintf(&query, "try_get_string(%s, %q) = %q", column, yp, m.Value)
 			case logql.OpNotEq:
 				fmt.Fprintf(&query, "try_get_string(%s, %q) != %q", column, yp, m.Value)
-			case logql.OpRe:
-				fmt.Fprintf(&query, "regex_full_match(try_get_string(%s, %q), %q)", column, yp, m.Value)
-			case logql.OpNotRe:
-				fmt.Fprintf(&query, "NOT regex_full_match(try_get_string(%s, %q), %q)", column, yp, m.Value)
 			default:
 				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
