@@ -55,6 +55,8 @@ func buildStage(stage logql.PipelineStage) (Processor, error) {
 		return buildLineFilter(stage)
 	case *logql.LabelFilter:
 		return buildLabelFilter(stage)
+	case *logql.RegexpLabelParser:
+		return buildRegexpExtractor(stage)
 	case *logql.JSONExpressionParser:
 		return buildJSONExtractor(stage)
 	case *logql.LogfmtExpressionParser:
