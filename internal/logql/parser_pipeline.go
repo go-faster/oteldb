@@ -414,13 +414,13 @@ func (p *parser) parseLabelFormatExpr() (lf *LabelFormatExpr, err error) {
 			if err != nil {
 				return nil, err
 			}
-			lf.Labels = append(lf.Labels, LabelFormatLabel{Label: label, Value: value})
+			lf.Labels = append(lf.Labels, RenameLabel{Label: label, To: value})
 		case lexer.String:
 			value, err := p.parseString()
 			if err != nil {
 				return nil, err
 			}
-			lf.Values = append(lf.Values, LabelFormatValue{Label: label, Value: value})
+			lf.Values = append(lf.Values, LabelTemplate{Label: label, Template: value})
 		default:
 			return nil, p.unexpectedToken(t)
 		}

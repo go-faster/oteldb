@@ -144,20 +144,20 @@ type NumberFilter struct {
 // LabelFormatExpr renames, modifies or add labels.
 type LabelFormatExpr struct {
 	// FIXME(tdakkota): use map[K][]V?
-	Labels []LabelFormatLabel
-	Values []LabelFormatValue
+	Labels []RenameLabel
+	Values []LabelTemplate
 }
 
-// LabelFormatValue sets value for a label.
-type LabelFormatValue struct {
-	Label Label
-	Value string
+// LabelTemplate sets value for a label.
+type LabelTemplate struct {
+	Label    Label
+	Template string
 }
 
-// LabelFormatLabel renames label.
-type LabelFormatLabel struct {
+// RenameLabel renames label.
+type RenameLabel struct {
 	Label Label
-	Value Label
+	To    Label
 }
 
 // DropLabelsExpr drops given labels in a pipeline (i.e. deny list).

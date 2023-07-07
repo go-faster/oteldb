@@ -310,20 +310,20 @@ var tests = []TestCase{
 			},
 			Pipeline: []PipelineStage{
 				&LabelFormatExpr{
-					Labels: []LabelFormatLabel{
+					Labels: []RenameLabel{
 						{"foo", "foo"},
 					},
 				},
 				&LabelFormatExpr{
-					Values: []LabelFormatValue{
+					Values: []LabelTemplate{
 						{"bar", "bar"},
 					},
 				},
 				&LabelFormatExpr{
-					Labels: []LabelFormatLabel{
+					Labels: []RenameLabel{
 						{"foo", "foo"},
 					},
-					Values: []LabelFormatValue{
+					Values: []LabelTemplate{
 						{"bar", "bar"},
 					},
 				},
