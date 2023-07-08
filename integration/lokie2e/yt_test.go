@@ -27,7 +27,7 @@ func TestYT(t *testing.T) {
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{
-		Name:         "oteldb-e2e-ytsaurus",
+		Name:         "oteldb-lokie2e-ytsaurus",
 		Image:        "ytsaurus/local:stable",
 		ExposedPorts: []string{"80/tcp"},
 		Cmd: []string{

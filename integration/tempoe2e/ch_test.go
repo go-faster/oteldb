@@ -26,7 +26,7 @@ func TestCH(t *testing.T) {
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{
-		Name:         "oteldb-e2e-clickhouse",
+		Name:         "oteldb-tempoe2e-clickhouse",
 		Image:        "clickhouse/clickhouse-server:23.4",
 		ExposedPorts: []string{"8123/tcp", "9000/tcp"},
 	}
