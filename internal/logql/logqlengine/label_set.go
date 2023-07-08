@@ -63,7 +63,11 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 	}
 	maps.Clear(l.labels)
 	for _, attrs := range attrMaps {
-		attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+		m := attrs.AsMap()
+		if m == (pcommon.Map{}) {
+			continue
+		}
+		m.Range(func(k string, v pcommon.Value) bool {
 			if err := logql.IsValidLabel(k, true); err != nil {
 				rerr = err
 				return false
