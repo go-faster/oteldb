@@ -7,13 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 )
 
 type inputLine struct {
