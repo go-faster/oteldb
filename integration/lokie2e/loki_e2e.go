@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // BatchSet is a set of batches.
@@ -17,6 +18,9 @@ type BatchSet struct {
 	Batches []plog.Logs
 	Labels  map[string][]logstorage.Label
 	Records map[pcommon.Timestamp]plog.LogRecord
+
+	Start otelstorage.Timestamp
+	End   otelstorage.Timestamp
 }
 
 // ParseBatchSet parses JSON batches from given reader.
@@ -75,6 +79,13 @@ func (s *BatchSet) addRecord(record plog.LogRecord) error {
 
 	if _, ok := s.Records[ts]; ok {
 		return errors.Errorf("duplicate record with timestamp %v", ts)
+	}
+
+	if s.Start == 0 || ts < s.Start {
+		s.Start = ts
+	}
+	if ts > s.End {
+		s.End = ts
 	}
 
 	if s.Records == nil {

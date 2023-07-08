@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,7 @@ import (
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokihandler"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 func readBatchSet(p string) (s lokie2e.BatchSet, _ error) {
@@ -73,6 +75,9 @@ func runTest(
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
 	require.NotEmpty(t, set.Records)
+	require.NotZero(t, set.Start)
+	require.NotZero(t, set.End)
+	require.GreaterOrEqual(t, set.End, set.Start)
 	c := setupDB(ctx, t, set, inserter, querier, engineQuerier)
 
 	t.Run("Labels", func(t *testing.T) {
@@ -137,6 +142,8 @@ func runTest(
 				}()
 				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
 					Query: tt.query,
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 					Limit: lokiapi.NewOptInt(1000),
 				})
 				require.NoError(t, err)
@@ -162,4 +169,9 @@ func runTest(
 			})
 		}
 	})
+}
+
+func asLokiTime(ts otelstorage.Timestamp) lokiapi.LokiTime {
+	format := ts.AsTime().Format(time.RFC3339Nano)
+	return lokiapi.LokiTime(format)
 }
