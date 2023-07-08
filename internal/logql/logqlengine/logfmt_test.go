@@ -12,17 +12,21 @@ import (
 
 func TestLogfmtExtractor(t *testing.T) {
 	tests := []struct {
-		input        string
-		extract      []logql.Label
-		expectLabels map[string]pcommon.Value
+		input         string
+		extract       []logql.Label
+		expectLabels  map[string]pcommon.Value
+		wantFilterErr bool
 	}{
-		{``, nil, nil},
+		{``, nil, nil, false},
+		{``, []logql.Label{"foo"}, nil, false},
+		{`bar=10`, []logql.Label{"foo"}, nil, false},
 		{
 			`foo=extract bar=not_extract`,
 			[]logql.Label{"foo"},
 			map[string]pcommon.Value{
 				"foo": pcommon.NewValueStr("extract"),
 			},
+			false,
 		},
 		{
 			`str=str int=10 bool=true`,
@@ -32,7 +36,11 @@ func TestLogfmtExtractor(t *testing.T) {
 				"int":  pcommon.NewValueStr("10"),
 				"bool": pcommon.NewValueStr("true"),
 			},
+			false,
 		},
+
+		{`label==`, nil, nil, true},
+		{`label==`, []logql.Label{"label"}, nil, true},
 	}
 	for i, tt := range tests {
 		tt := tt
@@ -48,6 +56,11 @@ func TestLogfmtExtractor(t *testing.T) {
 			require.Equal(t, tt.input, newLine)
 			require.True(t, ok)
 
+			if tt.wantFilterErr {
+				_, ok = set.GetError()
+				require.True(t, ok)
+				return
+			}
 			errMsg, ok := set.GetError()
 			require.False(t, ok, "got error: %s", errMsg)
 

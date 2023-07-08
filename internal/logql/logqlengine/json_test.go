@@ -12,17 +12,23 @@ import (
 
 func TestJSONExtractor(t *testing.T) {
 	tests := []struct {
-		input        string
-		extract      []logql.Label
-		expectLabels map[string]pcommon.Value
+		input         string
+		extract       []logql.Label
+		expectLabels  map[string]pcommon.Value
+		wantFilterErr bool
 	}{
-		{`{}`, nil, nil},
+		{`{}`, nil, nil, false},
+		{`{}`, []logql.Label{"foo"}, nil, false},
+		{`{"foo": null}`, nil, nil, false},
+		{`{"foo": null}`, []logql.Label{"foo"}, nil, false},
+		{`{"bar": 10}`, []logql.Label{"foo"}, nil, false},
 		{
 			`{"foo": "extract", "bar": "not extract"}`,
 			[]logql.Label{"foo"},
 			map[string]pcommon.Value{
 				"foo": pcommon.NewValueStr("extract"),
 			},
+			false,
 		},
 		{
 			`{
@@ -54,7 +60,11 @@ func TestJSONExtractor(t *testing.T) {
 					return r
 				}(),
 			},
+			false,
 		},
+
+		{`{"label": "foo}`, nil, nil, true},
+		{`{"label": "foo}`, []logql.Label{"label"}, nil, true},
 	}
 	for i, tt := range tests {
 		tt := tt
@@ -70,6 +80,11 @@ func TestJSONExtractor(t *testing.T) {
 			require.Equal(t, tt.input, newLine)
 			require.True(t, ok)
 
+			if tt.wantFilterErr {
+				_, ok = set.GetError()
+				require.True(t, ok)
+				return
+			}
 			errMsg, ok := set.GetError()
 			require.False(t, ok, "got error: %s", errMsg)
 
