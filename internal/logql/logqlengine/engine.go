@@ -3,6 +3,7 @@ package logqlengine
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -123,7 +124,7 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 		})
 		return data, nil
 	default:
-		return data, errors.Errorf("expression %T is not supported yet", expr)
+		return data, &UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}
 	}
 }
 
