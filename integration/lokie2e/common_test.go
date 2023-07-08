@@ -2,11 +2,14 @@ package lokie2e_test
 
 import (
 	"context"
+	"fmt"
 	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/integration/lokie2e"
 	"github.com/go-faster/oteldb/internal/logql"
@@ -97,6 +100,66 @@ func runTest(
 			for _, val := range r.Data {
 				a.Containsf(labelValue, val, "check label %q", labelName)
 			}
+		}
+	})
+	t.Run("Queries", func(t *testing.T) {
+		tests := []struct {
+			query   string
+			entries int
+		}{
+			{`{http_method="GET"}`, 21},
+			{`{http_method="HEAD"}`, 22},
+			{`{http_method="GET"} | json`, 21},
+			// IP filter.
+			{`{http_method="HEAD"} | json | host = "236.7.233.166"`, 1},
+			{`{http_method="HEAD"} | json | host == ip("236.7.233.166")`, 1},
+			{`{http_method="HEAD"} | json | host == ip("236.7.233.0/24")`, 1},
+			{`{http_method="HEAD"} | json | host == ip("236.7.233.0-236.7.233.255")`, 1},
+			// Sure empty queries.
+			{`{http_method="GET"} | json | http_method != "GET"`, 0},
+			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
+		}
+		labelSetHasAttrs := func(t assert.TestingT, set lokiapi.LabelSet, attrs pcommon.Map) {
+			// Do not check length, since label set may contain some parsed labels.
+			attrs.Range(func(k string, v pcommon.Value) bool {
+				assert.Contains(t, set, k)
+				assert.Equal(t, v.AsString(), set[k])
+				return true
+			})
+		}
+		for i, tt := range tests {
+			tt := tt
+			t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+				defer func() {
+					if t.Failed() {
+						t.Logf("query: \n%s", tt.query)
+					}
+				}()
+				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
+					Query: tt.query,
+					Limit: lokiapi.NewOptInt(1000),
+				})
+				require.NoError(t, err)
+
+				streams, ok := resp.Data.GetStreamsResult()
+				require.True(t, ok)
+
+				entries := 0
+				for _, stream := range streams.Result {
+					for _, entry := range stream.Values {
+						entries++
+
+						record, ok := set.Records[pcommon.Timestamp(entry.T)]
+						require.Truef(t, ok, "can't find log record %d", entry.T)
+
+						line := record.Body().AsString()
+						assert.Equal(t, line, entry.V)
+
+						labelSetHasAttrs(t, stream.Stream.Value, record.Attributes())
+					}
+				}
+				require.Equal(t, tt.entries, entries)
+			})
 		}
 	})
 }
