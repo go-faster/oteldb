@@ -95,20 +95,18 @@ func (l *LabelSet) GetString(name string) (string, bool) {
 	return "", false
 }
 
-const errorLabel = "__error__"
-
 // SetError sets special error label.
 func (l *LabelSet) SetError(err error) {
-	if _, ok := l.labels[errorLabel]; ok {
+	if _, ok := l.labels[logql.ErrorLabel]; ok {
 		// Do not override old error.
 		return
 	}
 	if err != nil {
-		l.labels[errorLabel] = pcommon.NewValueStr(err.Error())
+		l.labels[logql.ErrorLabel] = pcommon.NewValueStr(err.Error())
 	}
 }
 
 // GetError returns error label.
 func (l *LabelSet) GetError() (string, bool) {
-	return l.GetString(errorLabel)
+	return l.GetString(logql.ErrorLabel)
 }

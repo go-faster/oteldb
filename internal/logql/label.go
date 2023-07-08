@@ -5,6 +5,13 @@ import "github.com/go-faster/errors"
 // Label is a LogQL identifier.
 type Label string
 
+const (
+	// ErrorLabel is a specific label for LogQL errors.
+	ErrorLabel = "__error__"
+	// ErrorDetailsLabel is a specific label for LogQL error details.
+	ErrorDetailsLabel = "__error_details__"
+)
+
 // IsValidLabel validates label name.
 func IsValidLabel(s string, allowDot bool) error {
 	if s == "" {
