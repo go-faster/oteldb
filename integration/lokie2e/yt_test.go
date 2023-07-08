@@ -54,7 +54,7 @@ func TestYT(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	rootPath := ypath.Path("//oteldb-test-" + uuid.NewString()).Child("traces")
+	rootPath := ypath.Path("//oteldb-test-" + uuid.NewString()).Child("logs")
 	t.Logf("Test tables path: %s", rootPath)
 	tables := ytstorage.NewTables(rootPath)
 	{
