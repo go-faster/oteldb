@@ -307,13 +307,8 @@ components:
     StreamsResult:
       type: object
       required:
-        - resultType
         - result
       properties:
-        resultType:
-          type: string
-          enum:
-            - streams
         result:
           $ref: "#/components/schemas/Streams"
         stats:
@@ -346,13 +341,8 @@ components:
     ScalarResult:
       type: object
       required:
-        - resultType
         - result
       properties:
-        resultType:
-          type: string
-          enum:
-            - scalar
         result:
           $ref: "#/components/schemas/PrometheusSamplePair"
         stats:
@@ -360,13 +350,8 @@ components:
     VectorResult:
       type: object
       required:
-        - resultType
         - result
       properties:
-        resultType:
-          type: string
-          enum:
-            - vector
         result:
           type: array
           items:
@@ -385,13 +370,8 @@ components:
     MatrixResult:
       type: object
       required:
-        - resultType
         - result
       properties:
-        resultType:
-          type: string
-          enum:
-            - matrix
         result:
           $ref: "#/components/schemas/Matrix"
         stats:

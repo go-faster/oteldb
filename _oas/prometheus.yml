@@ -506,26 +506,20 @@ components:
           $ref: "#/components/schemas/PrometheusTimestamp"
     Scalar:
       type: object
-      required: [resultType, result]
+      required: [result]
       properties:
-        resultType:
-          type: string
         result:
           $ref: "#/components/schemas/Value"
     String:
       type: object
-      required: [resultType, result]
+      required: [result]
       properties:
-        resultType:
-          type: string
         result:
           type: string
     Vector:
       type: object
-      required: [resultType, result]
+      required: [result]
       properties:
-        resultType:
-          type: string
         result:
           type: array
           items:
@@ -540,10 +534,8 @@ components:
                 $ref: "#/components/schemas/Value"
     Matrix:
       type: object
-      required: [resultType, result]
+      required: [result]
       properties:
-        resultType:
-          type: string
         result:
           type: array
           items:
