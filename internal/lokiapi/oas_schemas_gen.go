@@ -606,6 +606,7 @@ func (s *QueryResponse) SetData(val QueryResponseData) {
 type QueryResponseData struct {
 	Type          QueryResponseDataType // switch on this field
 	StreamsResult StreamsResult
+	ScalarResult  ScalarResult
 	VectorResult  VectorResult
 	MatrixResult  MatrixResult
 }
@@ -616,12 +617,16 @@ type QueryResponseDataType string
 // Possible values for QueryResponseDataType.
 const (
 	StreamsResultQueryResponseData QueryResponseDataType = "StreamsResult"
+	ScalarResultQueryResponseData  QueryResponseDataType = "ScalarResult"
 	VectorResultQueryResponseData  QueryResponseDataType = "VectorResult"
 	MatrixResultQueryResponseData  QueryResponseDataType = "MatrixResult"
 )
 
 // IsStreamsResult reports whether QueryResponseData is StreamsResult.
 func (s QueryResponseData) IsStreamsResult() bool { return s.Type == StreamsResultQueryResponseData }
+
+// IsScalarResult reports whether QueryResponseData is ScalarResult.
+func (s QueryResponseData) IsScalarResult() bool { return s.Type == ScalarResultQueryResponseData }
 
 // IsVectorResult reports whether QueryResponseData is VectorResult.
 func (s QueryResponseData) IsVectorResult() bool { return s.Type == VectorResultQueryResponseData }
@@ -647,6 +652,27 @@ func (s QueryResponseData) GetStreamsResult() (v StreamsResult, ok bool) {
 func NewStreamsResultQueryResponseData(v StreamsResult) QueryResponseData {
 	var s QueryResponseData
 	s.SetStreamsResult(v)
+	return s
+}
+
+// SetScalarResult sets QueryResponseData to ScalarResult.
+func (s *QueryResponseData) SetScalarResult(v ScalarResult) {
+	s.Type = ScalarResultQueryResponseData
+	s.ScalarResult = v
+}
+
+// GetScalarResult returns ScalarResult and true boolean if QueryResponseData is ScalarResult.
+func (s QueryResponseData) GetScalarResult() (v ScalarResult, ok bool) {
+	if !s.IsScalarResult() {
+		return v, false
+	}
+	return s.ScalarResult, true
+}
+
+// NewScalarResultQueryResponseData returns new QueryResponseData from ScalarResult.
+func NewScalarResultQueryResponseData(v ScalarResult) QueryResponseData {
+	var s QueryResponseData
+	s.SetScalarResult(v)
 	return s
 }
 
@@ -690,6 +716,59 @@ func NewMatrixResultQueryResponseData(v MatrixResult) QueryResponseData {
 	var s QueryResponseData
 	s.SetMatrixResult(v)
 	return s
+}
+
+// Ref: #/components/schemas/ScalarResult
+type ScalarResult struct {
+	Result PrometheusSamplePair `json:"result"`
+	Stats  *Stats               `json:"stats"`
+}
+
+// GetResult returns the value of Result.
+func (s *ScalarResult) GetResult() PrometheusSamplePair {
+	return s.Result
+}
+
+// GetStats returns the value of Stats.
+func (s *ScalarResult) GetStats() *Stats {
+	return s.Stats
+}
+
+// SetResult sets the value of Result.
+func (s *ScalarResult) SetResult(val PrometheusSamplePair) {
+	s.Result = val
+}
+
+// SetStats sets the value of Stats.
+func (s *ScalarResult) SetStats(val *Stats) {
+	s.Stats = val
+}
+
+type ScalarResultResultType string
+
+const (
+	ScalarResultResultTypeScalar ScalarResultResultType = "scalar"
+)
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ScalarResultResultType) MarshalText() ([]byte, error) {
+	switch s {
+	case ScalarResultResultTypeScalar:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ScalarResultResultType) UnmarshalText(data []byte) error {
+	switch ScalarResultResultType(data) {
+	case ScalarResultResultTypeScalar:
+		*s = ScalarResultResultTypeScalar
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/Series

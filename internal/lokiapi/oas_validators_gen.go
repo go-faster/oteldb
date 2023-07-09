@@ -197,6 +197,11 @@ func (s QueryResponseData) Validate() error {
 			return err
 		}
 		return nil
+	case ScalarResultQueryResponseData:
+		if err := s.ScalarResult.Validate(); err != nil {
+			return err
+		}
+		return nil
 	case VectorResultQueryResponseData:
 		if err := s.VectorResult.Validate(); err != nil {
 			return err
@@ -212,6 +217,32 @@ func (s QueryResponseData) Validate() error {
 	}
 }
 
+func (s *ScalarResult) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+func (s ScalarResultResultType) Validate() error {
+	switch s {
+	case "scalar":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
 func (s *Series) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {

@@ -187,6 +187,20 @@ func (s *QueryResponseData) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *ScalarResult) SetFake() {
+	{
+		{
+			s.Result.SetFake()
+		}
+	}
+	{
+		{ // Keep pointer nil to prevent infinite recursion.
+			s.Stats = nil
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *Series) SetFake() {
 	{
 		{
