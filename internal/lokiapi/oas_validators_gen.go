@@ -98,14 +98,6 @@ func (s *MatrixResult) Validate() error {
 	}
 	return nil
 }
-func (s MatrixResultResultType) Validate() error {
-	switch s {
-	case "matrix":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
 
 func (s PrometheusDuration) Validate() error {
 	alias := (string)(s)
@@ -235,14 +227,6 @@ func (s *ScalarResult) Validate() error {
 	}
 	return nil
 }
-func (s ScalarResultResultType) Validate() error {
-	switch s {
-	case "scalar":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
 func (s *Series) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -335,14 +319,6 @@ func (s *StreamsResult) Validate() error {
 	}
 	return nil
 }
-func (s StreamsResultResultType) Validate() error {
-	switch s {
-	case "streams":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
 func (s *Values) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -413,12 +389,4 @@ func (s *VectorResult) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-func (s VectorResultResultType) Validate() error {
-	switch s {
-	case "vector":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }

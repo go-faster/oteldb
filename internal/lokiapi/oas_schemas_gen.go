@@ -208,33 +208,6 @@ func (s *MatrixResult) SetStats(val *Stats) {
 	s.Stats = val
 }
 
-type MatrixResultResultType string
-
-const (
-	MatrixResultResultTypeMatrix MatrixResultResultType = "matrix"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s MatrixResultResultType) MarshalText() ([]byte, error) {
-	switch s {
-	case MatrixResultResultTypeMatrix:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *MatrixResultResultType) UnmarshalText(data []byte) error {
-	switch MatrixResultResultType(data) {
-	case MatrixResultResultTypeMatrix:
-		*s = MatrixResultResultTypeMatrix
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // NewOptDirection returns new OptDirection with value set to v.
 func NewOptDirection(v Direction) OptDirection {
 	return OptDirection{
@@ -744,33 +717,6 @@ func (s *ScalarResult) SetStats(val *Stats) {
 	s.Stats = val
 }
 
-type ScalarResultResultType string
-
-const (
-	ScalarResultResultTypeScalar ScalarResultResultType = "scalar"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s ScalarResultResultType) MarshalText() ([]byte, error) {
-	switch s {
-	case ScalarResultResultTypeScalar:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *ScalarResultResultType) UnmarshalText(data []byte) error {
-	switch ScalarResultResultType(data) {
-	case ScalarResultResultTypeScalar:
-		*s = ScalarResultResultTypeScalar
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // Ref: #/components/schemas/Series
 type Series struct {
 	Metric OptLabelSet            `json:"metric"`
@@ -854,33 +800,6 @@ func (s *StreamsResult) SetStats(val *Stats) {
 	s.Stats = val
 }
 
-type StreamsResultResultType string
-
-const (
-	StreamsResultResultTypeStreams StreamsResultResultType = "streams"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s StreamsResultResultType) MarshalText() ([]byte, error) {
-	switch s {
-	case StreamsResultResultTypeStreams:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *StreamsResultResultType) UnmarshalText(data []byte) error {
-	switch StreamsResultResultType(data) {
-	case StreamsResultResultTypeStreams:
-		*s = StreamsResultResultTypeStreams
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
-
 // Array of strings.
 // Ref: #/components/schemas/Values
 type Values struct {
@@ -958,31 +877,4 @@ func (s *VectorResult) SetResult(val []Vector) {
 // SetStats sets the value of Stats.
 func (s *VectorResult) SetStats(val *Stats) {
 	s.Stats = val
-}
-
-type VectorResultResultType string
-
-const (
-	VectorResultResultTypeVector VectorResultResultType = "vector"
-)
-
-// MarshalText implements encoding.TextMarshaler.
-func (s VectorResultResultType) MarshalText() ([]byte, error) {
-	switch s {
-	case VectorResultResultTypeVector:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *VectorResultResultType) UnmarshalText(data []byte) error {
-	switch VectorResultResultType(data) {
-	case VectorResultResultTypeVector:
-		*s = VectorResultResultTypeVector
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
 }
