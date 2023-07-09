@@ -15,12 +15,12 @@ import (
 
 // LabelSet is a log record's label set.
 type LabelSet struct {
-	labels map[string]pcommon.Value
+	labels map[logql.Label]pcommon.Value
 }
 
 func newLabelSet() LabelSet {
 	return LabelSet{
-		labels: map[string]pcommon.Value{},
+		labels: map[logql.Label]pcommon.Value{},
 	}
 }
 
@@ -28,7 +28,7 @@ func newLabelSet() LabelSet {
 func (l *LabelSet) AsLokiAPI() lokiapi.LabelSet {
 	set := make(lokiapi.LabelSet, len(l.labels))
 	for k, v := range l.labels {
-		set[k] = v.AsString()
+		set[string(k)] = v.AsString()
 	}
 	return set
 }
@@ -47,7 +47,7 @@ func (l *LabelSet) String() string {
 		if i != 0 {
 			sb.WriteByte(',')
 		}
-		sb.WriteString(k)
+		sb.WriteString(string(k))
 		sb.WriteByte('=')
 		sb.WriteString(strconv.Quote(v.AsString()))
 		i++
@@ -59,7 +59,7 @@ func (l *LabelSet) String() string {
 // SetAttrs sets labels from attrs.
 func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 	if l.labels == nil {
-		l.labels = map[string]pcommon.Value{}
+		l.labels = map[logql.Label]pcommon.Value{}
 	}
 	maps.Clear(l.labels)
 	for _, attrs := range attrMaps {
@@ -72,7 +72,7 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 				rerr = err
 				return false
 			}
-			l.labels[k] = v
+			l.labels[logql.Label(k)] = v
 			return true
 		})
 	}
@@ -80,18 +80,30 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 }
 
 // Add adds new label.
-func (l *LabelSet) Add(s string, val pcommon.Value) {
+func (l *LabelSet) Add(s logql.Label, val pcommon.Value) {
 	l.labels[s] = val
 }
 
+// Delete deletes label.
+func (l *LabelSet) Delete(s logql.Label) {
+	delete(l.labels, s)
+}
+
+// Range iterates over label set.
+func (l *LabelSet) Range(cb func(logql.Label, pcommon.Value)) {
+	for k, v := range l.labels {
+		cb(k, v)
+	}
+}
+
 // Get returns attr value.
-func (l *LabelSet) Get(name string) (v pcommon.Value, ok bool) {
+func (l *LabelSet) Get(name logql.Label) (v pcommon.Value, ok bool) {
 	v, ok = l.labels[name]
 	return v, ok
 }
 
 // GetString returns stringified attr value.
-func (l *LabelSet) GetString(name string) (string, bool) {
+func (l *LabelSet) GetString(name logql.Label) (string, bool) {
 	v, ok := l.Get(name)
 	if ok {
 		return v.AsString(), true

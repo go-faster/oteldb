@@ -14,12 +14,12 @@ import (
 func TestRegexpExtractor(t *testing.T) {
 	tests := []struct {
 		input        string
-		expectLabels map[string]pcommon.Value
+		expectLabels map[logql.Label]pcommon.Value
 	}{
 		{``, nil},
 		{
 			`GET /foo HTTP/1.1`,
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"method":  pcommon.NewValueStr("GET"),
 				"path":    pcommon.NewValueStr("/foo"),
 				"version": pcommon.NewValueStr("HTTP/1.1"),
@@ -27,7 +27,7 @@ func TestRegexpExtractor(t *testing.T) {
 		},
 		{
 			`HEAD /foo HTTP/1.1`,
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"method":  pcommon.NewValueStr("HEAD"),
 				"path":    pcommon.NewValueStr("/foo"),
 				"version": pcommon.NewValueStr("HTTP/1.1"),

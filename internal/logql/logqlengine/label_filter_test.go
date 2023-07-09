@@ -13,7 +13,7 @@ import (
 
 func TestDurationLabelFilter(t *testing.T) {
 	tests := []struct {
-		input         map[string]pcommon.Value
+		input         map[logql.Label]pcommon.Value
 		label         string
 		op            logql.BinOp
 		value         time.Duration
@@ -22,7 +22,7 @@ func TestDurationLabelFilter(t *testing.T) {
 	}{
 		// No label.
 		{
-			map[string]pcommon.Value{},
+			map[logql.Label]pcommon.Value{},
 			`not_exist`,
 			logql.OpEq,
 			10 * time.Second,
@@ -32,7 +32,7 @@ func TestDurationLabelFilter(t *testing.T) {
 
 		// Has match.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("10s"),
 			},
 			"exist",
@@ -42,7 +42,7 @@ func TestDurationLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("9s"),
 			},
 			"exist",
@@ -53,7 +53,7 @@ func TestDurationLabelFilter(t *testing.T) {
 		},
 		// Greater than.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("11s"),
 			},
 			"exist",
@@ -63,7 +63,7 @@ func TestDurationLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("11s"),
 			},
 			"exist",
@@ -74,7 +74,7 @@ func TestDurationLabelFilter(t *testing.T) {
 		},
 		// Less than.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("9s"),
 			},
 			"exist",
@@ -84,7 +84,7 @@ func TestDurationLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("9s"),
 			},
 			"exist",
@@ -96,7 +96,7 @@ func TestDurationLabelFilter(t *testing.T) {
 
 		// Parsing error.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`foo`),
 			},
 			"exist",
@@ -138,7 +138,7 @@ func TestDurationLabelFilter(t *testing.T) {
 
 func TestBytesLabelFilter(t *testing.T) {
 	tests := []struct {
-		input         map[string]pcommon.Value
+		input         map[logql.Label]pcommon.Value
 		label         string
 		op            logql.BinOp
 		value         uint64
@@ -147,7 +147,7 @@ func TestBytesLabelFilter(t *testing.T) {
 	}{
 		// No label.
 		{
-			map[string]pcommon.Value{},
+			map[logql.Label]pcommon.Value{},
 			`not_exist`,
 			logql.OpEq,
 			10,
@@ -157,7 +157,7 @@ func TestBytesLabelFilter(t *testing.T) {
 
 		// Has match.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("10b"),
 			},
 			"exist",
@@ -167,7 +167,7 @@ func TestBytesLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("9b"),
 			},
 			"exist",
@@ -178,7 +178,7 @@ func TestBytesLabelFilter(t *testing.T) {
 		},
 		// Greater than.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("11b"),
 			},
 			"exist",
@@ -188,7 +188,7 @@ func TestBytesLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("11b"),
 			},
 			"exist",
@@ -199,7 +199,7 @@ func TestBytesLabelFilter(t *testing.T) {
 		},
 		// Less than.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("9b"),
 			},
 			"exist",
@@ -209,7 +209,7 @@ func TestBytesLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("9b"),
 			},
 			"exist",
@@ -221,7 +221,7 @@ func TestBytesLabelFilter(t *testing.T) {
 
 		// Parsing error.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`foo`),
 			},
 			"exist",
@@ -263,7 +263,7 @@ func TestBytesLabelFilter(t *testing.T) {
 
 func TestNumberLabelFilter(t *testing.T) {
 	tests := []struct {
-		input         map[string]pcommon.Value
+		input         map[logql.Label]pcommon.Value
 		label         string
 		op            logql.BinOp
 		value         float64
@@ -272,7 +272,7 @@ func TestNumberLabelFilter(t *testing.T) {
 	}{
 		// No label.
 		{
-			map[string]pcommon.Value{},
+			map[logql.Label]pcommon.Value{},
 			`not_exist`,
 			logql.OpEq,
 			10,
@@ -282,7 +282,7 @@ func TestNumberLabelFilter(t *testing.T) {
 
 		// Has match.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueDouble(10),
 			},
 			"exist",
@@ -292,7 +292,7 @@ func TestNumberLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueInt(10),
 			},
 			"exist",
@@ -302,7 +302,7 @@ func TestNumberLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr("10"),
 			},
 			"exist",
@@ -312,7 +312,7 @@ func TestNumberLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueDouble(9),
 			},
 			"exist",
@@ -323,7 +323,7 @@ func TestNumberLabelFilter(t *testing.T) {
 		},
 		// Greater than.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueDouble(11),
 			},
 			"exist",
@@ -333,7 +333,7 @@ func TestNumberLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueDouble(11),
 			},
 			"exist",
@@ -344,7 +344,7 @@ func TestNumberLabelFilter(t *testing.T) {
 		},
 		// Less than.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueDouble(9),
 			},
 			"exist",
@@ -354,7 +354,7 @@ func TestNumberLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueDouble(9),
 			},
 			"exist",
@@ -366,7 +366,7 @@ func TestNumberLabelFilter(t *testing.T) {
 
 		// Parsing error.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`foo`),
 			},
 			"exist",
@@ -408,29 +408,29 @@ func TestNumberLabelFilter(t *testing.T) {
 
 func TestIPLabelFilter(t *testing.T) {
 	tests := []struct {
-		input         map[string]pcommon.Value
-		label         string
+		input         map[logql.Label]pcommon.Value
+		label         logql.Label
 		pattern       string
 		wantOk        bool
 		wantFilterErr bool
 	}{
 		// No label.
 		{
-			map[string]pcommon.Value{},
+			map[logql.Label]pcommon.Value{},
 			`not_exist`,
 			"192.168.1.1",
 			false,
 			false,
 		},
 		{
-			map[string]pcommon.Value{},
+			map[logql.Label]pcommon.Value{},
 			`not_exist`,
 			"192.168.1.0-192.168.1.255",
 			false,
 			false,
 		},
 		{
-			map[string]pcommon.Value{},
+			map[logql.Label]pcommon.Value{},
 			`not_exist`,
 			"192.168.1.0/24",
 			false,
@@ -439,7 +439,7 @@ func TestIPLabelFilter(t *testing.T) {
 
 		// Has match.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`192.168.1.1`),
 			},
 			"exist",
@@ -448,7 +448,7 @@ func TestIPLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`192.168.1.1`),
 			},
 			"exist",
@@ -457,7 +457,7 @@ func TestIPLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`192.168.1.1`),
 			},
 			"exist",
@@ -468,7 +468,7 @@ func TestIPLabelFilter(t *testing.T) {
 
 		// No match.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`127.0.0.1`),
 			},
 			"exist",
@@ -477,7 +477,7 @@ func TestIPLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`127.0.0.1`),
 			},
 			"exist",
@@ -486,7 +486,7 @@ func TestIPLabelFilter(t *testing.T) {
 			false,
 		},
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`127.0.0.1`),
 			},
 			"exist",
@@ -497,7 +497,7 @@ func TestIPLabelFilter(t *testing.T) {
 
 		// Parsing error.
 		{
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"exist": pcommon.NewValueStr(`127.0.0.`),
 			},
 			"exist",
@@ -521,7 +521,7 @@ func TestIPLabelFilter(t *testing.T) {
 				{logql.OpNotEq, hasLabel && !tt.wantOk},
 			} {
 				f, err := buildIPLabelFilter(&logql.IPFilter{
-					Label: logql.Label(tt.label),
+					Label: tt.label,
 					Op:    cse.op,
 					Value: tt.pattern,
 				})

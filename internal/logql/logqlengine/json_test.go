@@ -14,7 +14,7 @@ func TestJSONExtractor(t *testing.T) {
 	tests := []struct {
 		input         string
 		extract       []logql.Label
-		expectLabels  map[string]pcommon.Value
+		expectLabels  map[logql.Label]pcommon.Value
 		wantFilterErr bool
 	}{
 		{`{}`, nil, nil, false},
@@ -25,7 +25,7 @@ func TestJSONExtractor(t *testing.T) {
 		{
 			`{"foo": "extract", "bar": "not extract"}`,
 			[]logql.Label{"foo"},
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"foo": pcommon.NewValueStr("extract"),
 			},
 			false,
@@ -41,7 +41,7 @@ func TestJSONExtractor(t *testing.T) {
 				"object": {"sub_key": 1}
 			}`,
 			nil,
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"str":    pcommon.NewValueStr("str"),
 				"int":    pcommon.NewValueInt(10),
 				"double": pcommon.NewValueDouble(3.14),

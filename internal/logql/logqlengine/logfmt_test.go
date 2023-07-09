@@ -14,7 +14,7 @@ func TestLogfmtExtractor(t *testing.T) {
 	tests := []struct {
 		input         string
 		extract       []logql.Label
-		expectLabels  map[string]pcommon.Value
+		expectLabels  map[logql.Label]pcommon.Value
 		wantFilterErr bool
 	}{
 		{``, nil, nil, false},
@@ -23,7 +23,7 @@ func TestLogfmtExtractor(t *testing.T) {
 		{
 			`foo=extract bar=not_extract`,
 			[]logql.Label{"foo"},
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"foo": pcommon.NewValueStr("extract"),
 			},
 			false,
@@ -31,7 +31,7 @@ func TestLogfmtExtractor(t *testing.T) {
 		{
 			`str=str int=10 bool=true`,
 			nil,
-			map[string]pcommon.Value{
+			map[logql.Label]pcommon.Value{
 				"str":  pcommon.NewValueStr("str"),
 				"int":  pcommon.NewValueStr("10"),
 				"bool": pcommon.NewValueStr("true"),

@@ -128,7 +128,7 @@ func buildLabelMatcher(pred logql.LabelMatcher) (Processor, error) {
 
 // Process implements Processor.
 func (lf *LabelMatcher[M]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
-	labelValue, ok := set.GetString(string(lf.name))
+	labelValue, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
 	}
@@ -183,7 +183,7 @@ func buildDurationLabelFilter(pred *logql.DurationFilter) (Processor, error) {
 // Process implements Processor.
 func (lf *DurationLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
 	// FIXME(tdakkota): try to check value type.
-	v, ok := set.GetString(string(lf.name))
+	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
 	}
@@ -246,7 +246,7 @@ func buildBytesLabelFilter(pred *logql.BytesFilter) (Processor, error) {
 // Process implements Processor.
 func (lf *BytesLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
 	// FIXME(tdakkota): try to check value type.
-	v, ok := set.GetString(string(lf.name))
+	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
 	}
@@ -309,7 +309,7 @@ func buildNumberLabelFilter(pred *logql.NumberFilter) (Processor, error) {
 // Process implements Processor.
 func (lf *NumberLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
 	// FIXME(tdakkota): try to check value type.
-	v, ok := set.GetString(string(lf.name))
+	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
 	}
@@ -413,7 +413,7 @@ func buildIPLabelFilter(pred *logql.IPFilter) (Processor, error) {
 
 // Process implements Processor.
 func (lf *IPLabelFilter[M]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
-	v, ok := set.GetString(string(lf.name))
+	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
 	}
