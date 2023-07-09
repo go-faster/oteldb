@@ -4,6 +4,7 @@ package logqlengine
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -84,12 +85,6 @@ func (p EvalParams) IsInstant() bool {
 
 // Eval parses and evaluates query.
 func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
-	// Instant query, sub lookback duration from Start.
-	if params.IsInstant() {
-		newStart := params.Start.AsTime().Add(e.lookbackDuration)
-		params.Start = otelstorage.NewTimestampFromTime(newStart)
-	}
-
 	ctx, span := e.tracer.Start(ctx, "Eval",
 		trace.WithAttributes(
 			attribute.String("logql.query", query),
@@ -112,6 +107,10 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 		return data, errors.Wrap(err, "parse")
 	}
 
+	return e.evalExpr(ctx, expr, params)
+}
+
+func (e *Engine) evalExpr(ctx context.Context, expr logql.Expr, params EvalParams) (data lokiapi.QueryResponseData, _ error) {
 	switch expr := logql.UnparenExpr(expr).(type) {
 	case *logql.LogExpr:
 		streams, err := e.evalLogExpr(ctx, expr, params)
@@ -123,12 +122,30 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 			Result: streams,
 		})
 		return data, nil
-	default:
-		return data, &UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}
+	case *logql.LiteralExpr:
+		return e.evalLiteral(expr, params), nil
+	case *logql.VectorExpr:
+		return e.evalVector(expr, params), nil
+	case *logql.BinOpExpr:
+		reduced, err := logql.ReduceBinOp(expr)
+		if err != nil {
+			return data, errors.Wrap(err, "reduce binop")
+		}
+		if reduced != nil {
+			return e.evalLiteral(reduced, params), nil
+		}
 	}
+
+	return data, &UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}
 }
 
 func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params EvalParams) (s lokiapi.Streams, _ error) {
+	// Instant query, sub lookback duration from Start.
+	if params.IsInstant() {
+		newStart := params.Start.AsTime().Add(e.lookbackDuration)
+		params.Start = otelstorage.NewTimestampFromTime(newStart)
+	}
+
 	cond, err := extractQueryConditions(e.querierCaps, expr.Sel)
 	if err != nil {
 		return s, errors.Wrap(err, "extract preconditions")
@@ -202,4 +219,62 @@ func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params Ev
 	lg.Debug("Eval completed", zap.Int("entries", entries))
 
 	return maps.Values(streams), nil
+}
+
+func (e *Engine) evalLiteral(expr *logql.LiteralExpr, params EvalParams) (data lokiapi.QueryResponseData) {
+	if params.IsInstant() {
+		data.SetScalarResult(lokiapi.ScalarResult{
+			Result: lokiapi.PrometheusSamplePair{
+				T: getPrometheusTimestamp(params.Start.AsTime()),
+				V: strconv.FormatFloat(expr.Value, 'f', -1, 64),
+			},
+		})
+		return data
+	}
+	data.SetMatrixResult(lokiapi.MatrixResult{
+		Result: generateLiteralMatrix(expr.Value, params),
+	})
+	return data
+}
+
+func (e *Engine) evalVector(expr *logql.VectorExpr, params EvalParams) (data lokiapi.QueryResponseData) {
+	if params.IsInstant() {
+		pair := lokiapi.PrometheusSamplePair{
+			T: getPrometheusTimestamp(params.Start.AsTime()),
+			V: strconv.FormatFloat(expr.Value, 'f', -1, 64),
+		}
+		data.SetVectorResult(lokiapi.VectorResult{
+			Result: []lokiapi.Vector{
+				{Value: pair},
+			},
+		})
+		return data
+	}
+	data.SetMatrixResult(lokiapi.MatrixResult{
+		Result: generateLiteralMatrix(expr.Value, params),
+	})
+	return data
+}
+
+func generateLiteralMatrix(value float64, params EvalParams) lokiapi.Matrix {
+	var (
+		start = params.Start.AsTime()
+		end   = params.End.AsTime()
+
+		series lokiapi.Series
+	)
+
+	strValue := strconv.FormatFloat(value, 'f', -1, 64)
+	for ts := start; ts.Equal(end) || ts.Before(end); ts = ts.Add(params.Step) {
+		series.Values = append(series.Values, lokiapi.PrometheusSamplePair{
+			T: getPrometheusTimestamp(ts),
+			V: strValue,
+		})
+	}
+	return lokiapi.Matrix{series}
+}
+
+func getPrometheusTimestamp(t time.Time) float64 {
+	// Pass milliseconds as fraction part.
+	return float64(t.UnixMilli()) / 1000
 }

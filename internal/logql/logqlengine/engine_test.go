@@ -14,6 +14,7 @@ import (
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logstorage"
+	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -155,6 +156,152 @@ func TestEngineEvalStream(t *testing.T) {
 			for i, e := range entries {
 				assert.Equal(t, e, tt.wantData[i])
 			}
+		})
+	}
+}
+
+func TestEngineEvalLiteral(t *testing.T) {
+	type timeRange struct {
+		start uint64
+		end   uint64
+		step  time.Duration
+	}
+	tests := []struct {
+		query   string
+		tsRange timeRange
+
+		wantData lokiapi.QueryResponseData
+		wantErr  bool
+	}{
+		// Literal eval.
+		{
+			`3.14`,
+			timeRange{
+				start: 1700000001_000000000,
+				end:   1700000001_000000000,
+			},
+			lokiapi.QueryResponseData{
+				Type: lokiapi.ScalarResultQueryResponseData,
+				ScalarResult: lokiapi.ScalarResult{
+					Result: lokiapi.PrometheusSamplePair{
+						T: 1700000001,
+						V: "3.14",
+					},
+				},
+			},
+			false,
+		},
+		{
+			`3.14`,
+			timeRange{
+				start: 1700000001_000000000,
+				end:   1700000003_000000000,
+				step:  time.Second,
+			},
+			lokiapi.QueryResponseData{
+				Type: lokiapi.MatrixResultQueryResponseData,
+				MatrixResult: lokiapi.MatrixResult{
+					Result: lokiapi.Matrix{
+						{
+							Values: []lokiapi.PrometheusSamplePair{
+								{T: 1700000001, V: "3.14"},
+								{T: 1700000002, V: "3.14"},
+								{T: 1700000003, V: "3.14"},
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+
+		// Vector eval.
+		{
+			`vector(3.14)`,
+			timeRange{
+				start: 1700000001_000000000,
+				end:   1700000001_000000000,
+			},
+			lokiapi.QueryResponseData{
+				Type: lokiapi.VectorResultQueryResponseData,
+				VectorResult: lokiapi.VectorResult{
+					Result: []lokiapi.Vector{
+						{
+							Value: lokiapi.PrometheusSamplePair{
+								T: 1700000001,
+								V: "3.14",
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+		{
+			`vector(3.14)`,
+			timeRange{
+				start: 1700000001_000000000,
+				end:   1700000003_000000000,
+				step:  time.Second,
+			},
+			lokiapi.QueryResponseData{
+				Type: lokiapi.MatrixResultQueryResponseData,
+				MatrixResult: lokiapi.MatrixResult{
+					Result: lokiapi.Matrix{
+						{
+							Values: []lokiapi.PrometheusSamplePair{
+								{T: 1700000001, V: "3.14"},
+								{T: 1700000002, V: "3.14"},
+								{T: 1700000003, V: "3.14"},
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+
+		// Binop reduce.
+		{
+			`2*2`,
+			timeRange{
+				start: 1700000001_000000000,
+				end:   1700000001_000000000,
+			},
+			lokiapi.QueryResponseData{
+				Type: lokiapi.ScalarResultQueryResponseData,
+				ScalarResult: lokiapi.ScalarResult{
+					Result: lokiapi.PrometheusSamplePair{
+						T: 1700000001,
+						V: "4",
+					},
+				},
+			},
+			false,
+		},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			ctx := context.Background()
+
+			opts := Options{
+				ParseOptions: logql.ParseOptions{AllowDots: true},
+			}
+			e := NewEngine(&mockQuerier{}, opts)
+
+			gotData, err := e.Eval(ctx, tt.query, EvalParams{
+				Start: otelstorage.Timestamp(tt.tsRange.start),
+				End:   otelstorage.Timestamp(tt.tsRange.end),
+				Step:  tt.tsRange.step,
+				Limit: 1000,
+			})
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.wantData, gotData)
 		})
 	}
 }
