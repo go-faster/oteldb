@@ -296,10 +296,12 @@ components:
         propertyName: resultType
         mapping:
           streams: "#/components/schemas/StreamsResult"
+          scalar: "#/components/schemas/ScalarResult"
           vector: "#/components/schemas/VectorResult"
           matrix: "#/components/schemas/MatrixResult"
       oneOf:
         - $ref: "#/components/schemas/StreamsResult"
+        - $ref: "#/components/schemas/ScalarResult"
         - $ref: "#/components/schemas/VectorResult"
         - $ref: "#/components/schemas/MatrixResult"
     StreamsResult:
@@ -341,6 +343,20 @@ components:
         - type: string
           description: value
           x-ogen-name: V
+    ScalarResult:
+      type: object
+      required:
+        - resultType
+        - result
+      properties:
+        resultType:
+          type: string
+          enum:
+            - scalar
+        result:
+          $ref: "#/components/schemas/PrometheusSamplePair"
+        stats:
+          $ref: "#/components/schemas/Stats"
     VectorResult:
       type: object
       required:
