@@ -12,7 +12,7 @@ import (
 
 // LogfmtExtractor is a Logfmt label extractor.
 type LogfmtExtractor struct {
-	Labels map[logql.Label]struct{}
+	labels map[logql.Label]struct{}
 }
 
 func buildLogfmtExtractor(stage *logql.LogfmtExpressionParser) (Processor, error) {
@@ -22,9 +22,9 @@ func buildLogfmtExtractor(stage *logql.LogfmtExpressionParser) (Processor, error
 
 	e := &LogfmtExtractor{}
 	if labels := stage.Labels; len(labels) > 0 {
-		e.Labels = make(map[logql.Label]struct{}, len(labels))
+		e.labels = make(map[logql.Label]struct{}, len(labels))
 		for _, label := range labels {
-			e.Labels[label] = struct{}{}
+			e.labels[label] = struct{}{}
 		}
 	}
 	return e, nil
@@ -33,7 +33,7 @@ func buildLogfmtExtractor(stage *logql.LogfmtExpressionParser) (Processor, error
 // Process implements Processor.
 func (e *LogfmtExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
 	var err error
-	if len(e.Labels) == 0 {
+	if len(e.labels) == 0 {
 		err = e.extractAll(line, set)
 	} else {
 		err = e.extractSome(line, set)
@@ -50,7 +50,7 @@ func (e *LogfmtExtractor) extractSome(line string, set LabelSet) error {
 
 	for d.ScanRecord() {
 		for d.ScanKeyval() {
-			if _, ok := e.Labels[logql.Label(d.Key())]; ok {
+			if _, ok := e.labels[logql.Label(d.Key())]; ok {
 				// TODO(tdakkota): try string interning
 				// TODO(tdakkota): probably, we can just use label name string
 				// 	instead of allocating a new string every time

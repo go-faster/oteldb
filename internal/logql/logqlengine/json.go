@@ -11,7 +11,7 @@ import (
 
 // JSONExtractor is a JSON label extractor.
 type JSONExtractor struct {
-	Labels map[logql.Label]struct{}
+	labels map[logql.Label]struct{}
 }
 
 func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
@@ -21,9 +21,9 @@ func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
 
 	e := &JSONExtractor{}
 	if labels := stage.Labels; len(labels) > 0 {
-		e.Labels = make(map[logql.Label]struct{}, len(labels))
+		e.labels = make(map[logql.Label]struct{}, len(labels))
 		for _, label := range labels {
-			e.Labels[label] = struct{}{}
+			e.labels[label] = struct{}{}
 		}
 	}
 	return e, nil
@@ -32,7 +32,7 @@ func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
 // Process implements Processor.
 func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
 	var err error
-	if len(e.Labels) == 0 {
+	if len(e.labels) == 0 {
 		err = e.extractAll(line, set)
 	} else {
 		err = e.extractSome(line, set)
@@ -53,7 +53,7 @@ func (e *JSONExtractor) extractSome(line string, set LabelSet) error {
 		if !ok {
 			return nil
 		}
-		if _, ok := e.Labels[logql.Label(key)]; ok {
+		if _, ok := e.labels[logql.Label(key)]; ok {
 			// TODO(tdakkota): try string interning
 			// TODO(tdakkota): probably, we can just use label name string
 			// 	instead of allocating a new string every time

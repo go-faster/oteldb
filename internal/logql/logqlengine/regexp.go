@@ -11,21 +11,21 @@ import (
 
 // RegexpExtractor is a Regexp label extractor.
 type RegexpExtractor struct {
-	Regexp  *regexp.Regexp
-	Mapping map[int]logql.Label
+	re      *regexp.Regexp
+	mapping map[int]logql.Label
 }
 
 func buildRegexpExtractor(stage *logql.RegexpLabelParser) (Processor, error) {
 	return &RegexpExtractor{
-		Regexp:  stage.Regexp,
-		Mapping: stage.Mapping,
+		re:      stage.Regexp,
+		mapping: stage.Mapping,
 	}, nil
 }
 
 // Process implements Processor.
 func (e *RegexpExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
-	for i, match := range e.Regexp.FindStringSubmatch(line) {
-		label, ok := e.Mapping[i]
+	for i, match := range e.re.FindStringSubmatch(line) {
+		label, ok := e.mapping[i]
 		if !ok {
 			continue
 		}
