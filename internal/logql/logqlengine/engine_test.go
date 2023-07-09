@@ -78,30 +78,121 @@ func TestEngineEvalStream(t *testing.T) {
 	}
 
 	startTime := otelstorage.Timestamp(1688833731000000000)
+	inputLines := justLines(
+		`{"id": 1, "foo": "4m", "bar": "1s", "baz": "1kb"}`,
+		`{"id": 2, "foo": "5m", "bar": "2s", "baz": "1mb"}`,
+		`{"id": 3, "foo": "6m", "bar": "3s", "baz": "1gb"}`,
+	)
+	resultLines := []resultLine{
+		{
+			`{"id": 1, "foo": "4m", "bar": "1s", "baz": "1kb"}`,
+			map[string]string{
+				"id":  "1",
+				"foo": "4m",
+				"bar": "1s",
+				"baz": "1kb",
+			},
+		},
+		{
+			`{"id": 2, "foo": "5m", "bar": "2s", "baz": "1mb"}`,
+			map[string]string{
+				"id":  "2",
+				"foo": "5m",
+				"bar": "2s",
+				"baz": "1mb",
+			},
+		},
+		{
+			`{"id": 3, "foo": "6m", "bar": "3s", "baz": "1gb"}`,
+			map[string]string{
+				"id":  "3",
+				"foo": "6m",
+				"bar": "3s",
+				"baz": "1gb",
+			},
+		},
+	}
+
 	tests := []struct {
 		query    string
 		input    []inputLine
 		wantData []resultLine
 		wantErr  bool
 	}{
+		// Line filter.
+		{
+			`{resource="test"} |= "5m" | json`,
+			inputLines,
+			[]resultLine{resultLines[1]},
+			false,
+		},
+		{
+			`{resource="test"} |~ ".*5m.*" | json`,
+			inputLines,
+			[]resultLine{resultLines[1]},
+			false,
+		},
+		{
+			`{resource="test"} != "5m" | json`,
+			inputLines,
+			[]resultLine{
+				resultLines[0],
+				resultLines[2],
+			},
+			false,
+		},
+		{
+			`{resource="test"} !~ "5m" | json`,
+			inputLines,
+			[]resultLine{
+				resultLines[0],
+				resultLines[2],
+			},
+			false,
+		},
+		// Label matcher.
+		{
+			`{resource="test"} | json | foo = "5"`,
+			inputLines,
+			[]resultLine{},
+			false,
+		},
+		{
+			`{resource="test"} | json | foo = "5m"`,
+			inputLines,
+			[]resultLine{resultLines[1]},
+			false,
+		},
+		{
+			`{resource="test"} | json | foo =~ ".*5m.*"`,
+			inputLines,
+			[]resultLine{resultLines[1]},
+			false,
+		},
+		{
+			`{resource="test"} | json | foo != "5m"`,
+			inputLines,
+			[]resultLine{
+				resultLines[0],
+				resultLines[2],
+			},
+			false,
+		},
+		{
+			`{resource="test"} | json | foo !~ "5m"`,
+			inputLines,
+			[]resultLine{
+				resultLines[0],
+				resultLines[2],
+			},
+			false,
+		},
+
+		// Complex queries.
 		{
 			`{resource="test"} | json | foo <= 5m, bar == 2s or baz == 1MB`,
-			justLines(
-				`{"id": 1, "foo": "4m", "bar": "1s", "baz": "1kb"}`,
-				`{"id": 2, "foo": "5m", "bar": "2s", "baz": "1mb"}`,
-				`{"id": 3, "foo": "6m", "bar": "3s", "baz": "1gb"}`,
-			),
-			[]resultLine{
-				{
-					`{"id": 2, "foo": "5m", "bar": "2s", "baz": "1mb"}`,
-					map[string]string{
-						"id":  "2",
-						"foo": "5m",
-						"bar": "2s",
-						"baz": "1mb",
-					},
-				},
-			},
+			inputLines,
+			[]resultLine{resultLines[1]},
 			false,
 		},
 	}

@@ -94,40 +94,25 @@ func (m *OrLabelMatcher) Process(ts otelstorage.Timestamp, line string, set Labe
 }
 
 // LabelMatcher is a label filter Processor.
-type LabelMatcher[M StringMatcher] struct {
+type LabelMatcher struct {
 	name    logql.Label
-	matcher M
+	matcher StringMatcher
 }
 
 func buildLabelMatcher(pred logql.LabelMatcher) (Processor, error) {
-	switch pred.Op {
-	case logql.OpEq:
-		return &LabelMatcher[ContainsMatcher]{
-			name:    pred.Label,
-			matcher: ContainsMatcher{Value: pred.Value},
-		}, nil
-	case logql.OpNotEq:
-		return &LabelMatcher[NotMatcher[string, ContainsMatcher]]{
-			name:    pred.Label,
-			matcher: NotMatcher[string, ContainsMatcher]{Next: ContainsMatcher{Value: pred.Value}},
-		}, nil
-	case logql.OpRe:
-		return &LabelMatcher[RegexpMatcher]{
-			name:    pred.Label,
-			matcher: RegexpMatcher{Re: pred.Re},
-		}, nil
-	case logql.OpNotRe:
-		return &LabelMatcher[NotMatcher[string, RegexpMatcher]]{
-			name:    pred.Label,
-			matcher: NotMatcher[string, RegexpMatcher]{Next: RegexpMatcher{Re: pred.Re}},
-		}, nil
-	default:
-		return nil, errors.Errorf("unknown operation %q", pred.Op)
+	matcher, err := buildStringMatcher(pred.Op, pred.Value, pred.Re, true)
+	if err != nil {
+		return nil, err
 	}
+
+	return &LabelMatcher{
+		name:    pred.Label,
+		matcher: matcher,
+	}, nil
 }
 
 // Process implements Processor.
-func (lf *LabelMatcher[M]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *LabelMatcher) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
 	labelValue, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false

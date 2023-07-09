@@ -3,7 +3,6 @@ package logqlengine
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/go-faster/errors"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -25,21 +24,10 @@ func buildKeepLabels(stage *logql.KeepLabelsExpr) (Processor, error) {
 	if matchers := stage.Matchers; len(matchers) > 0 {
 		e.matchers = make(map[logql.Label][]StringMatcher, len(matchers))
 		for _, matcher := range matchers {
-			var (
-				label = matcher.Label
-				m     StringMatcher
-			)
-			switch matcher.Op {
-			case logql.OpEq:
-				m = ContainsMatcher{Value: matcher.Value}
-			case logql.OpNotEq:
-				m = NotMatcher[string, ContainsMatcher]{Next: ContainsMatcher{Value: matcher.Value}}
-			case logql.OpRe:
-				m = RegexpMatcher{Re: matcher.Re}
-			case logql.OpNotRe:
-				m = NotMatcher[string, RegexpMatcher]{Next: RegexpMatcher{Re: matcher.Re}}
-			default:
-				return nil, errors.Errorf("unknown operation %q", matcher.Op)
+			label := matcher.Label
+			m, err := buildStringMatcher(matcher.Op, matcher.Value, matcher.Re, true)
+			if err != nil {
+				return nil, err
 			}
 			e.matchers[label] = append(e.matchers[label], m)
 		}
