@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
@@ -220,7 +221,12 @@ func TestEngineEvalStream(t *testing.T) {
 			result, ok := gotData.GetStreamsResult()
 			require.True(t, ok)
 
-			entries := make([]resultLine, 0, len(tt.wantData))
+			type entry struct {
+				ts     uint64
+				line   string
+				labels map[string]string
+			}
+			entries := make([]entry, 0, len(tt.wantData))
 			for _, s := range result.Result {
 				set := s.Stream.Value
 
@@ -236,16 +242,22 @@ func TestEngineEvalStream(t *testing.T) {
 				}
 
 				for _, e := range s.Values {
-					entries = append(entries, resultLine{
+					entries = append(entries, entry{
+						ts:     e.T,
 						line:   e.V,
 						labels: set,
 					})
 				}
 			}
+			slices.SortFunc(entries, func(a, b entry) bool { return a.ts < b.ts })
 
 			assert.Len(t, entries, len(tt.wantData))
 			for i, e := range entries {
-				assert.Equal(t, e, tt.wantData[i])
+				result := resultLine{
+					line:   e.line,
+					labels: e.labels,
+				}
+				assert.Equal(t, result, tt.wantData[i])
 			}
 		})
 	}

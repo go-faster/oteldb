@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+
+	"github.com/go-faster/oteldb/internal/logql"
 )
 
 func TestKeepLabels(t *testing.T) {
