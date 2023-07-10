@@ -19,3 +19,8 @@ secret.yaml
 
 /oteldb
 /otelproxy
+
+# goreleaser
+dist
+coverage.txt
+.task
