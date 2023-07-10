@@ -6,13 +6,48 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/trace"
+	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+func Logs(ctx context.Context, tracer trace.Tracer, now time.Time) plog.Logs {
+	ctx, span := tracer.Start(ctx, "Logs")
+	defer span.End()
+	var (
+		spanContext = span.SpanContext()
+		traceID     = spanContext.TraceID()
+		spanID      = spanContext.SpanID()
+	)
+	ld := plog.NewLogs()
+	rl := ld.ResourceLogs().AppendEmpty()
+	rl.Resource().Attributes().PutStr("host.name", "testHost")
+	rl.Resource().SetDroppedAttributesCount(1)
+	rl.SetSchemaUrl("resource_schema")
+	il := rl.ScopeLogs().AppendEmpty()
+	il.Scope().SetName("name")
+	il.Scope().SetVersion("version")
+	il.Scope().SetDroppedAttributesCount(1)
+	il.SetSchemaUrl("scope_schema")
+	lg := il.LogRecords().AppendEmpty()
+	lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_INFO))
+	lg.SetSeverityText("Info")
+	lg.SetFlags(plog.LogRecordFlags(logspb.LogRecordFlags_LOG_RECORD_FLAGS_DO_NOT_USE))
+	lg.SetTraceID(pcommon.TraceID(traceID))
+	lg.SetSpanID(pcommon.SpanID(spanID))
+	lg.Body().SetStr("hello world")
+	lg.SetTimestamp(pcommon.Timestamp(now.UnixNano()))
+	lg.SetObservedTimestamp(pcommon.Timestamp(now.UnixNano()))
+	lg.Attributes().PutStr("sdkVersion", "1.0.1")
+	lg.SetFlags(plog.DefaultLogRecordFlags.WithIsSampled(true))
+	return ld
+}
 
 func main() {
 	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
@@ -30,16 +65,9 @@ func main() {
 			return errors.Wrap(err, "dial oteldb")
 		}
 		client := plogotlp.NewGRPCClient(conn)
-		for range time.NewTicker(time.Second).C {
-			slice := plog.NewResourceLogsSlice()
-			slice.EnsureCapacity(1)
-			le := slice.AppendEmpty()
-			le.Resource().Attributes().PutStr("foo", "bar")
-
-			logs := plog.NewLogs()
-			slice.CopyTo(logs.ResourceLogs())
-
-			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(logs)); err != nil {
+		tracer := m.TracerProvider().Tracer("otelfaker")
+		for now := range time.NewTicker(time.Second).C {
+			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(Logs(ctx, tracer, now))); err != nil {
 				return errors.Wrap(err, "send logs")
 			}
 		}
