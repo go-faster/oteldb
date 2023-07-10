@@ -168,7 +168,7 @@ spec:
     spec:
       containers:
         - name: oteldb
-          image: ghcr.io/go-faster/oteldb/proxy:main
+          image: ghcr.io/go-faster/oteldb/faker:main
           ports:
             - containerPort: 8090
               protocol: TCP
