@@ -16,7 +16,7 @@ env:
   DOCKER_CLI_EXPERIMENTAL: "enabled"
 
 jobs:
-  run:
+  oteldb:
     runs-on: ubuntu-latest
     steps:
       # https://goreleaser.com/ci/actions/

@@ -48,7 +48,7 @@ release:
 
   extra_files:
     # cosign key
-    - glob: "go-faster.pub"
+    - glob: "cosign.pub"
 
 dockers:
   # https://goreleaser.com/customization/docker/

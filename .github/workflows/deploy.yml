@@ -120,7 +120,7 @@ jobs:
 
       - name: Deploy
         run: |
-          /tmp/kubectl apply -f .k8s/deployment.release.yml -f .k8s/service.yaml
+          /tmp/kubectl apply -f .k8s/deployment.yml -f .k8s/service.yaml
           /tmp/kubectl -n faster rollout status deployment oteldb otelproxy --timeout=10m
   otel:
     environment: prod
