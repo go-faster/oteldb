@@ -48,6 +48,11 @@ var (
 	_ yson.StreamUnmarshaler = (*TraceID)(nil)
 )
 
+// IsEmpty returns true if span ID is empty.
+func (id TraceID) IsEmpty() bool {
+	return pcommon.TraceID(id).IsEmpty()
+}
+
 // Hex returns a hex representation of TraceID.
 func (id TraceID) Hex() string {
 	const hextable = "0123456789abcdef"

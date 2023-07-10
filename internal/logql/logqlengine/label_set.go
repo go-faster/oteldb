@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -56,12 +58,30 @@ func (l *LabelSet) String() string {
 	return sb.String()
 }
 
-// SetAttrs sets labels from attrs.
-func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
+// SetFromRecord sets labels from given log record.
+func (l *LabelSet) SetFromRecord(record logstorage.Record) error {
 	if l.labels == nil {
 		l.labels = map[logql.Label]pcommon.Value{}
 	}
 	maps.Clear(l.labels)
+
+	if traceID := record.TraceID; !traceID.IsEmpty() {
+		l.Add(logql.Label(`trace_id`), pcommon.NewValueStr(traceID.Hex()))
+	}
+	if spanID := record.SpanID; !spanID.IsEmpty() {
+		l.Add(logql.Label(`span_id`), pcommon.NewValueStr(spanID.Hex()))
+	}
+	if severity := record.SeverityText; severity != "" {
+		l.Add(logql.Label(`severity_text`), pcommon.NewValueStr(severity))
+	}
+	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
+		l.Add(logql.Label(`severity_number`), pcommon.NewValueInt(int64(severity)))
+	}
+	return l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
+}
+
+// SetAttrs sets labels from attrs.
+func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 	for _, attrs := range attrMaps {
 		m := attrs.AsMap()
 		if m == (pcommon.Map{}) {
@@ -72,7 +92,7 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 				rerr = err
 				return false
 			}
-			l.labels[logql.Label(k)] = v
+			l.Add(logql.Label(k), v)
 			return true
 		})
 	}

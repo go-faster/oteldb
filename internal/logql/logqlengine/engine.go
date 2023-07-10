@@ -182,12 +182,8 @@ func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params Ev
 			break
 		}
 
-		if err := set.SetAttrs(
-			record.Attrs,
-			record.ScopeAttrs,
-			record.ResourceAttrs,
-		); err != nil {
-			lg.Warn("Invalid label name", zap.Uint64("ts", uint64(record.Timestamp)), zap.Error(err))
+		if err := set.SetFromRecord(record); err != nil {
+			lg.Warn("Invalid log record", zap.Uint64("ts", uint64(record.Timestamp)), zap.Error(err))
 			// Just skip the line.
 			continue
 		}
