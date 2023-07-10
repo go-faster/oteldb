@@ -31,7 +31,6 @@ func main() {
 		}
 		client := plogotlp.NewGRPCClient(conn)
 		for range time.NewTicker(time.Second).C {
-
 			slice := plog.NewResourceLogsSlice()
 			slice.EnsureCapacity(1)
 			le := slice.AppendEmpty()
