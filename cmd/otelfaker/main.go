@@ -31,7 +31,15 @@ func main() {
 		}
 		client := plogotlp.NewGRPCClient(conn)
 		for range time.NewTicker(time.Second).C {
+
+			slice := plog.NewResourceLogsSlice()
+			slice.EnsureCapacity(1)
+			le := slice.AppendEmpty()
+			le.Resource().Attributes().PutStr("foo", "bar")
+
 			logs := plog.NewLogs()
+			slice.CopyTo(logs.ResourceLogs())
+
 			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(logs)); err != nil {
 				return errors.Wrap(err, "send logs")
 			}
