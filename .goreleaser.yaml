@@ -1,0 +1,228 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+project_name: oteldb
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - riscv64
+    ignore:
+      - goos: windows
+        goarch: arm
+    main: ./cmd/oteldb
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser
+
+archives:
+  - name_template: >-
+      {{ .ProjectName }}-
+      {{- .Os }}-
+      {{- .Arch  }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    builds_info:
+      group: root
+      owner: root
+    rlcp: true
+    files:
+      - README.md
+      - LICENSE
+      - cosign.pub
+
+release:
+  # prerelease: allow # remove this when we start publishing non-prerelease or set to auto
+  # draft: true # allow for manual edits
+  github:
+    owner: go-faster
+    name: oteldb
+
+  extra_files:
+    # cosign key
+    - glob: "go-faster.pub"
+
+dockers:
+  # https://goreleaser.com/customization/docker/
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
+      - "{{ .Env.IMAGE }}:latest-amd64"
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
+      - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
+      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Aleksandr Razumov\",\"email\":\"ernado@go-faster.org\"}]"
+      - "--label=io.artifacthub.package.license=Apache 2.0"
+      - "--label=org.opencontainers.image.description=Observability sumulation services"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
+      - "{{ .Env.IMAGE }}:latest-arm64"
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
+      - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
+      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Aleksandr Razumov\",\"email\":\"ernado@go-faster.org\"}]"
+      - "--label=io.artifacthub.package.license=Apache 2.0"
+      - "--label=org.opencontainers.image.description=Observability sumulation services"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - use: buildx
+    goos: linux
+    goarch: riscv64
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
+      - "{{ .Env.IMAGE }}:latest-riscv64"
+    build_flag_templates:
+      - "--platform=linux/riscv64"
+      - "--pull"
+      # riscv64 architecture support for static images
+      # https://github.com/go-riscv/distroless
+      # https://github.com/GoogleContainerTools/distroless/issues/1269
+      - "--build-arg"
+      - "IMG=ghcr.io/go-riscv/distroless/static-unstable"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
+      - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
+      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Aleksandr Razumov\",\"email\":\"ernado@go-faster.org\"}]"
+      - "--label=io.artifacthub.package.license=Apache 2.0"
+      - "--label=org.opencontainers.image.description=Observability sumulation services"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+docker_manifests:
+  # https://goreleaser.com/customization/docker_manifest/
+  - name_template: "{{ .Env.IMAGE }}:{{ .Version }}"
+    image_templates:
+      - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
+      - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
+      - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
+  - name_template: "{{ .Env.IMAGE }}:latest"
+    image_templates:
+      - "{{ .Env.IMAGE }}:latest-amd64"
+      - "{{ .Env.IMAGE }}:latest-arm64"
+      - "{{ .Env.IMAGE }}:latest-riscv64"
+
+signs:
+  - cmd: cosign
+    id: cosign
+    signature: "${artifact}.sig"
+    certificate: '${artifact}.pem'
+    output: true
+    artifacts: binary
+    args:
+      - sign-blob
+      - "--key"
+      - "env://COSIGN_PRIVATE_KEY"
+      - "--output-signature"
+      - "${artifact}.sig"
+      - "${artifact}"
+      - --yes
+
+  - cmd: cosign
+    id: keyless
+    signature: "${artifact}.keyless.sig"
+    certificate: '${artifact}.keyless.pem'
+    output: true
+    artifacts: binary
+    args:
+      - sign-blob
+      - "--output-certificate"
+      - "${artifact}.keyless.pem"
+      - "--output-signature"
+      - "${artifact}.keyless.sig"
+      - "${artifact}"
+      - --yes
+
+docker_signs:
+  - cmd: cosign
+    artifacts: manifests
+    output: true
+    args:
+      - '--key'
+      - 'env://COSIGN_PRIVATE_KEY'
+      - 'sign'
+      - '${artifact}@${digest}'
+      - --yes
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^test:'
+      - '^chore'
+      - 'merge conflict'
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+      - go mod tidy
+  groups:
+    - title: Dependency updates
+      regexp: '^.*?(feat|fix)\(deps\)!?:.+$'
+      order: 300
+    - title: 'New Features'
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 100
+    - title: 'Security updates'
+      regexp: '^.*?sec(\([[:word:]]+\))??!?:.+$'
+      order: 150
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 200
+    - title: 'Documentation updates'
+      regexp: ^.*?doc(\([[:word:]]+\))??!?:.+$
+      order: 400
+    - title: 'Build process updates'
+      regexp: ^.*?build(\([[:word:]]+\))??!?:.+$
+      order: 400
+    - title: Other work
+      order: 9999
+
+sboms:
+  - artifacts: archive
+
+nfpms:
+  - package_name: oteldb
+    homepage: https://github.com/go-faster/oteldb
+    maintainer: Aleksandr Razumov <ernado@go-faster.org>
+    description: OpenTelemetry-compatible telemetry storage
+    license: Apache 2.0
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
+        - changelog-file-missing-in-native-package

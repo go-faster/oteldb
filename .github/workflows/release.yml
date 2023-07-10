@@ -2,37 +2,39 @@ name: release
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write # needed for signing the images with GitHub OIDC Token **not production ready**
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_TAG: ghcr.io/${{ github.repository }}
-  KUBECTL_VERSION: v1.27.1
+  IMAGE_NAME: ${{ github.repository }}
+  IMAGE: ghcr.io/${{ github.repository }}
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
 
 jobs:
-  oteldb:
-    environment: prod
+  run:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      KUBECONFIG: /tmp/kubeconfig
-
-    # Skip deploy commit message contains #skip
-    if: ${{ !contains(github.event.head_commit.message, '!skip') }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      # https://goreleaser.com/ci/actions/
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git fetch --force --tags
+
+      - uses: sigstore/cosign-installer@v3.1.1
+      - uses: anchore/sbom-action/download-syft@v0
+      - run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
 
       - uses: docker/setup-buildx-action@v2
 
       - name: Install Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.20.3"
+          go-version: "1.20.5"
           cache: false
 
       - name: Get Go environment
@@ -52,125 +54,32 @@ jobs:
           restore-keys: |
             release-${{ runner.os }}-go-${{ env.goversion }}
 
-      - name: Docker log in
+      - uses: actions/cache@v3
+        name: Releaser cache
+        with:
+          path: |
+            ./dist/*.deb
+            ./dist/*.rpm
+            ./dist/*.apk
+          key: ${{ github.ref }}
+
+      - name: ghcr-login
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: docker/login-action@v2
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get short commit SHA
-        id: var
-        shell: bash
-        run: |
-          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: goreleaser-install
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          install-only: true
 
-      - name: Go build
+      - name: goreleaser-release
+        run: task goreleaser
         env:
-          CGO_ENABLED: 0
-        run: |
-          go build -v ./cmd/oteldb
-          go build -v ./cmd/otelproxy
-
-      - name: Base image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: deploy.Dockerfile
-          push: true
-          tags: "${{ env.IMAGE_TAG }}:${{ env.sha }}"
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Proxy image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: deploy.proxy.Dockerfile
-          push: true
-          tags: "${{ env.IMAGE_TAG }}/proxy:${{ env.sha }}"
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Generate deployment with SHA version
-        run: sed 's/:main/:${{ env.sha }}/g' .k8s/deployment.yml > .k8s/deployment.release.yml
-
-      - name: Set up kubectl cache
-        uses: actions/cache@v3
-        with:
-          path: /tmp/kubectl
-          key: kubectl-${{ env.KUBECTL_VERSION }}
-
-      - name: Check kubectl
-        id: "kubectl"
-        uses: andstor/file-existence-action@v2
-        with:
-          files: /tmp/kubectl
-
-      - name: Download kubectl
-        if: steps.kubectl.outputs.files_exists != 'true'
-        run: |
-          wget -O /tmp/kubectl "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
-          chmod +x /tmp/kubectl
-
-      - name: Setup kubeconfig
-        env:
-          KUBE: ${{ secrets.KUBE }}
-        run: .k8s/kubeconfig.sh
-
-      - name: Deploy
-        run: |
-          /tmp/kubectl apply -f .k8s/deployment.release.yml -f .k8s/service.yaml
-          /tmp/kubectl -n faster rollout status deployment oteldb otelproxy --timeout=10m
-  otel:
-    environment: prod
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      KUBECONFIG: /tmp/kubeconfig
-
-    # Skip deploy commit message contains #skip
-    if: ${{ !contains(github.event.head_commit.message, '!skip') }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - uses: docker/setup-buildx-action@v2
-
-      - name: Docker log in
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up kubectl cache
-        uses: actions/cache@v3
-        with:
-          path: /tmp/kubectl
-          key: kubectl-${{ env.KUBECTL_VERSION }}
-
-      - name: Check kubectl
-        id: "kubectl"
-        uses: andstor/file-existence-action@v2
-        with:
-          files: /tmp/kubectl
-
-      - name: Download kubectl
-        if: steps.kubectl.outputs.files_exists != 'true'
-        run: |
-          wget -O /tmp/kubectl "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
-          chmod +x /tmp/kubectl
-
-      - name: Setup kubeconfig
-        env:
-          KUBE: ${{ secrets.KUBE }}
-        run: .k8s/kubeconfig.sh
-
-      - name: Deploy
-        run: |
-          /tmp/kubectl -n monitoring apply -f .k8s/otel.yml
-          /tmp/kubectl -n monitoring rollout status deployment otel-collector
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          COSIGN_YES: true
