@@ -6,21 +6,14 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
-      - darwin
     goarch:
       - amd64
       - arm64
       - riscv64
-    ignore:
-      - goos: windows
-        goarch: arm
     main: ./cmd/oteldb
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser
 
 archives:
   - name_template: >-
