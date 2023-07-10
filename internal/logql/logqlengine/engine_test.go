@@ -189,6 +189,93 @@ func TestEngineEvalStream(t *testing.T) {
 			false,
 		},
 
+		// Drop expression.
+		{
+			`{resource="test"} | json | drop id`,
+			justLines(
+				`{"id": 1, "foo": "bar"}`,
+				`{"id": 2, "foo": "baz"}`,
+			),
+			[]resultLine{
+				{
+					`{"id": 1, "foo": "bar"}`,
+					map[string]string{"foo": "bar"},
+				},
+				{
+					`{"id": 2, "foo": "baz"}`,
+					map[string]string{"foo": "baz"},
+				},
+			},
+			false,
+		},
+		{
+			`{resource="test"} | json | drop clearly_not_exists`,
+			justLines(
+				`{"id": 1, "foo": "bar"}`,
+			),
+			[]resultLine{
+				{
+					`{"id": 1, "foo": "bar"}`,
+					map[string]string{
+						"id":  "1",
+						"foo": "bar",
+					},
+				},
+			},
+			false,
+		},
+
+		// Distinct filter.
+		{
+			`{resource="test"} | json | distinct id`,
+			justLines(
+				`{"id": 1, "foo": "bar"}`,
+				`{"id": 1, "foo": "baz"}`,
+				`{"id": 2, "foo": "bar"}`,
+			),
+			[]resultLine{
+				{
+					`{"id": 1, "foo": "bar"}`,
+					map[string]string{
+						"id":  "1",
+						"foo": "bar",
+					},
+				},
+				{
+					`{"id": 2, "foo": "bar"}`,
+					map[string]string{
+						"id":  "2",
+						"foo": "bar",
+					},
+				},
+			},
+			false,
+		},
+		{
+			`{resource="test"} | json | distinct id, foo`,
+			justLines(
+				`{"id": 1, "foo": "bar"}`,
+				`{"id": 1, "foo": "baz"}`,
+				`{"id": 2, "foo": "bar"}`,
+			),
+			[]resultLine{
+				{
+					`{"id": 1, "foo": "bar"}`,
+					map[string]string{
+						"id":  "1",
+						"foo": "bar",
+					},
+				},
+			},
+			false,
+		},
+		{
+			`{resource="test"} | json | distinct clearly_not_exists`,
+			inputLines,
+			resultLines,
+			false,
+		},
+
 		// Complex queries.
 		{
 			`{resource="test"} | json | foo <= 5m, bar == 2s or baz == 1MB`,
