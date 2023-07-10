@@ -51,6 +51,10 @@ data:
           receivers: [otlp]
           processors: [memory_limiter, batch]
           exporters: [otlp/tempo, otlp/oteldb]
+        logs:
+          receivers: [otlp, loki]
+          processors: [memory_limiter, batch]
+          exporters: [otlp/oteldb]
 ---
 apiVersion: v1
 kind: Service
@@ -69,11 +73,11 @@ spec:
     port: 4318
     protocol: TCP
     targetPort: 4318
-  - name: loki-grpc # Default endpoint for OpenTelemetry gRPC receiver.
+  - name: loki-grpc # Default endpoint for Loki gRPC receiver.
     port: 3500
     protocol: TCP
     targetPort: 3500
-  - name: loki-http # Default endpoint for OpenTelemetry HTTP receiver.
+  - name: loki-http # Default endpoint for Loki HTTP receiver.
     port: 3600
     protocol: TCP
     targetPort: 3600
