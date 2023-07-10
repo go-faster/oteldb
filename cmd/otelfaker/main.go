@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -19,13 +17,11 @@ import (
 func main() {
 	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		// Generate fake telemetry signals to test oteldb.
-		target := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-		target = strings.TrimPrefix(target, "http://")
 		otelOptions := []otelgrpc.Option{
 			otelgrpc.WithTracerProvider(m.TracerProvider()),
 			otelgrpc.WithMeterProvider(m.MeterProvider()),
 		}
-		conn, err := grpc.DialContext(ctx, target,
+		conn, err := grpc.DialContext(ctx, "oteldb.faster.svc.cluster.local:4317",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor(otelOptions...)),
 			grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor(otelOptions...)),
