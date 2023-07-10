@@ -17,8 +17,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func Logs(ctx context.Context, tracer trace.Tracer, now time.Time) plog.Logs {
-	ctx, span := tracer.Start(ctx, "Logs")
+func getLogs(ctx context.Context, tracer trace.Tracer, now time.Time) plog.Logs {
+	_, span := tracer.Start(ctx, "getLogs")
 	defer span.End()
 	var (
 		spanContext = span.SpanContext()
@@ -67,7 +67,7 @@ func main() {
 		client := plogotlp.NewGRPCClient(conn)
 		tracer := m.TracerProvider().Tracer("otelfaker")
 		for now := range time.NewTicker(time.Second).C {
-			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(Logs(ctx, tracer, now))); err != nil {
+			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(getLogs(ctx, tracer, now))); err != nil {
 				return errors.Wrap(err, "send logs")
 			}
 		}
