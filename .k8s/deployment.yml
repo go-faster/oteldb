@@ -144,3 +144,60 @@ spec:
               value: "otlp"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: faster
+  name: otelfaker
+  labels:
+    app: otelfaker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otelfaker
+  template:
+    metadata:
+      labels:
+        app: otelfaker
+        service.opentelemetry.io/name: go-faster.otelfaker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
+    spec:
+      containers:
+        - name: oteldb
+          image: ghcr.io/go-faster/oteldb/proxy:main
+          ports:
+            - containerPort: 8090
+              protocol: TCP
+              name: metrics
+          resources:
+            requests:
+              cpu: 500m
+              memory: 128M
+            limits:
+              cpu: 1500m
+              memory: 256M
+          env:
+            - name: GOMEMLIMIT
+              value: "256MiB"
+            - name: GOMAXPROCS
+              value: "2"
+            - name: OTEL_METRICS_EXPORTER
+              value: "prometheus"
+            - name: OTEL_EXPORTER_PROMETHEUS_PORT
+              value: "8090"
+            - name: OTEL_EXPORTER_PROMETHEUS_HOST
+              value: "0.0.0.0"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=go-faster.otelfaker"
+            - name: OTEL_LOG_LEVEL
+              value: "DEBUG"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.monitoring.svc.cluster.local:4317"

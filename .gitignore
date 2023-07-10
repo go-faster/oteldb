@@ -19,6 +19,7 @@ secret.yaml
 
 /oteldb
 /otelproxy
+/otelfaker
 
 # goreleaser
 dist
