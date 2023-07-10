@@ -47,7 +47,7 @@ dockers:
   # https://goreleaser.com/customization/docker/
   - use: buildx
     goos: linux
-    dockerfile: deploy.Dockerfile
+    dockerfile: release.Dockerfile
     goarch: amd64
     image_templates:
       - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
@@ -68,7 +68,7 @@ dockers:
   - use: buildx
     goos: linux
     goarch: arm64
-    dockerfile: deploy.Dockerfile
+    dockerfile: release.Dockerfile
     image_templates:
       - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
       - "{{ .Env.IMAGE }}:latest-arm64"
@@ -88,7 +88,7 @@ dockers:
   - use: buildx
     goos: linux
     goarch: riscv64
-    dockerfile: deploy.Dockerfile
+    dockerfile: release.Dockerfile
     image_templates:
       - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
       - "{{ .Env.IMAGE }}:latest-riscv64"
