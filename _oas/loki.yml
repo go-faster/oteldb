@@ -344,7 +344,7 @@ components:
         - result
       properties:
         result:
-          $ref: "#/components/schemas/PrometheusSamplePair"
+          $ref: "#/components/schemas/FPoint"
         stats:
           $ref: "#/components/schemas/Stats"
     VectorResult:
@@ -353,12 +353,14 @@ components:
         - result
       properties:
         result:
-          type: array
-          items:
-            $ref: "#/components/schemas/Vector"
+          $ref: "#/components/schemas/Vector"
         stats:
           $ref: "#/components/schemas/Stats"
     Vector:
+      type: array
+      items:
+        $ref: "#/components/schemas/Sample"
+    Sample:
       type: object
       required:
         - value
@@ -366,7 +368,7 @@ components:
         metric:
           $ref: "#/components/schemas/LabelSet"
         value:
-          $ref: "#/components/schemas/PrometheusSamplePair"
+          $ref: "#/components/schemas/FPoint"
     MatrixResult:
       type: object
       required:
@@ -388,9 +390,9 @@ components:
         values:
           type: array
           items:
-            $ref: "#/components/schemas/PrometheusSamplePair"
+            $ref: "#/components/schemas/FPoint"
         # TODO(tdakkota): parse histogramas too
-    PrometheusSamplePair:
+    FPoint:
       type: array
       items:
         - type: number
