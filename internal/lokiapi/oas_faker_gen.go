@@ -16,6 +16,20 @@ func (s *Error) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *FPoint) SetFake() {
+	{
+		{
+			s.T = float64(0)
+		}
+	}
+	{
+		{
+			s.V = "string"
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *LabelSet) SetFake() {
 	var (
 		elem string
@@ -133,20 +147,6 @@ func (s *OptLabelSet) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *PrometheusSamplePair) SetFake() {
-	{
-		{
-			s.T = float64(0)
-		}
-	}
-	{
-		{
-			s.V = "string"
-		}
-	}
-}
-
-// SetFake set fake values.
 func (s *Push) SetFake() {
 	{
 		{
@@ -187,6 +187,20 @@ func (s *QueryResponseData) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Sample) SetFake() {
+	{
+		{
+			s.Metric.SetFake()
+		}
+	}
+	{
+		{
+			s.Value.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *ScalarResult) SetFake() {
 	{
 		{
@@ -211,7 +225,7 @@ func (s *Series) SetFake() {
 		{
 			s.Values = nil
 			for i := 0; i < 0; i++ {
-				var elem PrometheusSamplePair
+				var elem FPoint
 				{
 					elem.SetFake()
 				}
@@ -299,30 +313,25 @@ func (s *Values) SetFake() {
 
 // SetFake set fake values.
 func (s *Vector) SetFake() {
+	var unwrapped []Sample
 	{
-		{
-			s.Metric.SetFake()
+		unwrapped = nil
+		for i := 0; i < 0; i++ {
+			var elem Sample
+			{
+				elem.SetFake()
+			}
+			unwrapped = append(unwrapped, elem)
 		}
 	}
-	{
-		{
-			s.Value.SetFake()
-		}
-	}
+	*s = Vector(unwrapped)
 }
 
 // SetFake set fake values.
 func (s *VectorResult) SetFake() {
 	{
 		{
-			s.Result = nil
-			for i := 0; i < 0; i++ {
-				var elem Vector
-				{
-					elem.SetFake()
-				}
-				s.Result = append(s.Result, elem)
-			}
+			s.Result.SetFake()
 		}
 	}
 	{

@@ -23,6 +23,18 @@ func TestError_EncodeDecode(t *testing.T) {
 	var typ2 Error
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestFPoint_EncodeDecode(t *testing.T) {
+	var typ FPoint
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 FPoint
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestLabelSet_EncodeDecode(t *testing.T) {
 	var typ LabelSet
 	typ = make(LabelSet)
@@ -111,18 +123,6 @@ func TestMatrixResult_EncodeDecode(t *testing.T) {
 	var typ2 MatrixResult
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
-func TestPrometheusSamplePair_EncodeDecode(t *testing.T) {
-	var typ PrometheusSamplePair
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 PrometheusSamplePair
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
 func TestPush_EncodeDecode(t *testing.T) {
 	var typ Push
 	typ.SetFake()
@@ -157,6 +157,18 @@ func TestQueryResponseData_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 QueryResponseData
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestSample_EncodeDecode(t *testing.T) {
+	var typ Sample
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Sample
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestScalarResult_EncodeDecode(t *testing.T) {

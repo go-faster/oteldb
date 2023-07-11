@@ -54,6 +54,74 @@ func (s *Error) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *FPoint) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *FPoint) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		e.Float64(elem)
+	}
+	{
+		elem := s.V
+		e.Str(elem)
+	}
+}
+
+// Decode decodes FPoint from json.
+func (s *FPoint) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode FPoint to nil")
+	}
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Float64()
+			s.T = float64(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			v, err := d.Str()
+			s.V = string(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
+		}
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *FPoint) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *FPoint) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s LabelSet) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -683,74 +751,6 @@ func (s *OptLabelSet) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s *PrometheusSamplePair) Encode(e *jx.Encoder) {
-	e.ArrStart()
-	s.encodeTuple(e)
-	e.ArrEnd()
-}
-
-// encodeTuple encodes fields.
-func (s *PrometheusSamplePair) encodeTuple(e *jx.Encoder) {
-	{
-		elem := s.T
-		e.Float64(elem)
-	}
-	{
-		elem := s.V
-		e.Str(elem)
-	}
-}
-
-// Decode decodes PrometheusSamplePair from json.
-func (s *PrometheusSamplePair) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode PrometheusSamplePair to nil")
-	}
-	n := 0
-	if err := d.Arr(func(d *jx.Decoder) error {
-		switch n {
-		case 0:
-			n++
-			v, err := d.Float64()
-			s.T = float64(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		case 1:
-			n++
-			v, err := d.Str()
-			s.V = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		default:
-			return errors.Errorf("expected 2 elements, got %d", n)
-		}
-	}); err != nil {
-		return err
-	}
-	if n == 0 {
-		return errors.Errorf("expected 2 elements, got %d", n)
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *PrometheusSamplePair) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *PrometheusSamplePair) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
 func (s *Push) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -1051,6 +1051,117 @@ func (s *QueryResponseData) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *Sample) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *Sample) encodeFields(e *jx.Encoder) {
+	{
+		if s.Metric.Set {
+			e.FieldStart("metric")
+			s.Metric.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("value")
+		s.Value.Encode(e)
+	}
+}
+
+var jsonFieldsNameOfSample = [2]string{
+	0: "metric",
+	1: "value",
+}
+
+// Decode decodes Sample from json.
+func (s *Sample) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Sample to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "metric":
+			if err := func() error {
+				s.Metric.Reset()
+				if err := s.Metric.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"metric\"")
+			}
+		case "value":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Value.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"value\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode Sample")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000010,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfSample) {
+					name = jsonFieldsNameOfSample[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Sample) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Sample) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *ScalarResult) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -1217,9 +1328,9 @@ func (s *Series) Decode(d *jx.Decoder) error {
 			}
 		case "values":
 			if err := func() error {
-				s.Values = make([]PrometheusSamplePair, 0)
+				s.Values = make([]FPoint, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem PrometheusSamplePair
+					var elem FPoint
 					if err := elem.Decode(d); err != nil {
 						return err
 					}
@@ -1715,30 +1826,15 @@ func (s *Values) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode implements json.Marshaler.
-func (s *Vector) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
+// Encode encodes Vector as json.
+func (s Vector) Encode(e *jx.Encoder) {
+	unwrapped := []Sample(s)
 
-// encodeFields encodes fields.
-func (s *Vector) encodeFields(e *jx.Encoder) {
-	{
-		if s.Metric.Set {
-			e.FieldStart("metric")
-			s.Metric.Encode(e)
-		}
+	e.ArrStart()
+	for _, elem := range unwrapped {
+		elem.Encode(e)
 	}
-	{
-		e.FieldStart("value")
-		s.Value.Encode(e)
-	}
-}
-
-var jsonFieldsNameOfVector = [2]string{
-	0: "metric",
-	1: "value",
+	e.ArrEnd()
 }
 
 // Decode decodes Vector from json.
@@ -1746,75 +1842,29 @@ func (s *Vector) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Vector to nil")
 	}
-	var requiredBitSet [1]uint8
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "metric":
-			if err := func() error {
-				s.Metric.Reset()
-				if err := s.Metric.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"metric\"")
+	var unwrapped []Sample
+	if err := func() error {
+		unwrapped = make([]Sample, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem Sample
+			if err := elem.Decode(d); err != nil {
+				return err
 			}
-		case "value":
-			requiredBitSet[0] |= 1 << 1
-			if err := func() error {
-				if err := s.Value.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"value\"")
-			}
-		default:
-			return d.Skip()
+			unwrapped = append(unwrapped, elem)
+			return nil
+		}); err != nil {
+			return err
 		}
 		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode Vector")
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
 	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00000010,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfVector) {
-					name = jsonFieldsNameOfVector[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-
+	*s = Vector(unwrapped)
 	return nil
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s *Vector) MarshalJSON() ([]byte, error) {
+func (s Vector) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
@@ -1837,11 +1887,7 @@ func (s *VectorResult) Encode(e *jx.Encoder) {
 func (s *VectorResult) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("result")
-		e.ArrStart()
-		for _, elem := range s.Result {
-			elem.Encode(e)
-		}
-		e.ArrEnd()
+		s.Result.Encode(e)
 	}
 	{
 		if s.Stats != nil {
@@ -1868,15 +1914,7 @@ func (s *VectorResult) Decode(d *jx.Decoder) error {
 		case "result":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				s.Result = make([]Vector, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem Vector
-					if err := elem.Decode(d); err != nil {
-						return err
-					}
-					s.Result = append(s.Result, elem)
-					return nil
-				}); err != nil {
+				if err := s.Result.Decode(d); err != nil {
 					return err
 				}
 				return nil

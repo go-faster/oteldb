@@ -20,6 +20,24 @@ func (s Direction) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+func (s *FPoint) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
 func (s *Labels) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -114,24 +132,6 @@ func (s PrometheusDuration) Validate() error {
 	}
 	return nil
 }
-func (s *PrometheusSamplePair) Validate() error {
-	var failures []validate.FieldError
-	if err := func() error {
-		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
-			return errors.Wrap(err, "float")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "T",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
 func (s *Push) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -209,6 +209,24 @@ func (s QueryResponseData) Validate() error {
 	}
 }
 
+func (s *Sample) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Value.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "value",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
 func (s *ScalarResult) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -337,18 +355,24 @@ func (s *Values) Validate() error {
 	}
 	return nil
 }
-func (s *Vector) Validate() error {
+func (s Vector) Validate() error {
+	alias := ([]Sample)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
 	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Value.Validate(); err != nil {
-			return err
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
 		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "value",
-			Error: err,
-		})
 	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
@@ -358,25 +382,8 @@ func (s *Vector) Validate() error {
 func (s *VectorResult) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Result == nil {
-			return errors.New("nil is invalid value")
-		}
-		var failures []validate.FieldError
-		for i, elem := range s.Result {
-			if err := func() error {
-				if err := elem.Validate(); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				failures = append(failures, validate.FieldError{
-					Name:  fmt.Sprintf("[%d]", i),
-					Error: err,
-				})
-			}
-		}
-		if len(failures) > 0 {
-			return &validate.Error{Fields: failures}
+		if err := s.Result.Validate(); err != nil {
+			return err
 		}
 		return nil
 	}(); err != nil {

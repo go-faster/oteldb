@@ -75,6 +75,32 @@ func (s *ErrorStatusCode) SetResponse(val Error) {
 	s.Response = val
 }
 
+// Ref: #/components/schemas/FPoint
+type FPoint struct {
+	T float64
+	V string
+}
+
+// GetT returns the value of T.
+func (s *FPoint) GetT() float64 {
+	return s.T
+}
+
+// GetV returns the value of V.
+func (s *FPoint) GetV() string {
+	return s.V
+}
+
+// SetT sets the value of T.
+func (s *FPoint) SetT(val float64) {
+	s.T = val
+}
+
+// SetV sets the value of V.
+func (s *FPoint) SetV(val string) {
+	s.V = val
+}
+
 // Ref: #/components/schemas/LabelSet
 type LabelSet map[string]string
 
@@ -486,32 +512,6 @@ func (o OptString) Or(d string) string {
 
 type PrometheusDuration string
 
-// Ref: #/components/schemas/PrometheusSamplePair
-type PrometheusSamplePair struct {
-	T float64
-	V string
-}
-
-// GetT returns the value of T.
-func (s *PrometheusSamplePair) GetT() float64 {
-	return s.T
-}
-
-// GetV returns the value of V.
-func (s *PrometheusSamplePair) GetV() string {
-	return s.V
-}
-
-// SetT sets the value of T.
-func (s *PrometheusSamplePair) SetT(val float64) {
-	s.T = val
-}
-
-// SetV sets the value of V.
-func (s *PrometheusSamplePair) SetV(val string) {
-	s.V = val
-}
-
 // Ref: #/components/schemas/Push
 type Push struct {
 	Streams []Stream `json:"streams"`
@@ -691,14 +691,40 @@ func NewMatrixResultQueryResponseData(v MatrixResult) QueryResponseData {
 	return s
 }
 
+// Ref: #/components/schemas/Sample
+type Sample struct {
+	Metric OptLabelSet `json:"metric"`
+	Value  FPoint      `json:"value"`
+}
+
+// GetMetric returns the value of Metric.
+func (s *Sample) GetMetric() OptLabelSet {
+	return s.Metric
+}
+
+// GetValue returns the value of Value.
+func (s *Sample) GetValue() FPoint {
+	return s.Value
+}
+
+// SetMetric sets the value of Metric.
+func (s *Sample) SetMetric(val OptLabelSet) {
+	s.Metric = val
+}
+
+// SetValue sets the value of Value.
+func (s *Sample) SetValue(val FPoint) {
+	s.Value = val
+}
+
 // Ref: #/components/schemas/ScalarResult
 type ScalarResult struct {
-	Result PrometheusSamplePair `json:"result"`
-	Stats  *Stats               `json:"stats"`
+	Result FPoint `json:"result"`
+	Stats  *Stats `json:"stats"`
 }
 
 // GetResult returns the value of Result.
-func (s *ScalarResult) GetResult() PrometheusSamplePair {
+func (s *ScalarResult) GetResult() FPoint {
 	return s.Result
 }
 
@@ -708,7 +734,7 @@ func (s *ScalarResult) GetStats() *Stats {
 }
 
 // SetResult sets the value of Result.
-func (s *ScalarResult) SetResult(val PrometheusSamplePair) {
+func (s *ScalarResult) SetResult(val FPoint) {
 	s.Result = val
 }
 
@@ -719,8 +745,8 @@ func (s *ScalarResult) SetStats(val *Stats) {
 
 // Ref: #/components/schemas/Series
 type Series struct {
-	Metric OptLabelSet            `json:"metric"`
-	Values []PrometheusSamplePair `json:"values"`
+	Metric OptLabelSet `json:"metric"`
+	Values []FPoint    `json:"values"`
 }
 
 // GetMetric returns the value of Metric.
@@ -729,7 +755,7 @@ func (s *Series) GetMetric() OptLabelSet {
 }
 
 // GetValues returns the value of Values.
-func (s *Series) GetValues() []PrometheusSamplePair {
+func (s *Series) GetValues() []FPoint {
 	return s.Values
 }
 
@@ -739,7 +765,7 @@ func (s *Series) SetMetric(val OptLabelSet) {
 }
 
 // SetValues sets the value of Values.
-func (s *Series) SetValues(val []PrometheusSamplePair) {
+func (s *Series) SetValues(val []FPoint) {
 	s.Values = val
 }
 
@@ -827,40 +853,16 @@ func (s *Values) SetStatus(val string) {
 	s.Status = val
 }
 
-// Ref: #/components/schemas/Vector
-type Vector struct {
-	Metric OptLabelSet          `json:"metric"`
-	Value  PrometheusSamplePair `json:"value"`
-}
-
-// GetMetric returns the value of Metric.
-func (s *Vector) GetMetric() OptLabelSet {
-	return s.Metric
-}
-
-// GetValue returns the value of Value.
-func (s *Vector) GetValue() PrometheusSamplePair {
-	return s.Value
-}
-
-// SetMetric sets the value of Metric.
-func (s *Vector) SetMetric(val OptLabelSet) {
-	s.Metric = val
-}
-
-// SetValue sets the value of Value.
-func (s *Vector) SetValue(val PrometheusSamplePair) {
-	s.Value = val
-}
+type Vector []Sample
 
 // Ref: #/components/schemas/VectorResult
 type VectorResult struct {
-	Result []Vector `json:"result"`
-	Stats  *Stats   `json:"stats"`
+	Result Vector `json:"result"`
+	Stats  *Stats `json:"stats"`
 }
 
 // GetResult returns the value of Result.
-func (s *VectorResult) GetResult() []Vector {
+func (s *VectorResult) GetResult() Vector {
 	return s.Result
 }
 
@@ -870,7 +872,7 @@ func (s *VectorResult) GetStats() *Stats {
 }
 
 // SetResult sets the value of Result.
-func (s *VectorResult) SetResult(val []Vector) {
+func (s *VectorResult) SetResult(val Vector) {
 	s.Result = val
 }
 
