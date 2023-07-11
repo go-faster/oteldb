@@ -373,7 +373,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 			lokiapi.QueryResponseData{
 				Type: lokiapi.ScalarResultQueryResponseData,
 				ScalarResult: lokiapi.ScalarResult{
-					Result: lokiapi.PrometheusSamplePair{
+					Result: lokiapi.FPoint{
 						T: 1700000001,
 						V: "3.14",
 					},
@@ -393,7 +393,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 				MatrixResult: lokiapi.MatrixResult{
 					Result: lokiapi.Matrix{
 						{
-							Values: []lokiapi.PrometheusSamplePair{
+							Values: []lokiapi.FPoint{
 								{T: 1700000001, V: "3.14"},
 								{T: 1700000002, V: "3.14"},
 								{T: 1700000003, V: "3.14"},
@@ -415,9 +415,9 @@ func TestEngineEvalLiteral(t *testing.T) {
 			lokiapi.QueryResponseData{
 				Type: lokiapi.VectorResultQueryResponseData,
 				VectorResult: lokiapi.VectorResult{
-					Result: []lokiapi.Vector{
+					Result: lokiapi.Vector{
 						{
-							Value: lokiapi.PrometheusSamplePair{
+							Value: lokiapi.FPoint{
 								T: 1700000001,
 								V: "3.14",
 							},
@@ -439,7 +439,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 				MatrixResult: lokiapi.MatrixResult{
 					Result: lokiapi.Matrix{
 						{
-							Values: []lokiapi.PrometheusSamplePair{
+							Values: []lokiapi.FPoint{
 								{T: 1700000001, V: "3.14"},
 								{T: 1700000002, V: "3.14"},
 								{T: 1700000003, V: "3.14"},
@@ -461,7 +461,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 			lokiapi.QueryResponseData{
 				Type: lokiapi.ScalarResultQueryResponseData,
 				ScalarResult: lokiapi.ScalarResult{
-					Result: lokiapi.PrometheusSamplePair{
+					Result: lokiapi.FPoint{
 						T: 1700000001,
 						V: "4",
 					},

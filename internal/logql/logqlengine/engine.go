@@ -220,7 +220,7 @@ func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params Ev
 func (e *Engine) evalLiteral(expr *logql.LiteralExpr, params EvalParams) (data lokiapi.QueryResponseData) {
 	if params.IsInstant() {
 		data.SetScalarResult(lokiapi.ScalarResult{
-			Result: lokiapi.PrometheusSamplePair{
+			Result: lokiapi.FPoint{
 				T: getPrometheusTimestamp(params.Start.AsTime()),
 				V: strconv.FormatFloat(expr.Value, 'f', -1, 64),
 			},
@@ -235,12 +235,12 @@ func (e *Engine) evalLiteral(expr *logql.LiteralExpr, params EvalParams) (data l
 
 func (e *Engine) evalVector(expr *logql.VectorExpr, params EvalParams) (data lokiapi.QueryResponseData) {
 	if params.IsInstant() {
-		pair := lokiapi.PrometheusSamplePair{
+		pair := lokiapi.FPoint{
 			T: getPrometheusTimestamp(params.Start.AsTime()),
 			V: strconv.FormatFloat(expr.Value, 'f', -1, 64),
 		}
 		data.SetVectorResult(lokiapi.VectorResult{
-			Result: []lokiapi.Vector{
+			Result: lokiapi.Vector{
 				{Value: pair},
 			},
 		})
@@ -262,7 +262,7 @@ func generateLiteralMatrix(value float64, params EvalParams) lokiapi.Matrix {
 
 	strValue := strconv.FormatFloat(value, 'f', -1, 64)
 	for ts := start; ts.Equal(end) || ts.Before(end); ts = ts.Add(params.Step) {
-		series.Values = append(series.Values, lokiapi.PrometheusSamplePair{
+		series.Values = append(series.Values, lokiapi.FPoint{
 			T: getPrometheusTimestamp(ts),
 			V: strValue,
 		})
