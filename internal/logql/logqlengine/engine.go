@@ -91,7 +91,7 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 			attribute.Int64("logql.start", int64(params.Start)),
 			attribute.Int64("logql.end", int64(params.End)),
 			attribute.Int64("logql.step", int64(params.Step)),
-			attribute.String("logql.direction", query),
+			attribute.String("logql.direction", params.Direction),
 			attribute.Int("logql.limit", params.Limit),
 		),
 	)
