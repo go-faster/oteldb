@@ -67,24 +67,23 @@ func (m *mockQuerier) SelectLogs(_ context.Context, start, _ otelstorage.Timesta
 	return iterators.Slice(records), nil
 }
 
-func TestEngineEvalStream(t *testing.T) {
-	justLines := func(lines ...string) []inputLine {
-		r := make([]inputLine, len(lines))
-		for i, line := range lines {
-			r[i] = inputLine{
-				line: line,
-			}
+func justLines(lines ...string) []inputLine {
+	r := make([]inputLine, len(lines))
+	for i, line := range lines {
+		r[i] = inputLine{
+			line: line,
 		}
-		return r
 	}
+	return r
+}
 
-	startTime := otelstorage.Timestamp(1688833731000000000)
-	inputLines := justLines(
+var (
+	inputLines = justLines(
 		`{"id": 1, "foo": "4m", "bar": "1s", "baz": "1kb"}`,
 		`{"id": 2, "foo": "5m", "bar": "2s", "baz": "1mb"}`,
 		`{"id": 3, "foo": "6m", "bar": "3s", "baz": "1gb"}`,
 	)
-	resultLines := []resultLine{
+	resultLines = []resultLine{
 		{
 			`{"id": 1, "foo": "4m", "bar": "1s", "baz": "1kb"}`,
 			map[string]string{
@@ -113,6 +112,10 @@ func TestEngineEvalStream(t *testing.T) {
 			},
 		},
 	}
+)
+
+func TestEngineEvalStream(t *testing.T) {
+	startTime := otelstorage.Timestamp(1688833731000000000)
 
 	tests := []struct {
 		query    string
@@ -350,12 +353,13 @@ func TestEngineEvalStream(t *testing.T) {
 	}
 }
 
+type timeRange struct {
+	start uint64
+	end   uint64
+	step  time.Duration
+}
+
 func TestEngineEvalLiteral(t *testing.T) {
-	type timeRange struct {
-		start uint64
-		end   uint64
-		step  time.Duration
-	}
 	tests := []struct {
 		query   string
 		tsRange timeRange
