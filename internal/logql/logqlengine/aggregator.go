@@ -20,10 +20,10 @@ func buildAggregator(expr *logql.RangeAggregationExpr) (aggregator, error) {
 	case logql.RangeOpCount:
 		return &countOverTime{}, nil
 	case logql.RangeOpRate:
-		if qrange.Unwrap != nil {
-			return &rate[sumOverTime]{selRange: qrange.Range.Seconds()}, nil
+		if qrange.Unwrap == nil {
+			return &rate[countOverTime]{selRange: qrange.Range.Seconds()}, nil
 		}
-		return &rate[countOverTime]{selRange: qrange.Range.Seconds()}, nil
+		return &rate[sumOverTime]{selRange: qrange.Range.Seconds()}, nil
 	case logql.RangeOpRateCounter:
 		return &rateCounter{selRange: qrange.Range}, nil
 	case logql.RangeOpBytes:
@@ -129,7 +129,7 @@ func (minOverTime) Aggregate(points []fpoint) (min float64) {
 	}
 	for _, p := range points {
 		v := p.Value
-		if v < min || math.IsNaN(v) {
+		if v < min || math.IsNaN(min) {
 			min = v
 		}
 	}
@@ -145,7 +145,7 @@ func (maxOverTime) Aggregate(points []fpoint) (max float64) {
 	}
 	for _, p := range points {
 		v := p.Value
-		if v > max || math.IsNaN(v) {
+		if v > max || math.IsNaN(max) {
 			max = v
 		}
 	}
@@ -189,7 +189,7 @@ type firstOverTime struct{}
 
 func (firstOverTime) Aggregate(points []fpoint) float64 {
 	if len(points) == 0 {
-		return math.NaN()
+		return 0
 	}
 	return points[0].Value
 }
@@ -198,7 +198,7 @@ type lastOverTime struct{}
 
 func (lastOverTime) Aggregate(points []fpoint) (last float64) {
 	if len(points) == 0 {
-		return math.NaN()
+		return 0
 	}
 	return points[len(points)-1].Value
 }
