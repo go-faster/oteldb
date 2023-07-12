@@ -157,8 +157,8 @@ func (i *rangeAggIterator) Close() error {
 func (e *Engine) rangeAggIterator(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (*rangeAggIterator, error) {
 	qrange := expr.Range
 	if o := qrange.Offset; o != nil {
-		params.Start = addDuration(params.Start, o.Duration)
-		params.End = addDuration(params.End, o.Duration)
+		params.Start = addDuration(params.Start, -o.Duration)
+		params.End = addDuration(params.End, -o.Duration)
 	}
 
 	sampler, err := buildSampleExtractor(expr)
