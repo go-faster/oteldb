@@ -113,10 +113,7 @@ func buildLabelMatcher(pred logql.LabelMatcher) (Processor, error) {
 
 // Process implements Processor.
 func (lf *LabelMatcher) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
-	labelValue, ok := set.GetString(lf.name)
-	if !ok {
-		return "", false
-	}
+	labelValue, _ := set.GetString(lf.name)
 	keep = lf.matcher.Match(labelValue)
 	return line, keep
 }
