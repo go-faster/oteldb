@@ -19,8 +19,6 @@ type entry struct {
 	ts   otelstorage.Timestamp
 	line string
 	set  LabelSet
-	// key is a stringified sorted set of labels.
-	key string
 }
 
 type entryIterator struct {
@@ -62,7 +60,6 @@ func (i *entryIterator) Next(e *entry) bool {
 
 		e.ts = ts
 		e.line = line
-		e.key = e.set.String()
 
 		i.entries++
 		return true

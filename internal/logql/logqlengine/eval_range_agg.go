@@ -42,6 +42,7 @@ type rangeAggIterator struct {
 	step    time.Duration
 
 	sampler sampleExtractor
+	grouper grouper
 	// window state
 	window   map[string]series
 	interval time.Duration
@@ -130,17 +131,18 @@ func (i *rangeAggIterator) fillWindow(windowStart, windowEnd time.Time) {
 		if !ok {
 			continue
 		}
+		groupKey, metric := i.grouper.Group(e)
 
-		ser, ok := i.window[e.key]
+		ser, ok := i.window[groupKey]
 		if !ok {
-			ser.set = e.set.AsLokiAPI()
-			ser.key = e.key
+			ser.set = metric
+			ser.key = groupKey
 		}
 		ser.data = append(ser.data, fpoint{
 			Timestamp: e.ts,
 			Value:     val,
 		})
-		i.window[e.key] = ser
+		i.window[groupKey] = ser
 	}
 }
 
@@ -187,6 +189,7 @@ func (e *Engine) rangeAggIterator(ctx context.Context, expr *logql.RangeAggregat
 		step:    step,
 
 		sampler:  sampler,
+		grouper:  buildGrouper(expr.Grouping),
 		window:   map[string]series{},
 		interval: qrange.Range,
 	}, nil

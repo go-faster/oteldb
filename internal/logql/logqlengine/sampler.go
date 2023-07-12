@@ -17,9 +17,6 @@ type sampleExtractor interface {
 
 func buildSampleExtractor(expr *logql.RangeAggregationExpr) (sampleExtractor, error) {
 	qrange := expr.Range
-	if expr.Grouping != nil {
-		return nil, &UnsupportedError{Msg: "grouping is not supported yet"}
-	}
 	switch expr.Op {
 	case logql.RangeOpCount, logql.RangeOpRate, logql.RangeOpAbsent:
 		return &lineCounterExtractor{}, nil
