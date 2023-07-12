@@ -589,10 +589,10 @@ type QueryResponseDataType string
 
 // Possible values for QueryResponseDataType.
 const (
-	StreamsResultQueryResponseData QueryResponseDataType = "StreamsResult"
-	ScalarResultQueryResponseData  QueryResponseDataType = "ScalarResult"
-	VectorResultQueryResponseData  QueryResponseDataType = "VectorResult"
-	MatrixResultQueryResponseData  QueryResponseDataType = "MatrixResult"
+	StreamsResultQueryResponseData QueryResponseDataType = "streams"
+	ScalarResultQueryResponseData  QueryResponseDataType = "scalar"
+	VectorResultQueryResponseData  QueryResponseDataType = "vector"
+	MatrixResultQueryResponseData  QueryResponseDataType = "matrix"
 )
 
 // IsStreamsResult reports whether QueryResponseData is StreamsResult.

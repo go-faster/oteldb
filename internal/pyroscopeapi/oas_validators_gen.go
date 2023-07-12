@@ -35,6 +35,7 @@ func (s *ApplicationMetadata) Validate() error {
 	}
 	return nil
 }
+
 func (s ApplicationMetadataUnits) Validate() error {
 	switch s {
 	case "samples":
@@ -53,6 +54,7 @@ func (s ApplicationMetadataUnits) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s *FlamebearerMetadataV1) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -78,6 +80,7 @@ func (s *FlamebearerMetadataV1) Validate() error {
 	}
 	return nil
 }
+
 func (s FlamebearerMetadataV1Units) Validate() error {
 	switch s {
 	case "samples":
@@ -96,6 +99,7 @@ func (s FlamebearerMetadataV1Units) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s *FlamebearerProfileV1) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -179,6 +183,7 @@ func (s *FlamebearerProfileV1) Validate() error {
 	}
 	return nil
 }
+
 func (s FlamebearerProfileV1Groups) Validate() error {
 	var failures []validate.FieldError
 	for key, elem := range s {
@@ -200,6 +205,7 @@ func (s FlamebearerProfileV1Groups) Validate() error {
 	}
 	return nil
 }
+
 func (s *FlamebearerTimelineV1) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -218,6 +224,7 @@ func (s *FlamebearerTimelineV1) Validate() error {
 	}
 	return nil
 }
+
 func (s *FlamebearerV1) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -264,6 +271,7 @@ func (s *FlamebearerV1) Validate() error {
 	}
 	return nil
 }
+
 func (s *Heatmap) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -296,6 +304,7 @@ func (s *Heatmap) Validate() error {
 	}
 	return nil
 }
+
 func (s LabelValues) Validate() error {
 	alias := ([]string)(s)
 	if alias == nil {
@@ -303,6 +312,7 @@ func (s LabelValues) Validate() error {
 	}
 	return nil
 }
+
 func (s Labels) Validate() error {
 	alias := ([]string)(s)
 	if alias == nil {

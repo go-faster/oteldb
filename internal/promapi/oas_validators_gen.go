@@ -68,6 +68,7 @@ func (s *AlertingRule) Validate() error {
 	}
 	return nil
 }
+
 func (s AlertingRuleState) Validate() error {
 	switch s {
 	case "pending":
@@ -80,6 +81,7 @@ func (s AlertingRuleState) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s Data) Validate() error {
 	switch s.Type {
 	case MatrixData:
@@ -129,6 +131,7 @@ func (s *Exemplar) Validate() error {
 	}
 	return nil
 }
+
 func (s Exemplars) Validate() error {
 	alias := ([]ExemplarsSet)(s)
 	if alias == nil {
@@ -153,6 +156,7 @@ func (s Exemplars) Validate() error {
 	}
 	return nil
 }
+
 func (s *ExemplarsSet) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -185,6 +189,7 @@ func (s *ExemplarsSet) Validate() error {
 	}
 	return nil
 }
+
 func (s *Fail) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -221,6 +226,7 @@ func (s *Fail) Validate() error {
 	}
 	return nil
 }
+
 func (s FailErrorType) Validate() error {
 	switch s {
 	case "timeout":
@@ -241,6 +247,7 @@ func (s FailErrorType) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s *FailStatusCode) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -259,6 +266,7 @@ func (s *FailStatusCode) Validate() error {
 	}
 	return nil
 }
+
 func (s GetRulesType) Validate() error {
 	switch s {
 	case "alert":
@@ -269,6 +277,7 @@ func (s GetRulesType) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s LabelValues) Validate() error {
 	alias := ([]string)(s)
 	if alias == nil {
@@ -276,6 +285,7 @@ func (s LabelValues) Validate() error {
 	}
 	return nil
 }
+
 func (s *LabelValuesResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -294,6 +304,7 @@ func (s *LabelValuesResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s Labels) Validate() error {
 	alias := ([]string)(s)
 	if alias == nil {
@@ -301,6 +312,7 @@ func (s Labels) Validate() error {
 	}
 	return nil
 }
+
 func (s *LabelsResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -319,6 +331,7 @@ func (s *LabelsResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s *Matrix) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -354,6 +367,7 @@ func (s *Matrix) Validate() error {
 	}
 	return nil
 }
+
 func (s *MatrixResultItem) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -389,6 +403,7 @@ func (s *MatrixResultItem) Validate() error {
 	}
 	return nil
 }
+
 func (s Metadata) Validate() error {
 	var failures []validate.FieldError
 	for key, elem := range s {
@@ -427,6 +442,7 @@ func (s Metadata) Validate() error {
 	}
 	return nil
 }
+
 func (s *MetadataResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -445,6 +461,7 @@ func (s *MetadataResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s *MetricMetadata) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -470,6 +487,7 @@ func (s *MetricMetadata) Validate() error {
 	}
 	return nil
 }
+
 func (s MetricMetadataType) Validate() error {
 	switch s {
 	case "counter":
@@ -511,6 +529,7 @@ func (s *QueryExemplarsResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s *QueryResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -529,6 +548,7 @@ func (s *QueryResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s *RecordingRule) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -558,6 +578,7 @@ func (s *RecordingRule) Validate() error {
 	}
 	return nil
 }
+
 func (s Rule) Validate() error {
 	switch s.Type {
 	case AlertingRuleRule:
@@ -643,6 +664,7 @@ func (s *RuleGroup) Validate() error {
 	}
 	return nil
 }
+
 func (s RuleHealth) Validate() error {
 	switch s {
 	case "unknown":
@@ -655,6 +677,7 @@ func (s RuleHealth) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s *Rules) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -690,6 +713,7 @@ func (s *Rules) Validate() error {
 	}
 	return nil
 }
+
 func (s *RulesResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -708,6 +732,7 @@ func (s *RulesResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s *Scalar) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -726,6 +751,7 @@ func (s *Scalar) Validate() error {
 	}
 	return nil
 }
+
 func (s Series) Validate() error {
 	alias := ([]LabelSet)(s)
 	if alias == nil {
@@ -733,6 +759,7 @@ func (s Series) Validate() error {
 	}
 	return nil
 }
+
 func (s *SeriesResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -751,6 +778,7 @@ func (s *SeriesResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s *Value) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -780,6 +808,7 @@ func (s *Value) Validate() error {
 	}
 	return nil
 }
+
 func (s *Vector) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -815,6 +844,7 @@ func (s *Vector) Validate() error {
 	}
 	return nil
 }
+
 func (s *VectorResultItem) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {

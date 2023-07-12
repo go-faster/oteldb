@@ -53,6 +53,7 @@ func (s *Event) Validate() error {
 	}
 	return nil
 }
+
 func (s EventID) Validate() error {
 	alias := (string)(s)
 	if err := (validate.String{
@@ -116,6 +117,7 @@ func (s *Span) Validate() error {
 	}
 	return nil
 }
+
 func (s SpanID) Validate() error {
 	alias := (string)(s)
 	if err := (validate.String{
@@ -131,6 +133,7 @@ func (s SpanID) Validate() error {
 	}
 	return nil
 }
+
 func (s TraceID) Validate() error {
 	alias := (string)(s)
 	if err := (validate.String{

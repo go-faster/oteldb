@@ -20,6 +20,7 @@ func (s Direction) Validate() error {
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
+
 func (s *FPoint) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -38,6 +39,7 @@ func (s *FPoint) Validate() error {
 	}
 	return nil
 }
+
 func (s *Labels) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -56,6 +58,7 @@ func (s *Labels) Validate() error {
 	}
 	return nil
 }
+
 func (s *Maps) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -74,6 +77,7 @@ func (s *Maps) Validate() error {
 	}
 	return nil
 }
+
 func (s Matrix) Validate() error {
 	alias := ([]Series)(s)
 	if alias == nil {
@@ -98,6 +102,7 @@ func (s Matrix) Validate() error {
 	}
 	return nil
 }
+
 func (s *MatrixResult) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -132,6 +137,7 @@ func (s PrometheusDuration) Validate() error {
 	}
 	return nil
 }
+
 func (s *Push) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -164,6 +170,7 @@ func (s *Push) Validate() error {
 	}
 	return nil
 }
+
 func (s *QueryResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -182,6 +189,7 @@ func (s *QueryResponse) Validate() error {
 	}
 	return nil
 }
+
 func (s QueryResponseData) Validate() error {
 	switch s.Type {
 	case StreamsResultQueryResponseData:
@@ -227,6 +235,7 @@ func (s *Sample) Validate() error {
 	}
 	return nil
 }
+
 func (s *ScalarResult) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -245,6 +254,7 @@ func (s *ScalarResult) Validate() error {
 	}
 	return nil
 }
+
 func (s *Series) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -277,6 +287,7 @@ func (s *Series) Validate() error {
 	}
 	return nil
 }
+
 func (s *Stream) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -295,6 +306,7 @@ func (s *Stream) Validate() error {
 	}
 	return nil
 }
+
 func (s Streams) Validate() error {
 	alias := ([]Stream)(s)
 	if alias == nil {
@@ -319,6 +331,7 @@ func (s Streams) Validate() error {
 	}
 	return nil
 }
+
 func (s *StreamsResult) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -337,6 +350,7 @@ func (s *StreamsResult) Validate() error {
 	}
 	return nil
 }
+
 func (s *Values) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -355,6 +369,7 @@ func (s *Values) Validate() error {
 	}
 	return nil
 }
+
 func (s Vector) Validate() error {
 	alias := ([]Sample)(s)
 	if alias == nil {
@@ -379,6 +394,7 @@ func (s Vector) Validate() error {
 	}
 	return nil
 }
+
 func (s *VectorResult) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
