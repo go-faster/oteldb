@@ -251,10 +251,10 @@ type DataType string
 
 // Possible values for DataType.
 const (
-	MatrixData DataType = "Matrix"
-	VectorData DataType = "Vector"
-	ScalarData DataType = "Scalar"
-	StringData DataType = "String"
+	MatrixData DataType = "matrix"
+	VectorData DataType = "vector"
+	ScalarData DataType = "scalar"
+	StringData DataType = "string"
 )
 
 // IsMatrix reports whether Data is Matrix.
@@ -1717,8 +1717,8 @@ type RuleType string
 
 // Possible values for RuleType.
 const (
-	AlertingRuleRule  RuleType = "AlertingRule"
-	RecordingRuleRule RuleType = "RecordingRule"
+	AlertingRuleRule  RuleType = "alerting"
+	RecordingRuleRule RuleType = "recording"
 )
 
 // IsAlertingRule reports whether Rule is AlertingRule.

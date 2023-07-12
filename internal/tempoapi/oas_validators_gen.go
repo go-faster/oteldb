@@ -75,6 +75,7 @@ func (s *ArrayValue) Validate() error {
 	}
 	return nil
 }
+
 func (s Attributes) Validate() error {
 	alias := ([]KeyValue)(s)
 	if alias == nil {
@@ -99,6 +100,7 @@ func (s Attributes) Validate() error {
 	}
 	return nil
 }
+
 func (s *DoubleValue) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -117,6 +119,7 @@ func (s *DoubleValue) Validate() error {
 	}
 	return nil
 }
+
 func (s *KeyValue) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -135,6 +138,7 @@ func (s *KeyValue) Validate() error {
 	}
 	return nil
 }
+
 func (s *KvlistValue) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -197,6 +201,7 @@ func (s *TempoSpan) Validate() error {
 	}
 	return nil
 }
+
 func (s *TempoSpanSet) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -251,6 +256,7 @@ func (s *TempoSpanSet) Validate() error {
 	}
 	return nil
 }
+
 func (s *TraceSearchMetadata) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -276,6 +282,7 @@ func (s *TraceSearchMetadata) Validate() error {
 	}
 	return nil
 }
+
 func (s *Traces) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
