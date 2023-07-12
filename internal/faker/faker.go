@@ -16,20 +16,50 @@ type Config struct {
 	Services Services `json:"services" yaml:"services"`
 }
 
+// Services wraps all services configuration, describing topology of the
+// cluster and load.
 type Services struct {
-	API      ServiceAPI `json:"api" yaml:"api"`
-	Backend  Backend    `json:"backend" yaml:"backend"`
-	Frontend Frontend   `json:"frontend" yaml:"frontend"`
+	API      API      `json:"api" yaml:"api"`
+	Backend  Backend  `json:"backend" yaml:"backend"`
+	Frontend Frontend `json:"frontend" yaml:"frontend"`
+	DB       DB       `json:"db" yaml:"db"`
+	Cache    Cache    `json:"cache" yaml:"cache"`
 }
 
-type ServiceAPI struct {
+// API represents API service configuration.
+//
+// API service acts as an entrypoint and handles requests from clients, proxying
+// them to [Backend].
+type API struct {
 	Replicas int `json:"replicas" yaml:"replicas"`
 }
 
+// Backend handles requests from [API] service.
+//
+// Backend service is used to process user requests from [API].
+// Handles business logic and uses database and cache services.
 type Backend struct {
 	Replicas int `json:"replicas" yaml:"replicas"`
 }
 
+// DB represents database service configuration.
+type DB struct {
+	Replicas int `json:"replicas" yaml:"replicas"`
+}
+
+// Cache represents cache service configuration.
+//
+// Cache service is used by [Backend]for short term data storage with
+// fast access.
+//
+// Example: Redis.
+type Cache struct {
+	Replicas int `json:"replicas" yaml:"replicas"`
+}
+
+// Frontend represents user web client configuration.
+//
+// Frontend service sends requests to [API] on behalf of the user.
 type Frontend struct {
 	Replicas int `json:"replicas" yaml:"replicas"`
 }
