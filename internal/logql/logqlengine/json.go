@@ -38,7 +38,7 @@ func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelS
 		err = e.extractSome(line, set)
 	}
 	if err != nil {
-		set.SetError(err)
+		set.SetError("JSON parsing error", err)
 	}
 	return line, true
 }

@@ -176,7 +176,7 @@ func (lf *DurationLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, 
 	labelValue, err := time.ParseDuration(v)
 	if err != nil {
 		// Keep the line, but set error label.
-		set.SetError(err)
+		set.SetError("duration parsing error", err)
 		return line, true
 	}
 
@@ -239,7 +239,7 @@ func (lf *BytesLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set
 	labelValue, err := humanize.ParseBytes(v)
 	if err != nil {
 		// Keep the line, but set error label.
-		set.SetError(err)
+		set.SetError("bytes parsing error", err)
 		return line, true
 	}
 
@@ -302,7 +302,7 @@ func (lf *NumberLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, se
 	labelValue, err := strconv.ParseFloat(v, 64)
 	if err != nil {
 		// Keep the line, but set error label.
-		set.SetError(err)
+		set.SetError("number parsing error", err)
 		return line, true
 	}
 
@@ -406,7 +406,7 @@ func (lf *IPLabelFilter[M]) Process(_ otelstorage.Timestamp, line string, set La
 	labelValue, err := netip.ParseAddr(v)
 	if err != nil {
 		// Keep the line, but set error label.
-		set.SetError(err)
+		set.SetError("ip parsing error", err)
 		return line, true
 	}
 

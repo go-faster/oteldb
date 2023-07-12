@@ -132,13 +132,14 @@ func (l *LabelSet) GetString(name logql.Label) (string, bool) {
 }
 
 // SetError sets special error label.
-func (l *LabelSet) SetError(err error) {
+func (l *LabelSet) SetError(typ string, err error) {
 	if _, ok := l.labels[logql.ErrorLabel]; ok {
 		// Do not override old error.
 		return
 	}
 	if err != nil {
-		l.labels[logql.ErrorLabel] = pcommon.NewValueStr(err.Error())
+		l.labels[logql.ErrorLabel] = pcommon.NewValueStr(typ)
+		l.labels[logql.ErrorDetailsLabel] = pcommon.NewValueStr(err.Error())
 	}
 }
 

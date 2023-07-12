@@ -39,7 +39,7 @@ func (e *LogfmtExtractor) Process(_ otelstorage.Timestamp, line string, set Labe
 		err = e.extractSome(line, set)
 	}
 	if err != nil {
-		set.SetError(err)
+		set.SetError("logfmt parsing error", err)
 	}
 	return line, true
 }
