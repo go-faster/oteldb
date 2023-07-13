@@ -3,7 +3,6 @@ package logqlengine
 import (
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/go-faster/errors"
 
@@ -25,7 +24,9 @@ func buildAggregator(expr *logql.RangeAggregationExpr) (aggregator, error) {
 		}
 		return &rate[sumOverTime]{selRange: qrange.Range.Seconds()}, nil
 	case logql.RangeOpRateCounter:
-		return &rateCounter{selRange: qrange.Range}, nil
+		// FIXME(tdakkota): implementation of rate_counter in Loki
+		// 	is buggy, so keep it unimplemented.
+		// return &rateCounter{selRange: qrange.Range}, nil
 	case logql.RangeOpBytes:
 		return &sumOverTime{}, nil
 	case logql.RangeOpBytesRate:
@@ -70,14 +71,6 @@ type rate[A aggregator] struct {
 
 func (a rate[A]) Aggregate(points []fpoint) float64 {
 	return a.preAgg.Aggregate(points) / a.selRange
-}
-
-type rateCounter struct {
-	selRange time.Duration
-}
-
-func (a rateCounter) Aggregate(points []fpoint) float64 {
-	return extrapolatedRate(points, a.selRange, true, true)
 }
 
 type bytesRate = rate[sumOverTime]

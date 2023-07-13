@@ -7,8 +7,52 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
 
+	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 )
+
+type sampleIterator struct {
+	iter    iterators.Iterator[entry]
+	sampler sampleExtractor
+}
+
+func newSampleIterator(iter iterators.Iterator[entry], expr *logql.RangeAggregationExpr) (*sampleIterator, error) {
+	sampler, err := buildSampleExtractor(expr)
+	if err != nil {
+		return nil, errors.Wrap(err, "build sample extractor")
+	}
+
+	return &sampleIterator{
+		iter:    iter,
+		sampler: sampler,
+	}, nil
+}
+
+type sampledEntry struct {
+	sample float64
+	entry  entry
+}
+
+func (i *sampleIterator) Next(s *sampledEntry) bool {
+	for {
+		if !i.iter.Next(&s.entry) {
+			return false
+		}
+
+		if v, ok := i.sampler.Extract(s.entry); ok {
+			s.sample = v
+			return true
+		}
+	}
+}
+
+func (i *sampleIterator) Err() error {
+	return i.iter.Err()
+}
+
+func (i *sampleIterator) Close() error {
+	return i.iter.Close()
+}
 
 // sampleExtractor extracts samples from log records.
 type sampleExtractor interface {

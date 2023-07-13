@@ -9,6 +9,7 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
+	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -18,6 +19,11 @@ import (
 type fpoint struct {
 	Timestamp otelstorage.Timestamp
 	Value     float64
+}
+
+// MilliT returns Prometheus millisecond timestamp.
+func (p fpoint) MilliT() int64 {
+	return p.Timestamp.AsTime().UnixMilli()
 }
 
 type sample struct {
@@ -33,7 +39,7 @@ type series struct {
 }
 
 type rangeAggIterator struct {
-	iter *entryIterator
+	iter iterators.Iterator[sampledEntry]
 
 	agg aggregator
 	// step state
@@ -41,14 +47,41 @@ type rangeAggIterator struct {
 	end     time.Time
 	step    time.Duration
 
-	sampler sampleExtractor
 	grouper grouper
 	// window state
 	window   map[string]series
 	interval time.Duration
-	entry    entry
+	sampled  sampledEntry
 	// buffered whether last entry is buffered
 	buffered bool
+}
+
+func newRangeAggIterator(
+	iter iterators.Iterator[sampledEntry],
+	expr *logql.RangeAggregationExpr,
+	start, end time.Time,
+	step time.Duration,
+) (*rangeAggIterator, error) {
+	if step == 0 {
+		step = time.Second
+	}
+	aggtr, err := buildAggregator(expr)
+	if err != nil {
+		return nil, errors.Wrap(err, "build aggregator")
+	}
+
+	return &rangeAggIterator{
+		iter: iter,
+
+		agg:     aggtr,
+		current: start.Add(-step),
+		end:     end,
+		step:    step,
+
+		grouper:  buildGrouper(expr.Grouping),
+		window:   map[string]series{},
+		interval: expr.Range.Range,
+	}, nil
 }
 
 type rangeAgg struct {
@@ -108,7 +141,7 @@ func (i *rangeAggIterator) fillWindow(windowStart, windowEnd time.Time) {
 
 	for {
 		if !i.buffered {
-			if !i.iter.Next(&i.entry) {
+			if !i.iter.Next(&i.sampled) {
 				return
 			}
 		} else {
@@ -116,7 +149,9 @@ func (i *rangeAggIterator) fillWindow(windowStart, windowEnd time.Time) {
 			i.buffered = false
 		}
 
-		e := i.entry
+		s := i.sampled
+		e := s.entry
+
 		switch ts := e.ts.AsTime(); {
 		case ts.After(windowEnd):
 			// Entry is after the end of current window: buffer for the next window.
@@ -127,10 +162,6 @@ func (i *rangeAggIterator) fillWindow(windowStart, windowEnd time.Time) {
 			continue
 		}
 
-		val, ok := i.sampler.Extract(e)
-		if !ok {
-			continue
-		}
 		groupKey, metric := i.grouper.Group(e)
 
 		ser, ok := i.window[groupKey]
@@ -140,7 +171,7 @@ func (i *rangeAggIterator) fillWindow(windowStart, windowEnd time.Time) {
 		}
 		ser.data = append(ser.data, fpoint{
 			Timestamp: e.ts,
-			Value:     val,
+			Value:     s.sample,
 		})
 		i.window[groupKey] = ser
 	}
@@ -154,45 +185,34 @@ func (i *rangeAggIterator) Close() error {
 	return i.iter.Close()
 }
 
-func (e *Engine) rangeAggIterator(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (*rangeAggIterator, error) {
+func (e *Engine) rangeAggIterator(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (_ *rangeAggIterator, rerr error) {
 	qrange := expr.Range
 	if o := qrange.Offset; o != nil {
 		params.Start = addDuration(params.Start, -o.Duration)
 		params.End = addDuration(params.End, -o.Duration)
 	}
 
-	sampler, err := buildSampleExtractor(expr)
-	if err != nil {
-		return nil, errors.Wrap(err, "build sample extractor")
-	}
-
-	aggtr, err := buildAggregator(expr)
-	if err != nil {
-		return nil, errors.Wrap(err, "build aggregator")
-	}
-
-	iter, err := e.selectLogs(ctx, qrange.Sel, qrange.Pipeline, params)
+	entries, err := e.selectLogs(ctx, qrange.Sel, qrange.Pipeline, params)
 	if err != nil {
 		return nil, errors.Wrap(err, "select logs")
+	}
+	defer func() {
+		if rerr != nil {
+			_ = entries.Close()
+		}
+	}()
+
+	samples, err := newSampleIterator(entries, expr)
+	if err != nil {
+		return nil, errors.Wrap(err, "build sample iterator")
 	}
 
 	var (
 		start = params.Start.AsTime()
+		end   = params.End.AsTime()
 		step  = params.Step
 	)
-	return &rangeAggIterator{
-		iter: iter,
-
-		agg:     aggtr,
-		current: start.Add(-step),
-		end:     params.End.AsTime(),
-		step:    step,
-
-		sampler:  sampler,
-		grouper:  buildGrouper(expr.Grouping),
-		window:   map[string]series{},
-		interval: qrange.Range,
-	}, nil
+	return newRangeAggIterator(samples, expr, start, end, step)
 }
 
 func (e *Engine) evalRangeAggregation(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (s lokiapi.QueryResponseData, _ error) {
@@ -204,6 +224,10 @@ func (e *Engine) evalRangeAggregation(ctx context.Context, expr *logql.RangeAggr
 		_ = iter.Close()
 	}()
 
+	return readRangeAggregation(iter, params.IsInstant())
+}
+
+func readRangeAggregation(iter iterators.Iterator[rangeAgg], instant bool) (s lokiapi.QueryResponseData, _ error) {
 	var (
 		agg          rangeAgg
 		matrixSeries map[string]lokiapi.Series
@@ -213,7 +237,7 @@ func (e *Engine) evalRangeAggregation(ctx context.Context, expr *logql.RangeAggr
 			break
 		}
 
-		if params.IsInstant() {
+		if instant {
 			if err := iter.Err(); err != nil {
 				return s, err
 			}
