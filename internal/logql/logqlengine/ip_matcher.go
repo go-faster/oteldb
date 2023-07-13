@@ -2,13 +2,65 @@ package logqlengine
 
 import (
 	"net/netip"
+	"strings"
 
+	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/logql"
 	"go4.org/netipx"
 )
 
 // IPMatcher matches an IP.
 type IPMatcher interface {
 	Matcher[netip.Addr]
+}
+
+func buildIPMatcher(op logql.BinOp, pattern string) (m IPMatcher, _ error) {
+	switch {
+	case strings.Contains(pattern, "-"):
+		ipRange, err := netipx.ParseIPRange(pattern)
+		if err == nil {
+			switch op {
+			case logql.OpEq:
+				return RangeIPMatcher{Range: ipRange}, nil
+			case logql.OpNotEq:
+				return NotMatcher[netip.Addr, RangeIPMatcher]{
+					Next: RangeIPMatcher{Range: ipRange},
+				}, nil
+			default:
+				return nil, errors.Errorf("unknown operation %q", op)
+			}
+		}
+	case strings.Contains(pattern, "/"):
+		prefix, err := netip.ParsePrefix(pattern)
+		if err == nil {
+			switch op {
+			case logql.OpEq:
+				return PrefixIPMatcher{Prefix: prefix}, nil
+			case logql.OpNotEq:
+				return NotMatcher[netip.Addr, PrefixIPMatcher]{
+					Next: PrefixIPMatcher{Prefix: prefix},
+				}, nil
+			default:
+				return nil, errors.Errorf("unknown operation %q", op)
+			}
+		}
+	}
+
+	addr, err := netip.ParseAddr(pattern)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid addr %q", pattern)
+	}
+
+	switch op {
+	case logql.OpEq:
+		return EqualIPMatcher{Value: addr}, nil
+	case logql.OpNotEq:
+		return NotMatcher[netip.Addr, EqualIPMatcher]{
+			Next: EqualIPMatcher{Value: addr},
+		}, nil
+	default:
+		return nil, errors.Errorf("unknown operation %q", op)
+	}
 }
 
 // EqualIPMatcher checks if an IP equal to given value.

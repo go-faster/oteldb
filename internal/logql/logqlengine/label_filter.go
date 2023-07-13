@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"net/netip"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
-	"go4.org/netipx"
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -308,93 +306,21 @@ func (lf *NumberLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, se
 }
 
 // IPLabelFilter is a label filter Processor.
-type IPLabelFilter[M IPMatcher] struct {
+type IPLabelFilter struct {
 	name    logql.Label
-	matcher M
+	matcher IPMatcher
 }
 
 func buildIPLabelFilter(pred *logql.IPFilter) (Processor, error) {
-	pattern := pred.Value
-	switch {
-	case strings.Contains(pattern, "-"):
-		ipRange, err := netipx.ParseIPRange(pattern)
-		if err == nil {
-			switch pred.Op {
-			case logql.OpEq:
-				return &IPLabelFilter[RangeIPMatcher]{
-					name: pred.Label,
-					matcher: RangeIPMatcher{
-						Range: ipRange,
-					},
-				}, nil
-			case logql.OpNotEq:
-				return &IPLabelFilter[NotMatcher[netip.Addr, RangeIPMatcher]]{
-					name: pred.Label,
-					matcher: NotMatcher[netip.Addr, RangeIPMatcher]{
-						Next: RangeIPMatcher{
-							Range: ipRange,
-						},
-					},
-				}, nil
-			default:
-				return nil, errors.Errorf("unknown operation %q", pred.Op)
-			}
-		}
-	case strings.Contains(pattern, "/"):
-		cidr, err := netip.ParsePrefix(pattern)
-		if err == nil {
-			switch pred.Op {
-			case logql.OpEq:
-				return &IPLabelFilter[PrefixIPMatcher]{
-					name: pred.Label,
-					matcher: PrefixIPMatcher{
-						Prefix: cidr,
-					},
-				}, nil
-			case logql.OpNotEq:
-				return &IPLabelFilter[NotMatcher[netip.Addr, PrefixIPMatcher]]{
-					name: pred.Label,
-					matcher: NotMatcher[netip.Addr, PrefixIPMatcher]{
-						Next: PrefixIPMatcher{
-							Prefix: cidr,
-						},
-					},
-				}, nil
-			default:
-				return nil, errors.Errorf("unknown operation %q", pred.Op)
-			}
-		}
-	}
-
-	addr, err := netip.ParseAddr(pattern)
+	matcher, err := buildIPMatcher(pred.Op, pred.Value)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid addr %q", pattern)
+		return nil, err
 	}
-
-	switch pred.Op {
-	case logql.OpEq:
-		return &IPLabelFilter[EqualIPMatcher]{
-			name: pred.Label,
-			matcher: EqualIPMatcher{
-				Value: addr,
-			},
-		}, nil
-	case logql.OpNotEq:
-		return &IPLabelFilter[NotMatcher[netip.Addr, EqualIPMatcher]]{
-			name: pred.Label,
-			matcher: NotMatcher[netip.Addr, EqualIPMatcher]{
-				Next: EqualIPMatcher{
-					Value: addr,
-				},
-			},
-		}, nil
-	default:
-		return nil, errors.Errorf("unknown operation %q", pred.Op)
-	}
+	return &IPLabelFilter{name: pred.Label, matcher: matcher}, nil
 }
 
 // Process implements Processor.
-func (lf *IPLabelFilter[M]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *IPLabelFilter) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
 	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
