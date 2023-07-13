@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/oteldb/internal/logql"
 	"go4.org/netipx"
+
+	"github.com/go-faster/oteldb/internal/logql"
 )
 
 // IPMatcher matches an IP.
