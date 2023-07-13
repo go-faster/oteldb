@@ -33,12 +33,12 @@ func (m RangeIPMatcher) Match(ip netip.Addr) bool {
 	return m.Range.Contains(ip)
 }
 
-// CIDRMatcher checks if an IP is in given range.
-type CIDRMatcher struct {
+// PrefixIPMatcher checks if an IP has given prefix.
+type PrefixIPMatcher struct {
 	Prefix netip.Prefix
 }
 
 // Match implements IPMatcher.
-func (m CIDRMatcher) Match(ip netip.Addr) bool {
+func (m PrefixIPMatcher) Match(ip netip.Addr) bool {
 	return m.Prefix.Contains(ip)
 }

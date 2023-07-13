@@ -345,17 +345,17 @@ func buildIPLabelFilter(pred *logql.IPFilter) (Processor, error) {
 		if err == nil {
 			switch pred.Op {
 			case logql.OpEq:
-				return &IPLabelFilter[CIDRMatcher]{
+				return &IPLabelFilter[PrefixIPMatcher]{
 					name: pred.Label,
-					matcher: CIDRMatcher{
+					matcher: PrefixIPMatcher{
 						Prefix: cidr,
 					},
 				}, nil
 			case logql.OpNotEq:
-				return &IPLabelFilter[NotMatcher[netip.Addr, CIDRMatcher]]{
+				return &IPLabelFilter[NotMatcher[netip.Addr, PrefixIPMatcher]]{
 					name: pred.Label,
-					matcher: NotMatcher[netip.Addr, CIDRMatcher]{
-						Next: CIDRMatcher{
+					matcher: NotMatcher[netip.Addr, PrefixIPMatcher]{
+						Next: PrefixIPMatcher{
 							Prefix: cidr,
 						},
 					},
