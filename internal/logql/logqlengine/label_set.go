@@ -59,7 +59,7 @@ func (l *LabelSet) String() string {
 }
 
 // SetFromRecord sets labels from given log record.
-func (l *LabelSet) SetFromRecord(record logstorage.Record) error {
+func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	if l.labels == nil {
 		l.labels = map[logql.Label]pcommon.Value{}
 	}
@@ -77,11 +77,11 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) error {
 	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
 		l.Add(logql.Label(`severity_number`), pcommon.NewValueInt(int64(severity)))
 	}
-	return l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
+	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
 
 // SetAttrs sets labels from attrs.
-func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
+func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) {
 	for _, attrs := range attrMaps {
 		m := attrs.AsMap()
 		if m == (pcommon.Map{}) {
@@ -89,14 +89,13 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) (rerr error) {
 		}
 		m.Range(func(k string, v pcommon.Value) bool {
 			if err := logql.IsValidLabel(k, true); err != nil {
-				rerr = err
+				l.SetError("record extraction", err)
 				return false
 			}
 			l.Add(logql.Label(k), v)
 			return true
 		})
 	}
-	return rerr
 }
 
 // Add adds new label.

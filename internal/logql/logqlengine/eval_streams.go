@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
-	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
@@ -29,8 +27,6 @@ type entryIterator struct {
 
 	entries int
 	limit   int
-
-	lg *zap.Logger
 }
 
 func (i *entryIterator) Next(e *entry) bool {
@@ -42,11 +38,7 @@ func (i *entryIterator) Next(e *entry) bool {
 		}
 
 		ts := record.Timestamp
-		if err := e.set.SetFromRecord(record); err != nil {
-			i.lg.Warn("Invalid log record", zap.Uint64("ts", uint64(ts)), zap.Error(err))
-			// Just skip the line.
-			continue
-		}
+		e.set.SetFromRecord(record)
 
 		line, keep := i.prefilter.Process(ts, record.Body, e.set)
 		if !keep {
@@ -105,7 +97,6 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 		pipeline:  pipeline,
 		entries:   0,
 		limit:     params.Limit,
-		lg:        zctx.From(ctx),
 	}, nil
 }
 
