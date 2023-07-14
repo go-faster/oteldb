@@ -164,7 +164,7 @@ func buildSampleBinOp(expr *logql.BinOpExpr) (sampleBinOp, error) {
 			return
 		}, nil
 	default:
-		return nil, errors.Errorf("unexpected operation %s", expr.Op)
+		return nil, errors.Errorf("unexpected operation %q", expr.Op)
 	}
 }
 

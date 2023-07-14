@@ -54,8 +54,10 @@ func buildAggregator(expr *logql.RangeAggregationExpr) (aggregator, error) {
 	case logql.RangeOpLast:
 		return &lastOverTime{}, nil
 	case logql.RangeOpAbsent:
+	default:
+		return nil, errors.Errorf("unexpected range operation %q", expr.Op)
 	}
-	return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported range op %s", expr.Op)}
+	return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported range operation %q", expr.Op)}
 }
 
 type countOverTime struct{}

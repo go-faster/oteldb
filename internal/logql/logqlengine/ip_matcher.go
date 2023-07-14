@@ -28,7 +28,7 @@ func buildIPMatcher(op logql.BinOp, pattern string) (m IPMatcher, _ error) {
 					Next: RangeIPMatcher{Range: ipRange},
 				}, nil
 			default:
-				return nil, errors.Errorf("unknown operation %q", op)
+				return nil, errors.Errorf("unexpected operation %q", op)
 			}
 		}
 	case strings.Contains(pattern, "/"):
@@ -42,7 +42,7 @@ func buildIPMatcher(op logql.BinOp, pattern string) (m IPMatcher, _ error) {
 					Next: PrefixIPMatcher{Prefix: prefix},
 				}, nil
 			default:
-				return nil, errors.Errorf("unknown operation %q", op)
+				return nil, errors.Errorf("unexpected operation %q", op)
 			}
 		}
 	}
@@ -60,7 +60,7 @@ func buildIPMatcher(op logql.BinOp, pattern string) (m IPMatcher, _ error) {
 			Next: EqualIPMatcher{Value: addr},
 		}, nil
 	default:
-		return nil, errors.Errorf("unknown operation %q", op)
+		return nil, errors.Errorf("unexpected operation %q", op)
 	}
 }
 

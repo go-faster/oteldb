@@ -42,7 +42,7 @@ func buildLabelPredicate(pred logql.LabelPredicate) (Processor, error) {
 				Right: right,
 			}, nil
 		default:
-			return nil, errors.Errorf("unknown operation %q", pred.Op)
+			return nil, errors.Errorf("unexpected operation %q", pred.Op)
 		}
 	case *logql.LabelPredicateParen:
 		return buildLabelPredicate(pred.X)
@@ -156,7 +156,7 @@ func buildDurationLabelFilter(pred *logql.DurationFilter) (Processor, error) {
 			value: pred.Value,
 		}, nil
 	default:
-		return nil, errors.Errorf("unknown operation %q", pred.Op)
+		return nil, errors.Errorf("unexpected operation %q", pred.Op)
 	}
 }
 
@@ -219,7 +219,7 @@ func buildBytesLabelFilter(pred *logql.BytesFilter) (Processor, error) {
 			value: pred.Value,
 		}, nil
 	default:
-		return nil, errors.Errorf("unknown operation %q", pred.Op)
+		return nil, errors.Errorf("unexpected operation %q", pred.Op)
 	}
 }
 
@@ -282,7 +282,7 @@ func buildNumberLabelFilter(pred *logql.NumberFilter) (Processor, error) {
 			value: pred.Value,
 		}, nil
 	default:
-		return nil, errors.Errorf("unknown operation %q", pred.Op)
+		return nil, errors.Errorf("unexpected operation %q", pred.Op)
 	}
 }
 

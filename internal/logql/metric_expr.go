@@ -229,7 +229,7 @@ func ReduceBinOp(b *BinOpExpr) (_ *LiteralExpr, err error) {
 			r = 1.
 		}
 	default:
-		return nil, errors.Errorf("unexpected operation %s", b.Op)
+		return nil, errors.Errorf("unexpected operation %q", b.Op)
 	}
 
 	return &LiteralExpr{Value: r}, nil

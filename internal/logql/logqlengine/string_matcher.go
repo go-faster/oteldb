@@ -34,7 +34,7 @@ func buildStringMatcher(op logql.BinOp, value string, re *regexp.Regexp, label b
 	case logql.OpNotRe:
 		m = NotMatcher[string, RegexpMatcher]{Next: RegexpMatcher{Re: re}}
 	default:
-		return nil, errors.Errorf("unknown operation %q", op)
+		return nil, errors.Errorf("unexpected operation %q", op)
 	}
 	return m, nil
 }
