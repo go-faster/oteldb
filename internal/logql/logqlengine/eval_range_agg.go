@@ -2,12 +2,9 @@ package logqlengine
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/go-faster/errors"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
@@ -84,12 +81,12 @@ func newRangeAggIterator(
 	}, nil
 }
 
-type rangeAgg struct {
+type aggStep struct {
 	ts      otelstorage.Timestamp
 	samples []sample
 }
 
-func (i *rangeAggIterator) Next(r *rangeAgg) bool {
+func (i *rangeAggIterator) Next(r *aggStep) bool {
 	i.current = i.current.Add(i.step)
 	if i.current.After(i.end) {
 		return false
@@ -213,89 +210,4 @@ func (e *Engine) rangeAggIterator(ctx context.Context, expr *logql.RangeAggregat
 		step  = params.Step
 	)
 	return newRangeAggIterator(samples, expr, start, end, step)
-}
-
-func (e *Engine) evalRangeAggregation(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (s lokiapi.QueryResponseData, _ error) {
-	iter, err := e.rangeAggIterator(ctx, expr, params)
-	if err != nil {
-		return s, err
-	}
-	defer func() {
-		_ = iter.Close()
-	}()
-
-	return readRangeAggregation(iter, params.IsInstant())
-}
-
-func readRangeAggregation(iter iterators.Iterator[rangeAgg], instant bool) (s lokiapi.QueryResponseData, _ error) {
-	var (
-		agg          rangeAgg
-		matrixSeries map[string]lokiapi.Series
-	)
-	for {
-		if !iter.Next(&agg) {
-			break
-		}
-
-		if instant {
-			if err := iter.Err(); err != nil {
-				return s, err
-			}
-
-			var vector lokiapi.Vector
-			for _, s := range agg.samples {
-				vector = append(vector, lokiapi.Sample{
-					Metric: lokiapi.NewOptLabelSet(s.set),
-					Value: lokiapi.FPoint{
-						T: getPrometheusTimestamp(agg.ts.AsTime()),
-						V: strconv.FormatFloat(s.data, 'f', -1, 64),
-					},
-				})
-			}
-
-			s.SetVectorResult(lokiapi.VectorResult{
-				Result: vector,
-			})
-			return s, nil
-		}
-
-		if matrixSeries == nil {
-			matrixSeries = map[string]lokiapi.Series{}
-		}
-		for _, s := range agg.samples {
-			ser, ok := matrixSeries[s.key]
-			if !ok {
-				ser.Metric.SetTo(s.set)
-			}
-
-			ser.Values = append(ser.Values, lokiapi.FPoint{
-				T: getPrometheusTimestamp(agg.ts.AsTime()),
-				V: strconv.FormatFloat(s.data, 'f', -1, 64),
-			})
-			matrixSeries[s.key] = ser
-		}
-	}
-	if err := iter.Err(); err != nil {
-		return s, err
-	}
-
-	// Sort points inside series.
-	for k, s := range matrixSeries {
-		slices.SortFunc(s.Values, func(a, b lokiapi.FPoint) bool {
-			return a.T < b.T
-		})
-		matrixSeries[k] = s
-	}
-	result := maps.Values(matrixSeries)
-	slices.SortFunc(result, func(a, b lokiapi.Series) bool {
-		if len(a.Values) < 1 || len(b.Values) < 1 {
-			return len(a.Values) < len(b.Values)
-		}
-		return a.Values[0].T < b.Values[0].T
-	})
-
-	s.SetMatrixResult(lokiapi.MatrixResult{
-		Result: result,
-	})
-	return s, iter.Err()
 }

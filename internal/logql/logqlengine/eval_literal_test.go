@@ -11,24 +11,24 @@ import (
 	"github.com/go-faster/oteldb/internal/logql"
 )
 
-func TestRangeAggregationIterator(t *testing.T) {
+func TestLiteralOpAggIterator(t *testing.T) {
 	tests := []struct {
 		op       logql.RangeOp
 		expected string
 	}{
-		{logql.RangeOpCount, "3"},
-		{logql.RangeOpRate, "1.5"},    // count per log range interval
-		{logql.RangeOpBytes, "6"},     // same as sum
-		{logql.RangeOpBytesRate, "3"}, // sum per log range interval
-		{logql.RangeOpAvg, "2"},
-		{logql.RangeOpSum, "6"},
-		{logql.RangeOpMin, "1"},
-		{logql.RangeOpMax, "3"},
-		{logql.RangeOpStdvar, "0.6666666666666666"},
-		{logql.RangeOpStddev, "0.816496580927726"},
-		{logql.RangeOpQuantile, "2.98"},
-		{logql.RangeOpFirst, "1"},
-		{logql.RangeOpLast, "3"},
+		{logql.RangeOpCount, "6"},
+		{logql.RangeOpRate, "3"},      // count per log range interval
+		{logql.RangeOpBytes, "12"},    // same as sum
+		{logql.RangeOpBytesRate, "6"}, // sum per log range interval
+		{logql.RangeOpAvg, "4"},
+		{logql.RangeOpSum, "12"},
+		{logql.RangeOpMin, "2"},
+		{logql.RangeOpMax, "6"},
+		{logql.RangeOpStdvar, "1.3333333333333333"},
+		{logql.RangeOpStddev, "1.632993161855452"},
+		{logql.RangeOpQuantile, "5.96"},
+		{logql.RangeOpFirst, "2"},
+		{logql.RangeOpLast, "6"},
 	}
 	for i, tt := range tests {
 		tt := tt
@@ -63,8 +63,16 @@ func TestRangeAggregationIterator(t *testing.T) {
 			agg, err := newRangeAggIterator(samples, expr, start, end, step)
 			require.NoError(t, err)
 
+			op, err := buildSampleBinOp(&logql.BinOpExpr{
+				Op: logql.OpMul,
+			})
+			require.NoError(t, err)
+
+			lit := newLiteralOpAggIterator(agg, op, 2., false)
+			require.NoError(t, err)
+
 			data, err := readStepResponse(
-				agg,
+				lit,
 				params.IsInstant(),
 			)
 			require.NoError(t, err)
