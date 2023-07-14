@@ -145,15 +145,23 @@ func (e *Engine) evalExpr(ctx context.Context, expr logql.Expr, params EvalParam
 	return readStepResponse(iter, params.IsInstant())
 }
 
-func (e *Engine) buildAggStepIterator(ctx context.Context, expr logql.Expr, params EvalParams) (iterators.Iterator[aggStep], error) {
+func (e *Engine) buildAggStepIterator(ctx context.Context, expr logql.Expr, params EvalParams) (_ iterators.Iterator[aggStep], rerr error) {
 	switch expr := logql.UnparenExpr(expr).(type) {
 	case *logql.BinOpExpr:
-		if lit, ok := expr.Left.(*logql.LiteralExpr); ok {
-			op, err := buildSampleBinOp(expr)
-			if err != nil {
-				return nil, err
-			}
+		switch expr.Op {
+		case logql.OpAnd, logql.OpOr, logql.OpUnless:
+			return nil, &UnsupportedError{Msg: "binary set operations are unsupported yet"}
+		}
+		if m := expr.Modifier; m.Op != "" || len(m.OpLabels) > 0 || m.Group != "" || len(m.Include) > 0 {
+			return nil, &UnsupportedError{Msg: "binary operation modifiers are unsupported yet"}
+		}
 
+		op, err := buildSampleBinOp(expr)
+		if err != nil {
+			return nil, err
+		}
+
+		if lit, ok := expr.Left.(*logql.LiteralExpr); ok {
 			right, err := e.buildAggStepIterator(ctx, expr.Right, params)
 			if err != nil {
 				return nil, err
@@ -161,19 +169,36 @@ func (e *Engine) buildAggStepIterator(ctx context.Context, expr logql.Expr, para
 			return newLiteralOpAggIterator(right, op, lit.Value, true), nil
 		}
 		if lit, ok := expr.Right.(*logql.LiteralExpr); ok {
-			op, err := buildSampleBinOp(expr)
-			if err != nil {
-				return nil, err
-			}
-
 			left, err := e.buildAggStepIterator(ctx, expr.Left, params)
 			if err != nil {
 				return nil, err
 			}
 			return newLiteralOpAggIterator(left, op, lit.Value, false), nil
 		}
+
+		left, err := e.buildAggStepIterator(ctx, expr.Left, params)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if rerr != nil {
+				_ = left.Close()
+			}
+		}()
+
+		right, err := e.buildAggStepIterator(ctx, expr.Right, params)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if rerr != nil {
+				_ = right.Close()
+			}
+		}()
+
+		return newMergeAggIterator(left, right, op), nil
 	case *logql.RangeAggregationExpr:
-		return e.rangeAggIterator(ctx, expr, params)
+		return e.buildRangeAggIterator(ctx, expr, params)
 	}
 
 	return nil, &UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}

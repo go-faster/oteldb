@@ -81,11 +81,6 @@ func newRangeAggIterator(
 	}, nil
 }
 
-type aggStep struct {
-	ts      otelstorage.Timestamp
-	samples []sample
-}
-
 func (i *rangeAggIterator) Next(r *aggStep) bool {
 	i.current = i.current.Add(i.step)
 	if i.current.After(i.end) {
@@ -182,7 +177,7 @@ func (i *rangeAggIterator) Close() error {
 	return i.iter.Close()
 }
 
-func (e *Engine) rangeAggIterator(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (_ *rangeAggIterator, rerr error) {
+func (e *Engine) buildRangeAggIterator(ctx context.Context, expr *logql.RangeAggregationExpr, params EvalParams) (_ *rangeAggIterator, rerr error) {
 	qrange := expr.Range
 	if o := qrange.Offset; o != nil {
 		params.Start = addDuration(params.Start, -o.Duration)
