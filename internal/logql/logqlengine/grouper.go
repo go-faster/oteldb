@@ -63,6 +63,9 @@ func (g *withoutGrouper) Group(e entry) (key string, metric lokiapi.LabelSet) {
 	metric = lokiapi.LabelSet{}
 
 	e.set.Range(func(l logql.Label, v pcommon.Value) {
+		if _, ok := g.without[l]; ok {
+			return
+		}
 		metric[string(l)] = v.AsString()
 	})
 
