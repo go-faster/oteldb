@@ -1,6 +1,7 @@
 package faker
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,7 @@ import (
 
 func TestModel(t *testing.T) {
 	m := modelFromConfig(Config{
+		Rand:  rand.New(rand.NewSource(42)),
 		Nodes: 10,
 		RPS:   1000,
 		Services: Services{
@@ -30,5 +32,11 @@ func TestModel(t *testing.T) {
 	})
 	assert.Equal(t, 10, len(m.cluster.servers))
 	assert.Equal(t, 1000, m.rps)
-	assert.Equal(t, 12, len(m.cluster.servers[0].services))
+	assert.Equal(t, 3, len(m.frontends))
+
+	var services int
+	for _, s := range m.cluster.servers {
+		services += len(s.services)
+	}
+	assert.Equal(t, 9, services)
 }

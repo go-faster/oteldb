@@ -1,6 +1,8 @@
 // Package faker implement a fake telemetry generator.
 package faker
 
+import "math/rand"
+
 // Config models a single cluster of multiple nodes, where services are
 // deployed on each node.
 //
@@ -14,6 +16,8 @@ type Config struct {
 	RPS int `json:"rps" yaml:"rps"`
 	// Services configuration.
 	Services Services `json:"services" yaml:"services"`
+	// Random number generator.
+	Rand *rand.Rand
 }
 
 // Services wraps all services configuration, describing topology of the
