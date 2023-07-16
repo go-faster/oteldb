@@ -39,9 +39,10 @@ func TestAggregation(t *testing.T) {
 	}{
 		// Range aggregation.
 		{`count_over_time({} [2s])`, "3"},
-		{`rate({} [2s])`, "1.5"},          // count per log range interval
-		{`bytes_over_time({} [2s])`, "6"}, // same as sum
-		{`bytes_rate({} [2s])`, "3"},      // sum per log range interval
+		{`rate({} [2s])`, "1.5"},            // count per log range interval
+		{`rate({} | unwrap foo [2s])`, "3"}, // sum per log range interval
+		{`bytes_over_time({} [2s])`, "6"},   // same as sum
+		{`bytes_rate({} [2s])`, "3"},        // sum per log range interval
 		{`avg_over_time({} | unwrap foo [2s])`, "2"},
 		{`sum_over_time({} | unwrap foo [2s])`, "6"},
 		{`min_over_time({} | unwrap foo [2s])`, "1"},
@@ -51,6 +52,10 @@ func TestAggregation(t *testing.T) {
 		{`quantile_over_time(0.99, {} | unwrap foo [2s])`, "2.98"},
 		{`first_over_time({} | unwrap foo [2s])`, "1"},
 		{`last_over_time({} | unwrap foo [2s])`, "3"},
+		// Vector aggregation.
+		{`count(count_over_time({} [2s]))`, "1"},
+		{`sum(count_over_time({} [2s]))`, "3"},
+		{`avg(count_over_time({} [2s]))`, "3"},
 
 		// Vector function.
 		{`vector(1)`, "1"},

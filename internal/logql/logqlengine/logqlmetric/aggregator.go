@@ -2,7 +2,6 @@ package logqlmetric
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/go-faster/errors"
 
@@ -14,7 +13,7 @@ type BatchAggregator interface {
 	Aggregate(points []FPoint) float64
 }
 
-func buildAggregator(expr *logql.RangeAggregationExpr) (BatchAggregator, error) {
+func buildBatchAggregator(expr *logql.RangeAggregationExpr) (BatchAggregator, error) {
 	qrange := expr.Range
 	switch expr.Op {
 	case logql.RangeOpCount:
@@ -84,111 +83,22 @@ func (a Rate[A]) Aggregate(points []FPoint) float64 {
 type BytesRate = Rate[SumOverTime]
 
 // AvgOverTime implements `avg_over_time` aggregation.
-type AvgOverTime struct{}
-
-// Aggregate implements BatchAggregator.
-func (AvgOverTime) Aggregate(points []FPoint) float64 {
-	var cumAvg, count float64
-	// https://en.wikipedia.org/wiki/Moving_average#Cumulative_average
-	for _, p := range points {
-		v := p.Value
-		if math.IsInf(cumAvg, 0) {
-			// If ca is Inf, do not try to overwrite it
-			if math.IsInf(v, 0) {
-				if (cumAvg > 0) == (v > 0) {
-					continue
-				}
-				// unless new point is Inf with a different sign.
-			} else {
-				if !math.IsNaN(v) {
-					continue
-				}
-				// unless new point is NaN
-			}
-		}
-		// CA(n+1) = CA(n) + (x(n+1) - CA(n))/(n+1)
-		count++
-		cumAvg += (v - cumAvg) / count
-	}
-	return cumAvg
-}
+type AvgOverTime = batchApplier[AvgAggregator, *AvgAggregator]
 
 // SumOverTime implements `sum_over_time` aggregation.
-type SumOverTime struct{}
-
-// Aggregate implements BatchAggregator.
-func (SumOverTime) Aggregate(points []FPoint) float64 {
-	var sum float64
-	for _, p := range points {
-		sum += p.Value
-	}
-	return sum
-}
+type SumOverTime = batchApplier[SumAggregator, *SumAggregator]
 
 // MinOverTime implements `min_over_time` aggregation.
-type MinOverTime struct{}
-
-// Aggregate implements BatchAggregator.
-func (MinOverTime) Aggregate(points []FPoint) (min float64) {
-	min = math.NaN()
-	if len(points) > 0 {
-		min = points[0].Value
-	}
-	for _, p := range points {
-		v := p.Value
-		if v < min || math.IsNaN(min) {
-			min = v
-		}
-	}
-	return min
-}
+type MinOverTime = batchApplier[MinAggregator, *MinAggregator]
 
 // MaxOverTime implements `max_over_time` aggregation.
-type MaxOverTime struct{}
-
-// Aggregate implements BatchAggregator.
-func (MaxOverTime) Aggregate(points []FPoint) (max float64) {
-	max = math.NaN()
-	if len(points) > 0 {
-		max = points[0].Value
-	}
-	for _, p := range points {
-		v := p.Value
-		if v > max || math.IsNaN(max) {
-			max = v
-		}
-	}
-	return max
-}
+type MaxOverTime = batchApplier[MaxAggregator, *MaxAggregator]
 
 // StdvarOverTime implements `stdvar_over_time` aggregation.
-type StdvarOverTime struct{}
-
-// Aggregate implements BatchAggregator.
-func (StdvarOverTime) Aggregate(points []FPoint) float64 {
-	// https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
-	var m2, count, mean float64
-	for _, p := range points {
-		val := p.Value
-
-		count++
-		delta := val - mean
-		mean += delta / count
-		m2 += delta * (val - mean)
-	}
-	return m2 / count
-}
+type StdvarOverTime = batchApplier[StdvarAggregator, *StdvarAggregator]
 
 // StddevOverTime implements `stddev_over_time` aggregation.
-type StddevOverTime struct {
-	stdvar StdvarOverTime
-}
-
-// Aggregate implements BatchAggregator.
-func (a StddevOverTime) Aggregate(points []FPoint) float64 {
-	variance := a.stdvar.Aggregate(points)
-	return math.Sqrt(variance)
-}
+type StddevOverTime = batchApplier[StddevAggregator, *StddevAggregator]
 
 // QuantileOverTime implements `quantile_over_time` aggregation.
 type QuantileOverTime struct {

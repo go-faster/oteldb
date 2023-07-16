@@ -44,7 +44,7 @@ func RangeAggregation(
 		step = time.Second
 	}
 
-	aggtr, err := buildAggregator(expr)
+	agg, err := buildBatchAggregator(expr)
 	if err != nil {
 		return nil, errors.Wrap(err, "build aggregator")
 	}
@@ -65,7 +65,7 @@ func RangeAggregation(
 	return &rangeAggIterator{
 		iter: iter,
 
-		agg:     aggtr,
+		agg:     agg,
 		stepper: newStepper(start, end, step),
 
 		grouper:     grouper,
@@ -105,7 +105,8 @@ func (i *rangeAggIterator) clearWindow(windowStart time.Time) {
 		// Filter series data in place: timestamp should be >= windowStart.
 		n := 0
 		for _, p := range s.Data {
-			if p.Timestamp.AsTime().Before(windowStart) {
+			t := p.Timestamp.AsTime()
+			if t.Before(windowStart) || t.Equal(windowStart) {
 				continue
 			}
 			s.Data[n] = p

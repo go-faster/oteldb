@@ -42,6 +42,13 @@ func build(expr logql.Expr, sel SampleSelector, params EvalParams) (_ StepIterat
 
 		return RangeAggregation(iter, expr, params.Start, params.End, params.Step)
 	case *logql.VectorAggregationExpr:
+		iter, err := build(expr.Expr, sel, params)
+		if err != nil {
+			return nil, err
+		}
+		defer closeOnError(iter)
+
+		return VectorAggregation(iter, expr)
 	case *logql.LiteralExpr:
 	case *logql.LabelReplaceExpr:
 	case *logql.VectorExpr:
