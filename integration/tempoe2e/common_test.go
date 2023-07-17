@@ -198,7 +198,7 @@ func runTest(
 				if expectAttrs := expectSpan.Attributes(); expectAttrs.Len() > 0 {
 					// TODO(tdakkota): do a full attributes comparison.
 					a.NotNil(gotSpan.Attributes)
-					gotAttrs := *gotSpan.Attributes
+					gotAttrs := gotSpan.Attributes
 					a.Len(gotAttrs, expectAttrs.Len())
 				}
 			}
