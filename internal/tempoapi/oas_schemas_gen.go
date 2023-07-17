@@ -685,11 +685,11 @@ func (s *TagValuesV2) SetTagValues(val []TagValue) {
 
 // Ref: #/components/schemas/TempoSpan
 type TempoSpan struct {
-	SpanID            string      `json:"spanID"`
-	Name              OptString   `json:"name"`
-	StartTimeUnixNano time.Time   `json:"startTimeUnixNano"`
-	DurationNanos     int64       `json:"durationNanos"`
-	Attributes        *Attributes `json:"attributes"`
+	SpanID            string     `json:"spanID"`
+	Name              OptString  `json:"name"`
+	StartTimeUnixNano time.Time  `json:"startTimeUnixNano"`
+	DurationNanos     int64      `json:"durationNanos"`
+	Attributes        Attributes `json:"attributes"`
 }
 
 // GetSpanID returns the value of SpanID.
@@ -713,7 +713,7 @@ func (s *TempoSpan) GetDurationNanos() int64 {
 }
 
 // GetAttributes returns the value of Attributes.
-func (s *TempoSpan) GetAttributes() *Attributes {
+func (s *TempoSpan) GetAttributes() Attributes {
 	return s.Attributes
 }
 
@@ -738,7 +738,7 @@ func (s *TempoSpan) SetDurationNanos(val int64) {
 }
 
 // SetAttributes sets the value of Attributes.
-func (s *TempoSpan) SetAttributes(val *Attributes) {
+func (s *TempoSpan) SetAttributes(val Attributes) {
 	s.Attributes = val
 }
 
@@ -746,7 +746,7 @@ func (s *TempoSpan) SetAttributes(val *Attributes) {
 type TempoSpanSet struct {
 	Spans      []TempoSpan `json:"spans"`
 	Matched    OptInt      `json:"matched"`
-	Attributes *Attributes `json:"attributes"`
+	Attributes Attributes  `json:"attributes"`
 }
 
 // GetSpans returns the value of Spans.
@@ -760,7 +760,7 @@ func (s *TempoSpanSet) GetMatched() OptInt {
 }
 
 // GetAttributes returns the value of Attributes.
-func (s *TempoSpanSet) GetAttributes() *Attributes {
+func (s *TempoSpanSet) GetAttributes() Attributes {
 	return s.Attributes
 }
 
@@ -775,7 +775,7 @@ func (s *TempoSpanSet) SetMatched(val OptInt) {
 }
 
 // SetAttributes sets the value of Attributes.
-func (s *TempoSpanSet) SetAttributes(val *Attributes) {
+func (s *TempoSpanSet) SetAttributes(val Attributes) {
 	s.Attributes = val
 }
 

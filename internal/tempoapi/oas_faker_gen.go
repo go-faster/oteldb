@@ -244,8 +244,8 @@ func (s *TempoSpan) SetFake() {
 		}
 	}
 	{
-		{ // Keep pointer nil to prevent infinite recursion.
-			s.Attributes = nil
+		{
+			s.Attributes.SetFake()
 		}
 	}
 }
@@ -270,8 +270,8 @@ func (s *TempoSpanSet) SetFake() {
 		}
 	}
 	{
-		{ // Keep pointer nil to prevent infinite recursion.
-			s.Attributes = nil
+		{
+			s.Attributes.SetFake()
 		}
 	}
 }
