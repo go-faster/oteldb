@@ -1,0 +1,11 @@
+{
+    "rpc_port"=9020;
+    "monitoring_port"=10020;
+    "discovery_server"={
+        "server_addresses"=[
+            "1.discovery.yt.go-faster.org:9020";
+            "2.discovery.yt.go-faster.org:9020";
+            "3.discovery.yt.go-faster.org:9020";
+        ];
+    };
+}

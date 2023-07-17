@@ -1,0 +1,18 @@
+{
+  "clusters": [
+    {
+      "id": "hahn",
+      "name": "Hahn",
+      "proxy": "http-proxy.yt.go-faster.org",
+      "secure": false,
+      "theme": "lavander",
+      "authentication": "Basic",
+      "group": "YT",
+      "environment": "production",
+      "description": "First YT cluster",
+      "primaryMaster": {
+        "cellTag": 1
+      }
+    }
+  ]
+}
