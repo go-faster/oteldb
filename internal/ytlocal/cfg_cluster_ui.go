@@ -1,5 +1,6 @@
 package ytlocal
 
+// Cluster config.
 type Cluster struct {
 	ID             string               `json:"id"`
 	Name           string               `json:"name,omitempty"`
@@ -13,10 +14,12 @@ type Cluster struct {
 	PrimaryMaster  ClusterPrimaryMaster `json:"primaryMaster"`
 }
 
+// ClusterPrimaryMaster config.
 type ClusterPrimaryMaster struct {
 	CellTag int `json:"cellTag"`
 }
 
+// ClusterConfig config.
 type ClusterConfig struct {
 	Clusters []Cluster `json:"clusters"`
 }

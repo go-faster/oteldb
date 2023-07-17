@@ -1,11 +1,13 @@
 package ytlocal
 
+// ResourceLimits config.
 type ResourceLimits struct {
 	TotalCPU         float64 `yson:"total_cpu"`
 	TotalMemory      int64   `yson:"total_memory"`
 	NodeDedicatedCPU float64 `yson:"node_dedicated_cpu"`
 }
 
+// StoreLocation config.
 type StoreLocation struct {
 	Quota                  int64  `yson:"quota"`
 	MediumName             string `yson:"medium_name"`
@@ -15,10 +17,12 @@ type StoreLocation struct {
 	HighWatermark          int64  `yson:"high_watermark"`
 }
 
+// DataNodeOptions config.
 type DataNodeOptions struct {
 	StoreLocations []StoreLocation `yson:"store_locations"`
 }
 
+// DataNode config.
 type DataNode struct {
 	TimestampProvider *Connection        `yson:"timestamp_provider,omitempty"`
 	ClusterConnection *ClusterConnection `yson:"cluster_connection,omitempty"`
