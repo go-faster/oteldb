@@ -23,10 +23,19 @@ type SlotManager struct {
 	Locations      []SlotLocation `yson:"locations"`
 }
 
+// JobEnvironmentType is type for environment (runtime).
+type JobEnvironmentType string
+
+// Possible types.
+const (
+	JobEnvironmentTypeSimple JobEnvironmentType = "simple"
+	JobEnvironmentTypePorto  JobEnvironmentType = "porto"
+)
+
 // JobEnvironment config.
 type JobEnvironment struct {
-	StartUID int64  `yson:"start_uid"`
-	Type     string `yson:"type"`
+	StartUID int64              `yson:"start_uid"`
+	Type     JobEnvironmentType `yson:"type"`
 }
 
 // JobControllerResourceLimits config.
