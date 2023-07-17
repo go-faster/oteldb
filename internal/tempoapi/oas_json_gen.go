@@ -1595,12 +1595,9 @@ func (s *TempoSpan) Decode(d *jx.Decoder) error {
 			}
 		case "attributes":
 			if err := func() error {
-				s.Attributes = nil
-				var elem Attributes
-				if err := elem.Decode(d); err != nil {
+				if err := s.Attributes.Decode(d); err != nil {
 					return err
 				}
-				s.Attributes = &elem
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"attributes\"")
@@ -1737,12 +1734,9 @@ func (s *TempoSpanSet) Decode(d *jx.Decoder) error {
 			}
 		case "attributes":
 			if err := func() error {
-				s.Attributes = nil
-				var elem Attributes
-				if err := elem.Decode(d); err != nil {
+				if err := s.Attributes.Decode(d); err != nil {
 					return err
 				}
-				s.Attributes = &elem
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"attributes\"")

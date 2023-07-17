@@ -178,16 +178,8 @@ func (s *KvlistValue) Validate() error {
 func (s *TempoSpan) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Attributes == nil {
-			return nil // optional
-		}
-		if err := func() error {
-			if err := s.Attributes.Validate(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrap(err, "pointer")
+		if err := s.Attributes.Validate(); err != nil {
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -233,16 +225,8 @@ func (s *TempoSpanSet) Validate() error {
 		})
 	}
 	if err := func() error {
-		if s.Attributes == nil {
-			return nil // optional
-		}
-		if err := func() error {
-			if err := s.Attributes.Validate(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrap(err, "pointer")
+		if err := s.Attributes.Validate(); err != nil {
+			return err
 		}
 		return nil
 	}(); err != nil {
