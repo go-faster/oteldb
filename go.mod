@@ -11,7 +11,7 @@ require (
 	github.com/go-faster/sdk v0.7.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
-	github.com/ogen-go/ogen v0.71.0
+	github.com/ogen-go/ogen v0.71.1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.45.0
