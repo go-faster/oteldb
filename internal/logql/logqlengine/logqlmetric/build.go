@@ -12,7 +12,7 @@ import (
 )
 
 // SampleSelector creates new sampled entry iterator.
-type SampleSelector = func(sel logql.LogRangeExpr) (iterators.Iterator[SampledEntry], error)
+type SampleSelector = func(expr *logql.RangeAggregationExpr, start, end time.Time) (iterators.Iterator[SampledEntry], error)
 
 // EvalParams is a query evaluation params.
 type EvalParams struct {
@@ -34,13 +34,25 @@ func build(expr logql.Expr, sel SampleSelector, params EvalParams) (_ StepIterat
 
 	switch expr := logql.UnparenExpr(expr).(type) {
 	case *logql.RangeAggregationExpr:
-		iter, err := sel(expr.Range)
+		var (
+			qrange = expr.Range
+			start  = params.Start
+			end    = params.End
+		)
+		if o := qrange.Offset; o != nil {
+			start = start.Add(-o.Duration)
+			end = end.Add(-o.Duration)
+		}
+		// Query samples for first step.
+		qstart := start.Add(-qrange.Range)
+
+		iter, err := sel(expr, qstart, end)
 		if err != nil {
 			return nil, errors.Wrap(err, "get samples iterator")
 		}
 		defer closeOnError(iter)
 
-		return RangeAggregation(iter, expr, params.Start, params.End, params.Step)
+		return RangeAggregation(iter, expr, start, end, params.Step)
 	case *logql.VectorAggregationExpr:
 		iter, err := build(expr.Expr, sel, params)
 		if err != nil {

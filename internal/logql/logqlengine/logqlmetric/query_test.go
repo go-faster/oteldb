@@ -17,7 +17,7 @@ import (
 )
 
 func testSampler(samples []SampledEntry) SampleSelector {
-	return func(logql.LogRangeExpr) (iterators.Iterator[SampledEntry], error) {
+	return func(_ *logql.RangeAggregationExpr, _, _ time.Time) (iterators.Iterator[SampledEntry], error) {
 		slices.SortStableFunc(samples, func(a, b SampledEntry) bool {
 			return a.Timestamp < b.Timestamp
 		})

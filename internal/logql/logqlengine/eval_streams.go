@@ -66,9 +66,15 @@ func (i *entryIterator) Close() error {
 	return i.iter.Close()
 }
 
-func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []logql.PipelineStage, params EvalParams) (*entryIterator, error) {
+type selectLogsParams struct {
+	Start, End otelstorage.Timestamp
+	Instant    bool
+	Limit      int
+}
+
+func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []logql.PipelineStage, params selectLogsParams) (*entryIterator, error) {
 	// Instant query, sub lookback duration from Start.
-	if params.IsInstant() {
+	if params.Instant {
 		params.Start = addDuration(params.Start, e.lookbackDuration)
 	}
 
@@ -101,7 +107,12 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 }
 
 func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params EvalParams) (s lokiapi.Streams, _ error) {
-	iter, err := e.selectLogs(ctx, expr.Sel, expr.Pipeline, params)
+	iter, err := e.selectLogs(ctx, expr.Sel, expr.Pipeline, selectLogsParams{
+		Start:   params.Start,
+		End:     params.End,
+		Instant: params.IsInstant(),
+		Limit:   params.Limit,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "select logs")
 	}
