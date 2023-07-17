@@ -5,4 +5,6 @@
 
 set -e -x
 
-docker run -it --rm --init -e "HOME=/build" --ipc=host -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro --name yt-builder --user $(id -u):$(id -g) -v ./ytwork:/build ghcr.io/go-faster/yt-build ./build.sh
+docker run -it --rm --init -e "HOME=/build" --ipc=host -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro --name yt-builder --user "$(id -u):$(id -g)" -v ./_ytwork:/build ghcr.io/go-faster/yt-build ./build.sh
+
+realpath _ytwork/build/yt/yt/server/all/ytserver-all
