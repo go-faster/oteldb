@@ -3,20 +3,17 @@ package logqlengine
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/errors"
 
-	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -114,7 +111,7 @@ func (e *Engine) evalExpr(ctx context.Context, expr logql.Expr, params EvalParam
 	case *logql.LogExpr:
 		streams, err := e.evalLogExpr(ctx, expr, params)
 		if err != nil {
-			return data, err
+			return data, errors.Wrap(err, "evaluate log query")
 		}
 
 		data.SetStreamsResult(lokiapi.StreamsResult{
@@ -123,160 +120,68 @@ func (e *Engine) evalExpr(ctx context.Context, expr logql.Expr, params EvalParam
 		return data, nil
 	case *logql.LiteralExpr:
 		return e.evalLiteral(expr, params), nil
-	case *logql.VectorExpr:
-		return e.evalVector(expr, params), nil
-	case *logql.BinOpExpr:
-		reduced, err := logql.ReduceBinOp(expr)
-		if err != nil {
-			return data, errors.Wrap(err, "reduce binop")
-		}
-		if reduced != nil {
-			return e.evalLiteral(reduced, params), nil
-		}
-	}
-
-	iter, err := e.buildAggStepIterator(ctx, expr, params)
-	if err != nil {
-		return data, err
-	}
-	defer func() {
-		_ = iter.Close()
-	}()
-	return readStepResponse(iter, params.IsInstant())
-}
-
-func (e *Engine) buildAggStepIterator(ctx context.Context, expr logql.Expr, params EvalParams) (_ iterators.Iterator[aggStep], rerr error) {
-	switch expr := logql.UnparenExpr(expr).(type) {
-	case *logql.BinOpExpr:
-		switch expr.Op {
-		case logql.OpAnd, logql.OpOr, logql.OpUnless:
-			return nil, &UnsupportedError{Msg: "binary set operations are unsupported yet"}
-		}
-		if m := expr.Modifier; m.Op != "" || len(m.OpLabels) > 0 || m.Group != "" || len(m.Include) > 0 {
-			return nil, &UnsupportedError{Msg: "binary operation modifiers are unsupported yet"}
-		}
-
-		op, err := buildSampleBinOp(expr)
-		if err != nil {
-			return nil, err
-		}
-
-		if lit, ok := expr.Left.(*logql.LiteralExpr); ok {
-			right, err := e.buildAggStepIterator(ctx, expr.Right, params)
-			if err != nil {
-				return nil, err
-			}
-			return newLiteralOpAggIterator(right, op, lit.Value, true), nil
-		}
-		if lit, ok := expr.Right.(*logql.LiteralExpr); ok {
-			left, err := e.buildAggStepIterator(ctx, expr.Left, params)
-			if err != nil {
-				return nil, err
-			}
-			return newLiteralOpAggIterator(left, op, lit.Value, false), nil
-		}
-
-		left, err := e.buildAggStepIterator(ctx, expr.Left, params)
-		if err != nil {
-			return nil, err
-		}
-		defer func() {
-			if rerr != nil {
-				_ = left.Close()
-			}
-		}()
-
-		right, err := e.buildAggStepIterator(ctx, expr.Right, params)
-		if err != nil {
-			return nil, err
-		}
-		defer func() {
-			if rerr != nil {
-				_ = right.Close()
-			}
-		}()
-
-		return newMergeAggIterator(left, right, op), nil
-	case *logql.RangeAggregationExpr:
-		return e.buildRangeAggIterator(ctx, expr, params)
-	}
-
-	return nil, &UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}
-}
-
-func readStepResponse(iter iterators.Iterator[aggStep], instant bool) (s lokiapi.QueryResponseData, _ error) {
-	var (
-		agg          aggStep
-		matrixSeries map[string]lokiapi.Series
-	)
-	for {
-		if !iter.Next(&agg) {
-			break
-		}
-
-		if instant {
-			if err := iter.Err(); err != nil {
-				return s, err
-			}
-
-			var vector lokiapi.Vector
-			for _, s := range agg.samples {
-				vector = append(vector, lokiapi.Sample{
-					Metric: lokiapi.NewOptLabelSet(s.set),
-					Value: lokiapi.FPoint{
-						T: getPrometheusTimestamp(agg.ts.AsTime()),
-						V: strconv.FormatFloat(s.data, 'f', -1, 64),
-					},
-				})
-			}
-
-			s.SetVectorResult(lokiapi.VectorResult{
-				Result: vector,
-			})
-			return s, nil
-		}
-
-		if matrixSeries == nil {
-			matrixSeries = map[string]lokiapi.Series{}
-		}
-		for _, s := range agg.samples {
-			ser, ok := matrixSeries[s.key]
-			if !ok {
-				ser.Metric.SetTo(s.set)
-			}
-
-			ser.Values = append(ser.Values, lokiapi.FPoint{
-				T: getPrometheusTimestamp(agg.ts.AsTime()),
-				V: strconv.FormatFloat(s.data, 'f', -1, 64),
-			})
-			matrixSeries[s.key] = ser
-		}
-	}
-	if err := iter.Err(); err != nil {
-		return s, err
-	}
-
-	// Sort points inside series.
-	for k, s := range matrixSeries {
-		slices.SortFunc(s.Values, func(a, b lokiapi.FPoint) bool {
-			return a.T < b.T
+	case logql.MetricExpr:
+		iter, err := logqlmetric.Build(expr, e.sampleSelector(ctx, params), logqlmetric.EvalParams{
+			Start: params.Start.AsTime(),
+			End:   params.End.AsTime(),
+			Step:  params.Step,
 		})
-		matrixSeries[k] = s
-	}
-	result := maps.Values(matrixSeries)
-	slices.SortFunc(result, func(a, b lokiapi.Series) bool {
-		if len(a.Values) < 1 || len(b.Values) < 1 {
-			return len(a.Values) < len(b.Values)
+		if err != nil {
+			return data, errors.Wrap(err, "build metric query")
 		}
-		return a.Values[0].T < b.Values[0].T
-	})
 
-	s.SetMatrixResult(lokiapi.MatrixResult{
-		Result: result,
-	})
-	return s, iter.Err()
+		data, err = logqlmetric.ReadStepResponse(iter, params.IsInstant())
+		if err != nil {
+			return data, errors.Wrap(err, "evaluate metric query")
+		}
+
+		return data, nil
+	default:
+		return data, errors.Errorf("unexpected expression %T", expr)
+	}
 }
 
 func addDuration(ts otelstorage.Timestamp, d time.Duration) otelstorage.Timestamp {
 	return otelstorage.NewTimestampFromTime(ts.AsTime().Add(d))
+}
+
+func (e *Engine) evalLiteral(expr *logql.LiteralExpr, params EvalParams) (data lokiapi.QueryResponseData) {
+	if params.IsInstant() {
+		data.SetScalarResult(lokiapi.ScalarResult{
+			Result: lokiapi.FPoint{
+				T: getPrometheusTimestamp(params.Start.AsTime()),
+				V: strconv.FormatFloat(expr.Value, 'f', -1, 64),
+			},
+		})
+		return data
+	}
+	data.SetMatrixResult(lokiapi.MatrixResult{
+		Result: generateLiteralMatrix(expr.Value, params),
+	})
+	return data
+}
+
+func generateLiteralMatrix(value float64, params EvalParams) lokiapi.Matrix {
+	var (
+		start = params.Start.AsTime()
+		end   = params.End.AsTime()
+
+		series = lokiapi.Series{
+			Metric: lokiapi.NewOptLabelSet(lokiapi.LabelSet{}),
+		}
+	)
+
+	strValue := strconv.FormatFloat(value, 'f', -1, 64)
+	for ts := start; ts.Equal(end) || ts.Before(end); ts = ts.Add(params.Step) {
+		series.Values = append(series.Values, lokiapi.FPoint{
+			T: getPrometheusTimestamp(ts),
+			V: strValue,
+		})
+	}
+	return lokiapi.Matrix{series}
+}
+
+func getPrometheusTimestamp(t time.Time) float64 {
+	// Pass milliseconds as fraction part.
+	return float64(t.UnixMilli()) / 1000
 }

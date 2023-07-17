@@ -664,10 +664,13 @@ var tests = []TestCase{
 	},
 	// label_replace
 	{
-		`label_replace(rate({}), "dst", "replacement", "src", ".*")`,
+		`label_replace(rate({}[5h]), "dst", "replacement", "src", ".*")`,
 		&LabelReplaceExpr{
 			Expr: &RangeAggregationExpr{
 				Op: RangeOpRate,
+				Range: LogRangeExpr{
+					Range: 5 * time.Hour,
+				},
 			},
 			DstLabel:    "dst",
 			Replacement: "replacement",
@@ -1019,6 +1022,10 @@ var tests = []TestCase{
 	{`vector(1) or 1`, nil, true},
 	{`vector(1) unless 1`, nil, true},
 
+	// Range is required.
+	{`count_over_time({})`, nil, true},
+	// Two ranges.
+	{`count_over_time({}[5h][5h])`, nil, true},
 	// Parameter is required.
 	{`quantile_over_time({}[5h])`, nil, true},
 	{`topk(rate({job="mysql"}[1m]))`, nil, true},

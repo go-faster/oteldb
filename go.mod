@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/ClickHouse/ch-go v0.58.0
 	github.com/cenkalti/backoff/v4 v4.2.1
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-faster/errors v0.6.1
 	github.com/go-faster/jx v1.0.0
@@ -51,7 +52,6 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/containerd v1.6.19 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

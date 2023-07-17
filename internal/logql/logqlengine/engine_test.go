@@ -397,6 +397,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 				MatrixResult: lokiapi.MatrixResult{
 					Result: lokiapi.Matrix{
 						{
+							Metric: lokiapi.NewOptLabelSet(lokiapi.LabelSet{}),
 							Values: []lokiapi.FPoint{
 								{T: 1700000001, V: "3.14"},
 								{T: 1700000002, V: "3.14"},
@@ -421,6 +422,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 				VectorResult: lokiapi.VectorResult{
 					Result: lokiapi.Vector{
 						{
+							Metric: lokiapi.NewOptLabelSet(lokiapi.LabelSet{}),
 							Value: lokiapi.FPoint{
 								T: 1700000001,
 								V: "3.14",
@@ -443,31 +445,13 @@ func TestEngineEvalLiteral(t *testing.T) {
 				MatrixResult: lokiapi.MatrixResult{
 					Result: lokiapi.Matrix{
 						{
+							Metric: lokiapi.NewOptLabelSet(lokiapi.LabelSet{}),
 							Values: []lokiapi.FPoint{
 								{T: 1700000001, V: "3.14"},
 								{T: 1700000002, V: "3.14"},
 								{T: 1700000003, V: "3.14"},
 							},
 						},
-					},
-				},
-			},
-			false,
-		},
-
-		// Binop reduce.
-		{
-			`2*2`,
-			timeRange{
-				start: 1700000001_000000000,
-				end:   1700000001_000000000,
-			},
-			lokiapi.QueryResponseData{
-				Type: lokiapi.ScalarResultQueryResponseData,
-				ScalarResult: lokiapi.ScalarResult{
-					Result: lokiapi.FPoint{
-						T: 1700000001,
-						V: "4",
 					},
 				},
 			},

@@ -1,4 +1,4 @@
-package logqlengine
+package logqlmetric
 
 import (
 	"math"
@@ -15,7 +15,7 @@ import (
 // If q==NaN, NaN is returned.
 // If q<0, -Inf is returned.
 // If q>1, +Inf is returned.
-func quantile(q float64, values []fpoint) float64 {
+func quantile(q float64, values []FPoint) float64 {
 	if len(values) == 0 || math.IsNaN(q) {
 		return math.NaN()
 	}
@@ -25,7 +25,7 @@ func quantile(q float64, values []fpoint) float64 {
 	if q > 1 {
 		return math.Inf(+1)
 	}
-	slices.SortFunc(values, func(a, b fpoint) bool {
+	slices.SortFunc(values, func(a, b FPoint) bool {
 		if math.IsNaN(a.Value) {
 			return true
 		}

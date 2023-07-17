@@ -63,6 +63,8 @@ func (p *parser) parseRangeExpr() (e LogRangeExpr, err error) {
 		if err := parseRangeOffset(); err != nil {
 			return e, err
 		}
+	default:
+		return e, p.unexpectedToken(t)
 	}
 	return e, nil
 }

@@ -1,19 +1,53 @@
 package logqlengine
 
 import (
+	"context"
 	"strconv"
 	"time"
 
+	"github.com/cespare/xxhash/v2"
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
+	"github.com/go-faster/oteldb/internal/lokiapi"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
+
+func (e *Engine) sampleSelector(ctx context.Context, params EvalParams) logqlmetric.SampleSelector {
+	return func(expr *logql.RangeAggregationExpr, start, end time.Time) (_ iterators.Iterator[logqlmetric.SampledEntry], rerr error) {
+		qrange := expr.Range
+
+		iter, err := e.selectLogs(ctx, qrange.Sel, qrange.Pipeline, selectLogsParams{
+			Start:   otelstorage.NewTimestampFromTime(start),
+			End:     otelstorage.NewTimestampFromTime(end),
+			Instant: params.IsInstant(),
+			Limit:   params.Limit,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "select logs")
+		}
+		defer func() {
+			if rerr != nil {
+				_ = iter.Close()
+			}
+		}()
+
+		return newSampleIterator(iter, expr)
+	}
+}
 
 type sampleIterator struct {
 	iter    iterators.Iterator[entry]
 	sampler sampleExtractor
+
+	// grouping parameters.
+	by      map[string]struct{}
+	without map[string]struct{}
 }
 
 func newSampleIterator(iter iterators.Iterator[entry], expr *logql.RangeAggregationExpr) (*sampleIterator, error) {
@@ -22,27 +56,42 @@ func newSampleIterator(iter iterators.Iterator[entry], expr *logql.RangeAggregat
 		return nil, errors.Wrap(err, "build sample extractor")
 	}
 
+	var (
+		by      []logql.Label
+		without []logql.Label
+	)
+	if g := expr.Grouping; g != nil {
+		if g.Without {
+			without = g.Labels
+		} else {
+			by = g.Labels
+		}
+	}
+
 	return &sampleIterator{
 		iter:    iter,
 		sampler: sampler,
+		by:      buildSet(nil, by...),
+		without: buildSet(nil, without...),
 	}, nil
 }
 
-type sampledEntry struct {
-	sample float64
-	entry  entry
-}
-
-func (i *sampleIterator) Next(s *sampledEntry) bool {
+func (i *sampleIterator) Next(s *logqlmetric.SampledEntry) bool {
+	var e entry
 	for {
-		if !i.iter.Next(&s.entry) {
+		if !i.iter.Next(&e) {
 			return false
 		}
 
-		if v, ok := i.sampler.Extract(s.entry); ok {
-			s.sample = v
-			return true
+		v, ok := i.sampler.Extract(e)
+		if !ok {
+			continue
 		}
+
+		s.Timestamp = e.ts
+		s.Sample = v
+		s.Set = newAggregatedLabels(e.set, i.by, i.without)
+		return true
 	}
 }
 
@@ -52,6 +101,108 @@ func (i *sampleIterator) Err() error {
 
 func (i *sampleIterator) Close() error {
 	return i.iter.Close()
+}
+
+func buildSet[K ~string](r map[string]struct{}, input ...K) map[string]struct{} {
+	if len(input) == 0 {
+		return r
+	}
+
+	if r == nil {
+		r = make(map[string]struct{}, len(input))
+	}
+	for _, k := range input {
+		r[string(k)] = struct{}{}
+	}
+	return r
+}
+
+type labelEntry struct {
+	name  string
+	value string
+}
+
+type aggregatedLabels struct {
+	entries []labelEntry
+	without map[string]struct{}
+	by      map[string]struct{}
+}
+
+func newAggregatedLabels(set LabelSet, by, without map[string]struct{}) *aggregatedLabels {
+	labels := make([]labelEntry, 0, len(set.labels))
+	set.Range(func(l logql.Label, v pcommon.Value) {
+		labels = append(labels, labelEntry{
+			name:  string(l),
+			value: v.AsString(),
+		})
+	})
+
+	return &aggregatedLabels{
+		entries: labels,
+		without: without,
+		by:      by,
+	}
+}
+
+// By returns new set of labels containing only given list of labels.
+func (a *aggregatedLabels) By(labels ...logql.Label) logqlmetric.AggregatedLabels {
+	if len(labels) == 0 {
+		return a
+	}
+
+	sub := &aggregatedLabels{
+		entries: a.entries,
+		without: a.without,
+		by:      buildSet(maps.Clone(a.by), labels...),
+	}
+	return sub
+}
+
+// Without returns new set of labels without given list of labels.
+func (a *aggregatedLabels) Without(labels ...logql.Label) logqlmetric.AggregatedLabels {
+	if len(labels) == 0 {
+		return a
+	}
+
+	sub := &aggregatedLabels{
+		entries: a.entries,
+		without: maps.Clone(a.without),
+		by:      buildSet(maps.Clone(a.without), labels...),
+	}
+	return sub
+}
+
+// Key computes grouping key from set of labels.
+func (a *aggregatedLabels) Key() logqlmetric.GroupingKey {
+	h := xxhash.New()
+	a.forEach(func(k, v string) {
+		_, _ = h.WriteString(k)
+		_, _ = h.WriteString(v)
+	})
+	return h.Sum64()
+}
+
+// AsLokiAPI returns API structure for label set.
+func (a *aggregatedLabels) AsLokiAPI() (r lokiapi.LabelSet) {
+	r = lokiapi.LabelSet{}
+	a.forEach(func(k, v string) {
+		r[k] = v
+	})
+	return r
+}
+
+func (a *aggregatedLabels) forEach(cb func(k, v string)) {
+	for _, e := range a.entries {
+		if _, ok := a.without[e.name]; ok {
+			continue
+		}
+		if len(a.by) > 0 {
+			if _, ok := a.by[e.name]; !ok {
+				continue
+			}
+		}
+		cb(e.name, e.value)
+	}
 }
 
 // sampleExtractor extracts samples from log records.
