@@ -33,7 +33,7 @@ require (
 	go.opentelemetry.io/otel/bridge/opentracing v1.16.0
 	go.opentelemetry.io/otel/metric v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
-	go.opentelemetry.io/proto/otlp v0.20.0
+	go.opentelemetry.io/proto/otlp v1.0.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.24.0
 	go.ytsaurus.tech/library/go/core/log v0.0.3
