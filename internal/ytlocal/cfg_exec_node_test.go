@@ -6,16 +6,16 @@ func TestExecNode(t *testing.T) {
 	encode(t, "exec-node", ExecNode{
 		RPCPort:        9020,
 		MonitoringPort: 10020,
-		ClusterConnection: &ClusterConnection{
+		ClusterConnection: ClusterConnection{
 			ClusterName: "ytlocal",
-			DiscoveryConnection: &Connection{
+			DiscoveryConnection: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9020",
 					"2.master.yt.go-faster.org:9020",
 					"3.master.yt.go-faster.org:9020",
 				},
 			},
-			PrimaryMaster: &Connection{
+			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",
@@ -58,16 +58,16 @@ func TestExecNode(t *testing.T) {
 	encode(t, "exec-node-simple", ExecNode{
 		RPCPort:        9020,
 		MonitoringPort: 10020,
-		ClusterConnection: &ClusterConnection{
+		ClusterConnection: ClusterConnection{
 			ClusterName: "ytlocal",
-			DiscoveryConnection: &Connection{
+			DiscoveryConnection: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9020",
 					"2.master.yt.go-faster.org:9020",
 					"3.master.yt.go-faster.org:9020",
 				},
 			},
-			PrimaryMaster: &Connection{
+			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",

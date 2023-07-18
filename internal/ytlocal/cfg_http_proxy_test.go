@@ -8,8 +8,8 @@ func TestHTTPProxy(t *testing.T) {
 		RPCPort:        9020,
 		MonitoringPort: 10020,
 		Role:           "default",
-		Driver: &Driver{
-			MasterCache: &MasterCache{
+		Driver: Driver{
+			MasterCache: MasterCache{
 				EnableMasterCacheDiscovery: true,
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
@@ -18,14 +18,14 @@ func TestHTTPProxy(t *testing.T) {
 				},
 				CellID: "ffcef5128-9be15fe9-10242-ffffffcb",
 			},
-			TimestampProvider: &Connection{
+			TimestampProvider: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",
 					"3.master.yt.go-faster.org:9010",
 				},
 			},
-			PrimaryMaster: &Connection{
+			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",
@@ -35,32 +35,32 @@ func TestHTTPProxy(t *testing.T) {
 			},
 			APIVersion: 4,
 		},
-		AddressResolver: &AddressResolver{
+		AddressResolver: AddressResolver{
 			Retries:    1000,
 			EnableIPv6: false,
 			EnableIPv4: true,
 		},
-		Auth: &HTTPAuth{
+		Auth: HTTPAuth{
 			RequireAuthentication: true,
-			CypressTokenAuthenticator: &CypressTokenAuthenticator{
+			CypressTokenAuthenticator: CypressTokenAuthenticator{
 				Secure: true,
 			},
-			CypressCookieManager: &CypressCookieManager{},
+			CypressCookieManager: CypressCookieManager{},
 		},
-		Coordinator: &Coordinator{
+		Coordinator: Coordinator{
 			DefaultRoleFilter: "default",
 			Enable:            true,
 		},
-		ClusterConnection: &ClusterConnection{
+		ClusterConnection: ClusterConnection{
 			ClusterName: "ytlocal",
-			DiscoveryConnection: &Connection{
+			DiscoveryConnection: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9020",
 					"2.master.yt.go-faster.org:9020",
 					"3.master.yt.go-faster.org:9020",
 				},
 			},
-			PrimaryMaster: &Connection{
+			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",

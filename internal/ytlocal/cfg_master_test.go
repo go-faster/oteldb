@@ -44,14 +44,14 @@ func TestMaster(t *testing.T) {
 		SecondaryMasters: []Connection{},
 		ClusterConnection: ClusterConnection{
 			ClusterName: "ytlocal",
-			DiscoveryConnection: &Connection{
+			DiscoveryConnection: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9020",
 					"2.master.yt.go-faster.org:9020",
 					"3.master.yt.go-faster.org:9020",
 				},
 			},
-			PrimaryMaster: &Connection{
+			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",

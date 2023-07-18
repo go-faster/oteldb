@@ -28,8 +28,8 @@ type MasterCache struct {
 
 // Driver config.
 type Driver struct {
-	MasterCache       *MasterCache `yson:"master_cache,omitempty"`
-	TimestampProvider *Connection  `yson:"timestamp_provider,omitempty"`
-	PrimaryMaster     *Connection  `yson:"primary_master,omitempty"`
-	APIVersion        int          `yson:"api_version"`
+	MasterCache       MasterCache `yson:"master_cache,omitempty"`
+	TimestampProvider Connection  `yson:"timestamp_provider,omitempty"`
+	PrimaryMaster     Connection  `yson:"primary_master,omitempty"`
+	APIVersion        int         `yson:"api_version"`
 }

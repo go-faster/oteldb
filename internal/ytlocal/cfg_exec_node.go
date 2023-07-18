@@ -60,7 +60,7 @@ type MasterCacheService struct {
 
 // ExecNode config.
 type ExecNode struct {
-	ClusterConnection *ClusterConnection   `yson:"cluster_connection,omitempty"`
+	ClusterConnection ClusterConnection    `yson:"cluster_connection,omitempty"`
 	AddressResolver   AddressResolver      `yson:"address_resolver"`
 	RPCPort           int                  `yson:"rpc_port"`
 	MonitoringPort    int                  `yson:"monitoring_port"`

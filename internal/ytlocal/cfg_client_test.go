@@ -12,7 +12,7 @@ func TestClient(t *testing.T) {
 			EnableIPv4: true,
 		},
 		Driver: Driver{
-			MasterCache: &MasterCache{
+			MasterCache: MasterCache{
 				EnableMasterCacheDiscovery: true,
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
@@ -21,14 +21,14 @@ func TestClient(t *testing.T) {
 				},
 				CellID: "ffcef5128-9be15fe9-10242-ffffffcb",
 			},
-			TimestampProvider: &Connection{
+			TimestampProvider: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",
 					"3.master.yt.go-faster.org:9010",
 				},
 			},
-			PrimaryMaster: &Connection{
+			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",
 					"2.master.yt.go-faster.org:9010",

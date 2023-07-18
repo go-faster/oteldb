@@ -24,12 +24,12 @@ type DataNodeOptions struct {
 
 // DataNode config.
 type DataNode struct {
-	TimestampProvider *Connection        `yson:"timestamp_provider,omitempty"`
-	ClusterConnection *ClusterConnection `yson:"cluster_connection,omitempty"`
-	ResourceLimits    ResourceLimits     `yson:"resource_limits"`
-	Flavors           []string           `yson:"flavors"`
-	AddressResolver   AddressResolver    `yson:"address_resolver"`
-	Options           DataNodeOptions    `yson:"data_node"`
-	RPCPort           int                `yson:"rpc_port"`
-	MonitoringPort    int                `yson:"monitoring_port"`
+	TimestampProvider Connection        `yson:"timestamp_provider,omitempty"`
+	ClusterConnection ClusterConnection `yson:"cluster_connection,omitempty"`
+	ResourceLimits    ResourceLimits    `yson:"resource_limits"`
+	Flavors           []string          `yson:"flavors"`
+	AddressResolver   AddressResolver   `yson:"address_resolver"`
+	Options           DataNodeOptions   `yson:"data_node"`
+	RPCPort           int               `yson:"rpc_port"`
+	MonitoringPort    int               `yson:"monitoring_port"`
 }
