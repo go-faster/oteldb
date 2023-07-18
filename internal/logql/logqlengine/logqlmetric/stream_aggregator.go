@@ -1,7 +1,6 @@
 package logqlmetric
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/go-faster/errors"
@@ -46,14 +45,10 @@ func buildAggregator(expr *logql.VectorAggregationExpr) (func() Aggregator, erro
 		return func() Aggregator {
 			return &StdvarAggregator{}
 		}, nil
-	case logql.VectorOpBottomk:
-	case logql.VectorOpTopk:
-	case logql.VectorOpSort:
-	case logql.VectorOpSortDesc:
 	default:
+		// Sorting and top/bottom-k operations should be handled by caller.
 		return nil, errors.Errorf("unexpected vector operation %q", expr.Op)
 	}
-	return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported vector operation %q", expr.Op)}
 }
 
 type batchApplier[State any, Agg interface {

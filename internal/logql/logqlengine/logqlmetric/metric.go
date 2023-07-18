@@ -1,6 +1,8 @@
 package logqlmetric
 
 import (
+	"math"
+
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -10,15 +12,20 @@ type FPoint struct {
 	Value     float64
 }
 
-// MilliT returns Prometheus millisecond timestamp.
-func (p FPoint) MilliT() int64 {
-	return p.Timestamp.AsTime().UnixMilli()
-}
-
 // Sample is a metric sample extracted from logs.
 type Sample struct {
 	Data float64
 	Set  AggregatedLabels
+}
+
+// Less compares two samples by value.
+func (a Sample) Less(b Sample) bool {
+	return math.IsNaN(a.Data) || a.Data < b.Data
+}
+
+// Greater compares two samples by value.
+func (a Sample) Greater(b Sample) bool {
+	return math.IsNaN(a.Data) || a.Data > b.Data
 }
 
 // Series is a grouped set of metric points.

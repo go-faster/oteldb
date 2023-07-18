@@ -481,3 +481,51 @@ func TestGroupedAggregation(t *testing.T) {
 		})
 	}
 }
+
+func TestKHeapAggregation(t *testing.T) {
+	var (
+		testParams = EvalParams{
+			Start: time.Unix(1700000000, 0),
+			End:   time.Unix(1700000006, 0),
+			Step:  6 * time.Second,
+		}
+		testSamples = []SampledEntry{
+			{Sample: 4, Timestamp: 1700000001_000000000, Set: testLabels{"key": "a", "sample": "1"}},
+			{Sample: 5, Timestamp: 1700000002_000000000, Set: testLabels{"key": "a", "sample": "2"}},
+			{Sample: 6, Timestamp: 1700000003_000000000, Set: testLabels{"key": "a", "sample": "3"}},
+			{Sample: 3, Timestamp: 1700000004_000000000, Set: testLabels{"key": "a", "sample": "4"}},
+			{Sample: 2, Timestamp: 1700000005_000000000, Set: testLabels{"key": "a", "sample": "5"}},
+			{Sample: 1, Timestamp: 1700000006_000000000, Set: testLabels{"key": "a", "sample": "6"}},
+		}
+	)
+
+	tests := []struct {
+		query    string
+		expected []string
+	}{
+		{`topk by (key) (2, sum_over_time({} | unwrap _ [6s]))`, []string{"6", "5"}},
+		{`topk by (key) (3, sum_over_time({} | unwrap _ [6s]))`, []string{"6", "5", "4"}},
+		{`bottomk by (key) (2, sum_over_time({} | unwrap _ [6s]))`, []string{"1", "2"}},
+		{`bottomk by (key) (3, sum_over_time({} | unwrap _ [6s]))`, []string{"1", "2", "3"}},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			data := evaluateQuery(t, testSamples, tt.query, testParams, false)
+
+			v, ok := data.GetMatrixResult()
+			require.True(t, ok)
+
+			matrix := v.Result
+			require.NotEmpty(t, matrix)
+
+			var result []string
+			for _, s := range matrix {
+				values := s.Values
+				require.Len(t, s.Values, 1)
+				result = append(result, values[0].V)
+			}
+			require.ElementsMatch(t, tt.expected, result)
+		})
+	}
+}
