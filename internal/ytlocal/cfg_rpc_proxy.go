@@ -1,5 +1,6 @@
 package ytlocal
 
+// RPCProxy is rpc-proxy config.
 type RPCProxy struct {
 	AddressResolver           *AddressResolver           `yson:"address_resolver"`
 	Role                      string                     `yson:"role"`
