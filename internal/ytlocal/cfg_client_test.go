@@ -5,38 +5,18 @@ import (
 )
 
 func TestClient(t *testing.T) {
+	base := newBaseServer()
 	encode(t, "client", Client{
-		AddressResolver: AddressResolver{
-			Retries:    1000,
-			EnableIPv6: false,
-			EnableIPv4: true,
-		},
+		AddressResolver: base.AddressResolver,
 		Driver: Driver{
 			MasterCache: MasterCache{
 				EnableMasterCacheDiscovery: true,
-				Addresses: []string{
-					"1.master.yt.go-faster.org:9010",
-					"2.master.yt.go-faster.org:9010",
-					"3.master.yt.go-faster.org:9010",
-				},
-				CellID: "ffcef5128-9be15fe9-10242-ffffffcb",
+				Addresses:                  base.ClusterConnection.PrimaryMaster.Addresses,
+				CellID:                     base.ClusterConnection.PrimaryMaster.CellID,
 			},
-			TimestampProvider: Connection{
-				Addresses: []string{
-					"1.master.yt.go-faster.org:9010",
-					"2.master.yt.go-faster.org:9010",
-					"3.master.yt.go-faster.org:9010",
-				},
-			},
-			PrimaryMaster: Connection{
-				Addresses: []string{
-					"1.master.yt.go-faster.org:9010",
-					"2.master.yt.go-faster.org:9010",
-					"3.master.yt.go-faster.org:9010",
-				},
-				CellID: "ffcef5128-9be15fe9-10242-ffffffcb",
-			},
-			APIVersion: 4,
+			TimestampProvider: base.TimestampProvider,
+			PrimaryMaster:     base.ClusterConnection.PrimaryMaster,
+			APIVersion:        4,
 		},
 	})
 }

@@ -1,5 +1,13 @@
 {
-    "monitoring_port"=10014;
+    "rpc_port"=9015;
+    "monitoring_port"=9090;
+    logging={
+    };
+    "address_resolver"={
+        retries=1000;
+        "enable_ipv6"=%false;
+        "enable_ipv4"=%true;
+    };
     "timestamp_provider"={
         addresses=[
             "1.master.yt.go-faster.org:9010";
@@ -25,12 +33,6 @@
             "cell_id"="ffcef5128-9be15fe9-10242-ffffffcb";
         };
     };
-    "address_resolver"={
-        retries=1000;
-        "enable_ipv6"=%false;
-        "enable_ipv4"=%true;
-    };
-    "rpc_port"=9015;
     "controller_agent"={
         "use_columnar_statistics_default"=%true;
         "enable_tmpfs"=%true;

@@ -46,6 +46,6 @@ type LoggingWriter struct {
 
 // Logging config.
 type Logging struct {
-	Writers map[string]LoggingWriter `yson:"writers"`
-	Rules   []LoggingRule            `yson:"rules"`
+	Writers map[string]LoggingWriter `yson:"writers,omitempty"`
+	Rules   []LoggingRule            `yson:"rules,omitempty"`
 }

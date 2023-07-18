@@ -60,13 +60,9 @@ type MasterCacheService struct {
 
 // ExecNode config.
 type ExecNode struct {
-	ClusterConnection ClusterConnection    `yson:"cluster_connection,omitempty"`
-	AddressResolver   AddressResolver      `yson:"address_resolver"`
-	RPCPort           int                  `yson:"rpc_port"`
-	MonitoringPort    int                  `yson:"monitoring_port"`
-	TabletNode        TabletNodeConnection `yson:"tablet_node"`
-	ExecAgent         ExecAgent            `yson:"exec_agent"`
-	Flavors           []string             `yson:"flavors"`
-	TimestampProvider *Connection          `yson:"timestamp_provider,omitempty"`
-	ResourceLimits    ResourceLimits       `yson:"resource_limits"`
+	BaseServer
+	Flavors        []string             `yson:"flavors"`
+	ResourceLimits ResourceLimits       `yson:"resource_limits"`
+	TabletNode     TabletNodeConnection `yson:"tablet_node"`
+	ExecAgent      ExecAgent            `yson:"exec_agent"`
 }

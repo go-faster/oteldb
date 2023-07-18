@@ -27,16 +27,12 @@ type CypressManager struct {
 
 // Master config.
 type Master struct {
-	RPCPort           int               `yson:"rpc_port"`
-	MonitoringPort    int               `yson:"monitoring_port"`
-	PrimaryMaster     Connection        `yson:"primary_master"`
-	AddressResolver   AddressResolver   `yson:"address_resolver"`
-	UseNewHydra       bool              `yson:"use_new_hydra"`
-	Changelogs        MasterChangelogs  `yson:"snapshots"`
-	Snapshots         MasterSnapshots   `yson:"changelogs"`
-	ClusterConnection ClusterConnection `yson:"cluster_connection"`
-	TimestampProvider Connection        `yson:"timestamp_provider,omitempty"`
-	HydraManager      HydraManager      `yson:"hydra_manager"`
-	CypressManager    CypressManager    `yson:"cypress_manager"`
-	SecondaryMasters  []Connection      `yson:"secondary_masters"`
+	BaseServer
+	PrimaryMaster    Connection       `yson:"primary_master"`
+	UseNewHydra      bool             `yson:"use_new_hydra"`
+	Changelogs       MasterChangelogs `yson:"snapshots"`
+	Snapshots        MasterSnapshots  `yson:"changelogs"`
+	HydraManager     HydraManager     `yson:"hydra_manager"`
+	CypressManager   CypressManager   `yson:"cypress_manager"`
+	SecondaryMasters []Connection     `yson:"secondary_masters"`
 }

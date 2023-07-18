@@ -1,4 +1,13 @@
 {
+    "rpc_port"=9015;
+    "monitoring_port"=9090;
+    logging={
+    };
+    "address_resolver"={
+        retries=1000;
+        "enable_ipv6"=%false;
+        "enable_ipv4"=%true;
+    };
     "timestamp_provider"={
         addresses=[
             "1.master.yt.go-faster.org:9010";
@@ -24,18 +33,13 @@
             "cell_id"="ffcef5128-9be15fe9-10242-ffffffcb";
         };
     };
+    flavors=[
+        data;
+    ];
     "resource_limits"={
         "total_cpu"=0.000000;
         "total_memory"=8388608000;
         "node_dedicated_cpu"=0.000000;
-    };
-    flavors=[
-        data;
-    ];
-    "address_resolver"={
-        retries=1000;
-        "enable_ipv6"=%false;
-        "enable_ipv4"=%true;
     };
     "data_node"={
         "store_locations"=[
@@ -57,6 +61,4 @@
             };
         ];
     };
-    "rpc_port"=9015;
-    "monitoring_port"=10014;
 }

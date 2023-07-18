@@ -1,4 +1,20 @@
 {
+    "rpc_port"=9015;
+    "monitoring_port"=9090;
+    logging={
+    };
+    "address_resolver"={
+        retries=1000;
+        "enable_ipv6"=%false;
+        "enable_ipv4"=%true;
+    };
+    "timestamp_provider"={
+        addresses=[
+            "1.master.yt.go-faster.org:9010";
+            "2.master.yt.go-faster.org:9010";
+            "3.master.yt.go-faster.org:9010";
+        ];
+    };
     "cluster_connection"={
         "cluster_name"=ytlocal;
         "discovery_connection"={
@@ -14,15 +30,17 @@
                 "2.master.yt.go-faster.org:9010";
                 "3.master.yt.go-faster.org:9010";
             ];
+            "cell_id"="ffcef5128-9be15fe9-10242-ffffffcb";
         };
     };
-    "address_resolver"={
-        retries=1000;
-        "enable_ipv6"=%false;
-        "enable_ipv4"=%true;
+    flavors=[
+        exec;
+    ];
+    "resource_limits"={
+        "total_cpu"=0.000000;
+        "total_memory"=8388608000;
+        "node_dedicated_cpu"=0.000000;
     };
-    "rpc_port"=9020;
-    "monitoring_port"=10020;
     "tablet_node"={
         "versioned_chunk_meta_cache"={
             capacity=67108864;
@@ -42,13 +60,5 @@
                 };
             ];
         };
-    };
-    flavors=[
-        exec;
-    ];
-    "resource_limits"={
-        "total_cpu"=0.000000;
-        "total_memory"=8388608000;
-        "node_dedicated_cpu"=0.000000;
     };
 }

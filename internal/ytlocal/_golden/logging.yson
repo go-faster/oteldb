@@ -1,15 +1,48 @@
 {
     writers={
+        error={
+            type=file;
+            format=yson;
+            "file_name"="error.log";
+        };
+        trace={
+            type=file;
+            format=json;
+            "file_name"="trace.log";
+        };
         stderr={
             type=stderr;
             format=json;
         };
+        debug={
+            type=file;
+            format=plaintext;
+            "file_name"="debug.log";
+        };
     };
     rules=[
         {
-            "min_level"=error;
+            "min_level"=debug;
+            writers=[
+                debug;
+            ];
+        };
+        {
+            "min_level"=info;
             writers=[
                 stderr;
+            ];
+        };
+        {
+            "min_level"=error;
+            writers=[
+                error;
+            ];
+        };
+        {
+            "min_level"=trace;
+            writers=[
+                trace;
             ];
         };
     ];
