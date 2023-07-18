@@ -1,0 +1,16 @@
+{
+    writers={
+        stderr={
+            type=stderr;
+            format=json;
+        };
+    };
+    rules=[
+        {
+            "min_level"=error;
+            writers=[
+                stderr;
+            ];
+        };
+    ];
+}
