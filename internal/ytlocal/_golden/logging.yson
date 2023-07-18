@@ -1,5 +1,14 @@
 {
     writers={
+        stderr={
+            type=stderr;
+            format=json;
+        };
+        debug={
+            type=file;
+            format="plain_text";
+            "file_name"="debug.log";
+        };
         error={
             type=file;
             format=yson;
@@ -9,15 +18,6 @@
             type=file;
             format=json;
             "file_name"="trace.log";
-        };
-        stderr={
-            type=stderr;
-            format=json;
-        };
-        debug={
-            type=file;
-            format=plaintext;
-            "file_name"="debug.log";
         };
     };
     rules=[
