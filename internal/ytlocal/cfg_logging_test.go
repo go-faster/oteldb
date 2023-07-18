@@ -3,45 +3,67 @@ package ytlocal
 import "testing"
 
 func TestLogging(t *testing.T) {
-	encode(t, "logging", Logging{
-		Writers: map[string]LoggingWriter{
-			"stderr": {
+	for _, tc := range []struct {
+		Name   string
+		Writer LoggingWriter
+	}{
+		{
+			Name: "stderr",
+			Writer: LoggingWriter{
 				WriterType: LogWriterTypeStderr,
 				Format:     LogFormatJSON,
 			},
-			"debug": {
+		},
+		{
+			Name: "debug",
+			Writer: LoggingWriter{
 				WriterType: LogWriterTypeFile,
 				Format:     LogFormatPlainText,
 				FileName:   "debug.log",
 			},
-			"error": {
+		},
+		{
+			Name: "error",
+			Writer: LoggingWriter{
 				WriterType: LogWriterTypeFile,
 				Format:     LogFormatYSON,
 				FileName:   "error.log",
 			},
-			"trace": {
+		},
+		{
+			Name: "trace",
+			Writer: LoggingWriter{
 				WriterType: LogWriterTypeFile,
 				Format:     LogFormatJSON,
 				FileName:   "trace.log",
 			},
 		},
-		Rules: []LoggingRule{
-			{
-				MinLevel: LogLevelDebug,
-				Writers:  []string{"debug"},
+	} {
+		encode(t, "logging-"+tc.Name, Logging{
+			Writers: map[string]LoggingWriter{
+				tc.Name: {
+					WriterType: LogWriterTypeStderr,
+					Format:     LogFormatJSON,
+				},
 			},
-			{
-				MinLevel: LogLevelInfo,
-				Writers:  []string{"stderr"},
+			Rules: []LoggingRule{
+				{
+					MinLevel: LogLevelDebug,
+					Writers:  []string{"debug"},
+				},
+				{
+					MinLevel: LogLevelInfo,
+					Writers:  []string{"stderr"},
+				},
+				{
+					MinLevel: LogLevelError,
+					Writers:  []string{"error"},
+				},
+				{
+					MinLevel: LogLevelTrace,
+					Writers:  []string{"trace"},
+				},
 			},
-			{
-				MinLevel: LogLevelError,
-				Writers:  []string{"error"},
-			},
-			{
-				MinLevel: LogLevelTrace,
-				Writers:  []string{"trace"},
-			},
-		},
-	})
+		})
+	}
 }

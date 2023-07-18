@@ -16,6 +16,9 @@ func TestRun(t *testing.T) {
 
 	singleBinary := "ytserver-all"
 	singleBinaryPath, err := exec.LookPath(singleBinary)
+	if os.Getenv("YT_LOCAL_TEST") == "" {
+		t.Skip("YT_LOCAL_TEST not set")
+	}
 	if err != nil {
 		t.Skipf("Binary %q not found in $PATH", singleBinary)
 	}
