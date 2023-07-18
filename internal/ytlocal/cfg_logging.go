@@ -32,7 +32,7 @@ type LogFormat string
 
 // Possible log formats.
 const (
-	LogFormatPlainText LogFormat = "plaintext"
+	LogFormatPlainText LogFormat = "plain_text"
 	LogFormatJSON      LogFormat = "json"
 	LogFormatYSON      LogFormat = "yson"
 )
