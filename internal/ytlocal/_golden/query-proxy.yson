@@ -1,0 +1,35 @@
+{
+    "timestamp_provider"={
+        addresses=[
+            "1.master.yt.go-faster.org:9010";
+            "2.master.yt.go-faster.org:9010";
+            "3.master.yt.go-faster.org:9010";
+        ];
+    };
+    user="query-tracker";
+    "cluster_connection"={
+        "cluster_name"=ytlocal;
+        "discovery_connection"={
+            addresses=[
+                "1.master.yt.go-faster.org:9020";
+                "2.master.yt.go-faster.org:9020";
+                "3.master.yt.go-faster.org:9020";
+            ];
+        };
+        "primary_master"={
+            addresses=[
+                "1.master.yt.go-faster.org:9010";
+                "2.master.yt.go-faster.org:9010";
+                "3.master.yt.go-faster.org:9010";
+            ];
+        };
+    };
+    "address_resolver"={
+        retries=1000;
+        "enable_ipv6"=%false;
+        "enable_ipv4"=%true;
+    };
+    "rpc_port"=9020;
+    "monitoring_port"=10020;
+    "create_state_tables_on_startup"=%false;
+}
