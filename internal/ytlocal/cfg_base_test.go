@@ -29,6 +29,23 @@ func newBaseServer() BaseServer {
 					"3.master.yt.go-faster.org:9020",
 				},
 			},
+			CellDirectory: CellDirectory{
+				SoftBackoffTime:           100,
+				HardBackoffTime:           100,
+				EnablePeerPolling:         true,
+				PeerPollingPeriod:         500,
+				PeerPollingPeriodSplay:    100,
+				PeerPollingRequestTimeout: 100,
+				RediscoverPeriod:          5_000,
+				RediscoverSplay:           500,
+			},
+			TimestampProvider: Connection{
+				Addresses: []string{
+					"1.master.yt.go-faster.org:9010",
+					"2.master.yt.go-faster.org:9010",
+					"3.master.yt.go-faster.org:9010",
+				},
+			},
 			PrimaryMaster: Connection{
 				Addresses: []string{
 					"1.master.yt.go-faster.org:9010",

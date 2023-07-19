@@ -32,6 +32,23 @@
             ];
             "cell_id"="ffcef5128-9be15fe9-10242-ffffffcb";
         };
+        "cell_directory"={
+            "soft_backoff_time"=100;
+            "hard_backoff_time"=100;
+            "enable_peer_polling"=%true;
+            "peer_polling_period"=500;
+            "peer_polling_period_splay"=100;
+            "peer_polling_request_timeout"=100;
+            "rediscover_period"=5000;
+            "rediscover_splay"=500;
+        };
+        "timestamp_provider"={
+            addresses=[
+                "1.master.yt.go-faster.org:9010";
+                "2.master.yt.go-faster.org:9010";
+                "3.master.yt.go-faster.org:9010";
+            ];
+        };
     };
     flavors=[
         data;

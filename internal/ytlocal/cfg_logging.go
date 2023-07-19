@@ -46,6 +46,8 @@ type LoggingWriter struct {
 
 // Logging config.
 type Logging struct {
-	Writers map[string]LoggingWriter `yson:"writers,omitempty"`
-	Rules   []LoggingRule            `yson:"rules,omitempty"`
+	AbortOnAlert           bool                     `yson:"abort_on_alert,omitempty"`
+	CompressionThreadCount int                      `yson:"compression_thread_count,omitempty"`
+	Writers                map[string]LoggingWriter `yson:"writers,omitempty"`
+	Rules                  []LoggingRule            `yson:"rules,omitempty"`
 }
