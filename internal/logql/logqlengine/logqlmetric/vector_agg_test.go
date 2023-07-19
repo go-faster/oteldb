@@ -92,6 +92,9 @@ func TestSortVectorAggregation(t *testing.T) {
 
 			iter, err := VectorAggregation(input, tt.expr)
 			require.NoError(t, err)
+			defer func() {
+				require.NoError(t, iter.Close())
+			}()
 
 			var result Step
 			require.True(t, iter.Next(&result))
@@ -99,6 +102,7 @@ func TestSortVectorAggregation(t *testing.T) {
 			require.Equal(t, tt.expect, result.Samples)
 
 			require.False(t, iter.Next(&result))
+			require.NoError(t, iter.Err())
 		})
 	}
 }

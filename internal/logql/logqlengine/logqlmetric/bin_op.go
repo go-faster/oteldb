@@ -12,24 +12,34 @@ func BinOp(
 	left, right StepIterator,
 	expr *logql.BinOpExpr,
 ) (StepIterator, error) {
-	switch expr.Op {
-	case logql.OpAnd, logql.OpOr, logql.OpUnless:
-		return nil, &UnsupportedError{Msg: "binary set operations are unsupported yet"}
-	}
 	if m := expr.Modifier; m.Op != "" || len(m.OpLabels) > 0 || m.Group != "" || len(m.Include) > 0 {
 		return nil, &UnsupportedError{Msg: "binary operation modifiers are unsupported yet"}
 	}
 
-	op, err := buildSampleBinOp(expr)
-	if err != nil {
-		return nil, errors.Wrap(err, "build binary sample operation")
-	}
+	switch expr.Op {
+	case logql.OpAnd, logql.OpOr, logql.OpUnless:
+		merge, err := buildMergeSamplesOp(expr.Op, nopGrouper, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "build binary merge operation")
+		}
 
-	return &binOpIterator{
-		left:  left,
-		right: right,
-		op:    op,
-	}, nil
+		return &mergeBinOpIterator{
+			left:  left,
+			right: right,
+			merge: merge,
+		}, nil
+	default:
+		op, err := buildSampleBinOp(expr)
+		if err != nil {
+			return nil, errors.Wrap(err, "build binary sample operation")
+		}
+
+		return &binOpIterator{
+			left:  left,
+			right: right,
+			op:    op,
+		}, nil
+	}
 }
 
 type binOpIterator struct {
@@ -45,15 +55,11 @@ func (i *binOpIterator) Next(r *Step) bool {
 	}
 	r.Timestamp = left.Timestamp
 
-	getSamples := func(s Step) map[GroupingKey]Sample {
-		r := make(map[GroupingKey]Sample, len(s.Samples))
-		for _, sample := range s.Samples {
-			key := sample.Set.Key()
-			r[key] = sample
-		}
-		return r
+	leftSamples := make(map[GroupingKey]Sample, len(left.Samples))
+	for _, s := range left.Samples {
+		key := s.Set.Key()
+		leftSamples[key] = s
 	}
-	leftSamples := getSamples(left)
 
 	for _, rsample := range right.Samples {
 		key := rsample.Set.Key()
@@ -85,6 +91,101 @@ func (i *binOpIterator) Close() error {
 		i.left.Close(),
 		i.right.Close(),
 	)
+}
+
+type mergeBinOpIterator struct {
+	left  StepIterator
+	right StepIterator
+	merge func(a, b []Sample) []Sample
+}
+
+func (i *mergeBinOpIterator) Next(r *Step) bool {
+	var left, right Step
+	if !i.left.Next(&left) || !i.right.Next(&right) {
+		return false
+	}
+	r.Timestamp = left.Timestamp
+	r.Samples = i.merge(left.Samples, right.Samples)
+	return true
+}
+
+func (i *mergeBinOpIterator) Err() error {
+	return multierr.Append(
+		i.left.Err(),
+		i.right.Err(),
+	)
+}
+
+func (i *mergeBinOpIterator) Close() error {
+	return multierr.Append(
+		i.left.Close(),
+		i.right.Close(),
+	)
+}
+
+func buildMergeSamplesOp(op logql.BinOp, grouper grouperFunc, groupLabels []logql.Label) (func(a, b []Sample) []Sample, error) {
+	switch op {
+	case logql.OpAnd:
+		return func(left, right []Sample) (result []Sample) {
+			if len(left) == 0 || len(right) == 0 {
+				return nil
+			}
+
+			rightSamples := samplesSet(right, grouper, groupLabels)
+			for _, s := range left {
+				key := grouper(s.Set, groupLabels...).Key()
+				if _, ok := rightSamples[key]; ok {
+					result = append(result, s)
+				}
+			}
+			return result
+		}, nil
+	case logql.OpOr:
+		return func(left, right []Sample) (result []Sample) {
+			switch {
+			case len(left) == 0:
+				return right
+			case len(right) == 0:
+				return left
+			}
+
+			leftSamples := samplesSet(left, grouper, groupLabels)
+			result = append(result, left...)
+			for _, s := range right {
+				key := grouper(s.Set, groupLabels...).Key()
+				if _, ok := leftSamples[key]; !ok {
+					result = append(result, s)
+				}
+			}
+			return result
+		}, nil
+	case logql.OpUnless:
+		return func(left, right []Sample) (result []Sample) {
+			if len(left) == 0 || len(right) == 0 {
+				return left
+			}
+
+			rightSamples := samplesSet(right, grouper, groupLabels)
+			for _, s := range left {
+				key := grouper(s.Set, groupLabels...).Key()
+				if _, ok := rightSamples[key]; !ok {
+					result = append(result, s)
+				}
+			}
+			return result
+		}, nil
+	default:
+		return nil, errors.Errorf("unexpected binary merge operation %q", op)
+	}
+}
+
+func samplesSet(samples []Sample, grouper grouperFunc, groupLabels []logql.Label) map[GroupingKey]struct{} {
+	r := make(map[GroupingKey]struct{}, len(samples))
+	for _, s := range samples {
+		key := grouper(s.Set, groupLabels...).Key()
+		r[key] = struct{}{}
+	}
+	return r
 }
 
 type literalBinOpIterator struct {

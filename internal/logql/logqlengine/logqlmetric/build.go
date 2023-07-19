@@ -81,6 +81,8 @@ func build(expr logql.Expr, sel SampleSelector, params EvalParams) (_ StepIterat
 			return LiteralBinOp(left, expr, lit.Value, false)
 		}
 
+		// TODO(tdakkota): build likely would make a query to storage, so
+		// probably we should do it concurrently.
 		left, err := build(expr.Left, sel, params)
 		if err != nil {
 			return nil, err

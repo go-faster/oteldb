@@ -439,6 +439,23 @@ func TestGroupedAggregation(t *testing.T) {
 			},
 		},
 		{
+			`sum by (foo) ( count_over_time({} [4s]) ) * 2`,
+			[]series{
+				{
+					map[string]string{
+						"foo": "a",
+					},
+					[]string{"6", "6", "6"},
+				},
+				{
+					map[string]string{
+						"foo": "b",
+					},
+					[]string{"6", "6", "6"},
+				},
+			},
+		},
+		{
 			`sum without (method) ( count_over_time({} [4s]) )`,
 			[]series{
 				{
