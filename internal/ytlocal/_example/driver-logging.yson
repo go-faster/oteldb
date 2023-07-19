@@ -1,0 +1,18 @@
+{
+    "abort_on_alert" = %true;
+    "compression_thread_count" = 4;
+    "rules" = [
+        {
+            "min_level" = "info";
+            "writers" = [
+                "info";
+            ];
+        };
+    ];
+    "writers" = {
+        "info" = {
+            "type" = "file";
+            "file_name" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/driver.log";
+        };
+    };
+}

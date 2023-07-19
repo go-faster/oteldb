@@ -1,0 +1,34 @@
+{
+    writers={
+        debug={
+            type=stderr;
+            format=json;
+        };
+    };
+    rules=[
+        {
+            "min_level"=debug;
+            writers=[
+                debug;
+            ];
+        };
+        {
+            "min_level"=info;
+            writers=[
+                stderr;
+            ];
+        };
+        {
+            "min_level"=error;
+            writers=[
+                error;
+            ];
+        };
+        {
+            "min_level"=trace;
+            writers=[
+                trace;
+            ];
+        };
+    ];
+}

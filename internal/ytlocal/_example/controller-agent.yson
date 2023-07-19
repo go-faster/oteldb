@@ -1,0 +1,230 @@
+{
+    "cluster_connection" = {
+        "cluster_name" = "9868e048-bc6e1b69-ec02dadf-d92e8464";
+        "cell_directory" = {
+            "soft_backoff_time" = 100;
+            "hard_backoff_time" = 100;
+            "enable_peer_polling" = %true;
+            "peer_polling_period" = 500;
+            "peer_polling_period_splay" = 100;
+            "peer_polling_request_timeout" = 100;
+            "rediscover_period" = 5000;
+            "rediscover_splay" = 500;
+        };
+        "primary_master" = {
+            "enable_master_cache_discovery" = %false;
+            "addresses" = [
+                "localhost:23741";
+            ];
+            "cell_id" = "a3c51a55-ffffffff-259-ffffffff";
+            "retry_backoff_time" = 100;
+            "retry_attempts" = 100;
+            "soft_backoff_time" = 100;
+            "hard_backoff_time" = 100;
+            "enable_peer_polling" = %true;
+            "peer_polling_period" = 500;
+            "peer_polling_period_splay" = 100;
+            "peer_polling_request_timeout" = 100;
+            "rediscover_period" = 5000;
+            "rediscover_splay" = 500;
+            "rpc_timeout" = 25000;
+        };
+        "transaction_manager" = {
+            "default_ping_period" = 500;
+        };
+        "timestamp_provider" = {
+            "addresses" = [
+                "localhost:23741";
+            ];
+            "update_period" = 500;
+            "soft_backoff_time" = 100;
+            "hard_backoff_time" = 100;
+        };
+        "cell_directory_synchronizer" = {
+            "sync_period" = 500;
+            "sync_period_splay" = 100;
+        };
+        "chaos_cell_directory_synchronizer" = {
+            "sync_period" = 500;
+            "sync_period_splay" = 100;
+            "sync_all_chaos_cells" = %true;
+        };
+        "cluster_directory_synchronizer" = {
+            "sync_period" = 500;
+            "expire_after_successful_update_time" = 500;
+            "expire_after_failed_update_time" = 500;
+        };
+        "table_mount_cache" = {
+            "expire_after_successful_update_time" = 0;
+            "expire_after_failed_update_time" = 0;
+            "expire_after_access_time" = 0;
+            "refresh_time" = 0;
+        };
+        "sync_replica_cache" = {
+            "expire_after_successful_update_time" = 0;
+            "expire_after_failed_update_time" = 0;
+            "expire_after_access_time" = 0;
+            "refresh_time" = 0;
+        };
+        "queue_agent" = {
+            "stages" = {
+                "production" = {
+                    "addresses" = [
+                    ];
+                };
+            };
+            "queue_consumer_registration_manager" = {
+                "bypass_caching" = %true;
+                "cache_refresh_period" = 3000;
+                "configuration_refresh_period" = 500;
+            };
+        };
+        "permission_cache" = {
+            "expire_after_successful_update_time" = 0;
+            "expire_after_failed_update_time" = 0;
+            "expire_after_access_time" = 0;
+            "refresh_time" = 0;
+        };
+        "master_cell_directory_synchronizer" = {
+            "sync_period" = 500;
+            "expire_after_successful_update_time" = 500;
+            "expire_after_failed_update_time" = 500;
+        };
+        "job_node_descriptor_cache" = {
+            "expire_after_successful_update_time" = 0;
+            "expire_after_failed_update_time" = 0;
+            "expire_after_access_time" = 0;
+            "refresh_time" = 0;
+        };
+        "scheduler" = {
+            "retry_backoff_time" = 100;
+        };
+        "node_directory_synchronizer" = {
+            "sync_period" = 500;
+            "expire_after_successful_update_time" = 500;
+            "expire_after_failed_update_time" = 500;
+        };
+        "upload_transaction_timeout" = 5000;
+        "use_followers_for_write_targets_allocation" = %false;
+        "secondary_masters" = [
+        ];
+        "discovery_connection" = {
+            "addresses" = [
+                "localhost:23741";
+            ];
+        };
+    };
+    "rpc_server" = {
+        "tracing_mode" = "force";
+    };
+    "controller_agent" = {
+        "scheduling_tag_filter_expire_timeout" = 100;
+        "safe_scheduler_online_time" = 5000;
+        "static_orchid_cache_update_period" = 300;
+        "controller_static_orchid_update_period" = 0;
+        "operations_push_period" = 10;
+        "operation_alerts_push_period" = 100;
+        "suspicious_jobs_push_period" = 100;
+        "config_update_period" = 100;
+        "controller_exec_node_info_update_period" = 100;
+        "update_account_resource_usage_leases_period" = 100;
+        "running_job_statistics_update_period" = 100;
+        "exec_nodes_update_period" = 100;
+        "environment" = {
+            "TMPDIR" = "$(SandboxPath)";
+            "PYTHON_EGG_CACHE" = "$(SandboxPath)/.python-eggs";
+            "PYTHONUSERBASE" = "$(SandboxPath)/.python-site-packages";
+            "PYTHONPATH" = "$(SandboxPath)";
+            "HOME" = "$(SandboxPath)";
+        };
+        "enable_snapshot_loading" = %true;
+        "snapshot_period" = 100000000;
+        "snapshot_timeout" = 300000;
+        "max_archived_job_spec_count_per_operation" = 10;
+        "operation_options" = {
+            "spec_template" = {
+                "max_failed_job_count" = 10;
+                "locality_timeout" = 100;
+                "intermediate_data_replication_factor" = 1;
+                "enable_trace_logging" = %true;
+            };
+        };
+        "sorted_merge_operation_options" = {
+            "spec_template" = {
+                "use_new_sorted_pool" = %true;
+            };
+        };
+        "reduce_operation_options" = {
+            "spec_template" = {
+                "use_new_sorted_pool" = %true;
+            };
+        };
+        "join_reduce_operation_options" = {
+            "spec_template" = {
+                "use_new_sorted_pool" = %true;
+            };
+        };
+        "sort_operation_options" = {
+            "spec_template" = {
+                "use_new_sorted_pool" = %true;
+                "partition_data_size" = 536870912;
+            };
+        };
+        "map_reduce_operation_options" = {
+            "spec_template" = {
+                "use_new_sorted_pool" = %true;
+                "partition_data_size" = 536870912;
+                "enable_table_index_if_has_trivial_mapper" = %false;
+            };
+        };
+        "enable_bulk_insert_for_everyone" = %true;
+        "enable_tmpfs" = %false;
+        "enable_locality" = %false;
+    };
+    "yp_service_discovery" = {
+        "enable" = %false;
+    };
+    "rpc_dispatcher" = {
+        "compression_pool_size" = 1;
+        "heavy_pool_size" = 1;
+    };
+    "chunk_client_dispatcher" = {
+        "chunk_reader_pool_size" = 1;
+    };
+    "tcp_dispatcher" = {
+        "thread_pool_size" = 2;
+    };
+    "address_resolver" = {
+        "localhost_fqdn" = "localhost";
+        "enable_ipv4" = "true";
+        "enable_ipv6" = "false";
+    };
+    "solomon_exporter" = {
+        "grid_step" = 1000;
+    };
+    "cypress_annotations" = {
+        "yt_env_index" = 0;
+    };
+    "enable_ref_counted_tracker_profiling" = %false;
+    "enable_resource_tracker" = %false;
+    "rpc_port" = 21629;
+    "monitoring_port" = 32017;
+    "logging" = {
+        "abort_on_alert" = %true;
+        "compression_thread_count" = 4;
+        "rules" = [
+            {
+                "min_level" = "info";
+                "writers" = [
+                    "info";
+                ];
+            };
+        ];
+        "writers" = {
+            "info" = {
+                "type" = "file";
+                "file_name" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/controller-agent-0.log";
+            };
+        };
+    };
+}
