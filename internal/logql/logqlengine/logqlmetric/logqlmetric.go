@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/lokiapi"
@@ -76,25 +75,10 @@ func ReadStepResponse(iter iterators.Iterator[Step], instant bool) (s lokiapi.Qu
 		return s, err
 	}
 
-	// Sort points inside series.
-	for k, s := range matrixSeries {
-		slices.SortFunc(s.Values, func(a, b lokiapi.FPoint) bool {
-			return a.T < b.T
-		})
-		matrixSeries[k] = s
-	}
-	result := maps.Values(matrixSeries)
-	slices.SortFunc(result, func(a, b lokiapi.Series) bool {
-		if len(a.Values) < 1 || len(b.Values) < 1 {
-			return len(a.Values) < len(b.Values)
-		}
-		return a.Values[0].T < b.Values[0].T
-	})
-
 	s.SetMatrixResult(lokiapi.MatrixResult{
-		Result: result,
+		Result: maps.Values(matrixSeries),
 	})
-	return s, iter.Err()
+	return s, nil
 }
 
 func getPrometheusTimestamp(t time.Time) float64 {
