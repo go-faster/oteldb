@@ -26,6 +26,7 @@ type Connection struct {
 	UpdatePeriod              int      `yson:"update_period,omitempty"`
 }
 
+// CellDirectory config.
 type CellDirectory struct {
 	SoftBackoffTime           int  `yson:"soft_backoff_time,omitempty"`
 	HardBackoffTime           int  `yson:"hard_backoff_time,omitempty"`

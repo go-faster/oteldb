@@ -55,42 +55,51 @@ type CypressManager struct {
 	DefaultJournalWriteQuorum       int `yson:"default_journal_write_quorum,omitempty"`
 }
 
+// TimestampManager config.
 type TimestampManager struct {
 	CommitAdvance      int `yson:"commit_advance"`
 	RequestBackoffTime int `yson:"request_backoff_time"`
 	CalibrationPeriod  int `yson:"calibration_period"`
 }
 
+// HiveManager config.
 type HiveManager struct {
 	PingPeriod     int `yson:"ping_period"`
 	IdlePostPeriod int `yson:"idle_post_period"`
 }
 
+// YPServiceDiscovery is yp_service_discovery config.
 type YPServiceDiscovery struct {
 	Enable bool `yson:"enable"`
 }
 
+// RPCDispatcher is rpc_dispatcher config.
 type RPCDispatcher struct {
 	CompressionPoolSize int `yson:"compression_pool_size"`
 	HeavyPoolSize       int `yson:"heavy_pool_size"`
 }
 
+// ChunkClientDispatcher config.
 type ChunkClientDispatcher struct {
 	ChunkReaderPoolSize int `yson:"chunk_reader_pool_size"`
 }
 
+// TCPDispatcher is tcp_dispatcher config.
 type TCPDispatcher struct {
 	ThreadPoolSize int `yson:"thread_pool_size"`
 }
 
+// SolomonExporter config.
 type SolomonExporter struct {
 	GridStep int `yson:"grid_step"`
 }
 
+// CypressAnnotations config.
 type CypressAnnotations struct {
 	YTEnvIndex int `yson:"yt_env_index"`
 }
 
+// ChunkManger config.
 type ChunkManger struct {
 	AllowMultipleErasurePartsPerNode bool `yson:"allow_multiple_erasure_parts_per_node"`
 }
