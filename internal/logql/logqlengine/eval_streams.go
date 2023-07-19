@@ -33,7 +33,7 @@ func (i *entryIterator) Next(e *entry) bool {
 	var record logstorage.Record
 
 	for {
-		if !i.iter.Next(&record) || i.entries >= i.limit {
+		if !i.iter.Next(&record) || (i.limit > 0 && i.entries >= i.limit) {
 			return false
 		}
 

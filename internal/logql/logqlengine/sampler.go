@@ -26,7 +26,8 @@ func (e *Engine) sampleSelector(ctx context.Context, params EvalParams) logqlmet
 			Start:   otelstorage.NewTimestampFromTime(start),
 			End:     otelstorage.NewTimestampFromTime(end),
 			Instant: params.IsInstant(),
-			Limit:   params.Limit,
+			// Do not limit sample queries.
+			Limit: -1,
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "select logs")
