@@ -78,6 +78,7 @@ func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Tim
 		}
 		query.WriteByte(')')
 	}
+	query.WriteString("ORDER BY timestamp ASC")
 
 	r, err := q.yc.SelectRows(ctx, query.String(), nil)
 	if err != nil {
