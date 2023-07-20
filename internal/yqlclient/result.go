@@ -2,7 +2,6 @@ package yqlclient
 
 import (
 	"context"
-	"io"
 
 	"github.com/go-faster/errors"
 	"go.ytsaurus.tech/yt/go/yson"
@@ -21,24 +20,33 @@ func ReadResult[T any](ctx context.Context, c *Client, queryID ytqueryapi.QueryI
 		return nil, errors.Wrap(err, "read query result")
 	}
 
-	return &resultIterator[T]{dec: yson.NewDecoder(data)}, nil
+	return &resultIterator[T]{reader: yson.NewReaderKind(data, yson.StreamListFragment)}, nil
 }
 
 type resultIterator[T any] struct {
-	dec *yson.Decoder
-	err error
+	reader *yson.Reader
+	err    error
 }
 
-func (i *resultIterator[T]) Next(t *T) bool {
-	switch err := i.dec.Decode(t); err {
-	case io.EOF:
-		return false
-	case nil:
-		return true
-	default:
+func (i *resultIterator[T]) Next(to *T) bool {
+	ok, err := i.reader.NextListItem()
+	if !ok || err != nil {
 		i.err = err
 		return false
 	}
+
+	raw, err := i.reader.NextRawValue()
+	if err != nil {
+		i.err = errors.Wrap(err, "read next value")
+		return false
+	}
+
+	if err := yson.Unmarshal(raw, to); err != nil {
+		i.err = errors.Wrap(err, "unmarshal")
+		return false
+	}
+
+	return true
 }
 
 func (i *resultIterator[T]) Err() error {
