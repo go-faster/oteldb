@@ -55,7 +55,7 @@ func (s *securitySource) YTToken(context.Context, string) (t ytqueryapi.YTToken,
 	if s.Token == "" {
 		return t, ogenerrors.ErrSkipClientSecurity
 	}
-	t.APIKey = s.Token
+	t.APIKey = "OAuth " + s.Token
 	return t, nil
 }
 
@@ -167,11 +167,13 @@ func (c *Client) ExecuteQuery(ctx context.Context, q string, params ExecuteQuery
 				span.AddEvent("QueryAborted")
 				return queryID, errors.Wrapf(err, "query %s aborted", queryID)
 			case ytqueryapi.OperationStateFailed:
+				e := status.Error.Value
 				span.AddEvent("QueryFailed", trace.WithAttributes(
-					attribute.Int("yt.error_code", status.Error.Code),
-					attribute.String("yt.error_message", status.Error.Message),
+					attribute.Int("yt.error_code", e.Code),
+					attribute.String("yt.error_message", e.Message),
 				))
-				return queryID, &Error{Err: status.Error}
+
+				return queryID, &Error{Err: e}
 			case ytqueryapi.OperationStateCompleted:
 				span.AddEvent("QueryCompleted", trace.WithAttributes(
 					attribute.Int("yt.result_count", status.ResultCount.Or(0)),
