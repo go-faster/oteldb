@@ -29,7 +29,7 @@ func (e *RegexpExtractor) Process(_ otelstorage.Timestamp, line string, set Labe
 		if !ok {
 			continue
 		}
-		set.Add(label, pcommon.NewValueStr(match))
+		set.Set(label, pcommon.NewValueStr(match))
 	}
 	return line, true
 }

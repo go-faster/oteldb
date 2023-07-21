@@ -28,7 +28,12 @@ func newLabelSet() LabelSet {
 
 // AsLokiAPI returns lokiapi.LabelSet
 func (l *LabelSet) AsLokiAPI() lokiapi.LabelSet {
-	set := make(lokiapi.LabelSet, len(l.labels))
+	return lokiapi.LabelSet(l.AsMap())
+}
+
+// AsMap returns labels as strings map.
+func (l *LabelSet) AsMap() map[string]string {
+	set := make(map[string]string, len(l.labels))
 	for k, v := range l.labels {
 		set[string(k)] = v.AsString()
 	}
@@ -66,16 +71,16 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	maps.Clear(l.labels)
 
 	if traceID := record.TraceID; !traceID.IsEmpty() {
-		l.Add(logql.Label(`trace_id`), pcommon.NewValueStr(traceID.Hex()))
+		l.Set(logql.Label(`trace_id`), pcommon.NewValueStr(traceID.Hex()))
 	}
 	if spanID := record.SpanID; !spanID.IsEmpty() {
-		l.Add(logql.Label(`span_id`), pcommon.NewValueStr(spanID.Hex()))
+		l.Set(logql.Label(`span_id`), pcommon.NewValueStr(spanID.Hex()))
 	}
 	if severity := record.SeverityText; severity != "" {
-		l.Add(logql.Label(`severity_text`), pcommon.NewValueStr(severity))
+		l.Set(logql.Label(`severity_text`), pcommon.NewValueStr(severity))
 	}
 	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
-		l.Add(logql.Label(`severity_number`), pcommon.NewValueInt(int64(severity)))
+		l.Set(logql.Label(`severity_number`), pcommon.NewValueInt(int64(severity)))
 	}
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
@@ -92,14 +97,14 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) {
 				l.SetError("record extraction", err)
 				return false
 			}
-			l.Add(logql.Label(k), v)
+			l.Set(logql.Label(k), v)
 			return true
 		})
 	}
 }
 
-// Add adds new label.
-func (l *LabelSet) Add(s logql.Label, val pcommon.Value) {
+// Set sets label.
+func (l *LabelSet) Set(s logql.Label, val pcommon.Value) {
 	l.labels[s] = val
 }
 
