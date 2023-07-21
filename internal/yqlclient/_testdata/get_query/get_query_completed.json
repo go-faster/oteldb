@@ -1,0 +1,353 @@
+{
+    "id": "cc436038-a63e7640-3fcf14fc-e9a58649",
+    "engine": "yql",
+    "query": "use ytdemo;\n\nSELECT * FROM `//oteldb/logs/records` ORDER BY `timestamp`;\n",
+    "start_time": "2023-07-20T08:23:48.879248Z",
+    "finish_time": "2023-07-20T08:24:00.875768Z",
+    "settings": {},
+    "user": "admin",
+    "state": "completed",
+    "result_count": 1,
+    "progress": {
+        "yql_plan": {
+            "Detailed": {
+                "Operations": [
+                    {
+                        "Id": 6,
+                        "Name": "YtSort!",
+                        "InputsCount": 1,
+                        "OutputsCount": 1,
+                        "Inputs": [
+                            [
+                                1,
+                                1
+                            ]
+                        ],
+                        "Outputs": [
+                            [
+                                1,
+                                2
+                            ]
+                        ],
+                        "InputColumns": [
+                            "attrs",
+                            "body",
+                            "flags",
+                            "observed_timestamp",
+                            "resource_attrs",
+                            "scope_attrs",
+                            "scope_name",
+                            "scope_version",
+                            "severity_number",
+                            "severity_text",
+                            "span_id",
+                            "timestamp",
+                            "trace_id"
+                        ]
+                    },
+                    {
+                        "Id": 10,
+                        "Name": "ResPull!",
+                        "PullOperation": "YtSort!",
+                        "DependsOn": [
+                            6
+                        ]
+                    },
+                    {
+                        "Id": 8,
+                        "Name": "Commit!",
+                        "DependsOn": [
+                            10
+                        ]
+                    }
+                ],
+                "OperationRoot": 8,
+                "Providers": [
+                    {
+                        "Id": 1,
+                        "Name": "yt",
+                        "Cluster": "ytdemo",
+                        "Pins": [
+                            {
+                                "Id": 1,
+                                "Table": "oteldb/logs/records",
+                                "Type": [
+                                    "StructType",
+                                    [
+                                        [
+                                            "attrs",
+                                            [
+                                                "OptionalType",
+                                                [
+                                                    "DataType",
+                                                    "Yson"
+                                                ]
+                                            ]
+                                        ],
+                                        [
+                                            "body",
+                                            [
+                                                "DataType",
+                                                "Utf8"
+                                            ]
+                                        ],
+                                        [
+                                            "flags",
+                                            [
+                                                "DataType",
+                                                "Uint32"
+                                            ]
+                                        ],
+                                        [
+                                            "observed_timestamp",
+                                            [
+                                                "DataType",
+                                                "Uint64"
+                                            ]
+                                        ],
+                                        [
+                                            "resource_attrs",
+                                            [
+                                                "OptionalType",
+                                                [
+                                                    "DataType",
+                                                    "Yson"
+                                                ]
+                                            ]
+                                        ],
+                                        [
+                                            "scope_attrs",
+                                            [
+                                                "OptionalType",
+                                                [
+                                                    "DataType",
+                                                    "Yson"
+                                                ]
+                                            ]
+                                        ],
+                                        [
+                                            "scope_name",
+                                            [
+                                                "DataType",
+                                                "Utf8"
+                                            ]
+                                        ],
+                                        [
+                                            "scope_version",
+                                            [
+                                                "DataType",
+                                                "Utf8"
+                                            ]
+                                        ],
+                                        [
+                                            "severity_number",
+                                            [
+                                                "DataType",
+                                                "Int32"
+                                            ]
+                                        ],
+                                        [
+                                            "severity_text",
+                                            [
+                                                "DataType",
+                                                "Utf8"
+                                            ]
+                                        ],
+                                        [
+                                            "span_id",
+                                            [
+                                                "OptionalType",
+                                                [
+                                                    "DataType",
+                                                    "Uint64"
+                                                ]
+                                            ]
+                                        ],
+                                        [
+                                            "timestamp",
+                                            [
+                                                "DataType",
+                                                "Uint64"
+                                            ]
+                                        ],
+                                        [
+                                            "trace_id",
+                                            [
+                                                "OptionalType",
+                                                [
+                                                    "DataType",
+                                                    "String"
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            },
+                            {
+                                "Id": 2,
+                                "Table": "(tmp)"
+                            }
+                        ]
+                    }
+                ],
+                "OperationStats": {
+                    "Commit!": 1,
+                    "ResPull!": 1,
+                    "YtSort!": 1
+                }
+            },
+            "Basic": {
+                "nodes": [
+                    {
+                        "id": 7,
+                        "level": 1,
+                        "name": "ytdemo.`oteldb/logs/records`",
+                        "type": "in"
+                    },
+                    {
+                        "id": 6,
+                        "level": 2,
+                        "name": "YtSort!",
+                        "type": "op"
+                    },
+                    {
+                        "id": 10,
+                        "level": 3,
+                        "name": "ResPull!",
+                        "type": "op"
+                    },
+                    {
+                        "id": 8,
+                        "level": 4,
+                        "name": "Commit! on ytdemo #1",
+                        "type": "op"
+                    }
+                ],
+                "links": [
+                    {
+                        "source": 7,
+                        "target": 6
+                    },
+                    {
+                        "source": 6,
+                        "target": 10
+                    },
+                    {
+                        "source": 10,
+                        "target": 8
+                    }
+                ]
+            }
+        },
+        "yql_statistics": {
+            "ExecutionStatistics": {
+                "yt": {
+                    "6": {
+                        "data/input/chunk_count": {
+                            "sum": 21,
+                            "count": 1,
+                            "avg": 21,
+                            "max": 21,
+                            "min": 21
+                        },
+                        "data/input/row_count": {
+                            "sum": 123,
+                            "count": 1,
+                            "avg": 123,
+                            "max": 123,
+                            "min": 123
+                        },
+                        "data/input/data_weight": {
+                            "sum": 62426,
+                            "count": 1,
+                            "avg": 62426,
+                            "max": 62426,
+                            "min": 62426
+                        },
+                        "time/exec": {
+                            "sum": 139,
+                            "count": 1,
+                            "avg": 139,
+                            "max": 139,
+                            "min": 139
+                        },
+                        "time/total": {
+                            "sum": 153,
+                            "count": 1,
+                            "avg": 153,
+                            "max": 153,
+                            "min": 153
+                        },
+                        "time/prepare": {
+                            "sum": 0,
+                            "count": 1,
+                            "avg": 0,
+                            "max": 0,
+                            "min": 0
+                        },
+                        "_cluster": "http-proxies-default.yt.svc.cluster.local",
+                        "_id": "d2831ee5-51ca352e-103e8-e2e470c9"
+                    },
+                    "total": {
+                        "data/input/chunk_count": {
+                            "sum": 21,
+                            "count": 1,
+                            "avg": 21,
+                            "max": 21,
+                            "min": 21
+                        },
+                        "data/input/data_weight": {
+                            "sum": 62426,
+                            "count": 1,
+                            "avg": 62426,
+                            "max": 62426,
+                            "min": 62426
+                        },
+                        "data/input/row_count": {
+                            "sum": 123,
+                            "count": 1,
+                            "avg": 123,
+                            "max": 123,
+                            "min": 123
+                        },
+                        "time/exec": {
+                            "sum": 139,
+                            "count": 1,
+                            "avg": 139,
+                            "max": 139,
+                            "min": 139
+                        },
+                        "time/prepare": {
+                            "sum": 0,
+                            "count": 1,
+                            "avg": 0,
+                            "max": 0,
+                            "min": 0
+                        },
+                        "time/total": {
+                            "sum": 153,
+                            "count": 1,
+                            "avg": 153,
+                            "max": 153,
+                            "min": 153
+                        }
+                    }
+                },
+                "system": {
+                    "MaxRSS": {
+                        "max": 370900992
+                    },
+                    "MajorPageFaults": {
+                        "count": 1369
+                    }
+                }
+            }
+        }
+    },
+    "annotations": {},
+    "error": {
+        "code": 0,
+        "message": "",
+        "attributes": {}
+    }
+}
