@@ -15,7 +15,7 @@ First, prepare environment:
 
 This will build the `yt-builder` image.
 
-To reuse prebuild image, skip this step:
+To reuse prebuilt image, skip this step:
 ```bash
 cd _ytwork
 

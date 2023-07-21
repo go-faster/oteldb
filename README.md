@@ -17,8 +17,8 @@ The oteldb is stateless and uses external storage systems for data persistence, 
 The [YTsaurus](https://ytsaurus.tech/) is a primary storage for telemetry data.
 An open source big data platform for distributed storage and processing.
 
-- Hierarchical multitenancy with secure resource isolation
-- OLAP anbd OLTP
+- Hierarchical multi-tenancy with secure resource isolation
+- OLAP and OLTP
 - MapReduce, ACID
 - ClickHouse protocol compatible
 - Exabyte scale, up to 1M CPU, 10K+ nodes
