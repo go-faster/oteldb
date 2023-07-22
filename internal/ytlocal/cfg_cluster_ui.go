@@ -1,7 +1,7 @@
 package ytlocal
 
-// Cluster config.
-type Cluster struct {
+// UICluster is a cluster config for UI.
+type UICluster struct {
 	ID             string               `json:"id"`
 	Name           string               `json:"name,omitempty"`
 	Proxy          string               `json:"proxy,omitempty"`
@@ -21,5 +21,5 @@ type ClusterPrimaryMaster struct {
 
 // ClusterConfig config.
 type ClusterConfig struct {
-	Clusters []Cluster `json:"clusters"`
+	Clusters []UICluster `json:"clusters"`
 }

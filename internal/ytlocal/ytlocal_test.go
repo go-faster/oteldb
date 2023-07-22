@@ -3,6 +3,7 @@ package ytlocal
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"net"
@@ -114,6 +115,66 @@ func (c Component[T]) Run(ctx context.Context) error {
 	return g.Wait()
 }
 
+type ConsoleClient struct {
+	binary    string
+	cfgPath   string
+	proxyAddr string
+	token     string
+	tb        testing.TB
+}
+
+type Params map[string]any
+
+func (c *ConsoleClient) Run(ctx context.Context, args ...any) error {
+	var strArgs []string
+	for _, arg := range args {
+		switch v := arg.(type) {
+		case string:
+			strArgs = append(strArgs, v)
+		case Params:
+			// Handle convenience helper for params.
+			strArgs = append(strArgs, encodeParams(v))
+		default:
+			panic(fmt.Sprintf("unknown type: %T", arg))
+		}
+	}
+
+	// Setup command.
+	cmd := exec.CommandContext(ctx, c.binary, strArgs...)
+	// Setup cluster config.
+	env := cmd.Environ()
+	for k, v := range map[string]string{
+		"YT_PROXY": c.proxyAddr,
+		"YT_TOKEN": c.token,
+	} {
+		if v == "" {
+			continue
+		}
+		env = append(env, k+"="+v)
+	}
+	cmd.Env = env
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		c.tb.Logf("cli(%s): %s", strings.Join(strArgs, " "), string(out))
+		_, _ = fmt.Fprintln(os.Stderr, string(out))
+		return errors.Wrap(err, "run")
+	}
+	if output := strings.TrimSpace(string(out)); output != "" {
+		c.tb.Logf("cli(%s): %s", strings.Join(strArgs, " "), output)
+	} else {
+		c.tb.Logf("cli(%s): ok", strings.Join(strArgs, " "))
+	}
+	return nil
+}
+
+func encodeParams(param map[string]any) string {
+	data, err := yson.Marshal(param)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
+}
+
 func TestRun(t *testing.T) {
 	if ok, _ := strconv.ParseBool(os.Getenv("YT_LOCAL_TEST")); !ok {
 		t.Skip("Set YT_LOCAL_TEST=1")
@@ -126,11 +187,19 @@ func TestRun(t *testing.T) {
 	}
 
 	// Search for ytserver-all in $PATH.
-	singleBinary := "ytserver-all"
+	const singleBinary = "ytserver-all"
 	singleBinaryPath, err := exec.LookPath(singleBinary)
 	if err != nil {
 		t.Fatalf("Binary %q not found in $PATH", singleBinary)
 	}
+
+	// Setup client.
+	const clientBinary = "yt"
+	clientBinaryPath, err := exec.LookPath(clientBinary)
+	if err != nil {
+		t.Fatalf("Binary %q not found in $PATH", clientBinary)
+	}
+	t.Logf("Client binary: %s", clientBinaryPath)
 
 	// Ensure that all binaries are available.
 	//
@@ -296,6 +365,18 @@ func TestRun(t *testing.T) {
 		cfgChunkManager = ChunkManger{
 			AllowMultipleErasurePartsPerNode: true,
 		}
+		cfgDriver = Driver{
+			ClusterName:            clusterName,
+			EnableInternalCommands: true,
+			PrimaryMaster:          cfgPrimaryMaster,
+			CellDirectory:          cfgCellDirectory,
+			TimestampProvider:      cfgTimestampProvider,
+			DiscoveryConnections: []Connection{
+				{
+					Addresses: []string{masterAddr},
+				},
+			},
+		}
 		baseServer = baseServerFactory(cfgBaseServer, ports)
 	)
 	master := Component[Master]{
@@ -401,7 +482,7 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
-	httpPort := ports.RequireAllocate(t)
+	httpPort := 8080
 	httpProxy := Component[HTTPProxy]{
 		TB:      t,
 		RunDir:  runDir,
@@ -431,6 +512,26 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
+
+	// Setup client.
+	proxyAddr := net.JoinHostPort(localhost, strconv.Itoa(httpPort))
+	cc := &ConsoleClient{
+		binary:    clientBinaryPath,
+		proxyAddr: proxyAddr,
+		tb:        t,
+	}
+	{
+		// Setup client config.
+		data, err := yson.Marshal(Client{
+			AddressResolver: cfgAddressResolver,
+			Driver:          cfgDriver,
+		})
+		require.NoError(t, err)
+		cfgPath := filepath.Join(runDir, "client.yson")
+		require.NoError(t, os.WriteFile(cfgPath, data, 0644))
+		cc.cfgPath = cfgPath
+	}
+
 	g, ctx := errgroup.WithContext(context.Background())
 	master.Go(ctx, g)
 	scheduler.Go(ctx, g)
@@ -438,7 +539,7 @@ func TestRun(t *testing.T) {
 	node.Go(ctx, g)
 	httpProxy.Go(ctx, g)
 
-	errFoundNode := errors.New("found node")
+	errDone := errors.New("found node")
 	g.Go(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 		defer cancel()
@@ -446,12 +547,13 @@ func TestRun(t *testing.T) {
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		client, err := ythttp.NewClient(&yt.Config{
-			Proxy: net.JoinHostPort(localhost, strconv.Itoa(httpPort)),
+			Proxy: proxyAddr,
 		})
 		if err != nil {
 			return errors.Wrap(err, "create client")
 		}
 
+	Poll:
 		for {
 			select {
 			case <-ctx.Done():
@@ -462,10 +564,64 @@ func TestRun(t *testing.T) {
 					t.Log("NodeExists failed:", err)
 				} else {
 					t.Log("NodeExists:", ok)
-					return errFoundNode
+					break Poll
 				}
 			}
 		}
+
+		// Initialize cluster.
+		// yt remove //sys/@provision_lock -f
+		if err := client.RemoveNode(ctx, ypath.Root.Child("sys").Attr("provision_lock"), &yt.RemoveNodeOptions{Force: true}); err != nil {
+			return errors.Wrap(err, "provision lock")
+		}
+		if _, err := client.CreateObject(ctx, yt.NodeSchedulerPoolTree, &yt.CreateObjectOptions{
+			IgnoreExisting: true,
+			Attributes: map[string]any{
+				"name": "default",
+				"config": map[string]any{
+					"nodes_filter": "",
+				},
+			},
+		}); err != nil {
+			return errors.Wrap(err, "create scheduler pool")
+		}
+		if err := client.SetNode(ctx, ypath.Root.Child("sys").Child("pool_trees").Attr("default_tree"), "default", &yt.SetNodeOptions{}); err != nil {
+			return errors.Wrap(err, "set node")
+		}
+		if _, err := client.CreateNode(ctx, ypath.Root.Child("home"), yt.NodeMap, &yt.CreateNodeOptions{IgnoreExisting: true}); err != nil {
+			return errors.Wrap(err, "create node")
+		}
+		adminPassword := "admin"
+		adminPasswordSHA256 := fmt.Sprintf("%x", sha256.Sum256([]byte(adminPassword)))
+		if _, err := client.CreateObject(ctx, yt.NodeUser, &yt.CreateObjectOptions{
+			Attributes: map[string]any{
+				"name": "admin",
+			},
+		}); err != nil {
+			return errors.Wrap(err, "create user")
+		}
+
+		const user = "admin"
+		if err := cc.Run(ctx, "execute", "set_user_password", Params{
+			"user":                user,
+			"new_password_sha256": adminPasswordSHA256,
+		}); err != nil {
+			return errors.Wrap(err, "set user password")
+		}
+		if _, err := client.CreateNode(ctx, ypath.Root.Child("sys").Child("cypress_tokens").Child(adminPasswordSHA256), yt.NodeMap, &yt.CreateNodeOptions{
+			IgnoreExisting: true,
+			Attributes: map[string]any{
+				"user": user,
+			},
+		}); err != nil {
+			return errors.Wrap(err, "create cypress token")
+		}
+
+		if err := cc.Run(ctx, "add-member", user, "superusers"); err != nil {
+			return errors.Wrap(err, "add member")
+		}
+
+		return errDone
 	})
-	require.ErrorIs(t, g.Wait(), errFoundNode)
+	require.ErrorIs(t, g.Wait(), errDone)
 }

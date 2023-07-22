@@ -17,7 +17,7 @@ func TestJSON(t *testing.T) {
 		{
 			Name: "clusters-config",
 			Value: ClusterConfig{
-				Clusters: []Cluster{
+				Clusters: []UICluster{
 					{
 						ID:             "hahn",
 						Name:           "Hahn",
