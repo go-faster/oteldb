@@ -19,9 +19,23 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// RequireAllocate is helper for Allocate().
+func (p *PortAllocator) RequireAllocate(tb testing.TB) int {
+	tb.Helper()
+	n, err := p.Allocate()
+	require.NoError(tb, err)
+	return n
+}
+
 func TestRun(t *testing.T) {
 	if ok, _ := strconv.ParseBool(os.Getenv("YT_LOCAL_TEST")); !ok {
 		t.Skip("Set YT_LOCAL_TEST=1")
+	}
+
+	const localhost = "localhost"
+	ports := &PortAllocator{
+		Host: localhost,
+		Net:  "tcp4",
 	}
 
 	// Search for ytserver-all in $PATH.
@@ -75,10 +89,10 @@ func TestRun(t *testing.T) {
 	}
 
 	// Try running master.
-	const masterPort = 23741
-	const masterMonitoringPort = 23742
+	masterPort := ports.RequireAllocate(t)
+	masterMonitoringPort := ports.RequireAllocate(t)
 	const cellID = "a3c51a55-ffffffff-259-ffffffff"
-	const localhost = "localhost"
+
 	masterAddr := fmt.Sprintf("%s:%d", localhost, masterPort)
 	cfg := Master{
 		BaseServer: BaseServer{
