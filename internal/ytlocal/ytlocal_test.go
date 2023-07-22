@@ -109,10 +109,7 @@ func (c Component[T]) Run(ctx context.Context) error {
 	})
 	g.Go(func() error {
 		defer func() { _ = w.Close() }()
-		if err := cmd.Wait(); err != nil {
-			return err
-		}
-		return nil
+		return cmd.Wait()
 	})
 	return g.Wait()
 }
