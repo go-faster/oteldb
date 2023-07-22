@@ -14,6 +14,7 @@
             "2.master.yt.go-faster.org:9010";
             "3.master.yt.go-faster.org:9010";
         ];
+        "enable_master_cache_discovery"=%false;
     };
     "cluster_connection"={
         "cluster_name"=ytlocal;
@@ -23,6 +24,7 @@
                 "2.master.yt.go-faster.org:9020";
                 "3.master.yt.go-faster.org:9020";
             ];
+            "enable_master_cache_discovery"=%false;
         };
         "primary_master"={
             addresses=[
@@ -30,6 +32,7 @@
                 "2.master.yt.go-faster.org:9010";
                 "3.master.yt.go-faster.org:9010";
             ];
+            "enable_master_cache_discovery"=%false;
             "cell_id"="ffcef5128-9be15fe9-10242-ffffffcb";
         };
         "cell_directory"={
@@ -42,12 +45,16 @@
             "rediscover_period"=5000;
             "rediscover_splay"=500;
         };
+        "transaction_manager"={
+            "default_ping_period"=0;
+        };
         "timestamp_provider"={
             addresses=[
                 "1.master.yt.go-faster.org:9010";
                 "2.master.yt.go-faster.org:9010";
                 "3.master.yt.go-faster.org:9010";
             ];
+            "enable_master_cache_discovery"=%false;
         };
     };
 }

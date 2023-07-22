@@ -1,6 +1,6 @@
 {
     "cluster_connection" = {
-        "cluster_name" = "9868e048-bc6e1b69-ec02dadf-d92e8464";
+        "cluster_name" = "76ef1e1c-e53aa09a-cbcb0176-ed33362a";
         "cell_directory" = {
             "soft_backoff_time" = 100;
             "hard_backoff_time" = 100;
@@ -14,9 +14,9 @@
         "primary_master" = {
             "enable_master_cache_discovery" = %false;
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
-            "cell_id" = "a3c51a55-ffffffff-259-ffffffff";
+            "cell_id" = "665ea10c-ffffffff-259-ffffffff";
             "retry_backoff_time" = 100;
             "retry_attempts" = 100;
             "soft_backoff_time" = 100;
@@ -34,7 +34,7 @@
         };
         "timestamp_provider" = {
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
             "update_period" = 500;
             "soft_backoff_time" = 100;
@@ -110,7 +110,7 @@
         ];
         "discovery_connection" = {
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
         };
     };
@@ -207,8 +207,8 @@
     };
     "enable_ref_counted_tracker_profiling" = %false;
     "enable_resource_tracker" = %false;
-    "rpc_port" = 21629;
-    "monitoring_port" = 32017;
+    "rpc_port" = 22754;
+    "monitoring_port" = 27985;
     "logging" = {
         "abort_on_alert" = %true;
         "compression_thread_count" = 4;
@@ -223,7 +223,7 @@
         "writers" = {
             "info" = {
                 "type" = "file";
-                "file_name" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/controller-agent-0.log";
+                "file_name" = "file.log";
             };
         };
     };

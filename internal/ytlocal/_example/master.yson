@@ -6,7 +6,7 @@
         "hard_backoff_time" = 100;
         "update_period" = 500;
         "addresses" = [
-            "localhost:23741";
+            "localhost:12261";
         ];
     };
     "changelogs" = {
@@ -15,7 +15,7 @@
         "io_engine" = {
             "enable_sync" = %false;
         };
-        "path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/master/0/changelogs";
+        "path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/master/0/changelogs";
     };
     "object_service" = {
         "enable_local_read_executor" = %true;
@@ -71,14 +71,14 @@
     };
     "enable_ref_counted_tracker_profiling" = %false;
     "enable_resource_tracker" = %false;
-    "rpc_port" = 23741;
-    "monitoring_port" = 14215;
+    "rpc_port" = 12261;
+    "monitoring_port" = 20042;
     "primary_master" = {
         "enable_master_cache_discovery" = %false;
         "addresses" = [
-            "localhost:23741";
+            "localhost:12261";
         ];
-        "cell_id" = "a3c51a55-ffffffff-259-ffffffff";
+        "cell_id" = "665ea10c-ffffffff-259-ffffffff";
         "retry_backoff_time" = 100;
         "retry_attempts" = 100;
         "soft_backoff_time" = 100;
@@ -95,7 +95,7 @@
     ];
     "enable_timestamp_manager" = %true;
     "snapshots" = {
-        "path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/master/0/snapshots";
+        "path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/master/0/snapshots";
     };
     "logging" = {
         "abort_on_alert" = %true;
@@ -117,7 +117,7 @@
         "writers" = {
             "info" = {
                 "type" = "file";
-                "file_name" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/master-0-0.log";
+                "file_name" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/logs/master-0-0.log";
             };
             "stderr" = {
                 "type" = "stderr";
@@ -125,7 +125,7 @@
         };
     };
     "cluster_connection" = {
-        "cluster_name" = "9868e048-bc6e1b69-ec02dadf-d92e8464";
+        "cluster_name" = "76ef1e1c-e53aa09a-cbcb0176-ed33362a";
         "cell_directory" = {
             "soft_backoff_time" = 100;
             "hard_backoff_time" = 100;
@@ -139,9 +139,9 @@
         "primary_master" = {
             "enable_master_cache_discovery" = %false;
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
-            "cell_id" = "a3c51a55-ffffffff-259-ffffffff";
+            "cell_id" = "665ea10c-ffffffff-259-ffffffff";
             "retry_backoff_time" = 100;
             "retry_attempts" = 100;
             "soft_backoff_time" = 100;
@@ -159,7 +159,7 @@
         };
         "timestamp_provider" = {
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
             "update_period" = 500;
             "soft_backoff_time" = 100;
@@ -235,7 +235,7 @@
         ];
         "discovery_connection" = {
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
         };
     };

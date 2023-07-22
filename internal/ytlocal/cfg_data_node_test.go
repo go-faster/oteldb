@@ -3,7 +3,7 @@ package ytlocal
 import "testing"
 
 func TestDataNode(t *testing.T) {
-	encode(t, "data-node", DataNode{
+	encode(t, "data-node", Node{
 		BaseServer: newBaseServer(),
 		ResourceLimits: ResourceLimits{
 			TotalCPU:         0.0,

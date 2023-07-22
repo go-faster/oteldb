@@ -2,8 +2,11 @@ package ytlocal
 
 // Coordinator config.
 type Coordinator struct {
-	DefaultRoleFilter string `yson:"default_role_filter"`
+	DefaultRoleFilter string `yson:"default_role_filter,omitempty"`
 	Enable            bool   `yson:"enable"`
+	Announce          bool   `yson:"announce,omitempty"`
+	ShowPorts         bool   `yson:"show_ports,omitempty"`
+	PublicFQDN        string `yson:"public_fqdn,omitempty"`
 }
 
 // CypressTokenAuthenticator config.
@@ -25,7 +28,7 @@ type HTTPAuth struct {
 type HTTPProxy struct {
 	BaseServer
 	Port        int         `yson:"port"`
-	Role        string      `yson:"role"`
+	Role        string      `yson:"role,omitempty"`
 	ThreadCount int         `yson:"thread_count"`
 	Driver      Driver      `yson:"driver"`
 	Auth        HTTPAuth    `yson:"auth"`

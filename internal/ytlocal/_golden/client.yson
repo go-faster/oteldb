@@ -20,6 +20,7 @@
                 "2.master.yt.go-faster.org:9010";
                 "3.master.yt.go-faster.org:9010";
             ];
+            "enable_master_cache_discovery"=%false;
         };
         "primary_master"={
             addresses=[
@@ -27,8 +28,17 @@
                 "2.master.yt.go-faster.org:9010";
                 "3.master.yt.go-faster.org:9010";
             ];
+            "enable_master_cache_discovery"=%false;
             "cell_id"="ffcef5128-9be15fe9-10242-ffffffcb";
         };
+        "cell_directory"={
+        };
         "api_version"=4;
+        "enable_internal_commands"=%false;
+        "transaction_manager"={
+            addresses=[
+            ];
+            "enable_master_cache_discovery"=%false;
+        };
     };
 }

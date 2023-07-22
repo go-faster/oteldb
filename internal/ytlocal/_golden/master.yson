@@ -29,6 +29,7 @@
         addresses=[
             "localhost:23741";
         ];
+        "enable_master_cache_discovery"=%false;
         "soft_backoff_time"=100;
         "hard_backoff_time"=100;
         "update_period"=500;
@@ -39,11 +40,13 @@
             addresses=[
                 "localhost:23741";
             ];
+            "enable_master_cache_discovery"=%false;
         };
         "primary_master"={
             addresses=[
                 "localhost:23741";
             ];
+            "enable_master_cache_discovery"=%false;
             "cell_id"="a3c51a55-ffffffff-259-ffffffff";
             "soft_backoff_time"=100;
             "hard_backoff_time"=100;
@@ -67,10 +70,14 @@
             "rediscover_period"=5000;
             "rediscover_splay"=500;
         };
+        "transaction_manager"={
+            "default_ping_period"=0;
+        };
         "timestamp_provider"={
             addresses=[
                 "localhost:23741";
             ];
+            "enable_master_cache_discovery"=%false;
             "soft_backoff_time"=100;
             "hard_backoff_time"=100;
             "update_period"=500;
@@ -80,6 +87,7 @@
         addresses=[
             "localhost:23741";
         ];
+        "enable_master_cache_discovery"=%false;
         "cell_id"="a3c51a55-ffffffff-259-ffffffff";
     };
     "use_new_hydra"=%true;

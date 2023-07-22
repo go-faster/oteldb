@@ -8,7 +8,7 @@
         "update_period" = 500;
     };
     "cluster_connection" = {
-        "cluster_name" = "9868e048-bc6e1b69-ec02dadf-d92e8464";
+        "cluster_name" = "76ef1e1c-e53aa09a-cbcb0176-ed33362a";
         "cell_directory" = {
             "soft_backoff_time" = 100;
             "hard_backoff_time" = 100;
@@ -22,9 +22,9 @@
         "primary_master" = {
             "enable_master_cache_discovery" = %false;
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
-            "cell_id" = "a3c51a55-ffffffff-259-ffffffff";
+            "cell_id" = "665ea10c-ffffffff-259-ffffffff";
             "retry_backoff_time" = 100;
             "retry_attempts" = 100;
             "soft_backoff_time" = 100;
@@ -39,7 +39,7 @@
         };
         "timestamp_provider" = {
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
             "update_period" = 500;
             "soft_backoff_time" = 100;
@@ -112,7 +112,7 @@
         ];
         "discovery_connection" = {
             "addresses" = [
-                "localhost:23741";
+                "localhost:12261";
             ];
         };
     };
@@ -177,7 +177,7 @@
                 {
                     "low_watermark" = 1;
                     "location_is_absolute" = %false;
-                    "path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/node/0/layers";
+                    "path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/node/0/layers";
                 };
             ];
         };
@@ -188,7 +188,7 @@
                 "io_config" = {
                     "enable_sync" = %false;
                 };
-                "path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/node/0/chunk_cache";
+                "path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/node/0/chunk_cache";
             };
         ];
         "store_locations" = [
@@ -209,7 +209,7 @@
                 "low_latency_split_changelog" = {
                     "preallocate_size" = 1048576;
                 };
-                "path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/node/0/chunk_store";
+                "path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/node/0/chunk_store";
                 "max_trash_ttl" = 0;
             };
         ];
@@ -220,11 +220,11 @@
             "job_environment" = {
                 "type" = "simple";
                 "use_short_container_names" = %true;
-                "start_uid" = 25470;
+                "start_uid" = 29566;
             };
             "locations" = [
                 {
-                    "path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/node/0/slots";
+                    "path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/node/0/slots";
                     "disk_usage_watermark" = 0;
                 };
             ];
@@ -261,8 +261,8 @@
         };
         "root_fs_binds" = [
             {
-                "external_path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/node/0";
-                "internal_path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/runtime_data/node/0";
+                "external_path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/node/0";
+                "internal_path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/runtime_data/node/0";
             };
         ];
         "job_proxy_logging" = {
@@ -279,11 +279,11 @@
             "writers" = {
                 "info" = {
                     "type" = "file";
-                    "file_name" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/job_proxy-0-slot-%slot_index%.log";
+                    "file_name" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/logs/job_proxy-0-slot-%slot_index%.log";
                 };
             };
         };
-        "job_proxy_stderr_path" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/job_proxy-0-stderr-slot-%slot_index%";
+        "job_proxy_stderr_path" = "/tmp/76ef1e1c-e53aa09a-cbcb0176-ed33362a/logs/job_proxy-0-stderr-slot-%slot_index%";
     };
     "cellar_node" = {
         "master_connector" = {
@@ -347,8 +347,8 @@
     };
     "address_resolver" = {
         "localhost_fqdn" = "localhost";
-        "enable_ipv4" = "true";
-        "enable_ipv6" = "false";
+        "enable_ipv4" = %true;
+        "enable_ipv6" = %false;
     };
     "solomon_exporter" = {
         "grid_step" = 1000;
@@ -368,9 +368,9 @@
             "localhost";
         ];
     ];
-    "rpc_port" = 15470;
-    "monitoring_port" = 12874;
-    "skynet_http_port" = 31906;
+    "rpc_port" = 1000;
+    "monitoring_port" = 2000;
+    "skynet_http_port" = 3000;
     "logging" = {
         "abort_on_alert" = %true;
         "compression_thread_count" = 4;
@@ -385,7 +385,7 @@
         "writers" = {
             "info" = {
                 "type" = "file";
-                "file_name" = "/tmp/9868e048-bc6e1b69-ec02dadf-d92e8464/logs/node-0.log";
+                "file_name" = "file.log";
             };
         };
     };

@@ -5,16 +5,21 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-faster/errors"
 	"github.com/stretchr/testify/require"
+	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yson"
+	"go.ytsaurus.tech/yt/go/yt"
+	"go.ytsaurus.tech/yt/go/yt/ythttp"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -76,12 +81,11 @@ func (c Component[T]) Run(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	cmd := exec.CommandContext(ctx, c.Binary, args...)
 	r, w := io.Pipe()
-	cmd.Stderr = io.MultiWriter(w, os.Stderr)
+	cmd.Stderr = w
+
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "start")
 	}
-	errFound := errors.New("found")
-
 	g.Go(func() error {
 		defer func() { _ = r.Close() }()
 		scanner := bufio.NewScanner(r)
@@ -89,20 +93,23 @@ func (c Component[T]) Run(ctx context.Context) error {
 			if strings.Contains(scanner.Text(), "Leader active") {
 				c.TB.Log("Leader active")
 			}
+			text := scanner.Text()
+			firstTab := strings.IndexByte(text, '\t')
+			if firstTab != -1 {
+				// Trim timestamp.
+				text = text[firstTab+1:]
+			}
+			c.TB.Logf("%-16s %s", c.Name, strings.TrimSpace(text))
 		}
 		return scanner.Err()
 	})
 	g.Go(func() error {
 		defer func() { _ = w.Close() }()
 		if err := cmd.Wait(); err != nil {
-			if errors.Is(context.Cause(ctx), errFound) {
-				return nil
-			}
 			return err
 		}
 		return nil
 	})
-
 	return g.Wait()
 }
 
@@ -225,7 +232,7 @@ func TestRun(t *testing.T) {
 			Rules: []LoggingRule{
 				{
 					Writers:  []string{"stderr"},
-					MinLevel: LogLevelInfo,
+					MinLevel: LogLevenWarning,
 				},
 			},
 		}
@@ -364,12 +371,12 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
-	dataNode := Component[DataNode]{
+	node := Component[Node]{
 		Name:   "data-node",
 		Binary: binaries["node"],
 		RunDir: runDir,
 		TB:     t,
-		Config: DataNode{
+		Config: Node{
 			BaseServer: baseServer(t),
 			ResourceLimits: ResourceLimits{
 				TotalCPU:    1,
@@ -387,11 +394,70 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
-
+	httpPort := ports.RequireAllocate(t)
+	httpProxy := Component[HTTPProxy]{
+		TB:     t,
+		RunDir: runDir,
+		Name:   "http-proxy",
+		Binary: binaries["http-proxy"],
+		Config: HTTPProxy{
+			BaseServer: baseServer(t),
+			Port:       httpPort,
+			Coordinator: Coordinator{
+				Enable:     true,
+				Announce:   true,
+				ShowPorts:  true,
+				PublicFQDN: net.JoinHostPort(localhost, strconv.Itoa(httpPort)),
+			},
+			Driver: Driver{
+				ClusterName:            clusterName,
+				EnableInternalCommands: true,
+				PrimaryMaster:          cfgPrimaryMaster,
+				CellDirectory:          cfgCellDirectory,
+				TimestampProvider:      cfgTimestampProvider,
+				DiscoveryConnections: []Connection{
+					{
+						Addresses: []string{masterAddr},
+					},
+				},
+			},
+		},
+	}
 	g, ctx := errgroup.WithContext(context.Background())
 	master.Go(ctx, g)
 	scheduler.Go(ctx, g)
 	controllerAgent.Go(ctx, g)
-	dataNode.Go(ctx, g)
-	require.NoError(t, g.Wait())
+	node.Go(ctx, g)
+	httpProxy.Go(ctx, g)
+
+	errFoundNode := errors.New("found node")
+	g.Go(func() error {
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		client, err := ythttp.NewClient(&yt.Config{
+			Proxy: net.JoinHostPort(localhost, strconv.Itoa(httpPort)),
+		})
+		if err != nil {
+			return errors.Wrap(err, "create client")
+		}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-ticker.C:
+				ok, err := client.NodeExists(ctx, ypath.Path("//sys"), &yt.NodeExistsOptions{})
+				if err != nil {
+					t.Log("NodeExists failed:", err)
+				} else {
+					t.Log("NodeExists:", ok)
+					return errFoundNode
+				}
+			}
+		}
+	})
+	require.ErrorIs(t, g.Wait(), errFoundNode)
 }
