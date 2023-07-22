@@ -4,10 +4,11 @@ package ytlocal
 type LogLevel string
 
 const (
-	LogLevelTrace LogLevel = "trace"
-	LogLevelDebug LogLevel = "debug"
-	LogLevelInfo  LogLevel = "info"
-	LogLevelError LogLevel = "error"
+	LogLevelTrace   LogLevel = "trace"
+	LogLevelDebug   LogLevel = "debug"
+	LogLevelInfo    LogLevel = "info"
+	LogLevenWarning LogLevel = "warning"
+	LogLevelError   LogLevel = "error"
 )
 
 // LogWriterType string describes types of possible log writers.

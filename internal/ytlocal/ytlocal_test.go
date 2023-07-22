@@ -51,6 +51,12 @@ type Component[T any] struct {
 	TB     testing.TB
 }
 
+func (c Component[T]) Go(ctx context.Context, g *errgroup.Group) {
+	g.Go(func() error {
+		return errors.Wrap(c.Run(ctx), c.Name)
+	})
+}
+
 // Run runs the component.
 func (c Component[T]) Run(ctx context.Context) error {
 	data, err := yson.Marshal(c.Config)
@@ -78,7 +84,7 @@ func (c Component[T]) Run(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	cmd := exec.CommandContext(ctx, c.Binary, args...)
 	r, w := io.Pipe()
-	cmd.Stderr = w
+	cmd.Stderr = io.MultiWriter(w, os.Stderr)
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "start")
 	}
@@ -90,8 +96,6 @@ func (c Component[T]) Run(ctx context.Context) error {
 		for scanner.Scan() {
 			if strings.Contains(scanner.Text(), "Leader active") {
 				c.TB.Log("Leader active")
-				cancel(errFound)
-				return nil
 			}
 		}
 		return scanner.Err()
@@ -231,7 +235,7 @@ func TestRun(t *testing.T) {
 			Rules: []LoggingRule{
 				{
 					Writers:  []string{"stderr"},
-					MinLevel: LogLevelInfo,
+					MinLevel: LogLevenWarning,
 				},
 			},
 		}
@@ -292,6 +296,7 @@ func TestRun(t *testing.T) {
 		cfgChunkManager = ChunkManger{
 			AllowMultipleErasurePartsPerNode: true,
 		}
+		baseServer = baseServerFactory(cfgBaseServer, ports)
 	)
 	master := Component[Master]{
 		TB:     t,
@@ -348,6 +353,55 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
+	scheduler := Component[Scheduler]{
+		TB:     t,
+		RunDir: runDir,
+		Name:   "scheduler",
+		Binary: binaries["scheduler"],
+		Config: Scheduler{
+			BaseServer: baseServer(t),
+		},
+	}
+	controllerAgent := Component[ControllerAgent]{
+		TB:     t,
+		RunDir: runDir,
+		Name:   "controller-agent",
+		Binary: binaries["controller-agent"],
+		Config: ControllerAgent{
+			BaseServer: baseServer(t),
+			Options: ControllerAgentOptions{
+				EnableTMPFS: true,
+			},
+		},
+	}
+	dateNode := Component[DataNode]{
+		Name:   "data-node",
+		Binary: binaries["node"],
+		RunDir: runDir,
+		TB:     t,
+		Config: DataNode{
+			BaseServer: baseServer(t),
+			ResourceLimits: ResourceLimits{
+				TotalCPU:    1,
+				TotalMemory: 1024 * 1024 * 512,
+			},
+			Options: DataNodeOptions{
+				StoreLocations: []StoreLocation{
+					{
+						Path:          filepath.Join(runDir, "chunk_store"),
+						LowWatermark:  0,
+						HighWatermark: 0,
+						MediumName:    "default",
+					},
+				},
+			},
+		},
+	}
 
-	require.NoError(t, master.Run(context.Background()))
+	g, ctx := errgroup.WithContext(context.Background())
+	master.Go(ctx, g)
+	scheduler.Go(ctx, g)
+	controllerAgent.Go(ctx, g)
+	dateNode.Go(ctx, g)
+	require.NoError(t, g.Wait())
 }

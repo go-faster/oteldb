@@ -31,6 +31,14 @@ func TestLogging(t *testing.T) {
 			},
 		},
 		{
+			Name: "warning",
+			Writer: LoggingWriter{
+				WriterType: LogWriterTypeFile,
+				Format:     LogFormatYSON,
+				FileName:   "warning.log",
+			},
+		},
+		{
 			Name: "trace",
 			Writer: LoggingWriter{
 				WriterType: LogWriterTypeFile,
@@ -58,6 +66,10 @@ func TestLogging(t *testing.T) {
 				{
 					MinLevel: LogLevelError,
 					Writers:  []string{"error"},
+				},
+				{
+					MinLevel: LogLevenWarning,
+					Writers:  []string{"warning"},
 				},
 				{
 					MinLevel: LogLevelTrace,
