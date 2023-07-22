@@ -48,11 +48,12 @@ func baseServerFactory(tpl BaseServer, ports *PortAllocator) func(tb testing.TB)
 
 // Component is a helper to run ytserver components.
 type Component[T any] struct {
-	Name   string
-	Binary string
-	RunDir string
-	Config T
-	TB     testing.TB
+	Name    string
+	Binary  string
+	RunPath string
+	RunDir  string
+	Config  T
+	TB      testing.TB
 }
 
 func (c Component[T]) Go(ctx context.Context, g *errgroup.Group) {
@@ -82,6 +83,9 @@ func (c Component[T]) Run(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, c.Binary, args...)
 	r, w := io.Pipe()
 	cmd.Stderr = w
+	cmd.Env = []string{
+		"PATH", os.Getenv("PATH") + ":" + c.RunPath,
+	}
 
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "start")
@@ -139,6 +143,8 @@ func TestRun(t *testing.T) {
 	// If not available, create a symlink to ytserver-all.
 	runDir := t.TempDir()
 	binaries := map[string]string{}
+	runPath := filepath.Join(runDir, singleBinary)
+	require.NoError(t, os.MkdirAll(runPath, 0755))
 	for _, name := range []string{
 		"master",
 		"clock",
@@ -167,7 +173,7 @@ func TestRun(t *testing.T) {
 			continue
 		}
 		// Create link.
-		binaryPath = filepath.Join(runDir, binaryPath)
+		binaryPath = filepath.Join(runPath, binaryPath)
 		if err := os.Symlink(singleBinaryPath, binaryPath); err != nil {
 			t.Fatalf("failed to create link: %v", err)
 		}
@@ -296,10 +302,11 @@ func TestRun(t *testing.T) {
 		baseServer = baseServerFactory(cfgBaseServer, ports)
 	)
 	master := Component[Master]{
-		TB:     t,
-		RunDir: runDir,
-		Name:   "master",
-		Binary: binaries["master"],
+		TB:      t,
+		RunDir:  runDir,
+		RunPath: runPath,
+		Name:    "master",
+		Binary:  binaries["master"],
 		Config: Master{
 			BaseServer: cfgBaseServer,
 
@@ -351,19 +358,21 @@ func TestRun(t *testing.T) {
 		},
 	}
 	scheduler := Component[Scheduler]{
-		TB:     t,
-		RunDir: runDir,
-		Name:   "scheduler",
-		Binary: binaries["scheduler"],
+		TB:      t,
+		RunDir:  runDir,
+		RunPath: runPath,
+		Name:    "scheduler",
+		Binary:  binaries["scheduler"],
 		Config: Scheduler{
 			BaseServer: baseServer(t),
 		},
 	}
 	controllerAgent := Component[ControllerAgent]{
-		TB:     t,
-		RunDir: runDir,
-		Name:   "controller-agent",
-		Binary: binaries["controller-agent"],
+		TB:      t,
+		RunDir:  runDir,
+		RunPath: runPath,
+		Name:    "controller-agent",
+		Binary:  binaries["controller-agent"],
 		Config: ControllerAgent{
 			BaseServer: baseServer(t),
 			Options: ControllerAgentOptions{
@@ -372,10 +381,11 @@ func TestRun(t *testing.T) {
 		},
 	}
 	node := Component[Node]{
-		Name:   "data-node",
-		Binary: binaries["node"],
-		RunDir: runDir,
-		TB:     t,
+		Name:    "data-node",
+		Binary:  binaries["node"],
+		RunDir:  runDir,
+		RunPath: runPath,
+		TB:      t,
 		Config: Node{
 			BaseServer: baseServer(t),
 			ResourceLimits: ResourceLimits{
@@ -396,10 +406,11 @@ func TestRun(t *testing.T) {
 	}
 	httpPort := ports.RequireAllocate(t)
 	httpProxy := Component[HTTPProxy]{
-		TB:     t,
-		RunDir: runDir,
-		Name:   "http-proxy",
-		Binary: binaries["http-proxy"],
+		TB:      t,
+		RunDir:  runDir,
+		RunPath: runPath,
+		Name:    "http-proxy",
+		Binary:  binaries["http-proxy"],
 		Config: HTTPProxy{
 			BaseServer: baseServer(t),
 			Port:       httpPort,
