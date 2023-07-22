@@ -1,6 +1,6 @@
 {
     writers={
-        error={
+        warning={
             type=stderr;
             format=json;
         };

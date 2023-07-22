@@ -25,6 +25,12 @@
             ];
         };
         {
+            "min_level"=warning;
+            writers=[
+                warning;
+            ];
+        };
+        {
             "min_level"=trace;
             writers=[
                 trace;
