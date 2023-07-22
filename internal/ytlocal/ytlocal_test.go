@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/go-faster/errors"
 	"github.com/stretchr/testify/require"
@@ -73,13 +72,6 @@ func (c Component[T]) Run(ctx context.Context) error {
 	args := []string{
 		"--config", cfgPath,
 	}
-
-	ctx, timeoutCancel := context.WithTimeout(interrupted(), time.Second*10)
-	defer timeoutCancel()
-	ctx, cancel := context.WithCancelCause(ctx)
-	defer func() {
-		cancel(context.Canceled)
-	}()
 
 	g, ctx := errgroup.WithContext(ctx)
 	cmd := exec.CommandContext(ctx, c.Binary, args...)
@@ -233,7 +225,7 @@ func TestRun(t *testing.T) {
 			Rules: []LoggingRule{
 				{
 					Writers:  []string{"stderr"},
-					MinLevel: LogLevenWarning,
+					MinLevel: LogLevelInfo,
 				},
 			},
 		}
@@ -372,7 +364,7 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
-	dateNode := Component[DataNode]{
+	dataNode := Component[DataNode]{
 		Name:   "data-node",
 		Binary: binaries["node"],
 		RunDir: runDir,
@@ -400,6 +392,6 @@ func TestRun(t *testing.T) {
 	master.Go(ctx, g)
 	scheduler.Go(ctx, g)
 	controllerAgent.Go(ctx, g)
-	dateNode.Go(ctx, g)
+	dataNode.Go(ctx, g)
 	require.NoError(t, g.Wait())
 }
