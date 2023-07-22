@@ -175,10 +175,8 @@ func TestRun(t *testing.T) {
 		binaries[name] = binaryPath
 	}
 
-	const (
-		cellID      = "a3c51a55-ffffffff-259-ffffffff"
-		clusterName = "test"
-	)
+	const clusterName = "test"
+	cellID := GenerateCellID(1, clusterName)
 	var (
 		masterPort           = ports.RequireAllocate(t)
 		masterMonitoringPort = ports.RequireAllocate(t)
