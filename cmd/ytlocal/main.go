@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -29,7 +30,7 @@ func DeltaEncoder(now time.Time) zapcore.TimeEncoder {
 		milliseconds := (duration % time.Second) / time.Millisecond
 		secColor := color.New(color.Faint)
 		msecColor := color.New(color.FgHiBlack)
-		enc.AppendString(secColor.Sprintf("%03d", seconds) + msecColor.Sprintf(".%03d", milliseconds))
+		enc.AppendString(secColor.Sprintf("%03d", seconds) + msecColor.Sprintf(".%02d", milliseconds/10))
 	}
 }
 
@@ -57,9 +58,26 @@ func initBaseConfigs(pa *ytlocal.PortAllocator, base ytlocal.BaseServer, targets
 	return nil
 }
 
+// ColorLevelEncoder is single-character color encoder for zapcore.Level.
+func ColorLevelEncoder(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+	switch l {
+	case zapcore.DebugLevel:
+		enc.AppendString(color.New(color.FgCyan).Sprint("D"))
+	case zapcore.InfoLevel:
+		enc.AppendString(color.New(color.FgBlue).Sprint("I"))
+	case zapcore.WarnLevel:
+		enc.AppendString(color.New(color.FgYellow).Sprint("W"))
+	case zapcore.ErrorLevel:
+		enc.AppendString(color.New(color.FgRed).Sprint("E"))
+	default:
+		enc.AppendString("U")
+	}
+}
+
 func main() {
 	var arg struct {
 		ProxyPort int
+		Clean     bool
 	}
 	root := cobra.Command{
 		Use:           "ytlocal",
@@ -77,8 +95,14 @@ func main() {
 				return errors.Wrap(err, "mkdir temp")
 			}
 			defer func() {
-				_ = os.RemoveAll(dir)
+				zctx.From(ctx).Info("Stopped",
+					zap.String("dir", dir),
+					zap.Bool("clean", arg.Clean),
+				)
 			}()
+			if arg.Clean {
+				defer func() { _ = os.RemoveAll(dir) }()
+			}
 			bin, err := ytlocal.NewBinary(dir)
 			if err != nil {
 				return errors.Wrap(err, "new binary")
@@ -319,10 +343,7 @@ func main() {
 				return errors.Wrap(err, "init base configs")
 			}
 			var (
-				opt = ytlocal.Options{
-					Binary: bin,
-					Dir:    dir,
-				}
+				opt       = ytlocal.Options{Binary: bin, Dir: dir}
 				master    = ytlocal.NewComponent(opt, cfgMaster)
 				scheduler = ytlocal.NewComponent(opt, cfgScheduler)
 				agent     = ytlocal.NewComponent(opt, cfgControllerAgent)
@@ -346,18 +367,31 @@ func main() {
 	}
 
 	root.Flags().IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
+	root.Flags().BoolVar(&arg.Clean, "clean", true, "Clean temporary directory")
 
 	lgCfg := zap.NewDevelopmentConfig()
 	lgCfg.DisableStacktrace = true
 	lgCfg.DisableCaller = true
-	lgCfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	lgCfg.EncoderConfig.EncodeLevel = ColorLevelEncoder
 	lgCfg.EncoderConfig.EncodeTime = DeltaEncoder(time.Now())
+	lgCfg.EncoderConfig.ConsoleSeparator = " "
+	lgCfg.EncoderConfig.EncodeName = func(s string, encoder zapcore.PrimitiveArrayEncoder) {
+		name := s
+		const maxChars = 6
+		if len(name) > maxChars {
+			name = name[:maxChars]
+		}
+		format := "%-" + strconv.Itoa(maxChars) + "s"
+		encoder.AppendString(color.New(color.FgHiBlue).Sprintf(format, name))
+	}
 	lg, err := lgCfg.Build()
 	if err != nil {
 		panic(err)
 	}
-	ctx := zctx.Base(context.Background(), lg)
-	if err := root.ExecuteContext(ctx); err != nil {
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	if err := root.ExecuteContext(zctx.Base(ctx, lg)); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
 	}

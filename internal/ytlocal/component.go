@@ -2,6 +2,7 @@ package ytlocal
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -74,20 +75,23 @@ func (s *Server[T]) Run(ctx context.Context) error {
 	lg := zctx.From(ctx).Named(string(s.Type))
 
 	// Prepare configuration.
-	cfgDir := filepath.Join(s.Dir, string(s.Type))
+	cfgDir := filepath.Join(s.Dir, "cfg")
 	// #nosec: G301
 	if err := os.MkdirAll(cfgDir, 0755); err != nil {
 		return errors.Wrap(err, "mkdir all")
 	}
 
-	data, err := yson.Marshal(s.Config)
-	if err != nil {
-		return errors.Wrap(err, "marshal config")
+	var (
+		out = new(bytes.Buffer)
+		enc = yson.NewEncoderWriter(yson.NewWriterFormat(out, yson.FormatPretty))
+	)
+	if err := enc.Encode(s.Config); err != nil {
+		return errors.Wrap(err, "encode config")
 	}
 	// Save configuration.
-	cfgPath := filepath.Join(cfgDir, "cfg.yson")
+	cfgPath := filepath.Join(cfgDir, string(s.Type)+".yson")
 	// #nosec: G306
-	if err := os.WriteFile(cfgPath, data, 0644); err != nil {
+	if err := os.WriteFile(cfgPath, out.Bytes(), 0644); err != nil {
 		return errors.Wrap(err, "write config")
 	}
 
