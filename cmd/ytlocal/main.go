@@ -4,8 +4,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/fatih/color"
@@ -31,7 +33,34 @@ func DeltaEncoder(now time.Time) zapcore.TimeEncoder {
 	}
 }
 
+// initBaseConfigs allocates ports and fills base configs.
+func initBaseConfigs(pa *ytlocal.PortAllocator, base ytlocal.BaseServer, targets ...*ytlocal.BaseServer) error {
+	for _, target := range targets {
+		port, err := pa.Allocate()
+		if err != nil {
+			return errors.Wrap(err, "allocate")
+		}
+		rpcPort, err := pa.Allocate()
+		if err != nil {
+			return errors.Wrap(err, "allocate")
+		}
+		b := ytlocal.BaseServer{
+			RPCPort:           port,
+			MonitoringPort:    rpcPort,
+			Logging:           base.Logging,
+			AddressResolver:   base.AddressResolver,
+			TimestampProvider: base.TimestampProvider,
+			ClusterConnection: base.ClusterConnection,
+		}
+		*target = b
+	}
+	return nil
+}
+
 func main() {
+	var arg struct {
+		ProxyPort int
+	}
 	root := cobra.Command{
 		Use:           "ytlocal",
 		Short:         "ytlocal runs local ytsaurus cluster",
@@ -39,7 +68,7 @@ func main() {
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			pa := ytlocal.PortAllocator{
+			pa := &ytlocal.PortAllocator{
 				Host: "localhost",
 				Net:  "tcp",
 			}
@@ -248,18 +277,76 @@ func main() {
 						Path: filepath.Join(dir, "changelogs"),
 					},
 				}
+				cfgScheduler       = ytlocal.Scheduler{}
+				cfgControllerAgent = ytlocal.ControllerAgent{
+					Options: ytlocal.ControllerAgentOptions{
+						EnableTMPFS: true,
+					},
+				}
+				cfgNode = ytlocal.Node{
+					ResourceLimits: ytlocal.ResourceLimits{
+						TotalCPU:    1,
+						TotalMemory: 1024 * 1024 * 512,
+					},
+					Options: ytlocal.DataNodeOptions{
+						StoreLocations: []ytlocal.StoreLocation{
+							{
+								Path:       filepath.Join(dir, "chunk_store"),
+								MediumName: "default",
+							},
+						},
+					},
+				}
+				cfgHTTPProxy = ytlocal.HTTPProxy{
+					Port: arg.ProxyPort,
+					Coordinator: ytlocal.Coordinator{
+						Enable:     true,
+						Announce:   true,
+						ShowPorts:  true,
+						PublicFQDN: net.JoinHostPort(localhost, strconv.Itoa(arg.ProxyPort)),
+					},
+					Driver: cfgDriver,
+				}
 			)
-			_ = cfgDriver
-			opt := ytlocal.Options{
-				Binary: bin,
-				Dir:    dir,
+			// Allocate ports and fill base config for all components, using
+			// cfgBaseServer as a template.
+			if err := initBaseConfigs(pa, cfgBaseServer,
+				&cfgScheduler.BaseServer,
+				&cfgControllerAgent.BaseServer,
+				&cfgNode.BaseServer,
+				&cfgHTTPProxy.BaseServer,
+			); err != nil {
+				return errors.Wrap(err, "init base configs")
 			}
-			master := ytlocal.NewComponent(opt, cfgMaster)
+			var (
+				opt = ytlocal.Options{
+					Binary: bin,
+					Dir:    dir,
+				}
+				master    = ytlocal.NewComponent(opt, cfgMaster)
+				scheduler = ytlocal.NewComponent(opt, cfgScheduler)
+				agent     = ytlocal.NewComponent(opt, cfgControllerAgent)
+				node      = ytlocal.NewComponent(opt, cfgNode)
+				proxy     = ytlocal.NewComponent(opt, cfgHTTPProxy)
+			)
+			zctx.From(ctx).Info("Starting cluster",
+				zap.Int("master.rpc_port", master.Config.RPCPort),
+				zap.Int("master.monitoring_port", master.Config.MonitoringPort),
+			)
 			g, ctx := errgroup.WithContext(ctx)
-			ytlocal.Go(ctx, g, master)
+			ytlocal.Go(ctx, g,
+				master,
+				scheduler,
+				agent,
+				node,
+				proxy,
+			)
 			return g.Wait()
 		},
 	}
+
+	root.Flags().IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
+
 	lgCfg := zap.NewDevelopmentConfig()
 	lgCfg.DisableStacktrace = true
 	lgCfg.DisableCaller = true

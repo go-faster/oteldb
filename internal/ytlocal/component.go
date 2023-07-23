@@ -3,6 +3,7 @@ package ytlocal
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -21,8 +22,25 @@ type Component string
 
 // Component types.
 const (
-	ComponentHTTPProxy Component = "http-proxy"
-	ComponentMaster    Component = "master"
+	ComponentHTTPProxy         Component = "http-proxy"
+	ComponentMaster            Component = "master"
+	ComponentNode              Component = "node"
+	ComponentJobProxy          Component = "job-proxy"
+	ComponentClock             Component = "clock"
+	ComponentScheduler         Component = "scheduler"
+	ComponentExec              Component = "exec"
+	ComponentTools             Component = "tools"
+	ComponentControllerAgent   Component = "controller-agent"
+	ComponentLogTailer         Component = "log-tailer"
+	ComponentDiscovery         Component = "discovery"
+	ComponentTimestampProvider Component = "timestamp-provider"
+	ComponentMasherCache       Component = "master-cache"
+	ComponentCellBalancer      Component = "cell-balancer"
+	ComponentQueueAgent        Component = "queue-agent"
+	ComponentTabletBalancer    Component = "tablet-balancer"
+	ComponentQueryTracker      Component = "query-tracker"
+	ComponentCypressProxy      Component = "cypress-proxy"
+	ComponentTCPProxy          Component = "tcp-proxy"
 )
 
 // Server describes a component server.
@@ -137,12 +155,18 @@ func NewComponent[T any](opt Options, cfg T) *Server[T] {
 		t = ComponentMaster
 	case HTTPProxy:
 		t = ComponentHTTPProxy
+	case Node:
+		t = ComponentNode
+	case Scheduler:
+		t = ComponentScheduler
+	case ControllerAgent:
+		t = ComponentControllerAgent
 	default:
-		panic("unknown component")
+		panic(fmt.Sprintf("unknown component type %T", cfg))
 	}
 	bin, ok := opt.Binary.Components[t]
 	if !ok || bin == "" {
-		panic("unknown component path")
+		panic(fmt.Sprintf("unknown component %s", t))
 	}
 	return &Server[T]{
 		Type:   t,
