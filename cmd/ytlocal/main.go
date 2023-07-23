@@ -124,7 +124,7 @@ func main() {
 					CompressionThreadCount: 4,
 					Writers: map[string]ytlocal.LoggingWriter{
 						"stderr": {
-							Format:     ytlocal.LogFormatJSON,
+							Format:     ytlocal.LogFormatPlainText,
 							WriterType: ytlocal.LogWriterTypeStderr,
 						},
 					},
