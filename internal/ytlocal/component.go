@@ -33,6 +33,24 @@ type Server[T any] struct {
 	Dir    string
 }
 
+func (s Server[T]) String() string {
+	return string(s.Type)
+}
+
+// Go adds component to group.
+func Go(ctx context.Context, g *errgroup.Group, components ...interface {
+	Run(ctx context.Context) error
+	String() string
+}) {
+	for i := range components {
+		c := components[i]
+		zctx.From(ctx).Info("Starting component", zap.Stringer("component", c))
+		g.Go(func() error {
+			return c.Run(ctx)
+		})
+	}
+}
+
 // Run runs a component server.
 func (s *Server[T]) Run(ctx context.Context) error {
 	lg := zctx.From(ctx).Named(string(s.Type))
@@ -112,7 +130,7 @@ type Options struct {
 }
 
 // NewComponent creates a new component server.
-func NewComponent[T any](opt Options, cfg T) Server[T] {
+func NewComponent[T any](opt Options, cfg T) *Server[T] {
 	var t Component
 	switch any(cfg).(type) {
 	case Master:
@@ -126,7 +144,7 @@ func NewComponent[T any](opt Options, cfg T) Server[T] {
 	if !ok || bin == "" {
 		panic("unknown component path")
 	}
-	return Server[T]{
+	return &Server[T]{
 		Type:   t,
 		Config: cfg,
 		Binary: bin,

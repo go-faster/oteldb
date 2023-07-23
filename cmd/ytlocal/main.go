@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/ytlocal"
 )
@@ -42,12 +43,6 @@ func main() {
 				Host: "localhost",
 				Net:  "tcp",
 			}
-			port, err := pa.Allocate()
-			if err != nil {
-				return errors.Wrap(err, "allocate")
-			}
-			zctx.From(ctx).Info("allocated port", zap.Int("port", port))
-
 			dir, err := os.MkdirTemp("", "ytlocal-*")
 			if err != nil {
 				return errors.Wrap(err, "mkdir temp")
@@ -59,7 +54,7 @@ func main() {
 			if err != nil {
 				return errors.Wrap(err, "new binary")
 			}
-			zctx.From(ctx).Info("new binary",
+			zctx.From(ctx).Info("Using binaries",
 				zap.String("all", bin.All),
 				zap.String("master", bin.Master),
 			)
@@ -260,14 +255,9 @@ func main() {
 				Dir:    dir,
 			}
 			master := ytlocal.NewComponent(opt, cfgMaster)
-			zctx.From(ctx).Info("new component",
-				zap.String("type", string(master.Type)),
-				zap.String("binary", master.Binary),
-			)
-			if err := master.Run(ctx); err != nil {
-				return errors.Wrap(err, "run master")
-			}
-			return nil
+			g, ctx := errgroup.WithContext(ctx)
+			ytlocal.Go(ctx, g, master)
+			return g.Wait()
 		},
 	}
 	lgCfg := zap.NewDevelopmentConfig()
