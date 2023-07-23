@@ -498,18 +498,7 @@ func TestRun(t *testing.T) {
 				ShowPorts:  true,
 				PublicFQDN: net.JoinHostPort(localhost, strconv.Itoa(httpPort)),
 			},
-			Driver: Driver{
-				ClusterName:            clusterName,
-				EnableInternalCommands: true,
-				PrimaryMaster:          cfgPrimaryMaster,
-				CellDirectory:          cfgCellDirectory,
-				TimestampProvider:      cfgTimestampProvider,
-				DiscoveryConnections: []Connection{
-					{
-						Addresses: []string{masterAddr},
-					},
-				},
-			},
+			Driver: cfgDriver,
 		},
 	}
 
@@ -519,17 +508,6 @@ func TestRun(t *testing.T) {
 		binary:    clientBinaryPath,
 		proxyAddr: proxyAddr,
 		tb:        t,
-	}
-	{
-		// Setup client config.
-		data, err := yson.Marshal(Client{
-			AddressResolver: cfgAddressResolver,
-			Driver:          cfgDriver,
-		})
-		require.NoError(t, err)
-		cfgPath := filepath.Join(runDir, "client.yson")
-		require.NoError(t, os.WriteFile(cfgPath, data, 0644))
-		cc.cfgPath = cfgPath
 	}
 
 	g, ctx := errgroup.WithContext(context.Background())
@@ -569,9 +547,15 @@ func TestRun(t *testing.T) {
 			}
 		}
 
-		// Initialize cluster.
+		// Initialize world.
+		//
+		// See https://github.com/ytsaurus/ytsaurus/blob/main/yt/python/yt/environment/init_cluster.py#L128 for reference,
+		// the `initialize_world` function.
+
+		sys := ypath.Root.Child("sys")
+
 		// yt remove //sys/@provision_lock -f
-		if err := client.RemoveNode(ctx, ypath.Root.Child("sys").Attr("provision_lock"), &yt.RemoveNodeOptions{Force: true}); err != nil {
+		if err := client.RemoveNode(ctx, sys.Attr("provision_lock"), &yt.RemoveNodeOptions{Force: true}); err != nil {
 			return errors.Wrap(err, "provision lock")
 		}
 		if _, err := client.CreateObject(ctx, yt.NodeSchedulerPoolTree, &yt.CreateObjectOptions{
@@ -585,7 +569,7 @@ func TestRun(t *testing.T) {
 		}); err != nil {
 			return errors.Wrap(err, "create scheduler pool")
 		}
-		if err := client.SetNode(ctx, ypath.Root.Child("sys").Child("pool_trees").Attr("default_tree"), "default", &yt.SetNodeOptions{}); err != nil {
+		if err := client.SetNode(ctx, sys.Child("pool_trees").Attr("default_tree"), "default", &yt.SetNodeOptions{}); err != nil {
 			return errors.Wrap(err, "set node")
 		}
 		if _, err := client.CreateNode(ctx, ypath.Root.Child("home"), yt.NodeMap, &yt.CreateNodeOptions{IgnoreExisting: true}); err != nil {
@@ -608,7 +592,7 @@ func TestRun(t *testing.T) {
 		}); err != nil {
 			return errors.Wrap(err, "set user password")
 		}
-		if _, err := client.CreateNode(ctx, ypath.Root.Child("sys").Child("cypress_tokens").Child(adminPasswordSHA256), yt.NodeMap, &yt.CreateNodeOptions{
+		if _, err := client.CreateNode(ctx, sys.Child("cypress_tokens").Child(adminPasswordSHA256), yt.NodeMap, &yt.CreateNodeOptions{
 			IgnoreExisting: true,
 			Attributes: map[string]any{
 				"user": user,
@@ -619,6 +603,145 @@ func TestRun(t *testing.T) {
 
 		if err := cc.Run(ctx, "add-member", user, "superusers"); err != nil {
 			return errors.Wrap(err, "add member")
+		}
+
+		t.Log("Setting up users and groups")
+		for _, u := range []string{
+			"odin", "cron", "cron_merge", "cron_compression", "cron_operations", "cron_tmp",
+			"nightly_tester", "robot-yt-mon", "transfer_manager", "fennel", "robot-yt-idm",
+			"robot-yt-hermes",
+		} {
+			if _, err := client.CreateObject(ctx, yt.NodeUser, &yt.CreateObjectOptions{
+				IgnoreExisting: true,
+				Attributes: map[string]any{
+					"name": u,
+				},
+			}); err != nil {
+				return errors.Wrap(err, "create user")
+			}
+		}
+		const everyoneGroup = "everyone"
+		for _, group := range []string{
+			"devs", "admins", "admin_snapshots", everyoneGroup,
+		} {
+			if _, err := client.CreateObject(ctx, yt.NodeGroup, &yt.CreateObjectOptions{
+				IgnoreExisting: true,
+				Attributes: map[string]any{
+					"name": group,
+				},
+			}); err != nil {
+				return errors.Wrap(err, "create group")
+			}
+		}
+
+		t.Log("Setting up cron")
+		for _, cronUser := range []string{
+			"cron", "cron_merge", "cron_compression", "cron_operations", "cron_tmp",
+		} {
+			if err := cc.Run(ctx, "add-member", cronUser, "superusers"); err != nil {
+				return errors.Wrap(err, "add member")
+			}
+			const qSize = 500
+			qSizePath := sys.
+				Child("users").
+				Child(cronUser).
+				Attr("request_queue_size_limit")
+			if err := client.SetNode(ctx, qSizePath, qSize, &yt.SetNodeOptions{}); err != nil {
+				return errors.Wrap(err, "set req queue")
+			}
+		}
+		if _, err := client.CreateNode(ctx, sys.Child("cron"), yt.NodeMap, &yt.CreateNodeOptions{
+			IgnoreExisting: true,
+		}); err != nil {
+			return errors.Wrap(err, "create cron node")
+		}
+		for _, add := range []struct {
+			What string
+			To   string
+		}{
+			{What: "devs", To: "admins"},
+			{What: "robot-yt-mon", To: "admin_snapshots"},
+			{What: "robot-yt-idm", To: "superusers"},
+		} {
+			if err := cc.Run(ctx, "add-member", add.What, add.To); err != nil {
+				return errors.Wrap(err, "add member")
+			}
+		}
+		for _, dir := range []ypath.Path{
+			sys, sys.Child("tokens"), "//tmp",
+		} {
+			if err := client.SetNode(ctx, dir.Attr("opaque"), true, &yt.SetNodeOptions{}); err != nil {
+				return errors.Wrap(err, "set opaque")
+			}
+		}
+
+		if err := client.SetNode(ctx, sys.Attr("inherit_acl"), false, &yt.SetNodeOptions{}); err != nil {
+			return errors.Wrap(err, "set opaque")
+		}
+		for _, acl := range []struct {
+			Path ypath.Path
+			ACL  map[string]any
+		}{
+			{
+				Path: ypath.Root,
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{everyoneGroup},
+					"permissions": []string{"read"},
+				},
+			},
+			{
+				Path: ypath.Root,
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"admins"},
+					"permissions": []string{"write", "remove", "administer", "mount"},
+				},
+			},
+			{
+				Path: sys,
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"users"},
+					"permissions": []string{"read"},
+				},
+			},
+			{
+				Path: sys,
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"admins"},
+					"permissions": []string{"write", "remove", "administer", "mount"},
+				},
+			},
+			{
+				Path: sys.Child("accounts").Child("sys"),
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"root", "admins"},
+					"permissions": []string{"use"},
+				},
+			},
+			{
+				Path: sys.Child("tokens"),
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"admins"},
+					"permissions": []string{"read", "write", "remove"},
+				},
+			},
+		} {
+			// TODO: check if acl exists.
+			if err := client.SetNode(ctx, acl.Path.Attr("acl").Child("end"), acl.ACL, &yt.SetNodeOptions{}); err != nil {
+				return errors.Wrap(err, "set opaque")
+			}
+		}
+		for _, p := range []ypath.Path{
+			sys, sys.Child("tokens"), sys.Child("tablet_cells"),
+		} {
+			if err := client.SetNode(ctx, p.Attr("inherit_acl"), false, &yt.SetNodeOptions{}); err != nil {
+				return errors.Wrap(err, "set opaque")
+			}
 		}
 
 		return errDone
