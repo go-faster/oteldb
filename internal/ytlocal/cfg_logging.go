@@ -26,6 +26,7 @@ type LoggingRule struct {
 	IncludeCategories []string `yson:"include_categories,omitempty"`
 	MinLevel          LogLevel `yson:"min_level,omitempty"`
 	Writers           []string `yson:"writers,omitempty"`
+	Family            string   `yson:"family,omitempty"`
 }
 
 // LogFormat is a string describing possible log formats.

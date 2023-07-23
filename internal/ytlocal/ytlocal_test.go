@@ -47,8 +47,10 @@ func baseServerFactory(tpl BaseServer, ports *PortAllocator) func(tb testing.TB)
 	}
 }
 
-// Component is a helper to run ytserver components.
-type Component[T any] struct {
+// TestComponent is a helper to run ytserver components.
+//
+// TODO: Replace with Server.
+type TestComponent[T any] struct {
 	Name    string
 	Binary  string
 	RunPath string
@@ -57,14 +59,14 @@ type Component[T any] struct {
 	TB      testing.TB
 }
 
-func (c Component[T]) Go(ctx context.Context, g *errgroup.Group) {
+func (c TestComponent[T]) Go(ctx context.Context, g *errgroup.Group) {
 	g.Go(func() error {
 		return errors.Wrap(c.Run(ctx), c.Name)
 	})
 }
 
 // Run runs the component.
-func (c Component[T]) Run(ctx context.Context) error {
+func (c TestComponent[T]) Run(ctx context.Context) error {
 	data, err := yson.Marshal(c.Config)
 	if err != nil {
 		return errors.Wrap(err, "marshal config")
@@ -186,13 +188,6 @@ func TestRun(t *testing.T) {
 		Net:  "tcp4",
 	}
 
-	// Search for ytserver-all in $PATH.
-	const singleBinary = "ytserver-all"
-	singleBinaryPath, err := exec.LookPath(singleBinary)
-	if err != nil {
-		t.Fatalf("Binary %q not found in $PATH", singleBinary)
-	}
-
 	// Setup client.
 	const clientBinary = "yt"
 	clientBinaryPath, err := exec.LookPath(clientBinary)
@@ -201,50 +196,13 @@ func TestRun(t *testing.T) {
 	}
 	t.Logf("Client binary: %s", clientBinaryPath)
 
-	// Ensure that all binaries are available.
-	//
-	// See TryProgram here for list:
-	// https://github.com/ytsaurus/ytsaurus/blob/d8cc9c52b6fd94b352a4264579dd89a75aae9b38/yt/yt/server/all/main.cpp#L49-L74
-	//
-	// If not available, create a symlink to ytserver-all.
 	runDir := t.TempDir()
-	binaries := map[string]string{}
-	runPath := filepath.Join(runDir, singleBinary)
+
+	// Ensure binaries.
+	runPath := filepath.Join(runDir, "bin")
 	require.NoError(t, os.MkdirAll(runPath, 0755))
-	for _, name := range []string{
-		"master",
-		"clock",
-		"http-proxy",
-		"node",
-		"job-proxy",
-		"exec",
-		"tools",
-		"scheduler",
-		"controller-agent",
-		"log-tailer",
-		"discovery",
-		"timestamp-provider",
-		"master-cache",
-		"cell-balancer",
-		"queue-agent",
-		"tablet-balancer",
-		"cypress-proxy",
-		"query-tracker",
-		"tcp-proxy",
-	} {
-		binaryPath := "ytserver-" + name
-		p, err := exec.LookPath(binaryPath)
-		if err == nil {
-			binaries[name] = p
-			continue
-		}
-		// Create link.
-		binaryPath = filepath.Join(runPath, binaryPath)
-		if err := os.Symlink(singleBinaryPath, binaryPath); err != nil {
-			t.Fatalf("failed to create link: %v", err)
-		}
-		binaries[name] = binaryPath
-	}
+	bin, err := NewBinary(runPath)
+	require.NoError(t, err)
 
 	const clusterName = "test"
 	cellID := GenerateCellID(1, clusterName)
@@ -379,12 +337,12 @@ func TestRun(t *testing.T) {
 		}
 		baseServer = baseServerFactory(cfgBaseServer, ports)
 	)
-	master := Component[Master]{
+	master := TestComponent[Master]{
 		TB:      t,
 		RunDir:  runDir,
 		RunPath: runPath,
 		Name:    "master",
-		Binary:  binaries["master"],
+		Binary:  bin.Master,
 		Config: Master{
 			BaseServer: cfgBaseServer,
 
@@ -435,22 +393,22 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
-	scheduler := Component[Scheduler]{
+	scheduler := TestComponent[Scheduler]{
 		TB:      t,
 		RunDir:  runDir,
 		RunPath: runPath,
 		Name:    "scheduler",
-		Binary:  binaries["scheduler"],
+		Binary:  bin.Scheduler,
 		Config: Scheduler{
 			BaseServer: baseServer(t),
 		},
 	}
-	controllerAgent := Component[ControllerAgent]{
+	controllerAgent := TestComponent[ControllerAgent]{
 		TB:      t,
 		RunDir:  runDir,
 		RunPath: runPath,
 		Name:    "controller-agent",
-		Binary:  binaries["controller-agent"],
+		Binary:  bin.ControllerAgent,
 		Config: ControllerAgent{
 			BaseServer: baseServer(t),
 			Options: ControllerAgentOptions{
@@ -458,9 +416,9 @@ func TestRun(t *testing.T) {
 			},
 		},
 	}
-	node := Component[Node]{
+	node := TestComponent[Node]{
 		Name:    "data-node",
-		Binary:  binaries["node"],
+		Binary:  bin.Node,
 		RunDir:  runDir,
 		RunPath: runPath,
 		TB:      t,
@@ -483,12 +441,12 @@ func TestRun(t *testing.T) {
 		},
 	}
 	httpPort := 8080
-	httpProxy := Component[HTTPProxy]{
+	httpProxy := TestComponent[HTTPProxy]{
 		TB:      t,
 		RunDir:  runDir,
 		RunPath: runPath,
 		Name:    "http-proxy",
-		Binary:  binaries["http-proxy"],
+		Binary:  bin.HTTPProxy,
 		Config: HTTPProxy{
 			BaseServer: baseServer(t),
 			Port:       httpPort,

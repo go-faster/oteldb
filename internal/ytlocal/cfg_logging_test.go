@@ -3,6 +3,23 @@ package ytlocal
 import "testing"
 
 func TestLogging(t *testing.T) {
+	encode(t, "logging", Logging{
+		AbortOnAlert:           true,
+		CompressionThreadCount: 4,
+		Writers: map[string]LoggingWriter{
+			"stderr": {
+				Format:     LogFormatJSON,
+				WriterType: LogWriterTypeStderr,
+			},
+		},
+		Rules: []LoggingRule{
+			{
+				Writers:  []string{"stderr"},
+				MinLevel: LogLevelDebug,
+				Family:   "structured",
+			},
+		},
+	})
 	for _, tc := range []struct {
 		Name   string
 		Writer LoggingWriter

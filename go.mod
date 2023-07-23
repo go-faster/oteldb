@@ -7,6 +7,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/dustin/go-humanize v1.0.1
+	github.com/fatih/color v1.15.0
 	github.com/go-faster/errors v0.6.1
 	github.com/go-faster/jx v1.0.1
 	github.com/go-faster/sdk v0.7.0
@@ -17,6 +18,7 @@ require (
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.45.0
 	github.com/pyroscope-io/client v0.7.1
+	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.21.0
 	go.opentelemetry.io/collector v0.81.0
@@ -61,7 +63,6 @@ require (
 	github.com/docker/docker v24.0.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -121,7 +122,6 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/spf13/cobra v1.7.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect
