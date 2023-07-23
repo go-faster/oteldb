@@ -730,6 +730,22 @@ func TestRun(t *testing.T) {
 					"permissions": []string{"read", "write", "remove"},
 				},
 			},
+			{
+				Path: sys.Child("tablet_cells"),
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"admins"},
+					"permissions": []string{"read", "write", "remove", "administer"},
+				},
+			},
+			{
+				Path: sys.Child("tablet_cells"),
+				ACL: map[string]any{
+					"action":      "allow",
+					"subjects":    []string{"odin"},
+					"permissions": []string{"read"},
+				},
+			},
 		} {
 			// TODO: check if acl exists.
 			if err := client.SetNode(ctx, acl.Path.Attr("acl").Child("end"), acl.ACL, &yt.SetNodeOptions{}); err != nil {
