@@ -2,7 +2,7 @@ package ytlocal
 
 // AddressResolver config.
 type AddressResolver struct {
-	Retries       int    `yson:"retries"`
+	Retries       int    `yson:"retries,omitempty"`
 	EnableIPv6    bool   `yson:"enable_ipv6"`
 	EnableIPv4    bool   `yson:"enable_ipv4"`
 	LocalhostFQDN string `yson:"localhost_fqdn,omitempty"`

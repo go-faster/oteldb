@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"go.ytsaurus.tech/yt/go/yson"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/ytlocal"
@@ -366,8 +368,63 @@ func main() {
 		},
 	}
 
-	root.Flags().IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
-	root.Flags().BoolVar(&arg.Clean, "clean", true, "Clean temporary directory")
+	{
+		f := root.Flags()
+		f.IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
+		f.BoolVar(&arg.Clean, "clean", true, "Clean temporary directory")
+	}
+	{
+		python := &cobra.Command{
+			Use:   "python",
+			Short: "Run python yt_local mode",
+			RunE: func(cmd *cobra.Command, args []string) error {
+				// Generate new temporary directory.
+				dir, err := os.MkdirTemp("", "ytlocal-python-*")
+				if err != nil {
+					return errors.Wrap(err, "mkdir temp")
+				}
+				const allBinary = "ytserver-all"
+				allPath, err := exec.LookPath(allBinary)
+				if err != nil {
+					return errors.Wrap(err, "look path")
+				}
+				// Generate resolver configuration and save it to file.
+				data, err := yson.Marshal(ytlocal.AddressResolver{
+					EnableIPv4: true,
+					EnableIPv6: false,
+				})
+				if err != nil {
+					return errors.Wrap(err, "marshal")
+				}
+				cfgResolverPath := filepath.Join(dir, "resolver.yson")
+				// #nosec G306
+				if err := os.WriteFile(cfgResolverPath, data, 0644); err != nil {
+					return errors.Wrap(err, "write file")
+				}
+
+				ctx := cmd.Context()
+				// #nosec: G204
+				c := exec.CommandContext(ctx, "yt_local", "start",
+					"--proxy-por", "8080",
+					"--master-config", cfgResolverPath,
+					"--node-config", cfgResolverPath,
+					"--scheduler-config", cfgResolverPath,
+					"--controller-agent-config", cfgResolverPath,
+					"--rpc-proxy-config", cfgResolverPath,
+					"--local-cypress-dir", cfgResolverPath,
+					"--fqdn", "localhost",
+					"--ytserver-all-path", allPath,
+					"--sync",
+				)
+				c.Stderr = os.Stderr
+				c.Stdout = os.Stdout
+				c.Dir = dir
+
+				return c.Run()
+			},
+		}
+		root.AddCommand(python)
+	}
 
 	lgCfg := zap.NewDevelopmentConfig()
 	lgCfg.DisableStacktrace = true
