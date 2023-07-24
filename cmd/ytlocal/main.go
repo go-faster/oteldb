@@ -388,10 +388,15 @@ func main() {
 				if err != nil {
 					return errors.Wrap(err, "look path")
 				}
-				// Generate resolver configuration and save it to file.
-				data, err := yson.Marshal(ytlocal.AddressResolver{
-					EnableIPv4: true,
-					EnableIPv6: false,
+				// Generate resolver configuration patch and save it to file.
+				data, err := yson.Marshal(struct {
+					AddressResolver ytlocal.AddressResolver `yson:"address_resolver"`
+				}{
+					AddressResolver: ytlocal.AddressResolver{
+						EnableIPv4:    true,
+						EnableIPv6:    false,
+						LocalhostFQDN: "localhost",
+					},
 				})
 				if err != nil {
 					return errors.Wrap(err, "marshal")
@@ -405,7 +410,7 @@ func main() {
 				ctx := cmd.Context()
 				// #nosec: G204
 				c := exec.CommandContext(ctx, "yt_local", "start",
-					"--proxy-por", "8080",
+					"--proxy-port", "8080",
 					"--master-config", cfgResolverPath,
 					"--node-config", cfgResolverPath,
 					"--scheduler-config", cfgResolverPath,
