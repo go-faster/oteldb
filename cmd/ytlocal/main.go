@@ -370,7 +370,7 @@ func main() {
 
 	{
 		f := root.Flags()
-		f.IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
+		root.PersistentFlags().IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
 		f.BoolVar(&arg.Clean, "clean", true, "Clean temporary directory")
 	}
 	{
@@ -410,7 +410,7 @@ func main() {
 				ctx := cmd.Context()
 				// #nosec: G204
 				c := exec.CommandContext(ctx, "yt_local", "start",
-					"--proxy-port", "8080",
+					"--proxy-port", strconv.Itoa(arg.ProxyPort),
 					"--master-config", cfgResolverPath,
 					"--node-config", cfgResolverPath,
 					"--scheduler-config", cfgResolverPath,
