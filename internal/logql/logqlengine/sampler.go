@@ -243,21 +243,9 @@ func buildSampleExtractor(expr *logql.RangeAggregationExpr) (sampleExtractor, er
 				return strconv.ParseFloat(s, 64)
 			}
 		case "bytes":
-			le.converter = func(s string) (float64, error) {
-				v, err := humanize.ParseBytes(s)
-				if err != nil {
-					return 0, err
-				}
-				return float64(v), nil
-			}
+			le.converter = convertBytes
 		case "duration", "duration_seconds":
-			le.converter = func(s string) (float64, error) {
-				d, err := time.ParseDuration(s)
-				if err != nil {
-					return 0, err
-				}
-				return d.Seconds(), nil
-			}
+			le.converter = convertDuration
 		default:
 			return nil, errors.Errorf("unknown conversion operation %q", unwrap.Op)
 		}
@@ -287,6 +275,22 @@ func buildSampleExtractor(expr *logql.RangeAggregationExpr) (sampleExtractor, er
 	default:
 		return nil, errors.Errorf("unknown range operation %q", expr.Op)
 	}
+}
+
+func convertBytes(s string) (float64, error) {
+	v, err := humanize.ParseBytes(s)
+	if err != nil {
+		return 0, err
+	}
+	return float64(v), nil
+}
+
+func convertDuration(s string) (float64, error) {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return 0, err
+	}
+	return d.Seconds(), nil
 }
 
 type lineCounterExtractor struct{}

@@ -54,7 +54,7 @@ func (e *LogfmtExtractor) extractSome(line string, set LabelSet) error {
 				// TODO(tdakkota): try string interning
 				// TODO(tdakkota): probably, we can just use label name string
 				// 	instead of allocating a new string every time
-				set.Add(logql.Label(d.Key()), pcommon.NewValueStr(string(d.Value())))
+				set.Set(logql.Label(d.Key()), pcommon.NewValueStr(string(d.Value())))
 			}
 		}
 	}
@@ -69,7 +69,7 @@ func (e *LogfmtExtractor) extractAll(line string, set LabelSet) error {
 	for d.ScanRecord() {
 		for d.ScanKeyval() {
 			// TODO(tdakkota): try string interning
-			set.Add(logql.Label(d.Key()), pcommon.NewValueStr(string(d.Value())))
+			set.Set(logql.Label(d.Key()), pcommon.NewValueStr(string(d.Value())))
 		}
 	}
 
