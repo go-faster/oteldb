@@ -398,11 +398,18 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 func (p *parser) parseLabelFormatExpr() (lf *LabelFormatExpr, err error) {
 	lf = new(LabelFormatExpr)
 
+	labels := map[Label]struct{}{}
 	for {
-		label, err := p.parseIdent()
+		value, token, err := p.consumeText(lexer.Ident)
 		if err != nil {
 			return nil, err
 		}
+		label := Label(value)
+
+		if _, ok := labels[label]; ok {
+			return nil, errors.Errorf("label %q can be formatted only once per stage: at %s", label, token.Pos)
+		}
+		labels[label] = struct{}{}
 
 		if err := p.consume(lexer.Eq); err != nil {
 			return nil, err

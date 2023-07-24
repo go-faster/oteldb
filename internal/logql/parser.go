@@ -92,25 +92,26 @@ func (p *parser) unexpectedToken(t lexer.Token) error {
 	return errors.Errorf("unexpected token %q at %s", t.Type, t.Pos)
 }
 
-func (p *parser) consumeText(tt lexer.TokenType) (string, error) {
+func (p *parser) consumeText(tt lexer.TokenType) (string, lexer.Token, error) {
 	t := p.next()
 	if t.Type != tt {
-		return "", errors.Wrapf(p.unexpectedToken(t), "expected %q", tt)
+		return "", t, errors.Wrapf(p.unexpectedToken(t), "expected %q", tt)
 	}
-	return t.Text, nil
+	return t.Text, t, nil
 }
 
 func (p *parser) parseIdent() (Label, error) {
-	s, err := p.consumeText(lexer.Ident)
+	s, _, err := p.consumeText(lexer.Ident)
 	return Label(s), err
 }
 
 func (p *parser) parseString() (string, error) {
-	return p.consumeText(lexer.String)
+	s, _, err := p.consumeText(lexer.String)
+	return s, err
 }
 
 func (p *parser) parseNumber() (float64, error) {
-	text, err := p.consumeText(lexer.Number)
+	text, _, err := p.consumeText(lexer.Number)
 	if err != nil {
 		return 0, err
 	}
@@ -118,7 +119,7 @@ func (p *parser) parseNumber() (float64, error) {
 }
 
 func (p *parser) parseInt() (int, error) {
-	text, err := p.consumeText(lexer.Number)
+	text, _, err := p.consumeText(lexer.Number)
 	if err != nil {
 		return 0, err
 	}
@@ -126,7 +127,7 @@ func (p *parser) parseInt() (int, error) {
 }
 
 func (p *parser) parseDuration() (time.Duration, error) {
-	text, err := p.consumeText(lexer.Duration)
+	text, _, err := p.consumeText(lexer.Duration)
 	if err != nil {
 		return 0, err
 	}
@@ -134,7 +135,7 @@ func (p *parser) parseDuration() (time.Duration, error) {
 }
 
 func (p *parser) parseBytes() (uint64, error) {
-	text, err := p.consumeText(lexer.Bytes)
+	text, _, err := p.consumeText(lexer.Bytes)
 	if err != nil {
 		return 0, err
 	}

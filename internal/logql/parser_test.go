@@ -1049,6 +1049,8 @@ var tests = []TestCase{
 	{`avg_over_time({}[5h])`, nil, true},
 	// Unwrap expression is not allowed.
 	{`bytes_rate({}[5h] | unwrap label)`, nil, true},
+	// Label can be changed only once per stage.
+	{`{foo = "bar"} | label_format status=foo,status=bar`, nil, true},
 
 	// Invalid regexp.
 	{`{foo=~"\\"}`, nil, true},
