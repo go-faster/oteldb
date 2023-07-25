@@ -2,6 +2,7 @@ package yqlclient
 
 import (
 	"context"
+	"io"
 
 	"github.com/go-faster/errors"
 	"go.ytsaurus.tech/yt/go/yson"
@@ -11,24 +12,43 @@ import (
 )
 
 // ReadResult reads result of given query ID.
-func ReadResult[T any](ctx context.Context, c *Client, queryID ytqueryapi.QueryID) (iterators.Iterator[T], error) {
+func ReadResult[T any](ctx context.Context, c *Client, queryID ytqueryapi.QueryID, format ResultFormat[T]) (iterators.Iterator[T], error) {
 	data, err := c.client.ReadQueryResult(ctx, ytqueryapi.ReadQueryResultParams{
 		QueryID:      queryID,
-		OutputFormat: ytqueryapi.OutputFormatYson,
+		OutputFormat: format.Format(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "read query result")
 	}
 
-	return &resultIterator[T]{reader: yson.NewReaderKind(data, yson.StreamListFragment)}, nil
+	return format.Iter(data)
 }
 
-type resultIterator[T any] struct {
+// ResultFormat defines result decoder.
+type ResultFormat[T any] interface {
+	Format() ytqueryapi.OutputFormat
+	Iter(r io.Reader) (iterators.Iterator[T], error)
+}
+
+// YSONFormat decodes result as YSON.
+type YSONFormat[T any] struct{}
+
+// Format implements [ResultFormat].
+func (YSONFormat[T]) Format() ytqueryapi.OutputFormat {
+	return ytqueryapi.OutputFormatYson
+}
+
+// Iter implements [ResultFormat].
+func (YSONFormat[T]) Iter(r io.Reader) (iterators.Iterator[T], error) {
+	return &ysonIterator[T]{reader: yson.NewReaderKind(r, yson.StreamListFragment)}, nil
+}
+
+type ysonIterator[T any] struct {
 	reader *yson.Reader
 	err    error
 }
 
-func (i *resultIterator[T]) Next(to *T) bool {
+func (i *ysonIterator[T]) Next(to *T) bool {
 	ok, err := i.reader.NextListItem()
 	if !ok || err != nil {
 		i.err = err
@@ -49,10 +69,10 @@ func (i *resultIterator[T]) Next(to *T) bool {
 	return true
 }
 
-func (i *resultIterator[T]) Err() error {
+func (i *ysonIterator[T]) Err() error {
 	return i.err
 }
 
-func (i *resultIterator[T]) Close() error {
+func (i *ysonIterator[T]) Close() error {
 	return nil
 }

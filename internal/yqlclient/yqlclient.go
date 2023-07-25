@@ -193,7 +193,7 @@ func YQLQuery[T any](ctx context.Context, c *Client, q string) (iterators.Iterat
 		return nil, errors.Wrap(err, "execute query")
 	}
 
-	iter, err := ReadResult[T](ctx, c, queryID)
+	iter, err := ReadResult[T](ctx, c, queryID, YSONFormat[T]{})
 	if err != nil {
 		return nil, errors.Wrap(err, "read result")
 	}
