@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"net"
@@ -90,10 +91,31 @@ func ColorLevelEncoder(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
 	}
 }
 
+const alphabet = "1234567890abcdefghijklmnpqrstuvwxyz"
+
+// GenerateID generates a random ID with the given length from alphabet.
+func GenerateID(reader io.Reader, length int) string {
+	// Generate a random ID with the given length from alphabet.
+	// The alphabet is chosen to avoid characters that can be confused
+	// with each other, such as 0/O and 1/I/l.
+
+	buf := make([]byte, length)
+	_, err := io.ReadFull(reader, buf)
+	if err != nil {
+		panic(err)
+	}
+
+	for i, b := range buf {
+		buf[i] = alphabet[b%byte(len(alphabet))]
+	}
+	return string(buf)
+}
+
 func main() {
 	var arg struct {
-		ProxyPort int
-		Clean     bool
+		ProxyPort    int
+		FrontendPort int
+		Clean        bool
 	}
 	root := cobra.Command{
 		Use:           "ytlocal",
@@ -385,6 +407,7 @@ func main() {
 	{
 		f := root.Flags()
 		root.PersistentFlags().IntVar(&arg.ProxyPort, "port", 8080, "HTTP proxy port")
+		root.PersistentFlags().IntVar(&arg.FrontendPort, "frontend-port", 8081, "Frontend port")
 		f.BoolVar(&arg.Clean, "clean", true, "Clean temporary directory")
 	}
 	{
@@ -400,17 +423,20 @@ Also, docker is required to run UI.
 				defer func() {
 					zctx.From(cmd.Context()).Info("Stopped")
 				}()
-
-				// Generate new temporary directory.
-				dir, err := os.MkdirTemp("", "ytlocal-python-*")
-				if err != nil {
-					return errors.Wrap(err, "mkdir temp")
-				}
 				const allBinary = "ytserver-all"
 				allPath, err := exec.LookPath(allBinary)
 				if err != nil {
 					return errors.Wrap(err, "look path")
 				}
+
+				// Generate random name for cluster.
+				name := GenerateID(rand.Reader, 6)
+				// Create new temporary directory.
+				dir := filepath.Join(os.TempDir(), "ytlocal-python-"+name)
+				if err := os.Mkdir(dir, 0700); err != nil {
+					return errors.Wrap(err, "mkdir all")
+				}
+
 				// Generate resolver configuration patch and save it to file.
 				data, err := yson.Marshal(struct {
 					AddressResolver ytlocal.AddressResolver `yson:"address_resolver"`
@@ -432,8 +458,14 @@ Also, docker is required to run UI.
 
 				ctx := cmd.Context()
 				lg := zctx.From(ctx)
-				g, ctx := errgroup.WithContext(ctx)
+				lg.Info("Setting up",
+					zap.String("dir", dir),
+					zap.String("name", name),
+					zap.Int("proxy.port", arg.ProxyPort),
+					zap.Int("ui.port", arg.FrontendPort),
+				)
 
+				g, ctx := errgroup.WithContext(ctx)
 				const fqdn = "localhost"
 				proxyPort := strconv.Itoa(arg.ProxyPort)
 				{
@@ -449,6 +481,7 @@ Also, docker is required to run UI.
 						"--local-cypress-dir", cfgResolverPath,
 						"--fqdn", fqdn,
 						"--ytserver-all-path", allPath,
+						"--id", name,
 						"--sync",
 					)
 					logPath := filepath.Join(dir, "yt_local.log")
@@ -481,7 +514,7 @@ Also, docker is required to run UI.
 								continue
 							}
 							if strings.Contains(text, "Local YT started") {
-								lg.Info("Started")
+								lg.Info("Started", zap.Int("proxy_port", arg.ProxyPort))
 								continue
 							}
 							// ["2023-07-25", "16:37:44,704", "INFO", "Watcher started"]
@@ -537,7 +570,7 @@ Also, docker is required to run UI.
 					}
 					// Create network.
 					lg.Info("Creating network")
-					const network = "ytlocal.net"
+					network := "ytlocal." + name + ".net"
 					res, err := docker.NetworkCreate(ctx, network, types.NetworkCreate{
 						CheckDuplicate: true,
 						Labels: map[string]string{
@@ -586,7 +619,7 @@ Also, docker is required to run UI.
 					}
 
 					gatewayProxy := net.JoinHostPort(gateway, strconv.Itoa(gatewayProxyPort))
-					const containerName = "ytlocal.ui"
+					containerName := "ytlocal." + name + ".ui"
 					// #nosec: G204
 					{
 						logPath := filepath.Join(dir, "ui.log")
@@ -599,7 +632,7 @@ Also, docker is required to run UI.
 						c := exec.CommandContext(ctx, "docker", "run", "--rm",
 							"--network", network,
 							"--name", containerName,
-							"-p", "8030:80", // TODO: cfg
+							"-p", fmt.Sprintf("%d:80", arg.FrontendPort),
 							"-e", "PROXY="+gatewayProxy,
 							"-e", "APP_ENV=local",
 							image,
@@ -622,7 +655,7 @@ Also, docker is required to run UI.
 							for s.Scan() {
 								text := s.Text()
 								if strings.Contains(text, "nginx: started") {
-									lg.Info("Started")
+									lg.Info("Started", zap.Int("port", arg.FrontendPort))
 									continue
 								}
 								// ["2023-07-25", "16:37:44,704", "INFO", "Watcher started"]
@@ -693,7 +726,8 @@ Also, docker is required to run UI.
 						// Run proxy for UI on container network gateway, so it
 						// can be accessed from container.
 						var p tcpproxy.Proxy
-						p.AddRoute(gatewayProxy, tcpproxy.To(net.JoinHostPort(fqdn, proxyPort)))
+						target := net.JoinHostPort(fqdn, proxyPort)
+						p.AddRoute(gatewayProxy, tcpproxy.To(target))
 						g.Go(func() error {
 							<-ctx.Done()
 							if err := p.Close(); err != nil {
@@ -703,7 +737,10 @@ Also, docker is required to run UI.
 						})
 						g.Go(func() error {
 							lg := lg.Named("pxy")
-							lg.Info("Start")
+							lg.Info("Routing",
+								zap.String("from", gatewayProxy),
+								zap.String("to", target),
+							)
 							defer lg.Info("Stop")
 							if err := p.Run(); err != nil && !errors.Is(err, net.ErrClosed) {
 								lg.Error("Failed", zapErr(err))
