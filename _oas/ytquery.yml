@@ -200,6 +200,7 @@ components:
       enum:
         - yql
         - ql
+        - chyt
     OutputFormat:
       type: string
       enum:
