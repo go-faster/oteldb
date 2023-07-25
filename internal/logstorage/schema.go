@@ -31,7 +31,6 @@ func (Record) YTSchema() schema.Schema {
 	attrsType := schema.Optional{Item: schema.TypeAny}
 
 	return schema.Schema{
-		UniqueKeys: true,
 		Columns: []schema.Column{
 			{Name: `timestamp`, ComplexType: schema.TypeUint64, SortOrder: schema.SortAscending},
 			{Name: `observed_timestamp`, ComplexType: schema.TypeUint64},
