@@ -379,6 +379,8 @@ func (s *Engine) Decode(d *jx.Decoder) error {
 		*s = EngineYql
 	case EngineQl:
 		*s = EngineQl
+	case EngineChyt:
+		*s = EngineChyt
 	default:
 		*s = Engine(v)
 	}

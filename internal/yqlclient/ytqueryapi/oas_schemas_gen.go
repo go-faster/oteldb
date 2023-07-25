@@ -191,8 +191,9 @@ func (s *Attributes) SetService(val OptString) {
 type Engine string
 
 const (
-	EngineYql Engine = "yql"
-	EngineQl  Engine = "ql"
+	EngineYql  Engine = "yql"
+	EngineQl   Engine = "ql"
+	EngineChyt Engine = "chyt"
 )
 
 // MarshalText implements encoding.TextMarshaler.
@@ -201,6 +202,8 @@ func (s Engine) MarshalText() ([]byte, error) {
 	case EngineYql:
 		return []byte(s), nil
 	case EngineQl:
+		return []byte(s), nil
+	case EngineChyt:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -215,6 +218,9 @@ func (s *Engine) UnmarshalText(data []byte) error {
 		return nil
 	case EngineQl:
 		*s = EngineQl
+		return nil
+	case EngineChyt:
+		*s = EngineChyt
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
