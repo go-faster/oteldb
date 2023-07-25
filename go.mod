@@ -7,11 +7,13 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cespare/xxhash/v2 v2.2.0
+	github.com/docker/docker v24.0.2+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.15.0
 	github.com/go-faster/errors v0.6.1
 	github.com/go-faster/jx v1.0.1
 	github.com/go-faster/sdk v0.7.0
+	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ogen-go/ogen v0.71.1
@@ -63,7 +65,6 @@ require (
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/dmarkham/enumer v1.5.8 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect

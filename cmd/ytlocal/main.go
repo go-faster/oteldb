@@ -12,10 +12,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/docker/docker/api/types"
 	"github.com/fatih/color"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
+	"github.com/go-faster/tcpproxy"
 	"github.com/spf13/cobra"
+	"github.com/testcontainers/testcontainers-go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.ytsaurus.tech/yt/go/yson"
@@ -34,6 +37,14 @@ func DeltaEncoder(now time.Time) zapcore.TimeEncoder {
 		msecColor := color.New(color.FgHiBlack)
 		enc.AppendString(secColor.Sprintf("%03d", seconds) + msecColor.Sprintf(".%02d", milliseconds/10))
 	}
+}
+
+// zapErr is non-verbose zap field for error.
+func zapErr(err error) zap.Field {
+	if err == nil {
+		return zap.Skip()
+	}
+	return zap.String("err", err.Error())
 }
 
 // initBaseConfigs allocates ports and fills base configs.
@@ -376,8 +387,17 @@ func main() {
 	{
 		python := &cobra.Command{
 			Use:   "python",
-			Short: "Run python yt_local mode",
+			Short: "Run with yt_local",
+			Long: `Run with python yt_local.
+
+The yt_local should be in PATH.
+Also, docker is required to run UI.
+`,
 			RunE: func(cmd *cobra.Command, args []string) error {
+				defer func() {
+					zctx.From(cmd.Context()).Info("Stopped")
+				}()
+
 				// Generate new temporary directory.
 				dir, err := os.MkdirTemp("", "ytlocal-python-*")
 				if err != nil {
@@ -408,24 +428,183 @@ func main() {
 				}
 
 				ctx := cmd.Context()
-				// #nosec: G204
-				c := exec.CommandContext(ctx, "yt_local", "start",
-					"--proxy-port", strconv.Itoa(arg.ProxyPort),
-					"--master-config", cfgResolverPath,
-					"--node-config", cfgResolverPath,
-					"--scheduler-config", cfgResolverPath,
-					"--controller-agent-config", cfgResolverPath,
-					"--rpc-proxy-config", cfgResolverPath,
-					"--local-cypress-dir", cfgResolverPath,
-					"--fqdn", "localhost",
-					"--ytserver-all-path", allPath,
-					"--sync",
-				)
-				c.Stderr = os.Stderr
-				c.Stdout = os.Stdout
-				c.Dir = dir
+				lg := zctx.From(ctx)
+				g, ctx := errgroup.WithContext(ctx)
 
-				return c.Run()
+				const fqdn = "localhost"
+				proxyPort := strconv.Itoa(arg.ProxyPort)
+				{
+					lg := lg.Named("local")
+					// #nosec: G204
+					c := exec.CommandContext(ctx, "yt_local", "start",
+						"--proxy-port", proxyPort,
+						"--master-config", cfgResolverPath,
+						"--node-config", cfgResolverPath,
+						"--scheduler-config", cfgResolverPath,
+						"--controller-agent-config", cfgResolverPath,
+						"--rpc-proxy-config", cfgResolverPath,
+						"--local-cypress-dir", cfgResolverPath,
+						"--fqdn", fqdn,
+						"--ytserver-all-path", allPath,
+						"--sync",
+					)
+					c.Stderr = os.Stderr
+					c.Stdout = os.Stdout
+					c.Dir = dir
+					defer func() {
+						// Ensure that yt_local is stopped.
+						if p := c.Process; p != nil {
+							_ = p.Kill()
+						}
+					}()
+					g.Go(func() error {
+						lg.Info("Starting")
+						if err := c.Run(); err != nil {
+							lg.Error("Failed", zapErr(err))
+							return errors.Wrap(err, "yt_local")
+						}
+						return nil
+					})
+				}
+				{
+					// Run UI with docker.
+					const image = "ytsaurus/ui:stable"
+					lg := lg.Named("ui")
+
+					docker, err := testcontainers.NewDockerClient()
+					if err != nil {
+						return errors.Wrap(err, "docker client")
+					}
+					// Create network.
+					lg.Info("Creating network")
+					const network = "ytlocal.net"
+					res, err := docker.NetworkCreate(ctx, network, types.NetworkCreate{
+						CheckDuplicate: true,
+						Labels: map[string]string{
+							"go-faster.oteldb.ytlocal": "true",
+						},
+					})
+					if err != nil {
+						return errors.Wrap(err, "network create")
+					}
+					defer func() {
+						// Cleanup network.
+						ctx := context.Background()
+						ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+						defer cancel()
+
+						if err := docker.NetworkRemove(ctx, res.ID); err != nil {
+							lg.Error("Failed to remove network",
+								zapErr(err),
+								zap.String("id", res.ID),
+							)
+						} else {
+							lg.Info("Removed network",
+								zap.String("id", res.ID),
+							)
+						}
+					}()
+					// Get gateway address.
+					networkRes, err := docker.NetworkInspect(ctx, res.ID, types.NetworkInspectOptions{})
+					if err != nil {
+						return errors.Wrap(err, "network inspect")
+					}
+					var gateway string
+					for _, ipam := range networkRes.IPAM.Config {
+						gateway = ipam.Gateway
+					}
+					if gateway == "" {
+						return errors.New("gateway not found")
+					}
+
+					pa := &ytlocal.PortAllocator{
+						Host: gateway,
+						Net:  "tcp",
+					}
+
+					gatewayProxyPort, err := pa.Allocate()
+					if err != nil {
+						return errors.Wrap(err, "allocate")
+					}
+
+					gatewayProxy := net.JoinHostPort(gateway, strconv.Itoa(gatewayProxyPort))
+					const containerName = "ytlocal.ui"
+					// #nosec: G204
+					c := exec.CommandContext(ctx, "docker", "run", "--rm",
+						"--network", network,
+						"--name", containerName,
+						"-p", "8030:80", // TODO: cfg
+						"-e", "PROXY="+gatewayProxy,
+						"-e", "APP_ENV=local",
+						image,
+					)
+					c.Stderr = os.Stderr
+					c.Stdout = os.Stdout
+					defer func() {
+						// Ensure that container is stopped.
+						if p := c.Process; p != nil {
+							_ = p.Kill()
+						}
+					}()
+					g.Go(func() error {
+						lg.Info("Start")
+						defer lg.Info("Stop")
+						return errors.Wrap(c.Run(), "ui")
+					})
+					defer func() {
+						lg.Info("Ensuring that container is removed")
+						// Ensure that container is removed.
+						ctx := context.Background()
+						ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+						defer cancel()
+
+						containers, err := docker.ContainerList(ctx, types.ContainerListOptions{})
+						if err != nil {
+							lg.Error("Failed to list containers", zapErr(err))
+							return
+						}
+						for _, container := range containers {
+							for _, name := range container.Names {
+								if name != "/"+containerName {
+									lg.Info("Skip container", zap.String("name", name))
+									continue
+								}
+								if err := docker.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{
+									Force: true,
+								}); err != nil {
+									lg.Error("Failed to remove container", zapErr(err))
+								}
+							}
+						}
+					}()
+
+					// Run proxy for UI on container network gateway, so it
+					// can be accessed from container.
+					var p tcpproxy.Proxy
+					p.AddRoute(gatewayProxy, tcpproxy.To(net.JoinHostPort(fqdn, proxyPort)))
+					g.Go(func() error {
+						<-ctx.Done()
+						if err := p.Close(); err != nil {
+							return errors.Wrap(err, "close proxy")
+						}
+						return nil
+					})
+					g.Go(func() error {
+						lg := lg.Named("pxy")
+						lg.Info("Start")
+						defer lg.Info("Stop")
+						if err := p.Run(); err != nil && !errors.Is(err, net.ErrClosed) {
+							lg.Error("Failed", zapErr(err))
+							return errors.Wrap(err, "proxy")
+						}
+						return nil
+					})
+				}
+				if err := g.Wait(); err != nil {
+					lg.Error("Wait", zapErr(err))
+					return errors.Wrap(err, "wait")
+				}
+				return nil
 			},
 		}
 		root.AddCommand(python)
@@ -454,7 +633,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 	if err := root.ExecuteContext(zctx.Base(ctx, lg)); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
+		lg.Error("Failed", zapErr(err))
 		os.Exit(1)
 	}
 }
