@@ -2,14 +2,17 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -448,8 +451,59 @@ Also, docker is required to run UI.
 						"--ytserver-all-path", allPath,
 						"--sync",
 					)
-					c.Stderr = os.Stderr
-					c.Stdout = os.Stdout
+					logPath := filepath.Join(dir, "yt_local.log")
+					// #nosec: G304
+					out, err := os.Create(logPath)
+					if err != nil {
+						return errors.Wrap(err, "create")
+					}
+					defer func() { _ = out.Close() }()
+					r, w := io.Pipe()
+
+					c.Stderr = io.MultiWriter(out, w)
+					c.Stdout = io.MultiWriter(out, w)
+					defer func() {
+						// Ensure that container is stopped.
+						if p := c.Process; p != nil {
+							_ = p.Kill()
+						}
+					}()
+					g.Go(func() error {
+						defer func() {
+							_ = r.Close()
+						}()
+						s := bufio.NewScanner(r)
+						for s.Scan() {
+							text := s.Text()
+							if strings.Contains(text, "Waiting") {
+								idx := strings.Index(text, "Waiting")
+								lg.Info(text[idx:])
+								continue
+							}
+							if strings.Contains(text, "Local YT started") {
+								lg.Info("Started")
+								continue
+							}
+							// ["2023-07-25", "16:37:44,704", "INFO", "Watcher started"]
+							elems := strings.SplitN(text, " ", 4)
+							if len(elems) != 4 {
+								continue
+							}
+							var lvl zapcore.Level
+							switch elems[2][0] {
+							case 'I':
+								lvl = zapcore.InfoLevel
+							case 'W', 'C':
+								lvl = zapcore.WarnLevel
+							case 'E':
+								lvl = zapcore.ErrorLevel
+							case 'D', 'T':
+								lvl = zapcore.DebugLevel
+							}
+							lg.Check(lvl, elems[3]).Write()
+						}
+						return nil
+					})
 					c.Dir = dir
 					defer func() {
 						// Ensure that yt_local is stopped.
@@ -458,10 +512,16 @@ Also, docker is required to run UI.
 						}
 					}()
 					g.Go(func() error {
-						lg.Info("Starting")
+						defer func() { _ = w.Close() }()
+						lg.Info("Starting", zap.String("log", logPath))
 						if err := c.Run(); err != nil {
+							// Check if was stopped by signal and context is done.
+							if errors.Is(ctx.Err(), context.Canceled) {
+								lg.Info("Stopped by context")
+								return nil
+							}
 							lg.Error("Failed", zapErr(err))
-							return errors.Wrap(err, "yt_local")
+							return errors.Wrap(err, "ui")
 						}
 						return nil
 					})
@@ -499,9 +559,7 @@ Also, docker is required to run UI.
 								zap.String("id", res.ID),
 							)
 						} else {
-							lg.Info("Removed network",
-								zap.String("id", res.ID),
-							)
+							lg.Info("Removed network")
 						}
 					}()
 					// Get gateway address.
@@ -530,27 +588,81 @@ Also, docker is required to run UI.
 					gatewayProxy := net.JoinHostPort(gateway, strconv.Itoa(gatewayProxyPort))
 					const containerName = "ytlocal.ui"
 					// #nosec: G204
-					c := exec.CommandContext(ctx, "docker", "run", "--rm",
-						"--network", network,
-						"--name", containerName,
-						"-p", "8030:80", // TODO: cfg
-						"-e", "PROXY="+gatewayProxy,
-						"-e", "APP_ENV=local",
-						image,
-					)
-					c.Stderr = os.Stderr
-					c.Stdout = os.Stdout
-					defer func() {
-						// Ensure that container is stopped.
-						if p := c.Process; p != nil {
-							_ = p.Kill()
+					{
+						logPath := filepath.Join(dir, "ui.log")
+						// #nosec: G304
+						out, err := os.Create(logPath)
+						if err != nil {
+							return errors.Wrap(err, "create")
 						}
-					}()
-					g.Go(func() error {
-						lg.Info("Start")
-						defer lg.Info("Stop")
-						return errors.Wrap(c.Run(), "ui")
-					})
+						defer func() { _ = out.Close() }()
+						c := exec.CommandContext(ctx, "docker", "run", "--rm",
+							"--network", network,
+							"--name", containerName,
+							"-p", "8030:80", // TODO: cfg
+							"-e", "PROXY="+gatewayProxy,
+							"-e", "APP_ENV=local",
+							image,
+						)
+						r, w := io.Pipe()
+
+						c.Stderr = io.MultiWriter(out, w)
+						c.Stdout = io.MultiWriter(out, w)
+						defer func() {
+							// Ensure that container is stopped.
+							if p := c.Process; p != nil {
+								_ = p.Kill()
+							}
+						}()
+						g.Go(func() error {
+							defer func() {
+								_ = r.Close()
+							}()
+							s := bufio.NewScanner(r)
+							for s.Scan() {
+								text := s.Text()
+								if strings.Contains(text, "nginx: started") {
+									lg.Info("Started")
+									continue
+								}
+								// ["2023-07-25", "16:37:44,704", "INFO", "Watcher started"]
+								elems := strings.SplitN(text, " ", 4)
+								if len(elems) != 4 {
+									continue
+								}
+								var lvl zapcore.Level
+								switch elems[2][0] {
+								case 'I':
+									lvl = zapcore.InfoLevel
+								case 'W', 'C':
+									lvl = zapcore.WarnLevel
+								case 'E':
+									lvl = zapcore.ErrorLevel
+								case 'D', 'T':
+									lvl = zapcore.DebugLevel
+								default:
+									continue
+								}
+								lg.Check(lvl, elems[3]).Write()
+							}
+							return nil
+						})
+						g.Go(func() error {
+							defer func() { _ = w.Close() }()
+							lg.Info("Start", zap.String("log", logPath))
+							defer lg.Info("Stop")
+							if err := c.Run(); err != nil {
+								// Check if was stopped by signal and context is done.
+								if errors.Is(ctx.Err(), context.Canceled) {
+									lg.Info("Stopped by context")
+									return nil
+								}
+								lg.Error("Failed", zapErr(err))
+								return errors.Wrap(err, "ui")
+							}
+							return nil
+						})
+					}
 					defer func() {
 						lg.Info("Ensuring that container is removed")
 						// Ensure that container is removed.
@@ -577,28 +689,29 @@ Also, docker is required to run UI.
 							}
 						}
 					}()
-
-					// Run proxy for UI on container network gateway, so it
-					// can be accessed from container.
-					var p tcpproxy.Proxy
-					p.AddRoute(gatewayProxy, tcpproxy.To(net.JoinHostPort(fqdn, proxyPort)))
-					g.Go(func() error {
-						<-ctx.Done()
-						if err := p.Close(); err != nil {
-							return errors.Wrap(err, "close proxy")
-						}
-						return nil
-					})
-					g.Go(func() error {
-						lg := lg.Named("pxy")
-						lg.Info("Start")
-						defer lg.Info("Stop")
-						if err := p.Run(); err != nil && !errors.Is(err, net.ErrClosed) {
-							lg.Error("Failed", zapErr(err))
-							return errors.Wrap(err, "proxy")
-						}
-						return nil
-					})
+					{
+						// Run proxy for UI on container network gateway, so it
+						// can be accessed from container.
+						var p tcpproxy.Proxy
+						p.AddRoute(gatewayProxy, tcpproxy.To(net.JoinHostPort(fqdn, proxyPort)))
+						g.Go(func() error {
+							<-ctx.Done()
+							if err := p.Close(); err != nil {
+								return errors.Wrap(err, "close proxy")
+							}
+							return nil
+						})
+						g.Go(func() error {
+							lg := lg.Named("pxy")
+							lg.Info("Start")
+							defer lg.Info("Stop")
+							if err := p.Run(); err != nil && !errors.Is(err, net.ErrClosed) {
+								lg.Error("Failed", zapErr(err))
+								return errors.Wrap(err, "proxy")
+							}
+							return nil
+						})
+					}
 				}
 				if err := g.Wait(); err != nil {
 					lg.Error("Wait", zapErr(err))
