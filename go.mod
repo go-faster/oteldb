@@ -16,7 +16,7 @@ require (
 	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
-	github.com/ogen-go/ogen v0.71.1
+	github.com/ogen-go/ogen v0.72.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.46.0
@@ -45,7 +45,7 @@ require (
 	go.ytsaurus.tech/library/go/core/log v0.0.3
 	go.ytsaurus.tech/yt/go v0.0.6
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
 	golang.org/x/sync v0.3.0
 	golang.org/x/tools v0.11.0
 	google.golang.org/grpc v1.56.2
