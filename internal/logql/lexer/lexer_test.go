@@ -30,6 +30,41 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`3.5h`,
+		[]Token{
+			{Type: Duration, Text: "3.5h"},
+		},
+		false,
+	},
+	{
+		`.5h`,
+		[]Token{
+			{Type: Duration, Text: ".5h"},
+		},
+		false,
+	},
+	{
+		`10`,
+		[]Token{
+			{Type: Number, Text: "10"},
+		},
+		false,
+	},
+	{
+		`10.5`,
+		[]Token{
+			{Type: Number, Text: "10.5"},
+		},
+		false,
+	},
+	{
+		`.5`,
+		[]Token{
+			{Type: Number, Text: ".5"},
+		},
+		false,
+	},
+	{
 		`32kb`,
 		[]Token{
 			{Type: Bytes, Text: "32kb"},
@@ -40,6 +75,13 @@ var tests = []TestCase{
 		`32.4kb`,
 		[]Token{
 			{Type: Bytes, Text: "32.4kb"},
+		},
+		false,
+	},
+	{
+		`.5kb`,
+		[]Token{
+			{Type: Bytes, Text: ".5kb"},
 		},
 		false,
 	},

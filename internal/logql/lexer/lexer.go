@@ -4,13 +4,13 @@ package lexer
 import (
 	"strings"
 	"text/scanner"
-	"time"
 	"unicode"
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
-	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/util/strutil"
+
+	"github.com/go-faster/oteldb/internal/durationql"
 )
 
 type lexer struct {
@@ -63,9 +63,9 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 	switch r {
 	case scanner.Int, scanner.Float:
 		switch r := l.scanner.Peek(); {
-		case isDurationRune(r):
+		case durationql.IsDurationRune(r):
 			tok.Type = Duration
-			tok.Text, err = scanDuration(&l.scanner, text)
+			tok.Text, err = durationql.ScanDuration(&l.scanner, text)
 		case isBytesRune(r):
 			tok.Type = Bytes
 			tok.Text, err = scanBytes(&l.scanner, text)
@@ -119,33 +119,6 @@ func scanSpace(s *scanner.Scanner) {
 	}
 }
 
-func scanDuration(s *scanner.Scanner, number string) (string, error) {
-	var sb strings.Builder
-	sb.WriteString(number)
-
-	for {
-		ch := s.Peek()
-		if !isDigit(ch) && !isDurationRune(ch) && ch != '.' {
-			break
-		}
-		sb.WriteRune(ch)
-		s.Next()
-	}
-
-	duration := sb.String()
-	_, err := ParseDuration(duration)
-	return duration, err
-}
-
-func isDurationRune(r rune) bool {
-	switch r {
-	case 'n', 'u', 'µ', 'm', 's', 'h', 'd', 'w', 'y':
-		return true
-	default:
-		return false
-	}
-}
-
 func isDigit(r rune) bool {
 	return r >= '0' && r <= '9'
 }
@@ -175,19 +148,4 @@ func isBytesRune(r rune) bool {
 	default:
 		return false
 	}
-}
-
-// ParseDuration parses Prometheus or Go duration
-func ParseDuration(s string) (time.Duration, error) {
-	d, err := model.ParseDuration(s)
-	if err == nil {
-		return time.Duration(d), nil
-	}
-	err1 := err
-
-	d2, err := time.ParseDuration(s)
-	if err == nil {
-		return d2, nil
-	}
-	return 0, err1
 }
