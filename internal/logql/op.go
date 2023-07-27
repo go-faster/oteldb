@@ -35,6 +35,33 @@ var _ = map[bool]struct{}{
 	false:         {},
 }
 
+// Precedence returns operator precedence.
+func (op BinOp) Precedence() int {
+	switch op {
+	case OpOr:
+		return 1
+	case OpUnless, OpAnd:
+		return 2
+	case OpEq,
+		OpNotEq,
+		OpRe,
+		OpNotRe,
+		OpGt,
+		OpGte,
+		OpLt,
+		OpLte:
+		return 3
+	case OpAdd, OpSub:
+		return 4
+	case OpMul, OpDiv, OpMod:
+		return 5
+	case OpPow:
+		return 6
+	default:
+		return -1
+	}
+}
+
 // String implements fmt.Stringer.
 func (op BinOp) String() string {
 	switch op {

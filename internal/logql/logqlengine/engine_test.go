@@ -360,13 +360,41 @@ type timeRange struct {
 }
 
 func TestEngineEvalLiteral(t *testing.T) {
-	tests := []struct {
+	type testCase struct {
 		query   string
 		tsRange timeRange
 
 		wantData lokiapi.QueryResponseData
 		wantErr  bool
-	}{
+	}
+	test3steps := func(input, result string) testCase {
+		return testCase{
+			input,
+			timeRange{
+				start: 1700000001_000000000,
+				end:   1700000003_000000000,
+				step:  time.Second,
+			},
+			lokiapi.QueryResponseData{
+				Type: lokiapi.MatrixResultQueryResponseData,
+				MatrixResult: lokiapi.MatrixResult{
+					Result: lokiapi.Matrix{
+						{
+							Metric: lokiapi.NewOptLabelSet(lokiapi.LabelSet{}),
+							Values: []lokiapi.FPoint{
+								{T: 1700000001, V: result},
+								{T: 1700000002, V: result},
+								{T: 1700000003, V: result},
+							},
+						},
+					},
+				},
+			},
+			false,
+		}
+	}
+
+	tests := []testCase{
 		// Literal eval.
 		{
 			`3.14`,
@@ -433,30 +461,17 @@ func TestEngineEvalLiteral(t *testing.T) {
 			},
 			false,
 		},
-		{
-			`vector(3.14)`,
-			timeRange{
-				start: 1700000001_000000000,
-				end:   1700000003_000000000,
-				step:  time.Second,
-			},
-			lokiapi.QueryResponseData{
-				Type: lokiapi.MatrixResultQueryResponseData,
-				MatrixResult: lokiapi.MatrixResult{
-					Result: lokiapi.Matrix{
-						{
-							Metric: lokiapi.NewOptLabelSet(lokiapi.LabelSet{}),
-							Values: []lokiapi.FPoint{
-								{T: 1700000001, V: "3.14"},
-								{T: 1700000002, V: "3.14"},
-								{T: 1700000003, V: "3.14"},
-							},
-						},
-					},
-				},
-			},
-			false,
-		},
+		test3steps(`vector(3.14)`, "3.14"),
+
+		// Precedence tests.
+		test3steps(`vector(2)+vector(3)*vector(4)`, "14"),
+		test3steps(`vector(2)*vector(3)+vector(4)`, "10"),
+		test3steps(`vector(2) + vector(3)*vector(4) + vector(5)`, "19"),
+		test3steps(`vector(2)+vector(3)^vector(2)`, "11"),
+		test3steps(`vector(2)*vector(3)^vector(2)`, "18"),
+		test3steps(`vector(2)^vector(3)*vector(2)`, "16"),
+		test3steps(`vector(2)^vector(3)^vector(2)`, `512`),
+		test3steps(`(vector(2)^vector(3))^vector(2)`, `64`),
 	}
 	for i, tt := range tests {
 		tt := tt

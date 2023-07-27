@@ -47,6 +47,20 @@ func TestReduceBinOp(t *testing.T) {
 		{`2 <= 2`, 1., true},
 		{`2 <= 1`, 0., true},
 
+		{`2 + 3*4`, 14., true},
+		{`2*3 + 4`, 10., true},
+		{`2 + 3*4 + 5`, 19., true},
+		{`2 + 3^2`, 11., true},
+		{`2 * 3^2`, 18., true},
+		{`2^3 * 2`, 16., true},
+		{`2 ^ 3^2`, 512., true},
+
+		{`2*(3+4)`, 14., true},
+		{`(2+3)*4`, 20., true},
+		{`(3+2)*(2+3)`, 25., true},
+		{`((3+2)*(2+3))`, 25., true},
+		{`(2^3)^2`, 64., true},
+
 		{`vector(0) + vector(0)`, 0, false},
 		{`0 + vector(0)`, 0, false},
 		{`vector(0) + 0`, 0, false},
@@ -59,6 +73,7 @@ func TestReduceBinOp(t *testing.T) {
 			expr, err := Parse(tt.input, ParseOptions{AllowDots: true})
 			require.NoError(t, err, "invalid input")
 
+			expr = UnparenExpr(expr)
 			require.IsType(t, &BinOpExpr{}, expr, "wrong expression type")
 			binOp := expr.(*BinOpExpr)
 

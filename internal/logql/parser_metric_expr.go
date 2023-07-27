@@ -9,7 +9,15 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
-func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
+func (p *parser) parseMetricExpr() (MetricExpr, error) {
+	expr, err := p.parseMetricExpr1()
+	if err != nil {
+		return nil, err
+	}
+	return p.parseBinOp(expr, 0)
+}
+
+func (p *parser) parseMetricExpr1() (MetricExpr, error) {
 	switch t := p.peek(); t.Type {
 	case lexer.OpenParen:
 		p.next()
@@ -23,7 +31,7 @@ func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 			return nil, err
 		}
 
-		expr = &ParenExpr{X: subExpr}
+		return &ParenExpr{X: subExpr}, nil
 	case lexer.CountOverTime,
 		lexer.Rate,
 		lexer.RateCounter,
@@ -39,10 +47,7 @@ func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 		lexer.FirstOverTime,
 		lexer.LastOverTime,
 		lexer.AbsentOverTime:
-		expr, err = p.parseRangeAggregationExpr()
-		if err != nil {
-			return nil, err
-		}
+		return p.parseRangeAggregationExpr()
 	case lexer.Sum,
 		lexer.Avg,
 		lexer.Count,
@@ -54,85 +59,96 @@ func (p *parser) parseMetricExpr() (expr MetricExpr, err error) {
 		lexer.Topk,
 		lexer.Sort,
 		lexer.SortDesc:
-		expr, err = p.parseVectorAggregationExpr()
-		if err != nil {
-			return nil, err
-		}
+		return p.parseVectorAggregationExpr()
 	case lexer.Number, lexer.Add, lexer.Sub:
-		expr, err = p.parseLiteralExpr()
-		if err != nil {
-			return nil, err
-		}
+		return p.parseLiteralExpr()
 	case lexer.LabelReplace:
-		expr, err = p.parseLabelReplace()
-		if err != nil {
-			return nil, err
-		}
+		return p.parseLabelReplace()
 	case lexer.Vector:
-		expr, err = p.parseVectorExpr()
-		if err != nil {
-			return nil, err
-		}
+		return p.parseVectorExpr()
 	default:
 		return nil, p.unexpectedToken(t)
 	}
-	var binOp BinOp
+}
+
+func (p *parser) parseBinOp(left MetricExpr, minPrecedence int) (MetricExpr, error) {
+	for {
+		op, ok := p.peekBinOp()
+		if !ok || op.Precedence() < minPrecedence {
+			return left, nil
+		}
+		p.next()
+
+		modifier, err := p.parseBinOpModifier()
+		if err != nil {
+			return nil, err
+		}
+
+		right, err := p.parseMetricExpr1()
+		if err != nil {
+			return nil, err
+		}
+
+		if op.IsLogic() {
+			if v, ok := left.(*LiteralExpr); ok {
+				return nil, errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, op)
+			}
+			if v, ok := right.(*LiteralExpr); ok {
+				return nil, errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, op)
+			}
+		}
+
+		for {
+			rightOp, ok := p.peekBinOp()
+			if !ok || rightOp.Precedence() < op.Precedence() {
+				break
+			}
+
+			right, err = p.parseBinOp(right, minPrecedence+1)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		left = &BinOpExpr{Left: left, Op: op, Modifier: modifier, Right: right}
+	}
+}
+
+func (p *parser) peekBinOp() (op BinOp, ok bool) {
 	switch t := p.peek(); t.Type {
 	case lexer.Or:
-		binOp = OpOr
+		return OpOr, true
 	case lexer.And:
-		binOp = OpAnd
+		return OpAnd, true
 	case lexer.Unless:
-		binOp = OpUnless
+		return OpUnless, true
 	case lexer.Add:
-		binOp = OpAdd
+		return OpAdd, true
 	case lexer.Sub:
-		binOp = OpSub
+		return OpSub, true
 	case lexer.Mul:
-		binOp = OpMul
+		return OpMul, true
 	case lexer.Div:
-		binOp = OpDiv
+		return OpDiv, true
 	case lexer.Mod:
-		binOp = OpMod
+		return OpMod, true
 	case lexer.Pow:
-		binOp = OpPow
+		return OpPow, true
 	case lexer.CmpEq:
-		binOp = OpEq
+		return OpEq, true
 	case lexer.NotEq:
-		binOp = OpNotEq
+		return OpNotEq, true
 	case lexer.Gt:
-		binOp = OpGt
+		return OpGt, true
 	case lexer.Gte:
-		binOp = OpGte
+		return OpGte, true
 	case lexer.Lt:
-		binOp = OpLt
+		return OpLt, true
 	case lexer.Lte:
-		binOp = OpLte
+		return OpLte, true
 	default:
-		return expr, nil
+		return op, false
 	}
-	p.next()
-
-	modifier, err := p.parseBinOpModifier()
-	if err != nil {
-		return nil, err
-	}
-
-	right, err := p.parseExpr()
-	if err != nil {
-		return nil, err
-	}
-
-	if binOp.IsLogic() {
-		if v, ok := expr.(*LiteralExpr); ok {
-			return nil, errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, binOp)
-		}
-		if v, ok := right.(*LiteralExpr); ok {
-			return nil, errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, binOp)
-		}
-	}
-
-	return &BinOpExpr{Left: expr, Op: binOp, Modifier: modifier, Right: right}, nil
 }
 
 func (p *parser) parseRangeAggregationExpr() (e *RangeAggregationExpr, _ error) {
