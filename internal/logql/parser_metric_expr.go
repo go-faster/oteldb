@@ -77,6 +77,7 @@ func (p *parser) parseBinOp(left MetricExpr, minPrecedence int) (MetricExpr, err
 		if !ok || op.Precedence() < minPrecedence {
 			return left, nil
 		}
+		// Consume op.
 		p.next()
 
 		modifier, err := p.parseBinOpModifier()
