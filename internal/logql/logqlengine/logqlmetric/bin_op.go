@@ -53,6 +53,7 @@ func (i *binOpIterator) Next(r *Step) bool {
 	if !i.left.Next(&left) || !i.right.Next(&right) {
 		return false
 	}
+	r.Samples = r.Samples[:0]
 	r.Timestamp = left.Timestamp
 
 	leftSamples := make(map[GroupingKey]Sample, len(left.Samples))
