@@ -11,6 +11,7 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
+	"github.com/go-faster/oteldb/internal/cmp"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
@@ -18,8 +19,8 @@ import (
 
 func testSampler(samples []SampledEntry) SampleSelector {
 	return func(_ *logql.RangeAggregationExpr, _, _ time.Time) (iterators.Iterator[SampledEntry], error) {
-		slices.SortStableFunc(samples, func(a, b SampledEntry) bool {
-			return a.Timestamp < b.Timestamp
+		slices.SortStableFunc(samples, func(a, b SampledEntry) int {
+			return cmp.Compare(a.Timestamp, b.Timestamp)
 		})
 		return iterators.Slice(samples), nil
 	}
@@ -489,10 +490,10 @@ func TestGroupedAggregation(t *testing.T) {
 				}
 				got = append(got, to)
 			}
-			slices.SortFunc(got, func(a, b series) bool {
+			slices.SortFunc(got, func(a, b series) int {
 				akey := a.labels["foo"] + a.labels["method"]
 				bkey := b.labels["foo"] + b.labels["method"]
-				return akey < bkey
+				return cmp.Compare(akey, bkey)
 			})
 			require.Equal(t, tt.expected, got)
 		})

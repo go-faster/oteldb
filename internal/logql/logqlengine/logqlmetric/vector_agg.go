@@ -180,7 +180,12 @@ func (i *vectorAggHeapIterator) Next(r *Step) bool {
 	r.Samples = r.Samples[:0]
 	for _, g := range result {
 		samples := g.heap.elements
-		slices.SortFunc(samples, i.less)
+		slices.SortFunc(samples, func(a, b Sample) int {
+			if i.less(a, b) {
+				return -1
+			}
+			return 0
+		})
 		r.Samples = append(r.Samples, samples...)
 	}
 

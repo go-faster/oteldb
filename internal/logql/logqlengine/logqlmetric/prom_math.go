@@ -4,6 +4,8 @@ import (
 	"math"
 
 	"golang.org/x/exp/slices"
+
+	"github.com/go-faster/oteldb/internal/cmp"
 )
 
 // Note: this file contains stats functions from Prometheus.
@@ -25,11 +27,11 @@ func quantile(q float64, values []FPoint) float64 {
 	if q > 1 {
 		return math.Inf(+1)
 	}
-	slices.SortFunc(values, func(a, b FPoint) bool {
+	slices.SortFunc(values, func(a, b FPoint) int {
 		if math.IsNaN(a.Value) {
-			return true
+			return -1
 		}
-		return a.Value < b.Value
+		return cmp.Compare(a.Value, b.Value)
 	})
 
 	n := float64(len(values))
