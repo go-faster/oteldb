@@ -32,7 +32,7 @@ require (
 	go.opentelemetry.io/collector/extension v0.82.0
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0014
 	go.opentelemetry.io/collector/receiver v0.82.0
-	go.opentelemetry.io/collector/receiver/otlpreceiver v0.81.0
+	go.opentelemetry.io/collector/receiver/otlpreceiver v0.82.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.1-0.20230612162650-64be7e574a17
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0
 	go.opentelemetry.io/otel v1.16.0
@@ -134,17 +134,17 @@ require (
 	github.com/tklauser/numcpus v0.6.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/collector/config/configauth v0.81.0 // indirect
-	go.opentelemetry.io/collector/config/configcompression v0.81.0 // indirect
-	go.opentelemetry.io/collector/config/configgrpc v0.81.0 // indirect
-	go.opentelemetry.io/collector/config/confighttp v0.81.0 // indirect
+	go.opentelemetry.io/collector/config/configauth v0.82.0 // indirect
+	go.opentelemetry.io/collector/config/configcompression v0.82.0 // indirect
+	go.opentelemetry.io/collector/config/configgrpc v0.82.0 // indirect
+	go.opentelemetry.io/collector/config/confighttp v0.82.0 // indirect
 	go.opentelemetry.io/collector/config/confignet v0.82.0 // indirect
-	go.opentelemetry.io/collector/config/configopaque v0.81.0 // indirect
+	go.opentelemetry.io/collector/config/configopaque v0.82.0 // indirect
 	go.opentelemetry.io/collector/config/configtelemetry v0.82.0 // indirect
-	go.opentelemetry.io/collector/config/configtls v0.81.0 // indirect
-	go.opentelemetry.io/collector/config/internal v0.81.0 // indirect
+	go.opentelemetry.io/collector/config/configtls v0.82.0 // indirect
+	go.opentelemetry.io/collector/config/internal v0.82.0 // indirect
 	go.opentelemetry.io/collector/connector v0.82.0 // indirect
-	go.opentelemetry.io/collector/extension/auth v0.81.0 // indirect
+	go.opentelemetry.io/collector/extension/auth v0.82.0 // indirect
 	go.opentelemetry.io/collector/featuregate v1.0.0-rcv0014 // indirect
 	go.opentelemetry.io/collector/processor v0.82.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.82.0 // indirect
