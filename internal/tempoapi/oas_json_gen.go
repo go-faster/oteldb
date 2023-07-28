@@ -33,6 +33,25 @@ func (s AnyValue) Encode(e *jx.Encoder) {
 	}
 }
 
+func (s AnyValue) encodeFields(e *jx.Encoder) {
+	switch s.Type {
+	case StringValueAnyValue:
+		s.StringValue.encodeFields(e)
+	case BoolValueAnyValue:
+		s.BoolValue.encodeFields(e)
+	case IntValueAnyValue:
+		s.IntValue.encodeFields(e)
+	case DoubleValueAnyValue:
+		s.DoubleValue.encodeFields(e)
+	case ArrayValueAnyValue:
+		s.ArrayValue.encodeFields(e)
+	case KvlistValueAnyValue:
+		s.KvlistValue.encodeFields(e)
+	case BytesValueAnyValue:
+		s.BytesValue.encodeFields(e)
+	}
+}
+
 // Decode decodes AnyValue from json.
 func (s *AnyValue) Decode(d *jx.Decoder) error {
 	if s == nil {

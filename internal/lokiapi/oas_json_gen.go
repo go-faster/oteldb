@@ -938,31 +938,29 @@ func (s *QueryResponse) UnmarshalJSON(data []byte) error {
 
 // Encode encodes QueryResponseData as json.
 func (s QueryResponseData) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 	switch s.Type {
 	case MatrixResultQueryResponseData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("matrix")
 		s.MatrixResult.encodeFields(e)
-		e.ObjEnd()
 	case ScalarResultQueryResponseData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("scalar")
 		s.ScalarResult.encodeFields(e)
-		e.ObjEnd()
 	case StreamsResultQueryResponseData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("streams")
 		s.StreamsResult.encodeFields(e)
-		e.ObjEnd()
 	case VectorResultQueryResponseData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("vector")
 		s.VectorResult.encodeFields(e)
-		e.ObjEnd()
 	}
 }
 
