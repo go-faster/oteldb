@@ -491,31 +491,29 @@ func (s *AlertingRuleState) UnmarshalJSON(data []byte) error {
 
 // Encode encodes Data as json.
 func (s Data) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+func (s Data) encodeFields(e *jx.Encoder) {
 	switch s.Type {
 	case MatrixData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("matrix")
 		s.Matrix.encodeFields(e)
-		e.ObjEnd()
 	case ScalarData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("scalar")
 		s.Scalar.encodeFields(e)
-		e.ObjEnd()
 	case StringData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("string")
 		s.String.encodeFields(e)
-		e.ObjEnd()
 	case VectorData:
-		e.ObjStart()
 		e.FieldStart("resultType")
 		e.Str("vector")
 		s.Vector.encodeFields(e)
-		e.ObjEnd()
 	}
 }
 
@@ -2913,19 +2911,21 @@ func (s *RecordingRule) UnmarshalJSON(data []byte) error {
 
 // Encode encodes Rule as json.
 func (s Rule) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+func (s Rule) encodeFields(e *jx.Encoder) {
 	switch s.Type {
 	case AlertingRuleRule:
-		e.ObjStart()
 		e.FieldStart("type")
 		e.Str("alerting")
 		s.AlertingRule.encodeFields(e)
-		e.ObjEnd()
 	case RecordingRuleRule:
-		e.ObjStart()
 		e.FieldStart("type")
 		e.Str("recording")
 		s.RecordingRule.encodeFields(e)
-		e.ObjEnd()
 	}
 }
 

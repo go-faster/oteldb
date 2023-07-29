@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/slices"
 
+	"github.com/go-faster/oteldb/internal/cmp"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -339,7 +340,7 @@ func TestEngineEvalStream(t *testing.T) {
 					})
 				}
 			}
-			slices.SortFunc(entries, func(a, b entry) bool { return a.ts < b.ts })
+			slices.SortFunc(entries, func(a, b entry) int { return cmp.Compare(a.ts, b.ts) })
 
 			assert.Len(t, entries, len(tt.wantData))
 			for i, e := range entries {
