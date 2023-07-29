@@ -342,6 +342,31 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`({ .a } || { .b }) > { .c }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&BinarySpansetExpr{
+					Left: &ParenSpansetExpr{
+						Expr: &BinarySpansetExpr{
+							Left: &SpansetFilter{
+								Expr: &Attribute{Name: "a"},
+							},
+							Op: SpansetOpUnion,
+							Right: &SpansetFilter{
+								Expr: &Attribute{Name: "b"},
+							},
+						},
+					},
+					Op: SpansetOpChild,
+					Right: &SpansetFilter{
+						Expr: &Attribute{Name: "c"},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
 		`{ .a } && { .b } ~ { .c }`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
@@ -394,23 +419,6 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`avg(.foo) > count() + sum(.bar)`,
-		&SpansetPipeline{
-			Pipeline: []PipelineStage{
-				&ScalarFilter{
-					Left: &AggregateScalarExpr{Op: AggregateOpAvg, Field: &Attribute{Name: "foo"}},
-					Op:   OpGt,
-					Right: &BinaryScalarExpr{
-						Left:  &AggregateScalarExpr{Op: AggregateOpCount},
-						Op:    OpAdd,
-						Right: &AggregateScalarExpr{Op: AggregateOpSum, Field: &Attribute{Name: "bar"}},
-					},
-				},
-			},
-		},
-		false,
-	},
-	{
 		`-2 = -2`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
@@ -418,6 +426,29 @@ var tests = []TestCase{
 					Left:  &Static{Type: StaticInteger, Data: uint64(-2 + noConst)},
 					Op:    OpEq,
 					Right: &Static{Type: StaticInteger, Data: uint64(-2 + noConst)},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`(1+2)^3 = 27`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&ScalarFilter{
+					Left: &BinaryScalarExpr{
+						Left: &ParenScalarExpr{
+							Expr: &BinaryScalarExpr{
+								Left:  &Static{Type: StaticInteger, Data: uint64(1)},
+								Op:    OpAdd,
+								Right: &Static{Type: StaticInteger, Data: uint64(2)},
+							},
+						},
+						Op:    OpPow,
+						Right: &Static{Type: StaticInteger, Data: uint64(3)},
+					},
+					Op:    OpEq,
+					Right: &Static{Type: StaticInteger, Data: uint64(27)},
 				},
 			},
 		},
@@ -449,17 +480,63 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`avg(.foo) + count() > sum(.bar)`,
+		`max(.foo) > count() + sum(.bar)`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&ScalarFilter{
+					Left: &AggregateScalarExpr{Op: AggregateOpMax, Field: &Attribute{Name: "foo"}},
+					Op:   OpGt,
+					Right: &BinaryScalarExpr{
+						Left:  &AggregateScalarExpr{Op: AggregateOpCount},
+						Op:    OpAdd,
+						Right: &AggregateScalarExpr{Op: AggregateOpSum, Field: &Attribute{Name: "bar"}},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`min(.foo) + count() > sum(.bar)`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
 				&ScalarFilter{
 					Left: &BinaryScalarExpr{
-						Left:  &AggregateScalarExpr{Op: AggregateOpAvg, Field: &Attribute{Name: "foo"}},
+						Left:  &AggregateScalarExpr{Op: AggregateOpMin, Field: &Attribute{Name: "foo"}},
 						Op:    OpAdd,
 						Right: &AggregateScalarExpr{Op: AggregateOpCount},
 					},
 					Op:    OpGt,
 					Right: &AggregateScalarExpr{Op: AggregateOpSum, Field: &Attribute{Name: "bar"}},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ .a } | by(.b) | coalesce() | select(.c, .d) | avg(duration) = 1s`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &Attribute{Name: "a"},
+				},
+				&GroupOperation{
+					By: &Attribute{Name: "b"},
+				},
+				&CoalesceOperation{},
+				&SelectOperation{
+					Args: []FieldExpr{
+						&Attribute{Name: "c"},
+						&Attribute{Name: "d"},
+					},
+				},
+				&ScalarFilter{
+					Left: &AggregateScalarExpr{
+						Op:    AggregateOpAvg,
+						Field: &Attribute{Prop: SpanDuration},
+					},
+					Op:    OpEq,
+					Right: &Static{Type: StaticDuration, Data: uint64(time.Second)},
 				},
 			},
 		},
@@ -472,6 +549,25 @@ var tests = []TestCase{
 	{`{ -- }`, nil, true},
 	{`{ (1+) }`, nil, true},
 	{`{ (1+1 }`, nil, true},
+	{`{} | `, nil, true},
+	{`{} | by`, nil, true},
+	{`{} | coalesce`, nil, true},
+	{`{} | select`, nil, true},
+	{`{} | by(.foo`, nil, true},
+	{`{} | coalesce(`, nil, true},
+	{`{} | select(.foo`, nil, true},
+	// Parameter is required,
+	{`{} | max()`, nil, true},
+	{`{} | min()`, nil, true},
+	{`{} | avg()`, nil, true},
+	{`{} | sum()`, nil, true},
+	{`{} | by()`, nil, true},
+	{`{} | select()`, nil, true},
+	{`{} | select(.foo,)`, nil, true},
+	// Parameter is not allowed.
+	{`{} | count(.foo) = 10`, nil, true},
+	// Stage `coalesce`` cannot be first stage.
+	{`coalesce()`, nil, true},
 }
 
 func TestParse(t *testing.T) {

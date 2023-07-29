@@ -6,8 +6,12 @@ type PipelineStage interface {
 }
 
 func (*BinarySpansetExpr) pipelineStage() {}
+func (*ParenSpansetExpr) pipelineStage()  {}
 func (*SpansetFilter) pipelineStage()     {}
 func (*ScalarFilter) pipelineStage()      {}
+func (*GroupOperation) pipelineStage()    {}
+func (*CoalesceOperation) pipelineStage() {}
+func (*SelectOperation) pipelineStage()   {}
 
 // SpansetExpr is a spanset expression.
 type SpansetExpr interface {
@@ -16,6 +20,7 @@ type SpansetExpr interface {
 }
 
 func (*BinarySpansetExpr) spansetExpr() {}
+func (*ParenSpansetExpr) spansetExpr()  {}
 func (*SpansetFilter) spansetExpr()     {}
 
 // BinarySpansetExpr is a binary operation between two spanset expressions.
@@ -23,6 +28,11 @@ type BinarySpansetExpr struct {
 	Left  SpansetExpr
 	Op    SpansetOp
 	Right SpansetExpr
+}
+
+// ParenSpansetExpr is a parenthesized spanset expression.
+type ParenSpansetExpr struct {
+	Expr SpansetExpr
 }
 
 // SpansetFilter is a spanset filter.
@@ -35,4 +45,17 @@ type ScalarFilter struct {
 	Left  ScalarExpr
 	Op    BinaryOp
 	Right ScalarExpr
+}
+
+// GroupOperation is a `by()` operation.
+type GroupOperation struct {
+	By FieldExpr
+}
+
+// CoalesceOperation is a `colaesce()` operation.
+type CoalesceOperation struct{}
+
+// SelectOperation is a `select()` operation.
+type SelectOperation struct {
+	Args []FieldExpr
 }
