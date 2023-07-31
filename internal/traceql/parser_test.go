@@ -542,9 +542,77 @@ var tests = []TestCase{
 		},
 		false,
 	},
+	{
+		`( { .a } ) | by(.b)`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&ParenSpansetExpr{
+					Expr: &SpansetFilter{
+						Expr: &Attribute{Name: "a"},
+					},
+				},
+				&GroupOperation{
+					By: &Attribute{Name: "b"},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ .a } && { .b } | by(.b)`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&BinarySpansetExpr{
+					Left: &SpansetFilter{
+						Expr: &Attribute{Name: "a"},
+					},
+					Op: SpansetOpAnd,
+					Right: &SpansetFilter{
+						Expr: &Attribute{Name: "b"},
+					},
+				},
+				&GroupOperation{
+					By: &Attribute{Name: "b"},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`( { .a } && { .b } ) | by(.b)`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&ParenSpansetExpr{
+					Expr: &BinarySpansetExpr{
+						Left: &SpansetFilter{
+							Expr: &Attribute{Name: "a"},
+						},
+						Op: SpansetOpAnd,
+						Right: &SpansetFilter{
+							Expr: &Attribute{Name: "b"},
+						},
+					},
+				},
+				&GroupOperation{
+					By: &Attribute{Name: "b"},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`( { .a } | by(.b) ) ~ ( { .b } | by(.b) )`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				// TODO
+			},
+		},
+		false,
+	},
 
 	// Invalid syntax.
 	{`{`, nil, true},
+	{`{ .a`, nil, true},
 	{`{ 1+ }`, nil, true},
 	{`{ -- }`, nil, true},
 	{`{ (1+) }`, nil, true},
@@ -566,8 +634,10 @@ var tests = []TestCase{
 	{`{} | select(.foo,)`, nil, true},
 	// Parameter is not allowed.
 	{`{} | count(.foo) = 10`, nil, true},
-	// Stage `coalesce`` cannot be first stage.
+	// Stage `coalesce` cannot be first stage.
 	{`coalesce()`, nil, true},
+	// Scalar filter must be a part of pipeline.
+	{`max() > 3 && { }`, nil, true},
 }
 
 func TestParse(t *testing.T) {
