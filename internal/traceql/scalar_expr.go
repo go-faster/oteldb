@@ -5,15 +5,9 @@ type ScalarExpr interface {
 	scalarExpr()
 }
 
-func (*ParenScalarExpr) scalarExpr()     {}
 func (*BinaryScalarExpr) scalarExpr()    {}
 func (*Static) scalarExpr()              {}
 func (*AggregateScalarExpr) scalarExpr() {}
-
-// ParenScalarExpr is a parenthesized scalar expression.
-type ParenScalarExpr struct {
-	Expr ScalarExpr
-}
 
 // BinaryScalarExpr is a binary operation between two scalar expressions.
 type BinaryScalarExpr struct {

@@ -25,11 +25,14 @@ func Parse(s string) (Expr, error) {
 type parser struct {
 	tokens []lexer.Token
 	pos    int
+
+	first  bool
+	parens int
 }
 
 func (p *parser) consume(tt lexer.TokenType) error {
 	if t := p.next(); t.Type != tt {
-		return p.unexpectedToken(t)
+		return errors.Wrapf(p.unexpectedToken(t), "expected %q", tt)
 	}
 	return nil
 }

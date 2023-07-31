@@ -14,16 +14,17 @@ func (p *parser) parseScalarExpr1() (ScalarExpr, error) {
 	switch t := p.peek(); t.Type {
 	case lexer.OpenParen:
 		p.next()
+		p.parens++
 
 		expr, err := p.parseScalarExpr()
 		if err != nil {
 			return nil, err
 		}
 
-		if err := p.consume(lexer.CloseParen); err != nil {
+		if err := p.tryReadCloseParen(); err != nil {
 			return nil, err
 		}
-		return &ParenScalarExpr{Expr: expr}, nil
+		return expr, nil
 	case lexer.Integer,
 		lexer.Number,
 		lexer.Duration:

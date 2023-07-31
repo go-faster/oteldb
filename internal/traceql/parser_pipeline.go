@@ -6,40 +6,24 @@ import (
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
 )
 
-func (p *parser) parsePipeline() (stages []PipelineStage, _ error) {
+func (p *parser) parsePipeline() (stages []PipelineStage, rerr error) {
+	p.first = true
+	p.parens = 0
+	defer func() {
+		if rerr != nil {
+			return
+		}
+		for i := 0; i < p.parens; i++ {
+			if err := p.consume(lexer.CloseParen); err != nil {
+				rerr = err
+			}
+		}
+	}()
+
 	for {
-		n := 0
-		for {
-			if t := p.peek(); t.Type != lexer.OpenParen {
-				switch t.Type {
-				case lexer.OpenBrace,
-					lexer.Integer,
-					lexer.Number,
-					lexer.Duration,
-					lexer.Count,
-					lexer.Max,
-					lexer.Min,
-					lexer.Avg,
-					lexer.Sum:
-				default:
-					if n > 0 {
-						p.unread()
-						return stages, p.unexpectedToken(p.next())
-					}
-				}
-				break
-			}
-			p.next()
-			n++
-		}
-		unreadParens := func() {
-			for i := 0; i < n; i++ {
-				p.unread()
-			}
-		}
-		switch t := p.peek(); t.Type {
+		t := p.lookaheadParen()
+		switch t.Type {
 		case lexer.OpenBrace:
-			unreadParens()
 			expr, err := p.parseSpansetExpr()
 			if err != nil {
 				return stages, err
@@ -80,7 +64,6 @@ func (p *parser) parsePipeline() (stages []PipelineStage, _ error) {
 			lexer.Min,
 			lexer.Avg,
 			lexer.Sum:
-			unreadParens()
 			expr, err := p.parseScalarFilter()
 			if err != nil {
 				return stages, err
@@ -95,7 +78,38 @@ func (p *parser) parsePipeline() (stages []PipelineStage, _ error) {
 		}
 		// Consume "|".
 		p.next()
+		p.first = false
 	}
+}
+
+func (p *parser) tryReadCloseParen() error {
+	if !p.first {
+		return p.consume(lexer.CloseParen)
+	}
+	t := p.peek()
+	if t.Type != lexer.CloseParen {
+		return nil
+	}
+	if p.parens <= 0 {
+		return p.unexpectedToken(t)
+	}
+	// Consume.
+	p.next()
+	p.parens--
+	return nil
+}
+
+func (p *parser) lookaheadParen() lexer.Token {
+	var n int
+	for p.peek().Type == lexer.OpenParen {
+		p.next()
+		n++
+	}
+	t := p.peek()
+	for i := 0; i < n; i++ {
+		p.unread()
+	}
+	return t
 }
 
 func (p *parser) parseSpansetExpr() (SpansetExpr, error) {
@@ -109,15 +123,16 @@ func (p *parser) parseSpansetExpr() (SpansetExpr, error) {
 func (p *parser) parseSpansetExpr1() (SpansetExpr, error) {
 	switch t := p.next(); t.Type {
 	case lexer.OpenParen:
+		p.parens++
 		expr, err := p.parseSpansetExpr()
 		if err != nil {
 			return nil, err
 		}
 
-		if err := p.consume(lexer.CloseParen); err != nil {
+		if err := p.tryReadCloseParen(); err != nil {
 			return nil, err
 		}
-		return &ParenSpansetExpr{Expr: expr}, nil
+		return expr, nil
 	case lexer.OpenBrace:
 		var filter SpansetFilter
 		if t2 := p.peek(); t2.Type != lexer.CloseBrace {

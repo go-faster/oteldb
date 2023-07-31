@@ -71,9 +71,9 @@ func (op BinaryOp) IsArithmetic() bool {
 func (op BinaryOp) String() string {
 	switch op {
 	case OpAnd:
-		return "and"
+		return "&&"
 	case OpOr:
-		return "or"
+		return "||"
 	case OpAdd:
 		return "+"
 	case OpSub:

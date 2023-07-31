@@ -346,15 +346,13 @@ var tests = []TestCase{
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
 				&BinarySpansetExpr{
-					Left: &ParenSpansetExpr{
-						Expr: &BinarySpansetExpr{
-							Left: &SpansetFilter{
-								Expr: &Attribute{Name: "a"},
-							},
-							Op: SpansetOpUnion,
-							Right: &SpansetFilter{
-								Expr: &Attribute{Name: "b"},
-							},
+					Left: &BinarySpansetExpr{
+						Left: &SpansetFilter{
+							Expr: &Attribute{Name: "a"},
+						},
+						Op: SpansetOpUnion,
+						Right: &SpansetFilter{
+							Expr: &Attribute{Name: "b"},
 						},
 					},
 					Op: SpansetOpChild,
@@ -437,12 +435,10 @@ var tests = []TestCase{
 			Pipeline: []PipelineStage{
 				&ScalarFilter{
 					Left: &BinaryScalarExpr{
-						Left: &ParenScalarExpr{
-							Expr: &BinaryScalarExpr{
-								Left:  &Static{Type: StaticInteger, Data: uint64(1)},
-								Op:    OpAdd,
-								Right: &Static{Type: StaticInteger, Data: uint64(2)},
-							},
+						Left: &BinaryScalarExpr{
+							Left:  &Static{Type: StaticInteger, Data: uint64(1)},
+							Op:    OpAdd,
+							Right: &Static{Type: StaticInteger, Data: uint64(2)},
 						},
 						Op:    OpPow,
 						Right: &Static{Type: StaticInteger, Data: uint64(3)},
@@ -546,10 +542,8 @@ var tests = []TestCase{
 		`( { .a } ) | by(.b)`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
-				&ParenSpansetExpr{
-					Expr: &SpansetFilter{
-						Expr: &Attribute{Name: "a"},
-					},
+				&SpansetFilter{
+					Expr: &Attribute{Name: "a"},
 				},
 				&GroupOperation{
 					By: &Attribute{Name: "b"},
@@ -582,15 +576,13 @@ var tests = []TestCase{
 		`( { .a } && { .b } ) | by(.b)`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
-				&ParenSpansetExpr{
-					Expr: &BinarySpansetExpr{
-						Left: &SpansetFilter{
-							Expr: &Attribute{Name: "a"},
-						},
-						Op: SpansetOpAnd,
-						Right: &SpansetFilter{
-							Expr: &Attribute{Name: "b"},
-						},
+				&BinarySpansetExpr{
+					Left: &SpansetFilter{
+						Expr: &Attribute{Name: "a"},
+					},
+					Op: SpansetOpAnd,
+					Right: &SpansetFilter{
+						Expr: &Attribute{Name: "b"},
 					},
 				},
 				&GroupOperation{
@@ -602,9 +594,27 @@ var tests = []TestCase{
 	},
 	{
 		`( { .a } | by(.b) ) ~ ( { .b } | by(.b) )`,
-		&SpansetPipeline{
-			Pipeline: []PipelineStage{
-				// TODO
+		&BinaryExpr{
+			Left: &SpansetPipeline{
+				Pipeline: []PipelineStage{
+					&SpansetFilter{
+						Expr: &Attribute{Name: "a"},
+					},
+					&GroupOperation{
+						By: &Attribute{Name: "b"},
+					},
+				},
+			},
+			Op: SpansetOpSibling,
+			Right: &SpansetPipeline{
+				Pipeline: []PipelineStage{
+					&SpansetFilter{
+						Expr: &Attribute{Name: "b"},
+					},
+					&GroupOperation{
+						By: &Attribute{Name: "b"},
+					},
+				},
 			},
 		},
 		false,

@@ -6,7 +6,6 @@ type PipelineStage interface {
 }
 
 func (*BinarySpansetExpr) pipelineStage() {}
-func (*ParenSpansetExpr) pipelineStage()  {}
 func (*SpansetFilter) pipelineStage()     {}
 func (*ScalarFilter) pipelineStage()      {}
 func (*GroupOperation) pipelineStage()    {}
@@ -20,7 +19,6 @@ type SpansetExpr interface {
 }
 
 func (*BinarySpansetExpr) spansetExpr() {}
-func (*ParenSpansetExpr) spansetExpr()  {}
 func (*SpansetFilter) spansetExpr()     {}
 
 // BinarySpansetExpr is a binary operation between two spanset expressions.
@@ -28,11 +26,6 @@ type BinarySpansetExpr struct {
 	Left  SpansetExpr
 	Op    SpansetOp
 	Right SpansetExpr
-}
-
-// ParenSpansetExpr is a parenthesized spanset expression.
-type ParenSpansetExpr struct {
-	Expr SpansetExpr
 }
 
 // SpansetFilter is a spanset filter.
