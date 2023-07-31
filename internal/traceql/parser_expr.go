@@ -36,7 +36,12 @@ func (p *parser) parseBinaryExpr(left Expr, minPrecedence int) (Expr, error) {
 				break
 			}
 
-			right, err = p.parseBinaryExpr(right, minPrecedence+1)
+			nextPrecedence := minPrecedence
+			if rightOp.Precedence() > op.Precedence() {
+				nextPrecedence++
+			}
+
+			right, err = p.parseBinaryExpr(right, nextPrecedence)
 			if err != nil {
 				return nil, err
 			}

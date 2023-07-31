@@ -96,7 +96,12 @@ func (p *parser) parseBinaryScalarExpr(left ScalarExpr, minPrecedence int) (Scal
 				break
 			}
 
-			right, err = p.parseBinaryScalarExpr(right, minPrecedence+1)
+			nextPrecedence := minPrecedence
+			if rightOp.Precedence() > op.Precedence() {
+				nextPrecedence++
+			}
+
+			right, err = p.parseBinaryScalarExpr(right, nextPrecedence)
 			if err != nil {
 				return nil, err
 			}

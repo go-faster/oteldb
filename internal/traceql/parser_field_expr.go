@@ -102,7 +102,12 @@ func (p *parser) parseBinaryFieldExpr(left FieldExpr, minPrecedence int) (FieldE
 				break
 			}
 
-			right, err = p.parseBinaryFieldExpr(right, minPrecedence+1)
+			nextPrecedence := minPrecedence
+			if rightOp.Precedence() > op.Precedence() {
+				nextPrecedence++
+			}
+
+			right, err = p.parseBinaryFieldExpr(right, nextPrecedence)
 			if err != nil {
 				return nil, err
 			}

@@ -177,7 +177,12 @@ func (p *parser) parseBinarySpansetExpr(left SpansetExpr, minPrecedence int) (Sp
 				break
 			}
 
-			right, err = p.parseBinarySpansetExpr(right, minPrecedence+1)
+			nextPrecedence := minPrecedence
+			if rightOp.Precedence() > op.Precedence() {
+				nextPrecedence++
+			}
+
+			right, err = p.parseBinarySpansetExpr(right, nextPrecedence)
 			if err != nil {
 				return nil, err
 			}
