@@ -79,6 +79,13 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`parent`,
+		[]Token{
+			{Type: Parent, Text: "parent"},
+		},
+		false,
+	},
+	{
 		`.foo.bar`,
 		[]Token{
 			{Type: Ident, Text: ".foo.bar"},

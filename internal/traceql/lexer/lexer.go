@@ -82,9 +82,15 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 		return tok, err
 	}
 	peekCh := l.scanner.Peek()
-
 	switch text {
-	case ".", "parent", "resource", "span":
+	case "parent":
+		if peekCh != '.' {
+			// Just "parent".
+			break
+		}
+		// "parent" followed by dot, it's attribute selector.
+		fallthrough
+	case ".", "resource", "span":
 		// Attribute selector.
 		var sb strings.Builder
 		sb.WriteString(text)
