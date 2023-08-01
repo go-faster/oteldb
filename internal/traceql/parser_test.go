@@ -42,7 +42,32 @@ var tests = []TestCase{
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
 				&SpansetFilter{
-					Expr: &Static{Type: StaticBool, Data: 1},
+					Expr: &Static{Type: TypeBool, Data: 1},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ true }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &Static{Type: TypeBool, Data: 1},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ !true }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &UnaryFieldExpr{
+						Op:   OpNot,
+						Expr: &Static{Type: TypeBool, Data: 1},
+					},
 				},
 			},
 		},
@@ -53,7 +78,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: RootServiceName},
 			OpEq,
-			&Static{Type: StaticString, Str: "bar"},
+			&Static{Type: TypeString, Str: "bar"},
 		),
 		false,
 	},
@@ -62,7 +87,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: RootSpanName},
 			OpNotEq,
-			&Static{Type: StaticString, Str: "bar"},
+			&Static{Type: TypeString, Str: "bar"},
 		),
 		false,
 	},
@@ -71,7 +96,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanName},
 			OpRe,
-			&Static{Type: StaticString, Str: "bar"},
+			&Static{Type: TypeString, Str: "bar"},
 		),
 		false,
 	},
@@ -80,7 +105,16 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanChildCount},
 			OpEq,
-			&Static{Type: StaticInteger, Data: 10},
+			&Static{Type: TypeInt, Data: 10},
+		),
+		false,
+	},
+	{
+		`{ parent != nil }`,
+		testBinFieldExpr(
+			&Attribute{Prop: SpanParent},
+			OpNotEq,
+			&Static{Type: TypeNil},
 		),
 		false,
 	},
@@ -89,7 +123,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "foo"},
 			OpGte,
-			&Static{Type: StaticInteger, Data: uint64(-10 + noConst)},
+			&Static{Type: TypeInt, Data: uint64(-10 + noConst)},
 		),
 		false,
 	},
@@ -98,7 +132,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "foo"},
 			OpLte,
-			&Static{Type: StaticNumber, Data: math.Float64bits(.5)},
+			&Static{Type: TypeNumber, Data: math.Float64bits(.5)},
 		),
 		false,
 	},
@@ -107,7 +141,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "foo"},
 			OpAnd,
-			&Static{Type: StaticBool, Data: 1},
+			&Static{Type: TypeBool, Data: 1},
 		),
 		false,
 	},
@@ -116,7 +150,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "foo"},
 			OpAnd,
-			&Static{Type: StaticBool, Data: 0},
+			&Static{Type: TypeBool, Data: 0},
 		),
 		false,
 	},
@@ -125,7 +159,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "foo"},
 			OpEq,
-			&Static{Type: StaticNil},
+			&Static{Type: TypeNil},
 		),
 		false,
 	},
@@ -134,7 +168,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanDuration},
 			OpGt,
-			&Static{Type: StaticDuration, Data: uint64(10 * time.Second)},
+			&Static{Type: TypeDuration, Data: uint64(10 * time.Second)},
 		),
 		false,
 	},
@@ -143,7 +177,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: TraceDuration},
 			OpLt,
-			&Static{Type: StaticDuration, Data: uint64(24 * time.Hour)},
+			&Static{Type: TypeDuration, Data: uint64(24 * time.Hour)},
 		),
 		false,
 	},
@@ -152,7 +186,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanStatus},
 			OpEq,
-			&Static{Type: StaticSpanStatus, Data: uint64(ptrace.StatusCodeOk)},
+			&Static{Type: TypeSpanStatus, Data: uint64(ptrace.StatusCodeOk)},
 		),
 		false,
 	},
@@ -161,7 +195,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanStatus},
 			OpEq,
-			&Static{Type: StaticSpanStatus, Data: uint64(ptrace.StatusCodeUnset)},
+			&Static{Type: TypeSpanStatus, Data: uint64(ptrace.StatusCodeUnset)},
 		),
 		false,
 	},
@@ -170,7 +204,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanStatus},
 			OpEq,
-			&Static{Type: StaticSpanStatus, Data: uint64(ptrace.StatusCodeError)},
+			&Static{Type: TypeSpanStatus, Data: uint64(ptrace.StatusCodeError)},
 		),
 		false,
 	},
@@ -179,7 +213,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanKind},
 			OpEq,
-			&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindUnspecified)},
+			&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindUnspecified)},
 		),
 		false,
 	},
@@ -188,7 +222,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanKind},
 			OpEq,
-			&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindInternal)},
+			&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindInternal)},
 		),
 		false,
 	},
@@ -197,7 +231,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanKind},
 			OpEq,
-			&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindServer)},
+			&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindServer)},
 		),
 		false,
 	},
@@ -206,7 +240,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanKind},
 			OpEq,
-			&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindClient)},
+			&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindClient)},
 		),
 		false,
 	},
@@ -215,7 +249,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanKind},
 			OpEq,
-			&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindProducer)},
+			&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindProducer)},
 		),
 		false,
 	},
@@ -224,7 +258,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Prop: SpanKind},
 			OpEq,
-			&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindConsumer)},
+			&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindConsumer)},
 		),
 		false,
 	},
@@ -233,12 +267,10 @@ var tests = []TestCase{
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
 				&SpansetFilter{
-					Expr: &ParenFieldExpr{
-						&BinaryFieldExpr{
-							&Attribute{Prop: SpanKind},
-							OpEq,
-							&Static{Type: StaticSpanKind, Data: uint64(ptrace.SpanKindClient)},
-						},
+					Expr: &BinaryFieldExpr{
+						&Attribute{Prop: SpanKind},
+						OpEq,
+						&Static{Type: TypeSpanKind, Data: uint64(ptrace.SpanKindClient)},
 					},
 				},
 			},
@@ -250,11 +282,44 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&UnaryFieldExpr{
 				Op:   OpNeg,
-				Expr: &ParenFieldExpr{Expr: &Attribute{Prop: SpanChildCount}},
+				Expr: &Attribute{Prop: SpanChildCount},
 			},
 			OpLt,
-			&Static{Type: StaticInteger, Data: 0},
+			&Static{Type: TypeInt, Data: 0},
 		),
+		false,
+	},
+	{
+		`{ -(.a) < 0 }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left: &UnaryFieldExpr{
+							Op:   OpNeg,
+							Expr: &Attribute{Name: "a"},
+						},
+						Op:    OpLt,
+						Right: &Static{Type: TypeInt, Data: 0},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ 3.14 < 10 }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left:  &Static{Type: TypeNumber, Data: math.Float64bits(3.14)},
+						Op:    OpLt,
+						Right: &Static{Type: TypeInt, Data: 10},
+					},
+				},
+			},
+		},
 		false,
 	},
 	{
@@ -262,7 +327,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "github.com/ogen-go/ogen.attr"},
 			OpRe,
-			&Static{Type: StaticString, Str: "foo"},
+			&Static{Type: TypeString, Str: "foo"},
 		),
 		false,
 	},
@@ -271,7 +336,7 @@ var tests = []TestCase{
 		testBinFieldExpr(
 			&Attribute{Name: "github.com/ogen-go/ogen.attr", Scope: ScopeResource},
 			OpNotRe,
-			&Static{Type: StaticString, Str: "foo"},
+			&Static{Type: TypeString, Str: "foo"},
 		),
 		false,
 	},
@@ -421,9 +486,9 @@ var tests = []TestCase{
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
 				&ScalarFilter{
-					Left:  &Static{Type: StaticInteger, Data: uint64(-2 + noConst)},
+					Left:  &Static{Type: TypeInt, Data: uint64(-2 + noConst)},
 					Op:    OpEq,
-					Right: &Static{Type: StaticInteger, Data: uint64(-2 + noConst)},
+					Right: &Static{Type: TypeInt, Data: uint64(-2 + noConst)},
 				},
 			},
 		},
@@ -436,15 +501,15 @@ var tests = []TestCase{
 				&ScalarFilter{
 					Left: &BinaryScalarExpr{
 						Left: &BinaryScalarExpr{
-							Left:  &Static{Type: StaticInteger, Data: uint64(1)},
+							Left:  &Static{Type: TypeInt, Data: uint64(1)},
 							Op:    OpAdd,
-							Right: &Static{Type: StaticInteger, Data: uint64(2)},
+							Right: &Static{Type: TypeInt, Data: uint64(2)},
 						},
 						Op:    OpPow,
-						Right: &Static{Type: StaticInteger, Data: uint64(3)},
+						Right: &Static{Type: TypeInt, Data: uint64(3)},
 					},
 					Op:    OpEq,
-					Right: &Static{Type: StaticInteger, Data: uint64(27)},
+					Right: &Static{Type: TypeInt, Data: uint64(27)},
 				},
 			},
 		},
@@ -456,40 +521,44 @@ var tests = []TestCase{
 			Pipeline: []PipelineStage{
 				&ScalarFilter{
 					Left: &BinaryScalarExpr{
-						Left: &Static{Type: StaticInteger, Data: uint64(1)},
+						Left: &Static{Type: TypeInt, Data: uint64(1)},
 						Op:   OpAdd,
 						Right: &BinaryScalarExpr{
-							Left: &Static{Type: StaticInteger, Data: uint64(2)},
+							Left: &Static{Type: TypeInt, Data: uint64(2)},
 							Op:   OpMul,
 							Right: &BinaryScalarExpr{
-								Left:  &Static{Type: StaticInteger, Data: uint64(3)},
+								Left:  &Static{Type: TypeInt, Data: uint64(3)},
 								Op:    OpPow,
-								Right: &Static{Type: StaticInteger, Data: uint64(4)},
+								Right: &Static{Type: TypeInt, Data: uint64(4)},
 							},
 						},
 					},
 					Op:    OpEq,
-					Right: &Static{Type: StaticInteger, Data: uint64(163)},
+					Right: &Static{Type: TypeInt, Data: uint64(163)},
 				},
 			},
 		},
 		false,
 	},
 	{
-		`{ 1+2*3^4 }`,
+		`{ .a = 1+2*3^4 }`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
 				&SpansetFilter{
 					Expr: &BinaryFieldExpr{
-						Left: &Static{Type: StaticInteger, Data: uint64(1)},
-						Op:   OpAdd,
+						Left: &Attribute{Name: "a"},
+						Op:   OpEq,
 						Right: &BinaryFieldExpr{
-							Left: &Static{Type: StaticInteger, Data: uint64(2)},
-							Op:   OpMul,
+							Left: &Static{Type: TypeInt, Data: uint64(1)},
+							Op:   OpAdd,
 							Right: &BinaryFieldExpr{
-								Left:  &Static{Type: StaticInteger, Data: uint64(3)},
-								Op:    OpPow,
-								Right: &Static{Type: StaticInteger, Data: uint64(4)},
+								Left: &Static{Type: TypeInt, Data: uint64(2)},
+								Op:   OpMul,
+								Right: &BinaryFieldExpr{
+									Left:  &Static{Type: TypeInt, Data: uint64(3)},
+									Op:    OpPow,
+									Right: &Static{Type: TypeInt, Data: uint64(4)},
+								},
 							},
 						},
 					},
@@ -504,20 +573,20 @@ var tests = []TestCase{
 			Pipeline: []PipelineStage{
 				&ScalarFilter{
 					Left: &BinaryScalarExpr{
-						Left: &Static{Type: StaticInteger, Data: uint64(2)},
+						Left: &Static{Type: TypeInt, Data: uint64(2)},
 						Op:   OpAdd,
 						Right: &BinaryScalarExpr{
 							Left: &BinaryScalarExpr{
-								Left:  &Static{Type: StaticInteger, Data: uint64(3)},
+								Left:  &Static{Type: TypeInt, Data: uint64(3)},
 								Op:    OpMul,
-								Right: &Static{Type: StaticInteger, Data: uint64(4)},
+								Right: &Static{Type: TypeInt, Data: uint64(4)},
 							},
 							Op:    OpAdd,
-							Right: &Static{Type: StaticInteger, Data: uint64(5)},
+							Right: &Static{Type: TypeInt, Data: uint64(5)},
 						},
 					},
 					Op:    OpEq,
-					Right: &Static{Type: StaticInteger, Data: uint64(19)},
+					Right: &Static{Type: TypeInt, Data: uint64(19)},
 				},
 			},
 		},
@@ -580,7 +649,7 @@ var tests = []TestCase{
 						Field: &Attribute{Prop: SpanDuration},
 					},
 					Op:    OpEq,
-					Right: &Static{Type: StaticDuration, Data: uint64(time.Second)},
+					Right: &Static{Type: TypeDuration, Data: uint64(time.Second)},
 				},
 			},
 		},
@@ -754,6 +823,85 @@ var tests = []TestCase{
 	{`coalesce()`, nil, true},
 	// Scalar filter must be a part of pipeline.
 	{`max() > 3 && { }`, nil, true},
+
+	// Type check errors.
+	// Spanset expression must evaluate to boolean.
+	// Static.
+	{`{ "foo" }`, nil, true},
+	{`{ 1 }`, nil, true},
+	{`{ 3.14 }`, nil, true},
+	{`{ nil }`, nil, true},
+	{`{ 5h }`, nil, true},
+	{`{ ok }`, nil, true},
+	{`{ client }`, nil, true},
+	// Attribute.
+	{`{ duration }`, nil, true},
+	{`{ childCount }`, nil, true},
+	{`{ name }`, nil, true},
+	{`{ status }`, nil, true},
+	{`{ kind }`, nil, true},
+	{`{ parent }`, nil, true},
+	{`{ rootName }`, nil, true},
+	{`{ rootServiceName }`, nil, true},
+	{`{ traceDuration }`, nil, true},
+	// Aggregate expression must evaluate to number.
+	{`{ .a } | sum(true) > 10`, nil, true},
+	{`{ .a } | sum("foo") > 10`, nil, true},
+	// Illegal operand.
+	{`{ -"foo" =~ "foo" }`, nil, true},
+	{`{ !"foo" =~ "foo" }`, nil, true},
+	{`{ 1 + "foo" }`, nil, true},
+	{`{ 1 + true }`, nil, true},
+	{`{ 1 + nil }`, nil, true},
+	{`{ 1 + ok }`, nil, true},
+	{`{ 1 + client }`, nil, true},
+	{`{ "foo" > 10 }`, nil, true},
+	{`{ "foo" =~ 10 }`, nil, true},
+	// Illegal operation.
+	// String.
+	{`{ "foo" && "foo" }`, nil, true},
+	{`{ "foo" || "foo" }`, nil, true},
+	{`{ "foo" + "foo" }`, nil, true},
+	{`{ "foo" % "foo" }`, nil, true},
+	// Int.
+	{`{ 1 && 1 }`, nil, true},
+	{`{ 1 || 1 }`, nil, true},
+	{`{ 1 =~ 1 }`, nil, true},
+	{`{ 1 !~ 1 }`, nil, true},
+	// Number.
+	{`{ 3.14 && 3.14 }`, nil, true},
+	{`{ 3.14 || 3.14 }`, nil, true},
+	{`{ 3.14 =~ 3.14 }`, nil, true},
+	{`{ 3.14 !~ 3.14 }`, nil, true},
+	// Bool.
+	{`{ true / true }`, nil, true},
+	{`{ true < true }`, nil, true},
+	{`{ true =~ true }`, nil, true},
+	{`{ true !~ true }`, nil, true},
+	// Nil.
+	{`{ nil - nil }`, nil, true},
+	{`{ nil =~ nil }`, nil, true},
+	{`{ nil !~ nil }`, nil, true},
+	{`{ nil < nil }`, nil, true},
+	// Duration.
+	{`{ 5h && 5h }`, nil, true},
+	{`{ 5h || 5h }`, nil, true},
+	{`{ 5h =~ 5h }`, nil, true},
+	{`{ 5h !~ 5h }`, nil, true},
+	// Status.
+	{`{ ok && ok }`, nil, true},
+	{`{ ok || ok }`, nil, true},
+	{`{ ok ^ ok }`, nil, true},
+	{`{ ok =~ ok }`, nil, true},
+	{`{ ok !~ ok }`, nil, true},
+	{`{ ok <= ok }`, nil, true},
+	// Kind.
+	{`{ client && client }`, nil, true},
+	{`{ client || client }`, nil, true},
+	{`{ client * client }`, nil, true},
+	{`{ client =~ client }`, nil, true},
+	{`{ client !~ client }`, nil, true},
+	{`{ client >= client }`, nil, true},
 }
 
 func TestParse(t *testing.T) {

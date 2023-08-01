@@ -1,6 +1,10 @@
 package traceql
 
-import "github.com/go-faster/oteldb/internal/traceql/lexer"
+import (
+	"github.com/go-faster/errors"
+
+	"github.com/go-faster/oteldb/internal/traceql/lexer"
+)
 
 func (p *parser) parseScalarExpr() (ScalarExpr, error) {
 	expr, err := p.parseScalarExpr1()
@@ -62,11 +66,17 @@ func (p *parser) parseAggregateScalarExpr() (expr *AggregateScalarExpr, _ error)
 	}
 
 	if expr.Op != AggregateOpCount {
+		pos := p.peek().Pos
+
 		field, err := p.parseFieldExpr()
 		if err != nil {
 			return nil, err
 		}
 		expr.Field = field
+
+		if t := field.ValueType(); t != TypeAttribute && !t.IsNumeric() {
+			return nil, errors.Errorf("aggregate expression must evaluate to numeric: at %s", pos)
+		}
 	}
 
 	if err := p.consume(lexer.CloseParen); err != nil {
@@ -87,6 +97,10 @@ func (p *parser) parseBinaryScalarExpr(left ScalarExpr, minPrecedence int) (Scal
 
 		right, err := p.parseScalarExpr1()
 		if err != nil {
+			return nil, err
+		}
+
+		if err := CheckBinaryExpr(left, op, right); err != nil {
 			return nil, err
 		}
 

@@ -3,6 +3,7 @@ package traceql
 import (
 	"strings"
 
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
@@ -29,10 +30,11 @@ func (p *parser) parseFieldExpr1() (FieldExpr, error) {
 		if err := p.consume(lexer.CloseParen); err != nil {
 			return nil, err
 		}
-		return &ParenFieldExpr{Expr: expr}, nil
+		return expr, nil
 	case lexer.Not, lexer.Sub:
 		p.next()
 
+		pos := p.peek().Pos
 		expr, err := p.parseFieldExpr1()
 		if err != nil {
 			return nil, err
@@ -44,6 +46,10 @@ func (p *parser) parseFieldExpr1() (FieldExpr, error) {
 			op = OpNot
 		case lexer.Sub:
 			op = OpNeg
+		}
+
+		if err := CheckUnaryExpr(op, expr); err != nil {
+			return nil, errors.Wrapf(err, "at %s", pos)
 		}
 
 		return &UnaryFieldExpr{
@@ -72,6 +78,7 @@ func (p *parser) parseFieldExpr1() (FieldExpr, error) {
 		lexer.Name,
 		lexer.Status,
 		lexer.Kind,
+		lexer.Parent,
 		lexer.RootName,
 		lexer.RootServiceName,
 		lexer.TraceDuration,
@@ -93,6 +100,10 @@ func (p *parser) parseBinaryFieldExpr(left FieldExpr, minPrecedence int) (FieldE
 
 		right, err := p.parseFieldExpr1()
 		if err != nil {
+			return nil, err
+		}
+
+		if err := CheckBinaryExpr(left, op, right); err != nil {
 			return nil, err
 		}
 
@@ -167,7 +178,7 @@ func (p *parser) parseStatic() (s *Static, _ error) {
 		if err != nil {
 			return s, err
 		}
-		s.SetInteger(v)
+		s.SetInt(v)
 	case lexer.Number:
 		p.unread()
 		v, err := p.parseNumber()
@@ -225,12 +236,15 @@ func (p *parser) parseAttribute() (a *Attribute, _ error) {
 		a.Prop = SpanStatus
 	case lexer.Kind:
 		a.Prop = SpanKind
+	case lexer.Parent:
+		a.Prop = SpanParent
 	case lexer.RootName:
 		a.Prop = RootSpanName
 	case lexer.RootServiceName:
 		a.Prop = RootServiceName
 	case lexer.TraceDuration:
 		a.Prop = TraceDuration
+
 	case lexer.Ident:
 		attr := t.Text
 		attr, a.Parent = strings.CutPrefix(attr, "parent.")

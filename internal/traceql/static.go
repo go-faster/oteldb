@@ -1,6 +1,7 @@
 package traceql
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -11,21 +12,71 @@ import (
 type StaticType int
 
 const (
-	StaticString StaticType = iota + 1
-	StaticInteger
-	StaticNumber
-	StaticBool
-	StaticNil
-	StaticDuration
-	StaticSpanStatus
-	StaticSpanKind
+	TypeAttribute StaticType = iota
+	TypeString
+	TypeInt
+	TypeNumber
+	TypeBool
+	TypeNil
+	TypeDuration
+	TypeSpanStatus
+	TypeSpanKind
+	lastType
 )
+
+// String implements fmt.Stringer.
+func (s StaticType) String() string {
+	switch s {
+	case TypeAttribute:
+		return "Attribute"
+	case TypeString:
+		return "String"
+	case TypeInt:
+		return "Int"
+	case TypeNumber:
+		return "Number"
+	case TypeBool:
+		return "Bool"
+	case TypeNil:
+		return "Nil"
+	case TypeDuration:
+		return "Duration"
+	case TypeSpanStatus:
+		return "SpanStatus"
+	case TypeSpanKind:
+		return "SpanKind"
+	default:
+		return fmt.Sprintf("<unknown type %d>", s)
+	}
+}
+
+// CheckOperand whether is a and b are valid operands.
+func (s StaticType) CheckOperand(s2 StaticType) bool {
+	return s == s2 ||
+		s == TypeAttribute || s2 == TypeAttribute ||
+		(s.IsNumeric() && s2.IsNumeric())
+}
+
+// IsNumeric returns true if type is numeric.
+func (s StaticType) IsNumeric() bool {
+	switch s {
+	case TypeInt, TypeNumber, TypeDuration:
+		return true
+	default:
+		return false
+	}
+}
 
 // Static is a constant value.
 type Static struct {
 	Type StaticType
 	Data uint64 // stores everything, except strings
 	Str  string
+}
+
+// ValueType returns value type of expression.
+func (s Static) ValueType() StaticType {
+	return s.Type
 }
 
 func (s *Static) resetTo(typ StaticType) {
@@ -36,25 +87,25 @@ func (s *Static) resetTo(typ StaticType) {
 
 // SetString sets String value.
 func (s *Static) SetString(v string) {
-	s.resetTo(StaticString)
+	s.resetTo(TypeString)
 	s.Str = v
 }
 
-// SetInteger sets Integer value.
-func (s *Static) SetInteger(v int64) {
-	s.resetTo(StaticInteger)
+// SetInt sets Int value.
+func (s *Static) SetInt(v int64) {
+	s.resetTo(TypeInt)
 	s.Data = uint64(v)
 }
 
 // SetNumber sets Number value.
 func (s *Static) SetNumber(v float64) {
-	s.resetTo(StaticNumber)
+	s.resetTo(TypeNumber)
 	s.Data = math.Float64bits(v)
 }
 
 // SetBool sets Bool value.
 func (s *Static) SetBool(v bool) {
-	s.resetTo(StaticBool)
+	s.resetTo(TypeBool)
 	if v {
 		s.Data = 1
 	}
@@ -62,24 +113,24 @@ func (s *Static) SetBool(v bool) {
 
 // SetNil sets Nil value.
 func (s *Static) SetNil() {
-	s.resetTo(StaticNil)
+	s.resetTo(TypeNil)
 }
 
 // SetDuration sets Duration value.
 func (s *Static) SetDuration(v time.Duration) {
-	s.resetTo(StaticDuration)
+	s.resetTo(TypeDuration)
 	s.Data = uint64(v)
 }
 
 // SetSpanStatus sets SpanStatus value.
 func (s *Static) SetSpanStatus(status ptrace.StatusCode) {
-	s.resetTo(StaticSpanStatus)
+	s.resetTo(TypeSpanStatus)
 	s.Data = uint64(status)
 }
 
 // SetSpanKind sets SpanKind value.
 func (s *Static) SetSpanKind(kind ptrace.SpanKind) {
-	s.resetTo(StaticSpanKind)
+	s.resetTo(TypeSpanKind)
 	s.Data = uint64(kind)
 }
 
@@ -88,8 +139,8 @@ func (s *Static) AsString() string {
 	return s.Str
 }
 
-// AsInteger returns Integer value.
-func (s *Static) AsInteger() int64 {
+// AsInt returns Int value.
+func (s *Static) AsInt() int64 {
 	return int64(s.Data)
 }
 
@@ -105,7 +156,7 @@ func (s *Static) AsBool() bool {
 
 // IsNil returns true, if static is Nil.
 func (s *Static) IsNil() bool {
-	return s.Type == StaticNil
+	return s.Type == TypeNil
 }
 
 // AsDuration returns Duration value.

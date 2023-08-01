@@ -140,6 +140,11 @@ func (p *parser) parseSpansetExpr1() (SpansetExpr, error) {
 			if err != nil {
 				return nil, err
 			}
+			switch fieldExpr.ValueType() {
+			case TypeBool, TypeAttribute:
+			default:
+				return nil, errors.Errorf("filter expression must evaluate to boolean: at %s", t2.Pos)
+			}
 			filter.Expr = fieldExpr
 		} else {
 			s := &Static{}
