@@ -73,11 +73,6 @@ func (p *parser) consumeText(tt lexer.TokenType) (string, error) {
 	return t.Text, nil
 }
 
-func (p *parser) parseString() (string, error) {
-	s, err := p.consumeText(lexer.String)
-	return s, err
-}
-
 func (p *parser) parseInteger() (int64, error) {
 	text, err := p.consumeText(lexer.Integer)
 	if err != nil {

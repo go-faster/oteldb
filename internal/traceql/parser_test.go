@@ -451,6 +451,54 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`1+2*3^4 = 163`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&ScalarFilter{
+					Left: &BinaryScalarExpr{
+						Left: &Static{Type: StaticInteger, Data: uint64(1)},
+						Op:   OpAdd,
+						Right: &BinaryScalarExpr{
+							Left: &Static{Type: StaticInteger, Data: uint64(2)},
+							Op:   OpMul,
+							Right: &BinaryScalarExpr{
+								Left:  &Static{Type: StaticInteger, Data: uint64(3)},
+								Op:    OpPow,
+								Right: &Static{Type: StaticInteger, Data: uint64(4)},
+							},
+						},
+					},
+					Op:    OpEq,
+					Right: &Static{Type: StaticInteger, Data: uint64(163)},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ 1+2*3^4 }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left: &Static{Type: StaticInteger, Data: uint64(1)},
+						Op:   OpAdd,
+						Right: &BinaryFieldExpr{
+							Left: &Static{Type: StaticInteger, Data: uint64(2)},
+							Op:   OpMul,
+							Right: &BinaryFieldExpr{
+								Left:  &Static{Type: StaticInteger, Data: uint64(3)},
+								Op:    OpPow,
+								Right: &Static{Type: StaticInteger, Data: uint64(4)},
+							},
+						},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
 		`2+3*4+5 = 19`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
@@ -619,6 +667,51 @@ var tests = []TestCase{
 		},
 		false,
 	},
+	{
+		`( { .a } | coalesce() ) && ( { .b } | coalesce() ) >> ( { .c } | coalesce() ) && ( { .d } | coalesce() )`,
+		&BinaryExpr{
+			Left: &SpansetPipeline{
+				Pipeline: []PipelineStage{
+					&SpansetFilter{
+						Expr: &Attribute{Name: "a"},
+					},
+					&CoalesceOperation{},
+				},
+			},
+			Op: SpansetOpAnd,
+			Right: &BinaryExpr{
+				Left: &BinaryExpr{
+					Left: &SpansetPipeline{
+						Pipeline: []PipelineStage{
+							&SpansetFilter{
+								Expr: &Attribute{Name: "b"},
+							},
+							&CoalesceOperation{},
+						},
+					},
+					Op: SpansetOpDescendant, // Higher precedence then and.
+					Right: &SpansetPipeline{
+						Pipeline: []PipelineStage{
+							&SpansetFilter{
+								Expr: &Attribute{Name: "c"},
+							},
+							&CoalesceOperation{},
+						},
+					},
+				},
+				Op: SpansetOpAnd,
+				Right: &SpansetPipeline{
+					Pipeline: []PipelineStage{
+						&SpansetFilter{
+							Expr: &Attribute{Name: "d"},
+						},
+						&CoalesceOperation{},
+					},
+				},
+			},
+		},
+		false,
+	},
 
 	// Invalid syntax.
 	{`{`, nil, true},
@@ -634,6 +727,19 @@ var tests = []TestCase{
 	{`{} | by(.foo`, nil, true},
 	{`{} | coalesce(`, nil, true},
 	{`{} | select(.foo`, nil, true},
+	{`(`, nil, true},
+	{`()`, nil, true},
+	{`(( { .a } )`, nil, true},
+	// Missing expression.
+	{`{ .a = }`, nil, true},
+	{`20 >`, nil, true},
+	{`1 > 1+`, nil, true},
+	{`{ .a } ~ `, nil, true},
+	{`{ .a } && { .b } ~ `, nil, true},
+	{`({ .a }) ~ `, nil, true},
+	{`({ .a }) ~ ()`, nil, true},
+	{`({ .a } | by(.b)) ~ `, nil, true},
+	{`({ .a } | by(.b)) && ({ .b } | by(.b)) ~`, nil, true},
 	// Parameter is required,
 	{`{} | max()`, nil, true},
 	{`{} | min()`, nil, true},
