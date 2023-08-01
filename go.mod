@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/go-faster/errors v0.6.1
 	github.com/go-faster/jx v1.0.1
-	github.com/go-faster/sdk v0.7.0
+	github.com/go-faster/sdk v0.7.1
 	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.0
@@ -148,12 +148,12 @@ require (
 	go.opentelemetry.io/collector/featuregate v1.0.0-rcv0014 // indirect
 	go.opentelemetry.io/collector/processor v0.82.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.82.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.42.0-rc.1 // indirect
-	go.opentelemetry.io/contrib/propagators/autoprop v0.42.0-rc.1 // indirect
-	go.opentelemetry.io/contrib/propagators/aws v1.17.0-rc.1 // indirect
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.42.0 // indirect
+	go.opentelemetry.io/contrib/propagators/autoprop v0.42.0 // indirect
+	go.opentelemetry.io/contrib/propagators/aws v1.17.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.17.0 // indirect
-	go.opentelemetry.io/contrib/propagators/jaeger v1.17.0-rc.1 // indirect
-	go.opentelemetry.io/contrib/propagators/ot v1.17.0-rc.1 // indirect
+	go.opentelemetry.io/contrib/propagators/jaeger v1.17.0 // indirect
+	go.opentelemetry.io/contrib/propagators/ot v1.17.0 // indirect
 	go.opentelemetry.io/otel/bridge/opencensus v0.39.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.16.0 // indirect
