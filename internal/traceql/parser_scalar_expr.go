@@ -1,8 +1,6 @@
 package traceql
 
 import (
-	"github.com/go-faster/errors"
-
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
 )
 
@@ -75,7 +73,10 @@ func (p *parser) parseAggregateScalarExpr() (expr *AggregateScalarExpr, _ error)
 		expr.Field = field
 
 		if t := field.ValueType(); t != TypeAttribute && !t.IsNumeric() {
-			return nil, errors.Errorf("aggregate expression must evaluate to numeric: at %s", pos)
+			return nil, &TypeError{
+				Msg: "aggregate expression must evaluate to numeric",
+				Pos: pos,
+			}
 		}
 	}
 
@@ -92,15 +93,17 @@ func (p *parser) parseBinaryScalarExpr(left ScalarExpr, minPrecedence int) (Scal
 		if !ok || !op.IsArithmetic() || op.Precedence() < minPrecedence {
 			return left, nil
 		}
-		// Consume op.
-		p.next()
+		// Consume op and get op token position.
+		opPos := p.next().Pos
 
+		// Get right expression position.
+		rightPos := p.peek().Pos
 		right, err := p.parseScalarExpr1()
 		if err != nil {
 			return nil, err
 		}
 
-		if err := CheckBinaryExpr(left, op, right); err != nil {
+		if err := p.checkBinaryExpr(left, op, opPos, right, rightPos); err != nil {
 			return nil, err
 		}
 

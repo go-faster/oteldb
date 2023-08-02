@@ -3,7 +3,7 @@ package traceql
 // ScalarExpr is a scalar expression.
 type ScalarExpr interface {
 	scalarExpr()
-	ValueType() StaticType
+	TypedExpr
 }
 
 func (*BinaryScalarExpr) scalarExpr()    {}

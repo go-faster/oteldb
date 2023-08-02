@@ -823,85 +823,6 @@ var tests = []TestCase{
 	{`coalesce()`, nil, true},
 	// Scalar filter must be a part of pipeline.
 	{`max() > 3 && { }`, nil, true},
-
-	// Type check errors.
-	// Spanset expression must evaluate to boolean.
-	// Static.
-	{`{ "foo" }`, nil, true},
-	{`{ 1 }`, nil, true},
-	{`{ 3.14 }`, nil, true},
-	{`{ nil }`, nil, true},
-	{`{ 5h }`, nil, true},
-	{`{ ok }`, nil, true},
-	{`{ client }`, nil, true},
-	// Attribute.
-	{`{ duration }`, nil, true},
-	{`{ childCount }`, nil, true},
-	{`{ name }`, nil, true},
-	{`{ status }`, nil, true},
-	{`{ kind }`, nil, true},
-	{`{ parent }`, nil, true},
-	{`{ rootName }`, nil, true},
-	{`{ rootServiceName }`, nil, true},
-	{`{ traceDuration }`, nil, true},
-	// Aggregate expression must evaluate to number.
-	{`{ .a } | sum(true) > 10`, nil, true},
-	{`{ .a } | sum("foo") > 10`, nil, true},
-	// Illegal operand.
-	{`{ -"foo" =~ "foo" }`, nil, true},
-	{`{ !"foo" =~ "foo" }`, nil, true},
-	{`{ 1 + "foo" }`, nil, true},
-	{`{ 1 + true }`, nil, true},
-	{`{ 1 + nil }`, nil, true},
-	{`{ 1 + ok }`, nil, true},
-	{`{ 1 + client }`, nil, true},
-	{`{ "foo" > 10 }`, nil, true},
-	{`{ "foo" =~ 10 }`, nil, true},
-	// Illegal operation.
-	// String.
-	{`{ "foo" && "foo" }`, nil, true},
-	{`{ "foo" || "foo" }`, nil, true},
-	{`{ "foo" + "foo" }`, nil, true},
-	{`{ "foo" % "foo" }`, nil, true},
-	// Int.
-	{`{ 1 && 1 }`, nil, true},
-	{`{ 1 || 1 }`, nil, true},
-	{`{ 1 =~ 1 }`, nil, true},
-	{`{ 1 !~ 1 }`, nil, true},
-	// Number.
-	{`{ 3.14 && 3.14 }`, nil, true},
-	{`{ 3.14 || 3.14 }`, nil, true},
-	{`{ 3.14 =~ 3.14 }`, nil, true},
-	{`{ 3.14 !~ 3.14 }`, nil, true},
-	// Bool.
-	{`{ true / true }`, nil, true},
-	{`{ true < true }`, nil, true},
-	{`{ true =~ true }`, nil, true},
-	{`{ true !~ true }`, nil, true},
-	// Nil.
-	{`{ nil - nil }`, nil, true},
-	{`{ nil =~ nil }`, nil, true},
-	{`{ nil !~ nil }`, nil, true},
-	{`{ nil < nil }`, nil, true},
-	// Duration.
-	{`{ 5h && 5h }`, nil, true},
-	{`{ 5h || 5h }`, nil, true},
-	{`{ 5h =~ 5h }`, nil, true},
-	{`{ 5h !~ 5h }`, nil, true},
-	// Status.
-	{`{ ok && ok }`, nil, true},
-	{`{ ok || ok }`, nil, true},
-	{`{ ok ^ ok }`, nil, true},
-	{`{ ok =~ ok }`, nil, true},
-	{`{ ok !~ ok }`, nil, true},
-	{`{ ok <= ok }`, nil, true},
-	// Kind.
-	{`{ client && client }`, nil, true},
-	{`{ client || client }`, nil, true},
-	{`{ client * client }`, nil, true},
-	{`{ client =~ client }`, nil, true},
-	{`{ client !~ client }`, nil, true},
-	{`{ client >= client }`, nil, true},
 }
 
 func TestParse(t *testing.T) {
@@ -915,8 +836,12 @@ func TestParse(t *testing.T) {
 			}()
 
 			got, err := Parse(tt.input)
+			if err != nil {
+				t.Logf("Error: \n%+v", err)
+			}
 			if tt.wantErr {
-				require.Error(t, err)
+				var se *SyntaxError
+				require.ErrorAs(t, err, &se)
 				return
 			}
 			require.NoError(t, err)
@@ -927,6 +852,9 @@ func TestParse(t *testing.T) {
 
 func FuzzParse(f *testing.F) {
 	for _, tt := range tests {
+		f.Add(tt.input)
+	}
+	for _, tt := range typeTests {
 		f.Add(tt.input)
 	}
 	f.Fuzz(func(t *testing.T, input string) {

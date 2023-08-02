@@ -1,9 +1,9 @@
 package traceql
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
@@ -48,10 +48,12 @@ func (p *parser) parseFieldExpr1() (FieldExpr, error) {
 			op = OpNeg
 		}
 
-		if err := CheckUnaryExpr(op, expr); err != nil {
-			return nil, errors.Wrapf(err, "at %s", pos)
+		if t := expr.ValueType(); !op.CheckType(t) {
+			return nil, &TypeError{
+				Msg: fmt.Sprintf("unary operator %q not defined on %q", op, t),
+				Pos: pos,
+			}
 		}
-
 		return &UnaryFieldExpr{
 			Expr: expr,
 			Op:   op,
@@ -95,15 +97,17 @@ func (p *parser) parseBinaryFieldExpr(left FieldExpr, minPrecedence int) (FieldE
 		if !ok || op.Precedence() < minPrecedence {
 			return left, nil
 		}
-		// Consume op.
-		p.next()
+		// Consume op and get op token position.
+		opPos := p.next().Pos
 
+		// Get right expression position.
+		rightPos := p.peek().Pos
 		right, err := p.parseFieldExpr1()
 		if err != nil {
 			return nil, err
 		}
 
-		if err := CheckBinaryExpr(left, op, right); err != nil {
+		if err := p.checkBinaryExpr(left, op, opPos, right, rightPos); err != nil {
 			return nil, err
 		}
 

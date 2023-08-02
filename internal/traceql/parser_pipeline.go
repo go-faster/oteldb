@@ -1,8 +1,6 @@
 package traceql
 
 import (
-	"github.com/go-faster/errors"
-
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
 )
 
@@ -39,7 +37,10 @@ func (p *parser) parsePipeline() (stages []PipelineStage, rerr error) {
 			stages = append(stages, op)
 		case lexer.Coalesce:
 			if len(stages) < 1 {
-				return stages, errors.Errorf("coalesce cannot be first operation: at %s", t.Pos)
+				return stages, &SyntaxError{
+					Msg: "coalesce cannot be first operation",
+					Pos: t.Pos,
+				}
 			}
 			p.next()
 
@@ -143,7 +144,10 @@ func (p *parser) parseSpansetExpr1() (SpansetExpr, error) {
 			switch fieldExpr.ValueType() {
 			case TypeBool, TypeAttribute:
 			default:
-				return nil, errors.Errorf("filter expression must evaluate to boolean: at %s", t2.Pos)
+				return nil, &TypeError{
+					Msg: "filter expression must evaluate to boolean",
+					Pos: t2.Pos,
+				}
 			}
 			filter.Expr = fieldExpr
 		} else {

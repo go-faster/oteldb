@@ -1,6 +1,7 @@
 package traceql
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -60,15 +61,24 @@ func (p *parser) unread() {
 
 func (p *parser) unexpectedToken(t lexer.Token) error {
 	if t.Type == lexer.EOF {
-		return errors.New("unexpected EOF")
+		return &SyntaxError{
+			Msg: "unexpected EOF",
+			Pos: t.Pos,
+		}
 	}
-	return errors.Errorf("unexpected token %q at %s", t.Type, t.Pos)
+	return &SyntaxError{
+		Msg: fmt.Sprintf("unexpected token %q", t.Type),
+		Pos: t.Pos,
+	}
 }
 
-func (p *parser) consumeText(tt lexer.TokenType) (string, error) {
+func (p *parser) consumeText(expect lexer.TokenType) (string, error) {
 	t := p.next()
-	if t.Type != tt {
-		return "", errors.Wrapf(p.unexpectedToken(t), "expected %q", tt)
+	if t.Type != expect {
+		return "", &SyntaxError{
+			Msg: fmt.Sprintf("expected %q, got %q", expect, t.Type),
+			Pos: t.Pos,
+		}
 	}
 	return t.Text, nil
 }

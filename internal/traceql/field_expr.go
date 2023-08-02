@@ -3,7 +3,7 @@ package traceql
 // FieldExpr is a field expression.
 type FieldExpr interface {
 	fieldExpr()
-	ValueType() StaticType
+	TypedExpr
 }
 
 func (*BinaryFieldExpr) fieldExpr() {}
