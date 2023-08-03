@@ -42,7 +42,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.16.0
 	go.opentelemetry.io/proto/otlp v1.0.0
 	go.uber.org/multierr v1.11.0
-	go.uber.org/zap v1.24.0
+	go.uber.org/zap v1.25.0
 	go.ytsaurus.tech/library/go/core/log v0.0.3
 	go.ytsaurus.tech/yt/go v0.0.7
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
