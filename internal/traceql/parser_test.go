@@ -593,6 +593,23 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`(count() + count()) > 10`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&ScalarFilter{
+					Left: &BinaryScalarExpr{
+						Left:  &AggregateScalarExpr{Op: AggregateOpCount},
+						Op:    OpAdd,
+						Right: &AggregateScalarExpr{Op: AggregateOpCount},
+					},
+					Op:    OpGt,
+					Right: &Static{Type: TypeInt, Data: uint64(10)},
+				},
+			},
+		},
+		false,
+	},
+	{
 		`max(.foo) > count() + sum(.bar)`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
@@ -621,6 +638,26 @@ var tests = []TestCase{
 					},
 					Op:    OpGt,
 					Right: &AggregateScalarExpr{Op: AggregateOpSum, Field: &Attribute{Name: "bar"}},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ .a } | (count() + count()) > 10`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &Attribute{Name: "a"},
+				},
+				&ScalarFilter{
+					Left: &BinaryScalarExpr{
+						Left:  &AggregateScalarExpr{Op: AggregateOpCount},
+						Op:    OpAdd,
+						Right: &AggregateScalarExpr{Op: AggregateOpCount},
+					},
+					Op:    OpGt,
+					Right: &Static{Type: TypeInt, Data: uint64(10)},
 				},
 			},
 		},

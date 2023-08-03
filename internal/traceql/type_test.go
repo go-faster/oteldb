@@ -37,6 +37,7 @@ var typeTests = []struct {
 	// Illegal operand.
 	{`{ -"foo" =~ "foo" }`, nil, true},
 	{`{ !"foo" =~ "foo" }`, nil, true},
+	{`{ -(.a = 1) }`, nil, true},
 	{`{ 1 + "foo" }`, nil, true},
 	{`{ 1 + true }`, nil, true},
 	{`{ 1 + nil }`, nil, true},

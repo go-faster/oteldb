@@ -85,6 +85,7 @@ func (p *parser) parsePipeline() (stages []PipelineStage, rerr error) {
 
 func (p *parser) tryReadCloseParen() error {
 	if !p.first {
+		p.parens--
 		return p.consume(lexer.CloseParen)
 	}
 	t := p.peek()
