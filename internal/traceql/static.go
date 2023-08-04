@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
@@ -83,6 +84,32 @@ func (s *Static) resetTo(typ StaticType) {
 	s.Type = typ
 	s.Data = 0
 	s.Str = ""
+}
+
+// SetOTELValue sets value from given OpenTelemetry data value.
+//
+// SetOTELValue returns false, if [pcommon.Value] cannot be represent as [Static].
+func (s *Static) SetOTELValue(val pcommon.Value) bool {
+	switch val.Type() {
+	case pcommon.ValueTypeStr:
+		s.SetString(val.Str())
+		return true
+	case pcommon.ValueTypeInt:
+		s.SetInt(val.Int())
+		return true
+	case pcommon.ValueTypeDouble:
+		s.SetNumber(val.Double())
+		return true
+	case pcommon.ValueTypeBool:
+		s.SetBool(val.Bool())
+		return true
+	case pcommon.ValueTypeMap:
+	case pcommon.ValueTypeSlice:
+	case pcommon.ValueTypeBytes:
+		s.SetString(string(val.Bytes().AsRaw()))
+		return true
+	}
+	return false
 }
 
 // SetString sets String value.
