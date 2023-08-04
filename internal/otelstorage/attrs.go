@@ -21,9 +21,14 @@ func (m Attrs) MarshalYSON(w *yson.Writer) error {
 	return nil
 }
 
-// AsMap returns Attrs as pcommon.Map.
+// AsMap returns Attrs as [pcommon.Map].
 func (m Attrs) AsMap() pcommon.Map {
 	return pcommon.Map(m)
+}
+
+// IsZero whether Attrs is zero value.
+func (m Attrs) IsZero() bool {
+	return m == (Attrs{})
 }
 
 // CopyTo copies all attributes from m to target.
@@ -40,7 +45,7 @@ func (m *Attrs) UnmarshalYSON(r *yson.Reader) error {
 
 func otelMapToYSON(w *yson.Writer, kv pcommon.Map) {
 	w.BeginMap()
-	if kv != (pcommon.Map{}) {
+	if !Attrs(kv).IsZero() {
 		kv.Range(func(k string, v pcommon.Value) bool {
 			w.MapKeyString(k)
 			otelValueToYSON(w, v)
