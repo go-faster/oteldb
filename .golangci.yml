@@ -122,3 +122,9 @@ issues:
       text: "comment on exported const .+ should be of the form"
     - linters: [revive]
       text: "exported const .+ should have comment"
+
+    # False positive.
+    - path: internal/cmp
+      linters: [gocritic]
+      source: "return x != x"
+      text: "dupSubExpr"
