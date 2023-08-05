@@ -90,6 +90,11 @@ var typeTests = []struct {
 	{`{ client =~ client }`, nil, true},
 	{`{ client !~ client }`, nil, true},
 	{`{ client >= client }`, nil, true},
+
+	// Pattern must be a static string.
+	{`{ .foo =~ .dynamic_regex }`, nil, true},
+	{`{ .foo !~ .dynamic_regex }`, nil, true},
+	{`{ .foo =~ (.dynamic_regex + 10) }`, nil, true},
 }
 
 func TestTypeCheck(t *testing.T) {

@@ -111,6 +111,15 @@ func (p *parser) parseBinaryFieldExpr(left FieldExpr, minPrecedence int) (FieldE
 			return nil, err
 		}
 
+		if op.IsRegex() {
+			if _, ok := right.(*Static); !ok {
+				return nil, &TypeError{
+					Msg: fmt.Sprintf("regexp pattern should be a static string, got %T", right),
+					Pos: rightPos,
+				}
+			}
+		}
+
 		for {
 			rightOp, ok := p.peekBinaryOp()
 			if !ok || rightOp.Precedence() < op.Precedence() {
