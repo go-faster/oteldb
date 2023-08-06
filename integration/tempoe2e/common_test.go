@@ -18,6 +18,7 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tempohandler"
+	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -38,6 +39,7 @@ func setupDB(
 	set tempoe2e.BatchSet,
 	inserter tracestorage.Inserter,
 	querier tracestorage.Querier,
+	engineQuerier traceqlengine.Querier,
 ) *tempoapi.Client {
 	consumer := tracestorage.NewConsumer(inserter)
 	for i, b := range set.Batches {
@@ -46,7 +48,11 @@ func setupDB(
 		}
 	}
 
-	api := tempohandler.NewTempoAPI(querier)
+	var engine *traceqlengine.Engine
+	if engineQuerier != nil {
+		engine = traceqlengine.NewEngine(engineQuerier, traceqlengine.Options{})
+	}
+	api := tempohandler.NewTempoAPI(querier, engine)
 	tempoh, err := tempoapi.NewServer(api)
 	require.NoError(t, err)
 
@@ -63,6 +69,7 @@ func runTest(
 	t *testing.T,
 	inserter tracestorage.Inserter,
 	querier tracestorage.Querier,
+	engineQuerier traceqlengine.Querier,
 ) {
 	set, err := readBatchSet("_testdata/traces.json")
 	require.NoError(t, err)
@@ -70,7 +77,7 @@ func runTest(
 	require.NotEmpty(t, set.Tags)
 	require.NotEmpty(t, set.Traces)
 
-	c := setupDB(ctx, t, set, inserter, querier)
+	c := setupDB(ctx, t, set, inserter, querier, engineQuerier)
 
 	t.Run("SearchTags", func(t *testing.T) {
 		a := require.New(t)

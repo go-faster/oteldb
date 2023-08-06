@@ -4,6 +4,7 @@ package tempohandler
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
+	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -26,13 +28,15 @@ var _ tempoapi.Handler = (*TempoAPI)(nil)
 
 // TempoAPI implements tempoapi.Handler.
 type TempoAPI struct {
-	q tracestorage.Querier
+	q      tracestorage.Querier
+	engine *traceqlengine.Engine
 }
 
 // NewTempoAPI creates new TempoAPI.
-func NewTempoAPI(q tracestorage.Querier) *TempoAPI {
+func NewTempoAPI(q tracestorage.Querier, engine *traceqlengine.Engine) *TempoAPI {
 	return &TempoAPI{
-		q: q,
+		q:      q,
+		engine: engine,
 	}
 }
 
@@ -57,14 +61,47 @@ func (h *TempoAPI) Search(ctx context.Context, params tempoapi.SearchParams) (re
 		zap.String("tags", logfmtQuery),
 	)
 
-	tags, err := parseLogfmt(logfmtQuery)
+	switch {
+	case traceQLQuery != "":
+		return h.searchTraceQL(ctx, traceQLQuery, params)
+	case logfmtQuery != "":
+		return h.searchTags(ctx, logfmtQuery, params)
+	default:
+		return nil, &tempoapi.ErrorStatusCode{
+			StatusCode: http.StatusBadRequest,
+			Response:   `either of parameters "q" and "tags" should be set`,
+		}
+	}
+}
+
+func (h *TempoAPI) searchTraceQL(ctx context.Context, query string, params tempoapi.SearchParams) (resp *tempoapi.Traces, _ error) {
+	if h.engine == nil {
+		return nil, &tempoapi.ErrorStatusCode{
+			StatusCode: http.StatusInternalServerError,
+			Response:   "TraceQL engine is disabled",
+		}
+	}
+	return h.engine.Eval(ctx, query, traceqlengine.EvalParams{
+		MinDuration: params.MinDuration.Or(0),
+		MaxDuration: params.MinDuration.Or(0),
+		Start:       timeToTimestamp(params.Start),
+		End:         timeToTimestamp(params.End),
+		Limit:       params.Limit.Or(20),
+	})
+}
+
+func (h *TempoAPI) searchTags(ctx context.Context, query string, params tempoapi.SearchParams) (resp *tempoapi.Traces, _ error) {
+	tags, err := parseLogfmt(query)
 	if err != nil {
-		return nil, errors.Wrap(err, "parse logfmt")
+		return nil, &tempoapi.ErrorStatusCode{
+			StatusCode: http.StatusBadRequest,
+			Response:   tempoapi.Error(fmt.Sprintf("parse logfmt: %s", err)),
+		}
 	}
 
 	i, err := h.q.SearchTags(ctx, tags, tracestorage.SearchTagsOptions{
-		MinDuration: params.MinDuration.Value,
-		MaxDuration: params.MaxDuration.Value,
+		MinDuration: params.MinDuration.Or(0),
+		MaxDuration: params.MaxDuration.Or(0),
 		Start:       timeToTimestamp(params.Start),
 		End:         timeToTimestamp(params.End),
 	})
