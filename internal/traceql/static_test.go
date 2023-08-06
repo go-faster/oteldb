@@ -3,6 +3,7 @@ package traceql
 import (
 	"fmt"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,6 +81,78 @@ func TestStatic_SetOTELValue(t *testing.T) {
 			}
 			require.True(t, ok)
 			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestStatic_Compare(t *testing.T) {
+	parseStatic := func(t *testing.T, input string) Static {
+		p, err := newParser(input)
+		require.NoError(t, err)
+
+		s, err := p.parseStatic()
+		require.NoError(t, err)
+		return *s
+	}
+	tests := []struct {
+		a, b string
+		want int
+	}{
+		// String.
+		{`""`, `""`, 0},
+		{`"foo"`, `"foo"`, 0},
+		{`"foo"`, `"bar"`, strings.Compare("foo", "bar")},
+		{`"bar"`, `"foo"`, strings.Compare("bar", "foo")},
+		// Integer.
+		{`10`, `9`, +1},
+		{`10`, `10`, 0},
+		{`10`, `11`, -1},
+		// Number.
+		{`9.99`, `9.9`, +1},
+		{`10.0`, `10.0`, 0},
+		{`10.1`, `10.1`, 0},
+		{`10.0`, `10.1`, -1},
+		// Boolean.
+		{`true`, `true`, 0},
+		{`false`, `false`, 0},
+		{`true`, `false`, +1},
+		{`false`, `true`, -1},
+		// Nil.
+		{`nil`, `nil`, 0},
+		// Duration.
+		{`15ns`, `10ns`, +1},
+		{`10ns`, `10ns`, 0},
+		{`1s`, `1s`, 0},
+		{`1.5s`, `1.5s`, 0},
+		{`10ns`, `15ns`, -1},
+		// Status.
+		{`ok`, `ok`, 0},
+		{`unset`, `unset`, 0},
+		{`error`, `error`, 0},
+		// Kind.
+		{`client`, `client`, 0},
+		{`server`, `server`, 0},
+		{`producer`, `producer`, 0},
+		{`consumer`, `consumer`, 0},
+		// Numeric.
+		{`10`, `9.0`, +1},
+		{`10`, `9.9`, +1},
+		{`10`, `10.0`, 0},
+		{`10`, `10.1`, -1},
+		{`10`, `11.0`, -1},
+		{`10`, `9ns`, +1},
+		{`10`, `10ns`, 0},
+		{`10`, `11ns`, -1},
+		// Incomparable.
+		{`"foo"`, `10`, -1},
+		{`true`, `10`, -1},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			a := parseStatic(t, tt.a)
+			b := parseStatic(t, tt.b)
+			require.Equal(t, tt.want, a.Compare(b))
 		})
 	}
 }

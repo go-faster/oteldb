@@ -12,15 +12,22 @@ import (
 )
 
 // Parse parses TraceQL query from string.
-func Parse(s string) (Expr, error) {
-	tokens, err := lexer.Tokenize(s, lexer.TokenizeOptions{})
+func Parse(input string) (Expr, error) {
+	p, err := newParser(input)
 	if err != nil {
-		return nil, errors.Wrap(err, "tokenize")
-	}
-	p := parser{
-		tokens: tokens,
+		return nil, err
 	}
 	return p.parseExpr()
+}
+
+func newParser(input string) (parser, error) {
+	tokens, err := lexer.Tokenize(input, lexer.TokenizeOptions{})
+	if err != nil {
+		return parser{}, errors.Wrap(err, "tokenize")
+	}
+	return parser{
+		tokens: tokens,
+	}, nil
 }
 
 type parser struct {
