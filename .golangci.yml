@@ -128,3 +128,8 @@ issues:
       linters: [gocritic]
       source: "return x != x"
       text: "dupSubExpr"
+
+    # Not gonna use const, does not make any sense.
+    - path: internal/ytstorage
+      linters: [goconst]
+      text: "try_get_int64"
