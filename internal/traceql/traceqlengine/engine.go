@@ -108,10 +108,17 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 	}()
 
 	var (
+		limit  = params.Limit
 		elem   Trace
 		result []tempoapi.TraceSearchMetadata
 	)
+	if limit < 0 {
+		limit = 20
+	}
 	for iter.Next(&elem) {
+		if len(result) >= limit {
+			break
+		}
 		if len(elem.Spans) < 1 {
 			continue
 		}
@@ -158,6 +165,10 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 		}
 
 		for _, s := range ss {
+			if len(result) >= limit {
+				break
+			}
+
 			var spans tempoapi.TempoSpanSet
 			for _, span := range s.Spans {
 				spans.Spans = append(spans.Spans, span.AsTempoSpan())

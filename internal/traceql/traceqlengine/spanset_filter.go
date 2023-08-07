@@ -14,7 +14,7 @@ type SpansetFilter struct {
 func buildSpansetFilter(filter *traceql.SpansetFilter) (Processor, error) {
 	eval, err := buildEvaluater(filter.Expr)
 	if err != nil {
-		return nil, errors.Wrap(err, "build Filter")
+		return nil, errors.Wrap(err, "build spanset filter")
 	}
 	return &SpansetFilter{eval: eval}, nil
 }
