@@ -23,7 +23,7 @@ require (
 	github.com/pyroscope-io/client v0.7.1
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	github.com/testcontainers/testcontainers-go v0.21.0
+	github.com/testcontainers/testcontainers-go v0.22.0
 	go.opentelemetry.io/collector v0.82.0
 	go.opentelemetry.io/collector/component v0.82.0
 	go.opentelemetry.io/collector/confmap v0.82.0
@@ -54,13 +54,14 @@ require (
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect
+	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/containerd/containerd v1.6.19 // indirect
+	github.com/containerd/containerd v1.7.3 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
@@ -111,7 +112,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mostynb/go-grpc-compression v1.2.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc4 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
