@@ -341,6 +341,37 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`{ .a = "POST" && .b = 200 && duration > 0ns }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left: &BinaryFieldExpr{
+							Left:  &Attribute{Name: "a"},
+							Op:    OpEq,
+							Right: &Static{Type: TypeString, Str: "POST"},
+						},
+						Op: OpAnd,
+						Right: &BinaryFieldExpr{
+							Left: &BinaryFieldExpr{
+								Left:  &Attribute{Name: "b"},
+								Op:    OpEq,
+								Right: &Static{Type: TypeInt, Data: 200},
+							},
+							Op: OpAnd,
+							Right: &BinaryFieldExpr{
+								Left:  &Attribute{Prop: SpanDuration},
+								Op:    OpGt,
+								Right: &Static{Type: TypeDuration, Data: 0},
+							},
+						},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
 		`{ .a || span.a || resource.a } && { parent.a && parent.span.a && parent.resource.a }`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
