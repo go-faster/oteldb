@@ -33,11 +33,7 @@ func (f *SpansetFilter) Process(sets []Spanset) ([]Spanset, error) {
 }
 
 func (f *SpansetFilter) keep(set Spanset) bool {
-	ectx := evaluateCtx{
-		RootSpanName:    set.RootSpanName,
-		RootServiceName: set.RootServiceName,
-		TraceDuration:   set.TraceDuration,
-	}
+	ectx := set.evaluateCtx()
 	for _, span := range set.Spans {
 		if v := f.eval(span, ectx); v.Type == traceql.TypeBool && v.AsBool() {
 			return true

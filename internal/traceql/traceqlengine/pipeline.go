@@ -22,6 +22,14 @@ type Spanset struct {
 	TraceDuration   time.Duration
 }
 
+func (set Spanset) evaluateCtx() evaluateCtx {
+	return evaluateCtx{
+		RootSpanName:    set.RootSpanName,
+		RootServiceName: set.RootServiceName,
+		TraceDuration:   set.TraceDuration,
+	}
+}
+
 // Processor is a log record processor.
 type Processor interface {
 	Process(sets []Spanset) ([]Spanset, error)
@@ -66,6 +74,8 @@ func buildStage(stage traceql.PipelineStage) (Processor, error) {
 	switch stage := stage.(type) {
 	case *traceql.SpansetFilter:
 		return buildSpansetFilter(stage)
+	case *traceql.ScalarFilter:
+		return buildScalarFilter(stage)
 	default:
 		return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported stage %T", stage)}
 	}

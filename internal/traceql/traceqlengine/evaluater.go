@@ -20,7 +20,10 @@ type evaluateCtx struct {
 	TraceDuration   time.Duration
 }
 
-type evaluater func(span tracestorage.Span, ctx evaluateCtx) traceql.Static
+type (
+	evaluater func(span tracestorage.Span, ctx evaluateCtx) traceql.Static
+	binaryOp  func(a, b traceql.Static) traceql.Static
+)
 
 func buildEvaluater(expr traceql.FieldExpr) (evaluater, error) {
 	switch expr := expr.(type) {
@@ -45,79 +48,8 @@ func buildBinaryEvaluater(
 	op traceql.BinaryOp,
 	right traceql.FieldExpr,
 ) (evaluater, error) {
-	var opEval func(a, b traceql.Static) traceql.Static
-	switch op {
-	case traceql.OpAnd:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			if a.Type != traceql.TypeBool || b.Type != traceql.TypeBool {
-				r.SetBool(false)
-			} else {
-				r.SetBool(a.AsBool() && b.AsBool())
-			}
-			return r
-		}
-	case traceql.OpOr:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			if a.Type != traceql.TypeBool || b.Type != traceql.TypeBool {
-				r.SetBool(false)
-			} else {
-				r.SetBool(a.AsBool() || b.AsBool())
-			}
-			return r
-		}
-	case traceql.OpAdd:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(a.AsFloat() + b.AsFloat())
-			return r
-		}
-	case traceql.OpSub:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(a.AsFloat() - b.AsFloat())
-			return r
-		}
-	case traceql.OpMul:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(a.AsFloat() * b.AsFloat())
-			return r
-		}
-	case traceql.OpDiv:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			dividend := a.AsFloat()
-			// Checked division.
-			if dividend == 0 {
-				r.SetNumber(math.NaN())
-			} else {
-				r.SetNumber(dividend / b.AsFloat())
-			}
-			return r
-		}
-	case traceql.OpMod:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			dividend := a.AsFloat()
-			// Checked modular division.
-			if dividend == 0 {
-				r.SetNumber(math.NaN())
-			} else {
-				r.SetNumber(math.Mod(dividend, b.AsFloat()))
-			}
-			return r
-		}
-	case traceql.OpPow:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(math.Pow(a.AsFloat(), b.AsFloat()))
-			return r
-		}
-	case traceql.OpEq:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetBool(a.Compare(b) == 0)
-			return r
-		}
-	case traceql.OpNotEq:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetBool(a.Compare(b) != 0)
-			return r
-		}
-	case traceql.OpRe, traceql.OpNotRe:
+	var pattern string
+	if op.IsRegex() {
 		static, ok := right.(*traceql.Static)
 		if !ok {
 			return nil, errors.Errorf("unexpected pattern expression %T", right)
@@ -125,54 +57,12 @@ func buildBinaryEvaluater(
 		if static.Type != traceql.TypeString {
 			return nil, errors.Errorf("expected string pattern, got %q", static.Type)
 		}
-		pattern := static.AsString()
+		pattern = static.AsString()
+	}
 
-		re, err := regexp.Compile(pattern)
-		if err != nil {
-			return nil, errors.Wrapf(err, "compile regexp %q", pattern)
-		}
-
-		if op == traceql.OpRe {
-			opEval = func(a, _ traceql.Static) (r traceql.Static) {
-				if a.Type != traceql.TypeString {
-					r.SetBool(false)
-				} else {
-					r.SetBool(re.MatchString(a.AsString()))
-				}
-				return r
-			}
-		} else {
-			opEval = func(a, _ traceql.Static) (r traceql.Static) {
-				if a.Type != traceql.TypeString {
-					r.SetBool(false)
-				} else {
-					r.SetBool(!re.MatchString(a.AsString()))
-				}
-				return r
-			}
-		}
-	case traceql.OpGt:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetBool(a.Compare(b) > 0)
-			return r
-		}
-	case traceql.OpGte:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetBool(a.Compare(b) >= 0)
-			return r
-		}
-	case traceql.OpLt:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetBool(a.Compare(b) < 0)
-			return r
-		}
-	case traceql.OpLte:
-		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetBool(a.Compare(b) <= 0)
-			return r
-		}
-	default:
-		return nil, errors.Errorf("unexpected binary op %q", op)
+	opEval, err := buildBinaryOp(op, pattern)
+	if err != nil {
+		return nil, err
 	}
 
 	leftEval, err := buildEvaluater(left)
@@ -190,6 +80,127 @@ func buildBinaryEvaluater(
 		right := rightEval(span, ctx)
 		return opEval(left, right)
 	}, nil
+}
+
+func buildBinaryOp(op traceql.BinaryOp, pattern string) (binaryOp, error) {
+	switch op {
+	case traceql.OpAnd:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			if a.Type != traceql.TypeBool || b.Type != traceql.TypeBool {
+				r.SetBool(false)
+			} else {
+				r.SetBool(a.AsBool() && b.AsBool())
+			}
+			return r
+		}, nil
+	case traceql.OpOr:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			if a.Type != traceql.TypeBool || b.Type != traceql.TypeBool {
+				r.SetBool(false)
+			} else {
+				r.SetBool(a.AsBool() || b.AsBool())
+			}
+			return r
+		}, nil
+	case traceql.OpAdd:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetNumber(a.AsFloat() + b.AsFloat())
+			return r
+		}, nil
+	case traceql.OpSub:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetNumber(a.AsFloat() - b.AsFloat())
+			return r
+		}, nil
+	case traceql.OpMul:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetNumber(a.AsFloat() * b.AsFloat())
+			return r
+		}, nil
+	case traceql.OpDiv:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			dividend := a.AsFloat()
+			// Checked division.
+			if dividend == 0 {
+				r.SetNumber(math.NaN())
+			} else {
+				r.SetNumber(dividend / b.AsFloat())
+			}
+			return r
+		}, nil
+	case traceql.OpMod:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			dividend := a.AsFloat()
+			// Checked modular division.
+			if dividend == 0 {
+				r.SetNumber(math.NaN())
+			} else {
+				r.SetNumber(math.Mod(dividend, b.AsFloat()))
+			}
+			return r
+		}, nil
+	case traceql.OpPow:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetNumber(math.Pow(a.AsFloat(), b.AsFloat()))
+			return r
+		}, nil
+	case traceql.OpEq:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetBool(a.Compare(b) == 0)
+			return r
+		}, nil
+	case traceql.OpNotEq:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetBool(a.Compare(b) != 0)
+			return r
+		}, nil
+	case traceql.OpRe, traceql.OpNotRe:
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return nil, errors.Wrapf(err, "compile regexp %q", pattern)
+		}
+
+		if op == traceql.OpRe {
+			return func(a, _ traceql.Static) (r traceql.Static) {
+				if a.Type != traceql.TypeString {
+					r.SetBool(false)
+				} else {
+					r.SetBool(re.MatchString(a.AsString()))
+				}
+				return r
+			}, nil
+		}
+		return func(a, _ traceql.Static) (r traceql.Static) {
+			if a.Type != traceql.TypeString {
+				r.SetBool(false)
+			} else {
+				r.SetBool(!re.MatchString(a.AsString()))
+			}
+			return r
+		}, nil
+	case traceql.OpGt:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetBool(a.Compare(b) > 0)
+			return r
+		}, nil
+	case traceql.OpGte:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetBool(a.Compare(b) >= 0)
+			return r
+		}, nil
+	case traceql.OpLt:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetBool(a.Compare(b) < 0)
+			return r
+		}, nil
+	case traceql.OpLte:
+		return func(a, b traceql.Static) (r traceql.Static) {
+			r.SetBool(a.Compare(b) <= 0)
+			return r
+		}, nil
+	default:
+		return nil, errors.Errorf("unexpected binary op %q", op)
+	}
 }
 
 func buildUnaryEvaluater(op traceql.UnaryOp, expr traceql.FieldExpr) (evaluater, error) {
