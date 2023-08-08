@@ -109,7 +109,7 @@ func (p *parser) parseBinaryScalarExpr(left ScalarExpr, minPrecedence int) (Scal
 				break
 			}
 
-			nextPrecedence := minPrecedence
+			nextPrecedence := op.Precedence()
 			if rightOp.Precedence() > op.Precedence() {
 				nextPrecedence++
 			}

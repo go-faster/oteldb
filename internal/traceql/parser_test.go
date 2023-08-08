@@ -624,6 +624,33 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`{ 2+3*4+5 = 19 }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left: &BinaryFieldExpr{
+							Left: &Static{Type: TypeInt, Data: uint64(2)},
+							Op:   OpAdd,
+							Right: &BinaryFieldExpr{
+								Left: &BinaryFieldExpr{
+									Left:  &Static{Type: TypeInt, Data: uint64(3)},
+									Op:    OpMul,
+									Right: &Static{Type: TypeInt, Data: uint64(4)},
+								},
+								Op:    OpAdd,
+								Right: &Static{Type: TypeInt, Data: uint64(5)},
+							},
+						},
+						Op:    OpEq,
+						Right: &Static{Type: TypeInt, Data: uint64(19)},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
 		`(count() + count()) > 10`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
