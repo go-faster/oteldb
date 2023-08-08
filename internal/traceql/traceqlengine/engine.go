@@ -108,6 +108,13 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 	}()
 
 	var (
+		tr = timeRange{
+			start: params.Start,
+			end:   params.End,
+			min:   params.MinDuration,
+			max:   params.MaxDuration,
+		}
+
 		limit  = params.Limit
 		elem   Trace
 		result []tempoapi.TraceSearchMetadata
@@ -145,6 +152,11 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 			if v, ok := attrs.AsMap().Get("service.name"); ok && v.Type() == pcommon.ValueTypeStr {
 				rootServiceName = v.Str()
 			}
+		}
+
+		if !tr.within(start, end) {
+			// Trace is not within range.
+			continue
 		}
 
 		ss := []Spanset{
@@ -192,4 +204,26 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 		return nil, err
 	}
 	return &tempoapi.Traces{Traces: result}, nil
+}
+
+type timeRange struct {
+	start, end otelstorage.Timestamp
+	min, max   time.Duration
+}
+
+func (r timeRange) within(start, end time.Time) bool {
+	if r.start != 0 && start.Before(r.start.AsTime()) {
+		return false
+	}
+
+	if r.end != 0 && end.After(r.end.AsTime()) {
+		return false
+	}
+
+	duration := end.Sub(start)
+	if (r.min != 0 && duration < r.min) || (r.max != 0 && duration > r.max) {
+		return false
+	}
+
+	return true
 }
