@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"time"
 
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -13,7 +14,13 @@ import (
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
-type evaluater func(span tracestorage.Span) (traceql.Static, bool)
+type evaluateCtx struct {
+	RootSpanName    string
+	RootServiceName string
+	TraceDuration   time.Duration
+}
+
+type evaluater func(span tracestorage.Span, ctx evaluateCtx) traceql.Static
 
 func buildEvaluater(expr traceql.FieldExpr) (evaluater, error) {
 	switch expr := expr.(type) {
@@ -23,8 +30,8 @@ func buildEvaluater(expr traceql.FieldExpr) (evaluater, error) {
 		return buildUnaryEvaluater(expr.Op, expr.Expr)
 	case *traceql.Static:
 		cpy := *expr
-		return func(span tracestorage.Span) (traceql.Static, bool) {
-			return cpy, true
+		return func(tracestorage.Span, evaluateCtx) traceql.Static {
+			return cpy
 		}, nil
 	case *traceql.Attribute:
 		return buildAttributeEvaluater(expr)
@@ -75,18 +82,24 @@ func buildBinaryEvaluater(
 		}
 	case traceql.OpDiv:
 		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			divider := b.AsFloat()
+			dividend := a.AsFloat()
 			// Checked division.
-			if divider == 0 {
+			if dividend == 0 {
 				r.SetNumber(math.NaN())
 			} else {
-				r.SetNumber(a.AsFloat() / divider)
+				r.SetNumber(dividend / b.AsFloat())
 			}
 			return r
 		}
 	case traceql.OpMod:
 		opEval = func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(math.Mod(a.AsFloat(), b.AsFloat()))
+			dividend := a.AsFloat()
+			// Checked modular division.
+			if dividend == 0 {
+				r.SetNumber(math.NaN())
+			} else {
+				r.SetNumber(math.Mod(dividend, b.AsFloat()))
+			}
 			return r
 		}
 	case traceql.OpPow:
@@ -172,18 +185,10 @@ func buildBinaryEvaluater(
 		return nil, err
 	}
 
-	return func(span tracestorage.Span) (r traceql.Static, _ bool) {
-		left, ok := leftEval(span)
-		if !ok {
-			return r, false
-		}
-
-		right, ok := rightEval(span)
-		if !ok {
-			return r, false
-		}
-
-		return opEval(left, right), true
+	return func(span tracestorage.Span, ctx evaluateCtx) traceql.Static {
+		left := leftEval(span, ctx)
+		right := rightEval(span, ctx)
+		return opEval(left, right)
 	}, nil
 }
 
@@ -194,22 +199,24 @@ func buildUnaryEvaluater(op traceql.UnaryOp, expr traceql.FieldExpr) (evaluater,
 	}
 	switch op {
 	case traceql.OpNeg:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
-			val, ok := sub(span)
-			if !ok {
-				return r, false
+		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
+			val := sub(span, ctx)
+			if !val.Type.IsNumeric() {
+				r.SetNil()
+			} else {
+				r.SetNumber(-val.AsFloat())
 			}
-			r.SetNumber(-val.AsFloat())
-			return r, true
+			return r
 		}, nil
 	case traceql.OpNot:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
-			val, ok := sub(span)
-			if !ok || val.Type != traceql.TypeBool {
-				return r, false
+		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
+			val := sub(span, ctx)
+			if val.Type != traceql.TypeBool {
+				r.SetNil()
+			} else {
+				r.SetBool(!val.AsBool())
 			}
-			r.SetBool(!val.AsBool())
-			return r, true
+			return r
 		}, nil
 	default:
 		return nil, errors.Errorf("unexpected unary op %q", op)
@@ -219,46 +226,55 @@ func buildUnaryEvaluater(op traceql.UnaryOp, expr traceql.FieldExpr) (evaluater,
 func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 	switch attr.Prop {
 	case traceql.SpanDuration:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 			end := span.End.AsTime()
 			start := span.Start.AsTime()
 			r.SetDuration(end.Sub(start))
-			return r, true
+			return r
 		}, nil
 	case traceql.SpanChildCount:
 		// TODO(tdakkota): span child count
 	case traceql.SpanName:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 			r.SetString(span.Name)
-			return r, true
+			return r
 		}, nil
 	case traceql.SpanStatus:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 			r.SetSpanStatus(ptrace.StatusCode(span.StatusCode))
-			return r, true
+			return r
 		}, nil
 
 	case traceql.SpanKind:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 			r.SetSpanKind(ptrace.SpanKind(span.Kind))
-			return r, true
+			return r
 		}, nil
 	case traceql.SpanParent:
-		return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 			if span.ParentSpanID.IsEmpty() {
 				r.SetNil()
 			} else {
 				// Just set some non-nil value.
 				r.SetBool(true)
 			}
-			return r, true
+			return r
 		}, nil
 	case traceql.RootSpanName:
-		// TODO(tdakkota): root span attributes
+		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
+			r.SetString(ctx.RootSpanName)
+			return r
+		}, nil
 	case traceql.RootServiceName:
-		// TODO(tdakkota): root span attributes
+		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
+			r.SetString(ctx.RootServiceName)
+			return r
+		}, nil
 	case traceql.TraceDuration:
-		// TODO(tdakkota): trace attributes
+		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
+			r.SetDuration(ctx.TraceDuration)
+			return r
+		}, nil
 	default:
 		// SpanAttribute.
 		if attr.Parent {
@@ -266,20 +282,21 @@ func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 			break
 		}
 
-		evaluateAttr := func(name string, attrs ...otelstorage.Attrs) (r traceql.Static, _ bool) {
+		evaluateAttr := func(name string, attrs ...otelstorage.Attrs) (r traceql.Static) {
 			for _, m := range attrs {
 				if m.IsZero() {
 					continue
 				}
 				if v, ok := m.AsMap().Get(name); ok && r.SetOTELValue(v) {
-					return r, true
+					return r
 				}
 			}
-			return r, false
+			r.SetNil()
+			return r
 		}
 		switch attr.Scope {
 		case traceql.ScopeResource:
-			return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 				return evaluateAttr(
 					attr.Name,
 					span.ScopeAttrs,
@@ -287,14 +304,14 @@ func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 				)
 			}, nil
 		case traceql.ScopeSpan:
-			return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 				return evaluateAttr(
 					attr.Name,
 					span.Attrs,
 				)
 			}, nil
 		default:
-			return func(span tracestorage.Span) (r traceql.Static, _ bool) {
+			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 				return evaluateAttr(
 					attr.Name,
 					span.Attrs,
