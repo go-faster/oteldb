@@ -364,6 +364,15 @@ func runTest(
 						validateMetadata(a, metadata, tt.matcherSet)
 					}
 					a.Len(r.Traces, len(tt.matcherSet))
+
+					// Ensure that local in-memory engine gives the same result.
+					r2, err := set.Engine.Eval(ctx, tt.query, traceqlengine.EvalParams{Limit: 200})
+					a.NoError(err)
+
+					for _, metadata := range r2.Traces {
+						validateMetadata(a, metadata, tt.matcherSet)
+					}
+					a.Len(r2.Traces, len(tt.matcherSet))
 				})
 			}
 		})

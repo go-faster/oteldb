@@ -45,3 +45,30 @@ type SelectSpansetsParams struct {
 
 	Limit int
 }
+
+// MemoryQuerier is a simple in-memory querier, used for tests.
+type MemoryQuerier struct {
+	data map[otelstorage.TraceID][]tracestorage.Span
+}
+
+// SelectSpansets get spansets from storage.
+func (q *MemoryQuerier) SelectSpansets(context.Context, SelectSpansetsParams) (iterators.Iterator[Trace], error) {
+	var result []Trace
+	for traceID, spans := range q.data {
+		result = append(result, Trace{
+			TraceID: traceID,
+			Spans:   spans,
+		})
+	}
+	return iterators.Slice(result), nil
+}
+
+// Add adds span to data set.
+//
+// NOTE: There is no synchronization. Do not call this function concurrently with other methods.
+func (q *MemoryQuerier) Add(span tracestorage.Span) {
+	if q.data == nil {
+		q.data = map[otelstorage.TraceID][]tracestorage.Span{}
+	}
+	q.data[span.TraceID] = append(q.data[span.TraceID], span)
+}
