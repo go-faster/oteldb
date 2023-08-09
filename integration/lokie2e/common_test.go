@@ -139,11 +139,14 @@ func runTest(
 		for i, tt := range tests {
 			tt := tt
 			t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+				t.Parallel()
+
 				defer func() {
 					if t.Failed() {
 						t.Logf("query: \n%s", tt.query)
 					}
 				}()
+
 				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
 					Query: tt.query,
 					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),

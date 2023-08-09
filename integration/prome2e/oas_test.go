@@ -125,6 +125,8 @@ func TestPrometheusOAS(t *testing.T) {
 		end   = promapi.PrometheusTimestamp(now.Add(+15 * time.Minute).Format(time.RFC3339))
 	)
 	t.Run("QueryRange", func(t *testing.T) {
+		t.Parallel()
+
 		res, err := api.GetQueryRange(ctx, promapi.GetQueryRangeParams{
 			Query: "go_info{}",
 			Start: start,
@@ -140,6 +142,8 @@ func TestPrometheusOAS(t *testing.T) {
 		assert.Equal(t, "go_info", mr.Metric["__name__"], "metric name")
 	})
 	t.Run("QueryExemplars", func(t *testing.T) {
+		t.Parallel()
+
 		// By default, Prometheus does not store any exemplars.
 		//
 		// But Grafana may query it, so make sure that request is properly encoded
@@ -156,6 +160,8 @@ func TestPrometheusOAS(t *testing.T) {
 		require.Equal(t, "success", res.Status)
 	})
 	t.Run("Series", func(t *testing.T) {
+		t.Parallel()
+
 		res, err := api.GetSeries(ctx, promapi.GetSeriesParams{
 			Start: start,
 			End:   end,
@@ -170,6 +176,8 @@ func TestPrometheusOAS(t *testing.T) {
 		assert.Equal(t, "prometheus", m["job"])
 	})
 	t.Run("Labels", func(t *testing.T) {
+		t.Parallel()
+
 		labels, err := api.GetLabels(ctx, promapi.GetLabelsParams{})
 		require.NoError(t, err)
 		require.NotEmpty(t, labels.Data)
@@ -184,6 +192,8 @@ func TestPrometheusOAS(t *testing.T) {
 		printJSON(t, values, "label values")
 	})
 	t.Run("Metadata", func(t *testing.T) {
+		t.Parallel()
+
 		res, err := api.GetMetadata(ctx, promapi.GetMetadataParams{})
 		require.NoError(t, err)
 		require.NotEmpty(t, res.Data)
