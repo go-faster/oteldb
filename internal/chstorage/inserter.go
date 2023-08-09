@@ -11,6 +11,8 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/go-faster/errors"
+
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -20,6 +22,9 @@ var _ tracestorage.Inserter = (*Inserter)(nil)
 type Inserter struct {
 	ch     *chpool.Pool
 	tables Tables
+
+	insertedSpans metric.Int64Counter
+	insertedTags  metric.Int64Counter
 
 	tracer trace.Tracer
 }
@@ -48,10 +53,24 @@ func (opts *InserterOptions) setDefaults() {
 
 // NewInserter creates new Inserter.
 func NewInserter(c *chpool.Pool, opts InserterOptions) (*Inserter, error) {
+	opts.setDefaults()
+
+	meter := opts.MeterProvider.Meter("chstorage.Inserter")
+	insertedSpans, err := meter.Int64Counter("chstorage.traces.inserted_spans")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_spans")
+	}
+	insertedTags, err := meter.Int64Counter("chstorage.traces.inserted_tags")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_tags")
+	}
+
 	return &Inserter{
-		ch:     c,
-		tables: opts.Tables,
-		tracer: opts.TracerProvider.Tracer("Spans.Inserter"),
+		ch:            c,
+		tables:        opts.Tables,
+		insertedSpans: insertedSpans,
+		insertedTags:  insertedTags,
+		tracer:        opts.TracerProvider.Tracer("Spans.Inserter"),
 	}, nil
 }
 
@@ -65,6 +84,8 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			i.insertedSpans.Add(ctx, int64(len(spans)))
 		}
 		span.End()
 	}()
@@ -90,6 +111,8 @@ func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]str
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			i.insertedTags.Add(ctx, int64(len(tags)))
 		}
 		span.End()
 	}()
