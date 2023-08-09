@@ -8,6 +8,10 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/ClickHouse/ch-go/proto"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/errors"
 
@@ -22,22 +26,67 @@ var _ tracestorage.Querier = (*Querier)(nil)
 type Querier struct {
 	ch     *chpool.Pool
 	tables Tables
+	tracer trace.Tracer
 }
 
-// NewQuerier creates new Querier.
-func NewQuerier(c *chpool.Pool, tables Tables) *Querier {
-	return &Querier{
-		ch:     c,
-		tables: tables,
+// QuerierOptions is Querier's options.
+type QuerierOptions struct {
+	// Tables provides table paths to query.
+	Tables Tables
+	// MeterProvider provides OpenTelemetry meter for this querier.
+	MeterProvider metric.MeterProvider
+	// TracerProvider provides OpenTelemetry tracer for this querier.
+	TracerProvider trace.TracerProvider
+}
+
+func (opts *QuerierOptions) setDefaults() {
+	if opts.Tables == (Tables{}) {
+		opts.Tables = defaultTables
+	}
+	if opts.MeterProvider == nil {
+		opts.MeterProvider = otel.GetMeterProvider()
+	}
+	if opts.TracerProvider == nil {
+		opts.TracerProvider = otel.GetTracerProvider()
 	}
 }
 
+// NewQuerier creates new Querier.
+func NewQuerier(c *chpool.Pool, opts QuerierOptions) (*Querier, error) {
+	opts.setDefaults()
+
+	return &Querier{
+		ch:     c,
+		tables: opts.Tables,
+		tracer: otel.Tracer("chstorage.Querier"),
+	}, nil
+}
+
 // SearchTags performs search by given tags.
-func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (iterators.Iterator[tracestorage.Span], error) {
+func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (_ iterators.Iterator[tracestorage.Span], rerr error) {
+	table := q.tables.Spans
+
+	ctx, span := q.tracer.Start(ctx, "TagNames",
+		trace.WithAttributes(
+			attribute.Int("chstorage.tags_count", len(tags)),
+			attribute.Int64("chstorage.start_range", int64(opts.Start)),
+			attribute.Int64("chstorage.end_range", int64(opts.End)),
+			attribute.Int64("chstorage.max_duration", int64(opts.MaxDuration)),
+			attribute.Int64("chstorage.min_duration", int64(opts.MinDuration)),
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	var query strings.Builder
 	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
 		SELECT trace_id FROM %#[1]q WHERE true
-	`, q.tables.Spans)
+	`, table)
 	for key, value := range tags {
 		if key == "name" {
 			fmt.Fprintf(&query, " AND name = %s", singleQuoted(value))
@@ -90,10 +139,24 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 }
 
 // TagNames returns all available tag names.
-func (q *Querier) TagNames(ctx context.Context) (r []string, _ error) {
+func (q *Querier) TagNames(ctx context.Context) (r []string, rerr error) {
+	table := q.tables.Tags
+
+	ctx, span := q.tracer.Start(ctx, "TagNames",
+		trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	data := new(proto.ColStr).LowCardinality()
 	if err := q.ch.Do(ctx, ch.Query{
-		Body: fmt.Sprintf("SELECT DISTINCT name FROM %#q", q.tables.Tags),
+		Body: fmt.Sprintf("SELECT DISTINCT name FROM %#q", table),
 		Result: proto.ResultColumn{
 			Name: "name",
 			Data: data,
@@ -109,7 +172,22 @@ func (q *Querier) TagNames(ctx context.Context) (r []string, _ error) {
 }
 
 // TagValues returns all available tag values for given tag.
-func (q *Querier) TagValues(ctx context.Context, tagName string) (iterators.Iterator[tracestorage.Tag], error) {
+func (q *Querier) TagValues(ctx context.Context, tagName string) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
+	table := q.tables.Tags
+
+	ctx, span := q.tracer.Start(ctx, "TagValues",
+		trace.WithAttributes(
+			attribute.String("chstorage.tag_to_query", tagName),
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	var (
 		value     proto.ColStr
 		valueType proto.ColEnum8
@@ -118,7 +196,7 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (iterators.Iter
 	)
 
 	if err := q.ch.Do(ctx, ch.Query{
-		Body: fmt.Sprintf("SELECT DISTINCT value, value_type FROM %#q WHERE name = %s", q.tables.Tags, singleQuoted(tagName)),
+		Body: fmt.Sprintf("SELECT DISTINCT value, value_type FROM %#q WHERE name = %s", table, singleQuoted(tagName)),
 		Result: proto.Results{
 			{Name: "value", Data: &value},
 			{Name: "value_type", Data: proto.Wrap(&valueType, valueTypeDDL)},
@@ -142,8 +220,25 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (iterators.Iter
 }
 
 // TraceByID returns spans of given trace.
-func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (iterators.Iterator[tracestorage.Span], error) {
-	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = %s", q.tables.Spans, singleQuoted(id.Hex()))
+func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (_ iterators.Iterator[tracestorage.Span], rerr error) {
+	table := q.tables.Spans
+
+	ctx, span := q.tracer.Start(ctx, "TraceByID",
+		trace.WithAttributes(
+			attribute.String("chstorage.id_to_query", id.Hex()),
+			attribute.Int64("chstorage.start_range", int64(opts.Start)),
+			attribute.Int64("chstorage.end_range", int64(opts.End)),
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = %s", table, singleQuoted(id.Hex()))
 	if s := opts.Start; s != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)
 	}

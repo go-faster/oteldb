@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/errors"
@@ -19,9 +21,25 @@ import (
 var _ logstorage.Querier = (*YTQLQuerier)(nil)
 
 // LabelNames returns all available label names.
-func (q *YTQLQuerier) LabelNames(ctx context.Context, _ logstorage.LabelsOptions) ([]string, error) {
+func (q *YTQLQuerier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions) (_ []string, rerr error) {
+	table := q.tables.logLabels
+
+	ctx, span := q.tracer.Start(ctx, "LabelNames",
+		trace.WithAttributes(
+			attribute.Int64("ytstorage.start_range", int64(opts.Start)),
+			attribute.Int64("ytstorage.end_range", int64(opts.End)),
+			attribute.Stringer("ytstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	// FIXME(tdakkota): use time range from opts
-	query := fmt.Sprintf("name FROM [%s]", q.tables.logLabels)
+	query := fmt.Sprintf("name FROM [%s]", table)
 	names := map[string]struct{}{}
 	err := queryRows(ctx, q.yc, query, func(label logstorage.Label) {
 		names[label.Name] = struct{}{}
@@ -30,9 +48,26 @@ func (q *YTQLQuerier) LabelNames(ctx context.Context, _ logstorage.LabelsOptions
 }
 
 // LabelValues returns all available label values for given label.
-func (q *YTQLQuerier) LabelValues(ctx context.Context, labelName string, _ logstorage.LabelsOptions) (iterators.Iterator[logstorage.Label], error) {
+func (q *YTQLQuerier) LabelValues(ctx context.Context, labelName string, opts logstorage.LabelsOptions) (_ iterators.Iterator[logstorage.Label], rerr error) {
+	table := q.tables.logLabels
+
+	ctx, span := q.tracer.Start(ctx, "LabelValues",
+		trace.WithAttributes(
+			attribute.String("ytstorage.label_to_query", labelName),
+			attribute.Int64("ytstorage.start_range", int64(opts.Start)),
+			attribute.Int64("ytstorage.end_range", int64(opts.End)),
+			attribute.Stringer("ytstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	// FIXME(tdakkota): use time range from opts
-	query := fmt.Sprintf("* FROM [%s] WHERE name = %q", q.tables.logLabels, labelName)
+	query := fmt.Sprintf("* FROM [%s] WHERE name = %q", table, labelName)
 	r, err := q.yc.SelectRows(ctx, query, nil)
 	if err != nil {
 		return nil, err
@@ -51,9 +86,26 @@ func (q *YTQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
 }
 
 // SelectLogs makes a query for LogQL engine.
-func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (iterators.Iterator[logstorage.Record], error) {
+func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (_ iterators.Iterator[logstorage.Record], rerr error) {
+	table := q.tables.logs
+
+	ctx, span := q.tracer.Start(ctx, "LabelValues",
+		trace.WithAttributes(
+			attribute.Int("ytstorage.labels_count", len(params.Labels)),
+			attribute.Int64("ytstorage.start_range", int64(start)),
+			attribute.Int64("ytstorage.end_range", int64(end)),
+			attribute.Stringer("ytstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	var query strings.Builder
-	fmt.Fprintf(&query, "* FROM [%s] WHERE (timestamp >= %d AND timestamp <= %d)", q.tables.logs, start, end)
+	fmt.Fprintf(&query, "* FROM [%s] WHERE (timestamp >= %d AND timestamp <= %d)", table, start, end)
 	for _, m := range params.Labels {
 		query.WriteString(" AND (")
 		for i, column := range []string{

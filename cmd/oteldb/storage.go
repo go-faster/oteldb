@@ -22,7 +22,7 @@ import (
 	"github.com/go-faster/oteldb/internal/ytstorage"
 )
 
-func setupYT(ctx context.Context, lg *zap.Logger) (*ytstorage.Inserter, *ytstorage.YTQLQuerier, error) {
+func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (*ytstorage.Inserter, *ytstorage.YTQLQuerier, error) {
 	yc, err := ythttp.NewClient(&yt.Config{
 		Logger: &ytzap.Logger{L: lg.Named("yc")},
 	})
@@ -52,8 +52,24 @@ func setupYT(ctx context.Context, lg *zap.Logger) (*ytstorage.Inserter, *ytstora
 		}
 	}
 
-	inserter := ytstorage.NewInserter(yc, tables)
-	querier := ytstorage.NewYTQLQuerier(yc, tables)
+	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{
+		Tables:         tables,
+		MeterProvider:  m.MeterProvider(),
+		TracerProvider: m.TracerProvider(),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "create inserter")
+	}
+
+	querier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{
+		Tables:         tables,
+		MeterProvider:  m.MeterProvider(),
+		TracerProvider: m.TracerProvider(),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "create querier")
+	}
+
 	return inserter, querier, nil
 }
 
@@ -108,7 +124,23 @@ func setupCH(
 		return nil, nil, errors.Wrap(err, "create tables")
 	}
 
-	inserter := chstorage.NewInserter(c, tables)
-	querier := chstorage.NewQuerier(c, tables)
+	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{
+		Tables:         tables,
+		MeterProvider:  m.MeterProvider(),
+		TracerProvider: m.TracerProvider(),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "create inserter")
+	}
+
+	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{
+		Tables:         tables,
+		MeterProvider:  m.MeterProvider(),
+		TracerProvider: m.TracerProvider(),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "create querier")
+	}
+
 	return inserter, querier, nil
 }

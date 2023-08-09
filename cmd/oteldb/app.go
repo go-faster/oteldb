@@ -60,7 +60,7 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 		app.traceInserter = inserter
 		app.traceQuerier = querier
 	case "yt", "":
-		inserter, querier, err := setupYT(ctx, lg)
+		inserter, querier, err := setupYT(ctx, lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
