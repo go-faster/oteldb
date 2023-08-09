@@ -72,8 +72,8 @@ func BuildPipeline(stages ...traceql.PipelineStage) (Processor, error) {
 
 func buildStage(stage traceql.PipelineStage) (Processor, error) {
 	switch stage := stage.(type) {
-	case *traceql.SpansetFilter:
-		return buildSpansetFilter(stage)
+	case traceql.SpansetExpr:
+		return buildSpansetExpr(stage)
 	case *traceql.ScalarFilter:
 		return buildScalarFilter(stage)
 	default:
