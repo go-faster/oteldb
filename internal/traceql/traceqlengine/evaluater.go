@@ -293,18 +293,6 @@ func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 			break
 		}
 
-		evaluateAttr := func(name string, attrs ...otelstorage.Attrs) (r traceql.Static) {
-			for _, m := range attrs {
-				if m.IsZero() {
-					continue
-				}
-				if v, ok := m.AsMap().Get(name); ok && r.SetOTELValue(v) {
-					return r
-				}
-			}
-			r.SetNil()
-			return r
-		}
 		switch attr.Scope {
 		case traceql.ScopeResource:
 			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
@@ -333,4 +321,17 @@ func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 		}
 	}
 	return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported attribute %q", attr)}
+}
+
+func evaluateAttr(name string, attrs ...otelstorage.Attrs) (r traceql.Static) {
+	for _, m := range attrs {
+		if m.IsZero() {
+			continue
+		}
+		if v, ok := m.AsMap().Get(name); ok && r.SetOTELValue(v) {
+			return r
+		}
+	}
+	r.SetNil()
+	return r
 }
