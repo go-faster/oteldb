@@ -124,7 +124,23 @@ func setupCH(
 		return nil, nil, errors.Wrap(err, "create tables")
 	}
 
-	inserter := chstorage.NewInserter(c, tables)
-	querier := chstorage.NewQuerier(c, tables)
+	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{
+		Tables:         tables,
+		MeterProvider:  m.MeterProvider(),
+		TracerProvider: m.TracerProvider(),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "create inserter")
+	}
+
+	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{
+		Tables:         tables,
+		MeterProvider:  m.MeterProvider(),
+		TracerProvider: m.TracerProvider(),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "create querier")
+	}
+
 	return inserter, querier, nil
 }

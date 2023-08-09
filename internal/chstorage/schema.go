@@ -121,6 +121,11 @@ type Tables struct {
 	Tags  string
 }
 
+var defaultTables = Tables{
+	Spans: "traces_spans",
+	Tags:  "traces_tags",
+}
+
 type chClient interface {
 	Do(ctx context.Context, q ch.Query) (err error)
 }
