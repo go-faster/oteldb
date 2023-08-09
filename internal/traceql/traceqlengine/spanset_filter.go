@@ -4,6 +4,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/traceql"
+	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 // SpansetFilter filters spansets by field expression.
@@ -20,24 +21,22 @@ func buildSpansetFilter(filter *traceql.SpansetFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (f *SpansetFilter) Process(sets []Spanset) ([]Spanset, error) {
-	n := 0
+func (f *SpansetFilter) Process(sets []Spanset) (result []Spanset, _ error) {
+	var spans []tracestorage.Span
 	for _, set := range sets {
-		if f.keep(set) {
-			sets[n] = set
-			n++
+		spans = spans[:0]
+		ectx := set.evaluateCtx()
+		for _, span := range set.Spans {
+			if v := f.eval(span, ectx); v.Type == traceql.TypeBool && v.AsBool() {
+				spans = append(spans, span)
+			}
 		}
-	}
-	sets = sets[:n]
-	return sets, nil
-}
 
-func (f *SpansetFilter) keep(set Spanset) bool {
-	ectx := set.evaluateCtx()
-	for _, span := range set.Spans {
-		if v := f.eval(span, ectx); v.Type == traceql.TypeBool && v.AsBool() {
-			return true
+		if len(spans) == 0 {
+			continue
 		}
+		set.Spans = spans
+		result = append(result, set)
 	}
-	return false
+	return result, nil
 }

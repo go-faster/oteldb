@@ -44,16 +44,13 @@ func buildScalarFilter(filter *traceql.ScalarFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (f *ScalarFilter) Process(sets []Spanset) ([]Spanset, error) {
-	n := 0
+func (f *ScalarFilter) Process(sets []Spanset) (result []Spanset, _ error) {
 	for _, set := range sets {
 		if f.keep(set) {
-			sets[n] = set
-			n++
+			result = append(result, set)
 		}
 	}
-	sets = sets[:n]
-	return sets, nil
+	return result, nil
 }
 
 func (f *ScalarFilter) keep(set Spanset) bool {
