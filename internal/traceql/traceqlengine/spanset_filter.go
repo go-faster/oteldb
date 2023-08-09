@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-faster/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/traceql"
@@ -36,20 +37,20 @@ func buildSpansetFilter(filter *traceql.SpansetFilter) (Processor, error) {
 
 // Process implements Processor.
 func (f *SpansetFilter) Process(sets []Spanset) (result []Spanset, _ error) {
-	var spans []tracestorage.Span
+	var buf []tracestorage.Span
 	for _, set := range sets {
-		spans = spans[:0]
+		buf = buf[:0]
 		ectx := set.evaluateCtx()
 		for _, span := range set.Spans {
 			if v := f.eval(span, ectx); v.Type == traceql.TypeBool && v.AsBool() {
-				spans = append(spans, span)
+				buf = append(buf, span)
 			}
 		}
 
-		if len(spans) == 0 {
+		if len(buf) == 0 {
 			continue
 		}
-		set.Spans = spans
+		set.Spans = slices.Clone(buf)
 		result = append(result, set)
 	}
 	return result, nil
