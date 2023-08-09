@@ -3,6 +3,9 @@ package ytstorage
 import (
 	"context"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 	"go.ytsaurus.tech/yt/go/yt"
 
 	"github.com/go-faster/oteldb/internal/iterators"
@@ -12,14 +15,40 @@ import (
 type YTQLQuerier struct {
 	yc     yt.TabletClient
 	tables Tables
+	tracer trace.Tracer
+}
+
+// YTQLQuerierOptions is YTQLQuerier's options.
+type YTQLQuerierOptions struct {
+	// Tables provides table paths to query.
+	Tables Tables
+	// MeterProvider provides OpenTelemetry meter for this querier.
+	MeterProvider metric.MeterProvider
+	// TracerProvider provides OpenTelemetry tracer for this querier.
+	TracerProvider trace.TracerProvider
+}
+
+func (opts *YTQLQuerierOptions) setDefaults() {
+	if opts.Tables == (Tables{}) {
+		opts.Tables = defaultTables
+	}
+	if opts.MeterProvider == nil {
+		opts.MeterProvider = otel.GetMeterProvider()
+	}
+	if opts.TracerProvider == nil {
+		opts.TracerProvider = otel.GetTracerProvider()
+	}
 }
 
 // NewYTQLQuerier creates new YTQLQuerier.
-func NewYTQLQuerier(yc yt.TabletClient, tables Tables) *YTQLQuerier {
+func NewYTQLQuerier(yc yt.TabletClient, opts YTQLQuerierOptions) (*YTQLQuerier, error) {
+	opts.setDefaults()
+
 	return &YTQLQuerier{
 		yc:     yc,
-		tables: tables,
-	}
+		tables: opts.Tables,
+		tracer: opts.TracerProvider.Tracer("ytstorage.YTQLQuerier"),
+	}, nil
 }
 
 var _ iterators.Iterator[any] = (*ytIterator[any])(nil)

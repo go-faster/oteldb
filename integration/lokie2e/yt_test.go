@@ -69,7 +69,11 @@ func TestYT(t *testing.T) {
 		}
 	}
 
-	inserter := ytstorage.NewInserter(yc, tables)
-	querier := ytstorage.NewYTQLQuerier(yc, tables)
+	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{Tables: tables})
+	require.NoError(t, err)
+
+	querier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{Tables: tables})
+	require.NoError(t, err)
+
 	runTest(ctx, t, inserter, querier, querier)
 }

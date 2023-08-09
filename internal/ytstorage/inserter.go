@@ -4,6 +4,10 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 
@@ -20,14 +24,38 @@ var (
 type Inserter struct {
 	yc     yt.Client
 	tables Tables
+	tracer trace.Tracer
+}
+
+// InserterOptions is Inserter's options.
+type InserterOptions struct {
+	// Tables provides table paths to query.
+	Tables Tables
+	// MeterProvider provides OpenTelemetry meter for this querier.
+	MeterProvider metric.MeterProvider
+	// TracerProvider provides OpenTelemetry tracer for this querier.
+	TracerProvider trace.TracerProvider
+}
+
+func (opts *InserterOptions) setDefaults() {
+	if opts.Tables == (Tables{}) {
+		opts.Tables = defaultTables
+	}
+	if opts.MeterProvider == nil {
+		opts.MeterProvider = otel.GetMeterProvider()
+	}
+	if opts.TracerProvider == nil {
+		opts.TracerProvider = otel.GetTracerProvider()
+	}
 }
 
 // NewInserter creates new Inserter.
-func NewInserter(yc yt.Client, tables Tables) *Inserter {
+func NewInserter(yc yt.Client, opts InserterOptions) (*Inserter, error) {
 	return &Inserter{
 		yc:     yc,
-		tables: tables,
-	}
+		tables: opts.Tables,
+		tracer: opts.TracerProvider.Tracer("ytstorage.Inserter"),
+	}, nil
 }
 
 func insertSlice[T any](ctx context.Context, i *Inserter, table ypath.Path, data []T) error {
@@ -73,21 +101,69 @@ func insertSet[T comparable](ctx context.Context, i *Inserter, table ypath.Path,
 }
 
 // InsertSpans inserts given spans.
-func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) error {
-	return insertSlice(ctx, i, i.tables.spans, spans)
+func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (rerr error) {
+	table := i.tables.spans
+	ctx, span := i.tracer.Start(ctx, "InsertSpans", trace.WithAttributes(
+		attribute.Int("ytstorage.spans_count", len(spans)),
+		attribute.Stringer("ytstorage.table", table),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	return insertSlice(ctx, i, table, spans)
 }
 
 // InsertTags insert given set of tags to the storage.
-func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]struct{}) error {
-	return insertSet(ctx, i, i.tables.tags, tags)
+func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]struct{}) (rerr error) {
+	table := i.tables.tags
+	ctx, span := i.tracer.Start(ctx, "InsertTags", trace.WithAttributes(
+		attribute.Int("ytstorage.tags_count", len(tags)),
+		attribute.Stringer("ytstorage.table", table),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	return insertSet(ctx, i, table, tags)
 }
 
 // InsertRecords inserts given Records.
-func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Record) error {
-	return insertSlice(ctx, i, i.tables.logs, records)
+func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Record) (rerr error) {
+	table := i.tables.logs
+	ctx, span := i.tracer.Start(ctx, "InsertRecords", trace.WithAttributes(
+		attribute.Int("ytstorage.records_count", len(records)),
+		attribute.Stringer("ytstorage.table", table),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	return insertSlice(ctx, i, table, records)
 }
 
 // InsertLogLabels insert given set of labels to the storage.
-func (i *Inserter) InsertLogLabels(ctx context.Context, labels map[logstorage.Label]struct{}) error {
-	return insertSet(ctx, i, i.tables.logLabels, labels)
+func (i *Inserter) InsertLogLabels(ctx context.Context, labels map[logstorage.Label]struct{}) (rerr error) {
+	table := i.tables.logLabels
+	ctx, span := i.tracer.Start(ctx, "InsertLogLabels", trace.WithAttributes(
+		attribute.Int("ytstorage.labels_count", len(labels)),
+		attribute.Stringer("ytstorage.table", table),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	return insertSet(ctx, i, table, labels)
 }

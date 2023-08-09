@@ -21,6 +21,8 @@ type Tables struct {
 	logLabels ypath.Path
 }
 
+var defaultTables = NewTables(ypath.Path("//oteldb"))
+
 // NewTables creates new Tables with given path prefix.
 func NewTables(prefix ypath.Path) Tables {
 	traces := prefix.Child("traces")
