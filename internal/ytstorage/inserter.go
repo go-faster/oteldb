@@ -24,6 +24,12 @@ var (
 type Inserter struct {
 	yc     yt.Client
 	tables Tables
+
+	insertedSpans     metric.Int64Counter
+	insertedTags      metric.Int64Counter
+	insertedRecords   metric.Int64Counter
+	insertedLogLabels metric.Int64Counter
+
 	tracer trace.Tracer
 }
 
@@ -51,10 +57,34 @@ func (opts *InserterOptions) setDefaults() {
 
 // NewInserter creates new Inserter.
 func NewInserter(yc yt.Client, opts InserterOptions) (*Inserter, error) {
+	opts.setDefaults()
+
+	meter := opts.MeterProvider.Meter("ytstorage.Inserter")
+	insertedSpans, err := meter.Int64Counter("ytstorage.traces.inserted_spans")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_spans")
+	}
+	insertedTags, err := meter.Int64Counter("ytstorage.traces.inserted_tags")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_tags")
+	}
+	insertedRecords, err := meter.Int64Counter("ytstorage.logs.inserted_records")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_records")
+	}
+	insertedLogLabels, err := meter.Int64Counter("ytstorage.logs.inserted_log_labels")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_log_labels")
+	}
+
 	return &Inserter{
-		yc:     yc,
-		tables: opts.Tables,
-		tracer: opts.TracerProvider.Tracer("ytstorage.Inserter"),
+		yc:                yc,
+		tables:            opts.Tables,
+		insertedSpans:     insertedSpans,
+		insertedTags:      insertedTags,
+		insertedRecords:   insertedRecords,
+		insertedLogLabels: insertedLogLabels,
+		tracer:            opts.TracerProvider.Tracer("ytstorage.Inserter"),
 	}, nil
 }
 
@@ -110,6 +140,8 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			i.insertedSpans.Add(ctx, int64(len(spans)))
 		}
 		span.End()
 	}()
@@ -127,6 +159,8 @@ func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]str
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			i.insertedTags.Add(ctx, int64(len(tags)))
 		}
 		span.End()
 	}()
@@ -144,6 +178,8 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			i.insertedRecords.Add(ctx, int64(len(records)))
 		}
 		span.End()
 	}()
@@ -161,6 +197,8 @@ func (i *Inserter) InsertLogLabels(ctx context.Context, labels map[logstorage.La
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			i.insertedLogLabels.Add(ctx, int64(len(labels)))
 		}
 		span.End()
 	}()
