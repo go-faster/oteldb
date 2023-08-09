@@ -341,6 +341,37 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`{ .a = "POST" && .b = 200 && duration > 0ns }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left: &BinaryFieldExpr{
+							Left:  &Attribute{Name: "a"},
+							Op:    OpEq,
+							Right: &Static{Type: TypeString, Str: "POST"},
+						},
+						Op: OpAnd,
+						Right: &BinaryFieldExpr{
+							Left: &BinaryFieldExpr{
+								Left:  &Attribute{Name: "b"},
+								Op:    OpEq,
+								Right: &Static{Type: TypeInt, Data: 200},
+							},
+							Op: OpAnd,
+							Right: &BinaryFieldExpr{
+								Left:  &Attribute{Prop: SpanDuration},
+								Op:    OpGt,
+								Right: &Static{Type: TypeDuration, Data: 0},
+							},
+						},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
 		`{ .a || span.a || resource.a } && { parent.a && parent.span.a && parent.resource.a }`,
 		&SpansetPipeline{
 			Pipeline: []PipelineStage{
@@ -587,6 +618,33 @@ var tests = []TestCase{
 					},
 					Op:    OpEq,
 					Right: &Static{Type: TypeInt, Data: uint64(19)},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{ 2+3*4+5 = 19 }`,
+		&SpansetPipeline{
+			Pipeline: []PipelineStage{
+				&SpansetFilter{
+					Expr: &BinaryFieldExpr{
+						Left: &BinaryFieldExpr{
+							Left: &Static{Type: TypeInt, Data: uint64(2)},
+							Op:   OpAdd,
+							Right: &BinaryFieldExpr{
+								Left: &BinaryFieldExpr{
+									Left:  &Static{Type: TypeInt, Data: uint64(3)},
+									Op:    OpMul,
+									Right: &Static{Type: TypeInt, Data: uint64(4)},
+								},
+								Op:    OpAdd,
+								Right: &Static{Type: TypeInt, Data: uint64(5)},
+							},
+						},
+						Op:    OpEq,
+						Right: &Static{Type: TypeInt, Data: uint64(19)},
+					},
 				},
 			},
 		},

@@ -103,17 +103,13 @@ func (p *parser) parseBinaryScalarExpr(left ScalarExpr, minPrecedence int) (Scal
 			return nil, err
 		}
 
-		if err := p.checkBinaryExpr(left, op, opPos, right, rightPos); err != nil {
-			return nil, err
-		}
-
 		for {
 			rightOp, ok := p.peekBinaryOp()
 			if !ok || !op.IsArithmetic() || rightOp.Precedence() < op.Precedence() {
 				break
 			}
 
-			nextPrecedence := minPrecedence
+			nextPrecedence := op.Precedence()
 			if rightOp.Precedence() > op.Precedence() {
 				nextPrecedence++
 			}
@@ -124,6 +120,9 @@ func (p *parser) parseBinaryScalarExpr(left ScalarExpr, minPrecedence int) (Scal
 			}
 		}
 
+		if err := p.checkBinaryExpr(left, op, opPos, right, rightPos); err != nil {
+			return nil, err
+		}
 		left = &BinaryScalarExpr{Left: left, Op: op, Right: right}
 	}
 }

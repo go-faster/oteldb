@@ -5,6 +5,9 @@ import (
 	"math"
 	"time"
 
+	"github.com/go-faster/oteldb/internal/cmp"
+
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
@@ -75,14 +78,100 @@ type Static struct {
 }
 
 // ValueType returns value type of expression.
-func (s Static) ValueType() StaticType {
+func (s *Static) ValueType() StaticType {
 	return s.Type
+}
+
+// Compare compares two [Static] values.
+func (s *Static) Compare(to Static) int {
+	if s.Type == to.Type {
+		switch s.Type {
+		case TypeString:
+			return cmp.Compare(
+				s.AsString(),
+				to.AsString(),
+			)
+		case TypeInt:
+			return cmp.Compare(
+				s.AsInt(),
+				to.AsInt(),
+			)
+		case TypeNumber:
+			return cmp.Compare(
+				s.AsNumber(),
+				to.AsNumber(),
+			)
+		case TypeBool:
+			return cmp.Compare(s.Data, to.Data)
+		case TypeNil:
+			return 0 // nil is always equal to nil.
+		case TypeDuration:
+			return cmp.Compare(
+				s.AsDuration(),
+				to.AsDuration(),
+			)
+		case TypeSpanStatus:
+			return cmp.Compare(
+				s.AsSpanStatus(),
+				to.AsSpanStatus(),
+			)
+		case TypeSpanKind:
+			return cmp.Compare(
+				s.AsSpanKind(),
+				to.AsSpanKind(),
+			)
+		}
+	}
+	if !s.Type.IsNumeric() || !to.Type.IsNumeric() {
+		return -1 // incomparable
+	}
+	return cmp.Compare(s.AsFloat(), to.AsFloat())
+}
+
+// AsFloat converts numeric Static to a float value.
+func (s *Static) AsFloat() float64 {
+	switch s.Type {
+	case TypeInt:
+		return float64(s.AsInt())
+	case TypeNumber:
+		return s.AsNumber()
+	case TypeDuration:
+		return float64(s.AsDuration().Nanoseconds())
+	default:
+		return math.NaN()
+	}
 }
 
 func (s *Static) resetTo(typ StaticType) {
 	s.Type = typ
 	s.Data = 0
 	s.Str = ""
+}
+
+// SetOTELValue sets value from given OpenTelemetry data value.
+//
+// SetOTELValue returns false, if [pcommon.Value] cannot be represent as [Static].
+func (s *Static) SetOTELValue(val pcommon.Value) bool {
+	switch val.Type() {
+	case pcommon.ValueTypeStr:
+		s.SetString(val.Str())
+		return true
+	case pcommon.ValueTypeInt:
+		s.SetInt(val.Int())
+		return true
+	case pcommon.ValueTypeDouble:
+		s.SetNumber(val.Double())
+		return true
+	case pcommon.ValueTypeBool:
+		s.SetBool(val.Bool())
+		return true
+	case pcommon.ValueTypeMap:
+	case pcommon.ValueTypeSlice:
+	case pcommon.ValueTypeBytes:
+		s.SetString(string(val.Bytes().AsRaw()))
+		return true
+	}
+	return false
 }
 
 // SetString sets String value.

@@ -21,6 +21,7 @@ import (
 	"github.com/go-faster/oteldb/internal/otelreceiver"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tempohandler"
+	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -31,8 +32,9 @@ type App struct {
 	logQuerier  logQuerier
 	logInserter logstorage.Inserter
 
-	traceQuerier  tracestorage.Querier
-	traceInserter tracestorage.Inserter
+	traceQuerier   tracestorage.Querier
+	traceQLQuerier traceqlengine.Querier
+	traceInserter  tracestorage.Inserter
 
 	lg      *zap.Logger
 	metrics Metrics
@@ -64,6 +66,7 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 		}
 		app.traceInserter = inserter
 		app.traceQuerier = querier
+		app.traceQLQuerier = querier
 
 		app.logInserter = inserter
 		app.logQuerier = querier
@@ -145,7 +148,11 @@ func (app *App) trySetupTempo() error {
 		return nil
 	}
 
-	tempo := tempohandler.NewTempoAPI(q)
+	var engine *traceqlengine.Engine
+	if q := app.traceQLQuerier; q != nil {
+		engine = traceqlengine.NewEngine(q, traceqlengine.Options{})
+	}
+	tempo := tempohandler.NewTempoAPI(q, engine)
 
 	s, err := tempoapi.NewServer(tempo,
 		tempoapi.WithTracerProvider(app.metrics.TracerProvider()),

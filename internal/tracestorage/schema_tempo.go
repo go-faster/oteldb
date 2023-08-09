@@ -26,8 +26,8 @@ func (span Span) FillTraceMetadata(m *tempoapi.TraceSearchMetadata) {
 
 	m.StartTimeUnixNano = start
 	m.DurationMs.SetTo(int(end.Sub(start).Milliseconds()))
-	ytToTempoAttrs(&ss.Attributes, span.ScopeAttrs)
-	ytToTempoAttrs(&ss.Attributes, span.ResourceAttrs)
+	ConvertToTempoAttrs(&ss.Attributes, span.ScopeAttrs)
+	ConvertToTempoAttrs(&ss.Attributes, span.ResourceAttrs)
 }
 
 // AsTempoSpan converts span to TempoSpan.
@@ -39,11 +39,12 @@ func (span Span) AsTempoSpan() (s tempoapi.TempoSpan) {
 		DurationNanos:     int64(span.End - span.Start),
 		Attributes:        nil,
 	}
-	ytToTempoAttrs(&s.Attributes, span.Attrs)
+	ConvertToTempoAttrs(&s.Attributes, span.Attrs)
 	return s
 }
 
-func ytToTempoAttrs(to *tempoapi.Attributes, from otelstorage.Attrs) {
+// ConvertToTempoAttrs converts [otelstorage.Attrs] to Tempo API attributes.
+func ConvertToTempoAttrs(to *tempoapi.Attributes, from otelstorage.Attrs) {
 	var convertValue func(val pcommon.Value) (r tempoapi.AnyValue)
 	convertValue = func(val pcommon.Value) (r tempoapi.AnyValue) {
 		switch val.Type() {

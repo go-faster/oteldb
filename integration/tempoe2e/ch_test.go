@@ -71,5 +71,5 @@ func TestCH(t *testing.T) {
 
 	inserter := chstorage.NewInserter(c, tables)
 	querier := chstorage.NewQuerier(c, tables)
-	runTest(ctx, t, inserter, querier)
+	runTest(ctx, t, inserter, querier, nil)
 }

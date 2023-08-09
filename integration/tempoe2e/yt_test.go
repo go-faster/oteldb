@@ -71,5 +71,5 @@ func TestYT(t *testing.T) {
 
 	inserter := ytstorage.NewInserter(yc, tables)
 	querier := ytstorage.NewYTQLQuerier(yc, tables)
-	runTest(ctx, t, inserter, querier)
+	runTest(ctx, t, inserter, querier, querier)
 }

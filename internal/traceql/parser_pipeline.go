@@ -187,7 +187,7 @@ func (p *parser) parseBinarySpansetExpr(left SpansetExpr, minPrecedence int) (Sp
 				break
 			}
 
-			nextPrecedence := minPrecedence
+			nextPrecedence := op.Precedence()
 			if rightOp.Precedence() > op.Precedence() {
 				nextPrecedence++
 			}

@@ -105,7 +105,7 @@ func (p *parser) parseBinOp(left MetricExpr, minPrecedence int) (MetricExpr, err
 				break
 			}
 
-			nextPrecedence := minPrecedence
+			nextPrecedence := op.Precedence()
 			if rightOp.Precedence() > op.Precedence() {
 				nextPrecedence++
 			}
