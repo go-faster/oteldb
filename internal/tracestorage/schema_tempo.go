@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
@@ -45,48 +46,49 @@ func (span Span) AsTempoSpan() (s tempoapi.TempoSpan) {
 
 // ConvertToTempoAttrs converts [otelstorage.Attrs] to Tempo API attributes.
 func ConvertToTempoAttrs(to *tempoapi.Attributes, from otelstorage.Attrs) {
-	var convertValue func(val pcommon.Value) (r tempoapi.AnyValue)
-	convertValue = func(val pcommon.Value) (r tempoapi.AnyValue) {
-		switch val.Type() {
-		case pcommon.ValueTypeStr:
-			r.SetStringValue(tempoapi.StringValue{StringValue: val.Str()})
-		case pcommon.ValueTypeBool:
-			r.SetBoolValue(tempoapi.BoolValue{BoolValue: val.Bool()})
-		case pcommon.ValueTypeInt:
-			r.SetIntValue(tempoapi.IntValue{IntValue: val.Int()})
-		case pcommon.ValueTypeDouble:
-			r.SetDoubleValue(tempoapi.DoubleValue{DoubleValue: val.Double()})
-		case pcommon.ValueTypeMap:
-			m := tempoapi.KvlistValue{}
-			val.Map().Range(func(k string, v pcommon.Value) bool {
-				m.KvlistValue = append(m.KvlistValue, tempoapi.KeyValue{
-					Key:   k,
-					Value: convertValue(v),
-				})
-				return true
-			})
-			r.SetKvlistValue(m)
-		case pcommon.ValueTypeSlice:
-			a := tempoapi.ArrayValue{}
-			ss := val.Slice()
-			for i := 0; i < ss.Len(); i++ {
-				v := ss.At(i)
-				a.ArrayValue = append(a.ArrayValue, convertValue(v))
-			}
-			r.SetArrayValue(a)
-		case pcommon.ValueTypeBytes:
-			r.SetBytesValue(tempoapi.BytesValue{BytesValue: val.Bytes().AsRaw()})
-		default:
-			r.Type = tempoapi.StringValueAnyValue
-		}
-		return r
-	}
-
-	pcommon.Map(from).Range(func(k string, v pcommon.Value) bool {
+	m := from.AsMap()
+	*to = slices.Grow(*to, m.Len())
+	m.Range(func(k string, v pcommon.Value) bool {
 		*to = append(*to, tempoapi.KeyValue{
 			Key:   k,
-			Value: convertValue(v),
+			Value: otelToTempoValue(v),
 		})
 		return true
 	})
+}
+
+func otelToTempoValue(val pcommon.Value) (r tempoapi.AnyValue) {
+	switch val.Type() {
+	case pcommon.ValueTypeStr:
+		r.SetStringValue(tempoapi.StringValue{StringValue: val.Str()})
+	case pcommon.ValueTypeBool:
+		r.SetBoolValue(tempoapi.BoolValue{BoolValue: val.Bool()})
+	case pcommon.ValueTypeInt:
+		r.SetIntValue(tempoapi.IntValue{IntValue: val.Int()})
+	case pcommon.ValueTypeDouble:
+		r.SetDoubleValue(tempoapi.DoubleValue{DoubleValue: val.Double()})
+	case pcommon.ValueTypeMap:
+		m := tempoapi.KvlistValue{}
+		val.Map().Range(func(k string, v pcommon.Value) bool {
+			m.KvlistValue = append(m.KvlistValue, tempoapi.KeyValue{
+				Key:   k,
+				Value: otelToTempoValue(v),
+			})
+			return true
+		})
+		r.SetKvlistValue(m)
+	case pcommon.ValueTypeSlice:
+		a := tempoapi.ArrayValue{}
+		ss := val.Slice()
+		for i := 0; i < ss.Len(); i++ {
+			v := ss.At(i)
+			a.ArrayValue = append(a.ArrayValue, otelToTempoValue(v))
+		}
+		r.SetArrayValue(a)
+	case pcommon.ValueTypeBytes:
+		r.SetBytesValue(tempoapi.BytesValue{BytesValue: val.Bytes().AsRaw()})
+	default:
+		r.Type = tempoapi.StringValueAnyValue
+	}
+	return r
 }
