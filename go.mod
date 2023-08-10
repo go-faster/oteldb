@@ -1,6 +1,6 @@
 module github.com/go-faster/oteldb
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ClickHouse/ch-go v0.58.0

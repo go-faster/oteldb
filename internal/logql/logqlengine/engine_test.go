@@ -4,13 +4,13 @@ package logqlengine
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/cmp"
 	"github.com/go-faster/oteldb/internal/iterators"

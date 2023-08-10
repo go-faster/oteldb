@@ -2,9 +2,8 @@ package traceqlengine
 
 import (
 	"fmt"
+	"slices"
 	"testing"
-
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"

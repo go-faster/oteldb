@@ -2,8 +2,7 @@ package logqlmetric
 
 import (
 	"math"
-
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/go-faster/oteldb/internal/cmp"
 )

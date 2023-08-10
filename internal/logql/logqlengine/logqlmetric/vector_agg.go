@@ -2,9 +2,9 @@ package logqlmetric
 
 import (
 	"container/heap"
+	"slices"
 
 	"github.com/go-faster/errors"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"

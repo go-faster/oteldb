@@ -1,11 +1,11 @@
 package logqlengine
 
 import (
+	"slices"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"

@@ -1,10 +1,10 @@
 package tracestorage
 
 import (
+	"slices"
 	"time"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
-	"golang.org/x/exp/slices"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
