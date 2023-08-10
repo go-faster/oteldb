@@ -94,6 +94,15 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else if streams, ok := data.GetStreamsResult(); ok {
+			var entries int
+			for _, stream := range streams.Result {
+				entries += len(stream.Values)
+			}
+			span.SetAttributes(
+				attribute.Int("logql.returned_entries", entries),
+				attribute.Int("logql.returned_streams", len(streams.Result)),
+			)
 		}
 		span.End()
 	}()

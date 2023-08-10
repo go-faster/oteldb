@@ -59,7 +59,7 @@ type EvalParams struct {
 }
 
 // Eval parses and evaluates query.
-func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (_ *tempoapi.Traces, rerr error) {
+func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (traces *tempoapi.Traces, rerr error) {
 	ctx, span := e.tracer.Start(ctx, "Eval",
 		trace.WithAttributes(
 			attribute.String("traceql.query", query),
@@ -73,6 +73,15 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (_ *
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else if traces != nil {
+			var spans int
+			for _, m := range traces.Traces {
+				spans += len(m.SpanSet.Value.Spans)
+			}
+			span.SetAttributes(
+				attribute.Int("traceql.returned_spans", spans),
+				attribute.Int("traceql.returned_spansets", len(traces.Traces)),
+			)
 		}
 		span.End()
 	}()
