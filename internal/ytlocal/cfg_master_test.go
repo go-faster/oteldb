@@ -1,8 +1,9 @@
 package ytlocal
 
 import (
-	"fmt"
+	"net"
 	"path"
+	"strconv"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestMaster(t *testing.T) {
 	const cellID = "a3c51a55-ffffffff-259-ffffffff"
 	const localhost = "localhost"
 	runDir := "/tmp"
-	masterAddr := fmt.Sprintf("%s:%d", localhost, masterPort)
+	masterAddr := net.JoinHostPort(localhost, strconv.Itoa(masterPort))
 	cfg := Master{
 		BaseServer: BaseServer{
 			RPCPort:        masterPort,

@@ -164,7 +164,7 @@ func main() {
 			const localhost = "localhost"
 
 			var (
-				masterAddr           = fmt.Sprintf("%s:%d", localhost, masterPort)
+				masterAddr           = net.JoinHostPort(localhost, strconv.Itoa(masterPort))
 				cfgTimestampProvider = ytlocal.Connection{
 					Addresses:       []string{masterAddr},
 					SoftBackoffTime: 100,
@@ -433,7 +433,7 @@ Also, docker is required to run UI.
 				name := GenerateID(rand.Reader, 6)
 				// Create new temporary directory.
 				dir := filepath.Join(os.TempDir(), "ytlocal-python-"+name)
-				if err := os.Mkdir(dir, 0700); err != nil {
+				if err := os.Mkdir(dir, 0o700); err != nil {
 					return errors.Wrap(err, "mkdir all")
 				}
 
@@ -452,7 +452,7 @@ Also, docker is required to run UI.
 				}
 				cfgResolverPath := filepath.Join(dir, "resolver.yson")
 				// #nosec G306
-				if err := os.WriteFile(cfgResolverPath, data, 0644); err != nil {
+				if err := os.WriteFile(cfgResolverPath, data, 0o644); err != nil {
 					return errors.Wrap(err, "write file")
 				}
 

@@ -74,7 +74,7 @@ func (c TestComponent[T]) Run(ctx context.Context) error {
 
 	cfgName := c.Name + ".yson"
 	cfgPath := filepath.Join(c.RunDir, cfgName)
-	if err := os.WriteFile(cfgPath, data, 0644); err != nil {
+	if err := os.WriteFile(cfgPath, data, 0o644); err != nil {
 		return errors.Wrap(err, "write config")
 	}
 
@@ -200,7 +200,7 @@ func TestRun(t *testing.T) {
 
 	// Ensure binaries.
 	runPath := filepath.Join(runDir, "bin")
-	require.NoError(t, os.MkdirAll(runPath, 0755))
+	require.NoError(t, os.MkdirAll(runPath, 0o755))
 	bin, err := NewBinary(runPath)
 	require.NoError(t, err)
 
@@ -209,7 +209,7 @@ func TestRun(t *testing.T) {
 	var (
 		masterPort           = ports.RequireAllocate(t)
 		masterMonitoringPort = ports.RequireAllocate(t)
-		masterAddr           = fmt.Sprintf("%s:%d", localhost, masterPort)
+		masterAddr           = net.JoinHostPort(localhost, strconv.Itoa(masterPort))
 		cfgTimestampProvider = Connection{
 			Addresses:       []string{masterAddr},
 			SoftBackoffTime: 100,
