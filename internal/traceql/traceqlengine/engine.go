@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -157,10 +156,8 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 		}
 
 		var rootServiceName string
-		if attrs := root.ResourceAttrs; !attrs.IsZero() {
-			if v, ok := attrs.AsMap().Get("service.name"); ok && v.Type() == pcommon.ValueTypeStr {
-				rootServiceName = v.Str()
-			}
+		if name, ok := root.ServiceName(); ok {
+			rootServiceName = name
 		}
 
 		if !tr.within(start, end) {

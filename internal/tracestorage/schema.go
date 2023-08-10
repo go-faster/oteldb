@@ -31,6 +31,19 @@ type Span struct {
 	Links  []Link  `json:"links" yson:"links"`
 }
 
+// ServiceName gets service name from attributes.
+func (span Span) ServiceName() (string, bool) {
+	res := span.ResourceAttrs
+	if res.IsZero() {
+		return "", false
+	}
+	attr, ok := res.AsMap().Get("service.name")
+	if !ok {
+		return "", false
+	}
+	return attr.AsString(), true
+}
+
 // YTSchema returns YTsaurus table schema for this structure.
 func (Span) YTSchema() schema.Schema {
 	var (

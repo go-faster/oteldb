@@ -255,7 +255,6 @@ func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 			r.SetSpanStatus(ptrace.StatusCode(span.StatusCode))
 			return r
 		}, nil
-
 	case traceql.SpanKind:
 		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
 			r.SetSpanKind(ptrace.SpanKind(span.Kind))
