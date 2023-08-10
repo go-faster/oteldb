@@ -129,8 +129,8 @@ github.com/go-faster/errors v0.6.1 h1:nNIPOBkprlKzkThvS/0YaX8Zs9KewLCOSFQS5BU06F
 github.com/go-faster/errors v0.6.1/go.mod h1:5MGV2/2T9yvlrbhe9pD9LO5Z/2zCSq2T8j+Jpi2LAyY=
 github.com/go-faster/jx v1.1.0 h1:ZsW3wD+snOdmTDy9eIVgQdjUpXRRV4rqW8NS3t+20bg=
 github.com/go-faster/jx v1.1.0/go.mod h1:vKDNikrKoyUmpzaJ0OkIkRQClNHFX/nF3dnTJZb3skg=
-github.com/go-faster/sdk v0.8.0 h1:zy6R9Ot92qIU3rDYt4RJYBiWKGk4+sREl2haQlQ4GH4=
-github.com/go-faster/sdk v0.8.0/go.mod h1:ezZalGGeuw9hQD843O0ZAYpAOC63H8iOzMVeu/skWJY=
+github.com/go-faster/sdk v0.8.1 h1:aiH8GSwl1v7/1vnjHhv7tysRuk6719yJDAEGk39AVkU=
+github.com/go-faster/sdk v0.8.1/go.mod h1:ezZalGGeuw9hQD843O0ZAYpAOC63H8iOzMVeu/skWJY=
 github.com/go-faster/tcpproxy v0.1.0 h1:DXWJlSc09p2YuaAmPT1FMOjR3bm78MZ4FTh7nALcYxs=
 github.com/go-faster/tcpproxy v0.1.0/go.mod h1:6znjpcjn87QLCv215RCCde6eUHbP7wQnGfOGfPCUaIY=
 github.com/go-faster/yaml v0.4.6 h1:lOK/EhI04gCpPgPhgt0bChS6bvw7G3WwI8xxVe0sw9I=
