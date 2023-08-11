@@ -2,7 +2,6 @@ package traceqlengine
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/go-faster/errors"
 
@@ -24,7 +23,7 @@ func buildSpansetExpr(expr traceql.SpansetExpr) (Processor, error) {
 
 // SpansetFilter filters spansets by field expression.
 type SpansetFilter struct {
-	eval evaluater
+	Eval Evaluater
 }
 
 func buildSpansetFilter(filter *traceql.SpansetFilter) (Processor, error) {
@@ -32,28 +31,12 @@ func buildSpansetFilter(filter *traceql.SpansetFilter) (Processor, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "build spanset evaluater")
 	}
-	return &SpansetFilter{eval: eval}, nil
+	return &SpansetFilter{Eval: eval}, nil
 }
 
 // Process implements Processor.
 func (f *SpansetFilter) Process(sets []Spanset) (result []Spanset, _ error) {
-	var buf []tracestorage.Span
-	for _, set := range sets {
-		buf = buf[:0]
-		ectx := set.evaluateCtx()
-		for _, span := range set.Spans {
-			if v := f.eval(span, ectx); v.Type == traceql.TypeBool && v.AsBool() {
-				buf = append(buf, span)
-			}
-		}
-
-		if len(buf) == 0 {
-			continue
-		}
-		set.Spans = slices.Clone(buf)
-		result = append(result, set)
-	}
-	return result, nil
+	return filterBy(f.Eval, sets), nil
 }
 
 // BinarySpansetExpr merges two spansets.

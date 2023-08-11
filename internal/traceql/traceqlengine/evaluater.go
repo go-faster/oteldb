@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
-	"time"
+	"slices"
 
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -14,28 +14,51 @@ import (
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
-type evaluateCtx struct {
-	RootSpanName    string
-	RootServiceName string
-	TraceDuration   time.Duration
+func filterBy[E Evaluater](eval E, sets []Spanset) (result []Spanset) {
+	var buf []tracestorage.Span
+	for _, set := range sets {
+		buf = buf[:0]
+		ectx := set.evaluateCtx()
+		for _, span := range set.Spans {
+			if v := eval.Eval(span, ectx); v.Type == traceql.TypeBool && v.AsBool() {
+				buf = append(buf, span)
+			}
+		}
+
+		if len(buf) == 0 {
+			continue
+		}
+		set.Spans = slices.Clone(buf)
+		result = append(result, set)
+	}
+	return result
 }
 
-type (
-	evaluater func(span tracestorage.Span, ctx evaluateCtx) traceql.Static
-	binaryOp  func(a, b traceql.Static) traceql.Static
-)
+// EvaluateCtx is evaluation context.
+type EvaluateCtx struct {
+	Set Spanset
+}
 
-func buildEvaluater(expr traceql.FieldExpr) (evaluater, error) {
+// Evaluater evaluates TraceQL expression.
+type Evaluater interface {
+	Eval(span tracestorage.Span, ctx EvaluateCtx) traceql.Static
+}
+
+// BinaryOp is a binary operation.
+type BinaryOp func(a, b traceql.Static) traceql.Static
+
+func buildEvaluater(expr traceql.TypedExpr) (Evaluater, error) {
 	switch expr := expr.(type) {
 	case *traceql.BinaryFieldExpr:
 		return buildBinaryEvaluater(expr.Left, expr.Op, expr.Right)
 	case *traceql.UnaryFieldExpr:
 		return buildUnaryEvaluater(expr.Op, expr.Expr)
+	case *traceql.BinaryScalarExpr:
+		return buildBinaryEvaluater(expr.Left, expr.Op, expr.Right)
+	case *traceql.AggregateScalarExpr:
+		return buildAggregator(expr)
 	case *traceql.Static:
-		cpy := *expr
-		return func(tracestorage.Span, evaluateCtx) traceql.Static {
-			return cpy
-		}, nil
+		return buildStaticEvaluater(expr)
 	case *traceql.Attribute:
 		return buildAttributeEvaluater(expr)
 	default:
@@ -44,10 +67,10 @@ func buildEvaluater(expr traceql.FieldExpr) (evaluater, error) {
 }
 
 func buildBinaryEvaluater(
-	left traceql.FieldExpr,
+	left traceql.TypedExpr,
 	op traceql.BinaryOp,
-	right traceql.FieldExpr,
-) (evaluater, error) {
+	right traceql.TypedExpr,
+) (Evaluater, error) {
 	var pattern string
 	if op.IsRegex() {
 		static, ok := right.(*traceql.Static)
@@ -75,14 +98,28 @@ func buildBinaryEvaluater(
 		return nil, err
 	}
 
-	return func(span tracestorage.Span, ctx evaluateCtx) traceql.Static {
-		left := leftEval(span, ctx)
-		right := rightEval(span, ctx)
-		return opEval(left, right)
+	return &BinaryEvaluater{
+		Left:  leftEval,
+		Op:    opEval,
+		Right: rightEval,
 	}, nil
 }
 
-func buildBinaryOp(op traceql.BinaryOp, pattern string) (binaryOp, error) {
+// BinaryEvaluater is a binary operation [Evaluater].
+type BinaryEvaluater struct {
+	Left  Evaluater
+	Op    BinaryOp
+	Right Evaluater
+}
+
+// Eval implemenets [Evaluater].
+func (e *BinaryEvaluater) Eval(span tracestorage.Span, ctx EvaluateCtx) traceql.Static {
+	left := e.Left.Eval(span, ctx)
+	right := e.Right.Eval(span, ctx)
+	return e.Op(left, right)
+}
+
+func buildBinaryOp(op traceql.BinaryOp, pattern string) (BinaryOp, error) {
 	switch op {
 	case traceql.OpAnd:
 		return func(a, b traceql.Static) (r traceql.Static) {
@@ -203,88 +240,87 @@ func buildBinaryOp(op traceql.BinaryOp, pattern string) (binaryOp, error) {
 	}
 }
 
-func buildUnaryEvaluater(op traceql.UnaryOp, expr traceql.FieldExpr) (evaluater, error) {
+func buildUnaryEvaluater(op traceql.UnaryOp, expr traceql.FieldExpr) (Evaluater, error) {
 	sub, err := buildEvaluater(expr)
 	if err != nil {
 		return nil, err
 	}
 	switch op {
 	case traceql.OpNeg:
-		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
-			val := sub(span, ctx)
-			if !val.Type.IsNumeric() {
-				r.SetNil()
-			} else {
-				r.SetNumber(-val.AsFloat())
-			}
-			return r
-		}, nil
+		return &NegEvaluater{Sub: sub}, nil
 	case traceql.OpNot:
-		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
-			val := sub(span, ctx)
-			if val.Type != traceql.TypeBool {
-				r.SetNil()
-			} else {
-				r.SetBool(!val.AsBool())
-			}
-			return r
-		}, nil
+		return &NotEvaluater{Sub: sub}, nil
 	default:
 		return nil, errors.Errorf("unexpected unary op %q", op)
 	}
 }
 
-func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
+// NegEvaluater is a unary negation operation [Evaluater].
+type NegEvaluater struct {
+	Sub Evaluater
+}
+
+// Eval implemenets [Evaluater].
+func (e *NegEvaluater) Eval(span tracestorage.Span, ctx EvaluateCtx) (r traceql.Static) {
+	val := e.Sub.Eval(span, ctx)
+	if !val.Type.IsNumeric() {
+		r.SetNil()
+	} else {
+		r.SetNumber(-val.AsFloat())
+	}
+	return r
+}
+
+// NotEvaluater is a unary NOT operation [Evaluater].
+type NotEvaluater struct {
+	Sub Evaluater
+}
+
+// Eval implemenets [Evaluater].
+func (e *NotEvaluater) Eval(span tracestorage.Span, ctx EvaluateCtx) (r traceql.Static) {
+	val := e.Sub.Eval(span, ctx)
+	if val.Type != traceql.TypeBool {
+		r.SetNil()
+	} else {
+		r.SetBool(!val.AsBool())
+	}
+	return r
+}
+
+func buildStaticEvaluater(val *traceql.Static) (Evaluater, error) {
+	return &StaticEvaluater{Val: *val}, nil
+}
+
+// StaticEvaluater is a [Evaluater] returning a static value.
+type StaticEvaluater struct {
+	Val traceql.Static
+}
+
+// Eval implemenets [Evaluater].
+func (e *StaticEvaluater) Eval(tracestorage.Span, EvaluateCtx) traceql.Static {
+	return e.Val
+}
+
+func buildAttributeEvaluater(attr *traceql.Attribute) (Evaluater, error) {
 	switch attr.Prop {
 	case traceql.SpanDuration:
-		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-			end := span.End.AsTime()
-			start := span.Start.AsTime()
-			r.SetDuration(end.Sub(start))
-			return r
-		}, nil
+		return &SpanDurationEvalauter{}, nil
 	case traceql.SpanChildCount:
 		// TODO(tdakkota): span child count
 	case traceql.SpanName:
-		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-			r.SetString(span.Name)
-			return r
-		}, nil
+		return &SpanNameEvaluater{}, nil
 	case traceql.SpanStatus:
-		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-			r.SetSpanStatus(ptrace.StatusCode(span.StatusCode))
-			return r
-		}, nil
+		return &SpanStatusEvaluater{}, nil
 	case traceql.SpanKind:
-		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-			r.SetSpanKind(ptrace.SpanKind(span.Kind))
-			return r
-		}, nil
+		return &SpanKindEvaluater{}, nil
 	case traceql.SpanParent:
-		return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-			if span.ParentSpanID.IsEmpty() {
-				r.SetNil()
-			} else {
-				// Just set some non-nil value.
-				r.SetBool(true)
-			}
-			return r
-		}, nil
+		return &ParentEvaluater{}, nil
 	case traceql.RootSpanName:
-		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
-			r.SetString(ctx.RootSpanName)
-			return r
-		}, nil
+		return &RootSpanNameEvaluater{}, nil
 	case traceql.RootServiceName:
-		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
-			r.SetString(ctx.RootServiceName)
-			return r
-		}, nil
+		return &RootServiceNameEvaluater{}, nil
 	case traceql.TraceDuration:
-		return func(span tracestorage.Span, ctx evaluateCtx) (r traceql.Static) {
-			r.SetDuration(ctx.TraceDuration)
-			return r
-		}, nil
+		return &TraceDurationEvaluater{}, nil
 	default:
 		// SpanAttribute.
 		if attr.Parent {
@@ -294,32 +330,135 @@ func buildAttributeEvaluater(attr *traceql.Attribute) (evaluater, error) {
 
 		switch attr.Scope {
 		case traceql.ScopeResource:
-			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-				return evaluateAttr(
-					attr.Name,
-					span.ScopeAttrs,
-					span.ResourceAttrs,
-				)
-			}, nil
+			return &ResourceAttributeEvaluater{Name: attr.Name}, nil
 		case traceql.ScopeSpan:
-			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-				return evaluateAttr(
-					attr.Name,
-					span.Attrs,
-				)
-			}, nil
+			return &SpanAttributeEvaluater{Name: attr.Name}, nil
 		default:
-			return func(span tracestorage.Span, _ evaluateCtx) (r traceql.Static) {
-				return evaluateAttr(
-					attr.Name,
-					span.Attrs,
-					span.ScopeAttrs,
-					span.ResourceAttrs,
-				)
-			}, nil
+			return &AttributeEvaluater{Name: attr.Name}, nil
 		}
 	}
 	return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported attribute %q", attr)}
+}
+
+// SpanDurationEvalauter evaluates `duration` property.
+type SpanDurationEvalauter struct{}
+
+// Eval implemenets [Evaluater].
+func (*SpanDurationEvalauter) Eval(span tracestorage.Span, _ EvaluateCtx) (r traceql.Static) {
+	end := span.End.AsTime()
+	start := span.Start.AsTime()
+	r.SetDuration(end.Sub(start))
+	return r
+}
+
+// SpanNameEvaluater evaluates `name` property.
+type SpanNameEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*SpanNameEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) (r traceql.Static) {
+	r.SetString(span.Name)
+	return r
+}
+
+// SpanStatusEvaluater evaluates `status` property.
+type SpanStatusEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*SpanStatusEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) (r traceql.Static) {
+	r.SetSpanStatus(ptrace.StatusCode(span.StatusCode))
+	return r
+}
+
+// SpanKindEvaluater evaluates `kind` property.
+type SpanKindEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*SpanKindEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) (r traceql.Static) {
+	r.SetSpanKind(ptrace.SpanKind(span.Kind))
+	return r
+}
+
+// ParentEvaluater evaluates `parent` property.
+type ParentEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*ParentEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) (r traceql.Static) {
+	if span.ParentSpanID.IsEmpty() {
+		r.SetNil()
+	} else {
+		// Just set some non-nil value.
+		r.SetBool(true)
+	}
+	return r
+}
+
+// RootSpanNameEvaluater evaluates `rootName` property.
+type RootSpanNameEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*RootSpanNameEvaluater) Eval(_ tracestorage.Span, ctx EvaluateCtx) (r traceql.Static) {
+	r.SetString(ctx.Set.RootSpanName)
+	return r
+}
+
+// RootServiceNameEvaluater evaluates `rootServiceName` property.
+type RootServiceNameEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*RootServiceNameEvaluater) Eval(_ tracestorage.Span, ctx EvaluateCtx) (r traceql.Static) {
+	r.SetString(ctx.Set.RootServiceName)
+	return r
+}
+
+// TraceDurationEvaluater evaluates `traceDuration“ property.
+type TraceDurationEvaluater struct{}
+
+// Eval implemenets [Evaluater].
+func (*TraceDurationEvaluater) Eval(_ tracestorage.Span, ctx EvaluateCtx) (r traceql.Static) {
+	r.SetDuration(ctx.Set.TraceDuration)
+	return r
+}
+
+// ResourceAttributeEvaluater evaluates resource attribute selector.
+type ResourceAttributeEvaluater struct {
+	Name string
+}
+
+// Eval implemenets [Evaluater].
+func (e *ResourceAttributeEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) traceql.Static {
+	return evaluateAttr(
+		e.Name,
+		span.ScopeAttrs,
+		span.ResourceAttrs,
+	)
+}
+
+// SpanAttributeEvaluater evaluates Span attribute selector.
+type SpanAttributeEvaluater struct {
+	Name string
+}
+
+// Eval implemenets [Evaluater].
+func (e *SpanAttributeEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) traceql.Static {
+	return evaluateAttr(
+		e.Name,
+		span.Attrs,
+	)
+}
+
+// AttributeEvaluater evaluates attribute selector.
+type AttributeEvaluater struct {
+	Name string
+}
+
+// Eval implemenets [Evaluater].
+func (e *AttributeEvaluater) Eval(span tracestorage.Span, _ EvaluateCtx) traceql.Static {
+	return evaluateAttr(
+		e.Name,
+		span.Attrs,
+		span.ScopeAttrs,
+		span.ResourceAttrs,
+	)
 }
 
 func evaluateAttr(name string, attrs ...otelstorage.Attrs) (r traceql.Static) {

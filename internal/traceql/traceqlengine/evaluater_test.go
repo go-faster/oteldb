@@ -28,10 +28,15 @@ func TestEvaluater(t *testing.T) {
 		StatusCode: int32(ptrace.StatusCodeOk),
 		Attrs:      otelstorage.Attrs(attrs),
 	}
-	ectx := evaluateCtx{
-		RootSpanName:    "rootName",
-		RootServiceName: "rootServiceName",
-		TraceDuration:   time.Minute,
+	ectx := EvaluateCtx{
+		Set: Spanset{
+			RootSpanName:    "rootName",
+			RootServiceName: "rootServiceName",
+			TraceDuration:   time.Minute,
+			Spans: []tracestorage.Span{
+				span,
+			},
+		},
 	}
 
 	tests := []struct {
@@ -144,10 +149,10 @@ func TestEvaluater(t *testing.T) {
 			a.IsType((*traceql.SpansetFilter)(nil), pipeline[0])
 			spansetExpr := pipeline[0].(*traceql.SpansetFilter)
 
-			evaluater, err := buildEvaluater(spansetExpr.Expr)
+			e, err := buildEvaluater(spansetExpr.Expr)
 			a.NoError(err)
 
-			got := evaluater(span, ectx)
+			got := e.Eval(span, ectx)
 			a.Equal(traceql.TypeBool, got.Type)
 			a.Equal(tt.want, got.AsBool())
 		})

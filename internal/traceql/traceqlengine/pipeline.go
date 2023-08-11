@@ -22,11 +22,9 @@ type Spanset struct {
 	TraceDuration   time.Duration
 }
 
-func (set Spanset) evaluateCtx() evaluateCtx {
-	return evaluateCtx{
-		RootSpanName:    set.RootSpanName,
-		RootServiceName: set.RootServiceName,
-		TraceDuration:   set.TraceDuration,
+func (set Spanset) evaluateCtx() EvaluateCtx {
+	return EvaluateCtx{
+		Set: set,
 	}
 }
 
