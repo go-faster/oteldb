@@ -125,8 +125,8 @@ github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga
 github.com/felixge/httpsnoop v1.0.3 h1:s/nj+GCswXYzN5v2DpNMuMQYe+0DDwt5WVCU6CWBdXk=
 github.com/felixge/httpsnoop v1.0.3/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/frankban/quicktest v1.11.3/go.mod h1:wRf/ReqHper53s+kmmSZizM8NamnL3IM0I9ntUbOk+k=
-github.com/frankban/quicktest v1.14.4 h1:g2rn0vABPOOXmZUj+vbmUp0lPoXEMuhTpIluN0XL9UY=
-github.com/frankban/quicktest v1.14.4/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
+github.com/frankban/quicktest v1.14.5 h1:dfYrrRyLtiqT9GyKXgdh+k4inNeTvmGbuSgZ3lx3GhA=
+github.com/frankban/quicktest v1.14.5/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
 github.com/fsnotify/fsnotify v1.6.0 h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=
 github.com/fsnotify/fsnotify v1.6.0/go.mod h1:sl3t1tCWJFWoRz9R8WJCbQihKKwmorjAbSClcnxKAGw=
@@ -650,8 +650,8 @@ go.ytsaurus.tech/library/go/x/xreflect v0.0.2 h1:S+lfg3G+WrfiBfTYz8droZeyiYYvT4m
 go.ytsaurus.tech/library/go/x/xreflect v0.0.2/go.mod h1:FJB6bzAVFQxi99CZjUqDSAMu5puEjswFW9Qwj41Yyy8=
 go.ytsaurus.tech/library/go/x/xruntime v0.0.3 h1:/km3v+CPSuID5FsPKvE2LcwmYJPS8TcxeBMGH1MjtVs=
 go.ytsaurus.tech/library/go/x/xruntime v0.0.3/go.mod h1:b+ypj9bGoFpoupNQW2rLJRSrT8rLA0NcUfyBYQwHc68=
-go.ytsaurus.tech/yt/go v0.0.8 h1:l0ZKqGxkQK81/yU+ajNjpHv/jZi+XqpSrJUGYGT3ofw=
-go.ytsaurus.tech/yt/go v0.0.8/go.mod h1:OV9qFN5QTGbM1wvwMfI7oZEYuyXbg8Tco6Evd9MRH6w=
+go.ytsaurus.tech/yt/go v0.0.9 h1:cwnXVk0UYOmscpA0gYNXUY6EUrD3T7jd/kupgpPa04I=
+go.ytsaurus.tech/yt/go v0.0.9/go.mod h1:TKsuyuG/R/e9MWEHaZB2RyoI8qUfQ68pC430iY8u5a4=
 go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35 h1:nJAwRlGWZZDOD+6wni9KVUNHMpHko/OnRwsrCYeAzPo=
 go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35/go.mod h1:TQvodOM+hJTioNQJilmLXu08JNb8i+ccq418+KWu1/Y=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
