@@ -310,6 +310,12 @@ func runTest(
 				{`{ .http.method = "POST" && .http.status_code = 200 } | max(.http.status_code) = 200`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 } | avg(.http.status_code) = 200`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 } | sum(.http.status_code) >= 200`, postOkSpans},
+				{`{ .http.method = "POST" && .http.status_code = 200 } | 200 = min(.http.status_code)`, postOkSpans},
+				{`{ .http.method = "POST" && .http.status_code = 200 } | min(.http.status_code)+min(.http.status_code) = 400`, postOkSpans},
+				{`{ .http.method = "POST" && .http.status_code = 200 } | (min(.http.status_code)+min(.http.status_code))/2 = 200`, postOkSpans},
+				// Expression `sum(.foo) / count()` is same as `avg(.foo)`.
+				{`{ .http.method = "POST" && .http.status_code = 200 } | sum(.http.status_code) / count() = 200`, postOkSpans},
+				{`{ .http.method = "POST" && .http.status_code = 200 } | sum(.http.status_code) / count() = avg(.http.status_code)`, postOkSpans},
 				// Binary spanset expression test.
 				{`{ .http.method = "POST" && .http.status_code = 200 } && { .http.method = "POST" && .http.status_code = 200 }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 } || { .http.method = "POST" && .http.status_code = 200 }`, postOkSpans},
