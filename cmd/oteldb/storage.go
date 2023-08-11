@@ -24,7 +24,8 @@ import (
 
 func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (*ytstorage.Inserter, *ytstorage.YTQLQuerier, error) {
 	yc, err := ythttp.NewClient(&yt.Config{
-		Logger: &ytzap.Logger{L: lg.Named("yc")},
+		Logger:                &ytzap.Logger{L: lg.Named("yc")},
+		DisableProxyDiscovery: true,
 	})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "yt")

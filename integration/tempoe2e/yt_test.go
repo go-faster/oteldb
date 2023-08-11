@@ -50,7 +50,8 @@ func TestYT(t *testing.T) {
 	require.NoError(t, err, "container endpoint")
 
 	yc, err := ythttp.NewClient(&yt.Config{
-		Proxy: endpoint,
+		Proxy:                 endpoint,
+		DisableProxyDiscovery: true,
 	})
 	require.NoError(t, err)
 

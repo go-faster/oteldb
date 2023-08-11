@@ -483,7 +483,8 @@ func TestRun(t *testing.T) {
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		client, err := ythttp.NewClient(&yt.Config{
-			Proxy: proxyAddr,
+			Proxy:                 proxyAddr,
+			DisableProxyDiscovery: true,
 		})
 		if err != nil {
 			return errors.Wrap(err, "create client")
