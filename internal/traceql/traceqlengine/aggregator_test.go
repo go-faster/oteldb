@@ -99,7 +99,27 @@ func TestAggregator(t *testing.T) {
 			[]float64{3., 2., 1.},
 			true,
 		},
+		{
+			`sum(.aggregate_me) = 3*2`,
+			[]float64{3., 2., 1.},
+			true,
+		},
 		// Complex.
+		{
+			`sum(1) = count()`,
+			[]float64{3., 2., 1.},
+			true,
+		},
+		{
+			`sum(1+1) = count()*2`,
+			[]float64{3., 2., 1.},
+			true,
+		},
+		{
+			`sum(2^2) = 4*count()`,
+			[]float64{3., 2., 1.},
+			true,
+		},
 		{
 			`sum(.aggregate_me) / count() = avg(.aggregate_me)`,
 			[]float64{3., 2., 1.},

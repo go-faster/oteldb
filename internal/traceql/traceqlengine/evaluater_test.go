@@ -59,6 +59,7 @@ func TestEvaluater(t *testing.T) {
 		{`{ .http.status_code = 200.0 }`, true},
 		{`{ .http.status_code / 100 = 2 }`, true},
 		// Integer static.
+		{`{ -(10) = -10 }`, true},
 		{`{ 4 / 2 = 2 }`, true},
 		{`{ 4 / 2 = 2.0 }`, true},
 		{`{ 3 / 2 = 1.5 }`, true},
@@ -72,6 +73,9 @@ func TestEvaluater(t *testing.T) {
 		{`{ 2^3 * 2 = 16 }`, true},
 		{`{ 2 ^ 3^2 = 512 }`, true},
 		{`{ -(2 ^ 3^2) = -512 }`, true},
+		// Number static.
+		{`{ -(10) = -1e1 }`, true},
+		{`{ -(10.1) = -10.1 }`, true},
 		// Boolean attribute.
 		{`{ .truth }`, true},
 		{`{ span.truth }`, true},
@@ -106,6 +110,7 @@ func TestEvaluater(t *testing.T) {
 		{`{ duration-duration = 0 }`, true},
 		{`{ duration+duration = 4s }`, true},
 		{`{ duration*2 = 4s }`, true},
+		{`{ 2*duration = 4s }`, true},
 		// Trace duration is 1m.
 		{`{ traceDuration > 10s }`, true},
 		{`{ traceDuration >= 1m }`, true},
@@ -118,6 +123,7 @@ func TestEvaluater(t *testing.T) {
 		{`{ 10s = 10s }`, true},
 		{`{ 1m = 60s }`, true},
 		{`{ -1m = -60s }`, true},
+		{`{ -(1m) = -(60s) }`, true},
 		{`{ 1m+1m = 120s }`, true},
 		// Status attribute.
 		{`{ status = ok }`, true},
@@ -140,16 +146,8 @@ func TestEvaluater(t *testing.T) {
 			}()
 			a := require.New(t)
 
-			root, err := traceql.Parse(tt.input)
-			a.NoError(err)
-
-			a.IsType((*traceql.SpansetPipeline)(nil), root)
-			pipeline := root.(*traceql.SpansetPipeline).Pipeline
-
-			a.IsType((*traceql.SpansetFilter)(nil), pipeline[0])
-			spansetExpr := pipeline[0].(*traceql.SpansetFilter)
-
-			e, err := buildEvaluater(spansetExpr.Expr)
+			expr := parseSpansetFilter(t, tt.input)
+			e, err := buildEvaluater(expr)
 			a.NoError(err)
 
 			got := e.Eval(span, ectx)
@@ -157,4 +155,17 @@ func TestEvaluater(t *testing.T) {
 			a.Equal(tt.want, got.AsBool())
 		})
 	}
+}
+
+func parseSpansetFilter(t require.TestingT, input string) traceql.FieldExpr {
+	root, err := traceql.Parse(input)
+	require.NoError(t, err)
+
+	require.IsType(t, (*traceql.SpansetPipeline)(nil), root)
+	pipeline := root.(*traceql.SpansetPipeline).Pipeline
+
+	require.IsType(t, (*traceql.SpansetFilter)(nil), pipeline[0])
+	filter := pipeline[0].(*traceql.SpansetFilter)
+
+	return filter.Expr
 }

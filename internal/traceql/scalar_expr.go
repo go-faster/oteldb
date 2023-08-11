@@ -7,8 +7,8 @@ type ScalarExpr interface {
 }
 
 func (*BinaryScalarExpr) scalarExpr()    {}
-func (*Static) scalarExpr()              {}
 func (*AggregateScalarExpr) scalarExpr() {}
+func (*Static) scalarExpr()              {}
 
 // BinaryScalarExpr is a binary operation between two scalar expressions.
 type BinaryScalarExpr struct {

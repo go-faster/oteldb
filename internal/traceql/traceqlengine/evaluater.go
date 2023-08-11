@@ -48,6 +48,8 @@ type Evaluater interface {
 type BinaryOp func(a, b traceql.Static) traceql.Static
 
 func buildEvaluater(expr traceql.TypedExpr) (Evaluater, error) {
+	expr = ReduceExpr(expr)
+
 	switch expr := expr.(type) {
 	case *traceql.BinaryFieldExpr:
 		return buildBinaryEvaluater(expr.Left, expr.Op, expr.Right)
@@ -71,19 +73,7 @@ func buildBinaryEvaluater(
 	op traceql.BinaryOp,
 	right traceql.TypedExpr,
 ) (Evaluater, error) {
-	var pattern string
-	if op.IsRegex() {
-		static, ok := right.(*traceql.Static)
-		if !ok {
-			return nil, errors.Errorf("unexpected pattern expression %T", right)
-		}
-		if static.Type != traceql.TypeString {
-			return nil, errors.Errorf("expected string pattern, got %q", static.Type)
-		}
-		pattern = static.AsString()
-	}
-
-	opEval, err := buildBinaryOp(op, pattern)
+	opEval, err := buildBinaryOp(op, right)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +109,7 @@ func (e *BinaryEvaluater) Eval(span tracestorage.Span, ctx EvaluateCtx) traceql.
 	return e.Op(left, right)
 }
 
-func buildBinaryOp(op traceql.BinaryOp, pattern string) (BinaryOp, error) {
+func buildBinaryOp(op traceql.BinaryOp, right traceql.TypedExpr) (BinaryOp, error) {
 	switch op {
 	case traceql.OpAnd:
 		return func(a, b traceql.Static) (r traceql.Static) {
@@ -192,6 +182,15 @@ func buildBinaryOp(op traceql.BinaryOp, pattern string) (BinaryOp, error) {
 			return r
 		}, nil
 	case traceql.OpRe, traceql.OpNotRe:
+		static, ok := right.(*traceql.Static)
+		if !ok {
+			return nil, errors.Errorf("unexpected pattern expression %T", right)
+		}
+		if static.Type != traceql.TypeString {
+			return nil, errors.Errorf("expected string pattern, got %q", static.Type)
+		}
+		pattern := static.AsString()
+
 		re, err := regexp.Compile(pattern)
 		if err != nil {
 			return nil, errors.Wrapf(err, "compile regexp %q", pattern)
