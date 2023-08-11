@@ -106,8 +106,7 @@ func (agg MinAgg) Aggregate(set Spanset) (r float64) {
 
 // AvgAgg is `avg(...)` aggregator.
 type AvgAgg struct {
-	Sum   SumAgg
-	Count CountAgg
+	Sum SumAgg
 }
 
 // Aggregate implements [Aggregator].
