@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
-	"go.uber.org/zap/zaptest"
 
 	"github.com/go-faster/oteldb/internal/chstorage"
 )
@@ -42,11 +41,9 @@ func TestCH(t *testing.T) {
 	endpoint, err := chContainer.PortEndpoint(ctx, "9000", "")
 	require.NoError(t, err, "container endpoint")
 
-	log := zaptest.NewLogger(t)
 	opts := ch.Options{
 		Address:  endpoint,
 		Database: "default",
-		Logger:   log.Named("ch"),
 	}
 
 	connectBackoff := backoff.NewExponentialBackOff()
@@ -79,5 +76,5 @@ func TestCH(t *testing.T) {
 	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
 	require.NoError(t, err)
 
-	runTest(ctx, t, inserter, querier, nil)
+	runTest(ctx, t, inserter, querier, querier)
 }

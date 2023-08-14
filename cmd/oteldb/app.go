@@ -32,9 +32,8 @@ type App struct {
 	logQuerier  logQuerier
 	logInserter logstorage.Inserter
 
-	traceQuerier   tracestorage.Querier
-	traceQLQuerier traceqlengine.Querier
-	traceInserter  tracestorage.Inserter
+	traceQuerier  traceQuerier
+	traceInserter tracestorage.Inserter
 
 	lg      *zap.Logger
 	metrics Metrics
@@ -66,7 +65,6 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 		}
 		app.traceInserter = inserter
 		app.traceQuerier = querier
-		app.traceQLQuerier = querier
 
 		app.logInserter = inserter
 		app.logQuerier = querier
@@ -148,10 +146,9 @@ func (app *App) trySetupTempo() error {
 		return nil
 	}
 
-	var engine *traceqlengine.Engine
-	if q := app.traceQLQuerier; q != nil {
-		engine = traceqlengine.NewEngine(q, traceqlengine.Options{})
-	}
+	engine := traceqlengine.NewEngine(app.traceQuerier, traceqlengine.Options{
+		TracerProvider: app.metrics.TracerProvider(),
+	})
 	tempo := tempohandler.NewTempoAPI(q, engine)
 
 	s, err := tempoapi.NewServer(tempo,
@@ -234,4 +231,9 @@ func (app *App) Run(ctx context.Context) error {
 type logQuerier interface {
 	logstorage.Querier
 	logqlengine.Querier
+}
+
+type traceQuerier interface {
+	tracestorage.Querier
+	traceqlengine.Querier
 }

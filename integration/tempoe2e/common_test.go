@@ -296,6 +296,7 @@ func runTest(
 				{`{ .http.method = "POST" && .http.status_code = 200 && duration > 0ns }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 && traceDuration > 0ns }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 && status != error }`, postOkSpans},
+				{`{ .http.method = "POST" && .http.status_code = 200 && kind != internal }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 && name != "" }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 && rootName != "" }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 && rootServiceName = "shop-backend" }`, postOkSpans},
@@ -361,12 +362,16 @@ func runTest(
 				{`{ resource.http.method = "POST" }`, nil},
 				{`{ duration > 10h }`, nil},
 				{`{ traceDuration > 10h }`, nil},
+				{`{ kind = internal }`, nil},
 				{`{ .http.status_code = 200 } | min(.http.status_code) < 0`, nil},
 				{`{ .http.status_code = 200 } | max(.http.status_code) < 0`, nil},
 				{`{ .http.status_code = 200 } | sum(.http.status_code) < 0`, nil},
 				{`{ .http.status_code = 200 } | avg(.http.status_code) < 0`, nil},
 				{`count() > 1000`, nil},
 				{`count() < 0`, nil},
+				// Ensure that engine properly handles types mismatch.
+				{`{ .http.status_code = "200" }`, nil},
+				{`{ .http.status_code =~ "^POST$" }`, nil},
 			}
 			for i, tt := range queries {
 				tt := tt
