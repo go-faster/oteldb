@@ -133,3 +133,6 @@ issues:
     - path: internal/ytstorage
       linters: [goconst]
       text: "try_get_int64"
+    - path: internal/chstorage
+      linters: [goconst]
+      text: "int"
