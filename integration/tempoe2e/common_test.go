@@ -320,6 +320,25 @@ func runTest(
 				{`{ .http.method = "POST" && .http.status_code = 200 } && { .http.method = "POST" && .http.status_code = 200 }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 } || { .http.method = "POST" && .http.status_code = 200 }`, postOkSpans},
 				{`{ .http.method = "POST" && .http.status_code = 200 } ~ { .http.method = "POST" && .http.status_code = 200 }`, postOkSpans},
+				// Binary expression test.
+				{
+					`( { .http.method = "POST" && .http.status_code = 200 } | count() > 0 )
+					 &&
+    				 ( { .http.method = "POST" && .http.status_code = 200 } | count() > 0 )`,
+					postOkSpans,
+				},
+				{
+					`( { .http.method = "POST" && .http.status_code = 200 } | count() > 0 )
+					 ||
+    				 ( { .http.method = "POST" && .http.status_code = 200 } | count() > 0 )`,
+					postOkSpans,
+				},
+				{
+					`( { .http.method = "POST" && .http.status_code = 200 } | count() > 0 )
+					 ~
+    				 ( { .http.method = "POST" && .http.status_code = 200 } | count() > 0 )`,
+					postOkSpans,
+				},
 
 				// Other queries.
 				{
