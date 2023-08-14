@@ -198,7 +198,7 @@ func (c *Client) sendAbortQuery(ctx context.Context, params AbortQueryParams) (r
 			}
 			return false
 		}(); !ok {
-			return res, errors.New("no security requirement satisfied")
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -341,7 +341,7 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 			}
 			return false
 		}(); !ok {
-			return res, errors.New("no security requirement satisfied")
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -515,7 +515,7 @@ func (c *Client) sendReadQueryResult(ctx context.Context, params ReadQueryResult
 			}
 			return false
 		}(); !ok {
-			return res, errors.New("no security requirement satisfied")
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
@@ -669,7 +669,7 @@ func (c *Client) sendStartQuery(ctx context.Context, params StartQueryParams) (r
 			}
 			return false
 		}(); !ok {
-			return res, errors.New("no security requirement satisfied")
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
 		}
 	}
 
