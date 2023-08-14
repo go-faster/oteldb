@@ -207,13 +207,22 @@ func (q *YTQLQuerier) SelectSpansets(ctx context.Context, params traceqlengine.S
 		return nil, err
 	}
 
-	result := make([]traceqlengine.Trace, 0, len(traces))
+	var (
+		result     = make([]traceqlengine.Trace, 0, len(traces))
+		spansCount int
+	)
 	for id, spans := range traces {
+		spansCount += len(spans)
 		result = append(result, traceqlengine.Trace{
 			TraceID: id,
 			Spans:   spans,
 		})
 	}
+	span.SetAttributes(
+		attribute.Int("ytstorage.queried_spans", spansCount),
+		attribute.Int("ytstorage.queried_traces", len(result)),
+	)
+
 	return iterators.Slice(result), nil
 }
 
