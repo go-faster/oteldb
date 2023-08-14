@@ -3,7 +3,6 @@ package traceqlengine
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -94,12 +93,7 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (tra
 }
 
 func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalParams) (*tempoapi.Traces, error) {
-	stages, ok := expr.(*traceql.SpansetPipeline)
-	if !ok {
-		return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported expression %T", expr)}
-	}
-
-	processor, err := BuildPipeline(stages.Pipeline...)
+	processor, err := BuildExpr(expr)
 	if err != nil {
 		return nil, errors.Wrap(err, "build pipeline")
 	}
