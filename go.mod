@@ -20,7 +20,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.46.0
-	github.com/pyroscope-io/client v0.7.1
+	github.com/pyroscope-io/client v0.7.2
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.22.0

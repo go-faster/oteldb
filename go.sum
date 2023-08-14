@@ -440,8 +440,8 @@ github.com/prometheus/prometheus v0.46.0 h1:9JSdXnsuT6YsbODEhSQMwxNkGwPExfmzqG73
 github.com/prometheus/prometheus v0.46.0/go.mod h1:10L5IJE5CEsjee1FnOcVswYXlPIscDWWt3IJ2UDYrz4=
 github.com/prometheus/statsd_exporter v0.22.7 h1:7Pji/i2GuhK6Lu7DHrtTkFmNBCudCPT1pX2CziuyQR0=
 github.com/prometheus/statsd_exporter v0.22.7/go.mod h1:N/TevpjkIh9ccs6nuzY3jQn9dFqnUakOjnEuMPJJJnI=
-github.com/pyroscope-io/client v0.7.1 h1:yFRhj3vbgjBxehvxQmedmUWJQ4CAfCHhn+itPsuWsHw=
-github.com/pyroscope-io/client v0.7.1/go.mod h1:4h21iOU4pUOq0prKyDlvYRL+SCKsBc5wKiEtV+rJGqU=
+github.com/pyroscope-io/client v0.7.2 h1:OX2qdUQsS8RSkn/3C8isD7f/P0YiZQlRbAlecAaj/R8=
+github.com/pyroscope-io/client v0.7.2/go.mod h1:FEocnjn+Ngzxy6EtU9ZxXWRvQ0+pffkrBxHLnPpxwi8=
 github.com/rhnvrm/simples3 v0.6.1/go.mod h1:Y+3vYm2V7Y4VijFoJHHTrja6OgPrJ2cBti8dPGkC3sA=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
