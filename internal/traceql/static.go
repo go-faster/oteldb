@@ -1,11 +1,10 @@
 package traceql
 
 import (
+	"cmp"
 	"fmt"
 	"math"
 	"time"
-
-	"github.com/go-faster/oteldb/internal/cmp"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"

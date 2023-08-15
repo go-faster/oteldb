@@ -2,6 +2,7 @@
 package logqlengine
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"slices"
@@ -12,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/go-faster/oteldb/internal/cmp"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logstorage"

@@ -1,6 +1,7 @@
 package logqlmetric
 
 import (
+	"cmp"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -11,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 
-	"github.com/go-faster/oteldb/internal/cmp"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"

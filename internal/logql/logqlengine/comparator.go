@@ -1,6 +1,6 @@
 package logqlengine
 
-import "golang.org/x/exp/constraints"
+import "cmp"
 
 // Comparator is a filter that compares value.
 type Comparator[T any] interface {
@@ -24,7 +24,7 @@ func (NotEqComparator[T]) Compare(a, b T) bool {
 }
 
 // LtComparator implements '<' Comparator.
-type LtComparator[T constraints.Ordered] struct{}
+type LtComparator[T cmp.Ordered] struct{}
 
 // Compare implements Comparator[T].
 func (LtComparator[T]) Compare(a, b T) bool {
@@ -32,7 +32,7 @@ func (LtComparator[T]) Compare(a, b T) bool {
 }
 
 // LteComparator implements '<=' Comparator.
-type LteComparator[T constraints.Ordered] struct{}
+type LteComparator[T cmp.Ordered] struct{}
 
 // Compare implements Comparator[T].
 func (LteComparator[T]) Compare(a, b T) bool {
@@ -40,7 +40,7 @@ func (LteComparator[T]) Compare(a, b T) bool {
 }
 
 // GtComparator implements  '>' Comparator.
-type GtComparator[T constraints.Ordered] struct{}
+type GtComparator[T cmp.Ordered] struct{}
 
 // Compare implements Comparator[T].
 func (GtComparator[T]) Compare(a, b T) bool {
@@ -48,7 +48,7 @@ func (GtComparator[T]) Compare(a, b T) bool {
 }
 
 // GteComparator implements '>=' Comparator.
-type GteComparator[T constraints.Ordered] struct{}
+type GteComparator[T cmp.Ordered] struct{}
 
 // Compare implements Comparator[T].
 func (GteComparator[T]) Compare(a, b T) bool {

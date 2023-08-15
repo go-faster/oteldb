@@ -1,10 +1,9 @@
 package logqlmetric
 
 import (
+	"cmp"
 	"math"
 	"slices"
-
-	"github.com/go-faster/oteldb/internal/cmp"
 )
 
 // Note: this file contains stats functions from Prometheus.

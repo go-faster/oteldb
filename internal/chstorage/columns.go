@@ -5,7 +5,6 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/google/uuid"
-	"golang.org/x/exp/constraints"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -288,7 +287,7 @@ func (c *eventsColumns) Row(row int) (events []tracestorage.Event) {
 		timestamps = c.Timestamps.Row(row)
 		attrs      = c.Attrs.Row(row)
 
-		l = minimum(
+		l = min(
 			len(names),
 			len(timestamps),
 			len(attrs),
@@ -347,7 +346,7 @@ func (c *linksColumns) Row(row int) (links []tracestorage.Link) {
 		tracestates = c.Tracestates.Row(row)
 		attrs       = c.Attrs.Row(row)
 
-		l = minimum(
+		l = min(
 			len(traceIDs),
 			len(spanIDs),
 			len(tracestates),
@@ -363,17 +362,4 @@ func (c *linksColumns) Row(row int) (links []tracestorage.Link) {
 		})
 	}
 	return links
-}
-
-func minimum[T constraints.Integer](vals ...T) (min T) {
-	if len(vals) < 1 {
-		return min
-	}
-	min = vals[0]
-	for _, val := range vals[1:] {
-		if val < min {
-			min = val
-		}
-	}
-	return min
 }
