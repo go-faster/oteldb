@@ -2,6 +2,7 @@ package logqlengine
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ func Test_extractQueryConditions(t *testing.T) {
 		{
 			logql.Selector{
 				Matchers: []logql.LabelMatcher{
-					{Label: "foo", Op: logql.OpRe, Value: "bar.+"},
+					{Label: "foo", Op: logql.OpRe, Value: "bar.+", Re: regexp.MustCompile("bar.+")},
 					{Label: "bar", Op: logql.OpNotEq, Value: "foo"},
 				},
 			},
@@ -53,8 +54,8 @@ func Test_extractQueryConditions(t *testing.T) {
 		{
 			logql.Selector{
 				Matchers: []logql.LabelMatcher{
-					{Label: "foo", Op: logql.OpRe, Value: "bar.+"},
-					{Label: "bar", Op: logql.OpNotRe, Value: "foo.+"},
+					{Label: "foo", Op: logql.OpRe, Value: "bar.+", Re: regexp.MustCompile("bar.+")},
+					{Label: "bar", Op: logql.OpNotRe, Value: "foo.+", Re: regexp.MustCompile("foo.+")},
 				},
 			},
 			[]logql.BinOp{logql.OpEq, logql.OpNotEq},

@@ -16,6 +16,13 @@ type StringMatcher interface {
 
 func buildStringMatcher(op logql.BinOp, value string, re *regexp.Regexp, label bool) (m StringMatcher, _ error) {
 	switch op {
+	case logql.OpRe, logql.OpNotRe:
+		if re == nil {
+			return m, errors.Errorf("internal error: regexp %q is not compiled", value)
+		}
+	}
+
+	switch op {
 	case logql.OpEq:
 		if label {
 			m = EqualsMatcher{Value: value}
