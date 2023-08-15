@@ -123,7 +123,7 @@ func TestPredicateExtraction(t *testing.T) {
 
 		// NOT expression test.
 		{
-			`{ !(.a = 10) }`,
+			`{ !(.a = 10) }`, // -> { .a != 10 }
 			SelectSpansetsParams{
 				Op: traceql.SpansetOpAnd,
 				Matchers: []SpanMatcher{
@@ -136,7 +136,7 @@ func TestPredicateExtraction(t *testing.T) {
 			},
 		},
 		{
-			`{ !(.a > 10) }`,
+			`{ !(.a > 10) }`, // -> { .a <= 10 }
 			SelectSpansetsParams{
 				Op: traceql.SpansetOpAnd,
 				Matchers: []SpanMatcher{
@@ -149,7 +149,7 @@ func TestPredicateExtraction(t *testing.T) {
 			},
 		},
 		{
-			`{ !(.a < 10) }`,
+			`{ !(.a < 10) }`, // -> { .a >= 10 }
 			SelectSpansetsParams{
 				Op: traceql.SpansetOpAnd,
 				Matchers: []SpanMatcher{
@@ -162,7 +162,33 @@ func TestPredicateExtraction(t *testing.T) {
 			},
 		},
 		{
-			`{ !(.a != 10) }`,
+			`{ !(.a >= 10) }`, // -> { .a < 10 }
+			SelectSpansetsParams{
+				Op: traceql.SpansetOpAnd,
+				Matchers: []SpanMatcher{
+					{
+						Attribute: traceql.Attribute{Name: "a"},
+						Op:        traceql.OpLt,
+						Static:    traceql.Static{Type: traceql.TypeInt, Data: 10},
+					},
+				},
+			},
+		},
+		{
+			`{ !(.a <= 10) }`, // -> { .a > 10 }
+			SelectSpansetsParams{
+				Op: traceql.SpansetOpAnd,
+				Matchers: []SpanMatcher{
+					{
+						Attribute: traceql.Attribute{Name: "a"},
+						Op:        traceql.OpGt,
+						Static:    traceql.Static{Type: traceql.TypeInt, Data: 10},
+					},
+				},
+			},
+		},
+		{
+			`{ !(.a != 10) }`, // -> { .a = 10 }
 			SelectSpansetsParams{
 				Op: traceql.SpansetOpAnd,
 				Matchers: []SpanMatcher{
@@ -175,7 +201,7 @@ func TestPredicateExtraction(t *testing.T) {
 			},
 		},
 		{
-			`{ !!(.a = 10) }`,
+			`{ !!(.a = 10) }`, // -> { .a != 10 }
 			SelectSpansetsParams{
 				Op: traceql.SpansetOpAnd,
 				Matchers: []SpanMatcher{

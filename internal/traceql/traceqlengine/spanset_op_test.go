@@ -5,10 +5,12 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
-
-	"github.com/stretchr/testify/require"
 )
 
 type spanIDs struct {
@@ -16,13 +18,27 @@ type spanIDs struct {
 	parent uint64
 }
 
-func generateSpans(ids []spanIDs) []tracestorage.Span {
+var testTraceID = uuid.MustParse(`af622963-b3f5-4efd-9f08-ea539f9fd70d`)
+
+func generateSpans(ids []spanIDs, group string) []tracestorage.Span {
 	result := make([]tracestorage.Span, 0, len(ids))
+
+	attrs := pcommon.NewMap()
+	attrs.PutStr("group", group)
+
+	resAttrs := pcommon.NewMap()
+	resAttrs.PutStr("service.name", "test.service")
+
 	for _, span := range ids {
 		result = append(result, tracestorage.Span{
-			SpanID:       otelstorage.SpanIDFromUint64(span.id),
-			ParentSpanID: otelstorage.SpanIDFromUint64(span.parent),
-			Name:         fmt.Sprintf("Span #%d", span.id),
+			TraceID:       otelstorage.TraceID(testTraceID),
+			SpanID:        otelstorage.SpanIDFromUint64(span.id),
+			ParentSpanID:  otelstorage.SpanIDFromUint64(span.parent),
+			Name:          fmt.Sprintf("Span #%d", span.id),
+			Attrs:         otelstorage.Attrs(attrs),
+			ResourceAttrs: otelstorage.Attrs(resAttrs),
+			Start:         1700000001_000000000,
+			End:           1700000003_000000000,
 		})
 	}
 	return result
@@ -74,10 +90,10 @@ func TestChildSpans(t *testing.T) {
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			result := childSpans(
 				Spanset{
-					Spans: generateSpans(tt.left),
+					Spans: generateSpans(tt.left, "left"),
 				},
 				Spanset{
-					Spans: generateSpans(tt.right),
+					Spans: generateSpans(tt.right, "right"),
 				},
 			)
 
@@ -179,10 +195,10 @@ func TestSiblingSpans(t *testing.T) {
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			result := siblingSpans(
 				Spanset{
-					Spans: generateSpans(tt.left),
+					Spans: generateSpans(tt.left, "left"),
 				},
 				Spanset{
-					Spans: generateSpans(tt.right),
+					Spans: generateSpans(tt.right, "right"),
 				},
 			)
 
