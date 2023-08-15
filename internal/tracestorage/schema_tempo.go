@@ -46,6 +46,9 @@ func (span Span) AsTempoSpan() (s tempoapi.TempoSpan) {
 
 // ConvertToTempoAttrs converts [otelstorage.Attrs] to Tempo API attributes.
 func ConvertToTempoAttrs(to *tempoapi.Attributes, from otelstorage.Attrs) {
+	if from.IsZero() {
+		return
+	}
 	m := from.AsMap()
 	*to = slices.Grow(*to, m.Len())
 	m.Range(func(k string, v pcommon.Value) bool {
