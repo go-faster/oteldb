@@ -13,8 +13,8 @@ type TabletNodeConnection struct {
 // SlotLocation config.
 type SlotLocation struct {
 	Path               string `yson:"path"`
-	DiskQuota          int64  `yson:"disk_quota"`
-	DiskUsageWatermark int64  `yson:"disk_usage_watermark"`
+	DiskQuota          int64  `yson:"disk_quota,omitempty"`
+	DiskUsageWatermark int64  `yson:"disk_usage_watermark,omitempty"`
 }
 
 // SlotManager config.
@@ -50,7 +50,8 @@ type JobController struct {
 
 // ExecAgent config.
 type ExecAgent struct {
-	SlotManager SlotManager `yson:"slot_manager"`
+	SlotManager   SlotManager   `yson:"slot_manager"`
+	JobController JobController `yson:"job_controller"`
 }
 
 // MasterCacheService config.
@@ -65,4 +66,5 @@ type ExecNode struct {
 	ResourceLimits ResourceLimits       `yson:"resource_limits"`
 	TabletNode     TabletNodeConnection `yson:"tablet_node"`
 	ExecAgent      ExecAgent            `yson:"exec_agent"`
+	DataNode       DataNodeOptions      `yson:"data_node"`
 }

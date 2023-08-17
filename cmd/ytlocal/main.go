@@ -25,7 +25,10 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yson"
+	"go.ytsaurus.tech/yt/go/yt"
+	"go.ytsaurus.tech/yt/go/yt/ythttp"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/ytlocal"
@@ -62,6 +65,10 @@ func initBaseConfigs(pa *ytlocal.PortAllocator, base ytlocal.BaseServer, targets
 		if err != nil {
 			return errors.Wrap(err, "allocate")
 		}
+		skynetPort, err := pa.Allocate()
+		if err != nil {
+			return errors.Wrap(err, "allocate")
+		}
 		b := ytlocal.BaseServer{
 			RPCPort:           port,
 			MonitoringPort:    rpcPort,
@@ -69,6 +76,9 @@ func initBaseConfigs(pa *ytlocal.PortAllocator, base ytlocal.BaseServer, targets
 			AddressResolver:   base.AddressResolver,
 			TimestampProvider: base.TimestampProvider,
 			ClusterConnection: base.ClusterConnection,
+			// Every node would try to bind 10080 port, set some unused port to avoid
+			// "already used" errors.
+			SkynetHTTPPort: skynetPort,
 		}
 		*target = b
 	}
@@ -150,6 +160,17 @@ func main() {
 				zap.String("master", bin.Master),
 			)
 
+			chytExe, err := ytlocal.NewCHYTBinary(dir)
+			if err != nil {
+				return errors.Wrap(err, "new CHYT binary")
+			}
+			zctx.From(ctx).Info("Using CHYT binaries",
+				zap.String("controller", chytExe.Controller),
+				zap.String("trampoline", chytExe.Trampoline),
+				zap.String("tailer", chytExe.Tailer),
+				zap.String("server", chytExe.Server),
+			)
+
 			const clusterName = "test"
 			cellID := ytlocal.GenerateCellID(1, clusterName)
 
@@ -161,10 +182,26 @@ func main() {
 			if err != nil {
 				return errors.Wrap(err, "allocate")
 			}
+			chytControllerPort, err := pa.Allocate()
+			if err != nil {
+				return errors.Wrap(err, "allocate")
+			}
+
 			const localhost = "localhost"
+			var (
+				masterAddr         = net.JoinHostPort(localhost, strconv.Itoa(masterPort))
+				httpProxyAddr      = net.JoinHostPort(localhost, strconv.Itoa(arg.ProxyPort))
+				chytControllerAddr = net.JoinHostPort(localhost, strconv.Itoa(chytControllerPort))
+			)
+
+			zctx.From(ctx).Info(
+				"Using addrs",
+				zap.String("master", masterAddr),
+				zap.String("http_proxy", httpProxyAddr),
+				zap.String("chyt_controller", chytControllerAddr),
+			)
 
 			var (
-				masterAddr           = net.JoinHostPort(localhost, strconv.Itoa(masterPort))
 				cfgTimestampProvider = ytlocal.Connection{
 					Addresses:       []string{masterAddr},
 					SoftBackoffTime: 100,
@@ -285,20 +322,21 @@ func main() {
 					CellDirectory:          cfgCellDirectory,
 					TimestampProvider:      cfgTimestampProvider,
 					DiscoveryConnections: []ytlocal.Connection{
-						{
-							Addresses: []string{masterAddr},
-						},
+						cfgDiscoveryConnection,
 					},
 				}
 				cfgMaster = ytlocal.Master{
 					BaseServer: cfgBaseServer,
 
-					ChunkManger:           cfgChunkManager,
-					ObjectService:         cfgObjectService,
-					TimestampManager:      cfgTimestampManager,
-					HiveManager:           cfgHiveManager,
-					PrimaryMaster:         cfgPrimaryMaster,
-					YPServiceDiscovery:    cfgYPServiceDiscovery,
+					ChunkManger:        cfgChunkManager,
+					ObjectService:      cfgObjectService,
+					TimestampManager:   cfgTimestampManager,
+					HiveManager:        cfgHiveManager,
+					PrimaryMaster:      cfgPrimaryMaster,
+					YPServiceDiscovery: cfgYPServiceDiscovery,
+					DiscoveryServer: ytlocal.DiscoveryConfig{
+						Addresses: cfgDiscoveryConnection.Addresses,
+					},
 					RPCDispatcher:         cfgRPCDispatcher,
 					ChunkClientDispatcher: cfgChunkClientDispatcher,
 					TCPDispatcher:         cfgTCPDispatcher,
@@ -359,15 +397,69 @@ func main() {
 						},
 					},
 				}
+
+				execTotalCPU = 4
+				cfgExecNode  = ytlocal.ExecNode{
+					ExecAgent: ytlocal.ExecAgent{
+						SlotManager: ytlocal.SlotManager{
+							JobEnvironment: ytlocal.JobEnvironment{
+								StartUID: 19500,
+								Type:     ytlocal.JobEnvironmentTypeSimple,
+							},
+							Locations: []ytlocal.SlotLocation{
+								{Path: filepath.Join(dir, "slots")},
+							},
+						},
+						JobController: ytlocal.JobController{
+							ResourceLimits: ytlocal.JobControllerResourceLimits{
+								UserSlots: execTotalCPU * 2,
+							},
+						},
+					},
+					ResourceLimits: ytlocal.ResourceLimits{
+						TotalCPU:    float64(execTotalCPU),
+						TotalMemory: 4 * 1024 * 1024 * 1024,
+					},
+					DataNode: ytlocal.DataNodeOptions{
+						CacheLocations: []ytlocal.DiskLocation{
+							{Path: filepath.Join(dir, "chunk_cache")},
+						},
+					},
+					Flavors: []string{"exec"},
+				}
+
 				cfgHTTPProxy = ytlocal.HTTPProxy{
 					Port: arg.ProxyPort,
 					Coordinator: ytlocal.Coordinator{
 						Enable:     true,
 						Announce:   true,
 						ShowPorts:  true,
-						PublicFQDN: net.JoinHostPort(localhost, strconv.Itoa(arg.ProxyPort)),
+						PublicFQDN: httpProxyAddr,
 					},
 					Driver: cfgDriver,
+				}
+
+				cfgQueryTracker = ytlocal.QueryTracker{
+					User:                       "query_tracker",
+					CreateStateTablesOnStartup: true,
+				}
+
+				cfgCHYTContoller = ytlocal.CHYTController{
+					Strawberry: ytlocal.Strawberry{
+						Root:          "//sys/clickhouse/strawberry",
+						Stage:         "production",
+						RobotUsername: "robot-chyt-controller",
+					},
+					LocationProxies: []string{
+						httpProxyAddr,
+					},
+					Controller: struct {
+						Resolver ytlocal.AddressResolver `yson:"address_resolver"`
+					}{
+						Resolver: cfgAddressResolver,
+					},
+					HTTPAPIEndpoint: chytControllerAddr,
+					DisableAPIAuth:  true,
 				}
 			)
 			// Allocate ports and fill base config for all components, using
@@ -377,16 +469,25 @@ func main() {
 				&cfgControllerAgent.BaseServer,
 				&cfgNode.BaseServer,
 				&cfgHTTPProxy.BaseServer,
+				&cfgQueryTracker.BaseServer,
+				&cfgExecNode.BaseServer,
 			); err != nil {
 				return errors.Wrap(err, "init base configs")
 			}
 			var (
-				opt       = ytlocal.Options{Binary: bin, Dir: dir}
-				master    = ytlocal.NewComponent(opt, cfgMaster)
-				scheduler = ytlocal.NewComponent(opt, cfgScheduler)
-				agent     = ytlocal.NewComponent(opt, cfgControllerAgent)
-				node      = ytlocal.NewComponent(opt, cfgNode)
-				proxy     = ytlocal.NewComponent(opt, cfgHTTPProxy)
+				opt           = ytlocal.Options{Binary: bin, Dir: dir}
+				master        = ytlocal.NewComponent(opt, cfgMaster)
+				scheduler     = ytlocal.NewComponent(opt, cfgScheduler)
+				agent         = ytlocal.NewComponent(opt, cfgControllerAgent)
+				node          = ytlocal.NewComponent(opt, cfgNode)
+				proxy         = ytlocal.NewComponent(opt, cfgHTTPProxy)
+				queryTracker  = ytlocal.NewComponent(opt, cfgQueryTracker)
+				execNode      = ytlocal.NewComponent(opt, cfgExecNode)
+				chytContoller = chytExe.ControllerServer(opt, cfgCHYTContoller)
+				chytWaiter    = &waiterServer[ytlocal.CHYTController]{
+					done:   make(chan struct{}),
+					server: chytContoller,
+				}
 			)
 			zctx.From(ctx).Info("Starting cluster",
 				zap.Int("master.rpc_port", master.Config.RPCPort),
@@ -399,7 +500,46 @@ func main() {
 				agent,
 				node,
 				proxy,
+				queryTracker,
+				execNode,
+				chytWaiter,
 			)
+			g.Go(func() error {
+				yc, err := ythttp.NewClient(&yt.Config{
+					Proxy: httpProxyAddr,
+				})
+				if err != nil {
+					return errors.Wrap(err, "create client")
+				}
+
+				lg := zctx.From(ctx)
+				if err := ytlocal.SetupMaster(ctx, yc, cfgMaster); err != nil {
+					return errors.Wrap(err, "setup master")
+				}
+				lg.Info("Master setup is complete")
+
+				if err := ytlocal.SetupQueryTracker(ctx, yc, clusterName); err != nil {
+					return errors.Wrap(err, "setup query trackers")
+				}
+				lg.Info("Query tracker setup is complete")
+
+				if _, err := yc.CreateNode(ctx,
+					ypath.Path(`//sys/clickhouse/strawberry/chyt`),
+					yt.NodeMap,
+					&yt.CreateNodeOptions{Recursive: true, IgnoreExisting: true},
+				); err != nil {
+					return errors.Wrap(err, "create clickhouse dir")
+				}
+				chytWaiter.Ready()
+				lg.Info("Run CHYT controller")
+
+				if err := chytExe.Setup(ctx, yc, chytControllerAddr, dir, ytlocal.CHYTInitCluster{Proxy: httpProxyAddr}); err != nil {
+					return errors.Wrap(err, "setup chyt")
+				}
+				lg.Info("CHYT cluster setup is complete")
+
+				return nil
+			})
 			return g.Wait()
 		},
 	}
@@ -785,5 +925,27 @@ Also, docker is required to run UI.
 	if err := root.ExecuteContext(zctx.Base(ctx, lg)); err != nil {
 		lg.Error("Failed", zapErr(err))
 		os.Exit(1)
+	}
+}
+
+type waiterServer[T any] struct {
+	done   chan struct{}
+	server *ytlocal.Server[T]
+}
+
+func (s *waiterServer[T]) Ready() {
+	close(s.done)
+}
+
+func (s *waiterServer[T]) String() string {
+	return s.server.String()
+}
+
+func (s *waiterServer[T]) Run(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-s.done:
+		return s.server.Run(ctx)
 	}
 }

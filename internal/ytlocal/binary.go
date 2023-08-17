@@ -105,5 +105,7 @@ func (b *Binary) ensure(dir string) error {
 			return errors.Wrap(err, "symlink")
 		}
 	}
+	// Use same binary as for data nodes.
+	b.Components[ComponentExecNode] = b.Components[ComponentNode]
 	return nil
 }

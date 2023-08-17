@@ -115,6 +115,7 @@ type Master struct {
 	Snapshots                        MasterSnapshots       `yson:"snapshots"`
 	HydraManager                     HydraManager          `yson:"hydra_manager"`
 	YPServiceDiscovery               YPServiceDiscovery    `yson:"yp_service_discovery"`
+	DiscoveryServer                  DiscoveryConfig       `yson:"discovery_server"`
 	RPCDispatcher                    RPCDispatcher         `yson:"rpc_dispatcher"`
 	ChunkClientDispatcher            ChunkClientDispatcher `yson:"chunk_client_dispatcher"`
 	TCPDispatcher                    TCPDispatcher         `yson:"tcp_dispatcher"`
@@ -128,4 +129,9 @@ type Master struct {
 	CypressManager                   CypressManager        `yson:"cypress_manager"`
 	SecondaryMasters                 []Connection          `yson:"secondary_masters"`
 	ChunkManger                      ChunkManger           `yson:"chunk_manager"`
+}
+
+// DiscoveryConfig config.
+type DiscoveryConfig struct {
+	Addresses []string `yson:"addresses"`
 }
