@@ -94,7 +94,7 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 		cond.params,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, errors.Wrap(err, "get logs")
 	}
 
 	return &entryIterator{
