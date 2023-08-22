@@ -2,6 +2,7 @@ package lokie2e_test
 
 import (
 	"context"
+	"net"
 	"os"
 	"testing"
 	"time"
@@ -18,6 +19,7 @@ import (
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
 
+	"github.com/go-faster/oteldb/internal/yqlclient"
 	"github.com/go-faster/oteldb/internal/ytstorage"
 )
 
@@ -81,4 +83,62 @@ func TestYT(t *testing.T) {
 	require.NoError(t, err)
 
 	runTest(ctx, t, inserter, querier, querier)
+}
+
+func TestYTYQL(t *testing.T) {
+	t.Parallel()
+	if os.Getenv("E2E") == "" {
+		t.Skip("Set E2E env to run")
+	}
+	port := os.Getenv("YT_PROXY_PORT")
+	if port == "" {
+		t.Skip("Set YT_PROXY_PORT to run")
+	}
+	endpoint := net.JoinHostPort("localhost", port)
+	token := "admin"
+
+	ctx := context.Background()
+
+	log := zaptest.NewLogger(t)
+	yc, err := ythttp.NewClient(&yt.Config{
+		Proxy:                 endpoint,
+		Token:                 token,
+		DisableProxyDiscovery: true,
+		Logger:                &ytzap.Logger{L: log.Named("yc")},
+	})
+	require.NoError(t, err)
+
+	rootPath := ypath.Path("//oteldb-test-" + uuid.NewString()).Child("logs")
+	t.Logf("Test tables path: %s", rootPath)
+	tables := ytstorage.NewStaticTables(rootPath)
+	{
+		migrateBackoff := backoff.NewExponentialBackOff()
+		migrateBackoff.InitialInterval = 2 * time.Second
+		migrateBackoff.MaxElapsedTime = time.Minute
+
+		if err := backoff.Retry(func() error {
+			return tables.Migrate(ctx, yc, migrate.OnConflictDrop(ctx, yc))
+		}, migrateBackoff); err != nil {
+			t.Fatalf("Migrate: %+v", err)
+		}
+	}
+
+	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{Tables: tables})
+	require.NoError(t, err)
+
+	labelQuerier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{Tables: tables})
+	require.NoError(t, err)
+
+	yql, err := yqlclient.NewClient(
+		"http://"+endpoint,
+		yqlclient.ClientOptions{
+			Token: token,
+		},
+	)
+	require.NoError(t, err)
+
+	engineQuerier, err := ytstorage.NewYQLQuerier(yql, ytstorage.YQLQuerierOptions{Tables: tables})
+	require.NoError(t, err)
+
+	runTest(ctx, t, inserter, labelQuerier, engineQuerier)
 }
