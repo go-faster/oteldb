@@ -88,7 +88,7 @@ func (q *YTQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
 func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (_ iterators.Iterator[logstorage.Record], rerr error) {
 	table := q.tables.logs
 
-	ctx, span := q.tracer.Start(ctx, "LabelValues",
+	ctx, span := q.tracer.Start(ctx, "SelectLogs",
 		trace.WithAttributes(
 			attribute.Int("ytstorage.labels_count", len(params.Labels)),
 			attribute.Int64("ytstorage.start_range", int64(start)),
