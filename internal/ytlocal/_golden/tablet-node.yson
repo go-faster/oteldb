@@ -62,5 +62,6 @@
     ];
     "resource_limits"={
         "total_memory"=8388608000;
+        "node_dedicated_cpu"=0.000000;
     };
 }

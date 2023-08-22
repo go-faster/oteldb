@@ -124,6 +124,10 @@
     "yp_service_discovery"={
         enable=%false;
     };
+    "discovery_server"={
+        addresses=[
+        ];
+    };
     "rpc_dispatcher"={
         "compression_pool_size"=1;
         "heavy_pool_size"=1;
