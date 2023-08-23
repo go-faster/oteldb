@@ -89,7 +89,38 @@ func NewInserter(yc yt.Client, opts InserterOptions) (*Inserter, error) {
 }
 
 func insertSlice[T any](ctx context.Context, i *Inserter, table ypath.Path, data []T) error {
+	if i.tables.isStatic(table) {
+		return insertStaticSlice(ctx, i, table, data)
+	}
+	return insertDynamicSlice(ctx, i, table, data)
+}
+
+func insertStaticSlice[T any](ctx context.Context, i *Inserter, table ypath.Path, data []T) (rerr error) {
+	bw, err := yt.WriteTable(ctx, i.yc, "<append=%true>"+table, yt.WithExistingTable())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if rerr != nil {
+			_ = bw.Rollback()
+		}
+	}()
+
+	for _, e := range data {
+		if err := bw.Write(e); err != nil {
+			return errors.Wrapf(err, "write %T", e)
+		}
+	}
+	return bw.Commit()
+}
+
+func insertDynamicSlice[T any](ctx context.Context, i *Inserter, table ypath.Path, data []T) (rerr error) {
 	bw := i.yc.NewRowBatchWriter()
+	defer func() {
+		if rerr != nil {
+			_ = bw.Rollback()
+		}
+	}()
 
 	for _, e := range data {
 		if err := bw.Write(e); err != nil {

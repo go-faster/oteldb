@@ -125,12 +125,16 @@ func runTest(
 			{`{http_method=~"^GET$"}`, 21},
 			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
 			// Try other methods.
-			{`{http_method="HEAD"}`, 22},
 			{`{http_method="DELETE"}`, 20},
-			{`{http_method="PUT"}`, 20},
-			{`{http_method="POST"}`, 21},
+			{`{http_method="GET"}`, 21},
+			{`{http_method="HEAD"}`, 22},
 			{`{http_method="PATCH"}`, 19},
+			{`{http_method="POST"}`, 21},
+			{`{http_method="PUT"}`, 20},
 			{`{http_method="GET"} | json`, 21},
+			// Negative label matcher.
+			{`{http_method!="HEAD"}`, len(set.Records) - 22},
+			{`{http_method!~"^HEAD$"}`, len(set.Records) - 22},
 			// Multiple lables.
 			{`{http_method="HEAD",http_status="500"}`, 2},
 			{`{http_method="HEAD",http_status=~"^500$"}`, 2},

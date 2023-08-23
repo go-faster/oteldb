@@ -104,6 +104,16 @@ func (op BinOp) String() string {
 	}
 }
 
+// IsRegex returns whether operation is regexp matcher.
+func (op BinOp) IsRegex() bool {
+	switch op {
+	case OpRe, OpNotRe:
+		return true
+	default:
+		return false
+	}
+}
+
 // IsLogic returns whether operation is logical.
 func (op BinOp) IsLogic() bool {
 	switch op {
