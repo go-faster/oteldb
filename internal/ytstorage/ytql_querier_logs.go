@@ -106,7 +106,15 @@ func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Tim
 	var query strings.Builder
 	fmt.Fprintf(&query, "* FROM [%s] WHERE (timestamp >= %d AND timestamp <= %d)", table, start, end)
 	for _, m := range params.Labels {
-		query.WriteString(" AND (")
+		switch m.Op {
+		case logql.OpEq:
+			query.WriteString(" AND (")
+		case logql.OpNotEq:
+			query.WriteString(" AND NOT (")
+		default:
+			return nil, errors.Errorf("unexpected op %q", m.Op)
+		}
+
 		for i, column := range []string{
 			"attrs",
 			"scope_attrs",
@@ -118,14 +126,7 @@ func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Tim
 			yp := append([]byte{'/'}, m.Label...)
 			yp = append(yp, "/1"...)
 
-			switch m.Op {
-			case logql.OpEq:
-				fmt.Fprintf(&query, "try_get_string(%s, %q) = %q", column, yp, m.Value)
-			case logql.OpNotEq:
-				fmt.Fprintf(&query, "try_get_string(%s, %q) != %q", column, yp, m.Value)
-			default:
-				return nil, errors.Errorf("unexpected op %q", m.Op)
-			}
+			fmt.Fprintf(&query, "try_get_string(%s, %q) = %q", column, yp, m.Value)
 		}
 		query.WriteByte(')')
 	}

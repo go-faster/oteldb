@@ -21,7 +21,7 @@ var _ logqlengine.Querier = (*YQLQuerier)(nil)
 
 // Сapabilities defines storage capabilities.
 func (q *YQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
-	caps.Label.Add(logql.OpEq, logql.OpNotEq, logql.OpRe)
+	caps.Label.Add(logql.OpEq, logql.OpNotEq, logql.OpRe, logql.OpNotRe)
 	return caps
 }
 
@@ -67,7 +67,16 @@ func (q *YQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Time
 	// Preallocate path buffer.
 	yp := make([]byte, 0, 32)
 	for matcherIdx, m := range params.Labels {
-		query.WriteString("\tAND (")
+		query.WriteString("\t")
+		switch m.Op {
+		case logql.OpEq, logql.OpRe:
+			query.WriteString("AND (\n")
+		case logql.OpNotEq, logql.OpNotRe:
+			// Match record only if none of attributes columns have matching values.
+			query.WriteString("AND NOT (\n")
+		default:
+			return nil, errors.Errorf("unexpected op %q", m.Op)
+		}
 
 		yp = append(yp[:0], '/')
 		yp = append(yp, m.Label...)
@@ -77,23 +86,24 @@ func (q *YQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Time
 			"scope_attrs",
 			"resource_attrs",
 		} {
+			query.WriteString("\t\t")
 			if i != 0 {
-				query.WriteString("\t\tOR ")
+				query.WriteString("OR ")
 			}
 
+			fmt.Fprintf(&query, "( Yson::YPath(%s, %q) IS NOT NULL AND ", column, yp)
+			// Note: predicate negated above.
 			switch m.Op {
-			case logql.OpEq:
+			case logql.OpEq, logql.OpNotEq:
 				fmt.Fprintf(&query, "Yson::ConvertToString(Yson::YPath(%s, %q)) = %q", column, yp, m.Value)
-			case logql.OpNotEq:
-				fmt.Fprintf(&query, "Yson::ConvertToString(Yson::YPath(%s, %q)) != %q", column, yp, m.Value)
-			case logql.OpRe:
+			case logql.OpRe, logql.OpNotRe:
 				fmt.Fprintf(&query, "$matcher_%d(Yson::ConvertToString(Yson::YPath(%s, %q)))", matcherIdx, column, yp)
 			default:
 				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
-			query.WriteByte('\n')
+			query.WriteString(" )\n")
 		}
-		query.WriteString(")\n")
+		query.WriteString("\t)\n")
 	}
 	query.WriteString("ORDER BY `timestamp`")
 
