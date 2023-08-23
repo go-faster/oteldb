@@ -21,7 +21,7 @@ var _ logqlengine.Querier = (*YQLQuerier)(nil)
 
 // Сapabilities defines storage capabilities.
 func (q *YQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
-	caps.Label.Add(logql.OpEq, logql.OpNotEq)
+	caps.Label.Add(logql.OpEq, logql.OpNotEq, logql.OpRe)
 	return caps
 }
 
@@ -46,11 +46,28 @@ func (q *YQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Time
 	}()
 
 	var query strings.Builder
-	fmt.Fprintf(&query, "use %s;\nSELECT * FROM %#q WHERE (`timestamp` >= %d AND `timestamp` <= %d)", q.clusterName, table, start, end)
+	// Set cluster to use.
+	fmt.Fprintf(&query, "use %s;\n", q.clusterName)
+
+	// Precompile regexps.
+	for matcherIdx, m := range params.Labels {
+		if m.Op.IsRegex() {
+			// Note that Re2::Match is used, instead of Re2::Grep.
+			//
+			// Re2::Match(<pattern>) effectively the same as Re2::Grep("^"+<pattern>+"$"), i.e.
+			// regexp should match whole string.
+			//
+			// See https://ytsaurus.tech/docs/en/yql/udf/list/pire#match
+			// See https://ytsaurus.tech/docs/en/yql/udf/list/re2#match
+			fmt.Fprintf(&query, "$matcher_%d = Re2::Match(%q);\n", matcherIdx, m.Re)
+		}
+	}
+
+	fmt.Fprintf(&query, "SELECT * FROM %#q WHERE (`timestamp` >= %d AND `timestamp` <= %d)\n", table, start, end)
 	// Preallocate path buffer.
 	yp := make([]byte, 0, 32)
-	for _, m := range params.Labels {
-		query.WriteString(" AND (")
+	for matcherIdx, m := range params.Labels {
+		query.WriteString("\tAND (")
 
 		yp = append(yp[:0], '/')
 		yp = append(yp, m.Label...)
@@ -61,7 +78,7 @@ func (q *YQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Time
 			"resource_attrs",
 		} {
 			if i != 0 {
-				query.WriteString(" OR ")
+				query.WriteString("\t\tOR ")
 			}
 
 			switch m.Op {
@@ -69,11 +86,14 @@ func (q *YQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Time
 				fmt.Fprintf(&query, "Yson::ConvertToString(Yson::YPath(%s, %q)) = %q", column, yp, m.Value)
 			case logql.OpNotEq:
 				fmt.Fprintf(&query, "Yson::ConvertToString(Yson::YPath(%s, %q)) != %q", column, yp, m.Value)
+			case logql.OpRe:
+				fmt.Fprintf(&query, "$matcher_%d(Yson::ConvertToString(Yson::YPath(%s, %q)))", matcherIdx, column, yp)
 			default:
 				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
+			query.WriteByte('\n')
 		}
-		query.WriteByte(')')
+		query.WriteString(")\n")
 	}
 	query.WriteString("ORDER BY `timestamp`")
 
