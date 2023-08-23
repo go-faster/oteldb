@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/app"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/app"
-
+	"github.com/go-faster/oteldb/internal/httpmiddleware"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokiproxy"
 	"github.com/go-faster/oteldb/internal/promapi"
@@ -29,7 +29,7 @@ type service struct {
 	addr      string
 	name      string
 	handler   http.Handler
-	findRoute RouteFinder
+	findRoute httpmiddleware.RouteFinder
 }
 
 func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
@@ -63,6 +63,16 @@ func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error 
 		return nil
 	})
 	return g.Wait()
+}
+
+// ServiceMiddleware is a generic middleware for any service.
+func ServiceMiddleware(s service, lg *zap.Logger, m *app.Metrics) http.Handler {
+	return httpmiddleware.Wrap(
+		s.handler,
+		httpmiddleware.InjectLogger(lg),
+		httpmiddleware.LogRequests(s.findRoute),
+		httpmiddleware.Instrument(s.name, s.findRoute, m),
+	)
 }
 
 type services struct {
@@ -117,7 +127,7 @@ func (s *services) Prometheus(m *app.Metrics) error {
 		addr:      addr,
 		name:      strings.ToLower(prefix),
 		handler:   server,
-		findRoute: makeRouteFinder[promapi.Route](server),
+		findRoute: httpmiddleware.MakeRouteFinder[promapi.Route](server),
 	})
 }
 
@@ -157,7 +167,7 @@ func (s *services) Loki(m *app.Metrics) error {
 		addr:      addr,
 		name:      strings.ToLower(prefix),
 		handler:   server,
-		findRoute: makeRouteFinder[lokiapi.Route](server),
+		findRoute: httpmiddleware.MakeRouteFinder[lokiapi.Route](server),
 	})
 }
 
@@ -197,7 +207,7 @@ func (s *services) Pyroscope(m *app.Metrics) error {
 		addr:      addr,
 		name:      strings.ToLower(prefix),
 		handler:   server,
-		findRoute: makeRouteFinder[pyroscopeapi.Route](server),
+		findRoute: httpmiddleware.MakeRouteFinder[pyroscopeapi.Route](server),
 	})
 }
 
@@ -237,7 +247,7 @@ func (s *services) Tempo(m *app.Metrics) error {
 		addr:      addr,
 		name:      strings.ToLower(prefix),
 		handler:   server,
-		findRoute: makeRouteFinder[tempoapi.Route](server),
+		findRoute: httpmiddleware.MakeRouteFinder[tempoapi.Route](server),
 	})
 }
 
