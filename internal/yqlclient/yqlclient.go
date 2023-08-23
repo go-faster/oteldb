@@ -45,6 +45,9 @@ func (opts *ClientOptions) setDefaults() {
 	if opts.TracerProvider == nil {
 		opts.TracerProvider = otel.GetTracerProvider()
 	}
+	if opts.MeterProvider == nil {
+		opts.MeterProvider = otel.GetMeterProvider()
+	}
 }
 
 type securitySource struct {
