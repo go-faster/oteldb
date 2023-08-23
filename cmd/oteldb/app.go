@@ -3,16 +3,15 @@ package main
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/go-faster/errors"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/go-faster/errors"
-
+	"github.com/go-faster/oteldb/internal/httpmiddleware"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -86,17 +85,15 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 }
 
 func addOgen[
-	R interface {
-		OperationID() string
-	},
+	R httpmiddleware.OgenRoute,
 	Server interface {
-		FindPath(string, *url.URL) (R, bool)
+		httpmiddleware.OgenServer[R]
 		http.Handler
 	},
 ](
 	app *App,
 	name string,
-	s Server,
+	server Server,
 	defaultPort string,
 ) {
 	lg := app.lg.Named(name)
@@ -106,15 +103,21 @@ func addOgen[
 		addr = defaultPort
 	}
 
-	httpServer := &http.Server{
-		Addr:              addr,
-		Handler:           instrumentHTTP(s, s.FindPath, lg, app.metrics),
-		ReadHeaderTimeout: 15 * time.Second,
-	}
-
 	app.services[name] = func(ctx context.Context) error {
 		lg := lg.With(zap.String("addr", addr))
 		lg.Info("Starting HTTP server")
+
+		routeFinder := httpmiddleware.MakeRouteFinder(server)
+		httpServer := &http.Server{
+			Addr: addr,
+			Handler: httpmiddleware.Wrap(
+				server,
+				httpmiddleware.InjectLogger(lg),
+				httpmiddleware.LogRequests(routeFinder),
+				httpmiddleware.Instrument("oteldb", routeFinder, app.metrics),
+			),
+			ReadHeaderTimeout: 15 * time.Second,
+		}
 
 		parentCtx := ctx
 		g, ctx := errgroup.WithContext(ctx)
