@@ -113,6 +113,9 @@ func runTest(
 			entries int
 		}{
 			{`{http_method="GET"}`, 21},
+			{`{http_method=~".*GET.*"}`, 21},
+			{`{http_method=~"^GET$"}`, 21},
+			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS"}`, 21},
 			{`{http_method="HEAD"}`, 22},
 			{`{http_method="DELETE"}`, 20},
 			{`{http_method="PUT"}`, 20},
