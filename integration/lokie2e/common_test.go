@@ -108,20 +108,33 @@ func runTest(
 		}
 	})
 	t.Run("LogQueries", func(t *testing.T) {
+		// Example JQ expression to make testdata queries:
+		//
+		// 	.resourceLogs[].scopeLogs[].logRecords[]
+		// 		| .body.stringValue
+		// 		| fromjson
+		// 		| select(.method=="GET")
+		//
 		tests := []struct {
 			query   string
 			entries int
 		}{
+			// Effectively match GET.
 			{`{http_method="GET"}`, 21},
 			{`{http_method=~".*GET.*"}`, 21},
 			{`{http_method=~"^GET$"}`, 21},
-			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS"}`, 21},
+			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
+			// Try other methods.
 			{`{http_method="HEAD"}`, 22},
 			{`{http_method="DELETE"}`, 20},
 			{`{http_method="PUT"}`, 20},
 			{`{http_method="POST"}`, 21},
 			{`{http_method="PATCH"}`, 19},
 			{`{http_method="GET"} | json`, 21},
+			// Multiple lables.
+			{`{http_method="HEAD",http_status="500"}`, 2},
+			{`{http_method="HEAD",http_status=~"^500$"}`, 2},
+			{`{http_method=~".*HEAD.*",http_status=~"^500$"}`, 2},
 			// IP filter.
 			{`{http_method="HEAD"} | json | host = "236.7.233.166"`, 1},
 			{`{http_method="HEAD"} | json | host == ip("236.7.233.166")`, 1},
