@@ -119,6 +119,7 @@ func runTest(
 			query   string
 			entries int
 		}{
+			// Label matchers.
 			// Effectively match GET.
 			{`{http_method="GET"}`, 21},
 			{`{http_method=~".*GET.*"}`, 21},
@@ -139,11 +140,38 @@ func runTest(
 			{`{http_method="HEAD",http_status="500"}`, 2},
 			{`{http_method="HEAD",http_status=~"^500$"}`, 2},
 			{`{http_method=~".*HEAD.*",http_status=~"^500$"}`, 2},
-			// IP filter.
+
+			// Line filter.
+			{`{http_method=~".+"} |= "\"method\": \"GET\""`, 21},
+			{`{http_method=~".+"} |= "\"method\": \"DELETE\""`, 20},
+			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
+			{`{http_method=~".+"} |~ "\"method\":\\s*\"DELETE\""`, 20},
+			{`{http_method=~".+"} |~ "\"method\":\\s*\"HEAD\"" |= "\"status\":500"`, 2},
+			// Negative line matcher.
+			{`{http_method=~".+"} != "\"method\": \"HEAD\""`, len(set.Records) - 22},
+			{`{http_method=~".+"} !~ "\"method\":\\s*\"HEAD\""`, len(set.Records) - 22},
+			// IP line filter.
+			{`{http_method="HEAD"} |= ip("236.7.233.166")`, 1},
+
+			// Label filter.
+			{`{http_method=~".+"} | http_method = "GET"}`, 21},
+			{`{http_method=~".+"} | http_method = "HEAD", http_status = "500"}`, 2},
+			// Number of lines per protocol.
+			//
+			// 	"HTTP/1.0" 55
+			// 	"HTTP/1.1" 38
+			// 	"HTTP/2.0" 30
+			//
+			{`{http_method=~".+"} | json | protocol = "HTTP/1.0"`, 55},
+			{`{http_method=~".+"} | json | protocol =~ "HTTP/1.\\d"`, 55 + 38},
+			{`{http_method=~".+"} | json | protocol != "HTTP/2.0"`, 55 + 38},
+			{`{http_method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 38},
+			// IP label filter.
 			{`{http_method="HEAD"} | json | host = "236.7.233.166"`, 1},
 			{`{http_method="HEAD"} | json | host == ip("236.7.233.166")`, 1},
 			{`{http_method="HEAD"} | json | host == ip("236.7.233.0/24")`, 1},
 			{`{http_method="HEAD"} | json | host == ip("236.7.233.0-236.7.233.255")`, 1},
+
 			// Sure empty queries.
 			{`{http_method="GET"} | json | http_method != "GET"`, 0},
 			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},

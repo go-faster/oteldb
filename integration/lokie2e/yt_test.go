@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"go.uber.org/zap/zaptest"
-	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
@@ -53,11 +51,9 @@ func TestYT(t *testing.T) {
 	endpoint, err := ytContainer.Endpoint(ctx, "")
 	require.NoError(t, err, "container endpoint")
 
-	log := zaptest.NewLogger(t)
 	yc, err := ythttp.NewClient(&yt.Config{
 		Proxy:                 endpoint,
 		DisableProxyDiscovery: true,
-		Logger:                &ytzap.Logger{L: log.Named("yc")},
 	})
 	require.NoError(t, err)
 
@@ -99,12 +95,10 @@ func TestYTYQL(t *testing.T) {
 
 	ctx := context.Background()
 
-	log := zaptest.NewLogger(t)
 	yc, err := ythttp.NewClient(&yt.Config{
 		Proxy:                 endpoint,
 		Token:                 token,
 		DisableProxyDiscovery: true,
-		Logger:                &ytzap.Logger{L: log.Named("yc")},
 	})
 	require.NoError(t, err)
 
