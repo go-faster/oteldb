@@ -13,7 +13,7 @@ import (
 
 // ReadResult reads result of given query ID.
 func ReadResult[T any](ctx context.Context, c *Client, queryID ytqueryapi.QueryID, format ResultFormat[T]) (iterators.Iterator[T], error) {
-	data, err := c.client.ReadQueryResult(ctx, ytqueryapi.ReadQueryResultParams{
+	data, err := c.raw.ReadQueryResult(ctx, ytqueryapi.ReadQueryResultParams{
 		QueryID:      queryID,
 		OutputFormat: format.Format(),
 	})

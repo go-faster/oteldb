@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/ogen-go/ogen/ogenerrors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/multierr"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/yqlclient/ytqueryapi"
@@ -20,7 +22,7 @@ import (
 
 // Client is a YQL client.
 type Client struct {
-	client *ytqueryapi.Client
+	raw    *ytqueryapi.Client
 	tracer trace.Tracer
 }
 
@@ -78,14 +80,14 @@ func NewClient(proxyURL string, opts ClientOptions) (*Client, error) {
 	}
 
 	return &Client{
-		client: client,
+		raw:    client,
 		tracer: otel.Tracer("yqlclient"),
 	}, nil
 }
 
 // RawClient returns raw client.
 func (c *Client) RawClient() *ytqueryapi.Client {
-	return c.client
+	return c.raw
 }
 
 // ExecuteQueryParams sets ExecuteQuery parameters.
@@ -116,7 +118,7 @@ func (c *Client) abortQuery(queryID ytqueryapi.QueryID, timeout time.Duration) e
 	abortCtx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	if err := c.client.AbortQuery(abortCtx, ytqueryapi.AbortQueryParams{QueryID: queryID}); err != nil {
+	if err := c.raw.AbortQuery(abortCtx, ytqueryapi.AbortQueryParams{QueryID: queryID}); err != nil {
 		return errors.Wrapf(err, "abort query %s", queryID)
 	}
 	return nil
@@ -137,8 +139,9 @@ func (c *Client) ExecuteQuery(ctx context.Context, q string, params ExecuteQuery
 		}
 		span.End()
 	}()
+	lg := zctx.From(ctx)
 
-	started, err := c.client.StartQuery(ctx, ytqueryapi.StartQueryParams{
+	started, err := c.raw.StartQuery(ctx, ytqueryapi.StartQueryParams{
 		Query:  q,
 		Engine: params.Engine,
 	})
@@ -146,8 +149,13 @@ func (c *Client) ExecuteQuery(ctx context.Context, q string, params ExecuteQuery
 		return queryID, errors.Wrap(err, "start query")
 	}
 	queryID = started.QueryID
+
 	span.SetAttributes(attribute.String("yt.query_id", string(queryID)))
 	span.AddEvent("QueryStarted")
+	lg.Debug("Started query",
+		zap.String("yt.query_id", string(queryID)),
+		zap.String("yt.engine", string(params.Engine)),
+	)
 
 	t := time.NewTicker(params.PollInterval)
 	defer t.Stop()
@@ -160,10 +168,15 @@ func (c *Client) ExecuteQuery(ctx context.Context, q string, params ExecuteQuery
 				c.abortQuery(queryID, params.AbortTimeout),
 			)
 		case <-t.C:
-			status, err := c.client.GetQuery(ctx, ytqueryapi.GetQueryParams{QueryID: queryID})
+			status, err := c.raw.GetQuery(ctx, ytqueryapi.GetQueryParams{QueryID: queryID})
 			if err != nil {
-				return queryID, errors.Wrapf(err, "get query %s status", queryID)
+				lg.Error("Can't get query status",
+					zap.String("yt.query_id", string(queryID)),
+					zap.Error(err),
+				)
+				continue
 			}
+			lg.Debug("Got query status", zap.String("yt.query_state", string(status.State)))
 
 			switch status.State {
 			case ytqueryapi.OperationStateAborted:
