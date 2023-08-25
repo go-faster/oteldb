@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"golang.org/x/exp/maps"
@@ -133,6 +134,26 @@ func (l *LabelSet) GetString(name logql.Label) (string, bool) {
 		return v.AsString(), true
 	}
 	return "", false
+}
+
+// GetFloat returns number attr value.
+func (l *LabelSet) GetFloat(name logql.Label) (_ float64, ok bool, err error) {
+	v, ok := l.Get(name)
+	if !ok {
+		return 0, false, nil
+	}
+	switch t := v.Type(); t {
+	case pcommon.ValueTypeStr:
+		v, err := strconv.ParseFloat(v.Str(), 64)
+		return v, true, err
+	case pcommon.ValueTypeInt:
+		// TODO(tdakkota): check for overflow.
+		return float64(v.Int()), true, nil
+	case pcommon.ValueTypeDouble:
+		return v.Double(), true, nil
+	default:
+		return 0, false, errors.Errorf("can't convert %q to float", t)
+	}
 }
 
 // SetError sets special error label.

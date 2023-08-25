@@ -3,7 +3,6 @@ package logqlengine
 import (
 	"fmt"
 	"net/netip"
-	"strconv"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -162,7 +161,6 @@ func buildDurationLabelFilter(pred *logql.DurationFilter) (Processor, error) {
 
 // Process implements Processor.
 func (lf *DurationLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
-	// FIXME(tdakkota): try to check value type.
 	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
@@ -225,7 +223,6 @@ func buildBytesLabelFilter(pred *logql.BytesFilter) (Processor, error) {
 
 // Process implements Processor.
 func (lf *BytesLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
-	// FIXME(tdakkota): try to check value type.
 	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
@@ -288,21 +285,18 @@ func buildNumberLabelFilter(pred *logql.NumberFilter) (Processor, error) {
 
 // Process implements Processor.
 func (lf *NumberLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
-	// FIXME(tdakkota): try to check value type.
-	v, ok := set.GetString(lf.name)
-	if !ok {
-		return "", false
-	}
-
-	labelValue, err := strconv.ParseFloat(v, 64)
-	if err != nil {
+	switch val, ok, err := set.GetFloat(lf.name); {
+	case err != nil:
 		// Keep the line, but set error label.
 		set.SetError("number parsing error", err)
 		return line, true
+	case !ok:
+		// No such label, skip the line.
+		return "", false
+	default:
+		keep = lf.cmp.Compare(val, lf.value)
+		return line, keep
 	}
-
-	keep = lf.cmp.Compare(labelValue, lf.value)
-	return line, keep
 }
 
 // IPLabelFilter is a label filter Processor.
