@@ -221,6 +221,28 @@ var tests = []TestCase{
 		false,
 	},
 
+	// Comments.
+	{
+		`
+# foo
+
+10`,
+		[]Token{
+			{Type: Number, Text: "10"},
+		},
+		false,
+	},
+	{
+		`
+# foo
+# bar
+10`,
+		[]Token{
+			{Type: Number, Text: "10"},
+		},
+		false,
+	},
+
 	// Invalid number.
 	{`0xy`, nil, true},
 }
