@@ -27,6 +27,10 @@ func newLabelSet() LabelSet {
 	}
 }
 
+func (l *LabelSet) allowDots() bool {
+	return true
+}
+
 // AsLokiAPI returns lokiapi.LabelSet
 func (l *LabelSet) AsLokiAPI() lokiapi.LabelSet {
 	return lokiapi.LabelSet(l.AsMap())
@@ -94,7 +98,7 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) {
 			continue
 		}
 		m.Range(func(k string, v pcommon.Value) bool {
-			if err := logql.IsValidLabel(k, true); err != nil {
+			if err := logql.IsValidLabel(k, l.allowDots()); err != nil {
 				l.SetError("record extraction", err)
 				return false
 			}
