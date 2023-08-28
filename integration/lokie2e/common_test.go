@@ -172,6 +172,11 @@ func runTest(
 			{`{http_method="HEAD"} | json | host == ip("236.7.233.0/24")`, 1},
 			{`{http_method="HEAD"} | json | host == ip("236.7.233.0-236.7.233.255")`, 1},
 
+			// Distinct filter.
+			{`{http_method=~".+"} | distinct http_method`, 6},
+			{`{http_method=~".+"} | json | distinct method`, 6},
+			{`{http_method=~".+"} | json | distinct protocol`, 3},
+
 			// Sure empty queries.
 			{`{http_method="GET"} | json | http_method != "GET"`, 0},
 			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
