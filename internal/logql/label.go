@@ -18,7 +18,7 @@ func IsValidLabel[S ~string | ~[]byte](s S, allowDot bool) error {
 		return errors.New("label name cannot be empty")
 	}
 	if r := s[0]; !(isLetter(rune(r)) || r == '_') {
-		return errors.Errorf("invalid label name character %q at 0", r)
+		return errors.Errorf("invalid label name character %[1]q (%[1]U) at 0", r)
 	}
 	for i, r := range string(s) {
 		if isLetter(r) ||
@@ -27,7 +27,7 @@ func IsValidLabel[S ~string | ~[]byte](s S, allowDot bool) error {
 			(allowDot && r == '.') {
 			continue
 		}
-		return errors.Errorf("invalid label name character %q at %d", r, i)
+		return errors.Errorf("invalid label name character %[1]q (%[1]U) at %[2]d", r, i)
 	}
 	return nil
 }
