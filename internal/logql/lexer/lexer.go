@@ -62,8 +62,22 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 }
 
 func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
-	tok.Text = text
 	tok.Pos = l.scanner.Position
+	if r == '-' {
+		switch peekCh := l.scanner.Peek(); {
+		case isDigit(peekCh) || peekCh == '.':
+			// Negative numeric.
+			r = l.scanner.Scan()
+			text = "-" + l.scanner.TokenText()
+		case peekCh == '-':
+			// Parser flag.
+			tok.Type = ParserFlag
+			tok.Text = scanFlag(&l.scanner, text)
+			return tok, nil
+		}
+	}
+	tok.Text = text
+
 	switch r {
 	case scanner.Int, scanner.Float:
 		switch r := l.scanner.Peek(); {
@@ -152,6 +166,21 @@ func isBytesRune(r rune) bool {
 	default:
 		return false
 	}
+}
+
+func scanFlag(s *scanner.Scanner, prefix string) string {
+	var sb strings.Builder
+	sb.WriteString(prefix)
+
+	for {
+		ch := s.Peek()
+		if !unicode.IsLetter(ch) && ch != '-' {
+			break
+		}
+		sb.WriteRune(ch)
+		s.Next()
+	}
+	return sb.String()
 }
 
 func scanComment(s *scanner.Scanner) {

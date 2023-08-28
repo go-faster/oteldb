@@ -154,6 +154,8 @@ const (
 	BytesConv
 	DurationConv
 	DurationSecondsConv
+
+	ParserFlag
 )
 
 var tokens = map[string]TokenType{

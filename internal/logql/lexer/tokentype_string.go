@@ -97,11 +97,12 @@ func _() {
 	_ = x[BytesConv-86]
 	_ = x[DurationConv-87]
 	_ = x[DurationSecondsConv-88]
+	_ = x[ParserFlag-89]
 }
 
-const _TokenType_name = "InvalidEOFIdentStringNumberDurationBytesCommaDotOpenBraceCloseBraceEqNotEqReNotRePipeExactPipeMatchPipeUnwrapOpenParenCloseParenByWithoutBoolOpenBracketCloseBracketOffsetOnIgnoringGroupLeftGroupRightOrAndUnlessAddSubMulDivModPowCmpEqGtGteLtLteJSONRegexpLogfmtUnpackPatternLabelFormatLineFormatIPDecolorizeDistinctDropKeepRangeRateRateCounterCountOverTimeBytesRateBytesOverTimeAvgOverTimeSumOverTimeMinOverTimeMaxOverTimeStdvarOverTimeStddevOverTimeQuantileOverTimeFirstOverTimeLastOverTimeAbsentOverTimeVectorSumAvgMaxMinCountStddevStdvarBottomkTopkSortSortDescLabelReplaceBytesConvDurationConvDurationSecondsConv"
+const _TokenType_name = "InvalidEOFIdentStringNumberDurationBytesCommaDotOpenBraceCloseBraceEqNotEqReNotRePipeExactPipeMatchPipeUnwrapOpenParenCloseParenByWithoutBoolOpenBracketCloseBracketOffsetOnIgnoringGroupLeftGroupRightOrAndUnlessAddSubMulDivModPowCmpEqGtGteLtLteJSONRegexpLogfmtUnpackPatternLabelFormatLineFormatIPDecolorizeDistinctDropKeepRangeRateRateCounterCountOverTimeBytesRateBytesOverTimeAvgOverTimeSumOverTimeMinOverTimeMaxOverTimeStdvarOverTimeStddevOverTimeQuantileOverTimeFirstOverTimeLastOverTimeAbsentOverTimeVectorSumAvgMaxMinCountStddevStdvarBottomkTopkSortSortDescLabelReplaceBytesConvDurationConvDurationSecondsConvParserFlag"
 
-var _TokenType_index = [...]uint16{0, 7, 10, 15, 21, 27, 35, 40, 45, 48, 57, 67, 69, 74, 76, 81, 90, 99, 103, 109, 118, 128, 130, 137, 141, 152, 164, 170, 172, 180, 189, 199, 201, 204, 210, 213, 216, 219, 222, 225, 228, 233, 235, 238, 240, 243, 247, 253, 259, 265, 272, 283, 293, 295, 305, 313, 317, 321, 326, 330, 341, 354, 363, 376, 387, 398, 409, 420, 434, 448, 464, 477, 489, 503, 509, 512, 515, 518, 521, 526, 532, 538, 545, 549, 553, 561, 573, 582, 594, 613}
+var _TokenType_index = [...]uint16{0, 7, 10, 15, 21, 27, 35, 40, 45, 48, 57, 67, 69, 74, 76, 81, 90, 99, 103, 109, 118, 128, 130, 137, 141, 152, 164, 170, 172, 180, 189, 199, 201, 204, 210, 213, 216, 219, 222, 225, 228, 233, 235, 238, 240, 243, 247, 253, 259, 265, 272, 283, 293, 295, 305, 313, 317, 321, 326, 330, 341, 354, 363, 376, 387, 398, 409, 420, 434, 448, 464, 477, 489, 503, 509, 512, 515, 518, 521, 526, 532, 538, 545, 549, 553, 561, 573, 582, 594, 613, 623}
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {

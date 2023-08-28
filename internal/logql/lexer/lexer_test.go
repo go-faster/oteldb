@@ -23,6 +23,13 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`-3h`,
+		[]Token{
+			{Type: Duration, Text: "-3h"},
+		},
+		false,
+	},
+	{
 		`3h2m1.99s`,
 		[]Token{
 			{Type: Duration, Text: "3h2m1.99s"},
@@ -51,6 +58,13 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`-10`,
+		[]Token{
+			{Type: Number, Text: "-10"},
+		},
+		false,
+	},
+	{
 		`10.5`,
 		[]Token{
 			{Type: Number, Text: "10.5"},
@@ -58,9 +72,23 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`-10.5`,
+		[]Token{
+			{Type: Number, Text: "-10.5"},
+		},
+		false,
+	},
+	{
 		`.5`,
 		[]Token{
 			{Type: Number, Text: ".5"},
+		},
+		false,
+	},
+	{
+		`-.5`,
+		[]Token{
+			{Type: Number, Text: "-.5"},
 		},
 		false,
 	},
@@ -82,6 +110,21 @@ var tests = []TestCase{
 		`.5kb`,
 		[]Token{
 			{Type: Bytes, Text: ".5kb"},
+		},
+		false,
+	},
+	{
+		`--foo`,
+		[]Token{
+			{Type: ParserFlag, Text: "--foo"},
+		},
+		false,
+	},
+	{
+		`--flag --foo-bar-baz`,
+		[]Token{
+			{Type: ParserFlag, Text: "--flag"},
+			{Type: ParserFlag, Text: "--foo-bar-baz"},
 		},
 		false,
 	},
