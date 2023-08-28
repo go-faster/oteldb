@@ -35,8 +35,12 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 
 	for {
 		r := l.scanner.Scan()
-		if r == scanner.EOF {
+		switch r {
+		case scanner.EOF:
 			return l.tokens, l.err
+		case '#':
+			scanComment(&l.scanner)
+			continue
 		}
 
 		tok, err := l.nextToken(r, l.scanner.TokenText())
@@ -140,4 +144,13 @@ func isAttributeRune(r rune) bool {
 
 func isDigit(r rune) bool {
 	return r >= '0' && r <= '9'
+}
+
+func scanComment(s *scanner.Scanner) {
+	for {
+		ch := s.Next()
+		if ch == scanner.EOF || ch == '\n' {
+			break
+		}
+	}
 }

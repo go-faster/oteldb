@@ -189,6 +189,27 @@ var tests = []TestCase{
 		},
 		false,
 	},
+
+	{
+		`
+# foo
+
+10`,
+		[]Token{
+			{Type: Integer, Text: "10"},
+		},
+		false,
+	},
+	{
+		`
+# foo
+# bar
+10`,
+		[]Token{
+			{Type: Integer, Text: "10"},
+		},
+		false,
+	},
 }
 
 func TestTokenize(t *testing.T) {
