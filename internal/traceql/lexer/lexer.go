@@ -52,15 +52,15 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 }
 
 func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
+	tok.Pos = l.scanner.Position
 	if r == '-' {
 		if peekCh := l.scanner.Peek(); isDigit(peekCh) || peekCh == '.' {
 			r = l.scanner.Scan()
 			text = "-" + l.scanner.TokenText()
 		}
 	}
-
 	tok.Text = text
-	tok.Pos = l.scanner.Position
+
 	switch r {
 	case scanner.Float:
 		switch r := l.scanner.Peek(); {
