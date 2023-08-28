@@ -13,14 +13,14 @@ const (
 )
 
 // IsValidLabel validates label name.
-func IsValidLabel(s string, allowDot bool) error {
-	if s == "" {
+func IsValidLabel[S ~string | ~[]byte](s S, allowDot bool) error {
+	if len(s) == 0 {
 		return errors.New("label name cannot be empty")
 	}
 	if r := s[0]; !(isLetter(rune(r)) || r == '_') {
 		return errors.Errorf("invalid label name character %q at 0", r)
 	}
-	for i, r := range s {
+	for i, r := range string(s) {
 		if isLetter(r) ||
 			(r >= '0' && r <= '9') ||
 			r == '_' ||
@@ -32,6 +32,6 @@ func IsValidLabel(s string, allowDot bool) error {
 	return nil
 }
 
-func isLetter(r rune) bool {
+func isLetter[R rune | byte](r R) bool {
 	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
 }
