@@ -43,6 +43,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Get Go environment
+        id: go-env
+        shell: bash
+        run: |
+          echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
+          echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
+
+      - name: Set up cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.cache }}
+            ${{ env.modcache }}
+          key: codeql-${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            codeql-${{ runner.os }}-${{ runner.arch }}-go-
+
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
