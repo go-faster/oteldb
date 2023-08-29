@@ -225,6 +225,10 @@ func TestTokenizeErrors(t *testing.T) {
 			`{"foo"=~"\x"}`,
 			`at test.ql:1:9: unquote string: invalid syntax`,
 		},
+		{
+			`0ee1`,
+			`at test.ql:1:1: exponent has no digits`,
+		},
 	}
 	for i, tt := range tests {
 		tt := tt
