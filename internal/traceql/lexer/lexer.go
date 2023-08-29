@@ -2,12 +2,11 @@
 package lexer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"text/scanner"
 	"unicode"
-
-	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/durationql"
 )
@@ -30,7 +29,7 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 	l.scanner.Init(strings.NewReader(s))
 	l.scanner.Filename = opts.Filename
 	l.scanner.Error = func(s *scanner.Scanner, msg string) {
-		l.err = errors.Errorf("scanner error: %s", msg)
+		l.setError(msg, l.scanner.Position)
 	}
 
 	for {
@@ -43,15 +42,22 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 			continue
 		}
 
-		tok, err := l.nextToken(r, l.scanner.TokenText())
-		if err != nil {
-			return l.tokens, err
+		tok, ok := l.nextToken(r, l.scanner.TokenText())
+		if !ok {
+			return l.tokens, l.err
 		}
 		l.tokens = append(l.tokens, tok)
 	}
 }
 
-func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
+func (l *lexer) setError(msg string, pos scanner.Position) {
+	l.err = &Error{
+		Msg: msg,
+		Pos: pos,
+	}
+}
+
+func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	tok.Pos = l.scanner.Position
 	if r == '-' {
 		if peekCh := l.scanner.Peek(); isDigit(peekCh) || peekCh == '.' {
@@ -65,25 +71,40 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 	case scanner.Float:
 		switch r := l.scanner.Peek(); {
 		case durationql.IsDurationRune(r):
+			duration, err := durationql.ScanDuration(&l.scanner, text)
+			if err != nil {
+				l.setError(err.Error(), tok.Pos)
+				return tok, false
+			}
 			tok.Type = Duration
-			tok.Text, err = durationql.ScanDuration(&l.scanner, text)
+			tok.Text = duration
 		default:
 			tok.Type = Number
 		}
-		return tok, err
+		return tok, true
 	case scanner.Int:
 		switch r := l.scanner.Peek(); {
 		case durationql.IsDurationRune(r):
+			duration, err := durationql.ScanDuration(&l.scanner, text)
+			if err != nil {
+				l.setError(err.Error(), tok.Pos)
+				return tok, false
+			}
 			tok.Type = Duration
-			tok.Text, err = durationql.ScanDuration(&l.scanner, text)
+			tok.Text = duration
 		default:
 			tok.Type = Integer
 		}
-		return tok, err
+		return tok, true
 	case scanner.String, scanner.RawString:
+		unquoted, err := strconv.Unquote(text)
+		if err != nil {
+			l.setError(fmt.Sprintf("unquote string: %s", err), tok.Pos)
+			return tok, false
+		}
 		tok.Type = String
-		tok.Text, err = strconv.Unquote(text)
-		return tok, err
+		tok.Text = unquoted
+		return tok, true
 	}
 	peekCh := l.scanner.Peek()
 	switch text {
@@ -107,7 +128,7 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 
 		tok.Type = Ident
 		tok.Text = sb.String()
-		return tok, err
+		return tok, true
 	}
 	peeked := text + string(peekCh)
 
@@ -116,17 +137,17 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 		tok.Type = tt
 		tok.Text = peeked
 		l.scanner.Next()
-		return tok, nil
+		return tok, true
 	}
 
 	tt, ok = tokens[text]
 	if ok {
 		tok.Type = tt
-		return tok, nil
+		return tok, true
 	}
 
 	tok.Type = Ident
-	return tok, nil
+	return tok, true
 }
 
 func isAttributeRune(r rune) bool {
