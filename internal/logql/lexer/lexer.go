@@ -70,21 +70,12 @@ func (l *lexer) setError(msg string, pos scanner.Position) {
 
 func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	tok.Pos = l.scanner.Position
-	if r == '-' {
-		switch peekCh := l.scanner.Peek(); {
-		case isDigit(peekCh) || peekCh == '.':
-			// Negative numeric.
-			r = l.scanner.Scan()
-			text = "-" + l.scanner.TokenText()
-		case peekCh == '-':
-			// Parser flag.
-			tok.Type = ParserFlag
-			tok.Text = scanFlag(&l.scanner, text)
-			return tok, true
-		}
-	}
 	tok.Text = text
-
+	if r == '-' && l.scanner.Peek() == '-' {
+		tok.Type = ParserFlag
+		tok.Text = scanFlag(&l.scanner, text)
+		return tok, true
+	}
 	switch r {
 	case scanner.Int, scanner.Float:
 		switch r := l.scanner.Peek(); {
