@@ -13,23 +13,60 @@ import (
 func TestLogfmtExtractor(t *testing.T) {
 	tests := []struct {
 		input         string
-		extract       []logql.Label
+		labels        []logql.Label
+		exprs         []logql.LabelExtractionExpr
 		expectLabels  map[logql.Label]pcommon.Value
 		wantFilterErr bool
 	}{
-		{``, nil, nil, false},
-		{``, []logql.Label{"foo"}, nil, false},
-		{`bar=10`, []logql.Label{"foo"}, nil, false},
+		{``, nil, nil, nil, false},
+		{``, []logql.Label{"foo"}, nil, nil, false},
+		{`bar=10`, []logql.Label{"foo"}, nil, nil, false},
 		{
 			`foo=extract bar=not_extract`,
 			[]logql.Label{"foo"},
+			nil,
 			map[logql.Label]pcommon.Value{
 				"foo": pcommon.NewValueStr("extract"),
 			},
 			false,
 		},
 		{
+			`foo=extract bar=not_extract`,
+			nil,
+			[]logql.LabelExtractionExpr{
+				{Label: "foo", Expr: "foo"},
+			},
+			map[logql.Label]pcommon.Value{
+				"foo": pcommon.NewValueStr("extract"),
+			},
+			false,
+		},
+		{
+			`foo=extract bar=not_extract`,
+			nil,
+			[]logql.LabelExtractionExpr{
+				{Label: "rename", Expr: `"foo"`},
+			},
+			map[logql.Label]pcommon.Value{
+				"rename": pcommon.NewValueStr("extract"),
+			},
+			false,
+		},
+		{
+			`foo=extract bar=extract_too`,
+			[]logql.Label{"bar"},
+			[]logql.LabelExtractionExpr{
+				{Label: "rename", Expr: `"foo"`},
+			},
+			map[logql.Label]pcommon.Value{
+				"rename": pcommon.NewValueStr("extract"),
+				"bar":    pcommon.NewValueStr("extract_too"),
+			},
+			false,
+		},
+		{
 			`str=str int=10 bool=true`,
+			nil,
 			nil,
 			map[logql.Label]pcommon.Value{
 				"str":  pcommon.NewValueStr("str"),
@@ -39,14 +76,15 @@ func TestLogfmtExtractor(t *testing.T) {
 			false,
 		},
 
-		{`label==`, nil, nil, true},
-		{`label==`, []logql.Label{"label"}, nil, true},
+		{`label==`, nil, nil, nil, true},
+		{`label==`, []logql.Label{"label"}, nil, nil, true},
 	}
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			e, err := buildLogfmtExtractor(&logql.LogfmtExpressionParser{
-				Labels: tt.extract,
+				Labels: tt.labels,
+				Exprs:  tt.exprs,
 			})
 			require.NoError(t, err)
 
