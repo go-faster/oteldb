@@ -285,9 +285,6 @@ var tests = []TestCase{
 		},
 		false,
 	},
-
-	// Invalid number.
-	{`0xy`, nil, true},
 }
 
 func TestTokenize(t *testing.T) {
@@ -306,6 +303,35 @@ func TestTokenize(t *testing.T) {
 				got[i].Pos = scanner.Position{}
 			}
 			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestTokenizeErrors(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr string
+	}{
+		{
+			`10gg`,
+			`at test.ql:1:1: unhandled size name: gg`,
+		},
+		{
+			`10yy`,
+			`at test.ql:1:1: unknown unit "yy" in duration "10yy"`,
+		},
+		{
+			`{"foo"=~"\x"}`,
+			`at test.ql:1:9: unquote string: invalid syntax`,
+		},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			_, err := Tokenize(tt.input, TokenizeOptions{
+				Filename: "test.ql",
+			})
+			require.EqualError(t, err, tt.wantErr)
 		})
 	}
 }

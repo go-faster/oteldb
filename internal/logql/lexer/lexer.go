@@ -2,12 +2,12 @@
 package lexer
 
 import (
+	"fmt"
 	"strings"
 	"text/scanner"
 	"unicode"
 
 	"github.com/dustin/go-humanize"
-	"github.com/go-faster/errors"
 	"github.com/prometheus/prometheus/util/strutil"
 
 	"github.com/go-faster/oteldb/internal/durationql"
@@ -40,7 +40,7 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 		}
 	}
 	l.scanner.Error = func(s *scanner.Scanner, msg string) {
-		l.err = errors.Errorf("scanner error: %s", msg)
+		l.setError(msg, l.scanner.Position)
 	}
 
 	for {
@@ -53,15 +53,22 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 			continue
 		}
 
-		tok, err := l.nextToken(r, l.scanner.TokenText())
-		if err != nil {
-			return l.tokens, err
+		tok, ok := l.nextToken(r, l.scanner.TokenText())
+		if !ok {
+			return l.tokens, l.err
 		}
 		l.tokens = append(l.tokens, tok)
 	}
 }
 
-func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
+func (l *lexer) setError(msg string, pos scanner.Position) {
+	l.err = &Error{
+		Msg: msg,
+		Pos: pos,
+	}
+}
+
+func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	tok.Pos = l.scanner.Position
 	if r == '-' {
 		switch peekCh := l.scanner.Peek(); {
@@ -73,7 +80,7 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 			// Parser flag.
 			tok.Type = ParserFlag
 			tok.Text = scanFlag(&l.scanner, text)
-			return tok, nil
+			return tok, true
 		}
 	}
 	tok.Text = text
@@ -82,20 +89,35 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 	case scanner.Int, scanner.Float:
 		switch r := l.scanner.Peek(); {
 		case durationql.IsDurationRune(r):
+			duration, err := durationql.ScanDuration(&l.scanner, text)
+			if err != nil {
+				l.setError(err.Error(), tok.Pos)
+				return tok, false
+			}
 			tok.Type = Duration
-			tok.Text, err = durationql.ScanDuration(&l.scanner, text)
+			tok.Text = duration
 		case isBytesRune(r):
+			bytes, err := scanBytes(&l.scanner, text)
+			if err != nil {
+				l.setError(err.Error(), tok.Pos)
+				return tok, false
+			}
 			tok.Type = Bytes
-			tok.Text, err = scanBytes(&l.scanner, text)
+			tok.Text = bytes
 		default:
 			tok.Type = Number
 		}
-		return tok, err
+		return tok, true
 	case scanner.String, scanner.RawString:
-		tok.Type = String
 		// FIXME(tdakkota): requires a huge dependency
-		tok.Text, err = strutil.Unquote(text)
-		return tok, err
+		unquoted, err := strutil.Unquote(text)
+		if err != nil {
+			l.setError(fmt.Sprintf("unquote string: %s", err), tok.Pos)
+			return tok, false
+		}
+		tok.Type = String
+		tok.Text = unquoted
+		return tok, true
 	}
 	peekCh := l.scanner.Peek()
 	peeked := text + string(peekCh)
@@ -105,7 +127,7 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 		l.scanner.Next()
 		tok.Type = tt
 		tok.Text = peeked
-		return tok, nil
+		return tok, true
 	}
 
 	tt, ok = tokens[text]
@@ -121,11 +143,11 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, err error) {
 				tok.Type = Ident
 			}
 		}
-		return tok, nil
+		return tok, true
 	}
 
 	tok.Type = Ident
-	return tok, nil
+	return tok, true
 }
 
 func scanSpace(s *scanner.Scanner) {
