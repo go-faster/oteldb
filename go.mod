@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.15.0
 	github.com/go-faster/errors v0.6.1
 	github.com/go-faster/jx v1.1.0
-	github.com/go-faster/sdk v0.8.2
+	github.com/go-faster/sdk v0.9.0
 	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.3.1
@@ -158,17 +158,17 @@ require (
 	go.opentelemetry.io/contrib/propagators/ot v1.17.0 // indirect
 	go.opentelemetry.io/otel/bridge/opencensus v0.39.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.16.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.16.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.39.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.39.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v0.39.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.17.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric v0.40.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.40.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v0.40.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.16.0 // indirect
-	go.opentelemetry.io/otel/exporters/prometheus v0.39.0 // indirect
-	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v0.39.0 // indirect
+	go.opentelemetry.io/otel/exporters/prometheus v0.40.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v0.40.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.16.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v0.39.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v0.40.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.ytsaurus.tech/library/go/blockcodecs v0.0.2 // indirect
 	go.ytsaurus.tech/library/go/core/xerrors v0.0.3 // indirect
