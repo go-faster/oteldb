@@ -1,5 +1,5 @@
-// Package durationql provides utilities to parse duration in *QL languages.
-package durationql
+// Package lexerql provides utilities for lexing in *QL languages.
+package lexerql
 
 import (
 	"strings"
@@ -16,7 +16,7 @@ func ScanDuration(s *scanner.Scanner, number string) (string, error) {
 
 	for {
 		ch := s.Peek()
-		if !isDigit(ch) && !IsDurationRune(ch) && ch != '.' {
+		if !IsDigit(ch) && !IsDurationRune(ch) && ch != '.' {
 			break
 		}
 		sb.WriteRune(ch)
@@ -29,17 +29,13 @@ func ScanDuration(s *scanner.Scanner, number string) (string, error) {
 }
 
 // IsDurationRune returns true, if r is a non-digit rune that could be part of duration.
-func IsDurationRune(r rune) bool {
+func IsDurationRune[R char](r R) bool {
 	switch r {
 	case 'n', 'u', 'µ', 'm', 's', 'h', 'd', 'w', 'y':
 		return true
 	default:
 		return false
 	}
-}
-
-func isDigit(r rune) bool {
-	return r >= '0' && r <= '9'
 }
 
 // ParseDuration parses Prometheus or Go duration

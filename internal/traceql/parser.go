@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-faster/errors"
 
-	"github.com/go-faster/oteldb/internal/durationql"
+	"github.com/go-faster/oteldb/internal/lexerql"
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
 )
 
@@ -111,5 +111,5 @@ func (p *parser) parseDuration() (time.Duration, error) {
 	if err != nil {
 		return 0, err
 	}
-	return durationql.ParseDuration(text)
+	return lexerql.ParseDuration(text)
 }

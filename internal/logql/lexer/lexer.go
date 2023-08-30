@@ -10,7 +10,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/prometheus/prometheus/util/strutil"
 
-	"github.com/go-faster/oteldb/internal/durationql"
+	"github.com/go-faster/oteldb/internal/lexerql"
 )
 
 type lexer struct {
@@ -49,7 +49,7 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 		case scanner.EOF:
 			return l.tokens, l.err
 		case '#':
-			scanComment(&l.scanner)
+			lexerql.ScanComment(&l.scanner)
 			continue
 		}
 
@@ -79,8 +79,8 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	switch r {
 	case scanner.Int, scanner.Float:
 		switch r := l.scanner.Peek(); {
-		case durationql.IsDurationRune(r):
-			duration, err := durationql.ScanDuration(&l.scanner, text)
+		case lexerql.IsDurationRune(r):
+			duration, err := lexerql.ScanDuration(&l.scanner, text)
 			if err != nil {
 				l.setError(err.Error(), tok.Pos)
 				return tok, false
@@ -150,17 +150,13 @@ func scanSpace(s *scanner.Scanner) {
 	}
 }
 
-func isDigit(r rune) bool {
-	return r >= '0' && r <= '9'
-}
-
 func scanBytes(s *scanner.Scanner, number string) (string, error) {
 	var sb strings.Builder
 	sb.WriteString(number)
 
 	for {
 		ch := s.Peek()
-		if !isDigit(ch) && !isBytesRune(ch) && ch != '.' {
+		if !lexerql.IsDigit(ch) && !isBytesRune(ch) && ch != '.' {
 			break
 		}
 		sb.WriteRune(ch)
@@ -194,13 +190,4 @@ func scanFlag(s *scanner.Scanner, prefix string) string {
 		s.Next()
 	}
 	return sb.String()
-}
-
-func scanComment(s *scanner.Scanner) {
-	for {
-		ch := s.Next()
-		if ch == scanner.EOF || ch == '\n' {
-			break
-		}
-	}
 }

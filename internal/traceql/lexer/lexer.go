@@ -8,7 +8,7 @@ import (
 	"text/scanner"
 	"unicode"
 
-	"github.com/go-faster/oteldb/internal/durationql"
+	"github.com/go-faster/oteldb/internal/lexerql"
 )
 
 type lexer struct {
@@ -38,7 +38,7 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 		case scanner.EOF:
 			return l.tokens, l.err
 		case '#':
-			scanComment(&l.scanner)
+			lexerql.ScanComment(&l.scanner)
 			continue
 		}
 
@@ -60,7 +60,7 @@ func (l *lexer) setError(msg string, pos scanner.Position) {
 func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	tok.Pos = l.scanner.Position
 	if r == '-' {
-		if peekCh := l.scanner.Peek(); isDigit(peekCh) || peekCh == '.' {
+		if peekCh := l.scanner.Peek(); lexerql.IsDigit(peekCh) || peekCh == '.' {
 			r = l.scanner.Scan()
 			text = "-" + l.scanner.TokenText()
 		}
@@ -70,8 +70,8 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	switch r {
 	case scanner.Float:
 		switch r := l.scanner.Peek(); {
-		case durationql.IsDurationRune(r):
-			duration, err := durationql.ScanDuration(&l.scanner, text)
+		case lexerql.IsDurationRune(r):
+			duration, err := lexerql.ScanDuration(&l.scanner, text)
 			if err != nil {
 				l.setError(err.Error(), tok.Pos)
 				return tok, false
@@ -84,8 +84,8 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 		return tok, true
 	case scanner.Int:
 		switch r := l.scanner.Peek(); {
-		case durationql.IsDurationRune(r):
-			duration, err := durationql.ScanDuration(&l.scanner, text)
+		case lexerql.IsDurationRune(r):
+			duration, err := lexerql.ScanDuration(&l.scanner, text)
 			if err != nil {
 				l.setError(err.Error(), tok.Pos)
 				return tok, false
@@ -160,18 +160,5 @@ func isAttributeRune(r rune) bool {
 		return false
 	default:
 		return true
-	}
-}
-
-func isDigit(r rune) bool {
-	return r >= '0' && r <= '9'
-}
-
-func scanComment(s *scanner.Scanner) {
-	for {
-		ch := s.Next()
-		if ch == scanner.EOF || ch == '\n' {
-			break
-		}
 	}
 }

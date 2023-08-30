@@ -1,3 +1,4 @@
+// Package jsonexpr provides JSON extractor expression parser.
 package jsonexpr
 
 import (
@@ -7,6 +8,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/go-faster/errors"
+
+	"github.com/go-faster/oteldb/internal/lexerql"
 )
 
 // SelectorType is a [Selector] type.
@@ -43,7 +46,7 @@ func Parse(input string) (sel []Selector, _ error) {
 		case ch == '.':
 			r.Read()
 			fallthrough
-		case isIdentStartRune(ch):
+		case lexerql.IsIdentStartRune(ch):
 			field, err := r.scanField()
 			if err != nil {
 				return sel, errors.Wrap(err, "scan field")
@@ -53,7 +56,7 @@ func Parse(input string) (sel []Selector, _ error) {
 			r.Read()
 
 			switch indexCh := r.Peek(); {
-			case isDigit(indexCh):
+			case lexerql.IsDigit(indexCh):
 				index, err := r.scanInteger()
 				if err != nil {
 					return sel, errors.Wrap(err, "scan index")
@@ -95,14 +98,14 @@ func (r *reader) scanField() (string, error) {
 	input := r.input[r.pos:]
 
 	for i, c := range []byte(input) {
-		if !isIdentRune(c) {
+		if !lexerql.IsIdentRune(c) {
 			input = input[:i]
 			break
 		}
 	}
 
 	r.pos += len(input)
-	if r, _ := utf8.DecodeRuneInString(input); !isIdentStartRune(r) {
+	if r, _ := utf8.DecodeRuneInString(input); !lexerql.IsIdentStartRune(r) {
 		return "", errors.Errorf("field must start with letter or underscore, got %q", r)
 	}
 	return input, nil
@@ -112,7 +115,7 @@ func (r *reader) scanInteger() (int, error) {
 	input := r.input[r.pos:]
 
 	for i, c := range []byte(input) {
-		if !isDigit(c) {
+		if !lexerql.IsDigit(c) {
 			input = input[:i]
 			break
 		}
@@ -170,21 +173,4 @@ func (r *reader) Read() rune {
 	ch, size := r.next()
 	r.pos += size
 	return ch
-}
-
-func isDigit[R rune | byte](r R) bool {
-	return r >= '0' && r <= '9'
-}
-
-func isLetter[R rune | byte](r R) bool {
-	return (r >= 'a' && r <= 'z') ||
-		(r >= 'A' && r <= 'Z')
-}
-
-func isIdentStartRune(r rune) bool {
-	return isLetter(r) || r == '_'
-}
-
-func isIdentRune[R rune | byte](r R) bool {
-	return isLetter(r) || isDigit(r) || r == '_'
 }
