@@ -1,7 +1,9 @@
 package logqlengine
 
 import (
+	"cmp"
 	"context"
+	"slices"
 
 	"github.com/go-faster/errors"
 	"golang.org/x/exp/maps"
@@ -142,5 +144,12 @@ func groupEntries(iter *entryIterator) (s lokiapi.Streams, _ error) {
 	if err := iter.Err(); err != nil {
 		return s, err
 	}
-	return maps.Values(streams), nil
+
+	result := maps.Values(streams)
+	for _, stream := range result {
+		slices.SortFunc(stream.Values, func(a, b lokiapi.LogEntry) int {
+			return cmp.Compare(a.T, b.T)
+		})
+	}
+	return result, nil
 }
