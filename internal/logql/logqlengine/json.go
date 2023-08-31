@@ -6,41 +6,78 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/jsonexpr"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // JSONExtractor is a JSON label extractor.
 type JSONExtractor struct {
+	paths  map[logql.Label]jsonexpr.Path
 	labels map[logql.Label]struct{}
 }
 
 func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
-	if len(stage.Exprs) > 0 {
-		return nil, &UnsupportedError{Msg: "extraction expressions are not supported yet"}
-	}
+	var (
+		exprs  = stage.Exprs
+		labels = stage.Labels
+	)
 
 	e := &JSONExtractor{}
-	if labels := stage.Labels; len(labels) > 0 {
+	switch {
+	case len(exprs) > 0:
+		e.paths = make(map[logql.Label]jsonexpr.Path, len(labels)+len(exprs))
+		for _, p := range exprs {
+			sel, err := jsonexpr.Parse(p.Expr)
+			if err != nil {
+				return nil, errors.Wrapf(err, "parse selector %q", p.Expr)
+			}
+			e.paths[p.Label] = sel
+		}
+		// Convert labels into selectors.
+		for _, label := range labels {
+			e.paths[label] = jsonexpr.Path{
+				jsonexpr.KeySel(string(label)),
+			}
+		}
+		return e, nil
+	case len(labels) > 0:
 		e.labels = make(map[logql.Label]struct{}, len(labels))
 		for _, label := range labels {
 			e.labels[label] = struct{}{}
 		}
+		return e, nil
+	default:
+		return e, nil
 	}
-	return e, nil
 }
 
 // Process implements Processor.
 func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
 	var err error
-	if len(e.labels) == 0 {
-		err = e.extractAll(line, set)
-	} else {
+	switch {
+	case len(e.paths) != 0:
+		err = e.extractExprs(line, set)
+	case len(e.labels) != 0:
 		err = e.extractSome(line, set)
+	default:
+		err = e.extractAll(line, set)
 	}
 	if err != nil {
 		set.SetError("JSON parsing error", err)
 	}
 	return line, true
+}
+
+func (e *JSONExtractor) extractExprs(line string, set LabelSet) error {
+	// TODO(tdakkota): allocates buffer for each line.
+	d := jx.DecodeStr(line)
+	return jsonexpr.Extract(
+		d,
+		e.paths,
+		func(l logql.Label, s string) {
+			set.Set(l, pcommon.NewValueStr(s))
+		},
+	)
 }
 
 func (e *JSONExtractor) extractSome(line string, set LabelSet) error {

@@ -13,18 +13,20 @@ import (
 func TestJSONExtractor(t *testing.T) {
 	tests := []struct {
 		input         string
-		extract       []logql.Label
+		labels        []logql.Label
+		exprs         []logql.LabelExtractionExpr
 		expectLabels  map[logql.Label]pcommon.Value
 		wantFilterErr bool
 	}{
-		{`{}`, nil, nil, false},
-		{`{}`, []logql.Label{"foo"}, nil, false},
-		{`{"foo": null}`, nil, nil, false},
-		{`{"foo": null}`, []logql.Label{"foo"}, nil, false},
-		{`{"bar": 10}`, []logql.Label{"foo"}, nil, false},
+		{`{}`, nil, nil, nil, false},
+		{`{}`, []logql.Label{"foo"}, nil, nil, false},
+		{`{"foo": null}`, nil, nil, nil, false},
+		{`{"foo": null}`, []logql.Label{"foo"}, nil, nil, false},
+		{`{"bar": 10}`, []logql.Label{"foo"}, nil, nil, false},
 		{
 			`{"foo": "extract", "bar": "not extract"}`,
 			[]logql.Label{"foo"},
+			nil,
 			map[logql.Label]pcommon.Value{
 				"foo": pcommon.NewValueStr("extract"),
 			},
@@ -40,6 +42,7 @@ func TestJSONExtractor(t *testing.T) {
 				"array": [1],
 				"object": {"sub_key": 1}
 			}`,
+			nil,
 			nil,
 			map[logql.Label]pcommon.Value{
 				"str":    pcommon.NewValueStr("str"),
@@ -62,15 +65,28 @@ func TestJSONExtractor(t *testing.T) {
 			},
 			false,
 		},
+		{
+			`{"foo": {"sub_foo": "extract"}, "bar": "extract_too"}`,
+			[]logql.Label{"bar"},
+			[]logql.LabelExtractionExpr{
+				{Label: "foo", Expr: "foo.sub_foo"},
+			},
+			map[logql.Label]pcommon.Value{
+				"foo": pcommon.NewValueStr("extract"),
+				"bar": pcommon.NewValueStr("extract_too"),
+			},
+			false,
+		},
 
-		{`{"label": "foo}`, nil, nil, true},
-		{`{"label": "foo}`, []logql.Label{"label"}, nil, true},
+		{`{"label": "foo}`, nil, nil, nil, true},
+		{`{"label": "foo}`, []logql.Label{"label"}, nil, nil, true},
 	}
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			e, err := buildJSONExtractor(&logql.JSONExpressionParser{
-				Labels: tt.extract,
+				Labels: tt.labels,
+				Exprs:  tt.exprs,
 			})
 			require.NoError(t, err)
 
@@ -88,6 +104,7 @@ func TestJSONExtractor(t *testing.T) {
 			errMsg, ok := set.GetError()
 			require.False(t, ok, "got error: %s", errMsg)
 
+			require.Len(t, set.labels, len(tt.expectLabels))
 			for k, expect := range tt.expectLabels {
 				got, ok := set.Get(k)
 				require.Truef(t, ok, "key %q", k)
