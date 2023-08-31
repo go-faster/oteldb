@@ -9,63 +9,63 @@ import (
 
 var tests = []struct {
 	input   string
-	want    []Selector
+	want    Path
 	wantErr bool
 }{
-	{`[0]`, []Selector{indexSel(0)}, false},
-	{`[0][10]`, []Selector{indexSel(0), indexSel(10)}, false},
-	{`foo`, []Selector{keySel("foo")}, false},
+	{`[0]`, Path{IndexSel(0)}, false},
+	{`[0][10]`, Path{IndexSel(0), IndexSel(10)}, false},
+	{`foo`, Path{KeySel("foo")}, false},
 	{
 		`foo.bar.baz`,
-		[]Selector{
-			keySel("foo"),
-			keySel("bar"),
-			keySel("baz"),
+		Path{
+			KeySel("foo"),
+			KeySel("bar"),
+			KeySel("baz"),
 		},
 		false,
 	},
 	{
 		`["foo"]["bar"]["baz"]`,
-		[]Selector{
-			keySel("foo"),
-			keySel("bar"),
-			keySel("baz"),
+		Path{
+			KeySel("foo"),
+			KeySel("bar"),
+			KeySel("baz"),
 		},
 		false,
 	},
 	{
 		`foo.bar["baz"]`,
-		[]Selector{
-			keySel("foo"),
-			keySel("bar"),
-			keySel("baz"),
+		Path{
+			KeySel("foo"),
+			KeySel("bar"),
+			KeySel("baz"),
 		},
 		false,
 	},
 	{
 		`foo["bar"]["baz"]`,
-		[]Selector{
-			keySel("foo"),
-			keySel("bar"),
-			keySel("baz"),
+		Path{
+			KeySel("foo"),
+			KeySel("bar"),
+			KeySel("baz"),
 		},
 		false,
 	},
 	{
 		`["foo"].bar["baz"]`,
-		[]Selector{
-			keySel("foo"),
-			keySel("bar"),
-			keySel("baz"),
+		Path{
+			KeySel("foo"),
+			KeySel("bar"),
+			KeySel("baz"),
 		},
 		false,
 	},
 	{
 		`["foo"]["bar"].baz`,
-		[]Selector{
-			keySel("foo"),
-			keySel("bar"),
-			keySel("baz"),
+		Path{
+			KeySel("foo"),
+			KeySel("bar"),
+			KeySel("baz"),
 		},
 		false,
 	},

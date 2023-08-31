@@ -3,6 +3,7 @@ package jsonexpr
 
 import (
 	"io"
+	"slices"
 	"strconv"
 	"text/scanner"
 	"unicode/utf8"
@@ -11,6 +12,14 @@ import (
 
 	"github.com/go-faster/oteldb/internal/lexerql"
 )
+
+// Path is a list of selectors.
+type Path []Selector
+
+// Equal compares p to other.
+func (p Path) Equal(other Path) bool {
+	return slices.Equal(p, other)
+}
 
 // SelectorType is a [Selector] type.
 type SelectorType int
@@ -27,16 +36,18 @@ type Selector struct {
 	Key   string
 }
 
-func indexSel(i int) Selector {
+// IndexSel creates new index Selector.
+func IndexSel(i int) Selector {
 	return Selector{Type: Index, Index: i}
 }
 
-func keySel(k string) Selector {
+// KeySel creates new key Selector.
+func KeySel(k string) Selector {
 	return Selector{Type: Key, Key: k}
 }
 
 // Parse parses selector expression.
-func Parse(input string) (sel []Selector, _ error) {
+func Parse(input string) (sel Path, _ error) {
 	r := &reader{
 		input: input,
 	}
@@ -51,7 +62,7 @@ func Parse(input string) (sel []Selector, _ error) {
 			if err != nil {
 				return sel, errors.Wrap(err, "scan field")
 			}
-			sel = append(sel, keySel(field))
+			sel = append(sel, KeySel(field))
 		case ch == '[':
 			r.Read()
 
@@ -61,13 +72,13 @@ func Parse(input string) (sel []Selector, _ error) {
 				if err != nil {
 					return sel, errors.Wrap(err, "scan index")
 				}
-				sel = append(sel, indexSel(index))
+				sel = append(sel, IndexSel(index))
 			case indexCh == '"':
 				key, err := r.scanString()
 				if err != nil {
 					return sel, errors.Wrap(err, "scan key")
 				}
-				sel = append(sel, keySel(key))
+				sel = append(sel, KeySel(key))
 			case indexCh == scanner.EOF:
 				return sel, io.ErrUnexpectedEOF
 			default:
