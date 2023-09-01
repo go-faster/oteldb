@@ -31,6 +31,13 @@ func (l *LabelSet) allowDots() bool {
 	return true
 }
 
+func (l *LabelSet) reset() {
+	if l.labels == nil {
+		l.labels = map[logql.Label]pcommon.Value{}
+	}
+	maps.Clear(l.labels)
+}
+
 // AsLokiAPI returns lokiapi.LabelSet
 func (l *LabelSet) AsLokiAPI() lokiapi.LabelSet {
 	return lokiapi.LabelSet(l.AsMap())
@@ -70,10 +77,7 @@ func (l *LabelSet) String() string {
 
 // SetFromRecord sets labels from given log record.
 func (l *LabelSet) SetFromRecord(record logstorage.Record) {
-	if l.labels == nil {
-		l.labels = map[logql.Label]pcommon.Value{}
-	}
-	maps.Clear(l.labels)
+	l.reset()
 
 	if traceID := record.TraceID; !traceID.IsEmpty() {
 		l.Set(logql.Label(`trace_id`), pcommon.NewValueStr(traceID.Hex()))

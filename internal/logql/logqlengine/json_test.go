@@ -113,3 +113,82 @@ func TestJSONExtractor(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkJSONExtractor(b *testing.B) {
+	const benchdata = `{
+		"protocol": "HTTP/2.0",
+		"servers": ["129.0.1.1","10.2.1.3"],
+		"request": {
+			"time": "6.032",
+			"method": "GET",
+			"host": "foo.grafana.net",
+			"size": "55",
+			"headers": {
+			  "Accept": "*/*",
+			  "User-Agent": "curl/7.68.0"
+			}
+		},
+		"response": {
+			"status": 401,
+			"size": "228",
+			"latency_seconds": "6.031"
+		}
+	}`
+
+	benchs := []struct {
+		name string
+		expr *logql.JSONExpressionParser
+	}{
+		{
+			`All`,
+			&logql.JSONExpressionParser{},
+		},
+		{
+			`OneLabel`,
+			&logql.JSONExpressionParser{
+				Labels: []logql.Label{`protocol`},
+			},
+		},
+		{
+			`JMESPaths`,
+			&logql.JSONExpressionParser{
+				Exprs: []logql.LabelExtractionExpr{
+					{
+						Label: "user_agent",
+						Expr:  `request.headers["User-Agent"]`,
+					},
+					{
+						Label: "status",
+						Expr:  `response.status`,
+					},
+				},
+			},
+		},
+	}
+
+	for _, bb := range benchs {
+		bb := bb
+		b.Run(bb.name, func(b *testing.B) {
+			p, err := buildJSONExtractor(bb.expr)
+			require.NoError(b, err)
+
+			set := newLabelSet()
+			var (
+				line string
+				ok   bool
+			)
+			b.ReportAllocs()
+			b.SetBytes(int64(len(benchdata)))
+			b.ResetTimer()
+
+			for i := 0; i < b.N; i++ {
+				set.reset()
+				line, ok = p.Process(10, benchdata, set)
+			}
+
+			if !ok {
+				b.Fatal(line)
+			}
+		})
+	}
+}
