@@ -56,11 +56,11 @@ func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelS
 	var err error
 	switch {
 	case len(e.paths) != 0:
-		err = e.extractExprs(line, set)
+		err = extractExprs(e.paths, line, set)
 	case len(e.labels) != 0:
-		err = e.extractSome(line, set)
+		err = extractSome(e.labels, line, set)
 	default:
-		err = e.extractAll(line, set)
+		err = extractAll(line, set)
 	}
 	if err != nil {
 		set.SetError("JSON parsing error", err)
@@ -68,21 +68,24 @@ func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelS
 	return line, true
 }
 
-func (e *JSONExtractor) extractExprs(line string, set LabelSet) error {
+func extractExprs(paths map[logql.Label]jsonexpr.Path, line string, set LabelSet) error {
 	// TODO(tdakkota): allocates buffer for each line.
-	d := jx.DecodeStr(line)
+	d := decodeStr(line)
 	return jsonexpr.Extract(
 		d,
-		e.paths,
+		paths,
 		func(l logql.Label, s string) {
 			set.Set(l, pcommon.NewValueStr(s))
 		},
 	)
 }
 
-func (e *JSONExtractor) extractSome(line string, set LabelSet) error {
-	d := jx.DecodeStr(line)
+func extractSome(labels map[logql.Label]struct{}, line string, set LabelSet) error {
+	d := decodeStr(line)
 	return d.ObjBytes(func(d *jx.Decoder, key []byte) error {
+		if _, ok := labels[logql.Label(key)]; !ok {
+			return d.Skip()
+		}
 		value, ok, err := parseValue(d)
 		if err != nil {
 			return errors.Wrapf(err, "parse label %q", key)
@@ -90,18 +93,16 @@ func (e *JSONExtractor) extractSome(line string, set LabelSet) error {
 		if !ok {
 			return nil
 		}
-		if _, ok := e.labels[logql.Label(key)]; ok {
-			// TODO(tdakkota): try string interning
-			// TODO(tdakkota): probably, we can just use label name string
-			// 	instead of allocating a new string every time
-			set.Set(logql.Label(key), value)
-		}
+		// TODO(tdakkota): try string interning
+		// TODO(tdakkota): probably, we can just use label name string
+		// 	instead of allocating a new string every time
+		set.Set(logql.Label(key), value)
 		return nil
 	})
 }
 
-func (e *JSONExtractor) extractAll(line string, set LabelSet) error {
-	d := jx.DecodeStr(line)
+func extractAll(line string, set LabelSet) error {
+	d := decodeStr(line)
 	return d.Obj(func(d *jx.Decoder, key string) error {
 		value, ok, err := parseValue(d)
 		if err != nil {
