@@ -1,6 +1,8 @@
 package logqlmetric
 
 import (
+	"regexp"
+
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
@@ -16,6 +18,8 @@ type AggregatedLabels interface {
 	Without(...logql.Label) AggregatedLabels
 	// Key computes grouping key from set of labels.
 	Key() GroupingKey
+	// Replace replaces labels using given regexp.
+	Replace(dstLabel, replacement, srcLabel string, re *regexp.Regexp) AggregatedLabels
 
 	// AsLokiAPI returns API structure for label set.
 	AsLokiAPI() lokiapi.LabelSet
@@ -23,7 +27,8 @@ type AggregatedLabels interface {
 
 type emptyLabels struct{}
 
-func (l *emptyLabels) By(_ ...logql.Label) AggregatedLabels      { return l }
-func (l *emptyLabels) Without(_ ...logql.Label) AggregatedLabels { return l }
-func (l *emptyLabels) Key() GroupingKey                          { return 0 }
-func (l *emptyLabels) AsLokiAPI() lokiapi.LabelSet               { return lokiapi.LabelSet{} }
+func (l *emptyLabels) By(_ ...logql.Label) AggregatedLabels                      { return l }
+func (l *emptyLabels) Without(_ ...logql.Label) AggregatedLabels                 { return l }
+func (l *emptyLabels) Key() GroupingKey                                          { return 0 }
+func (l *emptyLabels) Replace(_, _, _ string, _ *regexp.Regexp) AggregatedLabels { return l }
+func (l *emptyLabels) AsLokiAPI() lokiapi.LabelSet                               { return lokiapi.LabelSet{} }

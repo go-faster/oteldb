@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
+	"regexp"
 	"slices"
 	"testing"
 	"time"
@@ -272,6 +273,23 @@ func (l testLabels) Key() GroupingKey {
 	}
 
 	return h.Sum64()
+}
+
+// Replace replaces labels using given regexp.
+func (l testLabels) Replace(dstLabel, replacement, srcLabel string, re *regexp.Regexp) AggregatedLabels {
+	src := l[srcLabel]
+
+	idxs := re.FindStringSubmatchIndex(src)
+	if idxs == nil {
+		return l
+	}
+
+	newLabels := maps.Clone(l)
+	delete(newLabels, dstLabel)
+	if dst := re.ExpandString([]byte{}, replacement, src, idxs); len(dst) > 0 {
+		newLabels[dstLabel] = string(dst)
+	}
+	return newLabels
 }
 
 // AsLokiAPI returns API structure for label set.

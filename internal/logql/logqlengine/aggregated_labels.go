@@ -2,6 +2,7 @@ package logqlengine
 
 import (
 	"maps"
+	"regexp"
 
 	"github.com/cespare/xxhash/v2"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -74,6 +75,67 @@ func (a *aggregatedLabels) Key() logqlmetric.GroupingKey {
 		_, _ = h.WriteString(v)
 	})
 	return h.Sum64()
+}
+
+// Replace replaces labels using given regexp.
+func (a *aggregatedLabels) Replace(dstLabel, replacement, srcLabel string, re *regexp.Regexp) logqlmetric.AggregatedLabels {
+	src := a.findEntry(srcLabel)
+
+	idxs := re.FindStringSubmatchIndex(src)
+	if idxs == nil {
+		return a
+	}
+
+	dst := re.ExpandString(nil, replacement, src, idxs)
+	if len(dst) == 0 {
+		// Destination value is empty, delete it.
+		a.deleteEntry(dstLabel)
+	} else {
+		a.setEntry(dstLabel, string(dst))
+	}
+
+	return a
+}
+
+func (a *aggregatedLabels) findEntry(key string) string {
+	for _, e := range a.entries {
+		if e.name == key {
+			return e.value
+		}
+	}
+	return ""
+}
+
+func (a *aggregatedLabels) deleteEntry(key string) {
+	n := 0
+	for _, e := range a.entries {
+		if e.name == key {
+			continue
+		}
+		a.entries[n] = e
+		n++
+	}
+	a.entries = a.entries[:n]
+}
+
+func (a *aggregatedLabels) setEntry(key, value string) {
+	var entry *labelEntry
+	for i, e := range a.entries {
+		if e.name == key {
+			entry = &a.entries[i]
+			break
+		}
+	}
+
+	replacement := labelEntry{
+		name:  key,
+		value: value,
+	}
+	if entry == nil {
+		a.entries = append(a.entries, replacement)
+	} else {
+		*entry = replacement
+	}
 }
 
 // AsLokiAPI returns API structure for label set.
