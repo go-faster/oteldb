@@ -100,8 +100,26 @@ func TestExtract(t *testing.T) {
 			true,
 		},
 		{
+			`{"a": {,}}`,
+			map[logql.Label]Path{"a": {KeySel("a")}},
+			nil,
+			true,
+		},
+		{
+			`{"a": [,]}`,
+			map[logql.Label]Path{"a": {KeySel("a")}},
+			nil,
+			true,
+		},
+		{
 			`{"a": "foo\"}`,
 			map[logql.Label]Path{"a": {KeySel("a")}},
+			nil,
+			true,
+		},
+		{
+			`["foo\"]`,
+			map[logql.Label]Path{"a": {IndexSel(0)}},
 			nil,
 			true,
 		},
