@@ -35,6 +35,7 @@ require (
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.84.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.43.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.43.0
+	go.opentelemetry.io/contrib/zpages v0.42.0
 	go.opentelemetry.io/otel v1.17.0
 	go.opentelemetry.io/otel/bridge/opentracing v1.17.0
 	go.opentelemetry.io/otel/metric v1.17.0
