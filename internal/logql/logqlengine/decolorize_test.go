@@ -15,6 +15,9 @@ func TestDecolorize(t *testing.T) {
 		wantLine      string
 		wantFilterErr bool
 	}{
+		{``, ``, false},
+		{`foo`, `foo`, false},
+		{"\x1b", "\x1b", false},
 		{"\x1b[1;31m bold red \x1b[0m", " bold red ", false},
 		{"\x1b[1;31m Hello", " Hello", false},
 		{"\x1b[2;37;41m World", " World", false},
