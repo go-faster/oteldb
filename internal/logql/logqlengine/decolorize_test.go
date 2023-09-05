@@ -1,0 +1,43 @@
+package logqlengine
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/stretchr/testify/require"
+)
+
+func TestDecolorize(t *testing.T) {
+	tests := []struct {
+		inputLine     string
+		wantLine      string
+		wantFilterErr bool
+	}{
+		{"\x1b[1;31m bold red \x1b[0m", " bold red ", false},
+		{"\x1b[1;31m Hello", " Hello", false},
+		{"\x1b[2;37;41m World", " World", false},
+		{"\x1b[4m\x1b[44m Blue Background Underline \x1b[0m", " Blue Background Underline ", false},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			set := newLabelSet()
+
+			f, err := buildDecolorize(&logql.DecolorizeExpr{})
+			require.NoError(t, err)
+
+			newLine, gotOk := f.Process(1700000001_000000000, tt.inputLine, set)
+			require.True(t, gotOk)
+			require.Equal(t, tt.wantLine, newLine)
+
+			if tt.wantFilterErr {
+				_, ok := set.GetError()
+				require.True(t, ok)
+				return
+			}
+			errMsg, ok := set.GetError()
+			require.False(t, ok, "got error: %s", errMsg)
+		})
+	}
+}

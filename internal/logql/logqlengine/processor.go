@@ -63,6 +63,8 @@ func buildStage(stage logql.PipelineStage) (Processor, error) {
 		return buildUnpackExtractor(stage)
 	case *logql.LineFormat:
 		return buildLineFormat(stage)
+	case *logql.DecolorizeExpr:
+		return buildDecolorize(stage)
 	case *logql.LabelFilter:
 		return buildLabelFilter(stage)
 	case *logql.LabelFormatExpr:
