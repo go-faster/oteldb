@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/stretchr/testify/require"
+
+	"github.com/go-faster/oteldb/internal/logql"
 )
 
 func TestDecolorize(t *testing.T) {
