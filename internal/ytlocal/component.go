@@ -26,6 +26,7 @@ const (
 	ComponentHTTPProxy         Component = "http-proxy"
 	ComponentMaster            Component = "master"
 	ComponentNode              Component = "node"
+	ComponentExecNode          Component = "exec-node"
 	ComponentJobProxy          Component = "job-proxy"
 	ComponentClock             Component = "clock"
 	ComponentScheduler         Component = "scheduler"
@@ -42,6 +43,7 @@ const (
 	ComponentQueryTracker      Component = "query-tracker"
 	ComponentCypressProxy      Component = "cypress-proxy"
 	ComponentTCPProxy          Component = "tcp-proxy"
+	ComponentCHYTContoller     Component = "chyt-controller"
 )
 
 // Server describes a component server.
@@ -60,7 +62,8 @@ func (s Server[T]) String() string {
 func Go(ctx context.Context, g *errgroup.Group, components ...interface {
 	Run(ctx context.Context) error
 	String() string
-}) {
+},
+) {
 	for i := range components {
 		c := components[i]
 		zctx.From(ctx).Info("Starting component", zap.Stringer("component", c))
@@ -77,7 +80,7 @@ func (s *Server[T]) Run(ctx context.Context) error {
 	// Prepare configuration.
 	cfgDir := filepath.Join(s.Dir, "cfg")
 	// #nosec: G301
-	if err := os.MkdirAll(cfgDir, 0755); err != nil {
+	if err := os.MkdirAll(cfgDir, 0o755); err != nil {
 		return errors.Wrap(err, "mkdir all")
 	}
 
@@ -91,15 +94,26 @@ func (s *Server[T]) Run(ctx context.Context) error {
 	// Save configuration.
 	cfgPath := filepath.Join(cfgDir, string(s.Type)+".yson")
 	// #nosec: G306
-	if err := os.WriteFile(cfgPath, out.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(cfgPath, out.Bytes(), 0o644); err != nil {
 		return errors.Wrap(err, "write config")
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
 
+	var args []string
+	if s.Type == ComponentCHYTContoller {
+		args = []string{
+			"--config-path", cfgPath,
+			"--log-to-stderr",
+			"run",
+		}
+	} else {
+		args = []string{"--config", cfgPath}
+	}
+
 	// Run binary.
 	// #nosec: G204
-	cmd := exec.CommandContext(ctx, s.Binary, "--config", cfgPath)
+	cmd := exec.CommandContext(ctx, s.Binary, args...)
 	r, w := io.Pipe()
 	cmd.Stderr = w
 	cmd.Dir = s.Dir
@@ -138,6 +152,7 @@ func (s *Server[T]) Run(ctx context.Context) error {
 				// Trim log level.
 				text = strings.TrimSpace(text[i+1:])
 			}
+
 			lg.Check(lvl, text).Write()
 		}
 		return sc.Err()
@@ -161,10 +176,16 @@ func NewComponent[T any](opt Options, cfg T) *Server[T] {
 		t = ComponentHTTPProxy
 	case Node:
 		t = ComponentNode
+	case ExecNode:
+		t = ComponentExecNode
 	case Scheduler:
 		t = ComponentScheduler
 	case ControllerAgent:
 		t = ComponentControllerAgent
+	case QueryTracker:
+		t = ComponentQueryTracker
+	case Discovery:
+		t = ComponentDiscovery
 	default:
 		panic(fmt.Sprintf("unknown component type %T", cfg))
 	}

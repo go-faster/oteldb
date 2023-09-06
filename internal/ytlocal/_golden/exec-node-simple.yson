@@ -62,6 +62,7 @@
     ];
     "resource_limits"={
         "total_memory"=8388608000;
+        "node_dedicated_cpu"=0.000000;
     };
     "tablet_node"={
         "versioned_chunk_meta_cache"={
@@ -81,6 +82,34 @@
                     "disk_usage_watermark"=161061273;
                 };
             ];
+        };
+        "job_controller"={
+            "resource_limits"={
+                "user_slots"=0;
+            };
+        };
+    };
+    "data_node"={
+        "store_locations"=[
+        ];
+        "cache_locations"=[
+        ];
+        "block_cache"={
+            "compressed_data"={
+                capacity=0;
+            };
+            "uncompressed_data"={
+                capacity=0;
+            };
+        };
+        "blocks_ext_cache"={
+            capacity=0;
+        };
+        "chunk_meta_cache"={
+            capacity=0;
+        };
+        "block_meta_cache"={
+            capacity=0;
         };
     };
 }
