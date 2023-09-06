@@ -124,6 +124,78 @@ func TestEngineEvalStream(t *testing.T) {
 		wantData []resultLine
 		wantErr  bool
 	}{
+		// Just label selector.
+		{
+			`{resource="test"}`,
+			inputLines,
+			[]resultLine{
+				{
+					`{"id": 1, "foo": "4m", "bar": "1s", "baz": "1kb"}`,
+					map[string]string{},
+				},
+				{
+					`{"id": 2, "foo": "5m", "bar": "2s", "baz": "1mb"}`,
+					map[string]string{},
+				},
+				{
+					`{"id": 3, "foo": "6m", "bar": "3s", "baz": "1gb"}`,
+					map[string]string{},
+				},
+			},
+			false,
+		},
+		{
+			`{resource="not_existing"}`,
+			inputLines,
+			nil,
+			false,
+		},
+		{
+			`{not_existing="test"}`,
+			inputLines,
+			nil,
+			false,
+		},
+
+		// JSON stage.
+		{
+			`{resource="test"} | json`,
+			inputLines,
+			resultLines,
+			false,
+		},
+		{
+			`{resource="test"} | json id,foo,bar,baz`,
+			inputLines,
+			resultLines,
+			false,
+		},
+		{
+			`{resource="test"} | json id="id",foo,bar,baz`,
+			inputLines,
+			resultLines,
+			false,
+		},
+		{
+			`{resource="test"} | json id="[\"id\"]",foo,bar,baz`,
+			inputLines,
+			resultLines,
+			false,
+		},
+
+		// Line format.
+		{
+			`{resource="test"} |= "5m" | json | line_format "{{ .foo }}"`,
+			inputLines,
+			[]resultLine{
+				{
+					line:   "5m",
+					labels: resultLines[1].labels,
+				},
+			},
+			false,
+		},
+
 		// Line filter.
 		{
 			`{resource="test"} |= "5m" | json`,
@@ -286,6 +358,14 @@ func TestEngineEvalStream(t *testing.T) {
 			inputLines,
 			[]resultLine{resultLines[1]},
 			false,
+		},
+
+		// Invalid query.
+		{
+			`{resource="test",}`,
+			inputLines,
+			nil,
+			true,
 		},
 	}
 	for i, tt := range tests {
