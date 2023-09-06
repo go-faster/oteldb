@@ -1,6 +1,7 @@
 package jsonexpr
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -10,17 +11,17 @@ import (
 	"github.com/go-faster/oteldb/internal/logql"
 )
 
-func TestExtract(t *testing.T) {
-	parseExprs := func(exprs ...string) map[logql.Label]Path {
-		selectors := make(map[logql.Label]Path, len(exprs))
-		for _, expr := range exprs {
-			sel, err := Parse(expr)
-			require.NoError(t, err)
-			selectors[logql.Label(expr)] = sel
-		}
-		return selectors
+func parseExprs(t require.TestingT, exprs ...string) map[logql.Label]Path {
+	selectors := make(map[logql.Label]Path, len(exprs))
+	for _, expr := range exprs {
+		sel, err := Parse(expr)
+		require.NoError(t, err)
+		selectors[logql.Label(expr)] = sel
 	}
+	return selectors
+}
 
+func TestExtract(t *testing.T) {
 	tests := []struct {
 		input   string
 		paths   map[logql.Label]Path
@@ -33,7 +34,7 @@ func TestExtract(t *testing.T) {
 				"obj": {"c": "bar"},
 				"arr": [{"e": "baz"}]
 			}`,
-			parseExprs(
+			parseExprs(t,
 				"literal",
 				"obj",
 				"obj.c",
@@ -69,7 +70,7 @@ func TestExtract(t *testing.T) {
 				"null": null,
 				"bool": true
 			}`,
-			parseExprs(
+			parseExprs(t,
 				"str",
 				"integer",
 				"float",
@@ -163,4 +164,38 @@ func TestExtract(t *testing.T) {
 			require.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func FuzzExtract(f *testing.F) {
+	for _, tt := range []struct {
+		input string
+		path  string
+	}{
+		{`{"foo": "bar"}`, `["foo"]`},
+		{`{"foo": "bar"}`, `foo"`},
+		{`[{"foo": "bar"}]`, `[0].foo"`},
+	} {
+		f.Add([]byte(tt.input), tt.path)
+	}
+
+	f.Fuzz(func(t *testing.T, input []byte, expr string) {
+		if !json.Valid(input) {
+			t.Skipf("Invalid JSON: %q", input)
+			return
+		}
+
+		sel, err := Parse(expr)
+		if err != nil {
+			t.Skipf("Invalid path: %q", expr)
+			return
+		}
+
+		_ = Extract(
+			jx.DecodeBytes(input),
+			map[logql.Label]Path{
+				"fuzz": sel,
+			},
+			func(l logql.Label, s string) {},
+		)
+	})
 }
