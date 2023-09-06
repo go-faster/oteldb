@@ -40,7 +40,7 @@ func (q *YTQLQuerier) LabelNames(ctx context.Context, opts logstorage.LabelsOpti
 	// FIXME(tdakkota): use time range from opts
 	query := fmt.Sprintf("name FROM [%s]", table)
 	names := map[string]struct{}{}
-	err := queryRows(ctx, q.yc, query, func(label logstorage.Label) {
+	err := queryRows(ctx, q.yc, q.tracer, query, func(label logstorage.Label) {
 		names[label.Name] = struct{}{}
 	})
 	return maps.Keys(names), err
@@ -71,7 +71,8 @@ func (q *YTQLQuerier) LabelValues(ctx context.Context, labelName string, opts lo
 	if err != nil {
 		return nil, err
 	}
-	return &ytIterator[logstorage.Label]{reader: r}, nil
+
+	return newYTIterator[logstorage.Label](ctx, r, q.tracer), nil
 }
 
 var _ logqlengine.Querier = (*YTQLQuerier)(nil)
@@ -135,5 +136,5 @@ func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Tim
 	if err != nil {
 		return nil, err
 	}
-	return &ytIterator[logstorage.Record]{reader: r}, nil
+	return newYTIterator[logstorage.Record](ctx, r, q.tracer), nil
 }

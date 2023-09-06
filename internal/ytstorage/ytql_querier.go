@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.ytsaurus.tech/yt/go/yt"
@@ -56,6 +58,20 @@ var _ iterators.Iterator[any] = (*ytIterator[any])(nil)
 type ytIterator[T any] struct {
 	reader yt.TableReader
 	err    error
+
+	rows int
+	span trace.Span
+}
+
+func newYTIterator[T any](ctx context.Context, reader yt.TableReader, tracer trace.Tracer) *ytIterator[T] {
+	var span trace.Span
+	if tracer != nil {
+		_, span = tracer.Start(ctx, "ReadRows")
+	}
+	return &ytIterator[T]{
+		reader: reader,
+		span:   span,
+	}
 }
 
 // Next returns true, if there is element and fills t.
@@ -68,6 +84,7 @@ func (i *ytIterator[T]) Next(t *T) bool {
 	if !ok {
 		return false
 	}
+	i.rows++
 
 	i.err = i.reader.Scan(t)
 	return i.err == nil
@@ -83,10 +100,21 @@ func (i *ytIterator[T]) Err() error {
 
 // Close closes iterator.
 func (i *ytIterator[T]) Close() error {
+	if i.span != nil {
+		i.span.SetAttributes(
+			attribute.Int64("ytstorage.rows", int64(i.rows)),
+		)
+		if i.err != nil {
+			i.span.SetStatus(codes.Error, "iterator error")
+			i.span.RecordError(i.err)
+		}
+		i.span.End()
+	}
+
 	return i.reader.Close()
 }
 
-func queryRows[T any](ctx context.Context, yc yt.TabletClient, q string, cb func(T)) error {
+func queryRows[T any](ctx context.Context, yc yt.TabletClient, tracer trace.Tracer, q string, cb func(T)) error {
 	r, err := yc.SelectRows(ctx, q, nil)
 	if err != nil {
 		return err
@@ -94,6 +122,12 @@ func queryRows[T any](ctx context.Context, yc yt.TabletClient, q string, cb func
 	defer func() {
 		_ = r.Close()
 	}()
+
+	iter := newYTIterator[T](ctx, r, tracer)
+	defer func() {
+		_ = iter.Close()
+	}()
+
 	for r.Next() {
 		var val T
 		if err := r.Scan(&val); err != nil {

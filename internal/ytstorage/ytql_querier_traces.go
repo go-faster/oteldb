@@ -98,7 +98,7 @@ func (q *YTQLQuerier) TagNames(ctx context.Context) (_ []string, rerr error) {
 
 	query := fmt.Sprintf("name FROM [%s]", table)
 	names := map[string]struct{}{}
-	err := queryRows(ctx, q.yc, query, func(tag tracestorage.Tag) {
+	err := queryRows(ctx, q.yc, q.tracer, query, func(tag tracestorage.Tag) {
 		names[tag.Name] = struct{}{}
 	})
 	return maps.Keys(names), err
@@ -126,7 +126,7 @@ func (q *YTQLQuerier) TagValues(ctx context.Context, tagName string) (_ iterator
 	if err != nil {
 		return nil, err
 	}
-	return &ytIterator[tracestorage.Tag]{reader: r}, nil
+	return newYTIterator[tracestorage.Tag](ctx, r, q.tracer), nil
 }
 
 // TraceByID returns spans of given trace.
@@ -161,7 +161,7 @@ func (q *YTQLQuerier) TraceByID(ctx context.Context, id otelstorage.TraceID, opt
 	if err != nil {
 		return nil, err
 	}
-	return &ytIterator[tracestorage.Span]{reader: r}, nil
+	return newYTIterator[tracestorage.Span](ctx, r, q.tracer), nil
 }
 
 var _ traceqlengine.Querier = (*YTQLQuerier)(nil)
@@ -421,7 +421,7 @@ func (q *YTQLQuerier) queryTraceIDs(ctx context.Context, query string) (_ map[ot
 	}()
 
 	traces := map[otelstorage.TraceID]struct{}{}
-	if err := queryRows(ctx, q.yc, query, func(s tracestorage.Span) {
+	if err := queryRows(ctx, q.yc, q.tracer, query, func(s tracestorage.Span) {
 		traces[s.TraceID] = struct{}{}
 	}); err != nil {
 		return nil, err
@@ -463,5 +463,5 @@ func (q *YTQLQuerier) querySpans(ctx context.Context, traces map[otelstorage.Tra
 	if err != nil {
 		return nil, err
 	}
-	return &ytIterator[tracestorage.Span]{reader: r}, nil
+	return newYTIterator[tracestorage.Span](ctx, r, q.tracer), nil
 }
