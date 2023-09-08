@@ -1,8 +1,8 @@
 name: x
 
 on:
-  pull_request:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 # Common Go workflows from go faster
 # See https://github.com/go-faster/x
@@ -15,5 +15,3 @@ jobs:
     uses: go-faster/x/.github/workflows/cover.yml@main
   lint:
     uses: go-faster/x/.github/workflows/lint.yml@main
-  commit:
-    uses: go-faster/x/.github/workflows/commit.yml@main
