@@ -568,8 +568,8 @@ go.opentelemetry.io/collector/semconv v0.85.0 h1:TVXgaWeYADXnytlhNq44zyv2W9m3Vod
 go.opentelemetry.io/collector/semconv v0.85.0/go.mod h1:j/8THcqVxFna1FpvA2zYIsUperEtOaRaqoLYIN4doWw=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.43.0 h1:7XZai4VhA473clBrOqqHdjHBImGfyEtv0qW4nnn/kAo=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.43.0/go.mod h1:1WpsUwjQrUJSNugfMlPn0rPRJ9Do7wwBgTBPK7MLiS4=
-go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.43.0 h1:HKORGpiOY0R0nAPtKx/ub8/7XoHhRooP8yNRkuPfelI=
-go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.43.0/go.mod h1:e+y1M74SYXo/FcIx3UATwth2+5dDkM8dBi7eXg1tbw8=
+go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0 h1:KfYpVmrjI7JuToy5k8XV3nkapjWx48k4E4JOtVstzQI=
+go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0/go.mod h1:SeQhzAEccGVZVEy7aH87Nh0km+utSpo1pTv6eMMop48=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.42.0 h1:EbmAUG9hEAMXyfWEasIt2kmh/WmXUznUksChApTgBGc=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.42.0/go.mod h1:rD9feqRYP24P14t5kmhNMqsqm1jvKmpx2H2rKVw52V8=
 go.opentelemetry.io/contrib/propagators/autoprop v0.42.0 h1:s2RzYOAqHVgG23q8fPWYChobUoZM6rJZ98EnylJr66w=
