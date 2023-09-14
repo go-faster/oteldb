@@ -72,6 +72,18 @@ const (
 	ApplicationMetadataUnitsLockSamples     ApplicationMetadataUnits = "lock_samples"
 )
 
+// AllValues returns all ApplicationMetadataUnits values.
+func (ApplicationMetadataUnits) AllValues() []ApplicationMetadataUnits {
+	return []ApplicationMetadataUnits{
+		ApplicationMetadataUnitsSamples,
+		ApplicationMetadataUnitsObjects,
+		ApplicationMetadataUnitsGoroutines,
+		ApplicationMetadataUnitsBytes,
+		ApplicationMetadataUnitsLockNanoseconds,
+		ApplicationMetadataUnitsLockSamples,
+	}
+}
+
 // MarshalText implements encoding.TextMarshaler.
 func (s ApplicationMetadataUnits) MarshalText() ([]byte, error) {
 	switch s {
@@ -217,6 +229,18 @@ const (
 	FlamebearerMetadataV1UnitsLockNanoseconds FlamebearerMetadataV1Units = "lock_nanoseconds"
 	FlamebearerMetadataV1UnitsLockSamples     FlamebearerMetadataV1Units = "lock_samples"
 )
+
+// AllValues returns all FlamebearerMetadataV1Units values.
+func (FlamebearerMetadataV1Units) AllValues() []FlamebearerMetadataV1Units {
+	return []FlamebearerMetadataV1Units{
+		FlamebearerMetadataV1UnitsSamples,
+		FlamebearerMetadataV1UnitsObjects,
+		FlamebearerMetadataV1UnitsGoroutines,
+		FlamebearerMetadataV1UnitsBytes,
+		FlamebearerMetadataV1UnitsLockNanoseconds,
+		FlamebearerMetadataV1UnitsLockSamples,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s FlamebearerMetadataV1Units) MarshalText() ([]byte, error) {
@@ -1269,6 +1293,16 @@ const (
 	RenderFormatCollapsed RenderFormat = "collapsed"
 	RenderFormatHTML      RenderFormat = "html"
 )
+
+// AllValues returns all RenderFormat values.
+func (RenderFormat) AllValues() []RenderFormat {
+	return []RenderFormat{
+		RenderFormatJSON,
+		RenderFormatPprof,
+		RenderFormatCollapsed,
+		RenderFormatHTML,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s RenderFormat) MarshalText() ([]byte, error) {

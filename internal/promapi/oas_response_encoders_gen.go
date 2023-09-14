@@ -9,6 +9,8 @@ import (
 	"github.com/go-faster/jx"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	ht "github.com/ogen-go/ogen/http"
 )
 
 func encodeGetLabelValuesResponse(response *LabelValuesResponse, w http.ResponseWriter, span trace.Span) error {
@@ -21,6 +23,7 @@ func encodeGetLabelValuesResponse(response *LabelValuesResponse, w http.Response
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -34,6 +37,7 @@ func encodeGetLabelsResponse(response *LabelsResponse, w http.ResponseWriter, sp
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -47,6 +51,7 @@ func encodeGetMetadataResponse(response *MetadataResponse, w http.ResponseWriter
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -60,6 +65,7 @@ func encodeGetQueryResponse(response *QueryResponse, w http.ResponseWriter, span
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -73,6 +79,7 @@ func encodeGetQueryExemplarsResponse(response *QueryExemplarsResponse, w http.Re
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -86,6 +93,7 @@ func encodeGetQueryRangeResponse(response *QueryResponse, w http.ResponseWriter,
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -99,6 +107,7 @@ func encodeGetRulesResponse(response *RulesResponse, w http.ResponseWriter, span
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -112,6 +121,7 @@ func encodeGetSeriesResponse(response *SeriesResponse, w http.ResponseWriter, sp
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -125,6 +135,7 @@ func encodePostLabelsResponse(response *LabelsResponse, w http.ResponseWriter, s
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -138,6 +149,7 @@ func encodePostQueryResponse(response *QueryResponse, w http.ResponseWriter, spa
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -151,6 +163,7 @@ func encodePostQueryExemplarsResponse(response *QueryExemplarsResponse, w http.R
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -164,6 +177,7 @@ func encodePostQueryRangeResponse(response *QueryResponse, w http.ResponseWriter
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -177,6 +191,7 @@ func encodePostSeriesResponse(response *SeriesResponse, w http.ResponseWriter, s
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
 	}
+
 	return nil
 }
 
@@ -199,6 +214,10 @@ func encodeErrorResponse(response *FailStatusCode, w http.ResponseWriter, span t
 	response.Response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
+	}
+
+	if code >= http.StatusInternalServerError {
+		return errors.Wrapf(ht.ErrInternalServerErrorResponse, "code: %d, message: %s", code, http.StatusText(code))
 	}
 	return nil
 

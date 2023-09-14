@@ -21,6 +21,14 @@ const (
 	DirectionForward  Direction = "forward"
 )
 
+// AllValues returns all Direction values.
+func (Direction) AllValues() []Direction {
+	return []Direction{
+		DirectionBackward,
+		DirectionForward,
+	}
+}
+
 // MarshalText implements encoding.TextMarshaler.
 func (s Direction) MarshalText() ([]byte, error) {
 	switch s {

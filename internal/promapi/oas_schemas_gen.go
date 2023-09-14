@@ -205,6 +205,15 @@ const (
 	AlertingRuleStateInactive AlertingRuleState = "inactive"
 )
 
+// AllValues returns all AlertingRuleState values.
+func (AlertingRuleState) AllValues() []AlertingRuleState {
+	return []AlertingRuleState{
+		AlertingRuleStatePending,
+		AlertingRuleStateFiring,
+		AlertingRuleStateInactive,
+	}
+}
+
 // MarshalText implements encoding.TextMarshaler.
 func (s AlertingRuleState) MarshalText() ([]byte, error) {
 	switch s {
@@ -479,6 +488,19 @@ const (
 	FailErrorTypeNotFound    FailErrorType = "not_found"
 )
 
+// AllValues returns all FailErrorType values.
+func (FailErrorType) AllValues() []FailErrorType {
+	return []FailErrorType{
+		FailErrorTypeTimeout,
+		FailErrorTypeCanceled,
+		FailErrorTypeExecution,
+		FailErrorTypeBadData,
+		FailErrorTypeInternal,
+		FailErrorTypeUnavailable,
+		FailErrorTypeNotFound,
+	}
+}
+
 // MarshalText implements encoding.TextMarshaler.
 func (s FailErrorType) MarshalText() ([]byte, error) {
 	switch s {
@@ -562,6 +584,14 @@ const (
 	GetRulesTypeAlert  GetRulesType = "alert"
 	GetRulesTypeRecord GetRulesType = "record"
 )
+
+// AllValues returns all GetRulesType values.
+func (GetRulesType) AllValues() []GetRulesType {
+	return []GetRulesType{
+		GetRulesTypeAlert,
+		GetRulesTypeRecord,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s GetRulesType) MarshalText() ([]byte, error) {
@@ -834,6 +864,20 @@ const (
 	MetricMetadataTypeStateset       MetricMetadataType = "stateset"
 	MetricMetadataTypeUnknown        MetricMetadataType = "unknown"
 )
+
+// AllValues returns all MetricMetadataType values.
+func (MetricMetadataType) AllValues() []MetricMetadataType {
+	return []MetricMetadataType{
+		MetricMetadataTypeCounter,
+		MetricMetadataTypeGauge,
+		MetricMetadataTypeHistogram,
+		MetricMetadataTypeGaugehistogram,
+		MetricMetadataTypeSummary,
+		MetricMetadataTypeInfo,
+		MetricMetadataTypeStateset,
+		MetricMetadataTypeUnknown,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s MetricMetadataType) MarshalText() ([]byte, error) {
@@ -1861,6 +1905,15 @@ const (
 	RuleHealthOk      RuleHealth = "ok"
 	RuleHealthErr     RuleHealth = "err"
 )
+
+// AllValues returns all RuleHealth values.
+func (RuleHealth) AllValues() []RuleHealth {
+	return []RuleHealth{
+		RuleHealthUnknown,
+		RuleHealthOk,
+		RuleHealthErr,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s RuleHealth) MarshalText() ([]byte, error) {

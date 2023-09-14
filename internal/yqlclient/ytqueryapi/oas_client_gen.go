@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
@@ -89,6 +90,8 @@ func (c *Client) AbortQuery(ctx context.Context, params AbortQueryParams) error 
 func (c *Client) sendAbortQuery(ctx context.Context, params AbortQueryParams) (res *AbortedQuery, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("abortQuery"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v4/abort_query"),
 	}
 
 	// Run stopwatch.
@@ -232,6 +235,8 @@ func (c *Client) GetQuery(ctx context.Context, params GetQueryParams) (*QuerySta
 func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *QueryStatus, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQuery"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v4/get_query"),
 	}
 
 	// Run stopwatch.
@@ -375,6 +380,8 @@ func (c *Client) ReadQueryResult(ctx context.Context, params ReadQueryResultPara
 func (c *Client) sendReadQueryResult(ctx context.Context, params ReadQueryResultParams) (res QueryResult, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("readQueryResult"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v4/read_query_result"),
 	}
 
 	// Run stopwatch.
@@ -549,6 +556,8 @@ func (c *Client) StartQuery(ctx context.Context, params StartQueryParams) (*Star
 func (c *Client) sendStartQuery(ctx context.Context, params StartQueryParams) (res *StartedQuery, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("startQuery"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v4/start_query"),
 	}
 
 	// Run stopwatch.

@@ -196,6 +196,15 @@ const (
 	EngineChyt Engine = "chyt"
 )
 
+// AllValues returns all Engine values.
+func (Engine) AllValues() []Engine {
+	return []Engine{
+		EngineYql,
+		EngineQl,
+		EngineChyt,
+	}
+}
+
 // MarshalText implements encoding.TextMarshaler.
 func (s Engine) MarshalText() ([]byte, error) {
 	switch s {
@@ -318,6 +327,24 @@ const (
 	OperationStateAborting      OperationState = "aborting"
 	OperationStateFailing       OperationState = "failing"
 )
+
+// AllValues returns all OperationState values.
+func (OperationState) AllValues() []OperationState {
+	return []OperationState{
+		OperationStateRunning,
+		OperationStatePending,
+		OperationStateCompleted,
+		OperationStateFailed,
+		OperationStateAborted,
+		OperationStateReviving,
+		OperationStateInitializing,
+		OperationStatePreparing,
+		OperationStateMaterializing,
+		OperationStateCompleting,
+		OperationStateAborting,
+		OperationStateFailing,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s OperationState) MarshalText() ([]byte, error) {
@@ -819,6 +846,17 @@ const (
 	OutputFormatSchemafulDsv OutputFormat = "schemaful_dsv"
 	OutputFormatProtobuf     OutputFormat = "protobuf"
 )
+
+// AllValues returns all OutputFormat values.
+func (OutputFormat) AllValues() []OutputFormat {
+	return []OutputFormat{
+		OutputFormatJSON,
+		OutputFormatYson,
+		OutputFormatDsv,
+		OutputFormatSchemafulDsv,
+		OutputFormatProtobuf,
+	}
+}
 
 // MarshalText implements encoding.TextMarshaler.
 func (s OutputFormat) MarshalText() ([]byte, error) {

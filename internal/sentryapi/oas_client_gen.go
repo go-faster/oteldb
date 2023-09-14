@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"go.opentelemetry.io/otel/trace"
 
 	ht "github.com/ogen-go/ogen/http"
@@ -85,6 +86,8 @@ func (c *Client) Dummy(ctx context.Context) (*Event, error) {
 func (c *Client) sendDummy(ctx context.Context) (res *Event, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("dummy"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/dummy"),
 	}
 
 	// Run stopwatch.
@@ -156,6 +159,8 @@ func (c *Client) Envelope(ctx context.Context, request *EnvelopeReqWithContentTy
 func (c *Client) sendEnvelope(ctx context.Context, request *EnvelopeReqWithContentType) (res *EnvelopeOK, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("envelope"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/envelope"),
 	}
 
 	// Run stopwatch.
