@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
@@ -87,6 +88,8 @@ func (c *Client) GetApps(ctx context.Context) ([]ApplicationMetadata, error) {
 func (c *Client) sendGetApps(ctx context.Context) (res []ApplicationMetadata, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getApps"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/apps"),
 	}
 
 	// Run stopwatch.
@@ -158,6 +161,8 @@ func (c *Client) Ingest(ctx context.Context, request *IngestReqWithContentType, 
 func (c *Client) sendIngest(ctx context.Context, request *IngestReqWithContentType, params IngestParams) (res *IngestOK, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("ingest"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/ingest"),
 	}
 
 	// Run stopwatch.
@@ -378,6 +383,8 @@ func (c *Client) LabelValues(ctx context.Context, params LabelValuesParams) (Lab
 func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) (res LabelValues, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labelValues"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/label-values"),
 	}
 
 	// Run stopwatch.
@@ -524,6 +531,8 @@ func (c *Client) Labels(ctx context.Context, params LabelsParams) (Labels, error
 func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Labels, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labels"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/labels"),
 	}
 
 	// Run stopwatch.
@@ -657,6 +666,8 @@ func (c *Client) Render(ctx context.Context, params RenderParams) (*FlamebearerP
 func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *FlamebearerProfileV1, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("render"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/render"),
 	}
 
 	// Run stopwatch.

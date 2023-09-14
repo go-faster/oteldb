@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
@@ -84,6 +85,8 @@ func (c *Client) GetLabelValues(ctx context.Context, params GetLabelValuesParams
 func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesParams) (res *LabelValuesResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getLabelValues"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/label/{label}/values"),
 	}
 
 	// Run stopwatch.
@@ -239,6 +242,8 @@ func (c *Client) GetLabels(ctx context.Context, params GetLabelsParams) (*Labels
 func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res *LabelsResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getLabels"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/labels"),
 	}
 
 	// Run stopwatch.
@@ -375,6 +380,8 @@ func (c *Client) GetMetadata(ctx context.Context, params GetMetadataParams) (*Me
 func (c *Client) sendGetMetadata(ctx context.Context, params GetMetadataParams) (res *MetadataResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getMetadata"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/metadata"),
 	}
 
 	// Run stopwatch.
@@ -501,6 +508,8 @@ func (c *Client) GetQuery(ctx context.Context, params GetQueryParams) (*QueryRes
 func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQuery"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/query"),
 	}
 
 	// Run stopwatch.
@@ -610,6 +619,8 @@ func (c *Client) GetQueryExemplars(ctx context.Context, params GetQueryExemplars
 func (c *Client) sendGetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (res *QueryExemplarsResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryExemplars"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
 	}
 
 	// Run stopwatch.
@@ -733,6 +744,8 @@ func (c *Client) GetQueryRange(ctx context.Context, params GetQueryRangeParams) 
 func (c *Client) sendGetQueryRange(ctx context.Context, params GetQueryRangeParams) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryRange"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/query_range"),
 	}
 
 	// Run stopwatch.
@@ -888,6 +901,8 @@ func (c *Client) GetRules(ctx context.Context, params GetRulesParams) (*RulesRes
 func (c *Client) sendGetRules(ctx context.Context, params GetRulesParams) (res *RulesResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getRules"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/rules"),
 	}
 
 	// Run stopwatch.
@@ -1049,6 +1064,8 @@ func (c *Client) GetSeries(ctx context.Context, params GetSeriesParams) (*Series
 func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res *SeriesResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getSeries"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v1/series"),
 	}
 
 	// Run stopwatch.
@@ -1179,6 +1196,8 @@ func (c *Client) PostLabels(ctx context.Context) (*LabelsResponse, error) {
 func (c *Client) sendPostLabels(ctx context.Context) (res *LabelsResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postLabels"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v1/labels"),
 	}
 
 	// Run stopwatch.
@@ -1250,6 +1269,8 @@ func (c *Client) PostQuery(ctx context.Context, request *QueryForm) (*QueryRespo
 func (c *Client) sendPostQuery(ctx context.Context, request *QueryForm) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQuery"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v1/query"),
 	}
 
 	// Run stopwatch.
@@ -1324,6 +1345,8 @@ func (c *Client) PostQueryExemplars(ctx context.Context) (*QueryExemplarsRespons
 func (c *Client) sendPostQueryExemplars(ctx context.Context) (res *QueryExemplarsResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryExemplars"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
 	}
 
 	// Run stopwatch.
@@ -1395,6 +1418,8 @@ func (c *Client) PostQueryRange(ctx context.Context, request *QueryRangeForm) (*
 func (c *Client) sendPostQueryRange(ctx context.Context, request *QueryRangeForm) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryRange"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v1/query_range"),
 	}
 
 	// Run stopwatch.
@@ -1469,6 +1494,8 @@ func (c *Client) PostSeries(ctx context.Context) (*SeriesResponse, error) {
 func (c *Client) sendPostSeries(ctx context.Context) (res *SeriesResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postSeries"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/api/v1/series"),
 	}
 
 	// Run stopwatch.

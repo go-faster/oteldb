@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
@@ -86,6 +87,8 @@ func (c *Client) Echo(ctx context.Context) (EchoOK, error) {
 func (c *Client) sendEcho(ctx context.Context) (res EchoOK, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("echo"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/echo"),
 	}
 
 	// Run stopwatch.
@@ -157,6 +160,8 @@ func (c *Client) Search(ctx context.Context, params SearchParams) (*Traces, erro
 func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Traces, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("search"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/search"),
 	}
 
 	// Run stopwatch.
@@ -351,6 +356,8 @@ func (c *Client) SearchTagValues(ctx context.Context, params SearchTagValuesPara
 func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValuesParams) (res *TagValues, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagValues"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/search/tag/{tag_name}/values"),
 	}
 
 	// Run stopwatch.
@@ -442,6 +449,8 @@ func (c *Client) SearchTagValuesV2(ctx context.Context, params SearchTagValuesV2
 func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValuesV2Params) (res *TagValuesV2, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagValuesV2"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/v2/search/tag/{tag_name}/values"),
 	}
 
 	// Run stopwatch.
@@ -532,6 +541,8 @@ func (c *Client) SearchTags(ctx context.Context) (*TagNames, error) {
 func (c *Client) sendSearchTags(ctx context.Context) (res *TagNames, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTags"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/search/tags"),
 	}
 
 	// Run stopwatch.
@@ -603,6 +614,8 @@ func (c *Client) TraceByID(ctx context.Context, params TraceByIDParams) (TraceBy
 func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res TraceByIDRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("traceByID"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/traces/{traceID}"),
 	}
 
 	// Run stopwatch.
