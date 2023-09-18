@@ -21,6 +21,78 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+// Invoker invokes operations described by OpenAPI v3 specification.
+type Invoker interface {
+	// GetLabelValues invokes getLabelValues operation.
+	//
+	// GET /api/v1/label/{label}/values
+	GetLabelValues(ctx context.Context, params GetLabelValuesParams) (*LabelValuesResponse, error)
+	// GetLabels invokes getLabels operation.
+	//
+	// GET /api/v1/labels
+	GetLabels(ctx context.Context, params GetLabelsParams) (*LabelsResponse, error)
+	// GetMetadata invokes getMetadata operation.
+	//
+	// GET /api/v1/metadata
+	GetMetadata(ctx context.Context, params GetMetadataParams) (*MetadataResponse, error)
+	// GetQuery invokes getQuery operation.
+	//
+	// Query Prometheus.
+	//
+	// GET /api/v1/query
+	GetQuery(ctx context.Context, params GetQueryParams) (*QueryResponse, error)
+	// GetQueryExemplars invokes getQueryExemplars operation.
+	//
+	// Query Prometheus.
+	//
+	// GET /api/v1/query_exemplars
+	GetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (*QueryExemplarsResponse, error)
+	// GetQueryRange invokes getQueryRange operation.
+	//
+	// Query Prometheus.
+	//
+	// GET /api/v1/query_range
+	GetQueryRange(ctx context.Context, params GetQueryRangeParams) (*QueryResponse, error)
+	// GetRules invokes getRules operation.
+	//
+	// GET /api/v1/rules
+	GetRules(ctx context.Context, params GetRulesParams) (*RulesResponse, error)
+	// GetSeries invokes getSeries operation.
+	//
+	// Query Prometheus.
+	//
+	// GET /api/v1/series
+	GetSeries(ctx context.Context, params GetSeriesParams) (*SeriesResponse, error)
+	// PostLabels invokes postLabels operation.
+	//
+	// POST /api/v1/labels
+	PostLabels(ctx context.Context) (*LabelsResponse, error)
+	// PostQuery invokes postQuery operation.
+	//
+	// Query Prometheus.
+	//
+	// POST /api/v1/query
+	PostQuery(ctx context.Context, request *QueryForm) (*QueryResponse, error)
+	// PostQueryExemplars invokes postQueryExemplars operation.
+	//
+	// Query Prometheus.
+	//
+	// POST /api/v1/query_exemplars
+	PostQueryExemplars(ctx context.Context) (*QueryExemplarsResponse, error)
+	// PostQueryRange invokes postQueryRange operation.
+	//
+	// Query Prometheus.
+	//
+	// POST /api/v1/query_range
+	PostQueryRange(ctx context.Context, request *QueryRangeForm) (*QueryResponse, error)
+	// PostSeries invokes postSeries operation.
+	//
+	// Query Prometheus.
+	//
+	// POST /api/v1/series
+	PostSeries(ctx context.Context) (*SeriesResponse, error)
+}
+
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL

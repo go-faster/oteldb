@@ -21,6 +21,42 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+// Invoker invokes operations described by OpenAPI v3 specification.
+type Invoker interface {
+	// GetApps invokes getApps operation.
+	//
+	// Returns list of application metadata.
+	// Used by Grafana to test connection to Pyroscope.
+	//
+	// GET /api/apps
+	GetApps(ctx context.Context) ([]ApplicationMetadata, error)
+	// Ingest invokes ingest operation.
+	//
+	// Push data to Pyroscope.
+	//
+	// POST /ingest
+	Ingest(ctx context.Context, request *IngestReqWithContentType, params IngestParams) error
+	// LabelValues invokes labelValues operation.
+	//
+	// Returns list of label values.
+	//
+	// GET /label-values
+	LabelValues(ctx context.Context, params LabelValuesParams) (LabelValues, error)
+	// Labels invokes labels operation.
+	//
+	// Returns list of labels.
+	//
+	// GET /labels
+	Labels(ctx context.Context, params LabelsParams) (Labels, error)
+	// Render invokes render operation.
+	//
+	// Renders given query.
+	// One of `query` or `key` is required.
+	//
+	// GET /render
+	Render(ctx context.Context, params RenderParams) (*FlamebearerProfileV1, error)
+}
+
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL
