@@ -21,6 +21,47 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+// Invoker invokes operations described by OpenAPI v3 specification.
+type Invoker interface {
+	// Echo invokes echo operation.
+	//
+	// Echo request for testing, issued by Grafana.
+	//
+	// GET /api/echo
+	Echo(ctx context.Context) (EchoOK, error)
+	// Search invokes search operation.
+	//
+	// Execute TraceQL query.
+	//
+	// GET /api/search
+	Search(ctx context.Context, params SearchParams) (*Traces, error)
+	// SearchTagValues invokes searchTagValues operation.
+	//
+	// This endpoint retrieves all discovered values for the given tag, which can be used in search.
+	//
+	// GET /api/search/tag/{tag_name}/values
+	SearchTagValues(ctx context.Context, params SearchTagValuesParams) (*TagValues, error)
+	// SearchTagValuesV2 invokes searchTagValuesV2 operation.
+	//
+	// This endpoint retrieves all discovered values and their data types for the given TraceQL
+	// identifier.
+	//
+	// GET /api/v2/search/tag/{tag_name}/values
+	SearchTagValuesV2(ctx context.Context, params SearchTagValuesV2Params) (*TagValuesV2, error)
+	// SearchTags invokes searchTags operation.
+	//
+	// This endpoint retrieves all discovered tag names that can be used in search.
+	//
+	// GET /api/search/tags
+	SearchTags(ctx context.Context) (*TagNames, error)
+	// TraceByID invokes traceByID operation.
+	//
+	// Querying traces by id.
+	//
+	// GET /api/traces/{traceID}
+	TraceByID(ctx context.Context, params TraceByIDParams) (TraceByIDRes, error)
+}
+
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL

@@ -22,6 +22,34 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+// Invoker invokes operations described by OpenAPI v3 specification.
+type Invoker interface {
+	// AbortQuery invokes abortQuery operation.
+	//
+	// Abort running query.
+	//
+	// POST /api/v4/abort_query
+	AbortQuery(ctx context.Context, params AbortQueryParams) error
+	// GetQuery invokes getQuery operation.
+	//
+	// Gets query status.
+	//
+	// POST /api/v4/get_query
+	GetQuery(ctx context.Context, params GetQueryParams) (*QueryStatus, error)
+	// ReadQueryResult invokes readQueryResult operation.
+	//
+	// Read query result.
+	//
+	// POST /api/v4/read_query_result
+	ReadQueryResult(ctx context.Context, params ReadQueryResultParams) (QueryResult, error)
+	// StartQuery invokes startQuery operation.
+	//
+	// Start a new query.
+	//
+	// POST /api/v4/start_query
+	StartQuery(ctx context.Context, params StartQueryParams) (*StartedQuery, error)
+}
+
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL

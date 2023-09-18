@@ -20,6 +20,22 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+// Invoker invokes operations described by OpenAPI v3 specification.
+type Invoker interface {
+	// Dummy invokes dummy operation.
+	//
+	// Dummy endpoint to generate schema definitions.
+	//
+	// GET /dummy
+	Dummy(ctx context.Context) (*Event, error)
+	// Envelope invokes envelope operation.
+	//
+	// Sentry push.
+	//
+	// POST /envelope
+	Envelope(ctx context.Context, request *EnvelopeReqWithContentType) error
+}
+
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL

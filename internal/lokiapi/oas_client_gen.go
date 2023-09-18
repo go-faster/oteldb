@@ -21,6 +21,47 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+// Invoker invokes operations described by OpenAPI v3 specification.
+type Invoker interface {
+	// LabelValues invokes labelValues operation.
+	//
+	// Get values of label.
+	//
+	// GET /loki/api/v1/label/{name}/values
+	LabelValues(ctx context.Context, params LabelValuesParams) (*Values, error)
+	// Labels invokes labels operation.
+	//
+	// Get labels.
+	// Used by Grafana to test connection to Loki.
+	//
+	// GET /loki/api/v1/labels
+	Labels(ctx context.Context, params LabelsParams) (*Labels, error)
+	// Push invokes push operation.
+	//
+	// Push data.
+	//
+	// POST /loki/api/v1/push
+	Push(ctx context.Context, request PushReq) error
+	// Query invokes query operation.
+	//
+	// Query.
+	//
+	// GET /loki/api/v1/query
+	Query(ctx context.Context, params QueryParams) (*QueryResponse, error)
+	// QueryRange invokes queryRange operation.
+	//
+	// Query range.
+	//
+	// GET /loki/api/v1/query_range
+	QueryRange(ctx context.Context, params QueryRangeParams) (*QueryResponse, error)
+	// Series invokes series operation.
+	//
+	// Get series.
+	//
+	// GET /loki/api/v1/series
+	Series(ctx context.Context, params SeriesParams) (*Maps, error)
+}
+
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL
