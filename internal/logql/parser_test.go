@@ -1019,6 +1019,8 @@ var tests = []TestCase{
 	{`{foo = "bar"} | unwrap label`, nil, true},
 	{`{foo = "bar"} |= foo`, nil, true},
 	{`{foo = "bar"} |= ip("foo"`, nil, true},
+	// Tail expression
+	{`{foo = "bar"} |= "foo" {}`, nil, true},
 	// Missing identifier.
 	{`{foo = "bar"} | json bar,`, nil, true},
 	{`{foo = "bar"} | logfmt bar,`, nil, true},

@@ -383,6 +383,8 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 		binOp = OpAnd
 	case lexer.Or:
 		binOp = OpOr
+	case lexer.EOF:
+		return pred, nil
 	default:
 		p.unread()
 		return pred, nil

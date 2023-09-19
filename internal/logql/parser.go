@@ -27,7 +27,15 @@ func Parse(s string, opts ParseOptions) (Expr, error) {
 		tokens:    tokens,
 		allowDots: opts.AllowDots,
 	}
-	return p.parseExpr()
+
+	expr, err := p.parseExpr()
+	if err != nil {
+		return nil, err
+	}
+	if t := p.next(); t.Type != lexer.EOF {
+		return nil, p.unexpectedToken(t)
+	}
+	return expr, nil
 }
 
 // ParseSelector parses label selector from string.
