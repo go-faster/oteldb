@@ -154,8 +154,8 @@ func runTest(
 			{`{http_method="HEAD"} |= ip("236.7.233.166")`, 1},
 
 			// Label filter.
-			{`{http_method=~".+"} | http_method = "GET"}`, 21},
-			{`{http_method=~".+"} | http_method = "HEAD", http_status = "500"}`, 2},
+			{`{http_method=~".+"} | http_method = "GET"`, 21},
+			{`{http_method=~".+"} | http_method = "HEAD", http_status = "500"`, 2},
 			// Number of lines per protocol.
 			//
 			// 	"HTTP/1.0" 55
