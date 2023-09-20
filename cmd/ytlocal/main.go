@@ -704,7 +704,7 @@ Also, docker is required to run UI.
 					const image = "ytsaurus/ui:stable"
 					lg := lg.Named("ui")
 
-					docker, err := testcontainers.NewDockerClient()
+					docker, err := testcontainers.NewDockerClientWithOpts(ctx)
 					if err != nil {
 						return errors.Wrap(err, "docker client")
 					}
