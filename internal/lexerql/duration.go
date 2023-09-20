@@ -30,8 +30,8 @@ func ScanDuration(s *scanner.Scanner, number string) (string, error) {
 
 // IsDurationRune returns true, if r is a non-digit rune that could be part of duration.
 func IsDurationRune[R char](r R) bool {
-	switch r {
-	case 'n', 'u', 'µ', 'm', 's', 'h', 'd', 'w', 'y':
+	switch rune(r) {
+	case 'n', 'u', 'µ', 'μ', 'm', 's', 'h', 'd', 'w', 'y':
 		return true
 	default:
 		return false
