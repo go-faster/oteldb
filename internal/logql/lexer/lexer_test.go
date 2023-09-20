@@ -286,11 +286,11 @@ func TestTokenizeErrors(t *testing.T) {
 	}{
 		{
 			`10gg`,
-			`at test.ql:1:1: unhandled size name: gg`,
+			`at test.ql:1:1: unknown unit "gg"`,
 		},
 		{
 			`10yy`,
-			`at test.ql:1:1: unknown unit "yy" in duration "10yy"`,
+			`at test.ql:1:1: unknown unit "yy"`,
 		},
 		{
 			`{"foo"=~"\x"}`,

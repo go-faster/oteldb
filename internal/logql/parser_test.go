@@ -440,6 +440,31 @@ var tests = []TestCase{
 		},
 		false,
 	},
+	{
+		`{name="kafka"}
+				| duration >= 20ms or size < 20mb or size <= 20MiB`,
+		&LogExpr{
+			Sel: Selector{
+				Matchers: []LabelMatcher{
+					{"name", OpEq, "kafka", nil},
+				},
+			},
+			Pipeline: []PipelineStage{
+				&LabelFilter{
+					Pred: &LabelPredicateBinOp{
+						Left: &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
+						Op:   OpOr,
+						Right: &LabelPredicateBinOp{
+							Left:  &BytesFilter{"size", OpLt, 20 * 1000 * 1000}, // 20MB
+							Op:    OpOr,
+							Right: &BytesFilter{"size", OpLte, 20 * 1024 * 1024}, // 20MiB
+						},
+					},
+				},
+			},
+		},
+		false,
+	},
 
 	// Metric queries.
 	// Range aggregation.

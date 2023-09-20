@@ -7,7 +7,6 @@ import (
 	"text/scanner"
 	"unicode"
 
-	"github.com/dustin/go-humanize"
 	"github.com/prometheus/prometheus/util/strutil"
 
 	"github.com/go-faster/oteldb/internal/lexerql"
@@ -78,23 +77,18 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	}
 	switch r {
 	case scanner.Int, scanner.Float:
-		switch r := l.scanner.Peek(); {
-		case lexerql.IsDurationRune(r):
-			duration, err := lexerql.ScanDuration(&l.scanner, text)
-			if err != nil {
-				l.setError(err.Error(), tok.Pos)
-				return tok, false
-			}
+		unit, err := lexerql.ScanUnit(&l.scanner, text)
+		if err != nil {
+			l.setError(err.Error(), tok.Pos)
+			return tok, false
+		}
+		switch unit.Type {
+		case lexerql.Duration:
 			tok.Type = Duration
-			tok.Text = duration
-		case isBytesRune(r):
-			bytes, err := scanBytes(&l.scanner, text)
-			if err != nil {
-				l.setError(err.Error(), tok.Pos)
-				return tok, false
-			}
+			tok.Text = unit.Text
+		case lexerql.Bytes:
 			tok.Type = Bytes
-			tok.Text = bytes
+			tok.Text = unit.Text
 		default:
 			tok.Type = Number
 		}
@@ -147,33 +141,6 @@ func scanSpace(s *scanner.Scanner) {
 			return
 		}
 		s.Next()
-	}
-}
-
-func scanBytes(s *scanner.Scanner, number string) (string, error) {
-	var sb strings.Builder
-	sb.WriteString(number)
-
-	for {
-		ch := s.Peek()
-		if !lexerql.IsDigit(ch) && !isBytesRune(ch) && ch != '.' {
-			break
-		}
-		sb.WriteRune(ch)
-		s.Next()
-	}
-
-	bs := sb.String()
-	_, err := humanize.ParseBytes(bs)
-	return bs, err
-}
-
-func isBytesRune(r rune) bool {
-	switch r {
-	case 'b', 'B', 'i', 'k', 'K', 'M', 'g', 'G', 't', 'T', 'p', 'P':
-		return true
-	default:
-		return false
 	}
 }
 
