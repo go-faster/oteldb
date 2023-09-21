@@ -10,6 +10,7 @@ import (
 type cluster struct {
 	name    string
 	servers []*server
+	rand    *rand.Rand
 }
 
 func (c *cluster) Attributes() []attribute.KeyValue {
@@ -18,8 +19,8 @@ func (c *cluster) Attributes() []attribute.KeyValue {
 	}
 }
 
-func (c *cluster) getRandomServer(source *rand.Rand) *server {
-	return c.servers[source.Intn(len(c.servers))]
+func (c *cluster) getRandomServer() *server {
+	return c.servers[c.rand.Intn(len(c.servers))]
 }
 
 func (c *cluster) addServer(s *server) {

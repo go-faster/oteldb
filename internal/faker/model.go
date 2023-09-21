@@ -3,7 +3,6 @@ package faker
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net/netip"
 	"strconv"
 
@@ -17,13 +16,9 @@ import (
 
 type model struct {
 	rps       int
-	cluster   cluster
+	cluster   *cluster
 	frontends []*frontendService
 	router    Router
-	rand      *rand.Rand
-	tp        TracerProviderFactory
-	res       *resource.Resource
-	tracer    trace.Tracer
 }
 
 const (
@@ -41,9 +36,8 @@ type Request struct {
 }
 
 func (m *model) IssueRequest() {
-	ctx, span := m.tracer.Start(context.Background(), "request")
-	defer span.End()
-	m.router.API(ctx)
+	ctx := context.Background()
+	m.router.Frontend(ctx)
 }
 
 func mergeToRes(s ...[]attribute.KeyValue) *resource.Resource {
@@ -74,7 +68,6 @@ func modelFromConfig(c Config) model {
 		semconv.TelemetrySDKLanguageGo,
 		semconv.TelemetrySDKVersion(sdk.Version()),
 	}
-	rootRes := resource.NewSchemaless(rootAttrs...)
 	tpf := c.TracerProviderFactory
 	router := &clusterRouter{
 		routes: map[string][]routerHandler{},
@@ -82,15 +75,13 @@ func modelFromConfig(c Config) model {
 	}
 	m := model{
 		rps:    c.RPS,
-		rand:   c.Rand,
 		router: router,
-		tracer: tpf.New(tracesdk.WithResource(rootRes)).Tracer("faker"),
-		cluster: cluster{
+		cluster: &cluster{
 			name: "alpha",
+			rand: c.Rand,
 		},
 	}
 
-	// Generate clients.
 	residentialPool := newIPAllocator(netip.MustParseAddr("95.24.0.0"))
 	for i := 0; i < c.Services.Frontend.Replicas; i++ {
 		ip := residentialPool.Next()
@@ -115,7 +106,6 @@ func modelFromConfig(c Config) model {
 		router.addRoute(serviceFrontend, f)
 	}
 
-	// Pool of external IP addresses.
 	serverPool := newIPAllocator(netip.MustParseAddr("103.21.244.0"))
 	for i := 0; i < c.Nodes; i++ {
 		m.cluster.addServer(&server{
@@ -125,9 +115,8 @@ func modelFromConfig(c Config) model {
 		})
 	}
 
-	// Distribute HTTP API.
 	for i := 0; i < c.Services.API.Replicas; i++ {
-		srv := m.cluster.getRandomServer(m.rand)
+		srv := m.cluster.getRandomServer()
 		attrs := []attribute.KeyValue{
 			semconv.ServiceName(serviceAPI),
 			instanceID(i),
@@ -143,12 +132,9 @@ func modelFromConfig(c Config) model {
 		router.addRoute(serviceAPI, s)
 	}
 
-	// Distribute internal services.
 	pool := newIPAllocator(netip.MustParseAddr("10.43.0.0"))
-
-	// Distribute Backend.
 	for i := 0; i < c.Services.Backend.Replicas; i++ {
-		srv := m.cluster.getRandomServer(m.rand)
+		srv := m.cluster.getRandomServer()
 		attrs := []attribute.KeyValue{
 			semconv.ServiceName(serviceBackend),
 			instanceID(i),
@@ -164,9 +150,8 @@ func modelFromConfig(c Config) model {
 		router.addRoute(serviceBackend, s)
 	}
 
-	// Distribute DB.
 	for i := 0; i < c.Services.DB.Replicas; i++ {
-		svc := m.cluster.getRandomServer(m.rand)
+		svc := m.cluster.getRandomServer()
 		attrs := []attribute.KeyValue{
 			semconv.ServiceName("db"),
 			instanceID(i),
@@ -179,12 +164,11 @@ func modelFromConfig(c Config) model {
 			tracer: tpf.New(withResAttrs(rootAttrs, svc.Attributes(), attrs)).Tracer("db"),
 		}
 		svc.addService(s)
-		router.addRoute("db", s)
+		router.addRoute(serviceDB, s)
 	}
 
-	// Distribute Cache.
 	for i := 0; i < c.Services.Cache.Replicas; i++ {
-		svc := m.cluster.getRandomServer(m.rand)
+		svc := m.cluster.getRandomServer()
 		attrs := []attribute.KeyValue{
 			semconv.ServiceName(serviceCache),
 			instanceID(i),

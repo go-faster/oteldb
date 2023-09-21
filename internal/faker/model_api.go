@@ -16,7 +16,7 @@ type apiService struct {
 }
 
 func (s apiService) Handle(ctx context.Context) {
-	ctx, span := s.tracer.Start(ctx, "request")
+	ctx, span := s.tracer.Start(ctx, "ProxyAndAggregate")
 	defer span.End()
 	s.router.Backend(ctx)
 }

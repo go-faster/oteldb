@@ -25,6 +25,7 @@ func (s *server) Attributes() []attribute.KeyValue {
 	return []attribute.KeyValue{
 		semconv.OSTypeLinux,
 		semconv.HostName(s.name),
+		semconv.OSDescription("Ubuntu 22.04.3 LTS (Jammy Jellyfish) (Linux server 6.2.0-32-generic #32~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Aug 18 10:40:13 UTC 2 x86_64)"),
 		semconv.HostID(hostID.String()),
 		attribute.Int("faker.server.id", s.id),
 	}

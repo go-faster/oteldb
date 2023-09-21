@@ -16,7 +16,7 @@ type backendService struct {
 }
 
 func (s backendService) Handle(ctx context.Context) {
-	ctx, span := s.tracer.Start(ctx, "request")
+	ctx, span := s.tracer.Start(ctx, "Handle")
 	defer span.End()
 	s.router.Cache(ctx)
 	s.router.DB(ctx)
