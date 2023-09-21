@@ -23,7 +23,7 @@ require (
 	github.com/pyroscope-io/client v0.7.2
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	github.com/testcontainers/testcontainers-go v0.24.0
+	github.com/testcontainers/testcontainers-go v0.24.1
 	go.opentelemetry.io/collector v0.85.0
 	go.opentelemetry.io/collector/component v0.85.0
 	go.opentelemetry.io/collector/confmap v0.85.0
