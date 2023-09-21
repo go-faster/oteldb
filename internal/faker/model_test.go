@@ -36,25 +36,43 @@ func (gen *randomIDGenerator) NewIDs(_ context.Context) (tid trace.TraceID, sid 
 	return tid, sid
 }
 
+type traceProviderFactory struct {
+	options   []tracesdk.TracerProviderOption
+	providers []*tracesdk.TracerProvider
+}
+
+func (f *traceProviderFactory) New(options ...tracesdk.TracerProviderOption) *tracesdk.TracerProvider {
+	opts := make([]tracesdk.TracerProviderOption, 0, len(f.options)+len(options))
+	opts = append(opts, f.options...)
+	opts = append(opts, options...)
+	provider := tracesdk.NewTracerProvider(opts...)
+	f.providers = append(f.providers, provider)
+	return provider
+}
+
 func TestModel(t *testing.T) {
 	// Initialize test tracer.
 	exporter := tracetest.NewInMemoryExporter()
 	randSource := rand.NewSource(42)
 	randInstance := rand.New(randSource)
-	tp := tracesdk.NewTracerProvider(
-		// Using deterministic random ids.
-		tracesdk.WithIDGenerator(&randomIDGenerator{
-			rand: randInstance,
-		}),
-		tracesdk.WithBatcher(exporter,
-			tracesdk.WithBatchTimeout(0), // instant
-		),
+	randGen := &randomIDGenerator{
+		rand: randInstance,
+	}
+	batchProcessor := tracesdk.NewBatchSpanProcessor(exporter,
+		tracesdk.WithBatchTimeout(0), // instant
 	)
+	tpFactory := &traceProviderFactory{
+		options: []tracesdk.TracerProviderOption{
+			// Using deterministic random ids.
+			tracesdk.WithIDGenerator(randGen),
+			tracesdk.WithSpanProcessor(batchProcessor),
+		},
+	}
 	m := modelFromConfig(Config{
-		Rand:           randInstance,
-		Nodes:          10,
-		RPS:            1000,
-		TracerProvider: tp,
+		Rand:                  randInstance,
+		Nodes:                 10,
+		RPS:                   1000,
+		TracerProviderFactory: tpFactory,
 		Services: Services{
 			API: API{
 				Replicas: 2,
@@ -86,8 +104,10 @@ func TestModel(t *testing.T) {
 		// Issue request.
 		m.IssueRequest()
 		t.Run("Spans", func(t *testing.T) {
-			// Force flushing.
-			require.NoError(t, tp.ForceFlush(context.Background()))
+			ctx := context.Background()
+			for _, provider := range tpFactory.providers {
+				require.NoError(t, provider.ForceFlush(ctx))
+			}
 			spans := exporter.GetSpans()
 			require.NotEmpty(t, spans)
 			require.Len(t, spans, 6)

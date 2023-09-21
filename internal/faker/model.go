@@ -2,66 +2,37 @@ package faker
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"net/netip"
 	"strconv"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/sdk"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type cluster struct {
-	name    string
-	servers []server
-}
-
-func (c *cluster) Attributes() []attribute.KeyValue {
-	return []attribute.KeyValue{
-		semconv.K8SClusterName(c.name),
-	}
-}
-
-func (c *cluster) getRandomServer(source *rand.Rand) int {
-	return source.Intn(len(c.servers))
-}
-
-func (c *cluster) addServer(s server) {
-	c.servers = append(c.servers, s)
-}
-
-type service interface {
-	routerHandler
-	Name() string
-}
-
-type server struct {
-	name     string     // hostname
-	ip       netip.Addr // address
-	id       int        // unique id
-	services []service
-}
-
-func (s *server) Attributes() []attribute.KeyValue {
-	return []attribute.KeyValue{
-		semconv.NetHostName(s.name),
-		attribute.Int("faker.server.id", s.id),
-	}
-}
-
-func (s *server) addService(service service) {
-	s.services = append(s.services, service)
-}
-
 type model struct {
 	rps       int
 	cluster   cluster
-	frontends []frontendService
+	frontends []*frontendService
 	router    Router
 	rand      *rand.Rand
-	tp        trace.TracerProvider
+	tp        TracerProviderFactory
+	res       *resource.Resource
 	tracer    trace.Tracer
 }
+
+const (
+	serviceFrontend = "frontend"
+	serviceAPI      = "api"
+	serviceBackend  = "backend"
+	serviceDB       = "db"
+	serviceCache    = "cache"
+)
 
 // Request of the client.
 type Request struct {
@@ -75,140 +46,36 @@ func (m *model) IssueRequest() {
 	m.router.API(ctx)
 }
 
-type apiService struct {
-	router Router
-	tracer trace.Tracer
-	id     int
-	ip     netip.Addr
-	port   int
-}
-
-func (s apiService) Handle(ctx context.Context) {
-	ctx, span := s.tracer.Start(ctx, "request", trace.WithAttributes(s.Attributes()...))
-	defer span.End()
-	s.router.Backend(ctx)
-}
-
-func (s apiService) Attributes() []attribute.KeyValue {
-	return []attribute.KeyValue{
-		semconv.ServiceName(s.Name()),
+func mergeToRes(s ...[]attribute.KeyValue) *resource.Resource {
+	res := resource.Empty()
+	for _, a := range s {
+		v, err := resource.Merge(res, resource.NewSchemaless(a...))
+		if err != nil {
+			panic(err)
+		}
+		res = v
 	}
+	return res
 }
 
-func (s apiService) Name() string { return "api" }
-
-type dbService struct {
-	router Router
-	tracer trace.Tracer
-	id     int
-	ip     netip.Addr
-	port   int
+func withResAttrs(s ...[]attribute.KeyValue) tracesdk.TracerProviderOption {
+	return tracesdk.WithResource(mergeToRes(s...))
 }
 
-func (s dbService) Handle(ctx context.Context) {
-	ctx, span := s.tracer.Start(ctx, "request")
-	defer span.End()
-	_ = ctx
-}
-
-func (s dbService) Name() string { return "db" }
-
-type cacheService struct {
-	router Router
-	tracer trace.Tracer
-	id     int
-	ip     netip.Addr
-	port   int
-}
-
-func (s cacheService) Handle(ctx context.Context) {
-	ctx, span := s.tracer.Start(ctx, "request")
-	defer span.End()
-	_ = ctx
-}
-
-func (s cacheService) Name() string { return "cache" }
-
-type backendService struct {
-	id     int
-	ip     netip.Addr
-	port   int
-	router Router
-	tracer trace.Tracer
-}
-
-func (s backendService) Handle(ctx context.Context) {
-	ctx, span := s.tracer.Start(ctx, "request")
-	defer span.End()
-	s.router.Cache(ctx)
-	s.router.DB(ctx)
-	s.router.Cache(ctx)
-}
-
-func (s backendService) Name() string { return "backend" }
-
-type frontendService struct {
-	router Router
-	tracer trace.Tracer
-	id     int
-	ip     netip.Addr
-}
-
-func (s frontendService) Name() string { return "frontend" }
-
-func (s frontendService) Handle(ctx context.Context) {
-	s.router.API(ctx)
-}
-
-// Router routes request to services.
-type Router interface {
-	Frontend(ctx context.Context)
-	API(ctx context.Context)
-	Backend(ctx context.Context)
-	Cache(ctx context.Context)
-	DB(ctx context.Context)
-}
-
-type routerHandler interface {
-	Handle(ctx context.Context)
-}
-
-type clusterRouter struct {
-	random *rand.Rand
-	routes map[string][]routerHandler
-}
-
-func (r *clusterRouter) addRoute(name string, handler routerHandler) {
-	r.routes[name] = append(r.routes[name], handler)
-}
-
-func (r *clusterRouter) handle(ctx context.Context, name string) {
-	routes := r.routes[name]
-	// Pick random.
-	routes[r.random.Intn(len(routes))].Handle(ctx)
-}
-
-func (r *clusterRouter) API(ctx context.Context) {
-	r.handle(ctx, "api")
-}
-
-func (r *clusterRouter) Backend(ctx context.Context) {
-	r.handle(ctx, "backend")
-}
-
-func (r *clusterRouter) Cache(ctx context.Context) {
-	r.handle(ctx, "cache")
-}
-
-func (r *clusterRouter) DB(ctx context.Context) {
-	r.handle(ctx, "db")
-}
-
-func (r *clusterRouter) Frontend(ctx context.Context) {
-	r.handle(ctx, "frontend")
+func instanceID(id int) attribute.KeyValue {
+	return semconv.ServiceInstanceID(fmt.Sprintf("%d", id))
 }
 
 func modelFromConfig(c Config) model {
+	rootAttrs := []attribute.KeyValue{
+		attribute.Bool("oteldb.faker", true),
+
+		semconv.TelemetrySDKName("opentelemetry"),
+		semconv.TelemetrySDKLanguageGo,
+		semconv.TelemetrySDKVersion(sdk.Version()),
+	}
+	rootRes := resource.NewSchemaless(rootAttrs...)
+	tpf := c.TracerProviderFactory
 	router := &clusterRouter{
 		routes: map[string][]routerHandler{},
 		random: c.Rand,
@@ -217,28 +84,41 @@ func modelFromConfig(c Config) model {
 		rps:    c.RPS,
 		rand:   c.Rand,
 		router: router,
-		tracer: c.TracerProvider.Tracer("faker"),
-		tp:     c.TracerProvider,
+		tracer: tpf.New(tracesdk.WithResource(rootRes)).Tracer("faker"),
+		cluster: cluster{
+			name: "alpha",
+		},
 	}
-	m.cluster.name = "msk1"
 
 	// Generate clients.
 	residentialPool := newIPAllocator(netip.MustParseAddr("95.24.0.0"))
 	for i := 0; i < c.Services.Frontend.Replicas; i++ {
-		f := frontendService{
+		ip := residentialPool.Next()
+		id := i
+		f := &frontendService{
 			router: router,
-			id:     i,
-			ip:     residentialPool.Next(),
-			tracer: c.TracerProvider.Tracer("client"),
+			id:     id,
+			ip:     ip,
+			tracer: tpf.New(withResAttrs(rootAttrs,
+				[]attribute.KeyValue{
+					semconv.ServiceName(serviceFrontend),
+					semconv.ServiceInstanceID(fmt.Sprintf("%d", id)),
+					semconv.BrowserLanguage("en"),
+					semconv.BrowserMobile(false),
+					semconv.BrowserPlatform("Linux"),
+					semconv.BrowserBrands("Firefox"),
+					attribute.Int("front.id", id),
+				},
+			)).Tracer(serviceFrontend),
 		}
 		m.frontends = append(m.frontends, f)
-		router.addRoute("frontend", f)
+		router.addRoute(serviceFrontend, f)
 	}
 
 	// Pool of external IP addresses.
 	serverPool := newIPAllocator(netip.MustParseAddr("103.21.244.0"))
 	for i := 0; i < c.Nodes; i++ {
-		m.cluster.addServer(server{
+		m.cluster.addServer(&server{
 			name: "node-" + strconv.Itoa(i),
 			ip:   serverPool.Next(),
 			id:   i,
@@ -247,18 +127,20 @@ func modelFromConfig(c Config) model {
 
 	// Distribute HTTP API.
 	for i := 0; i < c.Services.API.Replicas; i++ {
-		// Select random node.
-		j := m.cluster.getRandomServer(m.rand)
-		// Using note IP address as being exposed on node 80 port.
-		s := apiService{
-			router: router,
-			tracer: c.TracerProvider.Tracer("api"),
-			id:     i,
-			ip:     m.cluster.servers[j].ip,
-			port:   80,
+		srv := m.cluster.getRandomServer(m.rand)
+		attrs := []attribute.KeyValue{
+			semconv.ServiceName(serviceAPI),
+			instanceID(i),
 		}
-		m.cluster.servers[j].addService(s)
-		router.addRoute("api", s)
+		s := &apiService{
+			router: router,
+			id:     i,
+			ip:     srv.ip,
+			port:   80,
+			tracer: tpf.New(withResAttrs(rootAttrs, attrs)).Tracer(serviceAPI),
+		}
+		srv.addService(s)
+		router.addRoute(serviceAPI, s)
 	}
 
 	// Distribute internal services.
@@ -266,47 +148,56 @@ func modelFromConfig(c Config) model {
 
 	// Distribute Backend.
 	for i := 0; i < c.Services.Backend.Replicas; i++ {
+		srv := m.cluster.getRandomServer(m.rand)
+		attrs := []attribute.KeyValue{
+			semconv.ServiceName(serviceBackend),
+			instanceID(i),
+		}
 		s := backendService{
 			router: router,
-			tracer: c.TracerProvider.Tracer("backend"),
 			id:     i,
 			ip:     pool.Next(),
 			port:   8080,
+			tracer: tpf.New(withResAttrs(rootAttrs, srv.Attributes(), attrs)).Tracer(serviceBackend),
 		}
-		// Select random node.
-		j := m.cluster.getRandomServer(m.rand)
-		m.cluster.servers[j].addService(s)
-		router.addRoute("backend", s)
+		srv.addService(s)
+		router.addRoute(serviceBackend, s)
 	}
 
 	// Distribute DB.
 	for i := 0; i < c.Services.DB.Replicas; i++ {
+		svc := m.cluster.getRandomServer(m.rand)
+		attrs := []attribute.KeyValue{
+			semconv.ServiceName("db"),
+			instanceID(i),
+		}
 		s := dbService{
 			router: router,
-			tracer: c.TracerProvider.Tracer("db"),
 			id:     i,
 			ip:     pool.Next(),
 			port:   5432,
+			tracer: tpf.New(withResAttrs(rootAttrs, svc.Attributes(), attrs)).Tracer("db"),
 		}
-		// Select random node.
-		j := m.cluster.getRandomServer(m.rand)
-		m.cluster.servers[j].addService(s)
+		svc.addService(s)
 		router.addRoute("db", s)
 	}
 
 	// Distribute Cache.
 	for i := 0; i < c.Services.Cache.Replicas; i++ {
-		s := cacheService{
+		svc := m.cluster.getRandomServer(m.rand)
+		attrs := []attribute.KeyValue{
+			semconv.ServiceName(serviceCache),
+			instanceID(i),
+		}
+		s := &cacheService{
 			router: router,
-			tracer: c.TracerProvider.Tracer("cache"),
+			tracer: tpf.New(withResAttrs(rootAttrs, svc.Attributes(), attrs)).Tracer(serviceCache),
 			id:     i,
 			ip:     pool.Next(),
 			port:   6379,
 		}
-		// Select random node.
-		j := m.cluster.getRandomServer(m.rand)
-		m.cluster.servers[j].addService(s)
-		router.addRoute("cache", s)
+		svc.addService(s)
+		router.addRoute(serviceCache, s)
 	}
 
 	return m

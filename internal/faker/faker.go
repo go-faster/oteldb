@@ -21,8 +21,14 @@ type Config struct {
 	// Services configuration.
 	Services Services `json:"services" yaml:"services"`
 	// Random number generator.
-	Rand           *rand.Rand
-	TracerProvider *tracesdk.TracerProvider
+	Rand *rand.Rand
+	// Factory for TracerProvider that can create providers from new
+	TracerProviderFactory TracerProviderFactory
+}
+
+// TracerProviderFactory is a factory for TracerProvider.
+type TracerProviderFactory interface {
+	New(...tracesdk.TracerProviderOption) *tracesdk.TracerProvider
 }
 
 // Services wraps all services configuration, describing topology of the
