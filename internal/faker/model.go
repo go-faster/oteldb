@@ -11,7 +11,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type model struct {
@@ -28,12 +27,6 @@ const (
 	serviceDB       = "db"
 	serviceCache    = "cache"
 )
-
-// Request of the client.
-type Request struct {
-	TraceID  trace.TraceID
-	ParentID trace.SpanID
-}
 
 func (m *model) IssueRequest() {
 	ctx := context.Background()
