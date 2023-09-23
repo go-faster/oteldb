@@ -13,6 +13,14 @@ type service interface {
 	Name() string
 }
 
+// Server represents a physical Server, typically a node in cluster.
+//
+// Metrics:
+//   - [ ] Host metrics, like node exporter
+//
+// Traces: N/A
+//
+// Logs: N/A
 type server struct {
 	name     string     // hostname
 	ip       netip.Addr // address
