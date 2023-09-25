@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
@@ -41,6 +42,20 @@ type traceProviderFactory struct {
 	providers []*tracesdk.TracerProvider
 }
 
+type meterProviderFactory struct {
+	options   []metric.Option
+	providers []*metric.MeterProvider
+}
+
+func (f *meterProviderFactory) New(options ...metric.Option) *metric.MeterProvider {
+	opts := make([]metric.Option, 0, len(f.options)+len(options))
+	opts = append(opts, f.options...)
+	opts = append(opts, options...)
+	provider := metric.NewMeterProvider(opts...)
+	f.providers = append(f.providers, provider)
+	return provider
+}
+
 func (f *traceProviderFactory) New(options ...tracesdk.TracerProviderOption) *tracesdk.TracerProvider {
 	opts := make([]tracesdk.TracerProviderOption, 0, len(f.options)+len(options))
 	opts = append(opts, f.options...)
@@ -68,11 +83,17 @@ func TestModel(t *testing.T) {
 			tracesdk.WithSpanProcessor(batchProcessor),
 		},
 	}
+	mpFactory := &meterProviderFactory{
+		options: []metric.Option{
+			// ...
+		},
+	}
 	m := modelFromConfig(Config{
 		Rand:                  randInstance,
 		Nodes:                 10,
 		RPS:                   1000,
 		TracerProviderFactory: tpFactory,
+		MeterProviderFactory:  mpFactory,
 		Services: Services{
 			API: API{
 				Replicas: 2,

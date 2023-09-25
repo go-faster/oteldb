@@ -1,10 +1,13 @@
 package faker
 
 import (
+	"context"
+	"math/rand"
 	"net/netip"
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
@@ -16,7 +19,7 @@ type service interface {
 // Server represents a physical Server, typically a node in cluster.
 //
 // Metrics:
-//   - [ ] Host metrics, like node exporter
+//   - [ ] System metrics
 //
 // Traces: N/A
 //
@@ -26,6 +29,57 @@ type server struct {
 	ip       netip.Addr // address
 	id       int        // unique id
 	services []service
+	meter    metric.Meter
+	rnd      *rand.Rand
+	cpus     int
+
+	cpuUtilization metric.Float64ObservableGauge
+	memUtilization metric.Float64ObservableGauge
+}
+
+func (s *server) Metrics() (err error) {
+	// https://opentelemetry.io/docs/specs/otel/metrics/semantic_conventions/system-metrics/
+	if s.cpuUtilization, err = s.meter.Float64ObservableGauge("system.cpu.utilization",
+		metric.WithUnit("1"),
+		metric.WithDescription("Difference in system.cpu.time since the last measurement, divided by the elapsed time and number of CPUs/"),
+	); err != nil {
+		return err
+	}
+	if _, err := s.meter.RegisterCallback(s.Observe, s.cpuUtilization); err != nil {
+		return err
+	}
+	if s.memUtilization, err = s.meter.Float64ObservableGauge("system.memory.utilization",
+		metric.WithUnit("1"),
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Observe is metric callback.
+func (s *server) Observe(_ context.Context, observer metric.Observer) error {
+	for i := 0; i < s.cpus; i++ {
+		for _, state := range []string{
+			"idle",
+			"system",
+			"user",
+		} {
+			observer.ObserveFloat64(s.cpuUtilization, s.rnd.Float64(), metric.WithAttributes(
+				attribute.String("state", state),
+				attribute.Int("cpu", i+1), // CPU number (0..n)
+			))
+		}
+	}
+	for _, state := range []string{
+		"used",
+		"free",
+	} {
+		observer.ObserveFloat64(s.memUtilization, s.rnd.Float64(), metric.WithAttributes(
+			attribute.String("state", state),
+		))
+	}
+	return nil
 }
 
 func (s *server) Attributes() []attribute.KeyValue {

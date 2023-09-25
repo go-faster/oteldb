@@ -8,6 +8,7 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
@@ -62,6 +63,7 @@ func modelFromConfig(c Config) model {
 		semconv.TelemetrySDKVersion(sdk.Version()),
 	}
 	tpf := c.TracerProviderFactory
+	mpf := c.MeterProviderFactory
 	router := &clusterRouter{
 		routes: map[string][]routerHandler{},
 		random: c.Rand,
@@ -101,11 +103,19 @@ func modelFromConfig(c Config) model {
 
 	serverPool := newIPAllocator(netip.MustParseAddr("103.21.244.0"))
 	for i := 0; i < c.Nodes; i++ {
-		m.cluster.addServer(&server{
+		srv := &server{
 			name: "node-" + strconv.Itoa(i),
 			ip:   serverPool.Next(),
 			id:   i,
-		})
+			rnd:  c.Rand,
+			cpus: 168,
+		}
+		res := mergeToRes(rootAttrs, srv.Attributes())
+		srv.meter = mpf.New(metric.WithResource(res)).Meter("server")
+		if err := srv.Metrics(); err != nil {
+			panic(err)
+		}
+		m.cluster.addServer(srv)
 	}
 
 	for i := 0; i < c.Services.API.Replicas; i++ {

@@ -4,6 +4,7 @@ package faker
 import (
 	"math/rand"
 
+	"go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -24,11 +25,18 @@ type Config struct {
 	Rand *rand.Rand
 	// Factory for TracerProvider that can create providers from new
 	TracerProviderFactory TracerProviderFactory
+	// Factory for MeterProvider that can create providers from new
+	MeterProviderFactory MeterProviderFactory
 }
 
 // TracerProviderFactory is a factory for TracerProvider.
 type TracerProviderFactory interface {
 	New(...tracesdk.TracerProviderOption) *tracesdk.TracerProvider
+}
+
+// MeterProviderFactory is a factory for MeterProvider.
+type MeterProviderFactory interface {
+	New(...metric.Option) *metric.MeterProvider
 }
 
 // Services wraps all services configuration, describing topology of the
