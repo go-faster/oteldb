@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/go-faster/jx"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
@@ -57,4 +59,26 @@ func TestSet(t *testing.T) {
 		attribute.String("bar", "baz"),
 	)
 	t.Logf("%s %x", set.Encoded(attribute.DefaultEncoder()), Hash(set))
+
+	m := pcommon.NewMap()
+	require.NoError(t,
+		m.FromRaw(map[string]any{
+			"foo": 1,
+			"bar": "baz",
+		}),
+	)
+	t.Logf("%x", pdatautil.MapHash(m))
+}
+
+func BenchmarkMapHash(b *testing.B) {
+	m := pcommon.NewMap()
+	require.NoError(b,
+		m.FromRaw(map[string]any{
+			"foo": 1,
+			"bar": "baz",
+		}),
+	)
+	for i := 0; i < b.N; i++ {
+		pdatautil.MapHash(m)
+	}
 }
