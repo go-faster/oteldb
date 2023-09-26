@@ -100,7 +100,7 @@ func TestExtractLineQueryConditions(t *testing.T) {
 				&logql.LineFilter{Op: logql.OpEq, Value: "first"},
 				&logql.LineFilter{Op: logql.OpRe, Value: "regular.+", Re: regexp.MustCompile(`regular.+`)},
 				&logql.DecolorizeExpr{},
-				// These would not be off-loaded.
+				// These would not be offloaded.
 				&logql.LineFilter{Op: logql.OpEq, Value: "second"},
 				&logql.LineFilter{Op: logql.OpRe, Value: "no+", Re: regexp.MustCompile(`no.+`)},
 			},
@@ -121,6 +121,16 @@ func TestExtractLineQueryConditions(t *testing.T) {
 				&logql.LineFilter{Op: logql.OpRe, Value: "a.+", Re: regexp.MustCompile(`a.+`)},
 				&logql.DecolorizeExpr{},
 				&logql.LineFilter{Op: logql.OpRe, Value: "b+", Re: regexp.MustCompile(`b.+`)},
+			},
+			[]logql.BinOp{
+				logql.OpEq,
+			},
+			SelectLogsParams{},
+			false,
+		},
+		{
+			[]logql.PipelineStage{
+				&logql.LineFilter{Op: logql.OpEq, Value: "127.0.0.1", IP: true},
 			},
 			[]logql.BinOp{
 				logql.OpEq,

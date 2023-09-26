@@ -40,6 +40,10 @@ stageLoop:
 	for _, stage := range stages {
 		switch stage := stage.(type) {
 		case *logql.LineFilter:
+			if stage.IP {
+				// Do not offload IP line filter.
+				continue
+			}
 			if !caps.Line.Supports(stage.Op) {
 				continue
 			}
