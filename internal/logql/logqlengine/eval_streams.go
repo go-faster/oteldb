@@ -80,7 +80,7 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 		params.Start = addDuration(params.Start, e.lookbackDuration)
 	}
 
-	cond, err := extractQueryConditions(e.querierCaps, sel)
+	cond, err := extractQueryConditions(e.querierCaps, sel, stages)
 	if err != nil {
 		return nil, errors.Wrap(err, "extract preconditions")
 	}

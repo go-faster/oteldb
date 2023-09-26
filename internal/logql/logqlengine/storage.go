@@ -28,6 +28,7 @@ func (caps SupportedOps) Supports(op logql.BinOp) bool {
 // QuerierСapabilities defines what operations storage can do.
 type QuerierСapabilities struct {
 	Label SupportedOps
+	Line  SupportedOps
 }
 
 // Querier does queries to storage.
@@ -44,4 +45,5 @@ type Querier interface {
 // SelectLogsParams is a storage query params.
 type SelectLogsParams struct {
 	Labels []logql.LabelMatcher
+	Line   []logql.LineFilter
 }
