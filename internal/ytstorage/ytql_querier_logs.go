@@ -82,6 +82,7 @@ func (q *YTQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
 	// FIXME(tdakkota): we don't add OpRe and OpNotRe because YT QL query executer throws an exception
 	//	when regexp function are used.
 	caps.Label.Add(logql.OpEq, logql.OpNotEq)
+	caps.Line.Add(logql.OpEq, logql.OpNotEq)
 	return caps
 }
 
@@ -130,6 +131,19 @@ func (q *YTQLQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Tim
 			fmt.Fprintf(&query, "try_get_string(%s, %q) = %q", column, yp, m.Value)
 		}
 		query.WriteByte(')')
+	}
+	for _, m := range params.Line {
+		switch m.Op {
+		case logql.OpEq:
+			query.WriteString(" AND ")
+		case logql.OpNotEq:
+			query.WriteString(" AND NOT ")
+		default:
+			return nil, errors.Errorf("unexpected op %q", m.Op)
+		}
+
+		// Line filter checks if line contains given value.
+		fmt.Fprintf(&query, "is_substr(%q, body)", m.Value)
 	}
 
 	r, err := q.yc.SelectRows(ctx, query.String(), nil)
