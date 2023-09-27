@@ -147,6 +147,10 @@ func runTest(
 			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
 			{`{http_method=~".+"} |~ "\"method\":\\s*\"DELETE\""`, 20},
 			{`{http_method=~".+"} |~ "\"method\":\\s*\"HEAD\"" |= "\"status\":500"`, 2},
+			// Try to not use offloading.
+			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"DELETE\""`, 20},
+			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
+			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" | line_format "{{ __line__ }}" |= "\"status\":500"`, 2},
 			// Negative line matcher.
 			{`{http_method=~".+"} != "\"method\": \"HEAD\""`, len(set.Records) - 22},
 			{`{http_method=~".+"} !~ "\"method\":\\s*\"HEAD\""`, len(set.Records) - 22},
