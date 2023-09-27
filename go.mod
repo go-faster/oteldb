@@ -32,7 +32,7 @@ require (
 	go.opentelemetry.io/collector/otelcol v0.86.0
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0015
 	go.opentelemetry.io/collector/receiver v0.86.0
-	go.opentelemetry.io/collector/receiver/otlpreceiver v0.85.0
+	go.opentelemetry.io/collector/receiver/otlpreceiver v0.86.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.44.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 	go.opentelemetry.io/contrib/zpages v0.44.0
@@ -96,7 +96,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/knadh/koanf v1.5.0 // indirect
 	github.com/knadh/koanf/v2 v2.0.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
@@ -113,7 +113,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/mostynb/go-grpc-compression v1.2.0 // indirect
+	github.com/mostynb/go-grpc-compression v1.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc4 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
@@ -140,17 +140,17 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/collector v0.86.0 // indirect
-	go.opentelemetry.io/collector/config/configauth v0.85.0 // indirect
-	go.opentelemetry.io/collector/config/configcompression v0.85.0 // indirect
-	go.opentelemetry.io/collector/config/configgrpc v0.85.0 // indirect
-	go.opentelemetry.io/collector/config/confighttp v0.85.0 // indirect
+	go.opentelemetry.io/collector/config/configauth v0.86.0 // indirect
+	go.opentelemetry.io/collector/config/configcompression v0.86.0 // indirect
+	go.opentelemetry.io/collector/config/configgrpc v0.86.0 // indirect
+	go.opentelemetry.io/collector/config/confighttp v0.86.0 // indirect
 	go.opentelemetry.io/collector/config/confignet v0.86.0 // indirect
-	go.opentelemetry.io/collector/config/configopaque v0.85.0 // indirect
+	go.opentelemetry.io/collector/config/configopaque v0.86.0 // indirect
 	go.opentelemetry.io/collector/config/configtelemetry v0.86.0 // indirect
-	go.opentelemetry.io/collector/config/configtls v0.85.0 // indirect
-	go.opentelemetry.io/collector/config/internal v0.85.0 // indirect
+	go.opentelemetry.io/collector/config/configtls v0.86.0 // indirect
+	go.opentelemetry.io/collector/config/internal v0.86.0 // indirect
 	go.opentelemetry.io/collector/connector v0.86.0 // indirect
-	go.opentelemetry.io/collector/extension/auth v0.85.0 // indirect
+	go.opentelemetry.io/collector/extension/auth v0.86.0 // indirect
 	go.opentelemetry.io/collector/featuregate v1.0.0-rcv0015 // indirect
 	go.opentelemetry.io/collector/processor v0.86.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.86.0 // indirect
