@@ -39,7 +39,7 @@ in single time shard, so we don't add metric name to key.
 Data should be stored in a way that allows exploit low cardinality of metric name and resource set,
 subsequently reducing series cardinality.
 
-However, we can benefit for filtering concurrently by attribute and resource set,
+However, we can benefit of filtering concurrently by attribute and resource set,
 maintaining index for resources and attributes.
 
 Also, actual cardinality of resource set can be smaller than metric cardinality
