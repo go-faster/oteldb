@@ -81,8 +81,7 @@ For example:
 
 Query can be efficiently executed concurrently.
 Also, there are concurrent `LogQL` executors that can exploit that.
-
-##
+- https://github.com/thanos-io/promql-engine
 
 ## Query execution
 
