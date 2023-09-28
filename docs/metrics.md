@@ -45,6 +45,22 @@ maintaining index for resources and attributes.
 Also, actual cardinality of resource set can be smaller than metric cardinality
 locally in single time shard because of churn rate.
 
+## Attribute set hash
+
+The `resource` attribute set and `attributes` set can be hashed to produce
+fixed-size key for the index. That is, we can now store metric points like that:
+
+```
+| name | resource_hash | attribute_hash | timestamp | value |
+```
+
+Having effective joins with filtered `resource` and `attributes` tables
+and primary sorting key `(name, resource_hash, attribute_hash, timestamp)` we can efficiently
+fetch all points needed for query execution.
+
+Probably we can replace hashes by integers, but this complicates implementation
+of query ingestion where we should perform "insert or do nothing" operation with id lookup.
+
 ## Partitioning and sharding
 
 Data should be sharded by time (e.g. per day, week or similar, can be heterogeneous) and tenant id.
