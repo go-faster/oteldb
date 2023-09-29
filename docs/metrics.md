@@ -61,6 +61,49 @@ fetch all points needed for query execution.
 Probably we can replace hashes by integers, but this complicates implementation
 of query ingestion where we should perform "insert or do nothing" operation with id lookup.
 
+### Example
+
+Having metric like that:
+
+```yaml
+name: http.request.duration
+attributes:
+  foo: 1
+  bar: baz
+resource:
+  tenant.id: 1
+  service.name: api
+timestamp: 2021-01-01T00:00:00Z
+value: 10
+```
+
+We compute hashes from attribute sets:
+
+| name       | value                            |
+|------------|----------------------------------|
+| attributes | 3b52e723db6a5e0aaee48e0a984d33f9 |
+| resource   | 4bfe5ab10b4f64a45383b67c222d962c |
+
+Attribute set is represented by an ordered list attributes to make hash deterministic.
+
+#### `resource`
+
+| key                              | value                                       |
+|----------------------------------|---------------------------------------------|
+| 4bfe5ab10b4f64a45383b67c222d962c | `{"tenant.id": "1", "service.name": "api"}` |
+
+#### `attributes`
+
+| metric                | key                              | value                      |
+|-----------------------|----------------------------------|----------------------------|
+| http.request.duration | 3b52e723db6a5e0aaee48e0a984d33f9 | `{"foo": 1, "bar": "baz"}` |
+
+#### `points`
+
+| name                  | resource_hash                    | attribute_hash                   | timestamp            | value |
+|-----------------------|----------------------------------|----------------------------------|----------------------|-------|
+| http.request.duration | 4bfe5ab10b4f64a45383b67c222d962c | 3b52e723db6a5e0aaee48e0a984d33f9 | 2021-01-01T00:00:00Z | 10    |
+
 ## Partitioning and sharding
 
 Data should be sharded by time (e.g. per day, week or similar, can be heterogeneous) and tenant id.
