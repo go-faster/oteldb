@@ -11,6 +11,7 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
@@ -18,8 +19,6 @@ import (
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
-
-	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/chstorage"
 	"github.com/go-faster/oteldb/internal/iterators"
