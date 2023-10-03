@@ -35,7 +35,6 @@ in single time shard, so we don't add metric name to key.
 2. Resource set
 3. Attribute set
 
-
 Data should be stored in a way that allows exploit low cardinality of metric name and resource set,
 subsequently reducing series cardinality.
 
@@ -80,7 +79,7 @@ value: 10
 We compute hashes from attribute sets:
 
 | name       | value                            |
-|------------|----------------------------------|
+| ---------- | -------------------------------- |
 | attributes | 3b52e723db6a5e0aaee48e0a984d33f9 |
 | resource   | 4bfe5ab10b4f64a45383b67c222d962c |
 
@@ -89,41 +88,72 @@ Attribute set is represented by an ordered list attributes to make hash determin
 #### `resource`
 
 | key                              | value                                       |
-|----------------------------------|---------------------------------------------|
+| -------------------------------- | ------------------------------------------- |
 | 4bfe5ab10b4f64a45383b67c222d962c | `{"tenant.id": "1", "service.name": "api"}` |
 
 #### `attributes`
 
 | metric                | key                              | value                      |
-|-----------------------|----------------------------------|----------------------------|
+| --------------------- | -------------------------------- | -------------------------- |
 | http.request.duration | 3b52e723db6a5e0aaee48e0a984d33f9 | `{"foo": 1, "bar": "baz"}` |
 
 #### `points`
 
 | name                  | resource_hash                    | attribute_hash                   | timestamp            | value |
-|-----------------------|----------------------------------|----------------------------------|----------------------|-------|
+| --------------------- | -------------------------------- | -------------------------------- | -------------------- | ----- |
 | http.request.duration | 4bfe5ab10b4f64a45383b67c222d962c | 3b52e723db6a5e0aaee48e0a984d33f9 | 2021-01-01T00:00:00Z | 10    |
 
 ## Partitioning and sharding
 
 Data should be sharded by time (e.g. per day, week or similar, can be heterogeneous) and tenant id.
 
-For example:
+Having:
+
+1.  closed data partitioned by day (Δ=1D)
+2.  active attributes and resources partitioned by hour (δ=1H)
 
 ```
 /metrics
-  /tenant01
-     /2021-01-01 <- time shard
-       values
-       attributes
-       resources
-    /2021-01-02
-  /tenant02
-    /2021-01-01
+  /tenant-1
+     /active
+       points
+       attributes/
+         2021-01-01-T-20-00
+         2021-01-01-T-21-00
+         2021-01-01-T-22-00
+         2021-01-01-T-23-00
+       resources/
+         2021-01-01-T-20-00
+         2021-01-01-T-21-00
+         2021-01-01-T-22-00
+         2021-01-01-T-23-00
+     /closed
+       /2021-01-01
+         points
+         attributes
+         resources
 ```
+
+- `/metrics/tenant/active/{attributes, resources}/*`:
+
+  dynamic tables of 2Δ data that is partitioned by δ (1H)
+
+- `/metrics/tenant/points`:
+
+  dynamic table that stores 2Δ (2D) of point data
+
+Each Δ:
+
+1. Create new directory in `/metrics/tenant/closed`:
+   e.g. `/metrics/tenant1/closed/2021-01-01`
+2. Copy `[T-2Δ, T-Δ)` data from `active/points` to `points` static table
+3. Merge `[T-2Δ, T-Δ)` data from `active/attributes/\*` to `attributes` static table
+4. Merge `[T-2Δ, T-Δ)` data from `active/resources/\*` to `resources` static table
+5. Delete data that is older than `T-Δ` from active tables
 
 Query can be efficiently executed concurrently.
 Also, there are concurrent `LogQL` executors that can exploit that.
+
 - https://github.com/thanos-io/promql-engine
 
 ## Query execution
