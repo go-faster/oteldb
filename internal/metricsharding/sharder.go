@@ -10,6 +10,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
+	"go.ytsaurus.tech/yt/go/mapreduce"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
@@ -20,7 +21,8 @@ import (
 
 // Sharder controls sharding.
 type Sharder struct {
-	yc yt.Client
+	yc        yt.Client
+	mapreduce mapreduce.Client
 
 	shardOpts ShardingOptions
 }
@@ -31,6 +33,7 @@ func NewSharder(yc yt.Client, shardOpts ShardingOptions) *Sharder {
 
 	return &Sharder{
 		yc:        yc,
+		mapreduce: mapreduce.New(yc),
 		shardOpts: shardOpts,
 	}
 }
@@ -94,7 +97,7 @@ func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, sta
 			grp.Go(func() error {
 				ctx := grpCtx
 
-				blocks, err := s.getBlocks(ctx, activePath.Child("attributes"), tenant, start, end)
+				blocks, err := s.getBlocks(ctx, activePath.Child("attributes"), start, end)
 				if err != nil {
 					return errors.Wrapf(err, "get attributes block for tenant %v", tenant)
 				}
@@ -107,7 +110,7 @@ func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, sta
 			grp.Go(func() error {
 				ctx := grpCtx
 
-				blocks, err := s.getBlocks(ctx, activePath.Child("resource"), tenant, start, end)
+				blocks, err := s.getBlocks(ctx, activePath.Child("resource"), start, end)
 				if err != nil {
 					return errors.Wrapf(err, "get resource block for tenant %v", tenant)
 				}
@@ -123,7 +126,7 @@ func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, sta
 			grp.Go(func() error {
 				ctx := grpCtx
 
-				blocks, err := s.getBlocks(ctx, closedPath, tenant, start, end)
+				blocks, err := s.getBlocks(ctx, closedPath, start, end)
 				if err != nil {
 					return errors.Wrapf(err, "get closed block for tenant %v", tenant)
 				}
@@ -143,7 +146,6 @@ func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, sta
 
 func (s *Sharder) getBlocks(ctx context.Context,
 	dir ypath.Path,
-	tenant TenantID,
 	start, end time.Time,
 ) ([]Block, error) {
 	var (
@@ -175,7 +177,7 @@ func (s *Sharder) getBlocks(ctx context.Context,
 	var result []Block
 	for _, block := range timeBlocksForRange(blocks, start, end) {
 		result = append(result,
-			newBlock(dir.Child(block.dir), tenant, block.start),
+			newBlock(dir.Child(block.dir), block.start),
 		)
 	}
 	return result, nil

@@ -15,8 +15,6 @@ type Block struct {
 	Root ypath.Path
 	// At is a time block starting point.
 	At time.Time
-	// Tenant is tenant id of block.
-	Tenant TenantID
 }
 
 // Resource returns resource table path.
@@ -34,11 +32,10 @@ func (s Block) Points() ypath.Path {
 	return s.Root.Child("points")
 }
 
-func newBlock(root ypath.Path, tenant TenantID, at time.Time) Block {
+func newBlock(root ypath.Path, at time.Time) Block {
 	return Block{
 		root,
 		at,
-		tenant,
 	}
 }
 
