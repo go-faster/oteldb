@@ -29,18 +29,13 @@ func (s *Sharder) ArchiveTenant(ctx context.Context, tenant TenantID) (rerr erro
 	)
 
 	grp, grpCtx := errgroup.WithContext(ctx)
-	for _, table := range []string{
-		"points",
-	} {
-		table := table
-		grp.Go(func() error {
-			ctx := grpCtx
-			return s.archivePoints(ctx, table, tenantPath, start, end)
-		})
-	}
+	grp.Go(func() error {
+		ctx := grpCtx
+		return s.archivePoints(ctx, tenantPath, start, end)
+	})
 	for _, block := range []struct {
-		name   string
-		schema schema.Schema
+		Name   string
+		Schema schema.Schema
 	}{
 		{"attributes", metricstorage.Attributes{}.YTSchema()},
 		{"resource", metricstorage.Resource{}.YTSchema()},
@@ -48,7 +43,7 @@ func (s *Sharder) ArchiveTenant(ctx context.Context, tenant TenantID) (rerr erro
 		block := block
 		grp.Go(func() error {
 			ctx := grpCtx
-			return s.archiveAttributes(ctx, block.name, block.schema, tenantPath, start, end)
+			return s.archiveAttributes(ctx, block.Name, block.Schema, tenantPath, start, end)
 		})
 	}
 
@@ -57,7 +52,8 @@ func (s *Sharder) ArchiveTenant(ctx context.Context, tenant TenantID) (rerr erro
 
 func (s *Sharder) archiveAttributes(ctx context.Context,
 	dir string, targetSchema schema.Schema,
-	tenantPath ypath.Path, start, end time.Time,
+	tenantPath ypath.Path,
+	start, end time.Time,
 ) error {
 	var (
 		activePath = tenantPath.Child("active").Child(dir)
@@ -77,10 +73,11 @@ func (s *Sharder) archiveAttributes(ctx context.Context,
 	}
 
 	opSpec := spec.Merge()
-	opSpec.OutputTablePath = targetPath
+	opSpec.MergeMode = "ordered"
 	for _, block := range blocks {
 		opSpec = opSpec.AddInput(block.Root)
 	}
+	opSpec.OutputTablePath = targetPath
 
 	lg := zctx.From(ctx)
 	op, err := s.mapreduce.Merge(opSpec)
@@ -101,49 +98,48 @@ func (s *Sharder) archiveAttributes(ctx context.Context,
 	return nil
 }
 
-func (s *Sharder) archivePoints(ctx context.Context, table string, tenantPath ypath.Path, start, end time.Time) (rerr error) {
+func (s *Sharder) archivePoints(ctx context.Context,
+	tenantPath ypath.Path,
+	start, end time.Time,
+) (rerr error) {
+	const table = "points"
 	var (
 		activePath = tenantPath.Child("active").Child(table)
 		targetPath = tenantPath.Child("closed").Child(start.Format(timeBlockLayout)).Child(table)
 	)
 
-	bw, err := yt.WriteTable(ctx, s.yc, targetPath)
+	if _, err := yt.CreateTable(ctx, s.yc, targetPath,
+		yt.WithSchema(metricstorage.Point{}.YTSchema()),
+		yt.WithRecursive(),
+		yt.WithForce(),
+	); err != nil {
+		return errors.Wrapf(err, "create static table %q", targetPath)
+	}
+
+	opSpec := spec.Merge()
+	opSpec.MergeMode = "ordered"
+	opSpec.InputTablePaths = []ypath.YPath{activePath}
+	opSpec.OutputTablePath = targetPath
+	opSpec.InputQuery = fmt.Sprintf(
+		"* WHERE timestamp >= %d AND timestamp < %d",
+		start.UnixNano(), end.UnixNano(),
+	)
+
+	lg := zctx.From(ctx)
+	op, err := s.mapreduce.Merge(opSpec)
 	if err != nil {
-		return errors.Wrapf(err, "create table %q", targetPath)
+		return errors.Wrap(err, "run merge operation")
 	}
-	defer func() {
-		if rerr != nil {
-			_ = bw.Rollback()
-		}
-	}()
+	lg.Info("Run merge operation",
+		zap.Stringer("id", op.ID()),
+		zap.Stringer("from", activePath),
+		zap.Stringer("to", targetPath),
+	)
 
-	query := fmt.Sprintf("* FROM [%s] WHERE timestamp >= %d AND timestamp < %d",
-		activePath, start.UnixNano(), end.UnixNano())
-	r, err := s.yc.SelectRows(ctx, query, nil)
-	if err != nil {
-		return errors.Wrap(err, "select rows")
+	if err := op.Wait(); err != nil {
+		return errors.Wrapf(err, "wait operation %q", op.ID())
 	}
-	defer func() {
-		_ = r.Close()
-	}()
+	lg.Info("Merge operation done", zap.Stringer("id", op.ID()))
 
-	var point metricstorage.Point
-	for r.Next() {
-		if err := r.Scan(&point); err != nil {
-			return errors.Wrap(err, "scan point")
-		}
-
-		if err := bw.Write(point); err != nil {
-			return errors.Wrap(err, "write point")
-		}
-	}
-
-	if err := r.Err(); err != nil {
-		return err
-	}
-
-	if err := bw.Commit(); err != nil {
-		return errors.Wrap(err, "commit batch")
-	}
 	return nil
 }
