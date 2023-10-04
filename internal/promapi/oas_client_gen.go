@@ -150,7 +150,6 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // GET /api/v1/label/{label}/values
 func (c *Client) GetLabelValues(ctx context.Context, params GetLabelValuesParams) (*LabelValuesResponse, error) {
 	res, err := c.sendGetLabelValues(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -307,7 +306,6 @@ func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesPa
 // GET /api/v1/labels
 func (c *Client) GetLabels(ctx context.Context, params GetLabelsParams) (*LabelsResponse, error) {
 	res, err := c.sendGetLabels(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -445,7 +443,6 @@ func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res
 // GET /api/v1/metadata
 func (c *Client) GetMetadata(ctx context.Context, params GetMetadataParams) (*MetadataResponse, error) {
 	res, err := c.sendGetMetadata(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -573,7 +570,6 @@ func (c *Client) sendGetMetadata(ctx context.Context, params GetMetadataParams) 
 // GET /api/v1/query
 func (c *Client) GetQuery(ctx context.Context, params GetQueryParams) (*QueryResponse, error) {
 	res, err := c.sendGetQuery(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -684,7 +680,6 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 // GET /api/v1/query_exemplars
 func (c *Client) GetQueryExemplars(ctx context.Context, params GetQueryExemplarsParams) (*QueryExemplarsResponse, error) {
 	res, err := c.sendGetQueryExemplars(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -809,7 +804,6 @@ func (c *Client) sendGetQueryExemplars(ctx context.Context, params GetQueryExemp
 // GET /api/v1/query_range
 func (c *Client) GetQueryRange(ctx context.Context, params GetQueryRangeParams) (*QueryResponse, error) {
 	res, err := c.sendGetQueryRange(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -966,7 +960,6 @@ func (c *Client) sendGetQueryRange(ctx context.Context, params GetQueryRangePara
 // GET /api/v1/rules
 func (c *Client) GetRules(ctx context.Context, params GetRulesParams) (*RulesResponse, error) {
 	res, err := c.sendGetRules(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -1129,7 +1122,6 @@ func (c *Client) sendGetRules(ctx context.Context, params GetRulesParams) (res *
 // GET /api/v1/series
 func (c *Client) GetSeries(ctx context.Context, params GetSeriesParams) (*SeriesResponse, error) {
 	res, err := c.sendGetSeries(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -1261,7 +1253,6 @@ func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res
 // POST /api/v1/labels
 func (c *Client) PostLabels(ctx context.Context) (*LabelsResponse, error) {
 	res, err := c.sendPostLabels(ctx)
-	_ = res
 	return res, err
 }
 
@@ -1334,7 +1325,6 @@ func (c *Client) sendPostLabels(ctx context.Context) (res *LabelsResponse, err e
 // POST /api/v1/query
 func (c *Client) PostQuery(ctx context.Context, request *QueryForm) (*QueryResponse, error) {
 	res, err := c.sendPostQuery(ctx, request)
-	_ = res
 	return res, err
 }
 
@@ -1410,7 +1400,6 @@ func (c *Client) sendPostQuery(ctx context.Context, request *QueryForm) (res *Qu
 // POST /api/v1/query_exemplars
 func (c *Client) PostQueryExemplars(ctx context.Context) (*QueryExemplarsResponse, error) {
 	res, err := c.sendPostQueryExemplars(ctx)
-	_ = res
 	return res, err
 }
 
@@ -1483,7 +1472,6 @@ func (c *Client) sendPostQueryExemplars(ctx context.Context) (res *QueryExemplar
 // POST /api/v1/query_range
 func (c *Client) PostQueryRange(ctx context.Context, request *QueryRangeForm) (*QueryResponse, error) {
 	res, err := c.sendPostQueryRange(ctx, request)
-	_ = res
 	return res, err
 }
 
@@ -1559,7 +1547,6 @@ func (c *Client) sendPostQueryRange(ctx context.Context, request *QueryRangeForm
 // POST /api/v1/series
 func (c *Client) PostSeries(ctx context.Context) (*SeriesResponse, error) {
 	res, err := c.sendPostSeries(ctx)
-	_ = res
 	return res, err
 }
 

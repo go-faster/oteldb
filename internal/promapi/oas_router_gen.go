@@ -271,6 +271,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Route is route object.
 type Route struct {
 	name        string
+	summary     string
 	operationID string
 	pathPattern string
 	count       int
@@ -282,6 +283,11 @@ type Route struct {
 // It is guaranteed to be unique and not empty.
 func (r Route) Name() string {
 	return r.name
+}
+
+// Summary returns OpenAPI summary.
+func (r Route) Summary() string {
+	return r.summary
 }
 
 // OperationID returns OpenAPI operationId.
@@ -391,6 +397,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								// Leaf: GetLabelValues
 								r.name = "GetLabelValues"
+								r.summary = ""
 								r.operationID = "getLabelValues"
 								r.pathPattern = "/api/v1/label/{label}/values"
 								r.args = args
@@ -413,6 +420,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: GetLabels
 							r.name = "GetLabels"
+							r.summary = ""
 							r.operationID = "getLabels"
 							r.pathPattern = "/api/v1/labels"
 							r.args = args
@@ -421,6 +429,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "POST":
 							// Leaf: PostLabels
 							r.name = "PostLabels"
+							r.summary = ""
 							r.operationID = "postLabels"
 							r.pathPattern = "/api/v1/labels"
 							r.args = args
@@ -443,6 +452,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: GetMetadata
 						r.name = "GetMetadata"
+						r.summary = ""
 						r.operationID = "getMetadata"
 						r.pathPattern = "/api/v1/metadata"
 						r.args = args
@@ -463,6 +473,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					switch method {
 					case "GET":
 						r.name = "GetQuery"
+						r.summary = ""
 						r.operationID = "getQuery"
 						r.pathPattern = "/api/v1/query"
 						r.args = args
@@ -470,6 +481,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						return r, true
 					case "POST":
 						r.name = "PostQuery"
+						r.summary = ""
 						r.operationID = "postQuery"
 						r.pathPattern = "/api/v1/query"
 						r.args = args
@@ -503,6 +515,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								// Leaf: GetQueryExemplars
 								r.name = "GetQueryExemplars"
+								r.summary = ""
 								r.operationID = "getQueryExemplars"
 								r.pathPattern = "/api/v1/query_exemplars"
 								r.args = args
@@ -511,6 +524,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "POST":
 								// Leaf: PostQueryExemplars
 								r.name = "PostQueryExemplars"
+								r.summary = ""
 								r.operationID = "postQueryExemplars"
 								r.pathPattern = "/api/v1/query_exemplars"
 								r.args = args
@@ -532,6 +546,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								// Leaf: GetQueryRange
 								r.name = "GetQueryRange"
+								r.summary = ""
 								r.operationID = "getQueryRange"
 								r.pathPattern = "/api/v1/query_range"
 								r.args = args
@@ -540,6 +555,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "POST":
 								// Leaf: PostQueryRange
 								r.name = "PostQueryRange"
+								r.summary = ""
 								r.operationID = "postQueryRange"
 								r.pathPattern = "/api/v1/query_range"
 								r.args = args
@@ -563,6 +579,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: GetRules
 						r.name = "GetRules"
+						r.summary = ""
 						r.operationID = "getRules"
 						r.pathPattern = "/api/v1/rules"
 						r.args = args
@@ -584,6 +601,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: GetSeries
 						r.name = "GetSeries"
+						r.summary = ""
 						r.operationID = "getSeries"
 						r.pathPattern = "/api/v1/series"
 						r.args = args
@@ -592,6 +610,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: PostSeries
 						r.name = "PostSeries"
+						r.summary = ""
 						r.operationID = "postSeries"
 						r.pathPattern = "/api/v1/series"
 						r.args = args

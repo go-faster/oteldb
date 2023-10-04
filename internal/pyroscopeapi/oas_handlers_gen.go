@@ -63,12 +63,13 @@ func (s *Server) handleGetAppsRequest(args [0]string, argsEscaped bool, w http.R
 	var response []ApplicationMetadata
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetApps",
-			OperationID:   "getApps",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "GetApps",
+			OperationSummary: "",
+			OperationID:      "getApps",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -189,10 +190,11 @@ func (s *Server) handleIngestRequest(args [0]string, argsEscaped bool, w http.Re
 	var response *IngestOK
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Ingest",
-			OperationID:   "ingest",
-			Body:          request,
+			Context:          ctx,
+			OperationName:    "Ingest",
+			OperationSummary: "",
+			OperationID:      "ingest",
+			Body:             request,
 			Params: middleware.Parameters{
 				{
 					Name: "name",
@@ -333,10 +335,11 @@ func (s *Server) handleLabelValuesRequest(args [0]string, argsEscaped bool, w ht
 	var response LabelValues
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "LabelValues",
-			OperationID:   "labelValues",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "LabelValues",
+			OperationSummary: "",
+			OperationID:      "labelValues",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "label",
@@ -461,10 +464,11 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 	var response Labels
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Labels",
-			OperationID:   "labels",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "Labels",
+			OperationSummary: "",
+			OperationID:      "labels",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "from",
@@ -586,10 +590,11 @@ func (s *Server) handleRenderRequest(args [0]string, argsEscaped bool, w http.Re
 	var response *FlamebearerProfileV1
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Render",
-			OperationID:   "render",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "Render",
+			OperationSummary: "",
+			OperationID:      "render",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "from",

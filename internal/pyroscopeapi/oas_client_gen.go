@@ -117,7 +117,6 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // GET /api/apps
 func (c *Client) GetApps(ctx context.Context) ([]ApplicationMetadata, error) {
 	res, err := c.sendGetApps(ctx)
-	_ = res
 	return res, err
 }
 
@@ -189,8 +188,7 @@ func (c *Client) sendGetApps(ctx context.Context) (res []ApplicationMetadata, er
 //
 // POST /ingest
 func (c *Client) Ingest(ctx context.Context, request *IngestReqWithContentType, params IngestParams) error {
-	res, err := c.sendIngest(ctx, request, params)
-	_ = res
+	_, err := c.sendIngest(ctx, request, params)
 	return err
 }
 
@@ -412,7 +410,6 @@ func (c *Client) sendIngest(ctx context.Context, request *IngestReqWithContentTy
 // GET /label-values
 func (c *Client) LabelValues(ctx context.Context, params LabelValuesParams) (LabelValues, error) {
 	res, err := c.sendLabelValues(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -560,7 +557,6 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 // GET /labels
 func (c *Client) Labels(ctx context.Context, params LabelsParams) (Labels, error) {
 	res, err := c.sendLabels(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -695,7 +691,6 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Label
 // GET /render
 func (c *Client) Render(ctx context.Context, params RenderParams) (*FlamebearerProfileV1, error) {
 	res, err := c.sendRender(ctx, params)
-	_ = res
 	return res, err
 }
 

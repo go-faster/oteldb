@@ -121,7 +121,6 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // GET /api/echo
 func (c *Client) Echo(ctx context.Context) (EchoOK, error) {
 	res, err := c.sendEcho(ctx)
-	_ = res
 	return res, err
 }
 
@@ -194,7 +193,6 @@ func (c *Client) sendEcho(ctx context.Context) (res EchoOK, err error) {
 // GET /api/search
 func (c *Client) Search(ctx context.Context, params SearchParams) (*Traces, error) {
 	res, err := c.sendSearch(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -390,7 +388,6 @@ func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Trac
 // GET /api/search/tag/{tag_name}/values
 func (c *Client) SearchTagValues(ctx context.Context, params SearchTagValuesParams) (*TagValues, error) {
 	res, err := c.sendSearchTagValues(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -483,7 +480,6 @@ func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValues
 // GET /api/v2/search/tag/{tag_name}/values
 func (c *Client) SearchTagValuesV2(ctx context.Context, params SearchTagValuesV2Params) (*TagValuesV2, error) {
 	res, err := c.sendSearchTagValuesV2(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -575,7 +571,6 @@ func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValu
 // GET /api/search/tags
 func (c *Client) SearchTags(ctx context.Context) (*TagNames, error) {
 	res, err := c.sendSearchTags(ctx)
-	_ = res
 	return res, err
 }
 
@@ -648,7 +643,6 @@ func (c *Client) sendSearchTags(ctx context.Context) (res *TagNames, err error) 
 // GET /api/traces/{traceID}
 func (c *Client) TraceByID(ctx context.Context, params TraceByIDParams) (TraceByIDRes, error) {
 	res, err := c.sendTraceByID(ctx, params)
-	_ = res
 	return res, err
 }
 

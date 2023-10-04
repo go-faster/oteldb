@@ -170,6 +170,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Route is route object.
 type Route struct {
 	name        string
+	summary     string
 	operationID string
 	pathPattern string
 	count       int
@@ -181,6 +182,11 @@ type Route struct {
 // It is guaranteed to be unique and not empty.
 func (r Route) Name() string {
 	return r.name
+}
+
+// Summary returns OpenAPI summary.
+func (r Route) Summary() string {
+	return r.summary
 }
 
 // OperationID returns OpenAPI operationId.
@@ -259,6 +265,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: GetApps
 						r.name = "GetApps"
+						r.summary = ""
 						r.operationID = "getApps"
 						r.pathPattern = "/api/apps"
 						r.args = args
@@ -280,6 +287,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: Ingest
 						r.name = "Ingest"
+						r.summary = ""
 						r.operationID = "ingest"
 						r.pathPattern = "/ingest"
 						r.args = args
@@ -312,6 +320,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: LabelValues
 							r.name = "LabelValues"
+							r.summary = ""
 							r.operationID = "labelValues"
 							r.pathPattern = "/label-values"
 							r.args = args
@@ -333,6 +342,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: Labels
 							r.name = "Labels"
+							r.summary = ""
 							r.operationID = "labels"
 							r.pathPattern = "/labels"
 							r.args = args
@@ -355,6 +365,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: Render
 						r.name = "Render"
+						r.summary = ""
 						r.operationID = "render"
 						r.pathPattern = "/render"
 						r.args = args

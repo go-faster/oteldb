@@ -140,6 +140,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Route is route object.
 type Route struct {
 	name        string
+	summary     string
 	operationID string
 	pathPattern string
 	count       int
@@ -151,6 +152,11 @@ type Route struct {
 // It is guaranteed to be unique and not empty.
 func (r Route) Name() string {
 	return r.name
+}
+
+// Summary returns OpenAPI summary.
+func (r Route) Summary() string {
+	return r.summary
 }
 
 // OperationID returns OpenAPI operationId.
@@ -229,6 +235,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: AbortQuery
 						r.name = "AbortQuery"
+						r.summary = ""
 						r.operationID = "abortQuery"
 						r.pathPattern = "/api/v4/abort_query"
 						r.args = args
@@ -250,6 +257,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: GetQuery
 						r.name = "GetQuery"
+						r.summary = ""
 						r.operationID = "getQuery"
 						r.pathPattern = "/api/v4/get_query"
 						r.args = args
@@ -271,6 +279,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: ReadQueryResult
 						r.name = "ReadQueryResult"
+						r.summary = ""
 						r.operationID = "readQueryResult"
 						r.pathPattern = "/api/v4/read_query_result"
 						r.args = args
@@ -292,6 +301,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: StartQuery
 						r.name = "StartQuery"
+						r.summary = ""
 						r.operationID = "startQuery"
 						r.pathPattern = "/api/v4/start_query"
 						r.args = args

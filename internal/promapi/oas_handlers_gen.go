@@ -74,10 +74,11 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 	var response *LabelValuesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetLabelValues",
-			OperationID:   "getLabelValues",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetLabelValues",
+			OperationSummary: "",
+			OperationID:      "getLabelValues",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "label",
@@ -200,10 +201,11 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 	var response *LabelsResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetLabels",
-			OperationID:   "getLabels",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetLabels",
+			OperationSummary: "",
+			OperationID:      "getLabels",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "start",
@@ -322,10 +324,11 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 	var response *MetadataResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetMetadata",
-			OperationID:   "getMetadata",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetMetadata",
+			OperationSummary: "",
+			OperationID:      "getMetadata",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "limit",
@@ -446,10 +449,11 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetQuery",
-			OperationID:   "getQuery",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetQuery",
+			OperationSummary: "",
+			OperationID:      "getQuery",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
@@ -566,10 +570,11 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 	var response *QueryExemplarsResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetQueryExemplars",
-			OperationID:   "getQueryExemplars",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetQueryExemplars",
+			OperationSummary: "",
+			OperationID:      "getQueryExemplars",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
@@ -690,10 +695,11 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetQueryRange",
-			OperationID:   "getQueryRange",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetQueryRange",
+			OperationSummary: "",
+			OperationID:      "getQueryRange",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
@@ -820,10 +826,11 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 	var response *RulesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetRules",
-			OperationID:   "getRules",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetRules",
+			OperationSummary: "",
+			OperationID:      "getRules",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "type",
@@ -948,10 +955,11 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 	var response *SeriesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetSeries",
-			OperationID:   "getSeries",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetSeries",
+			OperationSummary: "",
+			OperationID:      "getSeries",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "start",
@@ -1056,12 +1064,13 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 	var response *LabelsResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "PostLabels",
-			OperationID:   "postLabels",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "PostLabels",
+			OperationSummary: "",
+			OperationID:      "postLabels",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -1172,12 +1181,13 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "PostQuery",
-			OperationID:   "postQuery",
-			Body:          request,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "PostQuery",
+			OperationSummary: "",
+			OperationID:      "postQuery",
+			Body:             request,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -1269,12 +1279,13 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 	var response *QueryExemplarsResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "PostQueryExemplars",
-			OperationID:   "postQueryExemplars",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "PostQueryExemplars",
+			OperationSummary: "",
+			OperationID:      "postQueryExemplars",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -1385,12 +1396,13 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "PostQueryRange",
-			OperationID:   "postQueryRange",
-			Body:          request,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "PostQueryRange",
+			OperationSummary: "",
+			OperationID:      "postQueryRange",
+			Body:             request,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -1482,12 +1494,13 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 	var response *SeriesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "PostSeries",
-			OperationID:   "postSeries",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "PostSeries",
+			OperationSummary: "",
+			OperationID:      "postSeries",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (

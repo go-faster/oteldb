@@ -123,10 +123,11 @@ func (s *Server) handleAbortQueryRequest(args [0]string, argsEscaped bool, w htt
 	var response *AbortedQuery
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "AbortQuery",
-			OperationID:   "abortQuery",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "AbortQuery",
+			OperationSummary: "",
+			OperationID:      "abortQuery",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query_id",
@@ -290,10 +291,11 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 	var response *QueryStatus
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "GetQuery",
-			OperationID:   "getQuery",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "GetQuery",
+			OperationSummary: "",
+			OperationID:      "getQuery",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query_id",
@@ -457,10 +459,11 @@ func (s *Server) handleReadQueryResultRequest(args [0]string, argsEscaped bool, 
 	var response QueryResult
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "ReadQueryResult",
-			OperationID:   "readQueryResult",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "ReadQueryResult",
+			OperationSummary: "",
+			OperationID:      "readQueryResult",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query_id",
@@ -632,10 +635,11 @@ func (s *Server) handleStartQueryRequest(args [0]string, argsEscaped bool, w htt
 	var response *StartedQuery
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "StartQuery",
-			OperationID:   "startQuery",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "StartQuery",
+			OperationSummary: "",
+			OperationID:      "startQuery",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
