@@ -121,7 +121,6 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // GET /loki/api/v1/label/{name}/values
 func (c *Client) LabelValues(ctx context.Context, params LabelValuesParams) (*Values, error) {
 	res, err := c.sendLabelValues(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -312,7 +311,6 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 // GET /loki/api/v1/labels
 func (c *Client) Labels(ctx context.Context, params LabelsParams) (*Labels, error) {
 	res, err := c.sendLabels(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -465,8 +463,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 //
 // POST /loki/api/v1/push
 func (c *Client) Push(ctx context.Context, request PushReq) error {
-	res, err := c.sendPush(ctx, request)
-	_ = res
+	_, err := c.sendPush(ctx, request)
 	return err
 }
 
@@ -558,7 +555,6 @@ func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoCont
 // GET /loki/api/v1/query
 func (c *Client) Query(ctx context.Context, params QueryParams) (*QueryResponse, error) {
 	res, err := c.sendQuery(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -720,7 +716,6 @@ func (c *Client) sendQuery(ctx context.Context, params QueryParams) (res *QueryR
 // GET /loki/api/v1/query_range
 func (c *Client) QueryRange(ctx context.Context, params QueryRangeParams) (*QueryResponse, error) {
 	res, err := c.sendQueryRange(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -942,7 +937,6 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 // GET /loki/api/v1/series
 func (c *Client) Series(ctx context.Context, params SeriesParams) (*Maps, error) {
 	res, err := c.sendSeries(ctx, params)
-	_ = res
 	return res, err
 }
 

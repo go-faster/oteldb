@@ -62,12 +62,13 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 	var response EchoOK
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Echo",
-			OperationID:   "echo",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "Echo",
+			OperationSummary: "",
+			OperationID:      "echo",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -173,10 +174,11 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 	var response *Traces
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Search",
-			OperationID:   "search",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "Search",
+			OperationSummary: "",
+			OperationID:      "search",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "q",
@@ -313,10 +315,11 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 	var response *TagValues
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "SearchTagValues",
-			OperationID:   "searchTagValues",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "SearchTagValues",
+			OperationSummary: "",
+			OperationID:      "searchTagValues",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "tag_name",
@@ -430,10 +433,11 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 	var response *TagValuesV2
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "SearchTagValuesV2",
-			OperationID:   "searchTagValuesV2",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "SearchTagValuesV2",
+			OperationSummary: "",
+			OperationID:      "searchTagValuesV2",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "tag_name",
@@ -532,12 +536,13 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 	var response *TagNames
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "SearchTags",
-			OperationID:   "searchTags",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "SearchTags",
+			OperationSummary: "",
+			OperationID:      "searchTags",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -643,10 +648,11 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 	var response TraceByIDRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "TraceByID",
-			OperationID:   "traceByID",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "TraceByID",
+			OperationSummary: "",
+			OperationID:      "traceByID",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "traceID",

@@ -62,12 +62,13 @@ func (s *Server) handleDummyRequest(args [0]string, argsEscaped bool, w http.Res
 	var response *Event
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Dummy",
-			OperationID:   "dummy",
-			Body:          nil,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "Dummy",
+			OperationSummary: "",
+			OperationID:      "dummy",
+			Body:             nil,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -178,12 +179,13 @@ func (s *Server) handleEnvelopeRequest(args [0]string, argsEscaped bool, w http.
 	var response *EnvelopeOK
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Envelope",
-			OperationID:   "envelope",
-			Body:          request,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "Envelope",
+			OperationSummary: "",
+			OperationID:      "envelope",
+			Body:             request,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (

@@ -243,6 +243,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Route is route object.
 type Route struct {
 	name        string
+	summary     string
 	operationID string
 	pathPattern string
 	count       int
@@ -254,6 +255,11 @@ type Route struct {
 // It is guaranteed to be unique and not empty.
 func (r Route) Name() string {
 	return r.name
+}
+
+// Summary returns OpenAPI summary.
+func (r Route) Summary() string {
+	return r.summary
 }
 
 // OperationID returns OpenAPI operationId.
@@ -332,6 +338,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: Echo
 						r.name = "Echo"
+						r.summary = ""
 						r.operationID = "echo"
 						r.pathPattern = "/api/echo"
 						r.args = args
@@ -352,6 +359,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					switch method {
 					case "GET":
 						r.name = "Search"
+						r.summary = ""
 						r.operationID = "search"
 						r.pathPattern = "/api/search"
 						r.args = args
@@ -405,6 +413,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "GET":
 									// Leaf: SearchTagValues
 									r.name = "SearchTagValues"
+									r.summary = ""
 									r.operationID = "searchTagValues"
 									r.pathPattern = "/api/search/tag/{tag_name}/values"
 									r.args = args
@@ -427,6 +436,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								// Leaf: SearchTags
 								r.name = "SearchTags"
+								r.summary = ""
 								r.operationID = "searchTags"
 								r.pathPattern = "/api/search/tags"
 								r.args = args
@@ -455,6 +465,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: TraceByID
 						r.name = "TraceByID"
+						r.summary = ""
 						r.operationID = "traceByID"
 						r.pathPattern = "/api/traces/{traceID}"
 						r.args = args
@@ -496,6 +507,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: SearchTagValuesV2
 							r.name = "SearchTagValuesV2"
+							r.summary = ""
 							r.operationID = "searchTagValuesV2"
 							r.pathPattern = "/api/v2/search/tag/{tag_name}/values"
 							r.args = args

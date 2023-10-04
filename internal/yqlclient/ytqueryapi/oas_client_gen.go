@@ -110,8 +110,7 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 //
 // POST /api/v4/abort_query
 func (c *Client) AbortQuery(ctx context.Context, params AbortQueryParams) error {
-	res, err := c.sendAbortQuery(ctx, params)
-	_ = res
+	_, err := c.sendAbortQuery(ctx, params)
 	return err
 }
 
@@ -256,7 +255,6 @@ func (c *Client) sendAbortQuery(ctx context.Context, params AbortQueryParams) (r
 // POST /api/v4/get_query
 func (c *Client) GetQuery(ctx context.Context, params GetQueryParams) (*QueryStatus, error) {
 	res, err := c.sendGetQuery(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -401,7 +399,6 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 // POST /api/v4/read_query_result
 func (c *Client) ReadQueryResult(ctx context.Context, params ReadQueryResultParams) (QueryResult, error) {
 	res, err := c.sendReadQueryResult(ctx, params)
-	_ = res
 	return res, err
 }
 
@@ -577,7 +574,6 @@ func (c *Client) sendReadQueryResult(ctx context.Context, params ReadQueryResult
 // POST /api/v4/start_query
 func (c *Client) StartQuery(ctx context.Context, params StartQueryParams) (*StartedQuery, error) {
 	res, err := c.sendStartQuery(ctx, params)
-	_ = res
 	return res, err
 }
 

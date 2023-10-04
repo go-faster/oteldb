@@ -213,6 +213,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Route is route object.
 type Route struct {
 	name        string
+	summary     string
 	operationID string
 	pathPattern string
 	count       int
@@ -224,6 +225,11 @@ type Route struct {
 // It is guaranteed to be unique and not empty.
 func (r Route) Name() string {
 	return r.name
+}
+
+// Summary returns OpenAPI summary.
+func (r Route) Summary() string {
+	return r.summary
 }
 
 // OperationID returns OpenAPI operationId.
@@ -333,6 +339,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							case "GET":
 								// Leaf: LabelValues
 								r.name = "LabelValues"
+								r.summary = ""
 								r.operationID = "labelValues"
 								r.pathPattern = "/loki/api/v1/label/{name}/values"
 								r.args = args
@@ -355,6 +362,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: Labels
 							r.name = "Labels"
+							r.summary = ""
 							r.operationID = "labels"
 							r.pathPattern = "/loki/api/v1/labels"
 							r.args = args
@@ -377,6 +385,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "POST":
 						// Leaf: Push
 						r.name = "Push"
+						r.summary = ""
 						r.operationID = "push"
 						r.pathPattern = "/loki/api/v1/push"
 						r.args = args
@@ -397,6 +406,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					switch method {
 					case "GET":
 						r.name = "Query"
+						r.summary = ""
 						r.operationID = "query"
 						r.pathPattern = "/loki/api/v1/query"
 						r.args = args
@@ -419,6 +429,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						case "GET":
 							// Leaf: QueryRange
 							r.name = "QueryRange"
+							r.summary = ""
 							r.operationID = "queryRange"
 							r.pathPattern = "/loki/api/v1/query_range"
 							r.args = args
@@ -441,6 +452,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					case "GET":
 						// Leaf: Series
 						r.name = "Series"
+						r.summary = ""
 						r.operationID = "series"
 						r.pathPattern = "/loki/api/v1/series"
 						r.args = args

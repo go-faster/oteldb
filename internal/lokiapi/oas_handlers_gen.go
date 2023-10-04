@@ -76,10 +76,11 @@ func (s *Server) handleLabelValuesRequest(args [1]string, argsEscaped bool, w ht
 	var response *Values
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "LabelValues",
-			OperationID:   "labelValues",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "LabelValues",
+			OperationSummary: "",
+			OperationID:      "labelValues",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "X-Grafana-User",
@@ -213,10 +214,11 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 	var response *Labels
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Labels",
-			OperationID:   "labels",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "Labels",
+			OperationSummary: "",
+			OperationID:      "labels",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "X-Grafana-User",
@@ -346,12 +348,13 @@ func (s *Server) handlePushRequest(args [0]string, argsEscaped bool, w http.Resp
 	var response *PushNoContent
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Push",
-			OperationID:   "push",
-			Body:          request,
-			Params:        middleware.Parameters{},
-			Raw:           r,
+			Context:          ctx,
+			OperationName:    "Push",
+			OperationSummary: "",
+			OperationID:      "push",
+			Body:             request,
+			Params:           middleware.Parameters{},
+			Raw:              r,
 		}
 
 		type (
@@ -457,10 +460,11 @@ func (s *Server) handleQueryRequest(args [0]string, argsEscaped bool, w http.Res
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Query",
-			OperationID:   "query",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "Query",
+			OperationSummary: "",
+			OperationID:      "query",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "X-Grafana-User",
@@ -589,10 +593,11 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "QueryRange",
-			OperationID:   "queryRange",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "QueryRange",
+			OperationSummary: "",
+			OperationID:      "queryRange",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "X-Grafana-User",
@@ -733,10 +738,11 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 	var response *Maps
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
-			Context:       ctx,
-			OperationName: "Series",
-			OperationID:   "series",
-			Body:          nil,
+			Context:          ctx,
+			OperationName:    "Series",
+			OperationSummary: "",
+			OperationID:      "series",
+			Body:             nil,
 			Params: middleware.Parameters{
 				{
 					Name: "start",

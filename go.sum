@@ -367,8 +367,8 @@ github.com/mrunalp/fileutils v0.5.0/go.mod h1:M1WthSahJixYnrXQl/DFQuteStB1weuxD2
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/npillmayer/nestext v0.1.3/go.mod h1:h2lrijH8jpicr25dFY+oAJLyzlya6jhnuG+zWp9L0Uk=
-github.com/ogen-go/ogen v0.75.0 h1:4p9zxJOPS/lizvKfbqqzRf8jYuzr2NrMJRy69tva6uY=
-github.com/ogen-go/ogen v0.75.0/go.mod h1:Lq8KR3bzieba8gY2uJwRP9r3buXNHClbQhLNOL0PDDM=
+github.com/ogen-go/ogen v0.76.0 h1:tdYMXVi9Khui4PDU2aTMaNcWVrTCwqjhs/xYNbI5Zsw=
+github.com/ogen-go/ogen v0.76.0/go.mod h1:ZPh0dhw8iSh8NtB+V0oh082H1rzSkW7S2zhY9HYnlB4=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.86.0 h1:xt/YvYpgssWk2Ix2C9SSXrILIzRqyWe+r5RE348m1fE=
 github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.86.0/go.mod h1:fjK1kn7PIDP+TqOIFVEth3w0Eiexx5jIk411c//fYkM=

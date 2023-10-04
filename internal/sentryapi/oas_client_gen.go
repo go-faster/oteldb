@@ -95,7 +95,6 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 // GET /dummy
 func (c *Client) Dummy(ctx context.Context) (*Event, error) {
 	res, err := c.sendDummy(ctx)
-	_ = res
 	return res, err
 }
 
@@ -167,8 +166,7 @@ func (c *Client) sendDummy(ctx context.Context) (res *Event, err error) {
 //
 // POST /envelope
 func (c *Client) Envelope(ctx context.Context, request *EnvelopeReqWithContentType) error {
-	res, err := c.sendEnvelope(ctx, request)
-	_ = res
+	_, err := c.sendEnvelope(ctx, request)
 	return err
 }
 
