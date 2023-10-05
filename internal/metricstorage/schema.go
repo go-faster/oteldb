@@ -9,8 +9,8 @@ import (
 // Point is a data structure for metric points.
 type Point struct {
 	Metric        string                `json:"metric_name" yson:"metric_name"`
-	ResourceHash  string                `json:"resource_hash" yson:"resource_hash"`
-	AttributeHash string                `json:"attr_hash" yson:"attr_hash"`
+	ResourceHash  otelstorage.Hash      `json:"resource_hash" yson:"resource_hash"`
+	AttributeHash otelstorage.Hash      `json:"attr_hash" yson:"attr_hash"`
 	Timestamp     otelstorage.Timestamp `json:"timestamp" yson:"timestamp"`
 	Point         float64               `json:"point" yson:"point"`
 }
@@ -19,7 +19,7 @@ type Point struct {
 func (Point) YTSchema() schema.Schema {
 	var (
 		tsType   = schema.TypeUint64
-		hashType = schema.TypeString
+		hashType = schema.TypeBytes
 	)
 
 	return schema.Schema{
@@ -35,14 +35,14 @@ func (Point) YTSchema() schema.Schema {
 
 // Resource is a data structure for resource.
 type Resource struct {
-	Hash  string            `json:"hash" yson:"hash"`
+	Hash  otelstorage.Hash  `json:"hash" yson:"hash"`
 	Attrs otelstorage.Attrs `json:"attrs" yson:"attrs"`
 }
 
 // YTSchema returns YTsaurus table schema for this structure.
 func (Resource) YTSchema() schema.Schema {
 	var (
-		hashType  = schema.TypeString
+		hashType  = schema.TypeBytes
 		attrsType = schema.Optional{Item: schema.TypeAny}
 	)
 
@@ -57,14 +57,14 @@ func (Resource) YTSchema() schema.Schema {
 // Attributes is a data structure for attributes.
 type Attributes struct {
 	Metric string            `json:"metric_name" yson:"metric_name"`
-	Hash   string            `json:"hash" yson:"hash"`
+	Hash   otelstorage.Hash  `json:"hash" yson:"hash"`
 	Attrs  otelstorage.Attrs `json:"attrs" yson:"attrs"`
 }
 
 // YTSchema returns YTsaurus table schema for this structure.
 func (Attributes) YTSchema() schema.Schema {
 	var (
-		hashType  = schema.TypeString
+		hashType  = schema.TypeBytes
 		attrsType = schema.Optional{Item: schema.TypeAny}
 	)
 
