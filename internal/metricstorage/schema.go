@@ -9,8 +9,8 @@ import (
 // Point is a data structure for metric points.
 type Point struct {
 	Metric        string                `json:"metric_name" yson:"metric_name"`
-	ResourceHash  string                `json:"resource_hash" yson:"resource_hash"`
-	AttributeHash string                `json:"attr_hash" yson:"attr_hash"`
+	ResourceHash  []byte                `json:"resource_hash" yson:"resource_hash"`
+	AttributeHash []byte                `json:"attr_hash" yson:"attr_hash"`
 	Timestamp     otelstorage.Timestamp `json:"timestamp" yson:"timestamp"`
 	Point         float64               `json:"point" yson:"point"`
 }
@@ -19,9 +19,8 @@ type Point struct {
 func (Point) YTSchema() schema.Schema {
 	var (
 		tsType   = schema.TypeUint64
-		hashType = schema.TypeString
+		hashType = schema.TypeBytes
 	)
-
 	return schema.Schema{
 		Columns: []schema.Column{
 			{Name: "metric_name", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},

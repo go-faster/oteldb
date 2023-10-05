@@ -40,6 +40,10 @@ func NewSharder(yc yt.Client, shardOpts ShardingOptions) *Sharder {
 
 const timeBlockLayout = "2006-01-02_15-04-05"
 
+func (s *Sharder) TenantPath(id TenantID) ypath.Path {
+	return s.tenantPath(id)
+}
+
 func (s *Sharder) tenantPath(id TenantID) ypath.Path {
 	return s.shardOpts.Root.Child(fmt.Sprintf("tenant_%v", id))
 }
@@ -58,12 +62,21 @@ func (s *Sharder) CreateTenant(ctx context.Context, tenant TenantID, at time.Tim
 		map[ypath.Path]migrate.Table{
 			activePath.Child("resource").Child(timePartition): {
 				Schema: metricstorage.Resource{}.YTSchema(),
+				Attributes: map[string]any{
+					"optimize_for": "scan",
+				},
 			},
 			activePath.Child("attributes").Child(timePartition): {
 				Schema: metricstorage.Attributes{}.YTSchema(),
+				Attributes: map[string]any{
+					"optimize_for": "scan",
+				},
 			},
 			activePath.Child("points"): {
 				Schema: metricstorage.Point{}.YTSchema(),
+				Attributes: map[string]any{
+					"optimize_for": "scan",
+				},
 			},
 		},
 		migrate.OnConflictTryAlter(ctx, s.yc),
