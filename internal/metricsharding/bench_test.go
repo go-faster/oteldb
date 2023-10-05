@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.ytsaurus.tech/yt/go/yt"
-	"go.ytsaurus.tech/yt/go/yt/ytrpc"
+	"go.ytsaurus.tech/yt/go/yt/ythttp"
 
 	"github.com/go-faster/oteldb/internal/metricstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -26,7 +26,8 @@ func TestIntegrationWorkload(t *testing.T) {
 		totalBatches    = totalTestPoints / uniqueRate
 	)
 	ctx := context.Background()
-	yc, err := ytrpc.NewClient(&yt.Config{
+	yc, err := ythttp.NewClient(&yt.Config{
+		Proxy:                 "localhost:8000",
 		RPCProxy:              "localhost:8002",
 		Token:                 "admin",
 		DisableProxyDiscovery: true,
