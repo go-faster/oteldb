@@ -25,6 +25,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.26.0
+	github.com/zeebo/xxh3 v1.0.2
 	go.opentelemetry.io/collector/component v0.88.0
 	go.opentelemetry.io/collector/confmap v0.88.0
 	go.opentelemetry.io/collector/consumer v0.88.0
@@ -99,6 +100,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.1 // indirect
+	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/knadh/koanf v1.5.0 // indirect
 	github.com/knadh/koanf/v2 v2.0.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect

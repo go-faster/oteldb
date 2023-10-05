@@ -2,7 +2,6 @@ package metricsharding
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"sync"
 	"time"
@@ -38,12 +37,6 @@ func NewSharder(yc yt.Client, shardOpts ShardingOptions) *Sharder {
 	}
 }
 
-const timeBlockLayout = "2006-01-02_15-04-05"
-
-func (s *Sharder) tenantPath(id TenantID) ypath.Path {
-	return s.shardOpts.Root.Child(fmt.Sprintf("tenant_%v", id))
-}
-
 func (s *Sharder) currentBlockStart() time.Time {
 	return time.Now().UTC().Truncate(s.shardOpts.BlockDelta)
 }
@@ -51,7 +44,7 @@ func (s *Sharder) currentBlockStart() time.Time {
 // CreateTenant creates storage strucute for given tenant.
 func (s *Sharder) CreateTenant(ctx context.Context, tenant TenantID, at time.Time) error {
 	var (
-		activePath    = s.tenantPath(tenant).Child("active")
+		activePath    = s.shardOpts.TenantPath(tenant).Child("active")
 		timePartition = at.UTC().Truncate(s.shardOpts.AttributeDelta).Format(timeBlockLayout)
 	)
 	return migrate.EnsureTables(ctx, s.yc,
@@ -88,7 +81,7 @@ func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, sta
 	grp, grpCtx := errgroup.WithContext(ctx)
 	for _, tenant := range tenants {
 		tenant := tenant
-		tenantPath := s.tenantPath(tenant)
+		tenantPath := s.shardOpts.TenantPath(tenant)
 
 		if needActive {
 			activePath := tenantPath.Child("active")
