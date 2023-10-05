@@ -46,17 +46,21 @@ func (s *Sharder) CreateTenant(ctx context.Context, tenant TenantID, at time.Tim
 	var (
 		activePath    = s.shardOpts.TenantPath(tenant).Child("active")
 		timePartition = at.UTC().Truncate(s.shardOpts.AttributeDelta).Format(timeBlockLayout)
+		attrs         = map[string]any{"optimize_for": "scan"}
 	)
 	return migrate.EnsureTables(ctx, s.yc,
 		map[ypath.Path]migrate.Table{
 			activePath.Child("resource").Child(timePartition): {
-				Schema: metricstorage.Resource{}.YTSchema(),
+				Schema:     metricstorage.Resource{}.YTSchema(),
+				Attributes: attrs,
 			},
 			activePath.Child("attributes").Child(timePartition): {
-				Schema: metricstorage.Attributes{}.YTSchema(),
+				Schema:     metricstorage.Attributes{}.YTSchema(),
+				Attributes: attrs,
 			},
 			activePath.Child("points"): {
-				Schema: metricstorage.Point{}.YTSchema(),
+				Schema:     metricstorage.Point{}.YTSchema(),
+				Attributes: attrs,
 			},
 		},
 		migrate.OnConflictTryAlter(ctx, s.yc),
