@@ -8,8 +8,6 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
-	"go.ytsaurus.tech/yt/go/migrate"
-	"go.ytsaurus.tech/yt/go/schema"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 	"golang.org/x/sync/errgroup"
@@ -53,6 +51,29 @@ func (c *Consumer) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 }
 
 func (c *Consumer) insertBatch(ctx context.Context, id TenantID, batch *InsertBatch) error {
+	// Concurrently create tenant tables before inserting.
+	{
+		// Collect all time blocks to create.
+		timeBlocks := map[int64]time.Time{}
+		batch.Attributes.Each(func(t time.Time, v []metricstorage.Attributes) {
+			timeBlocks[t.UnixNano()] = t
+		})
+		batch.Resource.Each(func(t time.Time, v []metricstorage.Resource) {
+			timeBlocks[t.UnixNano()] = t
+		})
+
+		grp, grpCtx := errgroup.WithContext(ctx)
+		for _, at := range timeBlocks {
+			at := at
+			grp.Go(func() error {
+				ctx := grpCtx
+				return c.shardOpts.CreateTenant(ctx, c.yc, id, at)
+			})
+		}
+		if err := grp.Wait(); err != nil {
+			return errors.Wrap(err, "migrate")
+		}
+	}
 	activePath := c.shardOpts.TenantPath(id)
 
 	grp, grpCtx := errgroup.WithContext(ctx)
@@ -74,30 +95,19 @@ func (c *Consumer) insertBatch(ctx context.Context, id TenantID, batch *InsertBa
 			return insertDynamicSlice(ctx, c.yc, table, v)
 		})
 	})
+	if err := grp.Wait(); err != nil {
+		return errors.Wrap(err, "insert")
+	}
 
-	return grp.Wait()
+	return nil
 }
 
-func insertDynamicSlice[T interface {
-	YTSchema() schema.Schema
-}](
+func insertDynamicSlice[T any](
 	ctx context.Context,
 	yc yt.Client,
 	table ypath.Path,
 	data []T,
 ) (rerr error) {
-	var zero T
-	if err := migrate.EnsureTables(ctx, yc,
-		map[ypath.Path]migrate.Table{
-			table: {
-				Schema: zero.YTSchema(),
-			},
-		},
-		migrate.OnConflictTryAlter(ctx, yc),
-	); err != nil {
-		return errors.Wrap(err, "create table")
-	}
-
 	bw := yc.NewRowBatchWriter()
 	defer func() {
 		if rerr != nil {

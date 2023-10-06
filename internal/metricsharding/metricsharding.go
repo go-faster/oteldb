@@ -2,12 +2,17 @@
 package metricsharding
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
+	"go.ytsaurus.tech/yt/go/yt"
+
+	"github.com/go-faster/oteldb/internal/metricstorage"
 )
 
 const timeBlockLayout = "2006-01-02_15-04-05"
@@ -29,6 +34,32 @@ type ShardingOptions struct {
 // TenantPath returns root path for given tenant.
 func (opts *ShardingOptions) TenantPath(id TenantID) ypath.Path {
 	return opts.Root.Child(fmt.Sprintf("tenant_%v", id))
+}
+
+// CreateTenant creates storage strucute for given tenant.
+func (opts *ShardingOptions) CreateTenant(ctx context.Context, yc yt.Client, tenant TenantID, at time.Time) error {
+	var (
+		activePath    = opts.TenantPath(tenant).Child("active")
+		timePartition = at.UTC().Truncate(opts.AttributeDelta).Format(timeBlockLayout)
+		attrs         = map[string]any{"optimize_for": "scan"}
+	)
+	return migrate.EnsureTables(ctx, yc,
+		map[ypath.Path]migrate.Table{
+			activePath.Child("resource").Child(timePartition): {
+				Schema:     metricstorage.Resource{}.YTSchema(),
+				Attributes: attrs,
+			},
+			activePath.Child("attributes").Child(timePartition): {
+				Schema:     metricstorage.Attributes{}.YTSchema(),
+				Attributes: attrs,
+			},
+			activePath.Child("points"): {
+				Schema:     metricstorage.Point{}.YTSchema(),
+				Attributes: attrs,
+			},
+		},
+		migrate.OnConflictTryAlter(ctx, yc),
+	)
 }
 
 // SetDefaults sets default options.

@@ -10,12 +10,9 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
 	"go.ytsaurus.tech/yt/go/mapreduce"
-	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/go-faster/oteldb/internal/metricstorage"
 )
 
 // Sharder controls sharding.
@@ -43,28 +40,7 @@ func (s *Sharder) currentBlockStart() time.Time {
 
 // CreateTenant creates storage strucute for given tenant.
 func (s *Sharder) CreateTenant(ctx context.Context, tenant TenantID, at time.Time) error {
-	var (
-		activePath    = s.shardOpts.TenantPath(tenant).Child("active")
-		timePartition = at.UTC().Truncate(s.shardOpts.AttributeDelta).Format(timeBlockLayout)
-		attrs         = map[string]any{"optimize_for": "scan"}
-	)
-	return migrate.EnsureTables(ctx, s.yc,
-		map[ypath.Path]migrate.Table{
-			activePath.Child("resource").Child(timePartition): {
-				Schema:     metricstorage.Resource{}.YTSchema(),
-				Attributes: attrs,
-			},
-			activePath.Child("attributes").Child(timePartition): {
-				Schema:     metricstorage.Attributes{}.YTSchema(),
-				Attributes: attrs,
-			},
-			activePath.Child("points"): {
-				Schema:     metricstorage.Point{}.YTSchema(),
-				Attributes: attrs,
-			},
-		},
-		migrate.OnConflictTryAlter(ctx, s.yc),
-	)
+	return s.shardOpts.CreateTenant(ctx, s.yc, tenant, at)
 }
 
 // GetBlocksForQuery returns list of blocks to query.
