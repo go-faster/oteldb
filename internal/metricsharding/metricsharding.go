@@ -33,11 +33,22 @@ type ShardingOptions struct {
 
 // TenantPath returns root path for given tenant.
 func (opts *ShardingOptions) TenantPath(id TenantID) ypath.Path {
+	opts.SetDefaults()
+
 	return opts.Root.Child(fmt.Sprintf("tenant_%v", id))
+}
+
+// CurrentBlockStart returns current block start point.
+func (opts *ShardingOptions) CurrentBlockStart() time.Time {
+	opts.SetDefaults()
+
+	return time.Now().UTC().Truncate(opts.BlockDelta)
 }
 
 // CreateTenant creates storage strucute for given tenant.
 func (opts *ShardingOptions) CreateTenant(ctx context.Context, yc yt.Client, tenant TenantID, at time.Time) error {
+	opts.SetDefaults()
+
 	var (
 		activePath    = opts.TenantPath(tenant).Child("active")
 		timePartition = at.UTC().Truncate(opts.AttributeDelta).Format(timeBlockLayout)

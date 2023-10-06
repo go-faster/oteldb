@@ -35,7 +35,7 @@ func NewSharder(yc yt.Client, shardOpts ShardingOptions) *Sharder {
 }
 
 func (s *Sharder) currentBlockStart() time.Time {
-	return time.Now().UTC().Truncate(s.shardOpts.BlockDelta)
+	return s.shardOpts.CurrentBlockStart()
 }
 
 // CreateTenant creates storage strucute for given tenant.

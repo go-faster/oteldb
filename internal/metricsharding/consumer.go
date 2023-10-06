@@ -135,7 +135,9 @@ func insertDynamicSlice[T any](
 
 func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (batches map[TenantID]*InsertBatch, _ error) {
 	var (
-		lg = zctx.From(ctx)
+		// Get 2Δ from now.
+		metricDeadline = c.shardOpts.CurrentBlockStart().Add(-c.shardOpts.BlockDelta)
+		lg             = zctx.From(ctx)
 
 		getTenantBatch = func(id TenantID) *InsertBatch {
 			if batches == nil {
@@ -173,6 +175,13 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 					)
 					continue
 				}
+				if ts.AsTime().Before(metricDeadline) {
+					lg.Warn("Metric is too old",
+						zap.String("metric_name", name),
+						zap.Int64("tenant_id", id),
+					)
+					continue
+				}
 				b := getTenantBatch(id)
 
 				attrHash := otelstorage.AttrHash(attrs)
@@ -198,7 +207,7 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 					Metric:        name,
 					ResourceHash:  res.Hash,
 					AttributeHash: attrHash,
-					Timestamp:     point.Timestamp(),
+					Timestamp:     ts,
 					Point:         val,
 				})
 			}
