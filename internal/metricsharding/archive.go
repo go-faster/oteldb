@@ -140,58 +140,42 @@ func (s *Sharder) archivePoints(ctx context.Context,
 		return errors.Wrapf(err, "create static table %q", targetPath)
 	}
 
-	{
-		mergeSpec := spec.Merge()
-		mergeSpec.MergeMode = defaultMergeMode
-		mergeSpec.InputTablePaths = []ypath.YPath{activePath}
-		mergeSpec.OutputTablePath = targetPath
-		mergeSpec.InputQuery = fmt.Sprintf(
-			"* WHERE timestamp >= %d AND timestamp < %d",
-			start.UnixNano(), end.UnixNano(),
-		)
+	mergeSpec := spec.Merge()
+	mergeSpec.MergeMode = defaultMergeMode
+	mergeSpec.InputTablePaths = []ypath.YPath{activePath}
+	mergeSpec.OutputTablePath = targetPath
+	mergeSpec.InputQuery = fmt.Sprintf(
+		"* WHERE timestamp >= %d AND timestamp < %d",
+		start.UnixNano(), end.UnixNano(),
+	)
 
-		op, err := s.mapreduce.Merge(mergeSpec)
-		if err != nil {
-			return errors.Wrap(err, "run merge operation")
-		}
-		lg.Info("Run merge operation",
-			zap.Stringer("id", op.ID()),
-			zap.Stringer("from", activePath),
-			zap.Stringer("to", targetPath),
-		)
-
-		if err := op.Wait(); err != nil {
-			return errors.Wrapf(err, "wait operation %q", op.ID())
-		}
-		lg.Info("Merge operation done", zap.Stringer("id", op.ID()))
+	op, err := s.mapreduce.Merge(mergeSpec)
+	if err != nil {
+		return errors.Wrap(err, "run merge operation")
 	}
+	lg.Info("Run merge operation",
+		zap.Stringer("id", op.ID()),
+		zap.Stringer("from", activePath),
+		zap.Stringer("to", targetPath),
+	)
 
-	{
-		// See https://ytsaurus.tech/docs/en/user-guide/dynamic-tables/bulk-insert#delete-where-via-input-query.
-		truncateSpec := spec.Merge()
-		truncateSpec.MergeMode = defaultMergeMode
-		truncateSpec.InputTablePaths = []ypath.YPath{
-			// Set attributes as guide says.
-			`<append=%true; schema_modification="unversioned_update">` + activePath,
-		}
-		truncateSpec.OutputTablePath = activePath
-		// Truncate all rows older than current block start.
-		truncateSpec.InputQuery = fmt.Sprintf("* WHERE timestamp >= %d", end.UnixNano())
-
-		op, err := s.mapreduce.Merge(truncateSpec)
-		if err != nil {
-			return errors.Wrap(err, "run truncate operation")
-		}
-		lg.Info("Run truncate operation",
-			zap.Stringer("id", op.ID()),
-			zap.Stringer("table", activePath),
-		)
-
-		if err := op.Wait(); err != nil {
-			return errors.Wrapf(err, "wait operation %q", op.ID())
-		}
-		lg.Info("Truncate operation done", zap.Stringer("id", op.ID()))
+	if err := op.Wait(); err != nil {
+		return errors.Wrapf(err, "wait operation %q", op.ID())
 	}
+	lg.Info("Merge operation done", zap.Stringer("id", op.ID()))
 
+	dataTTL := s.shardOpts.BlockDelta * 2
+	for attr, value := range map[string]int64{
+		`min_data_versions`: 0,
+		`max_data_versions`: 1,
+		`min_data_ttl`:      0,
+		`max_data_ttl`:      dataTTL.Milliseconds(),
+	} {
+		// FIXME(tdakkota): use a transaction?
+		attrPath := activePath.Attr(attr)
+		if err := s.yc.SetNode(ctx, attrPath, value, nil); err != nil {
+			return errors.Wrapf(err, "set attr %q", attrPath)
+		}
+	}
 	return nil
 }
