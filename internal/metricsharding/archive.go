@@ -173,7 +173,7 @@ func (s *Sharder) archivePoints(ctx context.Context,
 	} {
 		// FIXME(tdakkota): use a transaction?
 		attrPath := activePath.Attr(attr)
-		if err := s.yc.SetNode(ctx, attrPath, value, nil); err != nil {
+		if err := s.yc.SetNode(ctx, attrPath, value, &yt.SetNodeOptions{}); err != nil {
 			return errors.Wrapf(err, "set attr %q", attrPath)
 		}
 	}

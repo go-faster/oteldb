@@ -43,6 +43,30 @@ func (s *Sharder) CreateTenant(ctx context.Context, tenant TenantID, at time.Tim
 	return s.shardOpts.CreateTenant(ctx, s.yc, tenant, at)
 }
 
+// ListTenants returns list of tenants.
+func (s *Sharder) ListTenants(ctx context.Context) (result []TenantID, _ error) {
+	var (
+		lg   = zctx.From(ctx)
+		root = s.shardOpts.Root
+
+		dirs []string
+	)
+	if err := s.yc.ListNode(ctx, root, &dirs, &yt.ListNodeOptions{}); err != nil {
+		return nil, errors.Wrapf(err, "get %q dirs", root)
+	}
+
+	result = slices.Grow(result, len(dirs))
+	for _, dir := range dirs {
+		v, err := ParseTenant(dir)
+		if err != nil {
+			lg.Warn("Invalid tenant name", zap.String("dir", dir))
+			continue
+		}
+		result = append(result, v)
+	}
+	return result, nil
+}
+
 // GetBlocksForQuery returns list of blocks to query.
 func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, start, end time.Time) (qb QueryBlocks, _ error) {
 	var (
