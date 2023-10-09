@@ -141,7 +141,7 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 
 		getTenantBatch = func(id TenantID) *InsertBatch {
 			if batches == nil {
-				batches = map[int64]*InsertBatch{}
+				batches = map[TenantID]*InsertBatch{}
 			}
 			b, ok := batches[id]
 			if !ok {
@@ -178,7 +178,7 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 				if ts.AsTime().Before(metricDeadline) {
 					lg.Warn("Metric is too old",
 						zap.String("metric_name", name),
-						zap.Int64("tenant_id", id),
+						zap.Int64("tenant_id", int64(id)),
 					)
 					continue
 				}

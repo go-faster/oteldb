@@ -1,13 +1,50 @@
 package metricsharding
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/go-faster/errors"
 	"go.ytsaurus.tech/yt/go/ypath"
 )
 
 // TenantID is a tenant ID.
-type TenantID = int64
+type TenantID int64
+
+// ParseTenant parses dir name to tenant.
+func ParseTenant(s string) (TenantID, error) {
+	id, ok := strings.CutPrefix(s, "tenant_")
+	if !ok {
+		return 0, errors.Errorf("invalid tenant name %q: expected prefix", s)
+	}
+	v, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return TenantID(v), nil
+}
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (id *TenantID) UnmarshalText(data []byte) error {
+	v, err := ParseTenant(string(data))
+	if err != nil {
+		return err
+	}
+	*id = v
+	return nil
+}
+
+// String implements [fmt.Stringer].
+func (id TenantID) String() string {
+	return fmt.Sprintf("tenant_%d", int64(id))
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+func (id TenantID) MarshalText() ([]byte, error) {
+	return fmt.Appendf(nil, "tenant_%d", int64(id)), nil
+}
 
 // Block is a metric points/attributes block.
 type Block struct {

@@ -3,7 +3,6 @@ package metricsharding
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -35,7 +34,7 @@ type ShardingOptions struct {
 func (opts *ShardingOptions) TenantPath(id TenantID) ypath.Path {
 	opts.SetDefaults()
 
-	return opts.Root.Child(fmt.Sprintf("tenant_%v", id))
+	return opts.Root.Child(id.String())
 }
 
 // CurrentBlockStart returns current block start point.
@@ -86,10 +85,10 @@ func (opts *ShardingOptions) SetDefaults() {
 			}
 			switch v.Type() {
 			case pcommon.ValueTypeInt:
-				return v.Int(), true
+				return TenantID(v.Int()), true
 			case pcommon.ValueTypeStr:
-				p, err := strconv.ParseInt(v.Str(), 10, 64)
-				return p, err == nil
+				v, err := strconv.ParseInt(v.Str(), 10, 64)
+				return TenantID(v), err == nil
 			default:
 				return id, false
 			}
