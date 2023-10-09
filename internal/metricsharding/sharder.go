@@ -73,9 +73,9 @@ func (s *Sharder) GetBlocksForQuery(ctx context.Context, tenants []TenantID, sta
 		currentBlockStart = s.currentBlockStart()
 
 		// Query closed blocks only if range includes points before start of the active block.
-		needClosed = start.Before(currentBlockStart)
+		needClosed = start.IsZero() || start.Before(currentBlockStart)
 		// Query current blocks only if range includes points after start of the active block.
-		needActive = end.After(currentBlockStart)
+		needActive = end.IsZero() || end.After(currentBlockStart)
 	)
 
 	var (
