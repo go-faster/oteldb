@@ -35,12 +35,12 @@ func main() {
 			return errors.Wrap(err, "sharder.CreateTenant")
 		}
 
-		rnd := rand.New(rand.NewSource(1))
+		rnd := rand.New(rand.NewSource(1)) // #nosec G404
 		for {
 			var points []any
 			var rh, ah otelstorage.Hash
-			rnd.Read(rh[:])
-			rnd.Read(ah[:])
+			_, _ = rnd.Read(rh[:])
+			_, _ = rnd.Read(ah[:])
 			now = now.Add(time.Minute)
 			for j := 0; j < rate; j++ {
 				delta := time.Duration(j) * time.Millisecond
