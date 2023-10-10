@@ -13,11 +13,11 @@ func TestParseTenantID(t *testing.T) {
 		want    TenantID
 		wantErr bool
 	}{
-		{`tenant_19`, 19, false},
+		{`tenant-19`, 19, false},
 
 		{``, 0, true},
-		{`tenant_`, 0, true},
-		{`19`, 0, true},
+		{`tenant-`, 0, true},
+		{`10`, 0, true},
 	}
 	for i, tt := range tests {
 		tt := tt

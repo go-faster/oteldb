@@ -15,7 +15,7 @@ type TenantID int64
 
 // ParseTenant parses dir name to tenant.
 func ParseTenant(s string) (TenantID, error) {
-	id, ok := strings.CutPrefix(s, "tenant_")
+	id, ok := strings.CutPrefix(s, "tenant-")
 	if !ok {
 		return 0, errors.Errorf("invalid tenant name %q: expected prefix", s)
 	}
@@ -38,12 +38,12 @@ func (id *TenantID) UnmarshalText(data []byte) error {
 
 // String implements [fmt.Stringer].
 func (id TenantID) String() string {
-	return fmt.Sprintf("tenant_%d", int64(id))
+	return fmt.Sprintf("tenant-%d", int64(id))
 }
 
 // MarshalText implements [encoding.TextMarshaler].
 func (id TenantID) MarshalText() ([]byte, error) {
-	return fmt.Appendf(nil, "tenant_%d", int64(id)), nil
+	return fmt.Appendf(nil, "tenant-%d", int64(id)), nil
 }
 
 // Block is a metric points/attributes block.

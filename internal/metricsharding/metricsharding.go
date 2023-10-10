@@ -51,7 +51,12 @@ func (opts *ShardingOptions) CreateTenant(ctx context.Context, yc yt.Client, ten
 	var (
 		activePath    = opts.TenantPath(tenant).Child("active")
 		timePartition = at.UTC().Truncate(opts.AttributeDelta).Format(timeBlockLayout)
-		attrs         = map[string]any{"optimize_for": "scan"}
+		attrs         = map[string]any{
+			"optimize_for": "scan",
+
+			// HACK: probably tenant id newtype should be reworked.
+			"tenant_id": int64(tenant),
+		}
 	)
 	return migrate.EnsureTables(ctx, yc,
 		map[ypath.Path]migrate.Table{
