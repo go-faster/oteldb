@@ -42,7 +42,8 @@ func TestIntegrationWorkload(t *testing.T) {
 
 	tenant := sharder.shardOpts.TenantPath(tenantID)
 	active := tenant.Child(`active`)
-	t.Logf("active: %#q", active)
+	pointsPath := active.Child("points")
+	t.Logf("pointsPath: %#q", pointsPath)
 
 	now := time.Now()
 
@@ -64,7 +65,7 @@ func TestIntegrationWorkload(t *testing.T) {
 				Point:         float64(j),
 			})
 		}
-		if err := yc.InsertRows(ctx, active.Child("points"), points, nil); err != nil {
+		if err := yc.InsertRows(ctx, pointsPath, points, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
