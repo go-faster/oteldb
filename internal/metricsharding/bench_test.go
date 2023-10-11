@@ -35,7 +35,7 @@ func TestIntegrationWorkload(t *testing.T) {
 	require.NoError(t, err)
 
 	const tenantID = 222
-	sharder := NewSharder(yc, ShardingOptions{})
+	sharder := NewSharder(yc, nil, ShardingOptions{})
 	if err := sharder.CreateTenant(ctx, tenantID, time.Now()); err != nil {
 		t.Fatal(err)
 	}

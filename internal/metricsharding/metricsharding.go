@@ -11,6 +11,9 @@ import (
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 
+	"github.com/go-faster/errors"
+	"github.com/prometheus/prometheus/model/labels"
+
 	"github.com/go-faster/oteldb/internal/metricstorage"
 )
 
@@ -21,8 +24,10 @@ type ShardingOptions struct {
 	// Root path of storage.
 	Root ypath.Path
 
-	// ExtractTenant extracts TenantID from resource and attributes.
-	ExtractTenant func(resource, attrs pcommon.Map) (TenantID, bool)
+	// TenantFromAttrs extracts TenantID from resource and attributes.
+	TenantFromAttrs func(resource, attrs pcommon.Map) (TenantID, bool)
+	// TenantFromLabels extracts TenantIDs from labels.
+	TenantFromLabels func(ctx context.Context, s *Sharder, labels []*labels.Matcher) ([]TenantID, error)
 
 	// AttributeDelta defines partition (δ=1h) of the current block attributes.
 	AttributeDelta time.Duration
@@ -82,8 +87,8 @@ func (opts *ShardingOptions) SetDefaults() {
 	if opts.Root == "" {
 		opts.Root = ypath.Path("//oteldb/metrics")
 	}
-	if opts.ExtractTenant == nil {
-		opts.ExtractTenant = func(resource, attrs pcommon.Map) (id TenantID, _ bool) {
+	if opts.TenantFromAttrs == nil {
+		opts.TenantFromAttrs = func(resource, attrs pcommon.Map) (id TenantID, _ bool) {
 			v, ok := resource.Get("oteldb.tenant_id")
 			if !ok {
 				return id, false
@@ -99,10 +104,58 @@ func (opts *ShardingOptions) SetDefaults() {
 			}
 		}
 	}
+	if opts.TenantFromLabels == nil {
+		opts.TenantFromLabels = DefaultTenantsFromLabels
+	}
 	if opts.AttributeDelta == 0 {
 		opts.AttributeDelta = time.Hour
 	}
 	if opts.BlockDelta == 0 {
 		opts.BlockDelta = 24 * time.Hour
 	}
+}
+
+// DefaultTenantsFromLabels defines default implementation of TenantFromLabels.
+func DefaultTenantsFromLabels(ctx context.Context, s *Sharder, matchers []*labels.Matcher) ([]TenantID, error) {
+	const labelName = "oteldb_tenant"
+
+	var tenantMatchers []*labels.Matcher
+	for _, m := range matchers {
+		if m.Name != labelName {
+			continue
+		}
+
+		switch m.Type {
+		case labels.MatchEqual, labels.MatchRegexp:
+		default:
+			return nil, errors.Errorf("unsupported matcher: %q", m)
+		}
+
+		tenantMatchers = append(tenantMatchers, m)
+	}
+
+	tenants, err := s.ListTenants(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "list tenants")
+	}
+
+	// Filter in-place by given predicates.
+	keep := func(tenant TenantID) bool {
+		str := tenant.String()
+		for _, m := range tenantMatchers {
+			if m.Matches(str) {
+				return true
+			}
+		}
+		return false
+	}
+	n := 0
+	for _, tenant := range tenants {
+		if !keep(tenant) {
+			continue
+		}
+		tenants[n] = tenant
+	}
+	tenants = tenants[:n]
+	return tenants, nil
 }

@@ -171,7 +171,7 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 				ts := point.Timestamp()
 				attrs := point.Attributes()
 
-				id, ok := c.shardOpts.ExtractTenant(res.Attrs.AsMap(), attrs)
+				id, ok := c.shardOpts.TenantFromAttrs(res.Attrs.AsMap(), attrs)
 				if !ok {
 					lg.Warn("Can't extract tenant",
 						zap.String("metric_name", name),

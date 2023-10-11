@@ -13,23 +13,27 @@ import (
 	"go.ytsaurus.tech/yt/go/ypath"
 	"go.ytsaurus.tech/yt/go/yt"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/yqlclient"
 )
 
 // Sharder controls sharding.
 type Sharder struct {
 	yc        yt.Client
 	mapreduce mapreduce.Client
+	yql       *yqlclient.Client
 
 	shardOpts ShardingOptions
 }
 
 // NewSharder creates new [Sharder].
-func NewSharder(yc yt.Client, shardOpts ShardingOptions) *Sharder {
+func NewSharder(yc yt.Client, yql *yqlclient.Client, shardOpts ShardingOptions) *Sharder {
 	shardOpts.SetDefaults()
 
 	return &Sharder{
 		yc:        yc,
 		mapreduce: mapreduce.New(yc),
+		yql:       yql,
 		shardOpts: shardOpts,
 	}
 }

@@ -20,7 +20,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.88.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.45.0
-	github.com/prometheus/prometheus v0.47.2
+	github.com/prometheus/prometheus v0.47.2-0.20231009152518-fe90dcccffec
 	github.com/pyroscope-io/client v0.7.2
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
@@ -50,7 +50,7 @@ require (
 	go.ytsaurus.tech/library/go/core/log v0.0.3
 	go.ytsaurus.tech/yt/go v0.0.13
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
-	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
+	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 	golang.org/x/sync v0.4.0
 	golang.org/x/tools v0.14.0
 	google.golang.org/grpc v1.59.0
@@ -70,6 +70,7 @@ require (
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/dmarkham/enumer v1.5.8 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
