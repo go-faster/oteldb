@@ -81,15 +81,18 @@ func (c *Consumer) insertBatch(ctx context.Context, id TenantID, batch *InsertBa
 		ctx := grpCtx
 		return insertDynamicSlice(ctx, c.yc, activePath.Child("points"), batch.Points)
 	})
+
+	attributesPath := activePath.Child("attributes")
 	batch.Attributes.Each(func(at time.Time, v []metricstorage.Attributes) {
-		table := activePath.Child(at.Format(timeBlockLayout))
+		table := attributesPath.Child(at.Format(timeBlockLayout))
 		grp.Go(func() error {
 			ctx := grpCtx
 			return insertDynamicSlice(ctx, c.yc, table, v)
 		})
 	})
+	resourcePath := activePath.Child("resource")
 	batch.Resource.Each(func(at time.Time, v []metricstorage.Resource) {
-		table := activePath.Child(at.Format(timeBlockLayout))
+		table := resourcePath.Child(at.Format(timeBlockLayout))
 		grp.Go(func() error {
 			ctx := grpCtx
 			return insertDynamicSlice(ctx, c.yc, table, v)
