@@ -29,7 +29,7 @@ func main() {
 			return errors.Wrap(err, "yt.NewClient")
 		}
 
-		sharder := metricsharding.NewSharder(yc, metricsharding.ShardingOptions{})
+		sharder := metricsharding.NewSharder(yc, nil, metricsharding.ShardingOptions{})
 		now := time.Now()
 		if err := sharder.CreateTenant(ctx, tenantID, now); err != nil {
 			return errors.Wrap(err, "sharder.CreateTenant")
