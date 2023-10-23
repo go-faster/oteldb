@@ -71,7 +71,135 @@ var _ storage.Querier = (*querier)(nil)
 // If matchers are specified the returned result set is reduced
 // to label values of metrics matching the matchers.
 func (q *querier) LabelValues(ctx context.Context, name string, matchers ...*labels.Matcher) ([]string, annotations.Annotations, error) {
-	panic("not implemented") // TODO: Implement
+	tenants, err := q.extractTenants(ctx, q.sharder, matchers)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "extract tenants from labels")
+	}
+
+	qb, err := q.sharder.GetBlocksForQuery(ctx, tenants, q.mint, q.maxt)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "get blocks to query")
+	}
+
+	resultCh := make(chan string, 24)
+	attrPath := "/" + name + "/1"
+	grp, grpCtx := errgroup.WithContext(ctx)
+	// TODO(tdakkota): limit concurrency.
+	// TODO(tdakkota): add an upper limit for size of result.
+	for _, block := range qb.RecentAttributes {
+		block := block
+		grp.Go(func() error {
+			ctx := grpCtx
+			return q.queryDynamicLabelValues(ctx, block.Root, attrPath, resultCh)
+		})
+	}
+	for _, block := range qb.RecentResource {
+		block := block
+		grp.Go(func() error {
+			ctx := grpCtx
+			return q.queryDynamicLabelValues(ctx, block.Root, attrPath, resultCh)
+		})
+	}
+	grp.Go(func() error {
+		ctx := grpCtx
+		return queryStaticLabelValues(ctx, q, qb.Closed, Block.Attributes, attrPath, resultCh)
+	})
+	grp.Go(func() error {
+		ctx := grpCtx
+		return queryStaticLabelValues(ctx, q, qb.Closed, Block.Resource, attrPath, resultCh)
+	})
+
+	// Use map to dedup labels.
+	result := map[string]struct{}{}
+	grp.Go(func() error {
+		ctx := grpCtx
+		for {
+			select {
+			case <-ctx.Done():
+				// Query caused an error/request was canceled.
+				//
+				// It's okay to not read from resultCh, since all writers would be
+				// unblocked by canceled context.
+				return ctx.Err()
+			case v := <-resultCh:
+				result[v] = struct{}{}
+			}
+		}
+	})
+
+	if err := grp.Wait(); err != nil {
+		return nil, nil, err
+	}
+	return maps.Keys(result), nil, err
+}
+
+func queryStaticLabelValues[S any, G func(S) ypath.Path](
+	ctx context.Context,
+	q *querier,
+	tables []S,
+	getPath G,
+	attrPath string,
+	to chan<- string,
+) error {
+	type Row struct {
+		Value string `yson:"value"`
+	}
+
+	var query strings.Builder
+	fmt.Fprintf(&query, `SELECT Yson::ConvertToString(Yson::YPath(attrs, %q)) as value FROM CONCAT(`, attrPath)
+	for i, table := range tables {
+		if i != 0 {
+			query.WriteString(",")
+		}
+		fmt.Fprintf(&query, `%#q`, getPath(table))
+	}
+	query.WriteByte(')')
+	fmt.Fprintf(&query, "WHERE Yson::YPath(attrs, %q) IS NOT NULL", attrPath)
+
+	iter, err := yqlclient.YQLQuery[Row](ctx, q.yql, query.String())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = iter.Close()
+	}()
+
+	var row Row
+	for iter.Next(&row) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case to <- row.Value:
+		}
+	}
+	return iter.Err()
+}
+
+func (q *querier) queryDynamicLabelValues(ctx context.Context, table ypath.Path, attrPath string, to chan<- string) error {
+	r, err := q.yc.SelectRows(ctx, fmt.Sprintf(`try_get_string(%[1]q) FROM [%[2]s] WHERE NOT is_null(try_get_string(%[1]q))`, table, attrPath), nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = r.Close()
+	}()
+
+	var row struct {
+		Value string `yson:"value"`
+	}
+	for r.Next() {
+		if err := r.Scan(&row); err != nil {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case to <- row.Value:
+		}
+	}
+
+	return r.Err()
 }
 
 // LabelNames returns all the unique label names present in the block in sorted order.
@@ -88,7 +216,7 @@ func (q *querier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (
 		return nil, nil, errors.Wrap(err, "get blocks to query")
 	}
 
-	resultCh := make(chan string, 24)
+	resultCh := make(chan pcommon.Map, 24)
 	grp, grpCtx := errgroup.WithContext(ctx)
 	// TODO(tdakkota): limit concurrency.
 	// TODO(tdakkota): add an upper limit for size of result.
@@ -96,23 +224,23 @@ func (q *querier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (
 		block := block
 		grp.Go(func() error {
 			ctx := grpCtx
-			return q.dynamicLabelNames(ctx, block.Root, resultCh)
+			return q.queryDynamicLabels(ctx, block.Root, resultCh)
 		})
 	}
 	for _, block := range qb.RecentResource {
 		block := block
 		grp.Go(func() error {
 			ctx := grpCtx
-			return q.dynamicLabelNames(ctx, block.Root, resultCh)
+			return q.queryDynamicLabels(ctx, block.Root, resultCh)
 		})
 	}
 	grp.Go(func() error {
 		ctx := grpCtx
-		return staticLabelNames(ctx, q, qb.Closed, Block.Attributes, resultCh)
+		return queryStaticLabels(ctx, q, qb.Closed, Block.Attributes, resultCh)
 	})
 	grp.Go(func() error {
 		ctx := grpCtx
-		return staticLabelNames(ctx, q, qb.Closed, Block.Resource, resultCh)
+		return queryStaticLabels(ctx, q, qb.Closed, Block.Resource, resultCh)
 	})
 
 	// Use map to dedup labels.
@@ -121,14 +249,17 @@ func (q *querier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (
 		ctx := grpCtx
 		for {
 			select {
-			case v := <-resultCh:
-				result[v] = struct{}{}
 			case <-ctx.Done():
 				// Query caused an error/request was canceled.
 				//
 				// It's okay to not read from resultCh, since all writers would be
 				// unblocked by canceled context.
 				return ctx.Err()
+			case v := <-resultCh:
+				v.Range(func(k string, _ pcommon.Value) bool {
+					result[k] = struct{}{}
+					return true
+				})
 			}
 		}
 	})
@@ -139,19 +270,19 @@ func (q *querier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (
 	return maps.Keys(result), nil, err
 }
 
-func staticLabelNames[S any, G func(S) ypath.Path](
+func queryStaticLabels[S any, G func(S) ypath.Path](
 	ctx context.Context,
 	q *querier,
 	tables []S,
 	getPath G,
-	to chan<- string,
+	to chan<- pcommon.Map,
 ) error {
 	type Row struct {
-		Name string `yson:"name"`
+		Attrs otelstorage.Attrs `yson:"attrs"`
 	}
 
 	var query strings.Builder
-	query.WriteString("SELECT name FROM CONCAT(")
+	query.WriteString("SELECT attrs FROM CONCAT(")
 	for i, table := range tables {
 		if i != 0 {
 			query.WriteString(",")
@@ -171,16 +302,16 @@ func staticLabelNames[S any, G func(S) ypath.Path](
 	var row Row
 	for iter.Next(&row) {
 		select {
-		case to <- row.Name:
 		case <-ctx.Done():
 			return ctx.Err()
+		case to <- row.Attrs.AsMap():
 		}
 	}
 	return iter.Err()
 }
 
-func (q *querier) dynamicLabelNames(ctx context.Context, table ypath.Path, to chan<- string) error {
-	r, err := q.yc.SelectRows(ctx, fmt.Sprintf(`name FROM [%s]`, table), nil)
+func (q *querier) queryDynamicLabels(ctx context.Context, table ypath.Path, to chan<- pcommon.Map) error {
+	r, err := q.yc.SelectRows(ctx, fmt.Sprintf(`attrs FROM [%s]`, table), nil)
 	if err != nil {
 		return err
 	}
@@ -189,7 +320,7 @@ func (q *querier) dynamicLabelNames(ctx context.Context, table ypath.Path, to ch
 	}()
 
 	var row struct {
-		Name string `yson:"name"`
+		Attrs otelstorage.Attrs `yson:"attrs"`
 	}
 	for r.Next() {
 		if err := r.Scan(&row); err != nil {
@@ -199,7 +330,7 @@ func (q *querier) dynamicLabelNames(ctx context.Context, table ypath.Path, to ch
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case to <- row.Name:
+		case to <- row.Attrs.AsMap():
 		}
 	}
 
@@ -290,10 +421,10 @@ func (q *querier) selectSeries(ctx context.Context, sortSeries bool, hints *stor
 			ctx := grpCtx
 			for {
 				select {
-				case row := <-resultCh:
-					hashes[row.Hash] = row.Attributes
 				case <-ctx.Done():
 					return ctx.Err()
+				case row := <-resultCh:
+					hashes[row.Hash] = row.Attributes
 				}
 			}
 		})
@@ -457,9 +588,9 @@ func (q *querier) attributeHashes(ctx context.Context, to chan<- hashesResult, q
 	var row hashesResult
 	for iter.Next(&row) {
 		select {
-		case to <- row:
 		case <-ctx.Done():
 			return ctx.Err()
+		case to <- row:
 		}
 	}
 	return iter.Err()
