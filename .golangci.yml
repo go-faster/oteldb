@@ -123,6 +123,11 @@ issues:
     - linters: [revive]
       text: "exported const .+ should have comment"
 
+    # It's okay for ytlocal to write files and exec binaries.
+    - path: (cmd|internal)/ytlocal
+      linters: [gosec]
+      text: "G(306|301|204)"
+
     # False positive.
     - path: internal/cmp
       linters: [gocritic]
@@ -136,3 +141,6 @@ issues:
     - path: internal/chstorage
       linters: [goconst]
       text: "int"
+    - path: internal/ytlocal
+      linters: [goconst]
+      text: ".yson"

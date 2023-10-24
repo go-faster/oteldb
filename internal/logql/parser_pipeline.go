@@ -301,7 +301,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			var re *regexp.Regexp
 			switch op {
 			case OpRe, OpNotRe:
-				re, err = regexp.Compile("^(?:" + v + ")$")
+				re, err = compileLabelRegex(v)
 				if err != nil {
 					return nil, errors.Wrapf(err, "invalid regex in label matcher predicate %q", v)
 				}

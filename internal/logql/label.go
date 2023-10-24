@@ -1,6 +1,8 @@
 package logql
 
 import (
+	"regexp"
+
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/lexerql"
@@ -31,4 +33,8 @@ func IsValidLabel[S ~string | ~[]byte](s S, allowDot bool) error {
 		return errors.Errorf("invalid label name character %[1]q (%[1]U) at %[2]d", r, i)
 	}
 	return nil
+}
+
+func compileLabelRegex(re string) (*regexp.Regexp, error) {
+	return regexp.Compile("^(?:" + re + ")$")
 }

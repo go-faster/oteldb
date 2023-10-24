@@ -9,6 +9,6 @@ import (
 )
 
 func decodeStr(s string) *jx.Decoder {
-	data := unsafe.Slice(unsafe.StringData(s), len(s))
+	data := unsafe.Slice(unsafe.StringData(s), len(s)) // #nosec: G103
 	return jx.DecodeBytes(data)
 }

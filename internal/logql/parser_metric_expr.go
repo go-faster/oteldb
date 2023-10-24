@@ -2,7 +2,6 @@ package logql
 
 import (
 	"math"
-	"regexp"
 
 	"github.com/go-faster/errors"
 
@@ -373,11 +372,10 @@ func (p *parser) parseLabelReplace() (lr *LabelReplaceExpr, err error) {
 	if err := readParam(&lr.SrcLabel); err != nil {
 		return nil, err
 	}
-	// TODO(tdakkota): compile regex?
 	if err := readParam(&lr.Regex); err != nil {
 		return nil, err
 	}
-	lr.Re, err = regexp.Compile("^(?:" + lr.Regex + ")$")
+	lr.Re, err = compileLabelRegex(lr.Regex)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid regex in label_replace %q", lr.Regex)
 	}
