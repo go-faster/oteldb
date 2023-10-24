@@ -31,7 +31,7 @@ require (
 	go.opentelemetry.io/collector/exporter v0.87.0
 	go.opentelemetry.io/collector/extension v0.87.0
 	go.opentelemetry.io/collector/otelcol v0.87.0
-	go.opentelemetry.io/collector/pdata v1.0.0-rcv0016
+	go.opentelemetry.io/collector/pdata v1.0.0-rcv0017
 	go.opentelemetry.io/collector/receiver v0.87.0
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.87.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.45.0
