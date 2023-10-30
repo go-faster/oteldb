@@ -493,8 +493,6 @@ components:
         query:
           type: string
           description: Prometheus expression query string.
-        time:
-          $ref: "#/components/schemas/PrometheusTimestamp"
         start:
           $ref: "#/components/schemas/PrometheusTimestamp"
         end:
