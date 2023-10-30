@@ -91,8 +91,8 @@ func (s *Server) GetSeries(ctx context.Context, params promapi.GetSeriesParams) 
 // PostLabels implements postLabels operation.
 //
 // POST /api/v1/labels
-func (s *Server) PostLabels(ctx context.Context) (*promapi.LabelsResponse, error) {
-	return s.api.PostLabels(ctx)
+func (s *Server) PostLabels(ctx context.Context, req *promapi.LabelsForm) (*promapi.LabelsResponse, error) {
+	return s.api.PostLabels(ctx, req)
 }
 
 // PostQuery implements postQuery operation.
