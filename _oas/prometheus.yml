@@ -200,6 +200,12 @@ paths:
           $ref: "#/components/responses/Error"
     post:
       operationId: postLabels
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/LabelsForm"
       responses:
         200:
           $ref: "#/components/responses/LabelsResponse"
@@ -494,6 +500,18 @@ components:
         step:
           type: string
           description: Query resolution step width in duration format or float number of seconds.
+    LabelsForm:
+      type: object
+      properties:
+        start:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        end:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        match[]:
+          type: array
+          items:
+            type: string
+
     Scalar:
       type: object
       required: [result]
