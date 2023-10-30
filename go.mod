@@ -16,7 +16,7 @@ require (
 	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.4.0
-	github.com/ogen-go/ogen v0.76.0
+	github.com/ogen-go/ogen v0.77.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.88.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.45.0
@@ -104,7 +104,7 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.1-0.20220423185008-bf980b35cac4 // indirect

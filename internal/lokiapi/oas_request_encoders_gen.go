@@ -19,7 +19,7 @@ func encodePushRequest(
 	switch req := req.(type) {
 	case *Push:
 		const contentType = "application/json"
-		e := jx.GetEncoder()
+		e := new(jx.Encoder)
 		{
 			req.Encode(e)
 		}
