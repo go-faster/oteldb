@@ -126,6 +126,38 @@ func encodePostQueryRequest(
 			return errors.Wrap(err, "encode query")
 		}
 	}
+	{
+		// Encode "lookback_delta" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.LookbackDelta.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "stats" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.Stats.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
 	encoded := q.Values().Encode()
 	ht.SetBody(r, strings.NewReader(encoded), contentType)
 	return nil
@@ -193,6 +225,38 @@ func encodePostQueryRangeRequest(
 		}
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			return e.EncodeValue(conv.StringToString(request.Step))
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "lookback_delta" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.LookbackDelta.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "stats" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.Stats.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
 		}); err != nil {
 			return errors.Wrap(err, "encode query")
 		}

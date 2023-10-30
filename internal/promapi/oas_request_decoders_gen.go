@@ -271,6 +271,70 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 				}
 			}
 		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "lookback_delta",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotLookbackDeltaVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotLookbackDeltaVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.LookbackDelta.SetTo(requestDotLookbackDeltaVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"lookback_delta\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "stats",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotStatsVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotStatsVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.Stats.SetTo(requestDotStatsVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"stats\"")
+				}
+			}
+		}
 		return &request, close, nil
 	default:
 		return req, close, validate.InvalidContentType(ct)
@@ -433,6 +497,70 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 				}
 			} else {
 				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "lookback_delta",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotLookbackDeltaVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotLookbackDeltaVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.LookbackDelta.SetTo(requestDotLookbackDeltaVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"lookback_delta\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "stats",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotStatsVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						requestDotStatsVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.Stats.SetTo(requestDotStatsVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"stats\"")
+				}
 			}
 		}
 		return &request, close, nil

@@ -463,6 +463,14 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 					Name: "time",
 					In:   "query",
 				}: params.Time,
+				{
+					Name: "lookback_delta",
+					In:   "query",
+				}: params.LookbackDelta,
+				{
+					Name: "stats",
+					In:   "query",
+				}: params.Stats,
 			},
 			Raw: r,
 		}
@@ -717,6 +725,14 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 					Name: "step",
 					In:   "query",
 				}: params.Step,
+				{
+					Name: "lookback_delta",
+					In:   "query",
+				}: params.LookbackDelta,
+				{
+					Name: "stats",
+					In:   "query",
+				}: params.Stats,
 			},
 			Raw: r,
 		}

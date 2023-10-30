@@ -615,6 +615,10 @@ type GetQueryParams struct {
 	Query string
 	// Evaluation timestamp.
 	Time OptPrometheusTimestamp
+	// Lookback delta duration in duration format or float number of seconds.
+	LookbackDelta OptString
+	// Statistics to return.
+	Stats OptString
 }
 
 func unpackGetQueryParams(packed middleware.Parameters) (params GetQueryParams) {
@@ -632,6 +636,24 @@ func unpackGetQueryParams(packed middleware.Parameters) (params GetQueryParams) 
 		}
 		if v, ok := packed[key]; ok {
 			params.Time = v.(OptPrometheusTimestamp)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "lookback_delta",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.LookbackDelta = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "stats",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Stats = v.(OptString)
 		}
 	}
 	return params
@@ -719,6 +741,88 @@ func decodeGetQueryParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "time",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: lookback_delta.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotLookbackDeltaVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotLookbackDeltaVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.LookbackDelta.SetTo(paramsDotLookbackDeltaVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "lookback_delta",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: stats.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStatsVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStatsVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Stats.SetTo(paramsDotStatsVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "stats",
 			In:   "query",
 			Err:  err,
 		}
@@ -898,6 +1002,10 @@ type GetQueryRangeParams struct {
 	End PrometheusTimestamp
 	// Query resolution step width in duration format or float number of seconds.
 	Step string
+	// Lookback delta duration in duration format or float number of seconds.
+	LookbackDelta OptString
+	// Statistics to return.
+	Stats OptString
 }
 
 func unpackGetQueryRangeParams(packed middleware.Parameters) (params GetQueryRangeParams) {
@@ -928,6 +1036,24 @@ func unpackGetQueryRangeParams(packed middleware.Parameters) (params GetQueryRan
 			In:   "query",
 		}
 		params.Step = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "lookback_delta",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.LookbackDelta = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "stats",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Stats = v.(OptString)
+		}
 	}
 	return params
 }
@@ -1088,6 +1214,88 @@ func decodeGetQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "step",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: lookback_delta.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotLookbackDeltaVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotLookbackDeltaVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.LookbackDelta.SetTo(paramsDotLookbackDeltaVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "lookback_delta",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: stats.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStatsVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStatsVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Stats.SetTo(paramsDotStatsVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "stats",
 			In:   "query",
 			Err:  err,
 		}

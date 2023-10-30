@@ -649,6 +649,40 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 			return res, errors.Wrap(err, "encode query")
 		}
 	}
+	{
+		// Encode "lookback_delta" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.LookbackDelta.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "stats" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Stats.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
 	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
@@ -907,6 +941,40 @@ func (c *Client) sendGetQueryRange(ctx context.Context, params GetQueryRangePara
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			return e.EncodeValue(conv.StringToString(params.Step))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "lookback_delta" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.LookbackDelta.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "stats" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Stats.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode query")
 		}

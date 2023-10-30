@@ -1521,8 +1521,10 @@ func (s *QueryExemplarsResponse) SetData(val Exemplars) {
 
 // Ref: #/components/schemas/QueryForm
 type QueryForm struct {
-	Query string                 `json:"query"`
-	Time  OptPrometheusTimestamp `json:"time"`
+	Query         string                 `json:"query"`
+	Time          OptPrometheusTimestamp `json:"time"`
+	LookbackDelta OptString              `json:"lookback_delta"`
+	Stats         OptString              `json:"stats"`
 }
 
 // GetQuery returns the value of Query.
@@ -1535,6 +1537,16 @@ func (s *QueryForm) GetTime() OptPrometheusTimestamp {
 	return s.Time
 }
 
+// GetLookbackDelta returns the value of LookbackDelta.
+func (s *QueryForm) GetLookbackDelta() OptString {
+	return s.LookbackDelta
+}
+
+// GetStats returns the value of Stats.
+func (s *QueryForm) GetStats() OptString {
+	return s.Stats
+}
+
 // SetQuery sets the value of Query.
 func (s *QueryForm) SetQuery(val string) {
 	s.Query = val
@@ -1545,6 +1557,16 @@ func (s *QueryForm) SetTime(val OptPrometheusTimestamp) {
 	s.Time = val
 }
 
+// SetLookbackDelta sets the value of LookbackDelta.
+func (s *QueryForm) SetLookbackDelta(val OptString) {
+	s.LookbackDelta = val
+}
+
+// SetStats sets the value of Stats.
+func (s *QueryForm) SetStats(val OptString) {
+	s.Stats = val
+}
+
 // Ref: #/components/schemas/QueryRangeForm
 type QueryRangeForm struct {
 	// Prometheus expression query string.
@@ -1552,7 +1574,9 @@ type QueryRangeForm struct {
 	Start PrometheusTimestamp `json:"start"`
 	End   PrometheusTimestamp `json:"end"`
 	// Query resolution step width in duration format or float number of seconds.
-	Step string `json:"step"`
+	Step          string    `json:"step"`
+	LookbackDelta OptString `json:"lookback_delta"`
+	Stats         OptString `json:"stats"`
 }
 
 // GetQuery returns the value of Query.
@@ -1575,6 +1599,16 @@ func (s *QueryRangeForm) GetStep() string {
 	return s.Step
 }
 
+// GetLookbackDelta returns the value of LookbackDelta.
+func (s *QueryRangeForm) GetLookbackDelta() OptString {
+	return s.LookbackDelta
+}
+
+// GetStats returns the value of Stats.
+func (s *QueryRangeForm) GetStats() OptString {
+	return s.Stats
+}
+
 // SetQuery sets the value of Query.
 func (s *QueryRangeForm) SetQuery(val string) {
 	s.Query = val
@@ -1593,6 +1627,16 @@ func (s *QueryRangeForm) SetEnd(val PrometheusTimestamp) {
 // SetStep sets the value of Step.
 func (s *QueryRangeForm) SetStep(val string) {
 	s.Step = val
+}
+
+// SetLookbackDelta sets the value of LookbackDelta.
+func (s *QueryRangeForm) SetLookbackDelta(val OptString) {
+	s.LookbackDelta = val
+}
+
+// SetStats sets the value of Stats.
+func (s *QueryRangeForm) SetStats(val OptString) {
+	s.Stats = val
 }
 
 type QueryResponse struct {
