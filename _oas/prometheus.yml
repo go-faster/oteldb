@@ -38,7 +38,7 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/QueryForm'
+              $ref: "#/components/schemas/QueryForm"
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -94,7 +94,7 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/QueryRangeForm'
+              $ref: "#/components/schemas/QueryRangeForm"
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -515,7 +515,7 @@ components:
       required: [result]
       properties:
         result:
-          type: string
+          $ref: "#/components/schemas/StringValue"
     Vector:
       type: object
       required: [result]
@@ -567,11 +567,20 @@ components:
       type: array
       items:
         - type: number
-          description: float64 timestamp
+          description: float64 milli timestamp
           x-ogen-name: T
         - type: string
           description: value
           format: float64
+          x-ogen-name: V
+    StringValue:
+      type: array
+      items:
+        - type: number
+          description: float64 milli timestamp
+          x-ogen-name: T
+        - type: string
+          description: value
           x-ogen-name: V
 
     Exemplars:
@@ -657,10 +666,10 @@ components:
     Alert:
       type: object
       required:
-          - labels
-          - annotations
-          - state
-          - value
+        - labels
+        - annotations
+        - state
+        - value
       properties:
         labels:
           $ref: "#/components/schemas/LabelSet"
