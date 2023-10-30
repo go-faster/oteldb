@@ -21,10 +21,20 @@ paths:
           schema:
             type: string
         - name: time
-          description: Evaluation timestamp
+          description: Evaluation timestamp.
           in: query
           schema:
             $ref: "#/components/schemas/PrometheusTimestamp"
+        - name: lookback_delta
+          description: Lookback delta duration in duration format or float number of seconds.
+          in: query
+          schema:
+            type: string
+        - name: stats
+          description: Statistics to return.
+          in: query
+          schema:
+            type: string
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -74,7 +84,17 @@ paths:
           required: true
           schema:
             type: string
-            description: Prometheus duration or float
+            description: Prometheus duration or float.
+        - name: lookback_delta
+          description: Lookback delta duration in duration format or float number of seconds.
+          in: query
+          schema:
+            type: string
+        - name: stats
+          description: Statistics to return.
+          in: query
+          schema:
+            type: string
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -486,6 +506,10 @@ components:
           type: string
         time:
           $ref: "#/components/schemas/PrometheusTimestamp"
+        lookback_delta:
+          type: string
+        stats:
+          type: string
     QueryRangeForm:
       type: object
       required: [query, start, end, step]
@@ -500,6 +524,10 @@ components:
         step:
           type: string
           description: Query resolution step width in duration format or float number of seconds.
+        lookback_delta:
+          type: string
+        stats:
+          type: string
     LabelsForm:
       type: object
       properties:
