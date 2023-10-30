@@ -51,7 +51,7 @@ type Handler interface {
 	// PostLabels implements postLabels operation.
 	//
 	// POST /api/v1/labels
-	PostLabels(ctx context.Context) (*LabelsResponse, error)
+	PostLabels(ctx context.Context, req *LabelsForm) (*LabelsResponse, error)
 	// PostQuery implements postQuery operation.
 	//
 	// Query Prometheus.

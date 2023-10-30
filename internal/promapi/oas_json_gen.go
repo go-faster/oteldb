@@ -3764,7 +3764,7 @@ func (s *String) Encode(e *jx.Encoder) {
 func (s *String) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("result")
-		e.Str(s.Result)
+		s.Result.Encode(e)
 	}
 }
 
@@ -3784,9 +3784,7 @@ func (s *String) Decode(d *jx.Decoder) error {
 		case "result":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.Result = string(v)
-				if err != nil {
+				if err := s.Result.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -3847,6 +3845,74 @@ func (s *String) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *String) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *StringValue) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *StringValue) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		e.Float64(elem)
+	}
+	{
+		elem := s.V
+		e.Str(elem)
+	}
+}
+
+// Decode decodes StringValue from json.
+func (s *StringValue) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode StringValue to nil")
+	}
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Float64()
+			s.T = float64(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			v, err := d.Str()
+			s.V = string(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
+		}
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *StringValue) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *StringValue) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -80,7 +80,7 @@ func (UnimplementedHandler) GetSeries(ctx context.Context, params GetSeriesParam
 // PostLabels implements postLabels operation.
 //
 // POST /api/v1/labels
-func (UnimplementedHandler) PostLabels(ctx context.Context) (r *LabelsResponse, _ error) {
+func (UnimplementedHandler) PostLabels(ctx context.Context, req *LabelsForm) (r *LabelsResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -66,7 +66,7 @@ type Invoker interface {
 	// PostLabels invokes postLabels operation.
 	//
 	// POST /api/v1/labels
-	PostLabels(ctx context.Context) (*LabelsResponse, error)
+	PostLabels(ctx context.Context, request *LabelsForm) (*LabelsResponse, error)
 	// PostQuery invokes postQuery operation.
 	//
 	// Query Prometheus.
@@ -911,26 +911,6 @@ func (c *Client) sendGetQueryRange(ctx context.Context, params GetQueryRangePara
 			return res, errors.Wrap(err, "encode query")
 		}
 	}
-	{
-		// Encode "timeout" parameter.
-		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "timeout",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if val, ok := params.Timeout.Get(); ok {
-				if unwrapped := string(val); true {
-					return e.EncodeValue(conv.StringToString(unwrapped))
-				}
-				return nil
-			}
-			return nil
-		}); err != nil {
-			return res, errors.Wrap(err, "encode query")
-		}
-	}
 	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
@@ -1251,12 +1231,12 @@ func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res
 // PostLabels invokes postLabels operation.
 //
 // POST /api/v1/labels
-func (c *Client) PostLabels(ctx context.Context) (*LabelsResponse, error) {
-	res, err := c.sendPostLabels(ctx)
+func (c *Client) PostLabels(ctx context.Context, request *LabelsForm) (*LabelsResponse, error) {
+	res, err := c.sendPostLabels(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendPostLabels(ctx context.Context) (res *LabelsResponse, err error) {
+func (c *Client) sendPostLabels(ctx context.Context, request *LabelsForm) (res *LabelsResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postLabels"),
 		semconv.HTTPMethodKey.String("POST"),
@@ -1300,6 +1280,9 @@ func (c *Client) sendPostLabels(ctx context.Context) (res *LabelsResponse, err e
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePostLabelsRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "SendRequest"

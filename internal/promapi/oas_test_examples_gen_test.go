@@ -413,6 +413,18 @@ func TestString_EncodeDecode(t *testing.T) {
 	var typ2 String
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestStringValue_EncodeDecode(t *testing.T) {
+	var typ StringValue
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 StringValue
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestValue_EncodeDecode(t *testing.T) {
 	var typ Value
 	typ.SetFake()

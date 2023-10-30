@@ -674,6 +674,43 @@ func (s *LabelValuesResponse) SetData(val LabelValues) {
 
 type Labels []string
 
+// Ref: #/components/schemas/LabelsForm
+type LabelsForm struct {
+	Start OptPrometheusTimestamp `json:"start"`
+	End   OptPrometheusTimestamp `json:"end"`
+	Match []string               `json:"match[]"`
+}
+
+// GetStart returns the value of Start.
+func (s *LabelsForm) GetStart() OptPrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *LabelsForm) GetEnd() OptPrometheusTimestamp {
+	return s.End
+}
+
+// GetMatch returns the value of Match.
+func (s *LabelsForm) GetMatch() []string {
+	return s.Match
+}
+
+// SetStart sets the value of Start.
+func (s *LabelsForm) SetStart(val OptPrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *LabelsForm) SetEnd(val OptPrometheusTimestamp) {
+	s.End = val
+}
+
+// SetMatch sets the value of Match.
+func (s *LabelsForm) SetMatch(val []string) {
+	s.Match = val
+}
+
 type LabelsResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -1349,52 +1386,6 @@ func (o OptMetricMetadataType) Or(d MetricMetadataType) MetricMetadataType {
 	return d
 }
 
-// NewOptPrometheusDuration returns new OptPrometheusDuration with value set to v.
-func NewOptPrometheusDuration(v PrometheusDuration) OptPrometheusDuration {
-	return OptPrometheusDuration{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptPrometheusDuration is optional PrometheusDuration.
-type OptPrometheusDuration struct {
-	Value PrometheusDuration
-	Set   bool
-}
-
-// IsSet returns true if OptPrometheusDuration was set.
-func (o OptPrometheusDuration) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptPrometheusDuration) Reset() {
-	var v PrometheusDuration
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptPrometheusDuration) SetTo(v PrometheusDuration) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptPrometheusDuration) Get() (v PrometheusDuration, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptPrometheusDuration) Or(d PrometheusDuration) PrometheusDuration {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptPrometheusTimestamp returns new OptPrometheusTimestamp with value set to v.
 func NewOptPrometheusTimestamp(v PrometheusTimestamp) OptPrometheusTimestamp {
 	return OptPrometheusTimestamp{
@@ -1487,8 +1478,6 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-type PrometheusDuration string
-
 type PrometheusTimestamp string
 
 type QueryExemplarsResponse struct {
@@ -1559,23 +1548,16 @@ func (s *QueryForm) SetTime(val OptPrometheusTimestamp) {
 // Ref: #/components/schemas/QueryRangeForm
 type QueryRangeForm struct {
 	// Prometheus expression query string.
-	Query string                 `json:"query"`
-	Time  OptPrometheusTimestamp `json:"time"`
-	Start PrometheusTimestamp    `json:"start"`
-	End   PrometheusTimestamp    `json:"end"`
+	Query string              `json:"query"`
+	Start PrometheusTimestamp `json:"start"`
+	End   PrometheusTimestamp `json:"end"`
 	// Query resolution step width in duration format or float number of seconds.
-	Step    string                 `json:"step"`
-	Timeout OptPrometheusTimestamp `json:"timeout"`
+	Step string `json:"step"`
 }
 
 // GetQuery returns the value of Query.
 func (s *QueryRangeForm) GetQuery() string {
 	return s.Query
-}
-
-// GetTime returns the value of Time.
-func (s *QueryRangeForm) GetTime() OptPrometheusTimestamp {
-	return s.Time
 }
 
 // GetStart returns the value of Start.
@@ -1593,19 +1575,9 @@ func (s *QueryRangeForm) GetStep() string {
 	return s.Step
 }
 
-// GetTimeout returns the value of Timeout.
-func (s *QueryRangeForm) GetTimeout() OptPrometheusTimestamp {
-	return s.Timeout
-}
-
 // SetQuery sets the value of Query.
 func (s *QueryRangeForm) SetQuery(val string) {
 	s.Query = val
-}
-
-// SetTime sets the value of Time.
-func (s *QueryRangeForm) SetTime(val OptPrometheusTimestamp) {
-	s.Time = val
 }
 
 // SetStart sets the value of Start.
@@ -1621,11 +1593,6 @@ func (s *QueryRangeForm) SetEnd(val PrometheusTimestamp) {
 // SetStep sets the value of Step.
 func (s *QueryRangeForm) SetStep(val string) {
 	s.Step = val
-}
-
-// SetTimeout sets the value of Timeout.
-func (s *QueryRangeForm) SetTimeout(val OptPrometheusTimestamp) {
-	s.Timeout = val
 }
 
 type QueryResponse struct {
@@ -2058,17 +2025,43 @@ func (s *SeriesResponse) SetData(val Series) {
 
 // Ref: #/components/schemas/String
 type String struct {
-	Result string `json:"result"`
+	Result StringValue `json:"result"`
 }
 
 // GetResult returns the value of Result.
-func (s *String) GetResult() string {
+func (s *String) GetResult() StringValue {
 	return s.Result
 }
 
 // SetResult sets the value of Result.
-func (s *String) SetResult(val string) {
+func (s *String) SetResult(val StringValue) {
 	s.Result = val
+}
+
+// Ref: #/components/schemas/StringValue
+type StringValue struct {
+	T float64
+	V string
+}
+
+// GetT returns the value of T.
+func (s *StringValue) GetT() float64 {
+	return s.T
+}
+
+// GetV returns the value of V.
+func (s *StringValue) GetV() string {
+	return s.V
+}
+
+// SetT sets the value of T.
+func (s *StringValue) SetT(val float64) {
+	s.T = val
+}
+
+// SetV sets the value of V.
+func (s *StringValue) SetV(val string) {
+	s.V = val
 }
 
 // Ref: #/components/schemas/Value

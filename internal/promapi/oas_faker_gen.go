@@ -736,7 +736,21 @@ func (s *SeriesResponse) SetFake() {
 func (s *String) SetFake() {
 	{
 		{
-			s.Result = "string"
+			s.Result.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *StringValue) SetFake() {
+	{
+		{
+			s.T = float64(0)
+		}
+	}
+	{
+		{
+			s.V = "string"
 		}
 	}
 }

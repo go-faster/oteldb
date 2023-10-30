@@ -100,7 +100,10 @@ func (s Data) Validate() error {
 		}
 		return nil
 	case StringData:
-		return nil // no validation needed
+		if err := s.String.Validate(); err != nil {
+			return err
+		}
+		return nil
 	default:
 		return errors.Errorf("invalid type %q", s.Type)
 	}
@@ -770,6 +773,44 @@ func (s *SeriesResponse) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "data",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *String) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *StringValue) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
 			Error: err,
 		})
 	}

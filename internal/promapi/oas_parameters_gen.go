@@ -898,8 +898,6 @@ type GetQueryRangeParams struct {
 	End PrometheusTimestamp
 	// Query resolution step width in duration format or float number of seconds.
 	Step string
-	// Evaluation timeout.
-	Timeout OptPrometheusDuration
 }
 
 func unpackGetQueryRangeParams(packed middleware.Parameters) (params GetQueryRangeParams) {
@@ -930,15 +928,6 @@ func unpackGetQueryRangeParams(packed middleware.Parameters) (params GetQueryRan
 			In:   "query",
 		}
 		params.Step = packed[key].(string)
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "timeout",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.Timeout = v.(OptPrometheusDuration)
-		}
 	}
 	return params
 }
@@ -1099,54 +1088,6 @@ func decodeGetQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "step",
-			In:   "query",
-			Err:  err,
-		}
-	}
-	// Decode query: timeout.
-	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "timeout",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotTimeoutVal PrometheusDuration
-				if err := func() error {
-					var paramsDotTimeoutValVal string
-					if err := func() error {
-						val, err := d.DecodeValue()
-						if err != nil {
-							return err
-						}
-
-						c, err := conv.ToString(val)
-						if err != nil {
-							return err
-						}
-
-						paramsDotTimeoutValVal = c
-						return nil
-					}(); err != nil {
-						return err
-					}
-					paramsDotTimeoutVal = PrometheusDuration(paramsDotTimeoutValVal)
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.Timeout.SetTo(paramsDotTimeoutVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "timeout",
 			In:   "query",
 			Err:  err,
 		}
