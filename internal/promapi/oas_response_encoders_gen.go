@@ -18,7 +18,7 @@ func encodeGetLabelValuesResponse(response *LabelValuesResponse, w http.Response
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -32,7 +32,7 @@ func encodeGetLabelsResponse(response *LabelsResponse, w http.ResponseWriter, sp
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -46,7 +46,7 @@ func encodeGetMetadataResponse(response *MetadataResponse, w http.ResponseWriter
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -60,7 +60,7 @@ func encodeGetQueryResponse(response *QueryResponse, w http.ResponseWriter, span
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -74,7 +74,7 @@ func encodeGetQueryExemplarsResponse(response *QueryExemplarsResponse, w http.Re
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -88,7 +88,7 @@ func encodeGetQueryRangeResponse(response *QueryResponse, w http.ResponseWriter,
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -102,7 +102,7 @@ func encodeGetRulesResponse(response *RulesResponse, w http.ResponseWriter, span
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -116,7 +116,7 @@ func encodeGetSeriesResponse(response *SeriesResponse, w http.ResponseWriter, sp
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -130,7 +130,7 @@ func encodePostLabelsResponse(response *LabelsResponse, w http.ResponseWriter, s
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -144,7 +144,7 @@ func encodePostQueryResponse(response *QueryResponse, w http.ResponseWriter, spa
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -158,7 +158,7 @@ func encodePostQueryExemplarsResponse(response *QueryExemplarsResponse, w http.R
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -172,7 +172,7 @@ func encodePostQueryRangeResponse(response *QueryResponse, w http.ResponseWriter
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -186,7 +186,7 @@ func encodePostSeriesResponse(response *SeriesResponse, w http.ResponseWriter, s
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
@@ -210,7 +210,7 @@ func encodeErrorResponse(response *FailStatusCode, w http.ResponseWriter, span t
 		span.SetStatus(codes.Ok, st)
 	}
 
-	e := jx.GetEncoder()
+	e := new(jx.Encoder)
 	response.Response.Encode(e)
 	if _, err := e.WriteTo(w); err != nil {
 		return errors.Wrap(err, "write")
