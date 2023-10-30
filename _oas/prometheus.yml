@@ -75,12 +75,6 @@ paths:
           schema:
             type: string
             description: Prometheus duration or float
-        - name: timeout
-          description: Evaluation timeout.
-          in: query
-          required: false
-          schema:
-            $ref: "#/components/schemas/PrometheusDuration"
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -500,8 +494,6 @@ components:
         step:
           type: string
           description: Query resolution step width in duration format or float number of seconds.
-        timeout:
-          $ref: "#/components/schemas/PrometheusTimestamp"
     Scalar:
       type: object
       required: [result]
@@ -812,9 +804,6 @@ components:
     PrometheusTimestamp:
       type: string
       description: RFC3339 or Unix timestamp
-    PrometheusDuration:
-      type: string
-      description: Prometheus duration
     LabelSet:
       type: object
       additionalProperties:
