@@ -245,6 +245,54 @@ func (s *AlertingRuleState) UnmarshalText(data []byte) error {
 	}
 }
 
+// Ref: #/components/schemas/Bucket
+type Bucket struct {
+	BoundaryType int
+	Lower        float64
+	Upper        float64
+	Count        float64
+}
+
+// GetBoundaryType returns the value of BoundaryType.
+func (s *Bucket) GetBoundaryType() int {
+	return s.BoundaryType
+}
+
+// GetLower returns the value of Lower.
+func (s *Bucket) GetLower() float64 {
+	return s.Lower
+}
+
+// GetUpper returns the value of Upper.
+func (s *Bucket) GetUpper() float64 {
+	return s.Upper
+}
+
+// GetCount returns the value of Count.
+func (s *Bucket) GetCount() float64 {
+	return s.Count
+}
+
+// SetBoundaryType sets the value of BoundaryType.
+func (s *Bucket) SetBoundaryType(val int) {
+	s.BoundaryType = val
+}
+
+// SetLower sets the value of Lower.
+func (s *Bucket) SetLower(val float64) {
+	s.Lower = val
+}
+
+// SetUpper sets the value of Upper.
+func (s *Bucket) SetUpper(val float64) {
+	s.Upper = val
+}
+
+// SetCount sets the value of Count.
+func (s *Bucket) SetCount(val float64) {
+	s.Count = val
+}
+
 // Ref: #/components/schemas/Data
 // Data represents sum type.
 type Data struct {
@@ -425,6 +473,32 @@ func (s *ExemplarsSet) SetSeriesLabels(val OptLabelSet) {
 // SetExemplars sets the value of Exemplars.
 func (s *ExemplarsSet) SetExemplars(val []Exemplar) {
 	s.Exemplars = val
+}
+
+// Ref: #/components/schemas/FPoint
+type FPoint struct {
+	T float64
+	V float64
+}
+
+// GetT returns the value of T.
+func (s *FPoint) GetT() float64 {
+	return s.T
+}
+
+// GetV returns the value of V.
+func (s *FPoint) GetV() float64 {
+	return s.V
+}
+
+// SetT sets the value of T.
+func (s *FPoint) SetT(val float64) {
+	s.T = val
+}
+
+// SetV sets the value of V.
+func (s *FPoint) SetV(val float64) {
+	s.V = val
 }
 
 // May still contain data.
@@ -619,6 +693,133 @@ func (s *GetRulesType) UnmarshalText(data []byte) error {
 	}
 }
 
+// Ref: #/components/schemas/HPoint
+type HPoint struct {
+	T  float64
+	V1 Histogram
+}
+
+// GetT returns the value of T.
+func (s *HPoint) GetT() float64 {
+	return s.T
+}
+
+// GetV1 returns the value of V1.
+func (s *HPoint) GetV1() Histogram {
+	return s.V1
+}
+
+// SetT sets the value of T.
+func (s *HPoint) SetT(val float64) {
+	s.T = val
+}
+
+// SetV1 sets the value of V1.
+func (s *HPoint) SetV1(val Histogram) {
+	s.V1 = val
+}
+
+// Ref: #/components/schemas/Histogram
+type Histogram struct {
+	Count   float64  `json:"count"`
+	Sum     float64  `json:"sum"`
+	Buckets []Bucket `json:"buckets"`
+}
+
+// GetCount returns the value of Count.
+func (s *Histogram) GetCount() float64 {
+	return s.Count
+}
+
+// GetSum returns the value of Sum.
+func (s *Histogram) GetSum() float64 {
+	return s.Sum
+}
+
+// GetBuckets returns the value of Buckets.
+func (s *Histogram) GetBuckets() []Bucket {
+	return s.Buckets
+}
+
+// SetCount sets the value of Count.
+func (s *Histogram) SetCount(val float64) {
+	s.Count = val
+}
+
+// SetSum sets the value of Sum.
+func (s *Histogram) SetSum(val float64) {
+	s.Sum = val
+}
+
+// SetBuckets sets the value of Buckets.
+func (s *Histogram) SetBuckets(val []Bucket) {
+	s.Buckets = val
+}
+
+// HistogramOrValue represents sum type.
+type HistogramOrValue struct {
+	Type      HistogramOrValueType // switch on this field
+	Histogram Histogram
+	Float64   float64
+}
+
+// HistogramOrValueType is oneOf type of HistogramOrValue.
+type HistogramOrValueType string
+
+// Possible values for HistogramOrValueType.
+const (
+	HistogramHistogramOrValue HistogramOrValueType = "Histogram"
+	Float64HistogramOrValue   HistogramOrValueType = "float64"
+)
+
+// IsHistogram reports whether HistogramOrValue is Histogram.
+func (s HistogramOrValue) IsHistogram() bool { return s.Type == HistogramHistogramOrValue }
+
+// IsFloat64 reports whether HistogramOrValue is float64.
+func (s HistogramOrValue) IsFloat64() bool { return s.Type == Float64HistogramOrValue }
+
+// SetHistogram sets HistogramOrValue to Histogram.
+func (s *HistogramOrValue) SetHistogram(v Histogram) {
+	s.Type = HistogramHistogramOrValue
+	s.Histogram = v
+}
+
+// GetHistogram returns Histogram and true boolean if HistogramOrValue is Histogram.
+func (s HistogramOrValue) GetHistogram() (v Histogram, ok bool) {
+	if !s.IsHistogram() {
+		return v, false
+	}
+	return s.Histogram, true
+}
+
+// NewHistogramHistogramOrValue returns new HistogramOrValue from Histogram.
+func NewHistogramHistogramOrValue(v Histogram) HistogramOrValue {
+	var s HistogramOrValue
+	s.SetHistogram(v)
+	return s
+}
+
+// SetFloat64 sets HistogramOrValue to float64.
+func (s *HistogramOrValue) SetFloat64(v float64) {
+	s.Type = Float64HistogramOrValue
+	s.Float64 = v
+}
+
+// GetFloat64 returns float64 and true boolean if HistogramOrValue is float64.
+func (s HistogramOrValue) GetFloat64() (v float64, ok bool) {
+	if !s.IsFloat64() {
+		return v, false
+	}
+	return s.Float64, true
+}
+
+// NewFloat64HistogramOrValue returns new HistogramOrValue from float64.
+func NewFloat64HistogramOrValue(v float64) HistogramOrValue {
+	var s HistogramOrValue
+	s.SetFloat64(v)
+	return s
+}
+
 // Ref: #/components/schemas/LabelSet
 type LabelSet map[string]string
 
@@ -766,8 +967,9 @@ func (s *Matrix) SetResult(val []MatrixResultItem) {
 }
 
 type MatrixResultItem struct {
-	Metric MatrixResultItemMetric `json:"metric"`
-	Values []Value                `json:"values"`
+	Metric     MatrixResultItemMetric `json:"metric"`
+	Values     []FPoint               `json:"values"`
+	Histograms []HPoint               `json:"histograms"`
 }
 
 // GetMetric returns the value of Metric.
@@ -776,8 +978,13 @@ func (s *MatrixResultItem) GetMetric() MatrixResultItemMetric {
 }
 
 // GetValues returns the value of Values.
-func (s *MatrixResultItem) GetValues() []Value {
+func (s *MatrixResultItem) GetValues() []FPoint {
 	return s.Values
+}
+
+// GetHistograms returns the value of Histograms.
+func (s *MatrixResultItem) GetHistograms() []HPoint {
+	return s.Histograms
 }
 
 // SetMetric sets the value of Metric.
@@ -786,8 +993,13 @@ func (s *MatrixResultItem) SetMetric(val MatrixResultItemMetric) {
 }
 
 // SetValues sets the value of Values.
-func (s *MatrixResultItem) SetValues(val []Value) {
+func (s *MatrixResultItem) SetValues(val []FPoint) {
 	s.Values = val
+}
+
+// SetHistograms sets the value of Histograms.
+func (s *MatrixResultItem) SetHistograms(val []HPoint) {
+	s.Histograms = val
 }
 
 type MatrixResultItemMetric map[string]string
@@ -2011,18 +2223,44 @@ func (s *RulesResponse) SetData(val Rules) {
 	s.Data = val
 }
 
+// Ref: #/components/schemas/Sample
+type Sample struct {
+	T                float64
+	HistogramOrValue HistogramOrValue
+}
+
+// GetT returns the value of T.
+func (s *Sample) GetT() float64 {
+	return s.T
+}
+
+// GetHistogramOrValue returns the value of HistogramOrValue.
+func (s *Sample) GetHistogramOrValue() HistogramOrValue {
+	return s.HistogramOrValue
+}
+
+// SetT sets the value of T.
+func (s *Sample) SetT(val float64) {
+	s.T = val
+}
+
+// SetHistogramOrValue sets the value of HistogramOrValue.
+func (s *Sample) SetHistogramOrValue(val HistogramOrValue) {
+	s.HistogramOrValue = val
+}
+
 // Ref: #/components/schemas/Scalar
 type Scalar struct {
-	Result Value `json:"result"`
+	Result FPoint `json:"result"`
 }
 
 // GetResult returns the value of Result.
-func (s *Scalar) GetResult() Value {
+func (s *Scalar) GetResult() FPoint {
 	return s.Result
 }
 
 // SetResult sets the value of Result.
-func (s *Scalar) SetResult(val Value) {
+func (s *Scalar) SetResult(val FPoint) {
 	s.Result = val
 }
 
@@ -2108,32 +2346,6 @@ func (s *StringValue) SetV(val string) {
 	s.V = val
 }
 
-// Ref: #/components/schemas/Value
-type Value struct {
-	T float64
-	V float64
-}
-
-// GetT returns the value of T.
-func (s *Value) GetT() float64 {
-	return s.T
-}
-
-// GetV returns the value of V.
-func (s *Value) GetV() float64 {
-	return s.V
-}
-
-// SetT sets the value of T.
-func (s *Value) SetT(val float64) {
-	s.T = val
-}
-
-// SetV sets the value of V.
-func (s *Value) SetV(val float64) {
-	s.V = val
-}
-
 // Ref: #/components/schemas/Vector
 type Vector struct {
 	Result []VectorResultItem `json:"result"`
@@ -2151,7 +2363,7 @@ func (s *Vector) SetResult(val []VectorResultItem) {
 
 type VectorResultItem struct {
 	Metric VectorResultItemMetric `json:"metric"`
-	Value  Value                  `json:"value"`
+	Value  Sample                 `json:"value"`
 }
 
 // GetMetric returns the value of Metric.
@@ -2160,7 +2372,7 @@ func (s *VectorResultItem) GetMetric() VectorResultItemMetric {
 }
 
 // GetValue returns the value of Value.
-func (s *VectorResultItem) GetValue() Value {
+func (s *VectorResultItem) GetValue() Sample {
 	return s.Value
 }
 
@@ -2170,7 +2382,7 @@ func (s *VectorResultItem) SetMetric(val VectorResultItemMetric) {
 }
 
 // SetValue sets the value of Value.
-func (s *VectorResultItem) SetValue(val Value) {
+func (s *VectorResultItem) SetValue(val Sample) {
 	s.Value = val
 }
 

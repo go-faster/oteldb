@@ -47,6 +47,18 @@ func TestAlertingRuleState_EncodeDecode(t *testing.T) {
 	var typ2 AlertingRuleState
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestBucket_EncodeDecode(t *testing.T) {
+	var typ Bucket
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Bucket
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestData_EncodeDecode(t *testing.T) {
 	var typ Data
 	typ.SetFake()
@@ -95,6 +107,18 @@ func TestExemplarsSet_EncodeDecode(t *testing.T) {
 	var typ2 ExemplarsSet
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestFPoint_EncodeDecode(t *testing.T) {
+	var typ FPoint
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 FPoint
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestFail_EncodeDecode(t *testing.T) {
 	var typ Fail
 	typ.SetFake()
@@ -117,6 +141,42 @@ func TestFailErrorType_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 FailErrorType
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestHPoint_EncodeDecode(t *testing.T) {
+	var typ HPoint
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 HPoint
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestHistogram_EncodeDecode(t *testing.T) {
+	var typ Histogram
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Histogram
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestHistogramOrValue_EncodeDecode(t *testing.T) {
+	var typ HistogramOrValue
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 HistogramOrValue
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestLabelSet_EncodeDecode(t *testing.T) {
@@ -365,6 +425,18 @@ func TestRulesResponse_EncodeDecode(t *testing.T) {
 	var typ2 RulesResponse
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestSample_EncodeDecode(t *testing.T) {
+	var typ Sample
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 Sample
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestScalar_EncodeDecode(t *testing.T) {
 	var typ Scalar
 	typ.SetFake()
@@ -423,18 +495,6 @@ func TestStringValue_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 StringValue
-	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
-}
-func TestValue_EncodeDecode(t *testing.T) {
-	var typ Value
-	typ.SetFake()
-
-	e := jx.Encoder{}
-	typ.Encode(&e)
-	data := e.Bytes()
-	require.True(t, std.Valid(data), "Encoded: %s", data)
-
-	var typ2 Value
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestVector_EncodeDecode(t *testing.T) {

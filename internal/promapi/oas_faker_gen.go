@@ -108,6 +108,30 @@ func (s *AlertingRuleState) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Bucket) SetFake() {
+	{
+		{
+			s.BoundaryType = int(0)
+		}
+	}
+	{
+		{
+			s.Lower = float64(0)
+		}
+	}
+	{
+		{
+			s.Upper = float64(0)
+		}
+	}
+	{
+		{
+			s.Count = float64(0)
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *Data) SetFake() {
 	var variant Matrix
 
@@ -174,6 +198,20 @@ func (s *ExemplarsSet) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *FPoint) SetFake() {
+	{
+		{
+			s.T = float64(0)
+		}
+	}
+	{
+		{
+			s.V = float64(0)
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *Fail) SetFake() {
 	{
 		{
@@ -200,6 +238,56 @@ func (s *Fail) SetFake() {
 // SetFake set fake values.
 func (s *FailErrorType) SetFake() {
 	*s = FailErrorTypeTimeout
+}
+
+// SetFake set fake values.
+func (s *HPoint) SetFake() {
+	{
+		{
+			s.T = float64(0)
+		}
+	}
+	{
+		{
+			s.V1.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *Histogram) SetFake() {
+	{
+		{
+			s.Count = float64(0)
+		}
+	}
+	{
+		{
+			s.Sum = float64(0)
+		}
+	}
+	{
+		{
+			s.Buckets = nil
+			for i := 0; i < 0; i++ {
+				var elem Bucket
+				{
+					elem.SetFake()
+				}
+				s.Buckets = append(s.Buckets, elem)
+			}
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *HistogramOrValue) SetFake() {
+	var variant Histogram
+
+	{
+		variant.SetFake()
+	}
+	s.SetHistogram(variant)
 }
 
 // SetFake set fake values.
@@ -324,11 +412,23 @@ func (s *MatrixResultItem) SetFake() {
 		{
 			s.Values = nil
 			for i := 0; i < 0; i++ {
-				var elem Value
+				var elem FPoint
 				{
 					elem.SetFake()
 				}
 				s.Values = append(s.Values, elem)
+			}
+		}
+	}
+	{
+		{
+			s.Histograms = nil
+			for i := 0; i < 0; i++ {
+				var elem HPoint
+				{
+					elem.SetFake()
+				}
+				s.Histograms = append(s.Histograms, elem)
 			}
 		}
 	}
@@ -682,6 +782,20 @@ func (s *RulesResponse) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *Sample) SetFake() {
+	{
+		{
+			s.T = float64(0)
+		}
+	}
+	{
+		{
+			s.HistogramOrValue.SetFake()
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *Scalar) SetFake() {
 	{
 		{
@@ -751,20 +865,6 @@ func (s *StringValue) SetFake() {
 	{
 		{
 			s.V = "string"
-		}
-	}
-}
-
-// SetFake set fake values.
-func (s *Value) SetFake() {
-	{
-		{
-			s.T = float64(0)
-		}
-	}
-	{
-		{
-			s.V = float64(0)
 		}
 	}
 }
