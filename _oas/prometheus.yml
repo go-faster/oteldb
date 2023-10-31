@@ -545,7 +545,7 @@ components:
       required: [result]
       properties:
         result:
-          $ref: "#/components/schemas/Value"
+          $ref: "#/components/schemas/FPoint"
     String:
       type: object
       required: [result]
@@ -567,7 +567,7 @@ components:
                 additionalProperties:
                   type: string
               value:
-                $ref: "#/components/schemas/Value"
+                $ref: "#/components/schemas/Sample"
     Matrix:
       type: object
       required: [result]
@@ -576,7 +576,7 @@ components:
           type: array
           items:
             type: object
-            required: [metric, values]
+            required: [metric]
             properties:
               metric:
                 type: object
@@ -585,7 +585,11 @@ components:
               values:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Value"
+                  $ref: "#/components/schemas/FPoint"
+              histograms:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HPoint"
     Data:
       discriminator:
         propertyName: resultType
@@ -599,7 +603,7 @@ components:
         - $ref: "#/components/schemas/Vector"
         - $ref: "#/components/schemas/Scalar"
         - $ref: "#/components/schemas/String"
-    Value:
+    FPoint:
       type: array
       items:
         - type: number
@@ -609,6 +613,13 @@ components:
           description: value
           format: float64
           x-ogen-name: V
+    HPoint:
+      type: array
+      items:
+        - type: number
+          description: float64 milli timestamp
+          x-ogen-name: T
+        - $ref: "#/components/schemas/Histogram"
     StringValue:
       type: array
       items:
@@ -618,6 +629,60 @@ components:
         - type: string
           description: value
           x-ogen-name: V
+    Sample:
+      type: array
+      items:
+        - type: number
+          description: float64 milli timestamp
+          x-ogen-name: T
+        - oneOf:
+            - $ref: "#/components/schemas/Histogram"
+            - type: string
+              description: value
+              format: float64
+          x-ogen-name: HistogramOrValue
+    Histogram:
+      type: object
+      required: [count, sum]
+      properties:
+        count:
+          type: number
+          format: float64
+        sum:
+          type: number
+          format: float64
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bucket"
+    Bucket:
+      # See https://github.com/prometheus/prometheus/blob/8e5f0387a2c9115849fcd99c9a0b295b779d938a/util/jsonutil/marshal.go#L66-L89
+      # as encoding reference.
+      type: array
+      items:
+        - type: integer
+          description: |
+            The 1st element in each bucket array determines if the boundaries are
+            inclusive (AKA closed) or exclusive (AKA open):
+            ```
+            0: lower exclusive, upper inclusive
+            1: lower inclusive, upper exclusive
+            2: both exclusive
+            3: both inclusive
+            ```
+          x-ogen-name: BoundaryType
+        - type: string
+          description: Lower boundary.
+          format: float64
+          x-ogen-name: Lower
+        - type: string
+          description: Upper boundary.
+          format: float64
+          x-ogen-name: Upper
+        - type: string
+          description: Bucket count.
+          format: float64
+          x-ogen-name: Count
 
     Exemplars:
       type: array
