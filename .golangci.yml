@@ -134,6 +134,11 @@ issues:
       source: "return x != x"
       text: "dupSubExpr"
 
+    # False positive.
+    - path: internal/metricsharding/prometheus\.go
+      linters: [govet]
+      text: "method Seek"
+
     # Not gonna use const, does not make any sense.
     - path: internal/ytstorage
       linters: [goconst]

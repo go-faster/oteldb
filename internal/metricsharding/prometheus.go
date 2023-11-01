@@ -357,9 +357,9 @@ func (q *querier) addCloser(c io.Closer) {
 
 // Select returns a set of series that matches the given label matchers.
 // Caller can specify if it requires returned series to be sorted. Prefer not requiring sorting for better performance.
-// It allows passing hints that can help in optimising select, but it's up to implementation how this is used if used at all.
-func (q *querier) Select(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) storage.SeriesSet {
-	set, err := q.selectSeries(ctx, sortSeries, hints, matchers...)
+// It allows passing hints that can help in optimizing select, but it's up to implementation how this is used if used at all.
+func (q *querier) Select(ctx context.Context, _ bool, hints *storage.SelectHints, matchers ...*labels.Matcher) storage.SeriesSet {
+	set, err := q.selectSeries(ctx, hints, matchers...)
 	if err != nil {
 		return storage.ErrSeriesSet(err)
 	}
@@ -373,7 +373,7 @@ type query struct {
 	Blocks   QueryBlocks
 }
 
-func (q *querier) selectSeries(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) (storage.SeriesSet, error) {
+func (q *querier) selectSeries(ctx context.Context, hints *storage.SelectHints, matchers ...*labels.Matcher) (storage.SeriesSet, error) {
 	tenants, err := q.extractTenants(ctx, q.sharder, matchers)
 	if err != nil {
 		return nil, errors.Wrap(err, "extract tenants from labels")
@@ -779,7 +779,7 @@ func (p *pointIterator) Seek(t int64) chunkenc.ValueType {
 }
 
 // At returns the current timestamp/value pair if the value is a float.
-// Before the iterator has advanced, the behaviour is unspecified.
+// Before the iterator has advanced, the behavior is unspecified.
 func (p *pointIterator) At() (t int64, v float64) {
 	at := p.data[p.n]
 	return at.Timestamp.AsTime().UnixMilli(), at.Point
@@ -787,7 +787,7 @@ func (p *pointIterator) At() (t int64, v float64) {
 
 // AtHistogram returns the current timestamp/value pair if the value is
 // a histogram with integer counts. Before the iterator has advanced,
-// the behaviour is unspecified.
+// the behavior is unspecified.
 func (p *pointIterator) AtHistogram() (int64, *histogram.Histogram) {
 	return 0, nil
 }
@@ -796,13 +796,13 @@ func (p *pointIterator) AtHistogram() (int64, *histogram.Histogram) {
 // value is a histogram with floating-point counts. It also works if the
 // value is a histogram with integer counts, in which case a
 // FloatHistogram copy of the histogram is returned. Before the iterator
-// has advanced, the behaviour is unspecified.
+// has advanced, the behavior is unspecified.
 func (p *pointIterator) AtFloatHistogram() (int64, *histogram.FloatHistogram) {
 	return 0, nil
 }
 
 // AtT returns the current timestamp.
-// Before the iterator has advanced, the behaviour is unspecified.
+// Before the iterator has advanced, the behavior is unspecified.
 func (p *pointIterator) AtT() int64 {
 	at := p.data[p.n]
 	return at.Timestamp.AsTime().UnixMilli()
