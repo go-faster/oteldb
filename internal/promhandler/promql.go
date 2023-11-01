@@ -43,7 +43,6 @@ func mapResult(query string, r *promql.Result) (*promapi.QueryResponse, error) {
 			Result: make([]promapi.VectorResultItem, len(r)),
 		}
 		for i, e := range r {
-			// FIXME(tdakkota): map histogram too.
 			vec.Result[i] = promapi.VectorResultItem{
 				Metric: e.Metric.Map(),
 				Value:  mapSample(e),

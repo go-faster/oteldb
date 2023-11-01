@@ -114,7 +114,7 @@ func parseLabelMatchers(matchers []string) ([][]*labels.Matcher, error) {
 	for _, s := range matchers {
 		matchers, err := parser.ParseMetricSelector(s)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "parse selector %q", s)
 		}
 		matcherSets = append(matcherSets, matchers)
 	}
