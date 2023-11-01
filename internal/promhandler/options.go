@@ -10,6 +10,6 @@ type PromAPIOptions struct {
 
 func (opts *PromAPIOptions) setDefaults() {
 	if opts.LookbackDelta == 0 {
-		opts.LookbackDelta = time.Hour
+		opts.LookbackDelta = 5 * time.Minute
 	}
 }
