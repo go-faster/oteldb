@@ -163,8 +163,8 @@ func TestPrometheusOAS(t *testing.T) {
 		t.Parallel()
 
 		res, err := api.GetSeries(ctx, promapi.GetSeriesParams{
-			Start: start,
-			End:   end,
+			Start: promapi.NewOptPrometheusTimestamp(start),
+			End:   promapi.NewOptPrometheusTimestamp(end),
 			Match: []string{`go_info{job="prometheus"}`},
 		})
 		require.NoError(t, err)
