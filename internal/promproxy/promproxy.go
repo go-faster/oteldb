@@ -127,8 +127,8 @@ func (s *Server) PostQueryRange(ctx context.Context, req *promapi.QueryRangeForm
 // Query Prometheus.
 //
 // POST /api/v1/series
-func (s *Server) PostSeries(ctx context.Context) (*promapi.SeriesResponse, error) {
-	return s.api.PostSeries(ctx)
+func (s *Server) PostSeries(ctx context.Context, req *promapi.SeriesForm) (*promapi.SeriesResponse, error) {
+	return s.api.PostSeries(ctx, req)
 }
 
 // NewError creates *FailStatusCode from error returned by handler.
