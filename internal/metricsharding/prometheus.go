@@ -567,9 +567,9 @@ func (q *querier) attributeHashes(ctx context.Context, to chan<- hashesResult, q
 
 		// Note: predicate negated above.
 		switch m.Type {
-		case labels.MatchEqual, labels.MatchRegexp:
+		case labels.MatchEqual, labels.MatchNotEqual:
 			fmt.Fprintf(&query, "%s = %q", sel, m.Value)
-		case labels.MatchNotEqual, labels.MatchNotRegexp:
+		case labels.MatchRegexp, labels.MatchNotRegexp:
 			fmt.Fprintf(&query, "$label_matcher_%d(%s)", matcherIdx, sel)
 		default:
 			return errors.Errorf("unexpected type %q", m.Type)
