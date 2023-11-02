@@ -62,6 +62,9 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 	if err != nil {
 		return nil, executionErr("get querier", err)
 	}
+	defer func() {
+		_ = q.Close()
+	}()
 
 	// Fast path for cases when match[] is not set.
 	if len(sets) < 2 {
@@ -126,6 +129,9 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 	if err != nil {
 		return nil, executionErr("get querier", err)
 	}
+	defer func() {
+		_ = q.Close()
+	}()
 
 	// Fast path for cases when match[] is not set.
 	if len(sets) < 2 {
@@ -334,6 +340,9 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 	if err != nil {
 		return nil, executionErr("get querier", err)
 	}
+	defer func() {
+		_ = q.Close()
+	}()
 
 	var (
 		hints = &storage.SelectHints{
