@@ -312,8 +312,66 @@ func (h *PromAPI) GetRules(context.Context, promapi.GetRulesParams) (*promapi.Ru
 // Query Prometheus.
 //
 // GET /api/v1/series
-func (h *PromAPI) GetSeries(context.Context, promapi.GetSeriesParams) (*promapi.SeriesResponse, error) {
-	return nil, ht.ErrNotImplemented
+func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams) (*promapi.SeriesResponse, error) {
+	mint, err := parseOptTimestamp(params.Start, MinTime)
+	if err != nil {
+		return nil, validationErr("parse start", err)
+	}
+	maxt, err := parseOptTimestamp(params.End, MaxTime)
+	if err != nil {
+		return nil, validationErr("parse end", err)
+	}
+	matchers, err := parseLabelMatchers(params.Match)
+	if err != nil {
+		return nil, validationErr("parse match", err)
+	}
+	if len(matchers) == 0 {
+		err := errors.New("at least one matcher is required")
+		return nil, validationErr("validate match", err)
+	}
+
+	q, err := h.store.Querier(mint.UnixMilli(), maxt.UnixMilli())
+	if err != nil {
+		return nil, executionErr("get querier", err)
+	}
+
+	var (
+		hints = &storage.SelectHints{
+			Start: mint.UnixMilli(),
+			End:   maxt.UnixMilli(),
+			Func:  "series",
+		}
+		sortSeries = false
+		result     storage.SeriesSet
+	)
+	if len(matchers) > 1 {
+		var sets []storage.SeriesSet
+		for _, mset := range matchers {
+			set := q.Select(ctx, sortSeries, hints, mset...)
+			if err := set.Err(); err != nil {
+				return nil, executionErr("select", err)
+			}
+			sets = append(sets, set)
+		}
+		result = storage.NewMergeSeriesSet(sets, storage.ChainedSeriesMerge)
+	} else {
+		result = q.Select(ctx, sortSeries, hints, matchers[0]...)
+	}
+
+	var data []promapi.LabelSet
+	for result.Next() {
+		series := result.At()
+		data = append(data, series.Labels().Map())
+	}
+	if err := result.Err(); err != nil {
+		return nil, executionErr("select", err)
+	}
+
+	return &promapi.SeriesResponse{
+		Status:   "success",
+		Warnings: result.Warnings().AsStrings("", 0),
+		Data:     data,
+	}, nil
 }
 
 // PostSeries implements postSeries operation.
@@ -321,8 +379,12 @@ func (h *PromAPI) GetSeries(context.Context, promapi.GetSeriesParams) (*promapi.
 // Query Prometheus.
 //
 // POST /api/v1/series
-func (h *PromAPI) PostSeries(context.Context) (*promapi.SeriesResponse, error) {
-	return nil, ht.ErrNotImplemented
+func (h *PromAPI) PostSeries(ctx context.Context, req *promapi.SeriesForm) (*promapi.SeriesResponse, error) {
+	return h.GetSeries(ctx, promapi.GetSeriesParams{
+		Start: req.Start,
+		End:   req.End,
+		Match: req.Match,
+	})
 }
 
 // NewError creates *FailStatusCode from error returned by handler.
