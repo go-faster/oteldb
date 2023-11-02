@@ -160,13 +160,11 @@ paths:
         - name: start
           description: Start timestamp.
           in: query
-          required: true
           schema:
             $ref: "#/components/schemas/PrometheusTimestamp"
         - name: end
           description: End timestamp.
           in: query
-          required: true
           schema:
             $ref: "#/components/schemas/PrometheusTimestamp"
         - name: match[]
