@@ -2266,6 +2266,43 @@ func (s *Scalar) SetResult(val FPoint) {
 
 type Series []LabelSet
 
+// Ref: #/components/schemas/SeriesForm
+type SeriesForm struct {
+	Start OptPrometheusTimestamp `json:"start"`
+	End   OptPrometheusTimestamp `json:"end"`
+	Match []string               `json:"match[]"`
+}
+
+// GetStart returns the value of Start.
+func (s *SeriesForm) GetStart() OptPrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *SeriesForm) GetEnd() OptPrometheusTimestamp {
+	return s.End
+}
+
+// GetMatch returns the value of Match.
+func (s *SeriesForm) GetMatch() []string {
+	return s.Match
+}
+
+// SetStart sets the value of Start.
+func (s *SeriesForm) SetStart(val OptPrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *SeriesForm) SetEnd(val OptPrometheusTimestamp) {
+	s.End = val
+}
+
+// SetMatch sets the value of Match.
+func (s *SeriesForm) SetMatch(val []string) {
+	s.Match = val
+}
+
 type SeriesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`

@@ -90,7 +90,7 @@ type Invoker interface {
 	// Query Prometheus.
 	//
 	// POST /api/v1/series
-	PostSeries(ctx context.Context) (*SeriesResponse, error)
+	PostSeries(ctx context.Context, request *SeriesForm) (*SeriesResponse, error)
 }
 
 // Client implements OAS client.
@@ -1224,8 +1224,11 @@ func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if unwrapped := string(params.Start); true {
-				return e.EncodeValue(conv.StringToString(unwrapped))
+			if val, ok := params.Start.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -1241,8 +1244,11 @@ func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res
 		}
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
-			if unwrapped := string(params.End); true {
-				return e.EncodeValue(conv.StringToString(unwrapped))
+			if val, ok := params.End.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
 			}
 			return nil
 		}); err != nil {
@@ -1596,16 +1602,25 @@ func (c *Client) sendPostQueryRange(ctx context.Context, request *QueryRangeForm
 // Query Prometheus.
 //
 // POST /api/v1/series
-func (c *Client) PostSeries(ctx context.Context) (*SeriesResponse, error) {
-	res, err := c.sendPostSeries(ctx)
+func (c *Client) PostSeries(ctx context.Context, request *SeriesForm) (*SeriesResponse, error) {
+	res, err := c.sendPostSeries(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendPostSeries(ctx context.Context) (res *SeriesResponse, err error) {
+func (c *Client) sendPostSeries(ctx context.Context, request *SeriesForm) (res *SeriesResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postSeries"),
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/series"),
+	}
+	// Validate request before sending.
+	if err := func() error {
+		if err := request.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return res, errors.Wrap(err, "validate")
 	}
 
 	// Run stopwatch.
@@ -1645,6 +1660,9 @@ func (c *Client) sendPostSeries(ctx context.Context) (res *SeriesResponse, err e
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePostSeriesRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "SendRequest"

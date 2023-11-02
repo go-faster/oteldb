@@ -75,7 +75,7 @@ type Handler interface {
 	// Query Prometheus.
 	//
 	// POST /api/v1/series
-	PostSeries(ctx context.Context) (*SeriesResponse, error)
+	PostSeries(ctx context.Context, req *SeriesForm) (*SeriesResponse, error)
 	// NewError creates *FailStatusCode from error returned by handler.
 	//
 	// Used for common default response.

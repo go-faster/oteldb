@@ -568,3 +568,167 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 		return req, close, validate.InvalidContentType(ct)
 	}
 }
+
+func (s *Server) decodePostSeriesRequest(r *http.Request) (
+	req *SeriesForm,
+	close func() error,
+	rerr error,
+) {
+	var closers []func() error
+	close = func() error {
+		var merr error
+		// Close in reverse order, to match defer behavior.
+		for i := len(closers) - 1; i >= 0; i-- {
+			c := closers[i]
+			merr = multierr.Append(merr, c())
+		}
+		return merr
+	}
+	defer func() {
+		if rerr != nil {
+			rerr = multierr.Append(rerr, close())
+		}
+	}()
+	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil {
+		return req, close, errors.Wrap(err, "parse media type")
+	}
+	switch {
+	case ct == "application/x-www-form-urlencoded":
+		if r.ContentLength == 0 {
+			return req, close, validate.ErrBodyRequired
+		}
+		form, err := ht.ParseForm(r)
+		if err != nil {
+			return req, close, errors.Wrap(err, "parse form")
+		}
+
+		var request SeriesForm
+		q := uri.NewQueryDecoder(form)
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "start",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotStartVal PrometheusTimestamp
+					if err := func() error {
+						var requestDotStartValVal string
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToString(val)
+							if err != nil {
+								return err
+							}
+
+							requestDotStartValVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						requestDotStartVal = PrometheusTimestamp(requestDotStartValVal)
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.Start.SetTo(requestDotStartVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"start\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "end",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					var requestDotEndVal PrometheusTimestamp
+					if err := func() error {
+						var requestDotEndValVal string
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToString(val)
+							if err != nil {
+								return err
+							}
+
+							requestDotEndValVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						requestDotEndVal = PrometheusTimestamp(requestDotEndValVal)
+						return nil
+					}(); err != nil {
+						return err
+					}
+					request.End.SetTo(requestDotEndVal)
+					return nil
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"end\"")
+				}
+			}
+		}
+		{
+			cfg := uri.QueryParameterDecodingConfig{
+				Name:    "match[]",
+				Style:   uri.QueryStyleForm,
+				Explode: true,
+			}
+			if err := q.HasParam(cfg); err == nil {
+				if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+					return d.DecodeArray(func(d uri.Decoder) error {
+						var requestDotMatchVal string
+						if err := func() error {
+							val, err := d.DecodeValue()
+							if err != nil {
+								return err
+							}
+
+							c, err := conv.ToString(val)
+							if err != nil {
+								return err
+							}
+
+							requestDotMatchVal = c
+							return nil
+						}(); err != nil {
+							return err
+						}
+						request.Match = append(request.Match, requestDotMatchVal)
+						return nil
+					})
+				}); err != nil {
+					return req, close, errors.Wrap(err, "decode \"match[]\"")
+				}
+				if err := func() error {
+					if request.Match == nil {
+						return errors.New("nil is invalid value")
+					}
+					return nil
+				}(); err != nil {
+					return req, close, errors.Wrap(err, "validate")
+				}
+			} else {
+				return req, close, errors.Wrap(err, "query")
+			}
+		}
+		return &request, close, nil
+	default:
+		return req, close, validate.InvalidContentType(ct)
+	}
+}

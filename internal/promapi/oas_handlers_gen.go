@@ -1519,8 +1519,27 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "PostSeries",
+			ID:   "postSeries",
+		}
 	)
+	request, close, err := s.decodePostSeriesRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
 
 	var response *SeriesResponse
 	if m := s.cfg.Middleware; m != nil {
@@ -1529,13 +1548,13 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 			OperationName:    "PostSeries",
 			OperationSummary: "",
 			OperationID:      "postSeries",
-			Body:             nil,
+			Body:             request,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
 
 		type (
-			Request  = struct{}
+			Request  = *SeriesForm
 			Params   = struct{}
 			Response = *SeriesResponse
 		)
@@ -1548,12 +1567,12 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.PostSeries(ctx)
+				response, err = s.h.PostSeries(ctx, request)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.PostSeries(ctx)
+		response, err = s.h.PostSeries(ctx, request)
 	}
 	if err != nil {
 		if errRes, ok := errors.Into[*FailStatusCode](err); ok {

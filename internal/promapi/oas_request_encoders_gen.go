@@ -265,3 +265,76 @@ func encodePostQueryRangeRequest(
 	ht.SetBody(r, strings.NewReader(encoded), contentType)
 	return nil
 }
+
+func encodePostSeriesRequest(
+	req *SeriesForm,
+	r *http.Request,
+) error {
+	const contentType = "application/x-www-form-urlencoded"
+	request := req
+
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "start" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.Start.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "end" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := request.End.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "match[]" form field.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "match[]",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeArray(func(e uri.Encoder) error {
+				for i, item := range request.Match {
+					if err := func() error {
+						return e.EncodeValue(conv.StringToString(item))
+					}(); err != nil {
+						return errors.Wrapf(err, "[%d]", i)
+					}
+				}
+				return nil
+			})
+		}); err != nil {
+			return errors.Wrap(err, "encode query")
+		}
+	}
+	encoded := q.Values().Encode()
+	ht.SetBody(r, strings.NewReader(encoded), contentType)
+	return nil
+}

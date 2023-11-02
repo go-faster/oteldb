@@ -116,7 +116,7 @@ func (UnimplementedHandler) PostQueryRange(ctx context.Context, req *QueryRangeF
 // Query Prometheus.
 //
 // POST /api/v1/series
-func (UnimplementedHandler) PostSeries(ctx context.Context) (r *SeriesResponse, _ error) {
+func (UnimplementedHandler) PostSeries(ctx context.Context, req *SeriesForm) (r *SeriesResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
