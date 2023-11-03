@@ -200,11 +200,13 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 		}
 
 		if c := tracesConsumer; c != nil {
+			lg := logger.Named("traces")
 			params := receiver.CreateSettings{
 				TelemetrySettings: component.TelemetrySettings{
-					Logger:         logger.Named("traces"),
-					TracerProvider: cfg.TracerProvider,
-					MeterProvider:  cfg.MeterProvider,
+					Logger:                lg,
+					TracerProvider:        cfg.TracerProvider,
+					MeterProvider:         cfg.MeterProvider,
+					ReportComponentStatus: logStatusEvent(lg),
 				},
 			}
 
@@ -219,11 +221,13 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 			shim.receivers = append(shim.receivers, recv)
 		}
 		if c := metricsConsumer; c != nil {
+			lg := logger.Named("metrics")
 			params := receiver.CreateSettings{
 				TelemetrySettings: component.TelemetrySettings{
-					Logger:         logger.Named("metrics"),
-					TracerProvider: cfg.TracerProvider,
-					MeterProvider:  cfg.MeterProvider,
+					Logger:                lg,
+					TracerProvider:        cfg.TracerProvider,
+					MeterProvider:         cfg.MeterProvider,
+					ReportComponentStatus: logStatusEvent(lg),
 				},
 			}
 
@@ -238,11 +242,13 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 			shim.receivers = append(shim.receivers, recv)
 		}
 		if c := logsConsumer; c != nil {
+			lg := logger.Named("logs")
 			params := receiver.CreateSettings{
 				TelemetrySettings: component.TelemetrySettings{
-					Logger:         logger.Named("logs"),
-					TracerProvider: cfg.TracerProvider,
-					MeterProvider:  cfg.MeterProvider,
+					Logger:                lg,
+					TracerProvider:        cfg.TracerProvider,
+					MeterProvider:         cfg.MeterProvider,
+					ReportComponentStatus: logStatusEvent(lg),
 				},
 			}
 
@@ -316,4 +322,15 @@ func (r *Receiver) GetExtensions() map[component.ID]extension.Extension { return
 // GetExporters implements component.Host
 func (r *Receiver) GetExporters() map[component.DataType]map[component.ID]component.Component {
 	return nil
+}
+
+func logStatusEvent(lg *zap.Logger) component.StatusFunc {
+	return func(se *component.StatusEvent) error {
+		lg.Info("Status change",
+			zap.Time("changed_at", se.Timestamp()),
+			zap.Stringer("status", se.Status()),
+			zap.Error(se.Err()),
+		)
+		return nil
+	}
 }
