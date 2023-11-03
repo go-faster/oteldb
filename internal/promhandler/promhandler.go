@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-faster/errors"
 	ht "github.com/ogen-go/ogen/http"
+	"github.com/ogen-go/ogen/middleware"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/storage"
@@ -425,5 +426,24 @@ func fail(kind promapi.FailErrorType, err error) *promapi.FailStatusCode {
 			Error:     err.Error(),
 			ErrorType: kind,
 		},
+	}
+}
+
+// TimeoutMiddleware sets request timeout by given parameter, if set.
+func TimeoutMiddleware() promapi.Middleware {
+	return func(req middleware.Request, next middleware.Next) (middleware.Response, error) {
+		q := req.Raw.URL.Query()
+		if q.Has("timeout") {
+			timeout, err := parseDuration(q.Get("timeout"))
+			if err != nil {
+				return middleware.Response{}, validationErr("parse timeout", err)
+			}
+
+			var cancel context.CancelFunc
+			req.Context, cancel = context.WithTimeout(req.Context, timeout)
+			defer cancel()
+		}
+		resp, err := next(req)
+		return resp, err
 	}
 }

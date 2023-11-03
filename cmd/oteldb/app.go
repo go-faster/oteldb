@@ -199,6 +199,7 @@ func (app *App) trySetupProm() error {
 	s, err := promapi.NewServer(prom,
 		promapi.WithTracerProvider(app.metrics.TracerProvider()),
 		promapi.WithMeterProvider(app.metrics.MeterProvider()),
+		promapi.WithMiddleware(promhandler.TimeoutMiddleware()),
 	)
 	if err != nil {
 		return err
