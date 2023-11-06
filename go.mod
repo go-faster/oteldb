@@ -50,7 +50,7 @@ require (
 	go.ytsaurus.tech/yt/go v0.0.13
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
 	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
-	golang.org/x/sync v0.4.0
+	golang.org/x/sync v0.5.0
 	golang.org/x/tools v0.14.0
 	google.golang.org/grpc v1.59.0
 )
