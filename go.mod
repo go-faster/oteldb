@@ -10,7 +10,7 @@ require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.15.0
-	github.com/go-faster/errors v0.6.1
+	github.com/go-faster/errors v0.7.0
 	github.com/go-faster/jx v1.1.0
 	github.com/go-faster/sdk v0.9.2
 	github.com/go-faster/tcpproxy v0.1.0
