@@ -12,6 +12,7 @@ import (
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
@@ -68,6 +69,7 @@ func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (storage, error) {
 }
 
 func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string, cfg *yt.Config) (storage, error) {
+	zctx.From(ctx).Info("Setting up YQL")
 	yc, err := ythttp.NewClient(cfg)
 	if err != nil {
 		return storage{}, errors.Wrap(err, "yt")
@@ -146,6 +148,7 @@ func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string
 }
 
 func setupYTQL(ctx context.Context, lg *zap.Logger, m Metrics, cfg *yt.Config) (storage, error) {
+	zctx.From(ctx).Info("Setting up YTQL")
 	yc, err := ythttp.NewClient(cfg)
 	if err != nil {
 		return storage{}, errors.Wrap(err, "yt")
