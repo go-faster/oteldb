@@ -615,6 +615,10 @@ type GetQueryParams struct {
 	Query string
 	// Evaluation timestamp.
 	Time OptPrometheusTimestamp
+	// Lookback delta duration in duration format or float number of seconds.
+	LookbackDelta OptString
+	// Statistics to return.
+	Stats OptString
 }
 
 func unpackGetQueryParams(packed middleware.Parameters) (params GetQueryParams) {
@@ -632,6 +636,24 @@ func unpackGetQueryParams(packed middleware.Parameters) (params GetQueryParams) 
 		}
 		if v, ok := packed[key]; ok {
 			params.Time = v.(OptPrometheusTimestamp)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "lookback_delta",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.LookbackDelta = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "stats",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Stats = v.(OptString)
 		}
 	}
 	return params
@@ -719,6 +741,88 @@ func decodeGetQueryParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "time",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: lookback_delta.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "lookback_delta",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotLookbackDeltaVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotLookbackDeltaVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.LookbackDelta.SetTo(paramsDotLookbackDeltaVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "lookback_delta",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: stats.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStatsVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStatsVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Stats.SetTo(paramsDotStatsVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "stats",
 			In:   "query",
 			Err:  err,
 		}
@@ -898,8 +1002,10 @@ type GetQueryRangeParams struct {
 	End PrometheusTimestamp
 	// Query resolution step width in duration format or float number of seconds.
 	Step string
-	// Evaluation timeout.
-	Timeout OptPrometheusDuration
+	// Lookback delta duration in duration format or float number of seconds.
+	LookbackDelta OptString
+	// Statistics to return.
+	Stats OptString
 }
 
 func unpackGetQueryRangeParams(packed middleware.Parameters) (params GetQueryRangeParams) {
@@ -933,11 +1039,20 @@ func unpackGetQueryRangeParams(packed middleware.Parameters) (params GetQueryRan
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "timeout",
+			Name: "lookback_delta",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
-			params.Timeout = v.(OptPrometheusDuration)
+			params.LookbackDelta = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "stats",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Stats = v.(OptString)
 		}
 	}
 	return params
@@ -1103,41 +1218,34 @@ func decodeGetQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request
 			Err:  err,
 		}
 	}
-	// Decode query: timeout.
+	// Decode query: lookback_delta.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "timeout",
+			Name:    "lookback_delta",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotTimeoutVal PrometheusDuration
+				var paramsDotLookbackDeltaVal string
 				if err := func() error {
-					var paramsDotTimeoutValVal string
-					if err := func() error {
-						val, err := d.DecodeValue()
-						if err != nil {
-							return err
-						}
-
-						c, err := conv.ToString(val)
-						if err != nil {
-							return err
-						}
-
-						paramsDotTimeoutValVal = c
-						return nil
-					}(); err != nil {
+					val, err := d.DecodeValue()
+					if err != nil {
 						return err
 					}
-					paramsDotTimeoutVal = PrometheusDuration(paramsDotTimeoutValVal)
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotLookbackDeltaVal = c
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Timeout.SetTo(paramsDotTimeoutVal)
+				params.LookbackDelta.SetTo(paramsDotLookbackDeltaVal)
 				return nil
 			}); err != nil {
 				return err
@@ -1146,7 +1254,48 @@ func decodeGetQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "timeout",
+			Name: "lookback_delta",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: stats.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "stats",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStatsVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStatsVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Stats.SetTo(paramsDotStatsVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "stats",
 			In:   "query",
 			Err:  err,
 		}
@@ -1407,9 +1556,9 @@ func decodeGetRulesParams(args [0]string, argsEscaped bool, r *http.Request) (pa
 // GetSeriesParams is parameters of getSeries operation.
 type GetSeriesParams struct {
 	// Start timestamp.
-	Start PrometheusTimestamp
+	Start OptPrometheusTimestamp
 	// End timestamp.
-	End PrometheusTimestamp
+	End OptPrometheusTimestamp
 	// Repeated series selector argument that selects the series from which to read the label names.
 	Match []string
 }
@@ -1420,14 +1569,18 @@ func unpackGetSeriesParams(packed middleware.Parameters) (params GetSeriesParams
 			Name: "start",
 			In:   "query",
 		}
-		params.Start = packed[key].(PrometheusTimestamp)
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptPrometheusTimestamp)
+		}
 	}
 	{
 		key := middleware.ParameterKey{
 			Name: "end",
 			In:   "query",
 		}
-		params.End = packed[key].(PrometheusTimestamp)
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptPrometheusTimestamp)
+		}
 	}
 	{
 		key := middleware.ParameterKey{
@@ -1451,30 +1604,35 @@ func decodeGetSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (p
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotStartVal string
+				var paramsDotStartVal PrometheusTimestamp
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotStartValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStartValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotStartVal = c
+					paramsDotStartVal = PrometheusTimestamp(paramsDotStartValVal)
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.Start = PrometheusTimestamp(paramsDotStartVal)
+				params.Start.SetTo(paramsDotStartVal)
 				return nil
 			}); err != nil {
 				return err
 			}
-		} else {
-			return validate.ErrFieldRequired
 		}
 		return nil
 	}(); err != nil {
@@ -1494,30 +1652,35 @@ func decodeGetSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (p
 
 		if err := q.HasParam(cfg); err == nil {
 			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotEndVal string
+				var paramsDotEndVal PrometheusTimestamp
 				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
+					var paramsDotEndValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEndValVal = c
+						return nil
+					}(); err != nil {
 						return err
 					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotEndVal = c
+					paramsDotEndVal = PrometheusTimestamp(paramsDotEndValVal)
 					return nil
 				}(); err != nil {
 					return err
 				}
-				params.End = PrometheusTimestamp(paramsDotEndVal)
+				params.End.SetTo(paramsDotEndVal)
 				return nil
 			}); err != nil {
 				return err
 			}
-		} else {
-			return validate.ErrFieldRequired
 		}
 		return nil
 	}(); err != nil {

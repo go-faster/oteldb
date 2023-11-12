@@ -24,7 +24,9 @@ import (
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
+	"github.com/go-faster/oteldb/internal/metricsharding"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/tracestorage"
 	"github.com/go-faster/oteldb/internal/yqlclient"
 	"github.com/go-faster/oteldb/internal/ytstorage"
 )
@@ -42,14 +44,18 @@ func (q *combinedYTQuerier) SelectLogs(ctx context.Context, start, end otelstora
 	return q.yql.SelectLogs(ctx, start, end, params)
 }
 
-func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (
-	*ytstorage.Inserter,
-	interface {
-		logQuerier
-		traceQuerier
-	},
-	error,
-) {
+type storage struct {
+	logQuerier  logQuerier
+	logInserter logstorage.Inserter
+
+	traceQuerier  traceQuerier
+	traceInserter tracestorage.Inserter
+
+	metricShard    *metricsharding.Sharder
+	metricConsumer *metricsharding.Consumer
+}
+
+func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (storage, error) {
 	cfg := &yt.Config{
 		Logger:                &ytzap.Logger{L: lg.Named("yc")},
 		DisableProxyDiscovery: true,
@@ -61,15 +67,15 @@ func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (
 	return setupYTQL(ctx, lg, m, cfg)
 }
 
-func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string, cfg *yt.Config) (*ytstorage.Inserter, *combinedYTQuerier, error) {
+func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string, cfg *yt.Config) (storage, error) {
 	yc, err := ythttp.NewClient(cfg)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "yt")
+		return storage{}, errors.Wrap(err, "yt")
 	}
 
 	proxy, err := cfg.GetProxy()
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "get proxy addr")
+		return storage{}, errors.Wrap(err, "get proxy addr")
 	}
 
 	yqlClient, err := yqlclient.NewClient("http://"+proxy, yqlclient.ClientOptions{
@@ -85,12 +91,12 @@ func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string
 		MeterProvider:  m.MeterProvider(),
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "create YQL client")
+		return storage{}, errors.Wrap(err, "create YQL client")
 	}
 
 	tables := ytstorage.NewStaticTables(ypath.Path("//oteldb"))
 	if err := migrateYT(ctx, yc, lg, tables); err != nil {
-		return nil, nil, errors.Wrap(err, "migrate")
+		return storage{}, errors.Wrap(err, "migrate")
 	}
 
 	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{
@@ -99,7 +105,7 @@ func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string
 		TracerProvider: m.TracerProvider(),
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "create inserter")
+		return storage{}, errors.Wrap(err, "create inserter")
 	}
 
 	engineQuerier, err := ytstorage.NewYQLQuerier(yqlClient, ytstorage.YQLQuerierOptions{
@@ -109,7 +115,7 @@ func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string
 		TracerProvider: m.TracerProvider(),
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "create engine querier")
+		return storage{}, errors.Wrap(err, "create engine querier")
 	}
 
 	labelQuerier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{
@@ -118,25 +124,36 @@ func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string
 		TracerProvider: m.TracerProvider(),
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "create label querier")
+		return storage{}, errors.Wrap(err, "create label querier")
 	}
 
 	querier := &combinedYTQuerier{
 		yql:         engineQuerier,
 		YTQLQuerier: labelQuerier,
 	}
-	return inserter, querier, nil
+
+	shardOpts := metricsharding.ShardingOptions{}
+	metricShard := metricsharding.NewSharder(yc, yqlClient, shardOpts)
+	metricConsumer := metricsharding.NewConsumer(yc, shardOpts)
+	return storage{
+		logQuerier:     querier,
+		logInserter:    inserter,
+		traceQuerier:   querier,
+		traceInserter:  inserter,
+		metricShard:    metricShard,
+		metricConsumer: metricConsumer,
+	}, nil
 }
 
-func setupYTQL(ctx context.Context, lg *zap.Logger, m Metrics, cfg *yt.Config) (*ytstorage.Inserter, *ytstorage.YTQLQuerier, error) {
+func setupYTQL(ctx context.Context, lg *zap.Logger, m Metrics, cfg *yt.Config) (storage, error) {
 	yc, err := ythttp.NewClient(cfg)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "yt")
+		return storage{}, errors.Wrap(err, "yt")
 	}
 
 	tables := ytstorage.NewTables(ypath.Path("//oteldb"))
 	if err := migrateYT(ctx, yc, lg, tables); err != nil {
-		return nil, nil, errors.Wrap(err, "migrate")
+		return storage{}, errors.Wrap(err, "migrate")
 	}
 
 	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{
@@ -145,7 +162,7 @@ func setupYTQL(ctx context.Context, lg *zap.Logger, m Metrics, cfg *yt.Config) (
 		TracerProvider: m.TracerProvider(),
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "create inserter")
+		return storage{}, errors.Wrap(err, "create inserter")
 	}
 
 	querier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{
@@ -154,10 +171,17 @@ func setupYTQL(ctx context.Context, lg *zap.Logger, m Metrics, cfg *yt.Config) (
 		TracerProvider: m.TracerProvider(),
 	})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "create querier")
+		return storage{}, errors.Wrap(err, "create querier")
 	}
 
-	return inserter, querier, nil
+	return storage{
+		logQuerier:     querier,
+		logInserter:    inserter,
+		traceQuerier:   querier,
+		traceInserter:  inserter,
+		metricShard:    nil,
+		metricConsumer: nil,
+	}, nil
 }
 
 func migrateYT(ctx context.Context, yc yt.Client, lg *zap.Logger, tables ytstorage.Tables) error {

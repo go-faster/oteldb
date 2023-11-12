@@ -11,3 +11,6 @@ test_fast:
 
 tidy:
 	go mod tidy
+
+yt-metric-bench:
+	KO_DOCKER_REPO=cloud-registry.odkl.ru/dash/resource-dashboard/moc

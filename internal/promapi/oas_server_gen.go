@@ -51,7 +51,7 @@ type Handler interface {
 	// PostLabels implements postLabels operation.
 	//
 	// POST /api/v1/labels
-	PostLabels(ctx context.Context) (*LabelsResponse, error)
+	PostLabels(ctx context.Context, req *LabelsForm) (*LabelsResponse, error)
 	// PostQuery implements postQuery operation.
 	//
 	// Query Prometheus.
@@ -75,7 +75,7 @@ type Handler interface {
 	// Query Prometheus.
 	//
 	// POST /api/v1/series
-	PostSeries(ctx context.Context) (*SeriesResponse, error)
+	PostSeries(ctx context.Context, req *SeriesForm) (*SeriesResponse, error)
 	// NewError creates *FailStatusCode from error returned by handler.
 	//
 	// Used for common default response.

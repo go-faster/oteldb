@@ -245,6 +245,54 @@ func (s *AlertingRuleState) UnmarshalText(data []byte) error {
 	}
 }
 
+// Ref: #/components/schemas/Bucket
+type Bucket struct {
+	BoundaryType int
+	Lower        float64
+	Upper        float64
+	Count        float64
+}
+
+// GetBoundaryType returns the value of BoundaryType.
+func (s *Bucket) GetBoundaryType() int {
+	return s.BoundaryType
+}
+
+// GetLower returns the value of Lower.
+func (s *Bucket) GetLower() float64 {
+	return s.Lower
+}
+
+// GetUpper returns the value of Upper.
+func (s *Bucket) GetUpper() float64 {
+	return s.Upper
+}
+
+// GetCount returns the value of Count.
+func (s *Bucket) GetCount() float64 {
+	return s.Count
+}
+
+// SetBoundaryType sets the value of BoundaryType.
+func (s *Bucket) SetBoundaryType(val int) {
+	s.BoundaryType = val
+}
+
+// SetLower sets the value of Lower.
+func (s *Bucket) SetLower(val float64) {
+	s.Lower = val
+}
+
+// SetUpper sets the value of Upper.
+func (s *Bucket) SetUpper(val float64) {
+	s.Upper = val
+}
+
+// SetCount sets the value of Count.
+func (s *Bucket) SetCount(val float64) {
+	s.Count = val
+}
+
 // Ref: #/components/schemas/Data
 // Data represents sum type.
 type Data struct {
@@ -425,6 +473,32 @@ func (s *ExemplarsSet) SetSeriesLabels(val OptLabelSet) {
 // SetExemplars sets the value of Exemplars.
 func (s *ExemplarsSet) SetExemplars(val []Exemplar) {
 	s.Exemplars = val
+}
+
+// Ref: #/components/schemas/FPoint
+type FPoint struct {
+	T float64
+	V float64
+}
+
+// GetT returns the value of T.
+func (s *FPoint) GetT() float64 {
+	return s.T
+}
+
+// GetV returns the value of V.
+func (s *FPoint) GetV() float64 {
+	return s.V
+}
+
+// SetT sets the value of T.
+func (s *FPoint) SetT(val float64) {
+	s.T = val
+}
+
+// SetV sets the value of V.
+func (s *FPoint) SetV(val float64) {
+	s.V = val
 }
 
 // May still contain data.
@@ -619,6 +693,133 @@ func (s *GetRulesType) UnmarshalText(data []byte) error {
 	}
 }
 
+// Ref: #/components/schemas/HPoint
+type HPoint struct {
+	T  float64
+	V1 Histogram
+}
+
+// GetT returns the value of T.
+func (s *HPoint) GetT() float64 {
+	return s.T
+}
+
+// GetV1 returns the value of V1.
+func (s *HPoint) GetV1() Histogram {
+	return s.V1
+}
+
+// SetT sets the value of T.
+func (s *HPoint) SetT(val float64) {
+	s.T = val
+}
+
+// SetV1 sets the value of V1.
+func (s *HPoint) SetV1(val Histogram) {
+	s.V1 = val
+}
+
+// Ref: #/components/schemas/Histogram
+type Histogram struct {
+	Count   float64  `json:"count"`
+	Sum     float64  `json:"sum"`
+	Buckets []Bucket `json:"buckets"`
+}
+
+// GetCount returns the value of Count.
+func (s *Histogram) GetCount() float64 {
+	return s.Count
+}
+
+// GetSum returns the value of Sum.
+func (s *Histogram) GetSum() float64 {
+	return s.Sum
+}
+
+// GetBuckets returns the value of Buckets.
+func (s *Histogram) GetBuckets() []Bucket {
+	return s.Buckets
+}
+
+// SetCount sets the value of Count.
+func (s *Histogram) SetCount(val float64) {
+	s.Count = val
+}
+
+// SetSum sets the value of Sum.
+func (s *Histogram) SetSum(val float64) {
+	s.Sum = val
+}
+
+// SetBuckets sets the value of Buckets.
+func (s *Histogram) SetBuckets(val []Bucket) {
+	s.Buckets = val
+}
+
+// HistogramOrValue represents sum type.
+type HistogramOrValue struct {
+	Type      HistogramOrValueType // switch on this field
+	Histogram Histogram
+	Float64   float64
+}
+
+// HistogramOrValueType is oneOf type of HistogramOrValue.
+type HistogramOrValueType string
+
+// Possible values for HistogramOrValueType.
+const (
+	HistogramHistogramOrValue HistogramOrValueType = "Histogram"
+	Float64HistogramOrValue   HistogramOrValueType = "float64"
+)
+
+// IsHistogram reports whether HistogramOrValue is Histogram.
+func (s HistogramOrValue) IsHistogram() bool { return s.Type == HistogramHistogramOrValue }
+
+// IsFloat64 reports whether HistogramOrValue is float64.
+func (s HistogramOrValue) IsFloat64() bool { return s.Type == Float64HistogramOrValue }
+
+// SetHistogram sets HistogramOrValue to Histogram.
+func (s *HistogramOrValue) SetHistogram(v Histogram) {
+	s.Type = HistogramHistogramOrValue
+	s.Histogram = v
+}
+
+// GetHistogram returns Histogram and true boolean if HistogramOrValue is Histogram.
+func (s HistogramOrValue) GetHistogram() (v Histogram, ok bool) {
+	if !s.IsHistogram() {
+		return v, false
+	}
+	return s.Histogram, true
+}
+
+// NewHistogramHistogramOrValue returns new HistogramOrValue from Histogram.
+func NewHistogramHistogramOrValue(v Histogram) HistogramOrValue {
+	var s HistogramOrValue
+	s.SetHistogram(v)
+	return s
+}
+
+// SetFloat64 sets HistogramOrValue to float64.
+func (s *HistogramOrValue) SetFloat64(v float64) {
+	s.Type = Float64HistogramOrValue
+	s.Float64 = v
+}
+
+// GetFloat64 returns float64 and true boolean if HistogramOrValue is float64.
+func (s HistogramOrValue) GetFloat64() (v float64, ok bool) {
+	if !s.IsFloat64() {
+		return v, false
+	}
+	return s.Float64, true
+}
+
+// NewFloat64HistogramOrValue returns new HistogramOrValue from float64.
+func NewFloat64HistogramOrValue(v float64) HistogramOrValue {
+	var s HistogramOrValue
+	s.SetFloat64(v)
+	return s
+}
+
 // Ref: #/components/schemas/LabelSet
 type LabelSet map[string]string
 
@@ -673,6 +874,43 @@ func (s *LabelValuesResponse) SetData(val LabelValues) {
 }
 
 type Labels []string
+
+// Ref: #/components/schemas/LabelsForm
+type LabelsForm struct {
+	Start OptPrometheusTimestamp `json:"start"`
+	End   OptPrometheusTimestamp `json:"end"`
+	Match []string               `json:"match[]"`
+}
+
+// GetStart returns the value of Start.
+func (s *LabelsForm) GetStart() OptPrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *LabelsForm) GetEnd() OptPrometheusTimestamp {
+	return s.End
+}
+
+// GetMatch returns the value of Match.
+func (s *LabelsForm) GetMatch() []string {
+	return s.Match
+}
+
+// SetStart sets the value of Start.
+func (s *LabelsForm) SetStart(val OptPrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *LabelsForm) SetEnd(val OptPrometheusTimestamp) {
+	s.End = val
+}
+
+// SetMatch sets the value of Match.
+func (s *LabelsForm) SetMatch(val []string) {
+	s.Match = val
+}
 
 type LabelsResponse struct {
 	// Always 'success'.
@@ -729,8 +967,9 @@ func (s *Matrix) SetResult(val []MatrixResultItem) {
 }
 
 type MatrixResultItem struct {
-	Metric MatrixResultItemMetric `json:"metric"`
-	Values []Value                `json:"values"`
+	Metric     MatrixResultItemMetric `json:"metric"`
+	Values     []FPoint               `json:"values"`
+	Histograms []HPoint               `json:"histograms"`
 }
 
 // GetMetric returns the value of Metric.
@@ -739,8 +978,13 @@ func (s *MatrixResultItem) GetMetric() MatrixResultItemMetric {
 }
 
 // GetValues returns the value of Values.
-func (s *MatrixResultItem) GetValues() []Value {
+func (s *MatrixResultItem) GetValues() []FPoint {
 	return s.Values
+}
+
+// GetHistograms returns the value of Histograms.
+func (s *MatrixResultItem) GetHistograms() []HPoint {
+	return s.Histograms
 }
 
 // SetMetric sets the value of Metric.
@@ -749,8 +993,13 @@ func (s *MatrixResultItem) SetMetric(val MatrixResultItemMetric) {
 }
 
 // SetValues sets the value of Values.
-func (s *MatrixResultItem) SetValues(val []Value) {
+func (s *MatrixResultItem) SetValues(val []FPoint) {
 	s.Values = val
+}
+
+// SetHistograms sets the value of Histograms.
+func (s *MatrixResultItem) SetHistograms(val []HPoint) {
+	s.Histograms = val
 }
 
 type MatrixResultItemMetric map[string]string
@@ -1349,52 +1598,6 @@ func (o OptMetricMetadataType) Or(d MetricMetadataType) MetricMetadataType {
 	return d
 }
 
-// NewOptPrometheusDuration returns new OptPrometheusDuration with value set to v.
-func NewOptPrometheusDuration(v PrometheusDuration) OptPrometheusDuration {
-	return OptPrometheusDuration{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptPrometheusDuration is optional PrometheusDuration.
-type OptPrometheusDuration struct {
-	Value PrometheusDuration
-	Set   bool
-}
-
-// IsSet returns true if OptPrometheusDuration was set.
-func (o OptPrometheusDuration) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptPrometheusDuration) Reset() {
-	var v PrometheusDuration
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptPrometheusDuration) SetTo(v PrometheusDuration) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptPrometheusDuration) Get() (v PrometheusDuration, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptPrometheusDuration) Or(d PrometheusDuration) PrometheusDuration {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptPrometheusTimestamp returns new OptPrometheusTimestamp with value set to v.
 func NewOptPrometheusTimestamp(v PrometheusTimestamp) OptPrometheusTimestamp {
 	return OptPrometheusTimestamp{
@@ -1487,8 +1690,6 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
-type PrometheusDuration string
-
 type PrometheusTimestamp string
 
 type QueryExemplarsResponse struct {
@@ -1532,8 +1733,10 @@ func (s *QueryExemplarsResponse) SetData(val Exemplars) {
 
 // Ref: #/components/schemas/QueryForm
 type QueryForm struct {
-	Query string                 `json:"query"`
-	Time  OptPrometheusTimestamp `json:"time"`
+	Query         string                 `json:"query"`
+	Time          OptPrometheusTimestamp `json:"time"`
+	LookbackDelta OptString              `json:"lookback_delta"`
+	Stats         OptString              `json:"stats"`
 }
 
 // GetQuery returns the value of Query.
@@ -1546,6 +1749,16 @@ func (s *QueryForm) GetTime() OptPrometheusTimestamp {
 	return s.Time
 }
 
+// GetLookbackDelta returns the value of LookbackDelta.
+func (s *QueryForm) GetLookbackDelta() OptString {
+	return s.LookbackDelta
+}
+
+// GetStats returns the value of Stats.
+func (s *QueryForm) GetStats() OptString {
+	return s.Stats
+}
+
 // SetQuery sets the value of Query.
 func (s *QueryForm) SetQuery(val string) {
 	s.Query = val
@@ -1556,26 +1769,31 @@ func (s *QueryForm) SetTime(val OptPrometheusTimestamp) {
 	s.Time = val
 }
 
+// SetLookbackDelta sets the value of LookbackDelta.
+func (s *QueryForm) SetLookbackDelta(val OptString) {
+	s.LookbackDelta = val
+}
+
+// SetStats sets the value of Stats.
+func (s *QueryForm) SetStats(val OptString) {
+	s.Stats = val
+}
+
 // Ref: #/components/schemas/QueryRangeForm
 type QueryRangeForm struct {
 	// Prometheus expression query string.
-	Query string                 `json:"query"`
-	Time  OptPrometheusTimestamp `json:"time"`
-	Start PrometheusTimestamp    `json:"start"`
-	End   PrometheusTimestamp    `json:"end"`
+	Query string              `json:"query"`
+	Start PrometheusTimestamp `json:"start"`
+	End   PrometheusTimestamp `json:"end"`
 	// Query resolution step width in duration format or float number of seconds.
-	Step    string                 `json:"step"`
-	Timeout OptPrometheusTimestamp `json:"timeout"`
+	Step          string    `json:"step"`
+	LookbackDelta OptString `json:"lookback_delta"`
+	Stats         OptString `json:"stats"`
 }
 
 // GetQuery returns the value of Query.
 func (s *QueryRangeForm) GetQuery() string {
 	return s.Query
-}
-
-// GetTime returns the value of Time.
-func (s *QueryRangeForm) GetTime() OptPrometheusTimestamp {
-	return s.Time
 }
 
 // GetStart returns the value of Start.
@@ -1593,19 +1811,19 @@ func (s *QueryRangeForm) GetStep() string {
 	return s.Step
 }
 
-// GetTimeout returns the value of Timeout.
-func (s *QueryRangeForm) GetTimeout() OptPrometheusTimestamp {
-	return s.Timeout
+// GetLookbackDelta returns the value of LookbackDelta.
+func (s *QueryRangeForm) GetLookbackDelta() OptString {
+	return s.LookbackDelta
+}
+
+// GetStats returns the value of Stats.
+func (s *QueryRangeForm) GetStats() OptString {
+	return s.Stats
 }
 
 // SetQuery sets the value of Query.
 func (s *QueryRangeForm) SetQuery(val string) {
 	s.Query = val
-}
-
-// SetTime sets the value of Time.
-func (s *QueryRangeForm) SetTime(val OptPrometheusTimestamp) {
-	s.Time = val
 }
 
 // SetStart sets the value of Start.
@@ -1623,9 +1841,14 @@ func (s *QueryRangeForm) SetStep(val string) {
 	s.Step = val
 }
 
-// SetTimeout sets the value of Timeout.
-func (s *QueryRangeForm) SetTimeout(val OptPrometheusTimestamp) {
-	s.Timeout = val
+// SetLookbackDelta sets the value of LookbackDelta.
+func (s *QueryRangeForm) SetLookbackDelta(val OptString) {
+	s.LookbackDelta = val
+}
+
+// SetStats sets the value of Stats.
+func (s *QueryRangeForm) SetStats(val OptString) {
+	s.Stats = val
 }
 
 type QueryResponse struct {
@@ -2000,22 +2223,85 @@ func (s *RulesResponse) SetData(val Rules) {
 	s.Data = val
 }
 
+// Ref: #/components/schemas/Sample
+type Sample struct {
+	T                float64
+	HistogramOrValue HistogramOrValue
+}
+
+// GetT returns the value of T.
+func (s *Sample) GetT() float64 {
+	return s.T
+}
+
+// GetHistogramOrValue returns the value of HistogramOrValue.
+func (s *Sample) GetHistogramOrValue() HistogramOrValue {
+	return s.HistogramOrValue
+}
+
+// SetT sets the value of T.
+func (s *Sample) SetT(val float64) {
+	s.T = val
+}
+
+// SetHistogramOrValue sets the value of HistogramOrValue.
+func (s *Sample) SetHistogramOrValue(val HistogramOrValue) {
+	s.HistogramOrValue = val
+}
+
 // Ref: #/components/schemas/Scalar
 type Scalar struct {
-	Result Value `json:"result"`
+	Result FPoint `json:"result"`
 }
 
 // GetResult returns the value of Result.
-func (s *Scalar) GetResult() Value {
+func (s *Scalar) GetResult() FPoint {
 	return s.Result
 }
 
 // SetResult sets the value of Result.
-func (s *Scalar) SetResult(val Value) {
+func (s *Scalar) SetResult(val FPoint) {
 	s.Result = val
 }
 
 type Series []LabelSet
+
+// Ref: #/components/schemas/SeriesForm
+type SeriesForm struct {
+	Start OptPrometheusTimestamp `json:"start"`
+	End   OptPrometheusTimestamp `json:"end"`
+	Match []string               `json:"match[]"`
+}
+
+// GetStart returns the value of Start.
+func (s *SeriesForm) GetStart() OptPrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *SeriesForm) GetEnd() OptPrometheusTimestamp {
+	return s.End
+}
+
+// GetMatch returns the value of Match.
+func (s *SeriesForm) GetMatch() []string {
+	return s.Match
+}
+
+// SetStart sets the value of Start.
+func (s *SeriesForm) SetStart(val OptPrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *SeriesForm) SetEnd(val OptPrometheusTimestamp) {
+	s.End = val
+}
+
+// SetMatch sets the value of Match.
+func (s *SeriesForm) SetMatch(val []string) {
+	s.Match = val
+}
 
 type SeriesResponse struct {
 	// Always 'success'.
@@ -2058,42 +2344,42 @@ func (s *SeriesResponse) SetData(val Series) {
 
 // Ref: #/components/schemas/String
 type String struct {
-	Result string `json:"result"`
+	Result StringValue `json:"result"`
 }
 
 // GetResult returns the value of Result.
-func (s *String) GetResult() string {
+func (s *String) GetResult() StringValue {
 	return s.Result
 }
 
 // SetResult sets the value of Result.
-func (s *String) SetResult(val string) {
+func (s *String) SetResult(val StringValue) {
 	s.Result = val
 }
 
-// Ref: #/components/schemas/Value
-type Value struct {
+// Ref: #/components/schemas/StringValue
+type StringValue struct {
 	T float64
-	V float64
+	V string
 }
 
 // GetT returns the value of T.
-func (s *Value) GetT() float64 {
+func (s *StringValue) GetT() float64 {
 	return s.T
 }
 
 // GetV returns the value of V.
-func (s *Value) GetV() float64 {
+func (s *StringValue) GetV() string {
 	return s.V
 }
 
 // SetT sets the value of T.
-func (s *Value) SetT(val float64) {
+func (s *StringValue) SetT(val float64) {
 	s.T = val
 }
 
 // SetV sets the value of V.
-func (s *Value) SetV(val float64) {
+func (s *StringValue) SetV(val string) {
 	s.V = val
 }
 
@@ -2114,7 +2400,7 @@ func (s *Vector) SetResult(val []VectorResultItem) {
 
 type VectorResultItem struct {
 	Metric VectorResultItemMetric `json:"metric"`
-	Value  Value                  `json:"value"`
+	Value  Sample                 `json:"value"`
 }
 
 // GetMetric returns the value of Metric.
@@ -2123,7 +2409,7 @@ func (s *VectorResultItem) GetMetric() VectorResultItemMetric {
 }
 
 // GetValue returns the value of Value.
-func (s *VectorResultItem) GetValue() Value {
+func (s *VectorResultItem) GetValue() Sample {
 	return s.Value
 }
 
@@ -2133,7 +2419,7 @@ func (s *VectorResultItem) SetMetric(val VectorResultItemMetric) {
 }
 
 // SetValue sets the value of Value.
-func (s *VectorResultItem) SetValue(val Value) {
+func (s *VectorResultItem) SetValue(val Sample) {
 	s.Value = val
 }
 

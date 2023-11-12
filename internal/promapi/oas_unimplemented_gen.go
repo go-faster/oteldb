@@ -80,7 +80,7 @@ func (UnimplementedHandler) GetSeries(ctx context.Context, params GetSeriesParam
 // PostLabels implements postLabels operation.
 //
 // POST /api/v1/labels
-func (UnimplementedHandler) PostLabels(ctx context.Context) (r *LabelsResponse, _ error) {
+func (UnimplementedHandler) PostLabels(ctx context.Context, req *LabelsForm) (r *LabelsResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -116,7 +116,7 @@ func (UnimplementedHandler) PostQueryRange(ctx context.Context, req *QueryRangeF
 // Query Prometheus.
 //
 // POST /api/v1/series
-func (UnimplementedHandler) PostSeries(ctx context.Context) (r *SeriesResponse, _ error) {
+func (UnimplementedHandler) PostSeries(ctx context.Context, req *SeriesForm) (r *SeriesResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

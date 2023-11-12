@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/prometheus/prometheus/promql"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
@@ -18,6 +19,8 @@ import (
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokihandler"
 	"github.com/go-faster/oteldb/internal/otelreceiver"
+	"github.com/go-faster/oteldb/internal/promapi"
+	"github.com/go-faster/oteldb/internal/promhandler"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tempohandler"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
@@ -28,11 +31,7 @@ import (
 type App struct {
 	services map[string]func(context.Context) error
 
-	logQuerier  logQuerier
-	logInserter logstorage.Inserter
-
-	traceQuerier  traceQuerier
-	traceInserter tracestorage.Inserter
+	storage
 
 	lg      *zap.Logger
 	metrics Metrics
@@ -58,15 +57,11 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 		app.traceInserter = inserter
 		app.traceQuerier = querier
 	case "yt", "":
-		inserter, querier, err := setupYT(ctx, lg, m)
+		store, err := setupYT(ctx, lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
-		app.traceInserter = inserter
-		app.traceQuerier = querier
-
-		app.logInserter = inserter
-		app.logQuerier = querier
+		app.storage = store
 	default:
 		return nil, errors.Errorf("unknown storage %q", storageType)
 	}
@@ -192,6 +187,28 @@ func (app *App) trySetupLoki() error {
 	return nil
 }
 
+func (app *App) trySetupProm() error {
+	q := app.metricShard
+	if q == nil {
+		return nil
+	}
+
+	engine := promql.NewEngine(promql.EngineOpts{})
+	prom := promhandler.NewPromAPI(engine, q, promhandler.PromAPIOptions{})
+
+	s, err := promapi.NewServer(prom,
+		promapi.WithTracerProvider(app.metrics.TracerProvider()),
+		promapi.WithMeterProvider(app.metrics.MeterProvider()),
+		promapi.WithMiddleware(promhandler.TimeoutMiddleware()),
+	)
+	if err != nil {
+		return err
+	}
+
+	addOgen[promapi.Route](app, "prom", s, ":9090")
+	return nil
+}
+
 func (app *App) setupReceiver() error {
 	var consumers otelreceiver.Consumers
 	if i := app.traceInserter; i != nil {
@@ -199,6 +216,9 @@ func (app *App) setupReceiver() error {
 	}
 	if i := app.logInserter; i != nil {
 		consumers.Logs = logstorage.NewConsumer(i)
+	}
+	if c := app.metricConsumer; c != nil {
+		consumers.Metrics = c
 	}
 
 	recv, err := otelreceiver.NewReceiver(

@@ -21,10 +21,20 @@ paths:
           schema:
             type: string
         - name: time
-          description: Evaluation timestamp
+          description: Evaluation timestamp.
           in: query
           schema:
             $ref: "#/components/schemas/PrometheusTimestamp"
+        - name: lookback_delta
+          description: Lookback delta duration in duration format or float number of seconds.
+          in: query
+          schema:
+            type: string
+        - name: stats
+          description: Statistics to return.
+          in: query
+          schema:
+            type: string
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -38,7 +48,7 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/QueryForm'
+              $ref: "#/components/schemas/QueryForm"
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -74,13 +84,17 @@ paths:
           required: true
           schema:
             type: string
-            description: Prometheus duration or float
-        - name: timeout
-          description: Evaluation timeout.
+            description: Prometheus duration or float.
+        - name: lookback_delta
+          description: Lookback delta duration in duration format or float number of seconds.
           in: query
-          required: false
           schema:
-            $ref: "#/components/schemas/PrometheusDuration"
+            type: string
+        - name: stats
+          description: Statistics to return.
+          in: query
+          schema:
+            type: string
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -94,7 +108,7 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/QueryRangeForm'
+              $ref: "#/components/schemas/QueryRangeForm"
       responses:
         200:
           $ref: "#/components/responses/QueryResponse"
@@ -146,13 +160,11 @@ paths:
         - name: start
           description: Start timestamp.
           in: query
-          required: true
           schema:
             $ref: "#/components/schemas/PrometheusTimestamp"
         - name: end
           description: End timestamp.
           in: query
-          required: true
           schema:
             $ref: "#/components/schemas/PrometheusTimestamp"
         - name: match[]
@@ -172,6 +184,12 @@ paths:
     post:
       operationId: postSeries
       description: Query Prometheus
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SeriesForm"
       responses:
         200:
           $ref: "#/components/responses/SeriesResponse"
@@ -206,6 +224,12 @@ paths:
           $ref: "#/components/responses/Error"
     post:
       operationId: postLabels
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/LabelsForm"
       responses:
         200:
           $ref: "#/components/responses/LabelsResponse"
@@ -486,6 +510,10 @@ components:
           type: string
         time:
           $ref: "#/components/schemas/PrometheusTimestamp"
+        lookback_delta:
+          type: string
+        stats:
+          type: string
     QueryRangeForm:
       type: object
       required: [query, start, end, step]
@@ -493,8 +521,6 @@ components:
         query:
           type: string
           description: Prometheus expression query string.
-        time:
-          $ref: "#/components/schemas/PrometheusTimestamp"
         start:
           $ref: "#/components/schemas/PrometheusTimestamp"
         end:
@@ -502,20 +528,46 @@ components:
         step:
           type: string
           description: Query resolution step width in duration format or float number of seconds.
-        timeout:
+        lookback_delta:
+          type: string
+        stats:
+          type: string
+    LabelsForm:
+      type: object
+      properties:
+        start:
           $ref: "#/components/schemas/PrometheusTimestamp"
+        end:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        match[]:
+          type: array
+          items:
+            type: string
+    SeriesForm:
+      type: object
+      required: ["match[]"]
+      properties:
+        start:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        end:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        match[]:
+          type: array
+          items:
+            type: string
+
     Scalar:
       type: object
       required: [result]
       properties:
         result:
-          $ref: "#/components/schemas/Value"
+          $ref: "#/components/schemas/FPoint"
     String:
       type: object
       required: [result]
       properties:
         result:
-          type: string
+          $ref: "#/components/schemas/StringValue"
     Vector:
       type: object
       required: [result]
@@ -531,7 +583,7 @@ components:
                 additionalProperties:
                   type: string
               value:
-                $ref: "#/components/schemas/Value"
+                $ref: "#/components/schemas/Sample"
     Matrix:
       type: object
       required: [result]
@@ -540,7 +592,7 @@ components:
           type: array
           items:
             type: object
-            required: [metric, values]
+            required: [metric]
             properties:
               metric:
                 type: object
@@ -549,7 +601,11 @@ components:
               values:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Value"
+                  $ref: "#/components/schemas/FPoint"
+              histograms:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HPoint"
     Data:
       discriminator:
         propertyName: resultType
@@ -563,16 +619,86 @@ components:
         - $ref: "#/components/schemas/Vector"
         - $ref: "#/components/schemas/Scalar"
         - $ref: "#/components/schemas/String"
-    Value:
+    FPoint:
       type: array
       items:
         - type: number
-          description: float64 timestamp
+          description: float64 milli timestamp
           x-ogen-name: T
         - type: string
           description: value
           format: float64
           x-ogen-name: V
+    HPoint:
+      type: array
+      items:
+        - type: number
+          description: float64 milli timestamp
+          x-ogen-name: T
+        - $ref: "#/components/schemas/Histogram"
+    StringValue:
+      type: array
+      items:
+        - type: number
+          description: float64 milli timestamp
+          x-ogen-name: T
+        - type: string
+          description: value
+          x-ogen-name: V
+    Sample:
+      type: array
+      items:
+        - type: number
+          description: float64 milli timestamp
+          x-ogen-name: T
+        - oneOf:
+            - $ref: "#/components/schemas/Histogram"
+            - type: string
+              description: value
+              format: float64
+          x-ogen-name: HistogramOrValue
+    Histogram:
+      type: object
+      required: [count, sum]
+      properties:
+        count:
+          type: number
+          format: float64
+        sum:
+          type: number
+          format: float64
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bucket"
+    Bucket:
+      # See https://github.com/prometheus/prometheus/blob/8e5f0387a2c9115849fcd99c9a0b295b779d938a/util/jsonutil/marshal.go#L66-L89
+      # as encoding reference.
+      type: array
+      items:
+        - type: integer
+          description: |
+            The 1st element in each bucket array determines if the boundaries are
+            inclusive (AKA closed) or exclusive (AKA open):
+            ```
+            0: lower exclusive, upper inclusive
+            1: lower inclusive, upper exclusive
+            2: both exclusive
+            3: both inclusive
+            ```
+          x-ogen-name: BoundaryType
+        - type: string
+          description: Lower boundary.
+          format: float64
+          x-ogen-name: Lower
+        - type: string
+          description: Upper boundary.
+          format: float64
+          x-ogen-name: Upper
+        - type: string
+          description: Bucket count.
+          format: float64
+          x-ogen-name: Count
 
     Exemplars:
       type: array
@@ -657,10 +783,10 @@ components:
     Alert:
       type: object
       required:
-          - labels
-          - annotations
-          - state
-          - value
+        - labels
+        - annotations
+        - state
+        - value
       properties:
         labels:
           $ref: "#/components/schemas/LabelSet"
@@ -805,9 +931,6 @@ components:
     PrometheusTimestamp:
       type: string
       description: RFC3339 or Unix timestamp
-    PrometheusDuration:
-      type: string
-      description: Prometheus duration
     LabelSet:
       type: object
       additionalProperties:

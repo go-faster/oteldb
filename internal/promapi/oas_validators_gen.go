@@ -82,6 +82,47 @@ func (s AlertingRuleState) Validate() error {
 	}
 }
 
+func (s *Bucket) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).ValidateStringified(float64(s.Lower)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "Lower",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).ValidateStringified(float64(s.Upper)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "Upper",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).ValidateStringified(float64(s.Count)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "Count",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s Data) Validate() error {
 	switch s.Type {
 	case MatrixData:
@@ -100,7 +141,10 @@ func (s Data) Validate() error {
 		}
 		return nil
 	case StringData:
-		return nil // no validation needed
+		if err := s.String.Validate(); err != nil {
+			return err
+		}
+		return nil
 	default:
 		return errors.Errorf("invalid type %q", s.Type)
 	}
@@ -181,6 +225,36 @@ func (s *ExemplarsSet) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "exemplars",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *FPoint) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).ValidateStringified(float64(s.V)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "V",
 			Error: err,
 		})
 	}
@@ -278,6 +352,108 @@ func (s GetRulesType) Validate() error {
 	}
 }
 
+func (s *HPoint) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := s.V1.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "V1",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *Histogram) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.Count)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "count",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.Sum)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "sum",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		var failures []validate.FieldError
+		for i, elem := range s.Buckets {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "buckets",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s HistogramOrValue) Validate() error {
+	switch s.Type {
+	case HistogramHistogramOrValue:
+		if err := s.Histogram.Validate(); err != nil {
+			return err
+		}
+		return nil
+	case Float64HistogramOrValue:
+		if err := (validate.Float{}).ValidateStringified(float64(s.Float64)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	default:
+		return errors.Errorf("invalid type %q", s.Type)
+	}
+}
+
 func (s LabelValues) Validate() error {
 	alias := ([]string)(s)
 	if alias == nil {
@@ -371,9 +547,6 @@ func (s *Matrix) Validate() error {
 func (s *MatrixResultItem) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Values == nil {
-			return errors.New("nil is invalid value")
-		}
 		var failures []validate.FieldError
 		for i, elem := range s.Values {
 			if err := func() error {
@@ -395,6 +568,31 @@ func (s *MatrixResultItem) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "values",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		var failures []validate.FieldError
+		for i, elem := range s.Histograms {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "histograms",
 			Error: err,
 		})
 	}
@@ -733,6 +931,36 @@ func (s *RulesResponse) Validate() error {
 	return nil
 }
 
+func (s *Sample) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "T",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := s.HistogramOrValue.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "HistogramOrValue",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s *Scalar) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -760,6 +988,25 @@ func (s Series) Validate() error {
 	return nil
 }
 
+func (s *SeriesForm) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Match == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "match[]",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s *SeriesResponse) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
@@ -779,7 +1026,26 @@ func (s *SeriesResponse) Validate() error {
 	return nil
 }
 
-func (s *Value) Validate() error {
+func (s *String) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Result.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "result",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *StringValue) Validate() error {
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
@@ -789,17 +1055,6 @@ func (s *Value) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "T",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := (validate.Float{}).ValidateStringified(float64(s.V)); err != nil {
-			return errors.Wrap(err, "float")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "V",
 			Error: err,
 		})
 	}

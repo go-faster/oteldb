@@ -489,6 +489,98 @@ func (s *AlertingRuleState) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode implements json.Marshaler.
+func (s *Bucket) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *Bucket) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.BoundaryType
+		e.Int(elem)
+	}
+	{
+		elem := s.Lower
+		json.EncodeStringFloat64(e, elem)
+	}
+	{
+		elem := s.Upper
+		json.EncodeStringFloat64(e, elem)
+	}
+	{
+		elem := s.Count
+		json.EncodeStringFloat64(e, elem)
+	}
+}
+
+// Decode decodes Bucket from json.
+func (s *Bucket) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Bucket to nil")
+	}
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Int()
+			s.BoundaryType = int(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			v, err := json.DecodeStringFloat64(d)
+			s.Lower = v
+			if err != nil {
+				return err
+			}
+			return nil
+		case 2:
+			n++
+			v, err := json.DecodeStringFloat64(d)
+			s.Upper = v
+			if err != nil {
+				return err
+			}
+			return nil
+		case 3:
+			n++
+			v, err := json.DecodeStringFloat64(d)
+			s.Count = v
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 4 elements, got %d", n)
+		}
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 4 elements, got %d", n)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Bucket) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Bucket) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes Data as json.
 func (s Data) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -840,6 +932,74 @@ func (s *ExemplarsSet) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *FPoint) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *FPoint) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		e.Float64(elem)
+	}
+	{
+		elem := s.V
+		json.EncodeStringFloat64(e, elem)
+	}
+}
+
+// Decode decodes FPoint from json.
+func (s *FPoint) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode FPoint to nil")
+	}
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Float64()
+			s.T = float64(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			v, err := json.DecodeStringFloat64(d)
+			s.V = v
+			if err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
+		}
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *FPoint) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *FPoint) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *Fail) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -1031,6 +1191,261 @@ func (s FailErrorType) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *FailErrorType) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *HPoint) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *HPoint) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		e.Float64(elem)
+	}
+	{
+		elem := s.V1
+		elem.Encode(e)
+	}
+}
+
+// Decode decodes HPoint from json.
+func (s *HPoint) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode HPoint to nil")
+	}
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Float64()
+			s.T = float64(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			if err := s.V1.Decode(d); err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
+		}
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *HPoint) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *HPoint) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *Histogram) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *Histogram) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("count")
+		e.Float64(s.Count)
+	}
+	{
+		e.FieldStart("sum")
+		e.Float64(s.Sum)
+	}
+	{
+		if s.Buckets != nil {
+			e.FieldStart("buckets")
+			e.ArrStart()
+			for _, elem := range s.Buckets {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+}
+
+var jsonFieldsNameOfHistogram = [3]string{
+	0: "count",
+	1: "sum",
+	2: "buckets",
+}
+
+// Decode decodes Histogram from json.
+func (s *Histogram) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Histogram to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "count":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Float64()
+				s.Count = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"count\"")
+			}
+		case "sum":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Float64()
+				s.Sum = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"sum\"")
+			}
+		case "buckets":
+			if err := func() error {
+				s.Buckets = make([]Bucket, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem Bucket
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Buckets = append(s.Buckets, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"buckets\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode Histogram")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfHistogram) {
+					name = jsonFieldsNameOfHistogram[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Histogram) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Histogram) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes HistogramOrValue as json.
+func (s HistogramOrValue) Encode(e *jx.Encoder) {
+	switch s.Type {
+	case HistogramHistogramOrValue:
+		s.Histogram.Encode(e)
+	case Float64HistogramOrValue:
+		json.EncodeStringFloat64(e, s.Float64)
+	}
+}
+
+// Decode decodes HistogramOrValue from json.
+func (s *HistogramOrValue) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode HistogramOrValue to nil")
+	}
+	// Sum type type_discriminator.
+	switch t := d.Next(); t {
+	case jx.Object:
+		if err := s.Histogram.Decode(d); err != nil {
+			return err
+		}
+		s.Type = HistogramHistogramOrValue
+	case jx.String:
+		v, err := json.DecodeStringFloat64(d)
+		s.Float64 = v
+		if err != nil {
+			return err
+		}
+		s.Type = Float64HistogramOrValue
+	default:
+		return errors.Errorf("unexpected json type %q", t)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s HistogramOrValue) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *HistogramOrValue) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -1601,18 +2016,31 @@ func (s *MatrixResultItem) encodeFields(e *jx.Encoder) {
 		s.Metric.Encode(e)
 	}
 	{
-		e.FieldStart("values")
-		e.ArrStart()
-		for _, elem := range s.Values {
-			elem.Encode(e)
+		if s.Values != nil {
+			e.FieldStart("values")
+			e.ArrStart()
+			for _, elem := range s.Values {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
 		}
-		e.ArrEnd()
+	}
+	{
+		if s.Histograms != nil {
+			e.FieldStart("histograms")
+			e.ArrStart()
+			for _, elem := range s.Histograms {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
 	}
 }
 
-var jsonFieldsNameOfMatrixResultItem = [2]string{
+var jsonFieldsNameOfMatrixResultItem = [3]string{
 	0: "metric",
 	1: "values",
+	2: "histograms",
 }
 
 // Decode decodes MatrixResultItem from json.
@@ -1635,11 +2063,10 @@ func (s *MatrixResultItem) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"metric\"")
 			}
 		case "values":
-			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				s.Values = make([]Value, 0)
+				s.Values = make([]FPoint, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem Value
+					var elem FPoint
 					if err := elem.Decode(d); err != nil {
 						return err
 					}
@@ -1652,6 +2079,23 @@ func (s *MatrixResultItem) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"values\"")
 			}
+		case "histograms":
+			if err := func() error {
+				s.Histograms = make([]HPoint, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem HPoint
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Histograms = append(s.Histograms, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"histograms\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -1662,7 +2106,7 @@ func (s *MatrixResultItem) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000011,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3466,6 +3910,72 @@ func (s *RulesResponse) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *Sample) Encode(e *jx.Encoder) {
+	e.ArrStart()
+	s.encodeTuple(e)
+	e.ArrEnd()
+}
+
+// encodeTuple encodes fields.
+func (s *Sample) encodeTuple(e *jx.Encoder) {
+	{
+		elem := s.T
+		e.Float64(elem)
+	}
+	{
+		elem := s.HistogramOrValue
+		elem.Encode(e)
+	}
+}
+
+// Decode decodes Sample from json.
+func (s *Sample) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Sample to nil")
+	}
+	n := 0
+	if err := d.Arr(func(d *jx.Decoder) error {
+		switch n {
+		case 0:
+			n++
+			v, err := d.Float64()
+			s.T = float64(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		case 1:
+			n++
+			if err := s.HistogramOrValue.Decode(d); err != nil {
+				return err
+			}
+			return nil
+		default:
+			return errors.Errorf("expected 2 elements, got %d", n)
+		}
+	}); err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.Errorf("expected 2 elements, got %d", n)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Sample) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Sample) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *Scalar) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -3764,7 +4274,7 @@ func (s *String) Encode(e *jx.Encoder) {
 func (s *String) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("result")
-		e.Str(s.Result)
+		s.Result.Encode(e)
 	}
 }
 
@@ -3784,9 +4294,7 @@ func (s *String) Decode(d *jx.Decoder) error {
 		case "result":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.Result = string(v)
-				if err != nil {
+				if err := s.Result.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -3852,28 +4360,28 @@ func (s *String) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s *Value) Encode(e *jx.Encoder) {
+func (s *StringValue) Encode(e *jx.Encoder) {
 	e.ArrStart()
 	s.encodeTuple(e)
 	e.ArrEnd()
 }
 
 // encodeTuple encodes fields.
-func (s *Value) encodeTuple(e *jx.Encoder) {
+func (s *StringValue) encodeTuple(e *jx.Encoder) {
 	{
 		elem := s.T
 		e.Float64(elem)
 	}
 	{
 		elem := s.V
-		json.EncodeStringFloat64(e, elem)
+		e.Str(elem)
 	}
 }
 
-// Decode decodes Value from json.
-func (s *Value) Decode(d *jx.Decoder) error {
+// Decode decodes StringValue from json.
+func (s *StringValue) Decode(d *jx.Decoder) error {
 	if s == nil {
-		return errors.New("invalid: unable to decode Value to nil")
+		return errors.New("invalid: unable to decode StringValue to nil")
 	}
 	n := 0
 	if err := d.Arr(func(d *jx.Decoder) error {
@@ -3888,8 +4396,8 @@ func (s *Value) Decode(d *jx.Decoder) error {
 			return nil
 		case 1:
 			n++
-			v, err := json.DecodeStringFloat64(d)
-			s.V = v
+			v, err := d.Str()
+			s.V = string(v)
 			if err != nil {
 				return err
 			}
@@ -3907,14 +4415,14 @@ func (s *Value) Decode(d *jx.Decoder) error {
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s *Value) MarshalJSON() ([]byte, error) {
+func (s *StringValue) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
 }
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *Value) UnmarshalJSON(data []byte) error {
+func (s *StringValue) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

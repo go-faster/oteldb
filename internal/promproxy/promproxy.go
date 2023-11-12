@@ -91,8 +91,8 @@ func (s *Server) GetSeries(ctx context.Context, params promapi.GetSeriesParams) 
 // PostLabels implements postLabels operation.
 //
 // POST /api/v1/labels
-func (s *Server) PostLabels(ctx context.Context) (*promapi.LabelsResponse, error) {
-	return s.api.PostLabels(ctx)
+func (s *Server) PostLabels(ctx context.Context, req *promapi.LabelsForm) (*promapi.LabelsResponse, error) {
+	return s.api.PostLabels(ctx, req)
 }
 
 // PostQuery implements postQuery operation.
@@ -127,8 +127,8 @@ func (s *Server) PostQueryRange(ctx context.Context, req *promapi.QueryRangeForm
 // Query Prometheus.
 //
 // POST /api/v1/series
-func (s *Server) PostSeries(ctx context.Context) (*promapi.SeriesResponse, error) {
-	return s.api.PostSeries(ctx)
+func (s *Server) PostSeries(ctx context.Context, req *promapi.SeriesForm) (*promapi.SeriesResponse, error) {
+	return s.api.PostSeries(ctx, req)
 }
 
 // NewError creates *FailStatusCode from error returned by handler.

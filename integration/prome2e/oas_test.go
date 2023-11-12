@@ -116,7 +116,7 @@ func TestPrometheusOAS(t *testing.T) {
 		vr := v.Result[0]
 		assert.Equal(t, "go_info", vr.Metric["__name__"], "metric name")
 		assert.Greater(t, vr.Value.T, 0.0, "value")
-		assert.Equal(t, vr.Value.V, 1.0)
+		assert.Equal(t, vr.Value.HistogramOrValue.Float64, 1.0)
 	}
 
 	var (
@@ -163,8 +163,8 @@ func TestPrometheusOAS(t *testing.T) {
 		t.Parallel()
 
 		res, err := api.GetSeries(ctx, promapi.GetSeriesParams{
-			Start: start,
-			End:   end,
+			Start: promapi.NewOptPrometheusTimestamp(start),
+			End:   promapi.NewOptPrometheusTimestamp(end),
 			Match: []string{`go_info{job="prometheus"}`},
 		})
 		require.NoError(t, err)
