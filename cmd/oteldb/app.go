@@ -75,6 +75,9 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 	if err := app.trySetupLoki(); err != nil {
 		return nil, errors.Wrap(err, "loki")
 	}
+	if err := app.trySetupProm(); err != nil {
+		return nil, errors.Wrap(err, "prom")
+	}
 
 	return app, nil
 }
