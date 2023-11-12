@@ -5,6 +5,8 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/schema"
 	"go.ytsaurus.tech/yt/go/ypath"
@@ -97,7 +99,9 @@ func migrateStaticTable(ctx context.Context, yc yt.Client, tables map[ypath.Path
 			return errors.Wrapf(err, "check table %q", path)
 		}
 		if exist {
-			return errors.Errorf("table %q already exist", path)
+			// TODO(ernado): check schema?
+			zctx.From(ctx).Warn("table already exist", zap.Stringer("path", path))
+			continue
 		}
 
 		if _, err := yt.CreateTable(ctx, yc, path,
