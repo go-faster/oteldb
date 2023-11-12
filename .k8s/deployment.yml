@@ -65,6 +65,8 @@ spec:
               value: "grpc"
             - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
               value: "http://localhost:4317"
+            - name: YT_YQL_CLUSTER
+              value: yt
             - name: YT_PROXY
               value: http-proxies.yt.svc.cluster.local
             - name: YT_TOKEN
