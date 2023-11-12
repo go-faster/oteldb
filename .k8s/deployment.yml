@@ -30,6 +30,9 @@ spec:
             - containerPort: 3200
               protocol: TCP
               name: tempo-http
+            - containerPort: 9090
+              protocol: TCP
+              name: prom-http
             - containerPort: 3100
               protocol: TCP
               name: loki-http

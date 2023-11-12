@@ -21,6 +21,10 @@ spec:
       protocol: TCP
       targetPort: 3100
       name: loki-http
+    - port: 9090
+      protocol: TCP
+      targetPort: 9090
+      name: prom-http
     - port: 4317
       protocol: TCP
       targetPort: 4317
