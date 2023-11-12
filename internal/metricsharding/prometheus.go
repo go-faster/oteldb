@@ -597,7 +597,7 @@ func (q *querier) attributeHashes(ctx context.Context, to chan<- hashesResult, q
 }
 
 type seriesKey struct {
-	Name          string
+	Name          otelstorage.Hash
 	AttributeHash otelstorage.Hash
 	ResourceHash  otelstorage.Hash
 }

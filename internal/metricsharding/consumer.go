@@ -188,8 +188,9 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 				b := getTenantBatch(id)
 
 				attrHash := otelstorage.AttrHash(attrs)
-				b.Attributes.Add(ts.AsTime(), AttributesKey{name, attrHash}, metricstorage.Attributes{
-					Metric: name,
+				nameHash := otelstorage.StrHash(name)
+				b.Attributes.Add(ts.AsTime(), AttributesKey{nameHash, attrHash}, metricstorage.Attributes{
+					Metric: nameHash,
 					Hash:   attrHash,
 					Attrs:  otelstorage.Attrs(attrs),
 				})
@@ -207,7 +208,7 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 				}
 
 				b.Points = append(b.Points, metricstorage.Point{
-					Metric:        name,
+					Metric:        nameHash,
 					ResourceHash:  res.Hash,
 					AttributeHash: attrHash,
 					Timestamp:     ts,

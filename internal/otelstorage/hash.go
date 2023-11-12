@@ -47,6 +47,13 @@ func AttrHash(m pcommon.Map) Hash {
 	return h.Sum128().Bytes()
 }
 
+// StrHash computes string hash.
+func StrHash(s string) Hash {
+	h := xxh3.New()
+	_, _ = h.WriteString(s)
+	return h.Sum128().Bytes()
+}
+
 func hashValue(h *xxh3.Hasher, val pcommon.Value) {
 	var buf [8]byte
 

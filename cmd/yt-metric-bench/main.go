@@ -36,6 +36,8 @@ func main() {
 		}
 
 		rnd := rand.New(rand.NewSource(1)) // #nosec G404
+		var mh otelstorage.Hash
+		_, _ = rnd.Read(mh[:])
 		for {
 			var points []any
 			var rh, ah otelstorage.Hash
@@ -46,14 +48,14 @@ func main() {
 				delta := time.Duration(j) * time.Millisecond
 				ts := now.Add(delta)
 				points = append(points, metricstorage.Point{
-					Metric:        "foo",
+					Metric:        mh,
 					ResourceHash:  rh,
 					AttributeHash: ah,
 					Timestamp:     otelstorage.NewTimestampFromTime(ts),
 					Point:         float64(j),
 				})
 			}
-			if err := yc.InsertRows(ctx, "//oteldb/metrics/tenant_222/active/points", points, nil); err != nil {
+			if err := yc.InsertRows(ctx, "//oteldb/metrics/tenant-222/active/points", points, nil); err != nil {
 				return errors.Wrap(err, "yc.InsertRows")
 			}
 		}

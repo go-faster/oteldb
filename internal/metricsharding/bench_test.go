@@ -48,6 +48,8 @@ func TestIntegrationWorkload(t *testing.T) {
 	now := time.Now()
 
 	rnd := rand.New(rand.NewSource(1))
+	var mh otelstorage.Hash
+	rnd.Read(mh[:])
 
 	for i := 0; i < totalBatches; i++ {
 		var points []any
@@ -58,7 +60,7 @@ func TestIntegrationWorkload(t *testing.T) {
 			delta := time.Duration(i+j) * time.Millisecond
 			ts := now.Add(delta)
 			points = append(points, metricstorage.Point{
-				Metric:        "foo",
+				Metric:        mh,
 				ResourceHash:  rh,
 				AttributeHash: ah,
 				Timestamp:     otelstorage.NewTimestampFromTime(ts),

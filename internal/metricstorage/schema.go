@@ -8,7 +8,7 @@ import (
 
 // Point is a data structure for metric points.
 type Point struct {
-	Metric        string                `json:"metric_name" yson:"metric_name"`
+	Metric        otelstorage.Hash      `json:"metric_name" yson:"metric_name"`
 	ResourceHash  otelstorage.Hash      `json:"resource_hash" yson:"resource_hash"`
 	AttributeHash otelstorage.Hash      `json:"attr_hash" yson:"attr_hash"`
 	Timestamp     otelstorage.Timestamp `json:"timestamp" yson:"timestamp"`
@@ -24,7 +24,7 @@ func (Point) YTSchema() schema.Schema {
 
 	return schema.Schema{
 		Columns: []schema.Column{
-			{Name: "metric_name", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},
+			{Name: "metric_name", ComplexType: hashType, SortOrder: schema.SortAscending},
 			{Name: "resource_hash", ComplexType: hashType, SortOrder: schema.SortAscending},
 			{Name: "attr_hash", ComplexType: hashType, SortOrder: schema.SortAscending},
 			{Name: "timestamp", ComplexType: tsType, SortOrder: schema.SortAscending},
@@ -56,7 +56,7 @@ func (Resource) YTSchema() schema.Schema {
 
 // Attributes is a data structure for attributes.
 type Attributes struct {
-	Metric string            `json:"metric_name" yson:"metric_name"`
+	Metric otelstorage.Hash  `json:"metric_name" yson:"metric_name"`
 	Hash   otelstorage.Hash  `json:"hash" yson:"hash"`
 	Attrs  otelstorage.Attrs `json:"attrs" yson:"attrs"`
 }
@@ -70,7 +70,7 @@ func (Attributes) YTSchema() schema.Schema {
 
 	return schema.Schema{
 		Columns: []schema.Column{
-			{Name: "metric_name", ComplexType: schema.TypeString, SortOrder: schema.SortAscending},
+			{Name: "metric_name", ComplexType: hashType, SortOrder: schema.SortAscending},
 			{Name: "hash", ComplexType: hashType, SortOrder: schema.SortAscending},
 			{Name: "attrs", ComplexType: attrsType},
 		},

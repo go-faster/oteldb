@@ -60,6 +60,6 @@ func (s *timeShard[K, V]) Add(key K, val V) {
 
 // AttributesKey is a key for [TimeMap].
 type AttributesKey struct {
-	Name string
+	Name otelstorage.Hash
 	Hash otelstorage.Hash
 }
