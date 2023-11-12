@@ -155,7 +155,7 @@ metadata:
   labels:
     app: otelfaker
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: otelfaker
