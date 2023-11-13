@@ -4,6 +4,18 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+    groups:
+      opentelemetry:
+        patterns:
+          - "go.opentelemetry.io/otel/*"
+          - "go.opentelemetry.io/contrib/*"
+      opentelemetry-collector:
+        patterns:
+          - "go.opentelemetry.io/collector/*"
+          - "github.com/open-telemetry/opentelemetry-collector-contrib/*"
+      golang:
+        patterns:
+          - "golang.org/x/*"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
