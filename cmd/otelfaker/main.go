@@ -65,8 +65,7 @@ func main() {
 		}
 		conn, err := grpc.DialContext(ctx, "oteldb.faster.svc.cluster.local:4317",
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor(otelOptions...)),
-			grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor(otelOptions...)),
+			grpc.WithStatsHandler(otelgrpc.NewClientHandler(otelOptions...)),
 		)
 		if err != nil {
 			return errors.Wrap(err, "dial oteldb")
