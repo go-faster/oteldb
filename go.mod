@@ -20,7 +20,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.88.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.45.0
-	github.com/prometheus/prometheus v0.48.0-rc.1
+	github.com/prometheus/prometheus v0.48.0-rc.2
 	github.com/pyroscope-io/client v0.7.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
