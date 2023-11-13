@@ -44,16 +44,16 @@ spec:
               name: otlp-http
           resources:
             requests:
-              cpu: 500m
+              cpu: "4"
               memory: 256M
             limits:
-              cpu: "3"
+              cpu: "4"
               memory: 512M
           env:
             - name: GOMEMLIMIT
-              value: "512MiB"
+              value: "256MiB"
             - name: GOMAXPROCS
-              value: "2"
+              value: "4"
             - name: OTEL_METRICS_EXPORTER
               value: "prometheus"
             - name: OTEL_EXPORTER_PROMETHEUS_PORT
@@ -72,6 +72,13 @@ spec:
               value: yt
             - name: YT_PROXY
               value: http-proxies.yt.svc.cluster.local
+            - name: OTELDB_STORAGE
+              value: ch
+            - name: CH_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: oteldb
+                  key: CH_DSN
             - name: YT_TOKEN
               valueFrom:
                 secretKeyRef:
