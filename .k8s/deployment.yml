@@ -64,10 +64,12 @@ spec:
               value: "service.name=go-faster.oteldb"
             - name: OTEL_LOG_LEVEL
               value: "DEBUG"
-            - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: "grpc"
-            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-              value: "http://localhost:4317"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.monitoring.svc.cluster.local:4317"
             - name: YT_YQL_CLUSTER
               value: yt
             - name: YT_PROXY
