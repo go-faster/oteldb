@@ -22,6 +22,10 @@ func (s Direction) Validate() error {
 }
 
 func (s *FPoint) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
@@ -41,6 +45,10 @@ func (s *FPoint) Validate() error {
 }
 
 func (s *Labels) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Data == nil {
@@ -60,6 +68,10 @@ func (s *Labels) Validate() error {
 }
 
 func (s *Maps) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Data == nil {
@@ -104,6 +116,10 @@ func (s Matrix) Validate() error {
 }
 
 func (s *MatrixResult) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Result.Validate(); err != nil {
@@ -139,6 +155,10 @@ func (s PrometheusDuration) Validate() error {
 }
 
 func (s *Push) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError
@@ -172,6 +192,10 @@ func (s *Push) Validate() error {
 }
 
 func (s *QueryResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -218,6 +242,10 @@ func (s QueryResponseData) Validate() error {
 }
 
 func (s *Sample) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Value.Validate(); err != nil {
@@ -237,6 +265,10 @@ func (s *Sample) Validate() error {
 }
 
 func (s *ScalarResult) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Result.Validate(); err != nil {
@@ -256,6 +288,10 @@ func (s *ScalarResult) Validate() error {
 }
 
 func (s *Series) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError
@@ -289,6 +325,10 @@ func (s *Series) Validate() error {
 }
 
 func (s *Stream) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Values == nil {
@@ -333,6 +373,10 @@ func (s Streams) Validate() error {
 }
 
 func (s *StreamsResult) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Result.Validate(); err != nil {
@@ -352,6 +396,10 @@ func (s *StreamsResult) Validate() error {
 }
 
 func (s *Values) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Data == nil {
@@ -396,6 +444,10 @@ func (s Vector) Validate() error {
 }
 
 func (s *VectorResult) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Result.Validate(); err != nil {

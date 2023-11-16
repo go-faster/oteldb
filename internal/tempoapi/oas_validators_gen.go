@@ -41,6 +41,10 @@ func (s AnyValue) Validate() error {
 }
 
 func (s *ArrayValue) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.ArrayValue == nil {
@@ -102,6 +106,10 @@ func (s Attributes) Validate() error {
 }
 
 func (s *DoubleValue) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.DoubleValue)); err != nil {
@@ -121,6 +129,10 @@ func (s *DoubleValue) Validate() error {
 }
 
 func (s *KeyValue) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Value.Validate(); err != nil {
@@ -140,6 +152,10 @@ func (s *KeyValue) Validate() error {
 }
 
 func (s *KvlistValue) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.KvlistValue == nil {
@@ -176,6 +192,10 @@ func (s *KvlistValue) Validate() error {
 }
 
 func (s *TempoSpan) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Attributes.Validate(); err != nil {
@@ -195,6 +215,10 @@ func (s *TempoSpan) Validate() error {
 }
 
 func (s *TempoSpanSet) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Spans == nil {
@@ -242,6 +266,10 @@ func (s *TempoSpanSet) Validate() error {
 }
 
 func (s *TraceSearchMetadata) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.SpanSet.Get(); ok {
@@ -268,6 +296,10 @@ func (s *TraceSearchMetadata) Validate() error {
 }
 
 func (s *Traces) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError

@@ -70,6 +70,10 @@ func (s OutputFormat) Validate() error {
 }
 
 func (s *QueryStatus) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Engine.Validate(); err != nil {

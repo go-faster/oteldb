@@ -11,6 +11,10 @@ import (
 )
 
 func (s *AlertingRule) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.State.Get(); ok {
@@ -83,6 +87,10 @@ func (s AlertingRuleState) Validate() error {
 }
 
 func (s *Bucket) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).ValidateStringified(float64(s.Lower)); err != nil {
@@ -151,6 +159,10 @@ func (s Data) Validate() error {
 }
 
 func (s *Exemplar) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Value.Get(); ok {
@@ -202,6 +214,10 @@ func (s Exemplars) Validate() error {
 }
 
 func (s *ExemplarsSet) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError
@@ -235,6 +251,10 @@ func (s *ExemplarsSet) Validate() error {
 }
 
 func (s *FPoint) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
@@ -265,6 +285,10 @@ func (s *FPoint) Validate() error {
 }
 
 func (s *Fail) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.ErrorType.Validate(); err != nil {
@@ -323,6 +347,10 @@ func (s FailErrorType) Validate() error {
 }
 
 func (s *FailStatusCode) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Response.Validate(); err != nil {
@@ -353,6 +381,10 @@ func (s GetRulesType) Validate() error {
 }
 
 func (s *HPoint) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
@@ -383,6 +415,10 @@ func (s *HPoint) Validate() error {
 }
 
 func (s *Histogram) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.Count)); err != nil {
@@ -463,6 +499,10 @@ func (s LabelValues) Validate() error {
 }
 
 func (s *LabelValuesResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -490,6 +530,10 @@ func (s Labels) Validate() error {
 }
 
 func (s *LabelsResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -509,6 +553,10 @@ func (s *LabelsResponse) Validate() error {
 }
 
 func (s *Matrix) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Result == nil {
@@ -545,6 +593,10 @@ func (s *Matrix) Validate() error {
 }
 
 func (s *MatrixResultItem) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError
@@ -642,6 +694,10 @@ func (s Metadata) Validate() error {
 }
 
 func (s *MetadataResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -661,6 +717,10 @@ func (s *MetadataResponse) Validate() error {
 }
 
 func (s *MetricMetadata) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Type.Get(); ok {
@@ -710,6 +770,10 @@ func (s MetricMetadataType) Validate() error {
 }
 
 func (s *QueryExemplarsResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -729,6 +793,10 @@ func (s *QueryExemplarsResponse) Validate() error {
 }
 
 func (s *QueryResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -748,6 +816,10 @@ func (s *QueryResponse) Validate() error {
 }
 
 func (s *RecordingRule) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Health.Validate(); err != nil {
@@ -795,6 +867,10 @@ func (s Rule) Validate() error {
 }
 
 func (s *RuleGroup) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError
@@ -877,6 +953,10 @@ func (s RuleHealth) Validate() error {
 }
 
 func (s *Rules) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Groups == nil {
@@ -913,6 +993,10 @@ func (s *Rules) Validate() error {
 }
 
 func (s *RulesResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -932,6 +1016,10 @@ func (s *RulesResponse) Validate() error {
 }
 
 func (s *Sample) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
@@ -962,6 +1050,10 @@ func (s *Sample) Validate() error {
 }
 
 func (s *Scalar) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Result.Validate(); err != nil {
@@ -989,6 +1081,10 @@ func (s Series) Validate() error {
 }
 
 func (s *SeriesForm) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Match == nil {
@@ -1008,6 +1104,10 @@ func (s *SeriesForm) Validate() error {
 }
 
 func (s *SeriesResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Data.Validate(); err != nil {
@@ -1027,6 +1127,10 @@ func (s *SeriesResponse) Validate() error {
 }
 
 func (s *String) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Result.Validate(); err != nil {
@@ -1046,6 +1150,10 @@ func (s *String) Validate() error {
 }
 
 func (s *StringValue) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.T)); err != nil {
@@ -1065,6 +1173,10 @@ func (s *StringValue) Validate() error {
 }
 
 func (s *Vector) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Result == nil {
@@ -1101,6 +1213,10 @@ func (s *Vector) Validate() error {
 }
 
 func (s *VectorResultItem) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Value.Validate(); err != nil {

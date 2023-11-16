@@ -15,7 +15,7 @@ import (
 )
 
 func encodeEchoResponse(response EchoOK, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -28,7 +28,7 @@ func encodeEchoResponse(response EchoOK, w http.ResponseWriter, span trace.Span)
 }
 
 func encodeSearchResponse(response *Traces, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -42,7 +42,7 @@ func encodeSearchResponse(response *Traces, w http.ResponseWriter, span trace.Sp
 }
 
 func encodeSearchTagValuesResponse(response *TagValues, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -56,7 +56,7 @@ func encodeSearchTagValuesResponse(response *TagValues, w http.ResponseWriter, s
 }
 
 func encodeSearchTagValuesV2Response(response *TagValuesV2, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -70,7 +70,7 @@ func encodeSearchTagValuesV2Response(response *TagValuesV2, w http.ResponseWrite
 }
 
 func encodeSearchTagsResponse(response *TagNames, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 	span.SetStatus(codes.Ok, http.StatusText(200))
 
@@ -109,15 +109,14 @@ func encodeTraceByIDResponse(response TraceByIDRes, w http.ResponseWriter, span 
 }
 
 func encodeErrorResponse(response *ErrorStatusCode, w http.ResponseWriter, span trace.Span) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	code := response.StatusCode
 	if code == 0 {
 		// Set default status code.
 		code = http.StatusOK
 	}
 	w.WriteHeader(code)
-	st := http.StatusText(code)
-	if code >= http.StatusBadRequest {
+	if st := http.StatusText(code); code >= http.StatusBadRequest {
 		span.SetStatus(codes.Error, st)
 	} else {
 		span.SetStatus(codes.Ok, st)

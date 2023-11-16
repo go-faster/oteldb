@@ -1613,15 +1613,6 @@ func (c *Client) sendPostSeries(ctx context.Context, request *SeriesForm) (res *
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/series"),
 	}
-	// Validate request before sending.
-	if err := func() error {
-		if err := request.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
-	}
 
 	// Run stopwatch.
 	startTime := time.Now()

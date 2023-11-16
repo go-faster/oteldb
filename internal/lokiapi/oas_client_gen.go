@@ -473,22 +473,6 @@ func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoCont
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/push"),
 	}
-	// Validate request before sending.
-	switch request := request.(type) {
-	case *Push:
-		if err := func() error {
-			if err := request.Validate(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return res, errors.Wrap(err, "validate")
-		}
-	case *PushReqApplicationXProtobuf:
-		// Validation is not required for this type.
-	default:
-		return res, errors.Errorf("unexpected request type: %T", request)
-	}
 
 	// Run stopwatch.
 	startTime := time.Now()

@@ -47,6 +47,15 @@ func decodeGetLabelValuesResponse(resp *http.Response) (res *LabelValuesResponse
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -82,6 +91,15 @@ func decodeGetLabelValuesResponse(resp *http.Response) (res *LabelValuesResponse
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -130,6 +148,15 @@ func decodeGetLabelsResponse(resp *http.Response) (res *LabelsResponse, _ error)
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -165,6 +192,15 @@ func decodeGetLabelsResponse(resp *http.Response) (res *LabelsResponse, _ error)
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -213,6 +249,15 @@ func decodeGetMetadataResponse(resp *http.Response) (res *MetadataResponse, _ er
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -248,6 +293,15 @@ func decodeGetMetadataResponse(resp *http.Response) (res *MetadataResponse, _ er
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -296,6 +350,15 @@ func decodeGetQueryResponse(resp *http.Response) (res *QueryResponse, _ error) {
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -331,6 +394,15 @@ func decodeGetQueryResponse(resp *http.Response) (res *QueryResponse, _ error) {
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -379,6 +451,15 @@ func decodeGetQueryExemplarsResponse(resp *http.Response) (res *QueryExemplarsRe
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -414,6 +495,15 @@ func decodeGetQueryExemplarsResponse(resp *http.Response) (res *QueryExemplarsRe
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -462,6 +552,15 @@ func decodeGetQueryRangeResponse(resp *http.Response) (res *QueryResponse, _ err
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -497,6 +596,15 @@ func decodeGetQueryRangeResponse(resp *http.Response) (res *QueryResponse, _ err
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -545,6 +653,15 @@ func decodeGetRulesResponse(resp *http.Response) (res *RulesResponse, _ error) {
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -580,6 +697,15 @@ func decodeGetRulesResponse(resp *http.Response) (res *RulesResponse, _ error) {
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -628,6 +754,15 @@ func decodeGetSeriesResponse(resp *http.Response) (res *SeriesResponse, _ error)
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -663,6 +798,15 @@ func decodeGetSeriesResponse(resp *http.Response) (res *SeriesResponse, _ error)
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -711,6 +855,15 @@ func decodePostLabelsResponse(resp *http.Response) (res *LabelsResponse, _ error
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -746,6 +899,15 @@ func decodePostLabelsResponse(resp *http.Response) (res *LabelsResponse, _ error
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -794,6 +956,15 @@ func decodePostQueryResponse(resp *http.Response) (res *QueryResponse, _ error) 
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -829,6 +1000,15 @@ func decodePostQueryResponse(resp *http.Response) (res *QueryResponse, _ error) 
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -877,6 +1057,15 @@ func decodePostQueryExemplarsResponse(resp *http.Response) (res *QueryExemplarsR
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -912,6 +1101,15 @@ func decodePostQueryExemplarsResponse(resp *http.Response) (res *QueryExemplarsR
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -960,6 +1158,15 @@ func decodePostQueryRangeResponse(resp *http.Response) (res *QueryResponse, _ er
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -995,6 +1202,15 @@ func decodePostQueryRangeResponse(resp *http.Response) (res *QueryResponse, _ er
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,
@@ -1043,6 +1259,15 @@ func decodePostSeriesResponse(resp *http.Response) (res *SeriesResponse, _ error
 				}
 				return res, err
 			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
+			}
 			return &response, nil
 		default:
 			return res, validate.InvalidContentType(ct)
@@ -1078,6 +1303,15 @@ func decodePostSeriesResponse(resp *http.Response) (res *SeriesResponse, _ error
 					Err:         err,
 				}
 				return res, err
+			}
+			// Validate response.
+			if err := func() error {
+				if err := response.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return res, errors.Wrap(err, "validate")
 			}
 			return &FailStatusCode{
 				StatusCode: resp.StatusCode,

@@ -11,6 +11,10 @@ import (
 )
 
 func (s *ApplicationMetadata) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Units.Get(); ok {
@@ -56,6 +60,10 @@ func (s ApplicationMetadataUnits) Validate() error {
 }
 
 func (s *FlamebearerMetadataV1) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if value, ok := s.Units.Get(); ok {
@@ -101,6 +109,10 @@ func (s FlamebearerMetadataV1Units) Validate() error {
 }
 
 func (s *FlamebearerProfileV1) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Flamebearer.Validate(); err != nil {
@@ -207,6 +219,10 @@ func (s FlamebearerProfileV1Groups) Validate() error {
 }
 
 func (s *FlamebearerTimelineV1) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Samples == nil {
@@ -226,6 +242,10 @@ func (s *FlamebearerTimelineV1) Validate() error {
 }
 
 func (s *FlamebearerV1) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.Names == nil {
@@ -273,6 +293,10 @@ func (s *FlamebearerV1) Validate() error {
 }
 
 func (s *Heatmap) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		var failures []validate.FieldError

@@ -11,6 +11,10 @@ import (
 )
 
 func (s *Event) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.EventID.Validate(); err != nil {
@@ -71,6 +75,10 @@ func (s EventID) Validate() error {
 }
 
 func (s *Span) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.TraceID.Validate(); err != nil {
