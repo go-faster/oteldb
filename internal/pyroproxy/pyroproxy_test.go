@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/pyroscope-io/client/upstream"
-	"github.com/pyroscope-io/client/upstream/remote"
+	"github.com/grafana/pyroscope-go/upstream"
+	"github.com/grafana/pyroscope-go/upstream/remote"
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-faster/oteldb/internal/pyroscopeapi"

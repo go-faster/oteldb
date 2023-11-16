@@ -16,12 +16,12 @@ require (
 	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.4.0
+	github.com/grafana/pyroscope-go v1.0.4
 	github.com/ogen-go/ogen v0.77.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.89.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.45.0
 	github.com/prometheus/prometheus v0.48.0-rc.2
-	github.com/pyroscope-io/client v0.7.2
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.26.0
