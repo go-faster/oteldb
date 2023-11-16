@@ -16,7 +16,7 @@ require (
 	github.com/go-faster/tcpproxy v0.1.0
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.4.0
-	github.com/ogen-go/ogen v0.77.0
+	github.com/ogen-go/ogen v0.78.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.89.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.45.0
