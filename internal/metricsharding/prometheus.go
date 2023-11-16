@@ -748,10 +748,17 @@ type pointIterator struct {
 
 var _ chunkenc.Iterator = (*pointIterator)(nil)
 
+func newPointIterator(data []metricstorage.Point) *pointIterator {
+	return &pointIterator{
+		data: data,
+		n:    -1,
+	}
+}
+
 // Next advances the iterator by one and returns the type of the value
 // at the new position (or ValNone if the iterator is exhausted).
 func (p *pointIterator) Next() chunkenc.ValueType {
-	if p.n >= len(p.data) {
+	if p.n+1 >= len(p.data) {
 		return chunkenc.ValNone
 	}
 	p.n++
@@ -772,9 +779,10 @@ func (p *pointIterator) Seek(t int64) chunkenc.ValueType {
 		return cmp.Compare(p.Timestamp, seek)
 	})
 	if idx >= len(p.data) {
+		p.n = len(p.data)
 		return chunkenc.ValNone
 	}
-	p.n = idx
+	p.n = idx - 1
 	return chunkenc.ValFloat
 }
 
