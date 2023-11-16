@@ -752,7 +752,7 @@ var _ chunkenc.Iterator = (*pointIterator)(nil)
 // at the new position (or ValNone if the iterator is exhausted).
 func (p *pointIterator) Next() chunkenc.ValueType {
 	if p.n >= len(p.data) {
-		return chunkenc.ValFloat
+		return chunkenc.ValNone
 	}
 	p.n++
 	return chunkenc.ValFloat
