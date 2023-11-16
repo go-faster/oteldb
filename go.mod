@@ -21,7 +21,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.89.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/common v0.45.0
-	github.com/prometheus/prometheus v0.48.0-rc.2
+	github.com/prometheus/prometheus v0.48.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.26.0
