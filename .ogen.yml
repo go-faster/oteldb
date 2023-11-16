@@ -1,0 +1,5 @@
+generator:
+  convenient_errors: on
+  features:
+    enable:
+      - "debug/example_tests"
