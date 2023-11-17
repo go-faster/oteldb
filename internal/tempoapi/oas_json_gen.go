@@ -288,12 +288,17 @@ func (s *ArrayValue) UnmarshalJSON(data []byte) error {
 // Encode encodes Attributes as json.
 func (s Attributes) Encode(e *jx.Encoder) {
 	unwrapped := []KeyValue(s)
-
-	e.ArrStart()
-	for _, elem := range unwrapped {
-		elem.Encode(e)
+	if unwrapped == nil {
+		e.ArrEmpty()
+		return
 	}
-	e.ArrEnd()
+	if unwrapped != nil {
+		e.ArrStart()
+		for _, elem := range unwrapped {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
 }
 
 // Decode decodes Attributes from json.

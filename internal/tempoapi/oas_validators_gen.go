@@ -82,9 +82,6 @@ func (s *ArrayValue) Validate() error {
 
 func (s Attributes) Validate() error {
 	alias := ([]KeyValue)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
-	}
 	var failures []validate.FieldError
 	for i, elem := range alias {
 		if err := func() error {
