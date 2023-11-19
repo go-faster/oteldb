@@ -1,4 +1,8 @@
 version: "3"
+
+volumes:
+  prom_data:
+
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:23.4
@@ -23,6 +27,7 @@ services:
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
     ports:
       # Querier ports
+      - "9090:9090"   # prometheus API
       - "3200:3200"   # tempo REST API
       # - "9095:9095"   # tempo gRPC API
       - "3100:3100"   # loki REST API
@@ -43,6 +48,36 @@ services:
     depends_on:
       - oteldb
 
+  # to scrape node-exporter
+  # also can remote-write to otelcol
+  prometheus:
+    image: prom/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9091:9090"
+    restart: unless-stopped
+    volumes:
+      - ../prometheus:/etc/prometheus
+      - prom_data:/prometheus
+
+  # to produce some metrics
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.processes'
+      - '--web.max-requests=40'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
   grafana:
     image: "grafana/grafana:10.0.0"
     environment:
@@ -54,5 +89,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ../grafana.ini:/etc/grafana/grafana.ini
-      - ../grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ../grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
+      - ../grafana/dashboards:/etc/grafana/dashboards:ro
