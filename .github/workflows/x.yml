@@ -1,6 +1,8 @@
 name: x
 
 on:
+  push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -15,5 +17,3 @@ jobs:
     uses: go-faster/x/.github/workflows/cover.yml@main
   lint:
     uses: go-faster/x/.github/workflows/lint.yml@main
-  commit:
-    uses: go-faster/x/.github/workflows/commit.yml@main
