@@ -47,6 +47,6 @@ func NewQuerier(c *chpool.Pool, opts QuerierOptions) (*Querier, error) {
 	return &Querier{
 		ch:     c,
 		tables: opts.Tables,
-		tracer: otel.Tracer("chstorage.Querier"),
+		tracer: opts.TracerProvider.Tracer("chstorage.Querier"),
 	}, nil
 }
