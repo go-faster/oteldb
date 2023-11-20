@@ -21,6 +21,7 @@ type Table struct {
 	Attributes      proto.ColMap[string, string]     // attribute
 }
 
+// Rows returns Trace per row.
 func (t Table) Rows() []Trace {
 	var out []Trace
 	for i := 0; i < t.TraceID.Rows(); i++ {
@@ -40,6 +41,7 @@ func (t Table) Rows() []Trace {
 	return out
 }
 
+// Trace is a single trace span.
 type Trace struct {
 	TraceID       trace.TraceID
 	SpanID        trace.SpanID
@@ -50,6 +52,7 @@ type Trace struct {
 	Attributes    map[string]string
 }
 
+// Result returns proto.Results for Table.
 func (t *Table) Result() proto.Results {
 	return proto.Results{
 		{Name: "trace_id", Data: &t.TraceID},
@@ -63,6 +66,7 @@ func (t *Table) Result() proto.Results {
 	}
 }
 
+// Columns returns column names (and mappings) for doing SELECTS.
 func (t *Table) Columns() []string {
 	var out []string
 	for _, v := range t.Result() {
@@ -78,6 +82,7 @@ func (t *Table) Columns() []string {
 	return out
 }
 
+// NewTable creates and initializes new Table.
 func NewTable() *Table {
 	return &Table{
 		OperationName: new(proto.ColStr).LowCardinality(),

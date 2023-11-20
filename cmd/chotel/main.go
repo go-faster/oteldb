@@ -40,6 +40,7 @@ func main() {
 	})
 }
 
+// App is the trace exporter application.
 type App struct {
 	log     *zap.Logger
 	metrics *app.Metrics
@@ -64,6 +65,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS opentelemetry_span_export
         TTL toStartOfMinute(exported_at) + INTERVAL 10 MINUTE
 `
 
+// NewApp initializes the trace exporter application.
 func NewApp(logger *zap.Logger, metrics *app.Metrics) (*App, error) {
 	a := &App{
 		log:            logger,
@@ -81,6 +83,7 @@ func NewApp(logger *zap.Logger, metrics *app.Metrics) (*App, error) {
 	return a, nil
 }
 
+// Run starts and runs the application.
 func (a *App) Run(ctx context.Context) error {
 	ctx = zctx.Base(ctx, a.log)
 	if err := a.setup(ctx); err != nil {
