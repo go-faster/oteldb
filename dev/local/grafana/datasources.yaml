@@ -23,7 +23,7 @@ datasources:
       serviceMap:
         datasourceUid: promoteldb
 
-  - name: Prometheus (oteldb)
+  - name: PromQL oteldb
     type: prometheus
     access: proxy
     orgId: 1
@@ -44,3 +44,16 @@ datasources:
       port: 9000
       server: clickhouse
       tlsSkipVerify: true
+
+  - name: Jaeger
+    type: jaeger
+    uid: jaeger
+    url: http://jaeger:16686
+    access: proxy
+    jsonData:
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
