@@ -10,6 +10,8 @@ services:
       - "9009:9009"
       - "8123:8123"
       - "9000:9000"
+    volumes:
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
 
   oteldb:
     image: go-faster/oteldb
@@ -54,12 +56,31 @@ services:
     image: prom/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-remote-write-receiver'
     ports:
       - "9091:9090"
     restart: unless-stopped
     volumes:
       - ../prometheus:/etc/prometheus
       - prom_data:/prometheus
+
+  # https://opentelemetry.io/docs/collector/installation/#docker-compose
+  otelcol:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0
+    # ports:
+      # - 1888:1888 # pprof extension
+      # - 8888:8888 # Prometheus metrics exposed by the Collector
+      # - 8889:8889 # Prometheus exporter metrics
+      # - 13133:13133 # health_check extension
+      # - 14317:4317 # OTLP gRPC receiver
+      # - 14318:4318 # OTLP http receiver
+      # - 55679:55679 # zpages extension
+    volumes:
+      - ../otelcol.yml:/etc/otelcol-contrib/config.yaml
+    depends_on:
+      - prometheus
+      - oteldb
+      - node-exporter
 
   # to produce some metrics
   node-exporter:
@@ -86,6 +107,7 @@ services:
       - GF_AUTH_DISABLE_LOGIN_FORM=true
       - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
       - GF_LOG_LEVEL=debug
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
     ports:
       - "3000:3000"
     volumes:
@@ -93,3 +115,7 @@ services:
       - ../grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ../grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
       - ../grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - oteldb
+      - prometheus
+      - otelcol

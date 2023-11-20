@@ -4,26 +4,7 @@ global:
   evaluation_interval: 5s
 
 alerting:
-  alertmanagers:
-    - static_configs:
-        - targets: []
-      scheme: http
-      timeout: 10s
-      api_version: v1
 
-scrape_configs:
-  - job_name: prometheus
-    honor_timestamps: true
-    metrics_path: /metrics
-    scheme: http
-    static_configs:
-      - targets:
-          - localhost:9090
-
-  - job_name: node-exporter
-    honor_timestamps: true
-    metrics_path: /metrics
-    scheme: http
-    static_configs:
-      - targets:
-          - node-exporter:9100
+# scraping is done in otelcol
+# metrics are ingested by prometheus remote write
+scrape_configs: []

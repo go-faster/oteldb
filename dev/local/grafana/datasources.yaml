@@ -37,3 +37,10 @@ datasources:
     url: http://prometheus:9090
     uid: prometheus
     isDefault: true
+
+  - name: ClickHouse
+    type: grafana-clickhouse-datasource
+    jsonData:
+      port: 9000
+      server: clickhouse
+      tlsSkipVerify: true
