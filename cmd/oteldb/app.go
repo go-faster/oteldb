@@ -31,7 +31,7 @@ import (
 type App struct {
 	services map[string]func(context.Context) error
 
-	storage
+	otelStorage
 
 	lg      *zap.Logger
 	metrics Metrics
@@ -50,18 +50,17 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 
 	switch storageType {
 	case "ch":
-		inserter, querier, err := setupCH(ctx, os.Getenv("CH_DSN"), lg, m)
+		store, err := setupCH(ctx, os.Getenv("CH_DSN"), lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
-		app.traceInserter = inserter
-		app.traceQuerier = querier
+		app.otelStorage = store
 	case "yt", "":
 		store, err := setupYT(ctx, lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
-		app.storage = store
+		app.otelStorage = store
 	default:
 		return nil, errors.Errorf("unknown storage %q", storageType)
 	}
@@ -191,7 +190,7 @@ func (app *App) trySetupLoki() error {
 }
 
 func (app *App) trySetupProm() error {
-	q := app.metricShard
+	q := app.metricsQuerier
 	if q == nil {
 		return nil
 	}
@@ -220,7 +219,7 @@ func (app *App) setupReceiver() error {
 	if i := app.logInserter; i != nil {
 		consumers.Logs = logstorage.NewConsumer(i)
 	}
-	if c := app.metricConsumer; c != nil {
+	if c := app.metricsConsumer; c != nil {
 		consumers.Metrics = c
 	}
 
