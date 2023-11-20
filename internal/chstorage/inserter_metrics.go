@@ -7,27 +7,65 @@ import (
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"golang.org/x/sync/errgroup"
 )
 
 // ConsumeMetrics inserts given metrics.
 func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
-	c := newMetricColumns()
-	if err := i.mapMetrics(c, metrics); err != nil {
+	var (
+		points = newMetricColumns()
+
+		labels        = newLabelsColumns()
+		collectLabels = func(m pcommon.Map) {
+			m.Range(func(k string, v pcommon.Value) bool {
+				labels.name.Append(k)
+				// FIXME(tdakkota): annoying allocations
+				labels.value.Append(v.AsString())
+				return true
+			})
+		}
+	)
+
+	if err := i.mapMetrics(points, metrics, collectLabels); err != nil {
 		return errors.Wrap(err, "map metrics")
 	}
 
-	input := c.Input()
-	if err := i.ch.Do(ctx, ch.Query{
-		Body:  input.Into(i.tables.Points),
-		Input: input,
-	}); err != nil {
-		return errors.Wrap(err, "insert")
+	{
+		grp, grpCtx := errgroup.WithContext(ctx)
+
+		grp.Go(func() error {
+			ctx := grpCtx
+
+			input := points.Input()
+			if err := i.ch.Do(ctx, ch.Query{
+				Body:  input.Into(i.tables.Points),
+				Input: input,
+			}); err != nil {
+				return errors.Wrap(err, "insert points")
+			}
+			return nil
+		})
+		grp.Go(func() error {
+			ctx := grpCtx
+
+			input := labels.Input()
+			if err := i.ch.Do(ctx, ch.Query{
+				Body:  input.Into(i.tables.Labels),
+				Input: input,
+			}); err != nil {
+				return errors.Wrap(err, "insert labels")
+			}
+			return nil
+		})
+		if err := grp.Wait(); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (i *Inserter) mapMetrics(c *metricColumns, metrics pmetric.Metrics) error {
+func (i *Inserter) mapMetrics(c *metricColumns, metrics pmetric.Metrics, collectLabels func(attrs pcommon.Map)) error {
 	var (
 		addPoints = func(
 			name string,
@@ -50,6 +88,7 @@ func (i *Inserter) mapMetrics(c *metricColumns, metrics pmetric.Metrics) error {
 					return errors.Errorf("unexpected metric %q value type: %v", name, typ)
 				}
 
+				collectLabels(attrs)
 				c.name.Append(name)
 				c.ts.Append(ts)
 				c.value.Append(val)
@@ -64,6 +103,7 @@ func (i *Inserter) mapMetrics(c *metricColumns, metrics pmetric.Metrics) error {
 	for i := 0; i < resMetrics.Len(); i++ {
 		resMetric := resMetrics.At(i)
 		resAttrs := resMetric.Resource().Attributes()
+		collectLabels(resAttrs)
 
 		scopeMetrics := resMetric.ScopeMetrics()
 		for i := 0; i < scopeMetrics.Len(); i++ {
