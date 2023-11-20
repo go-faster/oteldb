@@ -60,7 +60,6 @@ exporters:
     tls:
       insecure: true
   debug:
-    verbosity: detailed
     sampling_initial: 5
     sampling_thereafter: 200
 
@@ -79,7 +78,7 @@ service:
     metrics:
       receivers: [otlp, prometheus, hostmetrics]
       processors: [batch]
-      exporters: [otlp, prometheusremotewrite, debug]
+      exporters: [otlp, prometheusremotewrite]
     logs:
       receivers: [otlp]
       processors: [batch]
