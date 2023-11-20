@@ -15,6 +15,8 @@ import (
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 	"github.com/prometheus/prometheus/util/annotations"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var _ storage.Queryable = (*Querier)(nil)
@@ -29,18 +31,23 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		maxTime = time.UnixMilli(maxt)
 	}
 	return &promQuerier{
-		ch:   q.ch,
 		mint: minTime,
 		maxt: maxTime,
+
+		ch:     q.ch,
+		tables: q.tables,
+		tracer: q.tracer,
 	}, nil
 }
 
 type promQuerier struct {
-	ch    chClient
-	table Tables
-
 	mint time.Time
 	maxt time.Time
+
+	ch     chClient
+	tables Tables
+
+	tracer trace.Tracer
 }
 
 var _ storage.Querier = (*promQuerier)(nil)
@@ -83,7 +90,8 @@ type seriesKey struct {
 	resource   string
 }
 
-func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHints, matchers ...*labels.Matcher) (storage.SeriesSet, error) {
+func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
+	table := p.tables.Points
 	var (
 		start = p.mint
 		end   = p.maxt
@@ -97,8 +105,22 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 		}
 	}
 
+	ctx, span := p.tracer.Start(ctx, "SelectSeries",
+		trace.WithAttributes(
+			attribute.Int64("chstorage.start_range", start.UnixNano()),
+			attribute.Int64("chstorage.end_range", end.UnixNano()),
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	var query strings.Builder
-	fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", p.table.Points)
+	fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
 	if !start.IsZero() {
 		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(ts) >= %d\n", start.UnixNano())
 	}
