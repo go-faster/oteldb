@@ -1,5 +1,12 @@
 package chstorage
 
+import (
+	"github.com/go-faster/jx"
+	"go.opentelemetry.io/collector/pdata/pcommon"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
+)
+
 const (
 	spansSchema = `CREATE TABLE IF NOT EXISTS %s
 (
@@ -11,82 +18,153 @@ const (
 	kind Enum8(` + kindDDL + `),
 	start DateTime64(9),
 	end DateTime64(9),
-	attrs_str_keys        Array(LowCardinality(String)),
-	attrs_str_values      Array(String),
-	attrs_int_keys        Array(LowCardinality(String)),
-	attrs_int_values      Array(Int64),
-	attrs_float_keys      Array(LowCardinality(String)),
-	attrs_float_values    Array(Float64),
-	attrs_bool_keys       Array(LowCardinality(String)),
-	attrs_bool_values     Array(Bool),
-	attrs_bytes_keys      Array(LowCardinality(String)),
-	attrs_bytes_values    Array(String),
 	status_code Int32,
 	status_message String,
 
 	batch_id UUID,
-	resource_attrs_str_keys    		Array(LowCardinality(String)),
-	resource_attrs_str_values  		Array(String),
-	resource_attrs_int_keys    		Array(LowCardinality(String)),
-	resource_attrs_int_values  		Array(Int64),
-	resource_attrs_float_keys  		Array(LowCardinality(String)),
-	resource_attrs_float_values		Array(Float64),
-	resource_attrs_bool_keys   		Array(LowCardinality(String)),
-	resource_attrs_bool_values 		Array(Bool),
-	resource_attrs_bytes_keys  		Array(LowCardinality(String)),
-	resource_attrs_bytes_values		Array(String),
+	attributes String,
+	resource String,
 
 	scope_name String,
 	scope_version String,
-	scope_attrs_str_keys    		Array(LowCardinality(String)),
-	scope_attrs_str_values  		Array(String),
-	scope_attrs_int_keys    		Array(LowCardinality(String)),
-	scope_attrs_int_values  		Array(Int64),
-	scope_attrs_float_keys  		Array(LowCardinality(String)),
-	scope_attrs_float_values		Array(Float64),
-	scope_attrs_bool_keys   		Array(LowCardinality(String)),
-	scope_attrs_bool_values 		Array(Bool),
-	scope_attrs_bytes_keys  		Array(LowCardinality(String)),
-	scope_attrs_bytes_values		Array(String),
+	scope_attributes String,
 
 	events_timestamps Array(DateTime64(9)),
 	events_names Array(String),
-	events_attrs_str_keys    		Array(Array(LowCardinality(String))),
-	events_attrs_str_values  		Array(Array(String)),
-	events_attrs_int_keys    		Array(Array(LowCardinality(String))),
-	events_attrs_int_values  		Array(Array(Int64)),
-	events_attrs_float_keys  		Array(Array(LowCardinality(String))),
-	events_attrs_float_values		Array(Array(Float64)),
-	events_attrs_bool_keys   		Array(Array(LowCardinality(String))),
-	events_attrs_bool_values 		Array(Array(Bool)),
-	events_attrs_bytes_keys  		Array(Array(LowCardinality(String))),
-	events_attrs_bytes_values		Array(Array(String)),
+	events_attributes Array(String),
 
 	links_trace_ids Array(UUID),
 	links_span_ids Array(UInt64),
 	links_tracestates Array(String),
-	links_attrs_str_keys    		Array(Array(LowCardinality(String))),
-	links_attrs_str_values  		Array(Array(String)),
-	links_attrs_int_keys    		Array(Array(LowCardinality(String))),
-	links_attrs_int_values  		Array(Array(Int64)),
-	links_attrs_float_keys  		Array(Array(LowCardinality(String))),
-	links_attrs_float_values		Array(Array(Float64)),
-	links_attrs_bool_keys   		Array(Array(LowCardinality(String))),
-	links_attrs_bool_values 		Array(Array(Bool)),
-	links_attrs_bytes_keys  		Array(Array(LowCardinality(String))),
-	links_attrs_bytes_values		Array(Array(String)),
+	links_attributes Array(String)
 )
 ENGINE = MergeTree()
 PRIMARY KEY (trace_id, span_id);`
-	kindDDL = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
-
+	kindDDL    = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
 	tagsSchema = `CREATE TABLE IF NOT EXISTS %s
-(
-	name LowCardinality(String),
-	value String,
-	value_type Enum8(` + valueTypeDDL + `)
-)
-ENGINE = MergeTree()
-PRIMARY KEY (name);`
+	(
+		name LowCardinality(String),
+		value String,
+		value_type Enum8(` + valueTypeDDL + `)
+	)
+	ENGINE = MergeTree()
+	PRIMARY KEY (name);`
 	valueTypeDDL = `'EMPTY' = 0,'STR' = 1,'INT' = 2,'DOUBLE' = 3,'BOOL' = 4,'MAP' = 5,'SLICE' = 6,'BYTES' = 7`
 )
+
+func encodeAttributes(attrs otelstorage.Attrs) string {
+	e := jx.GetEncoder()
+	defer jx.PutEncoder(e)
+
+	encodeMap(e, attrs.AsMap())
+	return e.String()
+}
+
+func encodeValue(e *jx.Encoder, v pcommon.Value) {
+	switch v.Type() {
+	case pcommon.ValueTypeStr:
+		e.Str(v.Str())
+	case pcommon.ValueTypeInt:
+		e.Int64(v.Int())
+	case pcommon.ValueTypeDouble:
+		e.Float64(v.Double())
+	case pcommon.ValueTypeBool:
+		e.Bool(v.Bool())
+	case pcommon.ValueTypeMap:
+		m := v.Map()
+		encodeMap(e, m)
+	case pcommon.ValueTypeSlice:
+		s := v.Slice()
+		e.ArrStart()
+		for i := 0; i < s.Len(); i++ {
+			encodeValue(e, s.At(i))
+		}
+		e.ArrEnd()
+	case pcommon.ValueTypeBytes:
+		e.ByteStr(v.Bytes().AsRaw())
+	default:
+		e.Null()
+	}
+}
+
+func encodeMap(e *jx.Encoder, m pcommon.Map) {
+	if otelstorage.Attrs(m).IsZero() {
+		e.ObjEmpty()
+		return
+	}
+	e.ObjStart()
+	m.Range(func(k string, v pcommon.Value) bool {
+		e.FieldStart(k)
+		encodeValue(e, v)
+		return true
+	})
+	e.ObjEnd()
+}
+
+func decodeAttributes(s string) (otelstorage.Attrs, error) {
+	result := pcommon.NewMap()
+	err := decodeMap(jx.DecodeStr(s), result)
+	return otelstorage.Attrs(result), err
+}
+
+func decodeValue(d *jx.Decoder, val pcommon.Value) error {
+	switch d.Next() {
+	case jx.String:
+		v, err := d.Str()
+		if err != nil {
+			return err
+		}
+		val.SetStr(v)
+		return nil
+	case jx.Number:
+		n, err := d.Num()
+		if err != nil {
+			return err
+		}
+		if n.IsInt() {
+			v, err := n.Int64()
+			if err != nil {
+				return err
+			}
+			val.SetInt(v)
+		} else {
+			v, err := n.Float64()
+			if err != nil {
+				return err
+			}
+			val.SetDouble(v)
+		}
+		return nil
+	case jx.Null:
+		if err := d.Null(); err != nil {
+			return err
+		}
+		// Do nothing, keep value empty.
+		return nil
+	case jx.Bool:
+		v, err := d.Bool()
+		if err != nil {
+			return err
+		}
+		val.SetBool(v)
+		return nil
+	case jx.Array:
+		s := val.SetEmptySlice()
+		return d.Arr(func(d *jx.Decoder) error {
+			rval := s.AppendEmpty()
+			return decodeValue(d, rval)
+		})
+	case jx.Object:
+		m := val.SetEmptyMap()
+		return decodeMap(d, m)
+	default:
+		return d.Skip()
+	}
+}
+
+func decodeMap(d *jx.Decoder, m pcommon.Map) error {
+	return d.Obj(func(d *jx.Decoder, key string) error {
+		rval := m.PutEmpty(key)
+		return decodeValue(d, rval)
+	})
+}

@@ -9,8 +9,10 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -51,29 +53,18 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 		}
 
 		query.WriteString(" AND (")
-		for i, prefix := range []string{
-			"attrs",
-			"scope_attrs",
-			"resource_attrs",
+		for i, column := range []string{
+			"attributes",
+			"scope_attributes",
+			"resource",
 		} {
 			if i != 0 {
 				query.WriteString(" OR ")
 			}
-			for i, column := range []string{
-				"str",
-				"int",
-				"float",
-				"bool",
-				"bytes",
-			} {
-				if i != 0 {
-					query.WriteString(" OR ")
-				}
-				fmt.Fprintf(&query,
-					`toString( %[1]s_%[2]s_values[indexOf(%[1]s_%[2]s_keys, %[3]s)] ) = %[4]s`,
-					prefix, column, singleQuoted(key), singleQuoted(value),
-				)
-			}
+			fmt.Fprintf(&query,
+				`JSONExtract(%s, %s, 'String') = %s`,
+				column, singleQuoted(key), singleQuoted(value),
+			)
 			query.WriteByte('\n')
 		}
 		query.WriteByte(')')
@@ -228,6 +219,7 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 	}()
 
 	query := q.buildSpansetsQuery(span, params)
+	zctx.From(ctx).Debug("Query", zap.String("query", query))
 
 	iter, err := q.querySpans(ctx, query)
 	if err != nil {
@@ -294,25 +286,14 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 			// Just query spans with this attribute.
 			attr := matcher.Attribute
 			query.WriteString("(\n")
-			for i, prefix := range getTraceQLAttributeColumns(attr) {
+			for i, column := range getTraceQLAttributeColumns(attr) {
 				if i != 0 {
 					query.WriteString(" OR ")
 				}
-				for i, column := range []string{
-					"str",
-					"int",
-					"float",
-					"bool",
-					"bytes",
-				} {
-					if i != 0 {
-						query.WriteString(" OR ")
-					}
-					fmt.Fprintf(&query,
-						`has(%s_%s_keys, %s)`,
-						prefix, column, singleQuoted(attr.Name),
-					)
-				}
+				fmt.Fprintf(&query,
+					`JSONHas(%s, %s) = 1`,
+					column, singleQuoted(attr.Name),
+				)
 				query.WriteByte('\n')
 			}
 			query.WriteString("\n)")
@@ -340,33 +321,33 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 			continue
 		}
 
-		var value, typeSuffix string
+		var value, typeName string
 		switch s := matcher.Static; s.Type {
 		case traceql.TypeString:
 			value = singleQuoted(s.Str)
-			typeSuffix = "str"
+			typeName = "String"
 		case traceql.TypeInt:
 			value = strconv.FormatInt(s.AsInt(), 10)
-			typeSuffix = "int"
+			typeName = "Int64"
 		case traceql.TypeNumber:
 			value = strconv.FormatFloat(s.AsNumber(), 'f', -1, 64)
-			typeSuffix = "float"
+			typeName = "Float64"
 		case traceql.TypeBool:
 			if s.AsBool() {
 				value = "true"
 			} else {
 				value = "false"
 			}
-			typeSuffix = "bool"
+			typeName = "Boolean"
 		case traceql.TypeDuration:
 			value = strconv.FormatInt(s.AsDuration().Nanoseconds(), 10)
-			typeSuffix = "int"
+			typeName = "Int64"
 		case traceql.TypeSpanStatus:
 			value = strconv.Itoa(int(s.AsSpanStatus()))
-			typeSuffix = "int"
+			typeName = "Int64"
 		case traceql.TypeSpanKind:
 			value = strconv.Itoa(int(s.AsSpanKind()))
-			typeSuffix = "int"
+			typeName = "Int64"
 		default:
 			// Unsupported for now.
 			dropped++
@@ -398,9 +379,8 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 				if i != 0 {
 					query.WriteString("\nOR ")
 				}
-				fmt.Fprintf(&query, "%[1]s_%[2]s_values[indexOf(%[1]s_%[2]s_keys, %[3]s)] %[4]s %[5]s",
-					column, typeSuffix,
-					singleQuoted(attr.Name),
+				fmt.Fprintf(&query, "JSONExtract(%s, %s, %s) %s %s",
+					column, singleQuoted(attr.Name), singleQuoted(typeName),
 					cmp, value,
 				)
 			}
@@ -429,18 +409,18 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
 	switch attr.Scope {
 	case traceql.ScopeNone:
 		return []string{
-			"attrs",
-			"scope_attrs",
-			"resource_attrs",
+			"attributes",
+			"scope_attributes",
+			"resource",
 		}
 	case traceql.ScopeResource:
 		return []string{
-			"scope_attrs",
-			"resource_attrs",
+			"scope_attributes",
+			"resource",
 		}
 	case traceql.ScopeSpan:
 		return []string{
-			"attrs",
+			"attributes",
 		}
 	default:
 		return nil
@@ -454,9 +434,9 @@ func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Itera
 	if err := q.ch.Do(ctx, ch.Query{
 		Body:   query,
 		Result: c.Result(),
-		OnResult: func(ctx context.Context, block proto.Block) error {
-			r = c.ReadRowsTo(r)
-			return nil
+		OnResult: func(ctx context.Context, block proto.Block) (err error) {
+			r, err = c.ReadRowsTo(r)
+			return err
 		},
 	}); err != nil {
 		return nil, errors.Wrap(err, "query")

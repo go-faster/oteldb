@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
+	"github.com/go-faster/errors"
 	"github.com/google/uuid"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -19,16 +20,16 @@ type spanColumns struct {
 	kind          proto.ColEnum8
 	start         *proto.ColDateTime64
 	end           *proto.ColDateTime64
-	spanAttrs     chAttrs
 	statusCode    proto.ColInt32
 	statusMessage proto.ColStr
 
-	batchID       proto.ColUUID
-	resourceAttrs chAttrs
+	batchID    proto.ColUUID
+	attributes proto.ColStr
+	resource   proto.ColStr
 
-	scopeName    proto.ColStr
-	scopeVersion proto.ColStr
-	scopeAttrs   chAttrs
+	scopeName       proto.ColStr
+	scopeVersion    proto.ColStr
+	scopeAttributes proto.ColStr
 
 	events eventsColumns
 	links  linksColumns
@@ -36,14 +37,11 @@ type spanColumns struct {
 
 func newSpanColumns() *spanColumns {
 	return &spanColumns{
-		name:          new(proto.ColStr).LowCardinality(),
-		start:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		end:           new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		spanAttrs:     newChAttrs(),
-		resourceAttrs: newChAttrs(),
-		scopeAttrs:    newChAttrs(),
-		events:        newEventsColumns(),
-		links:         newLinksColumns(),
+		name:   new(proto.ColStr).LowCardinality(),
+		start:  new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		end:    new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		events: newEventsColumns(),
+		links:  newLinksColumns(),
 	}
 }
 
@@ -57,70 +55,25 @@ func (c *spanColumns) Input() proto.Input {
 		{Name: "kind", Data: proto.Wrap(&c.kind, kindDDL)},
 		{Name: "start", Data: c.start},
 		{Name: "end", Data: c.end},
-		{Name: "attrs_str_keys", Data: c.spanAttrs.StrKeys},
-		{Name: "attrs_str_values", Data: c.spanAttrs.StrValues},
-		{Name: "attrs_int_keys", Data: c.spanAttrs.IntKeys},
-		{Name: "attrs_int_values", Data: c.spanAttrs.IntValues},
-		{Name: "attrs_float_keys", Data: c.spanAttrs.FloatKeys},
-		{Name: "attrs_float_values", Data: c.spanAttrs.FloatValues},
-		{Name: "attrs_bool_keys", Data: c.spanAttrs.BoolKeys},
-		{Name: "attrs_bool_values", Data: c.spanAttrs.BoolValues},
-		{Name: "attrs_bytes_keys", Data: c.spanAttrs.BytesKeys},
-		{Name: "attrs_bytes_values", Data: c.spanAttrs.BytesValues},
 		{Name: "status_code", Data: c.statusCode},
 		{Name: "status_message", Data: c.statusMessage},
 
 		{Name: "batch_id", Data: c.batchID},
-		{Name: "resource_attrs_str_keys", Data: c.resourceAttrs.StrKeys},
-		{Name: "resource_attrs_str_values", Data: c.resourceAttrs.StrValues},
-		{Name: "resource_attrs_int_keys", Data: c.resourceAttrs.IntKeys},
-		{Name: "resource_attrs_int_values", Data: c.resourceAttrs.IntValues},
-		{Name: "resource_attrs_float_keys", Data: c.resourceAttrs.FloatKeys},
-		{Name: "resource_attrs_float_values", Data: c.resourceAttrs.FloatValues},
-		{Name: "resource_attrs_bool_keys", Data: c.resourceAttrs.BoolKeys},
-		{Name: "resource_attrs_bool_values", Data: c.resourceAttrs.BoolValues},
-		{Name: "resource_attrs_bytes_keys", Data: c.resourceAttrs.BytesKeys},
-		{Name: "resource_attrs_bytes_values", Data: c.resourceAttrs.BytesValues},
+		{Name: "attributes", Data: c.attributes},
+		{Name: "resource", Data: c.resource},
 
 		{Name: "scope_name", Data: c.scopeName},
 		{Name: "scope_version", Data: c.scopeVersion},
-		{Name: "scope_attrs_str_keys", Data: c.scopeAttrs.StrKeys},
-		{Name: "scope_attrs_str_values", Data: c.scopeAttrs.StrValues},
-		{Name: "scope_attrs_int_keys", Data: c.scopeAttrs.IntKeys},
-		{Name: "scope_attrs_int_values", Data: c.scopeAttrs.IntValues},
-		{Name: "scope_attrs_float_keys", Data: c.scopeAttrs.FloatKeys},
-		{Name: "scope_attrs_float_values", Data: c.scopeAttrs.FloatValues},
-		{Name: "scope_attrs_bool_keys", Data: c.scopeAttrs.BoolKeys},
-		{Name: "scope_attrs_bool_values", Data: c.scopeAttrs.BoolValues},
-		{Name: "scope_attrs_bytes_keys", Data: c.scopeAttrs.BytesKeys},
-		{Name: "scope_attrs_bytes_values", Data: c.scopeAttrs.BytesValues},
+		{Name: "scope_attributes", Data: c.scopeAttributes},
 
-		{Name: "events_timestamps", Data: c.events.Timestamps},
-		{Name: "events_names", Data: c.events.Names},
-		{Name: "events_attrs_str_keys", Data: c.events.Attrs.StrKeys},
-		{Name: "events_attrs_str_values", Data: c.events.Attrs.StrValues},
-		{Name: "events_attrs_int_keys", Data: c.events.Attrs.IntKeys},
-		{Name: "events_attrs_int_values", Data: c.events.Attrs.IntValues},
-		{Name: "events_attrs_float_keys", Data: c.events.Attrs.FloatKeys},
-		{Name: "events_attrs_float_values", Data: c.events.Attrs.FloatValues},
-		{Name: "events_attrs_bool_keys", Data: c.events.Attrs.BoolKeys},
-		{Name: "events_attrs_bool_values", Data: c.events.Attrs.BoolValues},
-		{Name: "events_attrs_bytes_keys", Data: c.events.Attrs.BytesKeys},
-		{Name: "events_attrs_bytes_values", Data: c.events.Attrs.BytesValues},
+		{Name: "events_timestamps", Data: c.events.timestamps},
+		{Name: "events_names", Data: c.events.names},
+		{Name: "events_attributes", Data: c.events.attributes},
 
-		{Name: "links_trace_ids", Data: c.links.TraceIDs},
-		{Name: "links_span_ids", Data: c.links.SpanIDs},
-		{Name: "links_tracestates", Data: c.links.Tracestates},
-		{Name: "links_attrs_str_keys", Data: c.links.Attrs.StrKeys},
-		{Name: "links_attrs_str_values", Data: c.links.Attrs.StrValues},
-		{Name: "links_attrs_int_keys", Data: c.links.Attrs.IntKeys},
-		{Name: "links_attrs_int_values", Data: c.links.Attrs.IntValues},
-		{Name: "links_attrs_float_keys", Data: c.links.Attrs.FloatKeys},
-		{Name: "links_attrs_float_values", Data: c.links.Attrs.FloatValues},
-		{Name: "links_attrs_bool_keys", Data: c.links.Attrs.BoolKeys},
-		{Name: "links_attrs_bool_values", Data: c.links.Attrs.BoolValues},
-		{Name: "links_attrs_bytes_keys", Data: c.links.Attrs.BytesKeys},
-		{Name: "links_attrs_bytes_values", Data: c.links.Attrs.BytesValues},
+		{Name: "links_trace_ids", Data: c.links.traceIDs},
+		{Name: "links_span_ids", Data: c.links.spanIDs},
+		{Name: "links_tracestates", Data: c.links.tracestates},
+		{Name: "links_attributes", Data: c.links.attributes},
 	}
 }
 
@@ -134,70 +87,25 @@ func (c *spanColumns) Result() proto.Results {
 		{Name: "kind", Data: &c.kind},
 		{Name: "start", Data: c.start},
 		{Name: "end", Data: c.end},
-		{Name: "attrs_str_keys", Data: c.spanAttrs.StrKeys},
-		{Name: "attrs_str_values", Data: c.spanAttrs.StrValues},
-		{Name: "attrs_int_keys", Data: c.spanAttrs.IntKeys},
-		{Name: "attrs_int_values", Data: c.spanAttrs.IntValues},
-		{Name: "attrs_float_keys", Data: c.spanAttrs.FloatKeys},
-		{Name: "attrs_float_values", Data: c.spanAttrs.FloatValues},
-		{Name: "attrs_bool_keys", Data: c.spanAttrs.BoolKeys},
-		{Name: "attrs_bool_values", Data: c.spanAttrs.BoolValues},
-		{Name: "attrs_bytes_keys", Data: c.spanAttrs.BytesKeys},
-		{Name: "attrs_bytes_values", Data: c.spanAttrs.BytesValues},
 		{Name: "status_code", Data: &c.statusCode},
 		{Name: "status_message", Data: &c.statusMessage},
 
 		{Name: "batch_id", Data: &c.batchID},
-		{Name: "resource_attrs_str_keys", Data: c.resourceAttrs.StrKeys},
-		{Name: "resource_attrs_str_values", Data: c.resourceAttrs.StrValues},
-		{Name: "resource_attrs_int_keys", Data: c.resourceAttrs.IntKeys},
-		{Name: "resource_attrs_int_values", Data: c.resourceAttrs.IntValues},
-		{Name: "resource_attrs_float_keys", Data: c.resourceAttrs.FloatKeys},
-		{Name: "resource_attrs_float_values", Data: c.resourceAttrs.FloatValues},
-		{Name: "resource_attrs_bool_keys", Data: c.resourceAttrs.BoolKeys},
-		{Name: "resource_attrs_bool_values", Data: c.resourceAttrs.BoolValues},
-		{Name: "resource_attrs_bytes_keys", Data: c.resourceAttrs.BytesKeys},
-		{Name: "resource_attrs_bytes_values", Data: c.resourceAttrs.BytesValues},
+		{Name: "attributes", Data: &c.attributes},
+		{Name: "resource", Data: &c.resource},
 
 		{Name: "scope_name", Data: &c.scopeName},
 		{Name: "scope_version", Data: &c.scopeVersion},
-		{Name: "scope_attrs_str_keys", Data: c.scopeAttrs.StrKeys},
-		{Name: "scope_attrs_str_values", Data: c.scopeAttrs.StrValues},
-		{Name: "scope_attrs_int_keys", Data: c.scopeAttrs.IntKeys},
-		{Name: "scope_attrs_int_values", Data: c.scopeAttrs.IntValues},
-		{Name: "scope_attrs_float_keys", Data: c.scopeAttrs.FloatKeys},
-		{Name: "scope_attrs_float_values", Data: c.scopeAttrs.FloatValues},
-		{Name: "scope_attrs_bool_keys", Data: c.scopeAttrs.BoolKeys},
-		{Name: "scope_attrs_bool_values", Data: c.scopeAttrs.BoolValues},
-		{Name: "scope_attrs_bytes_keys", Data: c.scopeAttrs.BytesKeys},
-		{Name: "scope_attrs_bytes_values", Data: c.scopeAttrs.BytesValues},
+		{Name: "scope_attributes", Data: &c.scopeAttributes},
 
-		{Name: "events_timestamps", Data: c.events.Timestamps},
-		{Name: "events_names", Data: c.events.Names},
-		{Name: "events_attrs_str_keys", Data: c.events.Attrs.StrKeys},
-		{Name: "events_attrs_str_values", Data: c.events.Attrs.StrValues},
-		{Name: "events_attrs_int_keys", Data: c.events.Attrs.IntKeys},
-		{Name: "events_attrs_int_values", Data: c.events.Attrs.IntValues},
-		{Name: "events_attrs_float_keys", Data: c.events.Attrs.FloatKeys},
-		{Name: "events_attrs_float_values", Data: c.events.Attrs.FloatValues},
-		{Name: "events_attrs_bool_keys", Data: c.events.Attrs.BoolKeys},
-		{Name: "events_attrs_bool_values", Data: c.events.Attrs.BoolValues},
-		{Name: "events_attrs_bytes_keys", Data: c.events.Attrs.BytesKeys},
-		{Name: "events_attrs_bytes_values", Data: c.events.Attrs.BytesValues},
+		{Name: "events_timestamps", Data: c.events.timestamps},
+		{Name: "events_names", Data: c.events.names},
+		{Name: "events_attributes", Data: c.events.attributes},
 
-		{Name: "links_trace_ids", Data: c.links.TraceIDs},
-		{Name: "links_span_ids", Data: c.links.SpanIDs},
-		{Name: "links_tracestates", Data: c.links.Tracestates},
-		{Name: "links_attrs_str_keys", Data: c.links.Attrs.StrKeys},
-		{Name: "links_attrs_str_values", Data: c.links.Attrs.StrValues},
-		{Name: "links_attrs_int_keys", Data: c.links.Attrs.IntKeys},
-		{Name: "links_attrs_int_values", Data: c.links.Attrs.IntValues},
-		{Name: "links_attrs_float_keys", Data: c.links.Attrs.FloatKeys},
-		{Name: "links_attrs_float_values", Data: c.links.Attrs.FloatValues},
-		{Name: "links_attrs_bool_keys", Data: c.links.Attrs.BoolKeys},
-		{Name: "links_attrs_bool_values", Data: c.links.Attrs.BoolValues},
-		{Name: "links_attrs_bytes_keys", Data: c.links.Attrs.BytesKeys},
-		{Name: "links_attrs_bytes_values", Data: c.links.Attrs.BytesValues},
+		{Name: "links_trace_ids", Data: c.links.traceIDs},
+		{Name: "links_span_ids", Data: c.links.spanIDs},
+		{Name: "links_tracestates", Data: c.links.tracestates},
+		{Name: "links_attributes", Data: c.links.attributes},
 	}
 }
 
@@ -210,21 +118,45 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 	c.kind.Append(proto.Enum8(s.Kind))
 	c.start.Append(time.Unix(0, int64(s.Start)))
 	c.end.Append(time.Unix(0, int64(s.End)))
-	c.spanAttrs.Append(s.Attrs)
 	c.statusCode.Append(s.StatusCode)
 	c.statusMessage.Append(s.StatusMessage)
+
 	// FIXME(tdakkota): use UUID in Span.
 	c.batchID.Append(uuid.MustParse(s.BatchID))
-	c.resourceAttrs.Append(s.ResourceAttrs)
+	c.attributes.Append(encodeAttributes(s.Attrs))
+	c.resource.Append(encodeAttributes(s.ResourceAttrs))
+
 	c.scopeName.Append(s.ScopeName)
 	c.scopeVersion.Append(s.ScopeVersion)
-	c.scopeAttrs.Append(s.ScopeAttrs)
+	c.scopeAttributes.Append(encodeAttributes(s.ScopeAttrs))
+
 	c.events.AddRow(s.Events)
 	c.links.AddRow(s.Links)
 }
 
-func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) []tracestorage.Span {
+func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span, error) {
 	for i := 0; i < c.traceID.Rows(); i++ {
+		attrs, err := decodeAttributes(c.attributes.Row(i))
+		if err != nil {
+			return nil, errors.Wrap(err, "decode attributes")
+		}
+		resource, err := decodeAttributes(c.resource.Row(i))
+		if err != nil {
+			return nil, errors.Wrap(err, "decode resource")
+		}
+		scopeAttrs, err := decodeAttributes(c.scopeAttributes.Row(i))
+		if err != nil {
+			return nil, errors.Wrap(err, "decode scope attributes")
+		}
+		events, err := c.events.Row(i)
+		if err != nil {
+			return nil, errors.Wrap(err, "decode events")
+		}
+		links, err := c.links.Row(i)
+		if err != nil {
+			return nil, errors.Wrap(err, "decode links")
+		}
+
 		spans = append(spans, tracestorage.Span{
 			TraceID:       otelstorage.TraceID(c.traceID.Row(i)),
 			SpanID:        otelstorage.SpanIDFromUint64(c.spanID.Row(i)),
@@ -234,33 +166,33 @@ func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) []tracestorage.Span 
 			Kind:          int32(c.kind.Row(i)),
 			Start:         otelstorage.NewTimestampFromTime(c.start.Row(i)),
 			End:           otelstorage.NewTimestampFromTime(c.end.Row(i)),
-			Attrs:         c.spanAttrs.Row(i),
+			Attrs:         attrs,
 			StatusCode:    c.statusCode.Row(i),
 			StatusMessage: c.statusMessage.Row(i),
 			BatchID:       c.batchID.Row(i).String(),
-			ResourceAttrs: c.resourceAttrs.Row(i),
+			ResourceAttrs: resource,
 			ScopeName:     c.scopeName.Row(i),
 			ScopeVersion:  c.scopeVersion.Row(i),
-			ScopeAttrs:    c.scopeAttrs.Row(i),
-			Events:        c.events.Row(i),
-			Links:         c.links.Row(i),
+			ScopeAttrs:    scopeAttrs,
+			Events:        events,
+			Links:         links,
 		})
 	}
 
-	return spans
+	return spans, nil
 }
 
 type eventsColumns struct {
-	Names      *proto.ColArr[string]
-	Timestamps *proto.ColArr[time.Time]
-	Attrs      chArrAttrs
+	names      *proto.ColArr[string]
+	timestamps *proto.ColArr[time.Time]
+	attributes *proto.ColArr[string]
 }
 
 func newEventsColumns() eventsColumns {
 	return eventsColumns{
-		Names:      new(proto.ColStr).Array(),
-		Timestamps: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano).Array(),
-		Attrs:      newChArrAttrs(),
+		names:      new(proto.ColStr).Array(),
+		timestamps: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano).Array(),
+		attributes: new(proto.ColStr).Array(),
 	}
 }
 
@@ -268,54 +200,59 @@ func (c *eventsColumns) AddRow(events []tracestorage.Event) {
 	var (
 		names      []string
 		timestamps []time.Time
-		attrs      chArrAttrCollector
+		attrs      []string
 	)
 	for _, e := range events {
 		names = append(names, e.Name)
 		timestamps = append(timestamps, time.Unix(0, int64(e.Timestamp)))
-		attrs.Append(e.Attrs)
+		attrs = append(attrs, encodeAttributes(e.Attrs))
 	}
 
-	c.Names.Append(names)
-	c.Timestamps.Append(timestamps)
-	attrs.AddRow(&c.Attrs)
+	c.names.Append(names)
+	c.timestamps.Append(timestamps)
+	c.attributes.Append(attrs)
 }
 
-func (c *eventsColumns) Row(row int) (events []tracestorage.Event) {
+func (c *eventsColumns) Row(row int) (events []tracestorage.Event, _ error) {
 	var (
-		names      = c.Names.Row(row)
-		timestamps = c.Timestamps.Row(row)
-		attrs      = c.Attrs.Row(row)
+		names      = c.names.Row(row)
+		timestamps = c.timestamps.Row(row)
+		attributes = c.attributes.Row(row)
 
 		l = min(
 			len(names),
 			len(timestamps),
-			len(attrs),
+			len(attributes),
 		)
 	)
 	for i := 0; i < l; i++ {
+		attrs, err := decodeAttributes(attributes[i])
+		if err != nil {
+			return nil, errors.Wrap(err, "decode attributes")
+		}
+
 		events = append(events, tracestorage.Event{
 			Name:      names[i],
 			Timestamp: otelstorage.NewTimestampFromTime(timestamps[i]),
-			Attrs:     attrs[i],
+			Attrs:     attrs,
 		})
 	}
-	return events
+	return events, nil
 }
 
 type linksColumns struct {
-	TraceIDs    *proto.ColArr[uuid.UUID]
-	SpanIDs     *proto.ColArr[uint64]
-	Tracestates *proto.ColArr[string]
-	Attrs       chArrAttrs
+	traceIDs    *proto.ColArr[uuid.UUID]
+	spanIDs     *proto.ColArr[uint64]
+	tracestates *proto.ColArr[string]
+	attributes  *proto.ColArr[string]
 }
 
 func newLinksColumns() linksColumns {
 	return linksColumns{
-		TraceIDs:    new(proto.ColUUID).Array(),
-		SpanIDs:     new(proto.ColUInt64).Array(),
-		Tracestates: new(proto.ColStr).Array(),
-		Attrs:       newChArrAttrs(),
+		traceIDs:    new(proto.ColUUID).Array(),
+		spanIDs:     new(proto.ColUInt64).Array(),
+		tracestates: new(proto.ColStr).Array(),
+		attributes:  new(proto.ColStr).Array(),
 	}
 }
 
@@ -324,42 +261,47 @@ func (c *linksColumns) AddRow(links []tracestorage.Link) {
 		traceIDs    []uuid.UUID
 		spanIDs     []uint64
 		tracestates []string
-		attrs       chArrAttrCollector
+		attributes  []string
 	)
 	for _, l := range links {
 		traceIDs = append(traceIDs, uuid.UUID(l.TraceID))
 		spanIDs = append(spanIDs, l.SpanID.AsUint64())
 		tracestates = append(tracestates, l.TraceState)
-		attrs.Append(l.Attrs)
+		attributes = append(attributes, encodeAttributes(l.Attrs))
 	}
 
-	c.TraceIDs.Append(traceIDs)
-	c.SpanIDs.Append(spanIDs)
-	c.Tracestates.Append(tracestates)
-	attrs.AddRow(&c.Attrs)
+	c.traceIDs.Append(traceIDs)
+	c.spanIDs.Append(spanIDs)
+	c.tracestates.Append(tracestates)
+	c.attributes.Append(attributes)
 }
 
-func (c *linksColumns) Row(row int) (links []tracestorage.Link) {
+func (c *linksColumns) Row(row int) (links []tracestorage.Link, _ error) {
 	var (
-		traceIDs    = c.TraceIDs.Row(row)
-		spanIDs     = c.SpanIDs.Row(row)
-		tracestates = c.Tracestates.Row(row)
-		attrs       = c.Attrs.Row(row)
+		traceIDs    = c.traceIDs.Row(row)
+		spanIDs     = c.spanIDs.Row(row)
+		tracestates = c.tracestates.Row(row)
+		attributes  = c.attributes.Row(row)
 
 		l = min(
 			len(traceIDs),
 			len(spanIDs),
 			len(tracestates),
-			len(attrs),
+			len(attributes),
 		)
 	)
 	for i := 0; i < l; i++ {
+		attrs, err := decodeAttributes(attributes[i])
+		if err != nil {
+			return nil, errors.Wrap(err, "decode attributes")
+		}
+
 		links = append(links, tracestorage.Link{
 			TraceID:    otelstorage.TraceID(traceIDs[i]),
 			SpanID:     otelstorage.SpanIDFromUint64(spanIDs[i]),
 			TraceState: tracestates[i],
-			Attrs:      attrs[i],
+			Attrs:      attrs,
 		})
 	}
-	return links
+	return links, nil
 }

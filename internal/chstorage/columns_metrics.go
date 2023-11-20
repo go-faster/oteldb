@@ -1,8 +1,6 @@
 package chstorage
 
-import (
-	"github.com/ClickHouse/ch-go/proto"
-)
+import "github.com/ClickHouse/ch-go/proto"
 
 type metricColumns struct {
 	name       *proto.ColLowCardinality[string]
