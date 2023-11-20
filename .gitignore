@@ -20,6 +20,7 @@ secret.yaml
 /oteldb
 /otelproxy
 /otelfaker
+/chotel
 
 # goreleaser
 dist

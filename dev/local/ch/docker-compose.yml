@@ -5,13 +5,29 @@ volumes:
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.4
+    image: clickhouse/clickhouse-server:23.10
     ports:
 #      - "9009:9009"
       - "8123:8123"
       - "9000:9000"
     volumes:
       - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+
+  # Exports traces from clickhouse internal table to otel.
+  chotel:
+    image: go-faster/oteldb/chotel
+    restart: always
+    build:
+      # TODO(ernado): use just image, this should not change often
+      context: ../../../
+      dockerfile: chotel.Dockerfile
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb.chotel
+    depends_on:
+      - clickhouse
 
   oteldb:
     image: go-faster/oteldb
