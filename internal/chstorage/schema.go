@@ -14,6 +14,7 @@ type Tables struct {
 	Tags  string
 
 	Points string
+	Labels string
 }
 
 var defaultTables = Tables{
@@ -21,6 +22,7 @@ var defaultTables = Tables{
 	Tags:  "traces_tags",
 
 	Points: "metrics_points",
+	Labels: "metrics_labels",
 }
 
 type chClient interface {
@@ -36,6 +38,9 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 	for _, s := range []schema{
 		{t.Spans, spansSchema},
 		{t.Tags, tagsSchema},
+
+		{t.Points, pointsSchema},
+		{t.Labels, labelsSchema},
 	} {
 		if err := c.Do(ctx, ch.Query{
 			Body: fmt.Sprintf(s.query, s.name),

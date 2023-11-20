@@ -52,11 +52,11 @@ PRIMARY KEY (trace_id, span_id);`
 	valueTypeDDL = `'EMPTY' = 0,'STR' = 1,'INT' = 2,'DOUBLE' = 3,'BOOL' = 4,'MAP' = 5,'SLICE' = 6,'BYTES' = 7`
 )
 
-func encodeAttributes(attrs otelstorage.Attrs) string {
+func encodeAttributes(attrs pcommon.Map) string {
 	e := jx.GetEncoder()
 	defer jx.PutEncoder(e)
 
-	encodeMap(e, attrs.AsMap())
+	encodeMap(e, attrs)
 	return e.String()
 }
 

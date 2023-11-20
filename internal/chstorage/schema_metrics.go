@@ -8,16 +8,23 @@ import (
 )
 
 const (
-	metricSchema = `CREATE TABLE IF NOT EXISTS %s
-(
-	name		LowCardinality(String),
-	ts			DateTime64(9),
-	value		Float64,
-	attributes	String,
-	resource	String
-)
-ENGINE = MergeTree()
-ORDER BY ts;`
+	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
+	(
+		name		LowCardinality(String),
+		timestamp	DateTime64(9),
+		value		Float64,
+		attributes	String,
+		resource	String
+	)
+	ENGINE = MergeTree()
+	ORDER BY ts;`
+	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
+	(
+		name LowCardinality(String),
+		value String
+	)
+	ENGINE = MergeTree()
+	PRIMARY KEY (name);`
 )
 
 func parseLabels(s string, to map[string]string) error {

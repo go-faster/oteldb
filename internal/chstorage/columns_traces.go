@@ -123,12 +123,12 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 
 	// FIXME(tdakkota): use UUID in Span.
 	c.batchID.Append(uuid.MustParse(s.BatchID))
-	c.attributes.Append(encodeAttributes(s.Attrs))
-	c.resource.Append(encodeAttributes(s.ResourceAttrs))
+	c.attributes.Append(encodeAttributes(s.Attrs.AsMap()))
+	c.resource.Append(encodeAttributes(s.ResourceAttrs.AsMap()))
 
 	c.scopeName.Append(s.ScopeName)
 	c.scopeVersion.Append(s.ScopeVersion)
-	c.scopeAttributes.Append(encodeAttributes(s.ScopeAttrs))
+	c.scopeAttributes.Append(encodeAttributes(s.ScopeAttrs.AsMap()))
 
 	c.events.AddRow(s.Events)
 	c.links.AddRow(s.Links)
@@ -205,7 +205,7 @@ func (c *eventsColumns) AddRow(events []tracestorage.Event) {
 	for _, e := range events {
 		names = append(names, e.Name)
 		timestamps = append(timestamps, time.Unix(0, int64(e.Timestamp)))
-		attrs = append(attrs, encodeAttributes(e.Attrs))
+		attrs = append(attrs, encodeAttributes(e.Attrs.AsMap()))
 	}
 
 	c.names.Append(names)
@@ -267,7 +267,7 @@ func (c *linksColumns) AddRow(links []tracestorage.Link) {
 		traceIDs = append(traceIDs, uuid.UUID(l.TraceID))
 		spanIDs = append(spanIDs, l.SpanID.AsUint64())
 		tracestates = append(tracestates, l.TraceState)
-		attributes = append(attributes, encodeAttributes(l.Attrs))
+		attributes = append(attributes, encodeAttributes(l.Attrs.AsMap()))
 	}
 
 	c.traceIDs.Append(traceIDs)
