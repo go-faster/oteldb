@@ -122,11 +122,11 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 		return nil, nil, err
 	}
 
-	var column proto.ColStr
+	column := new(proto.ColStr).LowCardinality()
 	if err := p.ch.Do(ctx, ch.Query{
 		Body: query.String(),
 		Result: proto.Results{
-			{Name: "name", Data: &column},
+			{Name: "name", Data: column},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < column.Rows(); i++ {
