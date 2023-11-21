@@ -20,7 +20,7 @@ func newMetricColumns() *metricColumns {
 func (c *metricColumns) StaticColumns() []string {
 	return []string{
 		"name",
-		"ts",
+		"timestamp",
 		"value",
 		"attributes",
 		"resource",
@@ -30,7 +30,7 @@ func (c *metricColumns) StaticColumns() []string {
 func (c *metricColumns) Input() proto.Input {
 	input := proto.Input{
 		{Name: "name", Data: c.name},
-		{Name: "ts", Data: c.ts},
+		{Name: "timestamp", Data: c.ts},
 		{Name: "value", Data: c.value},
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
@@ -41,7 +41,7 @@ func (c *metricColumns) Input() proto.Input {
 func (c *metricColumns) Result() proto.Results {
 	return proto.Results{
 		{Name: "name", Data: c.name},
-		{Name: "ts", Data: c.ts},
+		{Name: "timestamp", Data: c.ts},
 		{Name: "value", Data: &c.value},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},

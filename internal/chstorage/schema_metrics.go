@@ -17,7 +17,7 @@ const (
 		resource	String
 	)
 	ENGINE = MergeTree()
-	ORDER BY ts;`
+	ORDER BY timestamp;`
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
