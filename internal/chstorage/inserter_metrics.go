@@ -79,6 +79,9 @@ func (i *Inserter) mapMetrics(c *metricColumns, metrics pmetric.Metrics, collect
 
 				var val float64
 				switch typ := point.ValueType(); typ {
+				case pmetric.NumberDataPointValueTypeEmpty:
+					// Just ignore it.
+					continue
 				case pmetric.NumberDataPointValueTypeInt:
 					// TODO(tdakkota): check for overflow
 					val = float64(point.IntValue())
