@@ -66,6 +66,9 @@ func TestCH(t *testing.T) {
 	tables := chstorage.Tables{
 		Spans: prefix + "_spans",
 		Tags:  prefix + "_tags",
+
+		Points: prefix + "_points",
+		Labels: prefix + "_labels",
 	}
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
