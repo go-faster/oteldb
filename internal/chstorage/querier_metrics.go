@@ -56,17 +56,112 @@ var _ storage.Querier = (*promQuerier)(nil)
 // It is not safe to use the strings beyond the lifetime of the querier.
 // If matchers are specified the returned result set is reduced
 // to label values of metrics matching the matchers.
-func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...*labels.Matcher) ([]string, annotations.Annotations, error) {
-	// TODO: Implement
-	return nil, nil, nil
+func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+	table := p.tables.Labels
+
+	ctx, span := p.tracer.Start(ctx, "LabelValues",
+		trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.label_to_query", name),
+			attribute.Int("chstorage.label_matchers", len(matchers)),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	var query strings.Builder
+	fmt.Fprintf(&query, "SELECT DISTINCT value FROM %#q WHERE name = %s\n", table, singleQuoted(name))
+	if err := addLabelMatchers(&query, matchers); err != nil {
+		return nil, nil, err
+	}
+
+	var column proto.ColStr
+	if err := p.ch.Do(ctx, ch.Query{
+		Body: query.String(),
+		Result: proto.Results{
+			{Name: "value", Data: &column},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < column.Rows(); i++ {
+				result = append(result, column.Row(i))
+			}
+			return nil
+		},
+	}); err != nil {
+		return nil, nil, errors.Wrap(err, "do query")
+	}
+	return result, nil, nil
 }
 
 // LabelNames returns all the unique label names present in the block in sorted order.
 // If matchers are specified the returned result set is reduced
 // to label names of metrics matching the matchers.
-func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) ([]string, annotations.Annotations, error) {
-	// TODO: Implement
-	return nil, nil, nil
+func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+	table := p.tables.Labels
+
+	ctx, span := p.tracer.Start(ctx, "LabelNames",
+		trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+			attribute.Int("chstorage.label_matchers", len(matchers)),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	var query strings.Builder
+	fmt.Fprintf(&query, "SELECT DISTINCT name FROM %#q WHERE true\n", table)
+	if err := addLabelMatchers(&query, matchers); err != nil {
+		return nil, nil, err
+	}
+
+	var column proto.ColStr
+	if err := p.ch.Do(ctx, ch.Query{
+		Body: query.String(),
+		Result: proto.Results{
+			{Name: "name", Data: &column},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < column.Rows(); i++ {
+				result = append(result, column.Row(i))
+			}
+			return nil
+		},
+	}); err != nil {
+		return nil, nil, errors.Wrap(err, "do query")
+	}
+	return result, nil, nil
+}
+
+func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error {
+	for _, m := range matchers {
+		switch m.Type {
+		case labels.MatchEqual, labels.MatchRegexp:
+			query.WriteString("AND ")
+		case labels.MatchNotEqual, labels.MatchNotRegexp:
+			query.WriteString("AND NOT ")
+		default:
+			return errors.Errorf("unexpected type %q", m.Type)
+		}
+
+		// Note: predicate negated above.
+		switch m.Type {
+		case labels.MatchEqual, labels.MatchNotEqual:
+			fmt.Fprintf(query, "name = %s\n", singleQuoted(m.Value))
+		case labels.MatchRegexp, labels.MatchNotRegexp:
+			fmt.Fprintf(query, "name REGEXP %s\n", singleQuoted(m.Value))
+		default:
+			return errors.Errorf("unexpected type %q", m.Type)
+		}
+	}
+	return nil
 }
 
 // Close releases the resources of the Querier.
