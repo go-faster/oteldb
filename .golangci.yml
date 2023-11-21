@@ -135,8 +135,8 @@ issues:
       text: "dupSubExpr"
 
     # False positive.
-    - path: internal/metricsharding/prometheus\.go
-      linters: [govet]
+    - linters: [govet]
+      source: func.+Seek\(.+int64\).+chunkenc\.ValueType
       text: "method Seek"
 
     # Not gonna use const, does not make any sense.

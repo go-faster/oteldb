@@ -171,7 +171,7 @@ func (p *promQuerier) Close() error {
 
 // Select returns a set of series that matches the given label matchers.
 // Caller can specify if it requires returned series to be sorted. Prefer not requiring sorting for better performance.
-// It allows passing hints that can help in optimising select, but it's up to implementation how this is used if used at all.
+// It allows passing hints that can help in optimizing select, but it's up to implementation how this is used if used at all.
 func (p *promQuerier) Select(ctx context.Context, _ bool, hints *storage.SelectHints, matchers ...*labels.Matcher) storage.SeriesSet {
 	ss, err := p.selectSeries(ctx, hints, matchers...)
 	if err != nil {
