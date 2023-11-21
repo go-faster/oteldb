@@ -198,6 +198,9 @@ func (c *Consumer) mapMetrics(ctx context.Context, metrics pmetric.Metrics) (bat
 
 				var val float64
 				switch typ := point.ValueType(); typ {
+				case pmetric.NumberDataPointValueTypeEmpty:
+					// Just ignore it.
+					continue
 				case pmetric.NumberDataPointValueTypeInt:
 					// TODO(tdakkota): check for overflow
 					val = float64(point.IntValue())
