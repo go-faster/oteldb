@@ -195,7 +195,13 @@ func (app *App) trySetupProm() error {
 		return nil
 	}
 
-	engine := promql.NewEngine(promql.EngineOpts{})
+	engine := promql.NewEngine(promql.EngineOpts{
+		// The default timeout is 0, which makes
+		// all queries to fail with timeout error.
+		//
+		// TODO(tdakkota): make configurable.
+		Timeout: time.Minute,
+	})
 	prom := promhandler.NewPromAPI(engine, q, promhandler.PromAPIOptions{})
 
 	s, err := promapi.NewServer(prom,
