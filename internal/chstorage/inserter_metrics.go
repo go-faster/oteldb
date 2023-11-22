@@ -93,7 +93,7 @@ func (i *Inserter) mapMetrics(c *metricColumns, metrics pmetric.Metrics, collect
 
 				collectLabels(attrs)
 				c.name.Append(name)
-				c.ts.Append(ts)
+				c.timestamp.Append(ts)
 				c.value.Append(val)
 				c.attributes.Append(encodeAttributes(attrs))
 				c.resource.Append(encodeAttributes(res))

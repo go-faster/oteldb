@@ -4,7 +4,7 @@ import "github.com/ClickHouse/ch-go/proto"
 
 type metricColumns struct {
 	name       *proto.ColLowCardinality[string]
-	ts         *proto.ColDateTime64
+	timestamp  *proto.ColDateTime64
 	value      proto.ColFloat64
 	attributes proto.ColStr
 	resource   proto.ColStr
@@ -12,8 +12,8 @@ type metricColumns struct {
 
 func newMetricColumns() *metricColumns {
 	return &metricColumns{
-		name: new(proto.ColStr).LowCardinality(),
-		ts:   new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		name:      new(proto.ColStr).LowCardinality(),
+		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 	}
 }
 
@@ -30,7 +30,7 @@ func (c *metricColumns) StaticColumns() []string {
 func (c *metricColumns) Input() proto.Input {
 	input := proto.Input{
 		{Name: "name", Data: c.name},
-		{Name: "timestamp", Data: c.ts},
+		{Name: "timestamp", Data: c.timestamp},
 		{Name: "value", Data: c.value},
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
@@ -41,7 +41,7 @@ func (c *metricColumns) Input() proto.Input {
 func (c *metricColumns) Result() proto.Results {
 	return proto.Results{
 		{Name: "name", Data: c.name},
-		{Name: "timestamp", Data: c.ts},
+		{Name: "timestamp", Data: c.timestamp},
 		{Name: "value", Data: &c.value},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
