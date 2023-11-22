@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/storage"
@@ -40,7 +41,10 @@ func setupDB(
 		}
 	}
 
-	engine := promql.NewEngine(promql.EngineOpts{})
+	engine := promql.NewEngine(promql.EngineOpts{
+		Timeout:    time.Minute,
+		MaxSamples: 1_000_000,
+	})
 	api := promhandler.NewPromAPI(engine, querier, promhandler.PromAPIOptions{})
 	promh, err := promapi.NewServer(api)
 	require.NoError(t, err)
