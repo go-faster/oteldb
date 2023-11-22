@@ -333,9 +333,7 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 		result = append(result, s.series)
 	}
 
-	return &seriesSet{
-		set: result,
-	}, nil
+	return newSeriesSet(result), nil
 }
 
 type seriesSet struct {
