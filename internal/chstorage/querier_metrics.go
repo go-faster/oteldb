@@ -181,6 +181,7 @@ func (p *promQuerier) Select(ctx context.Context, _ bool, hints *storage.SelectH
 }
 
 type seriesKey struct {
+	name       string
 	attributes string
 	resource   string
 }
@@ -281,12 +282,14 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
+				name := c.name.Row(i)
 				value := c.value.Row(i)
 				timestamp := c.timestamp.Row(i)
 				attributes := c.attributes.Row(i)
 				resource := c.resource.Row(i)
 
 				key := seriesKey{
+					name:       name,
 					attributes: attributes,
 					resource:   resource,
 				}
@@ -301,6 +304,8 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 
 				s.series.values = append(s.series.values, value)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
+
+				s.labels["__name__"] = name
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
