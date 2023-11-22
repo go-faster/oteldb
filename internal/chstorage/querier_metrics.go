@@ -217,14 +217,12 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 	var query strings.Builder
 	fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
 	if !start.IsZero() {
-		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(ts) >= %d\n", start.UnixNano())
+		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
 	}
 	if !end.IsZero() {
-		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(ts) <= %d\n", end.UnixNano())
+		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
 	}
 	for _, m := range matchers {
-		query.WriteString("\t(")
-
 		switch m.Type {
 		case labels.MatchEqual, labels.MatchRegexp:
 			query.WriteString("AND ")
@@ -244,10 +242,10 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 					fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(m.Name)),
 				}
 			}
-			query.WriteString("\t\t(")
+			query.WriteString("(\n")
 			for i, sel := range selectors {
 				if i != 0 {
-					query.WriteString("\t\tOR")
+					query.WriteString("\tOR ")
 				}
 				// Note: predicate negated above.
 				switch m.Type {
@@ -259,12 +257,11 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 					return nil, errors.Errorf("unexpected type %q", m.Type)
 				}
 			}
-			query.WriteString("\t)")
+			query.WriteString(")")
 		}
-
-		query.WriteString(")\n")
+		query.WriteString("\n")
 	}
-	query.WriteString("ORDER BY ts")
+	query.WriteString("ORDER BY timestamp")
 
 	return p.doQuery(ctx, query.String())
 }
@@ -283,9 +280,9 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 		Body:   query,
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < c.ts.Rows(); i++ {
+			for i := 0; i < c.timestamp.Rows(); i++ {
 				value := c.value.Row(i)
-				ts := c.ts.Row(i)
+				timestamp := c.timestamp.Row(i)
 				attributes := c.attributes.Row(i)
 				resource := c.resource.Row(i)
 
@@ -303,7 +300,7 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 				}
 
 				s.series.values = append(s.series.values, value)
-				s.series.ts = append(s.series.ts, ts.UnixMilli())
+				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
