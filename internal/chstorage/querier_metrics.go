@@ -431,12 +431,19 @@ func (p *pointIterator) Next() chunkenc.ValueType {
 func (p *pointIterator) Seek(seek int64) chunkenc.ValueType {
 	// Find the closest value.
 	idx, _ := slices.BinarySearch(p.ts, seek)
-	if idx >= len(p.ts) {
+	switch {
+	case idx >= len(p.ts):
+		// Outside of the range.
 		p.n = len(p.ts)
 		return chunkenc.ValNone
+	case idx < 1:
+		// Move to the first point.
+		p.n = 0
+		return chunkenc.ValFloat
+	default:
+		p.n = idx - 1
+		return chunkenc.ValFloat
 	}
-	p.n = idx - 1
-	return chunkenc.ValFloat
 }
 
 // At returns the current timestamp/value pair if the value is a float.
