@@ -99,4 +99,56 @@ func runTest(
 			}
 		}
 	})
+	t.Run("Series", func(t *testing.T) {
+		t.Run("ByName", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`prometheus_http_requests_total{}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, labels := range r.Data {
+				a.Equal("prometheus_http_requests_total", labels["__name__"])
+			}
+		})
+		t.Run("Matchers", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`prometheus_http_requests_total{
+						code="200",
+						handler=~"/api/v1.+",
+						handler!="/api/v1/series",
+						handler!~"/api/v1/query(_range)?"
+					}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, labels := range r.Data {
+				a.Equal("200", labels["code"])
+
+				handler := labels["handler"]
+				// Check that handler=~"/api/v1.+" is satisfied.
+				a.Contains(handler, "/api/v1")
+
+				// Check that handler!="/api/v1/series" is satisfied.
+				a.NotEqual("/api/v1/series", handler)
+
+				// Check that handler!~"/api/v1/query(_range)?" is satisfied.
+				a.NotEqual("/api/v1/query", handler)
+				a.NotEqual("/api/v1/query_range", handler)
+			}
+		})
+	})
 }
