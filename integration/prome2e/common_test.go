@@ -117,7 +117,7 @@ func runTest(
 				a.Equal("prometheus_http_requests_total", labels["__name__"])
 			}
 		})
-		t.Run("Matchers", func(t *testing.T) {
+		t.Run("OneMatcher", func(t *testing.T) {
 			a := require.New(t)
 
 			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
@@ -149,6 +149,87 @@ func runTest(
 				a.NotEqual("/api/v1/query", handler)
 				a.NotEqual("/api/v1/query_range", handler)
 			}
+		})
+		t.Run("MultipleMatchers", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`prometheus_http_requests_total{
+						handler="/api/v1/query"
+					}`,
+					`prometheus_http_requests_total{
+						handler="/api/v1/series"
+					}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, labels := range r.Data {
+				a.Contains([]string{
+					"/api/v1/query",
+					"/api/v1/series",
+				}, labels["handler"])
+			}
+		})
+		t.Run("OutOfRange", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1000000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1100000000.0`),
+				Match: []string{
+					`prometheus_http_requests_total{}`,
+				},
+			})
+			a.NoError(err)
+			a.Empty(r.Data)
+		})
+		t.Run("NoMatch", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`prometheus_http_requests_total{
+						clearly="not_exist"
+					}`,
+				},
+			})
+			a.NoError(err)
+			a.Empty(r.Data)
+		})
+		t.Run("InvalidTimestamp", func(t *testing.T) {
+			a := require.New(t)
+
+			_, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`abcd`),
+				Match: []string{
+					`prometheus_http_requests_total{}`,
+				},
+			})
+			perr := new(promapi.FailStatusCode)
+			a.ErrorAs(err, &perr)
+			a.Equal(promapi.FailErrorTypeBadData, perr.Response.ErrorType)
+		})
+		t.Run("InvalidMatcher", func(t *testing.T) {
+			a := require.New(t)
+
+			_, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`\{\}`,
+				},
+			})
+			perr := new(promapi.FailStatusCode)
+			a.ErrorAs(err, &perr)
+			a.Equal(promapi.FailErrorTypeBadData, perr.Response.ErrorType)
 		})
 	})
 }
