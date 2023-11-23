@@ -13,8 +13,10 @@ import (
 // BatchSet is a set of batches.
 type BatchSet struct {
 	Batches []pmetric.Metrics
+	Labels  map[string]map[string]struct{}
 
-	Labels map[string]map[string]struct{}
+	Start pcommon.Timestamp
+	End   pcommon.Timestamp
 }
 
 // ParseBatchSet parses JSON batches from given reader.
@@ -74,13 +76,17 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
 			s.addLabels(point.Attributes())
+			s.addTimestamp(point.Timestamp())
 		}
+		return nil
 	case pmetric.MetricTypeSum:
 		points := metric.Sum().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
 			s.addLabels(point.Attributes())
+			s.addTimestamp(point.Timestamp())
 		}
+		return nil
 	case pmetric.MetricTypeHistogram:
 	case pmetric.MetricTypeExponentialHistogram:
 	case pmetric.MetricTypeSummary:
@@ -89,6 +95,15 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 		return errors.Errorf("unexpected type %v", t)
 	}
 	return nil
+}
+
+func (s *BatchSet) addTimestamp(ts pcommon.Timestamp) {
+	if s.Start == 0 || ts < s.Start {
+		s.Start = ts
+	}
+	if ts > s.End {
+		s.End = ts
+	}
 }
 
 func (s *BatchSet) addLabels(m pcommon.Map) {

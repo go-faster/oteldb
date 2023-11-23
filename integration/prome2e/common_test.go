@@ -4,12 +4,14 @@ import (
 	"context"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/integration/prome2e"
 	"github.com/go-faster/oteldb/internal/otelreceiver"
@@ -236,4 +238,32 @@ func runTest(
 			a.Equal(promapi.FailErrorTypeBadData, perr.Response.ErrorType)
 		})
 	})
+	t.Run("QueryRange", func(t *testing.T) {
+		a := require.New(t)
+
+		r, err := c.GetQueryRange(ctx, promapi.GetQueryRangeParams{
+			Query: `count(prometheus_http_requests_total{})`,
+			Start: getPromTS(set.Start),
+			End:   getPromTS(set.End),
+			Step:  "5s",
+		})
+		a.NoError(err)
+
+		data := r.Data
+		a.Equal(promapi.MatrixData, data.Type)
+
+		mat := data.Matrix.Result
+		a.Len(mat, 1)
+		values := mat[0].Values
+		a.NotEmpty(values)
+
+		for _, point := range values {
+			a.Equal(float64(51), point.V)
+		}
+	})
+}
+
+func getPromTS(ts pcommon.Timestamp) promapi.PrometheusTimestamp {
+	v := strconv.FormatInt(ts.AsTime().Unix(), 10)
+	return promapi.PrometheusTimestamp(v)
 }
