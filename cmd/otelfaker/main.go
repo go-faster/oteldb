@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -63,7 +64,11 @@ func main() {
 			otelgrpc.WithTracerProvider(m.TracerProvider()),
 			otelgrpc.WithMeterProvider(m.MeterProvider()),
 		}
-		conn, err := grpc.DialContext(ctx, "oteldb.faster.svc.cluster.local:4317",
+		target := os.Getenv("OTEL_TARGET")
+		if target == "" {
+			target = "oteldb.faster.svc.cluster.local:4317"
+		}
+		conn, err := grpc.DialContext(ctx, target,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithStatsHandler(otelgrpc.NewClientHandler(otelOptions...)),
 		)
