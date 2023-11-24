@@ -251,13 +251,7 @@ func setupCH(
 		return store, errors.Wrap(err, "migrate")
 	}
 
-	tables := chstorage.Tables{
-		Spans:  "traces_spans",
-		Tags:   "traces_tags",
-		Logs:   "logs",
-		Points: "metrics_points",
-		Labels: "metrics_labels",
-	}
+	tables := chstorage.DefaultTables()
 	if err := tables.Create(ctx, c); err != nil {
 		return store, errors.Wrap(err, "create tables")
 	}
