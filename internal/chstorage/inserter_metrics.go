@@ -73,8 +73,9 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		})
 	}
 	if err := grp.Wait(); err != nil {
-		return err
+		return errors.Wrap(err, "insert")
 	}
+
 	return nil
 }
 
