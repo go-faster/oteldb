@@ -13,42 +13,57 @@ type Tables struct {
 	Spans string
 	Tags  string
 
-	Points string
-	Labels string
+	Points        string
+	Histograms    string
+	ExpHistograms string
+	Summaries     string
+	Labels        string
 }
 
 // Validate checks table names
-func (t Tables) Validate() error {
-	validateTableName := func(name string) error {
-		if name == "" {
+func (t *Tables) Validate() error {
+	return t.Each(func(name *string) error {
+		if *name == "" {
 			return errors.New("table name must be non-empty")
 		}
 		return nil
-	}
+	})
+}
 
+// Each calls given callback for each table.
+func (t *Tables) Each(cb func(name *string) error) error {
 	for _, table := range []struct {
-		name      string
+		field     *string
 		fieldName string
 	}{
-		{t.Spans, "Spans"},
-		{t.Tags, "Tags"},
+		{&t.Spans, "Spans"},
+		{&t.Tags, "Tags"},
 
-		{t.Points, "Points"},
-		{t.Labels, "Labels"},
+		{&t.Points, "Points"},
+		{&t.Histograms, "Histograms"},
+		{&t.ExpHistograms, "ExpHistograms"},
+		{&t.Summaries, "Summaries"},
+		{&t.Labels, "Labels"},
 	} {
-		if err := validateTableName(table.name); err != nil {
+		if err := cb(table.field); err != nil {
 			return errors.Wrapf(err, "table %s", table.fieldName)
 		}
 	}
 	return nil
 }
 
-var defaultTables = Tables{
-	Spans: "traces_spans",
-	Tags:  "traces_tags",
+// DefaultTables returns default tables.
+func DefaultTables() Tables {
+	return Tables{
+		Spans: "traces_spans",
+		Tags:  "traces_tags",
 
-	Points: "metrics_points",
-	Labels: "metrics_labels",
+		Points:        "metrics_points",
+		Histograms:    "metrics_histograms",
+		ExpHistograms: "metrics_exp_histograms",
+		Summaries:     "metrics_summaries",
+		Labels:        "metrics_labels",
+	}
 }
 
 type chClient interface {
@@ -70,6 +85,9 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{t.Tags, tagsSchema},
 
 		{t.Points, pointsSchema},
+		{t.Histograms, histogramsSchema},
+		{t.ExpHistograms, expHistogramsSchema},
+		{t.Summaries, summariesSchema},
 		{t.Labels, labelsSchema},
 	} {
 		if err := c.Do(ctx, ch.Query{

@@ -275,7 +275,7 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 
 	var (
 		set = map[seriesKey]seriesWithLabels{}
-		c   = newMetricColumns()
+		c   = newPointColumns()
 	)
 	if err := p.ch.Do(ctx, ch.Query{
 		Body:   query,

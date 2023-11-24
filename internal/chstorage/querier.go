@@ -30,7 +30,7 @@ type QuerierOptions struct {
 
 func (opts *QuerierOptions) setDefaults() {
 	if opts.Tables == (Tables{}) {
-		opts.Tables = defaultTables
+		opts.Tables = DefaultTables()
 	}
 	if opts.MeterProvider == nil {
 		opts.MeterProvider = otel.GetMeterProvider()

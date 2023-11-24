@@ -10,14 +10,70 @@ import (
 const (
 	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
-		name		LowCardinality(String),
-		timestamp	DateTime64(9),
-		value		Float64,
+		name LowCardinality(String),
+		timestamp DateTime64(9),
+
+		value Float64,
+
 		attributes	String,
 		resource	String
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp;`
+	histogramsSchema = `CREATE TABLE IF NOT EXISTS %s
+	(
+		name LowCardinality(String),
+		timestamp DateTime64(9),
+
+		histogram_count UInt64,
+		histogram_sum Nullable(Float64),
+		histogram_min Nullable(Float64),
+		histogram_max Nullable(Float64),
+		histogram_bucket_counts Array(UInt64),
+		histogram_explicit_bounds Array(Float64),
+
+		attributes	String,
+		resource	String
+	)
+	ENGINE = MergeTree()
+	ORDER BY timestamp;`
+	expHistogramsSchema = `CREATE TABLE IF NOT EXISTS %s
+	(
+		name LowCardinality(String),
+		timestamp DateTime64(9),
+
+		exp_histogram_count UInt64,
+		exp_histogram_sum Nullable(Float64),
+		exp_histogram_min Nullable(Float64),
+		exp_histogram_max Nullable(Float64),
+		exp_histogram_scale Int32,
+		exp_histogram_zerocount UInt64,
+		exp_histogram_positive_offset Int32,
+		exp_histogram_positive_bucket_counts Array(UInt64),
+		exp_histogram_negative_offset Int32,
+		exp_histogram_negative_bucket_counts Array(UInt64),
+
+		attributes	String,
+		resource	String
+	)
+	ENGINE = MergeTree()
+	ORDER BY timestamp;`
+	summariesSchema = `CREATE TABLE IF NOT EXISTS %s
+	(
+		name LowCardinality(String),
+		timestamp DateTime64(9),
+
+		summary_count UInt64,
+		summary_sum Float64,
+		summary_quantiles Array(Float64),
+		summary_values Array(Float64),
+
+		attributes	String,
+		resource	String
+	)
+	ENGINE = MergeTree()
+	ORDER BY timestamp;`
+
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
