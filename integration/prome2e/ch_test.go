@@ -62,14 +62,13 @@ func TestCH(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	prefix := "traces_" + strings.ReplaceAll(uuid.NewString(), "-", "")
-	tables := chstorage.Tables{
-		Spans: prefix + "_spans",
-		Tags:  prefix + "_tags",
-
-		Points: prefix + "_points",
-		Labels: prefix + "_labels",
-	}
+	prefix := strings.ReplaceAll(uuid.NewString(), "-", "")
+	tables := chstorage.DefaultTables()
+	tables.Each(func(name *string) error {
+		old := *name
+		*name = prefix + "_" + old
+		return nil
+	})
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
 
