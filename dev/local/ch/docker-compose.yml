@@ -84,7 +84,7 @@ services:
     depends_on:
       - clickhouse
 
-  faker:
+  otelfaker:
     image: go-faster/oteldb/faker
     build:
       context: ../../../
