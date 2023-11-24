@@ -88,13 +88,34 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 		}
 		return nil
 	case pmetric.MetricTypeHistogram:
+		points := metric.Histogram().DataPoints()
+		for i := 0; i < points.Len(); i++ {
+			point := points.At(i)
+			s.addLabels(point.Attributes())
+			s.addTimestamp(point.Timestamp())
+		}
+		return nil
 	case pmetric.MetricTypeExponentialHistogram:
+		points := metric.ExponentialHistogram().DataPoints()
+		for i := 0; i < points.Len(); i++ {
+			point := points.At(i)
+			s.addLabels(point.Attributes())
+			s.addTimestamp(point.Timestamp())
+		}
+		return nil
 	case pmetric.MetricTypeSummary:
+		points := metric.Summary().DataPoints()
+		for i := 0; i < points.Len(); i++ {
+			point := points.At(i)
+			s.addLabels(point.Attributes())
+			s.addTimestamp(point.Timestamp())
+		}
+		return nil
 	case pmetric.MetricTypeEmpty:
+		return nil
 	default:
 		return errors.Errorf("unexpected type %v", t)
 	}
-	return nil
 }
 
 func (s *BatchSet) addTimestamp(ts pcommon.Timestamp) {
