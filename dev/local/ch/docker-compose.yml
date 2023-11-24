@@ -1,7 +1,7 @@
 version: "3"
 
 volumes:
-  prom_data:
+  prom:
 
 services:
   clickhouse:
@@ -12,6 +12,33 @@ services:
       - "9000:9000"
     volumes:
       - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  # Add https://github.com/metrico/qryn for compatibility testing.
+  qryn:
+    image: qxip/qryn:latest
+    ports:
+      - "3101:3100"
+    restart: on-failure
+    environment:
+      - CLICKHOUSE_SERVER=clickhouse
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=qryn
+    depends_on:
+      - clickhouse
+  qryn-collector:
+    image: ghcr.io/metrico/qryn-otel-collector:latest
+    volumes:
+      - ../qryncol.yml:/etc/otel/config.yaml
+    restart: on-failure
+    depends_on:
+      - clickhouse
 
   # Exports traces from clickhouse internal table to otel.
   chotel:
@@ -78,7 +105,7 @@ services:
     restart: unless-stopped
     volumes:
       - ../prometheus:/etc/prometheus
-      - prom_data:/prometheus
+      - prom:/prometheus
 
   # https://opentelemetry.io/docs/collector/installation/#docker-compose
   otelcol:
@@ -112,7 +139,6 @@ services:
   # to produce some metrics
   node-exporter:
     image: prom/node-exporter
-    container_name: node-exporter
     restart: unless-stopped
     volumes:
       - /proc:/host/proc:ro
@@ -126,6 +152,7 @@ services:
       - '--web.max-requests=40'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
+  # for compatibility testing
   jaeger:
     image: jaegertracing/all-in-one:latest
 
@@ -135,7 +162,9 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_DISABLE_LOGIN_FORM=true
-      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor,traceToMetrics,publicDashboards,tempoApmTable
+      - GF_ALERTING_ENABLED=false
+      - GF_USERS_ALLOW_SIGN_UP=false
       - GF_LOG_LEVEL=debug
       - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
     ports:

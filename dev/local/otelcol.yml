@@ -1,5 +1,3 @@
-
-
 receivers:
   otlp:
     protocols:
@@ -41,6 +39,16 @@ receivers:
           scrape_interval: 5s
           static_configs:
             - targets: [oteldb:9090]
+
+        # For PromQL compliance tester
+        # https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-tester
+        - job_name: 'demo'
+          static_configs:
+            - targets:
+              - 'demo.promlabs.com:10000'
+              - 'demo.promlabs.com:10001'
+              - 'demo.promlabs.com:10002'
+
 processors:
   batch:
 
@@ -51,6 +59,10 @@ exporters:
       insecure: true
   otlp/jaeger:
     endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlp/qryn:
+    endpoint: qryn-collector:4317
     tls:
       insecure: true
   prometheusremotewrite:
@@ -74,15 +86,15 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, otlp/jaeger]
+      exporters: [otlp, otlp/jaeger, otlp/qryn]
     metrics:
       receivers: [otlp, prometheus, hostmetrics]
       processors: [batch]
-      exporters: [otlp, prometheusremotewrite]
+      exporters: [otlp, prometheusremotewrite, otlp/qryn]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, debug]
+      exporters: [otlp, debug, otlp/qryn]
   # https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/observability.md#how-we-expose-telemetry
   telemetry:
     metrics:

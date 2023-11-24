@@ -50,10 +50,57 @@ datasources:
     uid: jaeger
     url: http://jaeger:16686
     access: proxy
+
+  # For qryn
+  - name: Loki qryn
+    type: loki
+    access: proxy
+    uid: loki-qryn
+    url: http://qryn:3100
+    editable: true
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo-qryn
+          matcherRegex: "^.*?traceI[d|D]=(\\w+).*$"
+          name: traceId
+          url: '$${__value.raw}'
+        - datasourceUid: tempo-qryn
+          matcherRegex: "^.*?\"traceID\":\"(\\w+)\".*$"
+          name: traceID
+          url: '$${__value.raw}'
+
+  - name: Tempo qryn
+    type: tempo
+    access: proxy
+    uid: tempo-qryn
+    url: http://qryn:3100
+    editable: true
     jsonData:
       nodeGraph:
         enabled: true
-      traceQuery:
-        timeShiftEnabled: true
-        spanStartTimeShift: '1h'
-        spanEndTimeShift: '-1h'
+      tracesToLogs:
+        datasourceUid: loki-qryn
+        filterByTraceID: false
+        spanEndTimeShift: "2000ms"
+        spanStartTimeShift: "-2000ms"
+        tags: ['job']
+      tracesToMetrics:
+        datasourceUid: prom-qryn
+        tags: ['job']
+      serviceMap:
+        datasourceUid: prom-qryn
+      lokiSearch:
+        datasourceUid: loki-qryn
+
+  - name: PromQL qryn
+    type: prometheus
+    access: proxy
+    uid: prom-qryn
+    url: http://qryn:3100
+    editable: true
+    basicAuth: false
+    jsonData:
+      httpMethod: GET
+      graphiteVersion: "1.1"
+      tlsAuth: false
+      tlsAuthWithCACert: false
