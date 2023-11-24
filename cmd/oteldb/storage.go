@@ -279,7 +279,7 @@ func setupCH(
 
 	return otelStorage{
 		logQuerier:      nil,
-		logInserter:     nil,
+		logInserter:     inserter,
 		traceQuerier:    querier,
 		traceInserter:   inserter,
 		metricsQuerier:  querier,

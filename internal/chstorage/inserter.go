@@ -18,8 +18,9 @@ type Inserter struct {
 	ch     *chpool.Pool
 	tables Tables
 
-	insertedSpans metric.Int64Counter
-	insertedTags  metric.Int64Counter
+	insertedSpans   metric.Int64Counter
+	insertedTags    metric.Int64Counter
+	insertedRecords metric.Int64Counter
 
 	tracer trace.Tracer
 }
@@ -59,12 +60,17 @@ func NewInserter(c *chpool.Pool, opts InserterOptions) (*Inserter, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "create inserted_tags")
 	}
+	insertedRecords, err := meter.Int64Counter("chstorage.traces.inserted_records")
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_records")
+	}
 
 	return &Inserter{
-		ch:            c,
-		tables:        opts.Tables,
-		insertedSpans: insertedSpans,
-		insertedTags:  insertedTags,
-		tracer:        opts.TracerProvider.Tracer("chstorage.Inserter"),
+		ch:              c,
+		tables:          opts.Tables,
+		insertedSpans:   insertedSpans,
+		insertedTags:    insertedTags,
+		insertedRecords: insertedRecords,
+		tracer:          opts.TracerProvider.Tracer("chstorage.Inserter"),
 	}, nil
 }
