@@ -631,7 +631,7 @@ func (s *Type) SetGroups(val []TypeGroupsItem) {
 type TypeGroupsItem struct {
 	ID         string                         `json:"id"`
 	Prefix     OptString                      `json:"prefix"`
-	Type       OptString                      `json:"type"`
+	Type       TypeGroupsItemType             `json:"type"`
 	Brief      OptString                      `json:"brief"`
 	Note       OptString                      `json:"note"`
 	Attributes []TypeGroupsItemAttributesItem `json:"attributes"`
@@ -648,7 +648,7 @@ func (s *TypeGroupsItem) GetPrefix() OptString {
 }
 
 // GetType returns the value of Type.
-func (s *TypeGroupsItem) GetType() OptString {
+func (s *TypeGroupsItem) GetType() TypeGroupsItemType {
 	return s.Type
 }
 
@@ -678,7 +678,7 @@ func (s *TypeGroupsItem) SetPrefix(val OptString) {
 }
 
 // SetType sets the value of Type.
-func (s *TypeGroupsItem) SetType(val OptString) {
+func (s *TypeGroupsItem) SetType(val TypeGroupsItemType) {
 	s.Type = val
 }
 
@@ -763,6 +763,61 @@ func NewAttributeTypeGroupsItemAttributesItem(v Attribute) TypeGroupsItemAttribu
 	var s TypeGroupsItemAttributesItem
 	s.SetAttribute(v)
 	return s
+}
+
+type TypeGroupsItemType string
+
+const (
+	TypeGroupsItemTypeMetric         TypeGroupsItemType = "metric"
+	TypeGroupsItemTypeSpan           TypeGroupsItemType = "span"
+	TypeGroupsItemTypeResource       TypeGroupsItemType = "resource"
+	TypeGroupsItemTypeAttributeGroup TypeGroupsItemType = "attribute_group"
+)
+
+// AllValues returns all TypeGroupsItemType values.
+func (TypeGroupsItemType) AllValues() []TypeGroupsItemType {
+	return []TypeGroupsItemType{
+		TypeGroupsItemTypeMetric,
+		TypeGroupsItemTypeSpan,
+		TypeGroupsItemTypeResource,
+		TypeGroupsItemTypeAttributeGroup,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TypeGroupsItemType) MarshalText() ([]byte, error) {
+	switch s {
+	case TypeGroupsItemTypeMetric:
+		return []byte(s), nil
+	case TypeGroupsItemTypeSpan:
+		return []byte(s), nil
+	case TypeGroupsItemTypeResource:
+		return []byte(s), nil
+	case TypeGroupsItemTypeAttributeGroup:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TypeGroupsItemType) UnmarshalText(data []byte) error {
+	switch TypeGroupsItemType(data) {
+	case TypeGroupsItemTypeMetric:
+		*s = TypeGroupsItemTypeMetric
+		return nil
+	case TypeGroupsItemTypeSpan:
+		*s = TypeGroupsItemTypeSpan
+		return nil
+	case TypeGroupsItemTypeResource:
+		*s = TypeGroupsItemTypeResource
+		return nil
+	case TypeGroupsItemTypeAttributeGroup:
+		*s = TypeGroupsItemTypeAttributeGroup
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Encode implements json.Marshaler.
@@ -1909,10 +1964,8 @@ func (s *TypeGroupsItem) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Type.Set {
-			e.FieldStart("type")
-			s.Type.Encode(e)
-		}
+		e.FieldStart("type")
+		s.Type.Encode(e)
 	}
 	{
 		if s.Brief.Set {
@@ -1979,8 +2032,8 @@ func (s *TypeGroupsItem) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"prefix\"")
 			}
 		case "type":
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				s.Type.Reset()
 				if err := s.Type.Decode(d); err != nil {
 					return err
 				}
@@ -2035,7 +2088,7 @@ func (s *TypeGroupsItem) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000001,
+		0b00000101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2179,6 +2232,50 @@ func (s TypeGroupsItemAttributesItem) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *TypeGroupsItemAttributesItem) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes TypeGroupsItemType as json.
+func (s TypeGroupsItemType) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes TypeGroupsItemType from json.
+func (s *TypeGroupsItemType) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode TypeGroupsItemType to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch TypeGroupsItemType(v) {
+	case TypeGroupsItemTypeMetric:
+		*s = TypeGroupsItemTypeMetric
+	case TypeGroupsItemTypeSpan:
+		*s = TypeGroupsItemTypeSpan
+	case TypeGroupsItemTypeResource:
+		*s = TypeGroupsItemTypeResource
+	case TypeGroupsItemTypeAttributeGroup:
+		*s = TypeGroupsItemTypeAttributeGroup
+	default:
+		*s = TypeGroupsItemType(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s TypeGroupsItemType) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *TypeGroupsItemType) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -2344,6 +2441,17 @@ func (s *TypeGroupsItem) Validate() error {
 
 	var failures []validate.FieldError
 	if err := func() error {
+		if err := s.Type.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "type",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		var failures []validate.FieldError
 		for i, elem := range s.Attributes {
 			if err := func() error {
@@ -2385,5 +2493,20 @@ func (s TypeGroupsItemAttributesItem) Validate() error {
 		return nil
 	default:
 		return errors.Errorf("invalid type %q", s.Type)
+	}
+}
+
+func (s TypeGroupsItemType) Validate() error {
+	switch s {
+	case "metric":
+		return nil
+	case "span":
+		return nil
+	case "resource":
+		return nil
+	case "attribute_group":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
 	}
 }

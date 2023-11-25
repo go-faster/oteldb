@@ -96,6 +96,11 @@ properties:
           type: string
         type:
           type: string
+          enum:
+            - metric
+            - span
+            - resource
+            - attribute_group
         brief:
           type: string
         note:
@@ -108,5 +113,6 @@ properties:
               - $ref: "#/$defs/attribute"
       required:
         - id
+        - type
 required:
   - groups
