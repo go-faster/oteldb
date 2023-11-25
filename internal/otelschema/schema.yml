@@ -1,0 +1,112 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+
+$defs:
+  enum:
+    additionalProperties: false
+    type: object
+    required:
+      - members
+    properties:
+      allow_custom_values:
+        type: boolean
+      members:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            id:
+              type: string
+            note:
+              type: string
+            value:
+              oneOf:
+                - type: string
+                - type: number
+            brief:
+              type: string
+          required:
+            - id
+            - value
+  requirementLevel:
+    oneOf:
+      - type: string
+      - type: object
+        additionalProperties:
+          type: string
+  attributeReference:
+    type: object
+    additionalProperties: false
+    required:
+      - ref
+    properties:
+      ref:
+        type: string
+      brief:
+        type: string
+      note:
+        type: string
+      tag:
+        type: string
+      examples:
+        type: array
+        items: {}
+      requirement_level:
+        $ref: "#/$defs/requirementLevel"
+      sampling_relevant:
+        type: boolean
+  attribute:
+    type: object
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+      sampling_relevant:
+        type: boolean
+      type:
+        oneOf:
+          - $ref: "#/$defs/enum"
+          - type: string
+      brief:
+        type: string
+      note:
+        type: string
+      tag:
+        type: string
+      examples: {}
+      requirement_level:
+        $ref: "#/$defs/requirementLevel"
+      stability:
+        type: string
+    required:
+      - id
+      - type
+
+type: object
+additionalProperties: false
+properties:
+  groups:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+        prefix:
+          type: string
+        type:
+          type: string
+        brief:
+          type: string
+        note:
+          type: string
+        attributes:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/$defs/attributeReference"
+              - $ref: "#/$defs/attribute"
+      required:
+        - id
+required:
+  - groups
