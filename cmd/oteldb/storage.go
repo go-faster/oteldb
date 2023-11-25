@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/prometheus/storage"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
 	"go.ytsaurus.tech/yt/go/migrate"
 	"go.ytsaurus.tech/yt/go/ypath"
@@ -220,8 +221,20 @@ func setupCH(
 	}
 
 	pass, _ := u.User.Password()
+	chLogger := lg.Named("ch")
+	{
+		var lvl zapcore.Level
+		if v := os.Getenv("CH_LOG_LEVEL"); v != "" {
+			if err := lvl.UnmarshalText([]byte(v)); err != nil {
+				return store, errors.Wrap(err, "parse log level")
+			}
+		} else {
+			lvl = lg.Level()
+		}
+		chLogger = chLogger.WithOptions(zap.IncreaseLevel(lvl))
+	}
 	opts := ch.Options{
-		Logger:         lg.Named("ch"),
+		Logger:         chLogger,
 		Address:        u.Host,
 		Database:       strings.TrimPrefix(u.Path, "/"),
 		User:           u.User.Username(),
