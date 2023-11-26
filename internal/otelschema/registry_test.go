@@ -22,6 +22,7 @@ type registryEntry struct {
 	Column   proto.ColumnType `json:"column"`
 	Examples []any            `json:"examples,omitempty"`
 	Brief    string           `json:"brief,omitempty"`
+	Name     string           `json:"name,omitempty"`
 }
 
 func anyTo[T any](s []any) (result []T) {
@@ -195,6 +196,7 @@ func TestParseAllAttributes(t *testing.T) {
 				Column:   columnType(name, v.Brief.Value, typ, enum),
 				Examples: examples,
 				Brief:    v.Brief.Value,
+				Name:     strings.ReplaceAll(name, ".", "_"),
 			}
 		}
 	}
