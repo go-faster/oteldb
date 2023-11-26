@@ -10,8 +10,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+func modelPath() string {
+	return filepath.Join("_testdata", "semantic-conventions", "model")
+}
+
 func TestParse(t *testing.T) {
-	require.NoError(t, filepath.Walk(filepath.Join("_testdata", "model"), func(path string, info fs.FileInfo, err error) error {
+	require.NoError(t, filepath.Walk(modelPath(), func(path string, info fs.FileInfo, err error) error {
 		require.NoError(t, err)
 		if info.IsDir() {
 			return nil
