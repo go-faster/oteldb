@@ -56,6 +56,15 @@ type Table struct {
 	Columns []AttributeColumn
 }
 
+// Reset resets table columns.
+func (t *Table) Reset() {
+	t.encoder.Reset()
+	t.Raw.Reset()
+	for _, c := range t.Columns {
+		c.Column.Reset()
+	}
+}
+
 // Append appends attributes to the table.
 func (t *Table) Append(attrs otelstorage.Attrs) {
 	kv := attrs.AsMap()
@@ -66,6 +75,7 @@ func (t *Table) Append(attrs otelstorage.Attrs) {
 		appendZeroes[c.Key] = struct{}{}
 	}
 
+	t.encoder.ObjStart()
 	kv.Range(func(k string, v pcommon.Value) bool {
 		for _, c := range t.Columns {
 			if c.Key == k {
@@ -86,6 +96,7 @@ func (t *Table) Append(attrs otelstorage.Attrs) {
 		})
 		return true
 	})
+	t.encoder.ObjEnd()
 	t.Raw.AppendBytes(t.encoder.Bytes())
 	for _, c := range t.Columns {
 		if _, ok := appendZeroes[c.Key]; !ok {
