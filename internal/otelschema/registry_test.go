@@ -32,7 +32,7 @@ func anyTo[T any](s []any) (result []T) {
 	return result
 }
 
-func columnType(name, t string, enum []any) proto.ColumnType {
+func columnType(name, brief, t string, enum []any) proto.ColumnType {
 	isEnum := len(enum) > 0
 	if !isEnum || t == "int" {
 		// We don't care about templates for storage data types.
@@ -54,6 +54,10 @@ func columnType(name, t string, enum []any) proto.ColumnType {
 		}
 		if strings.HasSuffix(name, ".port") {
 			return proto.ColumnTypeUInt16
+		}
+		if strings.Contains(brief, "ISO 8601") && t == "string" {
+			// Just seconds?
+			return proto.ColumnTypeDateTime
 		}
 
 		if isEnum {
@@ -188,7 +192,7 @@ func TestParseAllAttributes(t *testing.T) {
 			out.Entries[name] = registryEntry{
 				Type:     typ,
 				Enum:     enum,
-				Column:   columnType(name, typ, enum),
+				Column:   columnType(name, v.Brief.Value, typ, enum),
 				Examples: examples,
 				Brief:    v.Brief.Value,
 			}

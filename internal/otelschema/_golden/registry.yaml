@@ -732,7 +732,7 @@ entries:
   faas.document.time:
     brief: |
       A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
-    column: String
+    column: DateTime
     examples:
     - "2020-01-23T13:47:06Z"
     type: string
@@ -786,7 +786,7 @@ entries:
   faas.time:
     brief: |
       A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
-    column: String
+    column: DateTime
     examples:
     - "2020-01-23T13:47:06Z"
     type: string
