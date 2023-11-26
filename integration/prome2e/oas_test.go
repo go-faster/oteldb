@@ -17,6 +17,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
+	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/promapi"
 )
 
@@ -38,10 +39,7 @@ func printJSON(t *testing.T, v jxEncode, name string) {
 var prometheusConfig []byte
 
 func TestPrometheusOAS(t *testing.T) {
-	if os.Getenv("E2E") == "" {
-		t.Skip("Set E2E env to run")
-	}
-
+	integration.Skip(t)
 	ctx := context.Background()
 
 	// Provide config to prometheus testcontainer.

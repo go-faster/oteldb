@@ -2,7 +2,6 @@ package prome2e_test
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -15,14 +14,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 
+	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chstorage"
 )
 
 func TestCH(t *testing.T) {
 	t.Parallel()
-	if os.Getenv("E2E") == "" {
-		t.Skip("Set E2E env to run")
-	}
+	integration.Skip(t)
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{

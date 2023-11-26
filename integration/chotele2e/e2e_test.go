@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -21,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
+	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chtrace"
 )
 
@@ -51,11 +51,9 @@ func discardResult() proto.Result {
 	return (&proto.Results{}).Auto()
 }
 
-func TestIntegrationTrace(t *testing.T) {
-	t.Parallel()
-	if os.Getenv("E2E") == "" {
-		t.Skip("Set E2E env to run")
-	}
+func ConnectOpt(t *testing.T, connOpt ch.Options) *ch.Client {
+	t.Helper()
+	integration.Skip(t)
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{
@@ -78,6 +76,29 @@ func TestIntegrationTrace(t *testing.T) {
 	connectBackoff.InitialInterval = 2 * time.Second
 	connectBackoff.MaxElapsedTime = time.Minute
 
+	connOpt.Address = endpoint
+	conn, err := backoff.RetryWithData(func() (*ch.Client, error) {
+		c, err := ch.Dial(ctx, connOpt)
+		if err != nil {
+			return nil, errors.Wrap(err, "dial")
+		}
+		return c, nil
+	}, connectBackoff)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return conn
+}
+
+func Connect(t *testing.T) *ch.Client {
+	t.Helper()
+	return ConnectOpt(t, ch.Options{
+		Logger: zap.NewNop(),
+	})
+}
+
+func TestIntegrationTrace(t *testing.T) {
+	ctx := context.Background()
 	exporter := tracetest.NewInMemoryExporter()
 	randSource := rand.NewSource(15)
 	tp := tracesdk.NewTracerProvider(
@@ -89,8 +110,7 @@ func TestIntegrationTrace(t *testing.T) {
 			tracesdk.WithBatchTimeout(0), // instant
 		),
 	)
-	connOpt := ch.Options{
-		Address:                      endpoint,
+	conn := ConnectOpt(t, ch.Options{
 		Logger:                       zap.NewNop(),
 		OpenTelemetryInstrumentation: true,
 		TracerProvider:               tp,
@@ -101,17 +121,7 @@ func TestIntegrationTrace(t *testing.T) {
 				Important: true,
 			},
 		},
-	}
-	conn, err := backoff.RetryWithData(func() (*ch.Client, error) {
-		c, err := ch.Dial(ctx, connOpt)
-		if err != nil {
-			return nil, errors.Wrap(err, "dial")
-		}
-		return c, nil
-	}, connectBackoff)
-	if err != nil {
-		t.Fatal(err)
-	}
+	})
 
 	// Should record trace and spans.
 	var traceID trace.TraceID
