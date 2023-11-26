@@ -11,6 +11,7 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/sdk/gold"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
 )
@@ -112,9 +113,10 @@ func TestParseAllAttributes(t *testing.T) {
 	}))
 
 	type Statistics struct {
-		Total   int `json:"total"`
-		Enum    int `json:"enum"`
-		Unknown int `json:"unknown"`
+		Total      int `json:"total"`
+		Enum       int `json:"enum"`
+		Unknown    int `json:"unknown"`
+		Deprecated int `json:"deprecated"`
 	}
 	type Registry struct {
 		Statistics Statistics               `json:"statistics"`
@@ -125,6 +127,10 @@ func TestParseAllAttributes(t *testing.T) {
 	}
 	for _, group := range parsed {
 		for _, attr := range group.Attributes {
+			if attr.Attribute.Stability.Value == "deprecated" {
+				out.Statistics.Deprecated++
+				continue
+			}
 			v, ok := attr.GetAttribute()
 			if !ok {
 				continue
@@ -205,4 +211,6 @@ func TestParseAllAttributes(t *testing.T) {
 	require.NoError(t, err)
 
 	gold.Str(t, string(data), "registry.yaml")
+
+	assert.Zero(t, out.Statistics.Unknown, "Should be no unknown types")
 }

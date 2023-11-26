@@ -989,18 +989,6 @@ entries:
     examples:
     - n1-standard-1
     type: string
-  http.flavor:
-    brief: Deprecated, use `network.protocol.name` instead.
-    column: String
-    type: string
-  http.method:
-    brief: Deprecated, use `http.request.method` instead.
-    column: String
-    examples:
-    - GET
-    - POST
-    - HEAD
-    type: string
   http.request.body.size:
     brief: |
       The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
@@ -1039,12 +1027,6 @@ entries:
     examples:
     - 3
     type: int
-  http.request_content_length:
-    brief: Deprecated, use `http.request.header.content-length` instead.
-    column: Int64
-    examples:
-    - 3495
-    type: int
   http.response.body.size:
     brief: |
       The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
@@ -1066,12 +1048,6 @@ entries:
     examples:
     - 200
     type: int
-  http.response_content_length:
-    brief: Deprecated, use `http.response.header.content-length` instead.
-    column: Int64
-    examples:
-    - 3495
-    type: int
   http.route:
     brief: |
       The matched route, that is, the path template in the format used by the respective server framework.
@@ -1079,39 +1055,6 @@ entries:
     examples:
     - /users/:userID?
     - '{controller}/{action}/{id?}'
-    type: string
-  http.scheme:
-    brief: Deprecated, use `url.scheme` instead.
-    column: String
-    examples:
-    - http
-    - https
-    type: string
-  http.status_code:
-    brief: Deprecated, use `http.response.status_code` instead.
-    column: Int64
-    examples:
-    - 200
-    type: int
-  http.target:
-    brief: Deprecated, use `url.path` and `url.query` instead.
-    column: String
-    examples:
-    - /search?q=OpenTelemetry#SemConv
-    type: string
-  http.url:
-    brief: Deprecated, use `url.full` instead.
-    column: String
-    examples:
-    - https://www.foo.bar/search?q=OpenTelemetry#SemConv
-    type: string
-  http.user_agent:
-    brief: Deprecated, use `user_agent.original` instead.
-    column: String
-    examples:
-    - CERN-LineMode/2.15 libwww/2.17b3
-    - Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15
-      (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1
     type: string
   ios.state:
     brief: |
@@ -1592,84 +1535,6 @@ entries:
       An identifier for the messaging system being used. See below for a list of well-known identifiers.
     column: String
     type: string
-  net.host.name:
-    brief: Deprecated, use `server.address`.
-    column: String
-    examples:
-    - example.com
-    type: string
-  net.host.port:
-    brief: Deprecated, use `server.port`.
-    column: UInt16
-    examples:
-    - 8080
-    type: int
-  net.peer.name:
-    brief: Deprecated, use `server.address` on client spans and `client.address` on
-      server spans.
-    column: String
-    examples:
-    - example.com
-    type: string
-  net.peer.port:
-    brief: Deprecated, use `server.port` on client spans and `client.port` on server
-      spans.
-    column: UInt16
-    examples:
-    - 8080
-    type: int
-  net.protocol.name:
-    brief: Deprecated, use `network.protocol.name`.
-    column: String
-    examples:
-    - amqp
-    - http
-    - mqtt
-    type: string
-  net.protocol.version:
-    brief: Deprecated, use `network.protocol.version`.
-    column: String
-    examples:
-    - 3.1.1
-    type: string
-  net.sock.family:
-    brief: Deprecated, use `network.transport` and `network.type`.
-    column: String
-    type: string
-  net.sock.host.addr:
-    brief: Deprecated, use `network.local.address`.
-    column: String
-    examples:
-    - /var/my.sock
-    type: string
-  net.sock.host.port:
-    brief: Deprecated, use `network.local.port`.
-    column: UInt16
-    examples:
-    - 8080
-    type: int
-  net.sock.peer.addr:
-    brief: Deprecated, use `network.peer.address`.
-    column: String
-    examples:
-    - 192.168.0.1
-    type: string
-  net.sock.peer.name:
-    brief: Deprecated, no replacement at this time.
-    column: String
-    examples:
-    - /var/my.sock
-    type: string
-  net.sock.peer.port:
-    brief: Deprecated, use `network.peer.port`.
-    column: UInt16
-    examples:
-    - 65531
-    type: int
-  net.transport:
-    brief: Deprecated, use `network.transport`.
-    column: String
-    type: string
   network.carrier.icc:
     brief: The ISO 3166-1 alpha-2 2-character country code associated with the mobile
       carrier network.
@@ -1825,18 +1690,6 @@ entries:
     examples:
     - 14.2.1
     - 18.04.1
-    type: string
-  otel.library.name:
-    brief: Deprecated, use the `otel.scope.name` attribute.
-    column: String
-    examples:
-    - io.opentelemetry.contrib.mongodb
-    type: string
-  otel.library.version:
-    brief: Deprecated, use the `otel.scope.version` attribute.
-    column: String
-    examples:
-    - 1.0.0
     type: string
   otel.scope.name:
     brief: The name of the instrumentation scope - (`InstrumentationScope.Name` in
@@ -2576,6 +2429,7 @@ entries:
     - 21.0.0
     type: string
 statistics:
+  deprecated: 24
   enum: 23
-  total: 716
+  total: 668
   unknown: 0
