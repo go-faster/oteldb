@@ -1,6 +1,17 @@
 $schema: "http://json-schema.org/draft-07/schema#"
 
 $defs:
+  exampleValue:
+    oneOf:
+      - type: string
+      - type: number
+      - type: boolean
+  examples:
+    oneOf:
+      - type: array
+        items:
+          $ref: "#/$defs/exampleValue"
+      - $ref: "#/$defs/exampleValue"
   enum:
     additionalProperties: false
     type: object
@@ -22,7 +33,7 @@ $defs:
             value:
               oneOf:
                 - type: string
-                - type: number
+                - type: integer
             brief:
               type: string
           required:
@@ -49,8 +60,7 @@ $defs:
       tag:
         type: string
       examples:
-        type: array
-        items: {}
+        $ref: "#/$defs/examples"
       requirement_level:
         $ref: "#/$defs/requirementLevel"
       sampling_relevant:
@@ -73,7 +83,8 @@ $defs:
         type: string
       tag:
         type: string
-      examples: {}
+      examples:
+        $ref: "#/$defs/examples"
       requirement_level:
         $ref: "#/$defs/requirementLevel"
       stability:

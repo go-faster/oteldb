@@ -26,7 +26,6 @@ func TestParse(t *testing.T) {
 			var schema Type
 			jsonData, err := yaml.YAMLToJSON(data)
 			require.NoError(t, err)
-			t.Logf("json: %s", jsonData)
 			require.NoError(t, schema.UnmarshalJSON(jsonData))
 		})
 		return nil

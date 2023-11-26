@@ -21,7 +21,7 @@ type Attribute struct {
 	Brief            OptString           `json:"brief"`
 	Note             OptString           `json:"note"`
 	Tag              OptString           `json:"tag"`
-	Examples         jx.Raw              `json:"examples"`
+	Examples         OptExamples         `json:"examples"`
 	RequirementLevel OptRequirementLevel `json:"requirement_level"`
 	Stability        OptString           `json:"stability"`
 }
@@ -57,7 +57,7 @@ func (s *Attribute) GetTag() OptString {
 }
 
 // GetExamples returns the value of Examples.
-func (s *Attribute) GetExamples() jx.Raw {
+func (s *Attribute) GetExamples() OptExamples {
 	return s.Examples
 }
 
@@ -102,7 +102,7 @@ func (s *Attribute) SetTag(val OptString) {
 }
 
 // SetExamples sets the value of Examples.
-func (s *Attribute) SetExamples(val jx.Raw) {
+func (s *Attribute) SetExamples(val OptExamples) {
 	s.Examples = val
 }
 
@@ -122,7 +122,7 @@ type AttributeReference struct {
 	Brief            OptString           `json:"brief"`
 	Note             OptString           `json:"note"`
 	Tag              OptString           `json:"tag"`
-	Examples         []jx.Raw            `json:"examples"`
+	Examples         OptExamples         `json:"examples"`
 	RequirementLevel OptRequirementLevel `json:"requirement_level"`
 	SamplingRelevant OptBool             `json:"sampling_relevant"`
 }
@@ -148,7 +148,7 @@ func (s *AttributeReference) GetTag() OptString {
 }
 
 // GetExamples returns the value of Examples.
-func (s *AttributeReference) GetExamples() []jx.Raw {
+func (s *AttributeReference) GetExamples() OptExamples {
 	return s.Examples
 }
 
@@ -183,7 +183,7 @@ func (s *AttributeReference) SetTag(val OptString) {
 }
 
 // SetExamples sets the value of Examples.
-func (s *AttributeReference) SetExamples(val []jx.Raw) {
+func (s *AttributeReference) SetExamples(val OptExamples) {
 	s.Examples = val
 }
 
@@ -336,9 +336,9 @@ func (s *EnumMembersItem) SetBrief(val OptString) {
 
 // EnumMembersItemValue represents sum type.
 type EnumMembersItemValue struct {
-	Type    EnumMembersItemValueType // switch on this field
-	String  string
-	Float64 float64
+	Type   EnumMembersItemValueType // switch on this field
+	String string
+	Int    int
 }
 
 // EnumMembersItemValueType is oneOf type of EnumMembersItemValue.
@@ -346,15 +346,15 @@ type EnumMembersItemValueType string
 
 // Possible values for EnumMembersItemValueType.
 const (
-	StringEnumMembersItemValue  EnumMembersItemValueType = "string"
-	Float64EnumMembersItemValue EnumMembersItemValueType = "float64"
+	StringEnumMembersItemValue EnumMembersItemValueType = "string"
+	IntEnumMembersItemValue    EnumMembersItemValueType = "int"
 )
 
 // IsString reports whether EnumMembersItemValue is string.
 func (s EnumMembersItemValue) IsString() bool { return s.Type == StringEnumMembersItemValue }
 
-// IsFloat64 reports whether EnumMembersItemValue is float64.
-func (s EnumMembersItemValue) IsFloat64() bool { return s.Type == Float64EnumMembersItemValue }
+// IsInt reports whether EnumMembersItemValue is int.
+func (s EnumMembersItemValue) IsInt() bool { return s.Type == IntEnumMembersItemValue }
 
 // SetString sets EnumMembersItemValue to string.
 func (s *EnumMembersItemValue) SetString(v string) {
@@ -377,24 +377,180 @@ func NewStringEnumMembersItemValue(v string) EnumMembersItemValue {
 	return s
 }
 
-// SetFloat64 sets EnumMembersItemValue to float64.
-func (s *EnumMembersItemValue) SetFloat64(v float64) {
-	s.Type = Float64EnumMembersItemValue
+// SetInt sets EnumMembersItemValue to int.
+func (s *EnumMembersItemValue) SetInt(v int) {
+	s.Type = IntEnumMembersItemValue
+	s.Int = v
+}
+
+// GetInt returns int and true boolean if EnumMembersItemValue is int.
+func (s EnumMembersItemValue) GetInt() (v int, ok bool) {
+	if !s.IsInt() {
+		return v, false
+	}
+	return s.Int, true
+}
+
+// NewIntEnumMembersItemValue returns new EnumMembersItemValue from int.
+func NewIntEnumMembersItemValue(v int) EnumMembersItemValue {
+	var s EnumMembersItemValue
+	s.SetInt(v)
+	return s
+}
+
+// Ref: #/$defs/exampleValue
+// ExampleValue represents sum type.
+type ExampleValue struct {
+	Type    ExampleValueType // switch on this field
+	String  string
+	Float64 float64
+	Bool    bool
+}
+
+// ExampleValueType is oneOf type of ExampleValue.
+type ExampleValueType string
+
+// Possible values for ExampleValueType.
+const (
+	StringExampleValue  ExampleValueType = "string"
+	Float64ExampleValue ExampleValueType = "float64"
+	BoolExampleValue    ExampleValueType = "bool"
+)
+
+// IsString reports whether ExampleValue is string.
+func (s ExampleValue) IsString() bool { return s.Type == StringExampleValue }
+
+// IsFloat64 reports whether ExampleValue is float64.
+func (s ExampleValue) IsFloat64() bool { return s.Type == Float64ExampleValue }
+
+// IsBool reports whether ExampleValue is bool.
+func (s ExampleValue) IsBool() bool { return s.Type == BoolExampleValue }
+
+// SetString sets ExampleValue to string.
+func (s *ExampleValue) SetString(v string) {
+	s.Type = StringExampleValue
+	s.String = v
+}
+
+// GetString returns string and true boolean if ExampleValue is string.
+func (s ExampleValue) GetString() (v string, ok bool) {
+	if !s.IsString() {
+		return v, false
+	}
+	return s.String, true
+}
+
+// NewStringExampleValue returns new ExampleValue from string.
+func NewStringExampleValue(v string) ExampleValue {
+	var s ExampleValue
+	s.SetString(v)
+	return s
+}
+
+// SetFloat64 sets ExampleValue to float64.
+func (s *ExampleValue) SetFloat64(v float64) {
+	s.Type = Float64ExampleValue
 	s.Float64 = v
 }
 
-// GetFloat64 returns float64 and true boolean if EnumMembersItemValue is float64.
-func (s EnumMembersItemValue) GetFloat64() (v float64, ok bool) {
+// GetFloat64 returns float64 and true boolean if ExampleValue is float64.
+func (s ExampleValue) GetFloat64() (v float64, ok bool) {
 	if !s.IsFloat64() {
 		return v, false
 	}
 	return s.Float64, true
 }
 
-// NewFloat64EnumMembersItemValue returns new EnumMembersItemValue from float64.
-func NewFloat64EnumMembersItemValue(v float64) EnumMembersItemValue {
-	var s EnumMembersItemValue
+// NewFloat64ExampleValue returns new ExampleValue from float64.
+func NewFloat64ExampleValue(v float64) ExampleValue {
+	var s ExampleValue
 	s.SetFloat64(v)
+	return s
+}
+
+// SetBool sets ExampleValue to bool.
+func (s *ExampleValue) SetBool(v bool) {
+	s.Type = BoolExampleValue
+	s.Bool = v
+}
+
+// GetBool returns bool and true boolean if ExampleValue is bool.
+func (s ExampleValue) GetBool() (v bool, ok bool) {
+	if !s.IsBool() {
+		return v, false
+	}
+	return s.Bool, true
+}
+
+// NewBoolExampleValue returns new ExampleValue from bool.
+func NewBoolExampleValue(v bool) ExampleValue {
+	var s ExampleValue
+	s.SetBool(v)
+	return s
+}
+
+// Ref: #/$defs/examples
+// Examples represents sum type.
+type Examples struct {
+	Type              ExamplesType // switch on this field
+	ExampleValueArray []ExampleValue
+	ExampleValue      ExampleValue
+}
+
+// ExamplesType is oneOf type of Examples.
+type ExamplesType string
+
+// Possible values for ExamplesType.
+const (
+	ExampleValueArrayExamples ExamplesType = "[]ExampleValue"
+	ExampleValueExamples      ExamplesType = "ExampleValue"
+)
+
+// IsExampleValueArray reports whether Examples is []ExampleValue.
+func (s Examples) IsExampleValueArray() bool { return s.Type == ExampleValueArrayExamples }
+
+// IsExampleValue reports whether Examples is ExampleValue.
+func (s Examples) IsExampleValue() bool { return s.Type == ExampleValueExamples }
+
+// SetExampleValueArray sets Examples to []ExampleValue.
+func (s *Examples) SetExampleValueArray(v []ExampleValue) {
+	s.Type = ExampleValueArrayExamples
+	s.ExampleValueArray = v
+}
+
+// GetExampleValueArray returns []ExampleValue and true boolean if Examples is []ExampleValue.
+func (s Examples) GetExampleValueArray() (v []ExampleValue, ok bool) {
+	if !s.IsExampleValueArray() {
+		return v, false
+	}
+	return s.ExampleValueArray, true
+}
+
+// NewExampleValueArrayExamples returns new Examples from []ExampleValue.
+func NewExampleValueArrayExamples(v []ExampleValue) Examples {
+	var s Examples
+	s.SetExampleValueArray(v)
+	return s
+}
+
+// SetExampleValue sets Examples to ExampleValue.
+func (s *Examples) SetExampleValue(v ExampleValue) {
+	s.Type = ExampleValueExamples
+	s.ExampleValue = v
+}
+
+// GetExampleValue returns ExampleValue and true boolean if Examples is ExampleValue.
+func (s Examples) GetExampleValue() (v ExampleValue, ok bool) {
+	if !s.IsExampleValue() {
+		return v, false
+	}
+	return s.ExampleValue, true
+}
+
+// NewExampleValueExamples returns new Examples from ExampleValue.
+func NewExampleValueExamples(v ExampleValue) Examples {
+	var s Examples
+	s.SetExampleValue(v)
 	return s
 }
 
@@ -438,6 +594,52 @@ func (o OptBool) Get() (v bool, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptBool) Or(d bool) bool {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptExamples returns new OptExamples with value set to v.
+func NewOptExamples(v Examples) OptExamples {
+	return OptExamples{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptExamples is optional Examples.
+type OptExamples struct {
+	Value Examples
+	Set   bool
+}
+
+// IsSet returns true if OptExamples was set.
+func (o OptExamples) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptExamples) Reset() {
+	var v Examples
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptExamples) SetTo(v Examples) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptExamples) Get() (v Examples, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptExamples) Or(d Examples) Examples {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -862,9 +1064,9 @@ func (s *Attribute) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if len(s.Examples) != 0 {
+		if s.Examples.Set {
 			e.FieldStart("examples")
-			e.Raw(s.Examples)
+			s.Examples.Encode(e)
 		}
 	}
 	{
@@ -966,9 +1168,8 @@ func (s *Attribute) Decode(d *jx.Decoder) error {
 			}
 		case "examples":
 			if err := func() error {
-				v, err := d.RawAppend(nil)
-				s.Examples = jx.Raw(v)
-				if err != nil {
+				s.Examples.Reset()
+				if err := s.Examples.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -1084,15 +1285,9 @@ func (s *AttributeReference) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Examples != nil {
+		if s.Examples.Set {
 			e.FieldStart("examples")
-			e.ArrStart()
-			for _, elem := range s.Examples {
-				if len(elem) != 0 {
-					e.Raw(elem)
-				}
-			}
-			e.ArrEnd()
+			s.Examples.Encode(e)
 		}
 	}
 	{
@@ -1172,17 +1367,8 @@ func (s *AttributeReference) Decode(d *jx.Decoder) error {
 			}
 		case "examples":
 			if err := func() error {
-				s.Examples = make([]jx.Raw, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem jx.Raw
-					v, err := d.RawAppend(nil)
-					elem = jx.Raw(v)
-					if err != nil {
-						return err
-					}
-					s.Examples = append(s.Examples, elem)
-					return nil
-				}); err != nil {
+				s.Examples.Reset()
+				if err := s.Examples.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -1586,8 +1772,8 @@ func (s EnumMembersItemValue) Encode(e *jx.Encoder) {
 	switch s.Type {
 	case StringEnumMembersItemValue:
 		e.Str(s.String)
-	case Float64EnumMembersItemValue:
-		e.Float64(s.Float64)
+	case IntEnumMembersItemValue:
+		e.Int(s.Int)
 	}
 }
 
@@ -1599,12 +1785,12 @@ func (s *EnumMembersItemValue) Decode(d *jx.Decoder) error {
 	// Sum type type_discriminator.
 	switch t := d.Next(); t {
 	case jx.Number:
-		v, err := d.Float64()
-		s.Float64 = float64(v)
+		v, err := d.Int()
+		s.Int = int(v)
 		if err != nil {
 			return err
 		}
-		s.Type = Float64EnumMembersItemValue
+		s.Type = IntEnumMembersItemValue
 	case jx.String:
 		v, err := d.Str()
 		s.String = string(v)
@@ -1627,6 +1813,123 @@ func (s EnumMembersItemValue) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *EnumMembersItemValue) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ExampleValue as json.
+func (s ExampleValue) Encode(e *jx.Encoder) {
+	switch s.Type {
+	case StringExampleValue:
+		e.Str(s.String)
+	case Float64ExampleValue:
+		e.Float64(s.Float64)
+	case BoolExampleValue:
+		e.Bool(s.Bool)
+	}
+}
+
+// Decode decodes ExampleValue from json.
+func (s *ExampleValue) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ExampleValue to nil")
+	}
+	// Sum type type_discriminator.
+	switch t := d.Next(); t {
+	case jx.Bool:
+		v, err := d.Bool()
+		s.Bool = bool(v)
+		if err != nil {
+			return err
+		}
+		s.Type = BoolExampleValue
+	case jx.Number:
+		v, err := d.Float64()
+		s.Float64 = float64(v)
+		if err != nil {
+			return err
+		}
+		s.Type = Float64ExampleValue
+	case jx.String:
+		v, err := d.Str()
+		s.String = string(v)
+		if err != nil {
+			return err
+		}
+		s.Type = StringExampleValue
+	default:
+		return errors.Errorf("unexpected json type %q", t)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ExampleValue) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ExampleValue) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes Examples as json.
+func (s Examples) Encode(e *jx.Encoder) {
+	switch s.Type {
+	case ExampleValueArrayExamples:
+		e.ArrStart()
+		for _, elem := range s.ExampleValueArray {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	case ExampleValueExamples:
+		s.ExampleValue.Encode(e)
+	}
+}
+
+// Decode decodes Examples from json.
+func (s *Examples) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Examples to nil")
+	}
+	// Sum type type_discriminator.
+	switch t := d.Next(); t {
+	case jx.Array:
+		s.ExampleValueArray = make([]ExampleValue, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem ExampleValue
+			if err := elem.Decode(d); err != nil {
+				return err
+			}
+			s.ExampleValueArray = append(s.ExampleValueArray, elem)
+			return nil
+		}); err != nil {
+			return err
+		}
+		s.Type = ExampleValueArrayExamples
+	case jx.Bool, jx.Number, jx.String:
+		if err := s.ExampleValue.Decode(d); err != nil {
+			return err
+		}
+		s.Type = ExampleValueExamples
+	default:
+		return errors.Errorf("unexpected json type %q", t)
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s Examples) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Examples) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -1662,6 +1965,39 @@ func (s OptBool) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptBool) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes Examples as json.
+func (o OptExamples) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes Examples from json.
+func (o *OptExamples) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptExamples to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptExamples) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptExamples) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -2297,6 +2633,54 @@ func (s *Attribute) Validate() error {
 			Error: err,
 		})
 	}
+	if err := func() error {
+		if value, ok := s.Examples.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "examples",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *AttributeReference) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if value, ok := s.Examples.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "examples",
+			Error: err,
+		})
+	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
@@ -2327,8 +2711,43 @@ func (s *Enum) Validate() error {
 		if s.Members == nil {
 			return errors.New("nil is invalid value")
 		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "members",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ExampleValue) Validate() error {
+	switch s.Type {
+	case StringExampleValue:
+		return nil // no validation needed
+	case Float64ExampleValue:
+		if err := (validate.Float{}).Validate(float64(s.Float64)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	case BoolExampleValue:
+		return nil // no validation needed
+	default:
+		return errors.Errorf("invalid type %q", s.Type)
+	}
+}
+
+func (s Examples) Validate() error {
+	switch s.Type {
+	case ExampleValueArrayExamples:
+		if s.ExampleValueArray == nil {
+			return errors.New("nil is invalid value")
+		}
 		var failures []validate.FieldError
-		for i, elem := range s.Members {
+		for i, elem := range s.ExampleValueArray {
 			if err := func() error {
 				if err := elem.Validate(); err != nil {
 					return err
@@ -2345,48 +2764,9 @@ func (s *Enum) Validate() error {
 			return &validate.Error{Fields: failures}
 		}
 		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "members",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
-func (s *EnumMembersItem) Validate() error {
-	if s == nil {
-		return validate.ErrNilPointer
-	}
-
-	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Value.Validate(); err != nil {
+	case ExampleValueExamples:
+		if err := s.ExampleValue.Validate(); err != nil {
 			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "value",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
-func (s EnumMembersItemValue) Validate() error {
-	switch s.Type {
-	case StringEnumMembersItemValue:
-		return nil // no validation needed
-	case Float64EnumMembersItemValue:
-		if err := (validate.Float{}).Validate(float64(s.Float64)); err != nil {
-			return errors.Wrap(err, "float")
 		}
 		return nil
 	default:
@@ -2485,7 +2865,10 @@ func (s *TypeGroupsItem) Validate() error {
 func (s TypeGroupsItemAttributesItem) Validate() error {
 	switch s.Type {
 	case AttributeReferenceTypeGroupsItemAttributesItem:
-		return nil // no validation needed
+		if err := s.AttributeReference.Validate(); err != nil {
+			return err
+		}
+		return nil
 	case AttributeTypeGroupsItemAttributesItem:
 		if err := s.Attribute.Validate(); err != nil {
 			return err
