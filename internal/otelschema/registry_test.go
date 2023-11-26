@@ -13,10 +13,54 @@ import (
 	"github.com/go-faster/sdk/gold"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/maps"
 	"sigs.k8s.io/yaml"
 )
 
+func generateDDL(columns map[string]registryEntry) string {
+	var sb strings.Builder
+	sb.WriteString("CREATE TABLE columns (\n")
+
+	groups := make(map[string][]registryEntry)
+	for _, c := range columns {
+		prefix := c.Group
+		groups[prefix] = append(groups[prefix], c)
+	}
+
+	orderedGroups := maps.Keys(groups)
+	slices.Sort(orderedGroups)
+
+	for i, groupName := range orderedGroups {
+		if groupName != "" {
+			sb.WriteString(fmt.Sprintf("  -- %s\n", groupName))
+		}
+		maxFieldLen := 10
+		for _, c := range groups[groupName] {
+			if len(c.Name) > maxFieldLen {
+				maxFieldLen = len(c.Name)
+			}
+		}
+		slices.SortFunc(groups[groupName], func(a, b registryEntry) int {
+			return strings.Compare(a.Name, b.Name)
+		})
+		lastGroup := i == len(orderedGroups)-1
+		for j, c := range groups[groupName] {
+			sb.WriteString("  ")
+			sb.WriteString(fmt.Sprintf("%-*s %s", maxFieldLen, c.Name, c.Column))
+			sb.WriteString(fmt.Sprintf(" COMMENT '%s'", c.FullName))
+			if !(lastGroup && j == len(groups[groupName])-1) {
+				sb.WriteString(",\n")
+			}
+		}
+		sb.WriteString("\n")
+	}
+	sb.WriteString(") ENGINE Null;")
+	return sb.String()
+}
+
 type registryEntry struct {
+	FullName string           `json:"-"`
+	Group    string           `json:"group,omitempty"`
 	Type     string           `json:"type"`
 	Enum     []any            `json:"enum,omitempty"`
 	Column   proto.ColumnType `json:"column"`
@@ -91,7 +135,7 @@ func columnType(name, brief, t string, enum []any) proto.ColumnType {
 	var params []string
 	for i, v := range anyTo[string](enum) {
 		// Should we escape?
-		params = append(params, fmt.Sprintf("%d = '%s'", i, v))
+		params = append(params, fmt.Sprintf("'%s' = %d", v, i))
 	}
 	return colType.With(params...)
 }
@@ -190,7 +234,13 @@ func TestParseAllAttributes(t *testing.T) {
 			if len(enum) != 0 {
 				examples = nil
 			}
+			groupName := group.Prefix.Value
+			if i := strings.Index(name, "."); i != -1 {
+				groupName = name[:i]
+			}
 			out.Entries[name] = registryEntry{
+				FullName: name,
+				Group:    groupName,
 				Type:     typ,
 				Enum:     enum,
 				Column:   columnType(name, v.Brief.Value, typ, enum),
@@ -210,13 +260,13 @@ func TestParseAllAttributes(t *testing.T) {
 		if strings.HasPrefix(e.Column.String(), "Enum") {
 			out.Statistics.Enum++
 		}
-		out.Statistics.Total++
 	}
 
 	data, err := yaml.Marshal(out)
 	require.NoError(t, err)
 
 	gold.Str(t, string(data), "registry.yaml")
+	gold.Str(t, generateDDL(out.Entries), "ddl.sql")
 
 	assert.Zero(t, out.Statistics.Unknown, "Should be no unknown types")
 }
