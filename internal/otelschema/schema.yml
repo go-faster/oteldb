@@ -73,7 +73,9 @@ $defs:
         type: string
       tag:
         type: string
-      examples: {}
+      examples:
+        type: array
+        items: {}
       requirement_level:
         $ref: "#/$defs/requirementLevel"
       stability:
