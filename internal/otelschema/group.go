@@ -21,7 +21,7 @@ type Attribute struct {
 	Brief            OptString           `json:"brief"`
 	Note             OptString           `json:"note"`
 	Tag              OptString           `json:"tag"`
-	Examples         []jx.Raw            `json:"examples"`
+	Examples         jx.Raw              `json:"examples"`
 	RequirementLevel OptRequirementLevel `json:"requirement_level"`
 	Stability        OptString           `json:"stability"`
 }
@@ -57,7 +57,7 @@ func (s *Attribute) GetTag() OptString {
 }
 
 // GetExamples returns the value of Examples.
-func (s *Attribute) GetExamples() []jx.Raw {
+func (s *Attribute) GetExamples() jx.Raw {
 	return s.Examples
 }
 
@@ -102,7 +102,7 @@ func (s *Attribute) SetTag(val OptString) {
 }
 
 // SetExamples sets the value of Examples.
-func (s *Attribute) SetExamples(val []jx.Raw) {
+func (s *Attribute) SetExamples(val jx.Raw) {
 	s.Examples = val
 }
 
@@ -862,15 +862,9 @@ func (s *Attribute) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Examples != nil {
+		if len(s.Examples) != 0 {
 			e.FieldStart("examples")
-			e.ArrStart()
-			for _, elem := range s.Examples {
-				if len(elem) != 0 {
-					e.Raw(elem)
-				}
-			}
-			e.ArrEnd()
+			e.Raw(s.Examples)
 		}
 	}
 	{
@@ -972,17 +966,9 @@ func (s *Attribute) Decode(d *jx.Decoder) error {
 			}
 		case "examples":
 			if err := func() error {
-				s.Examples = make([]jx.Raw, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem jx.Raw
-					v, err := d.RawAppend(nil)
-					elem = jx.Raw(v)
-					if err != nil {
-						return err
-					}
-					s.Examples = append(s.Examples, elem)
-					return nil
-				}); err != nil {
+				v, err := d.RawAppend(nil)
+				s.Examples = jx.Raw(v)
+				if err != nil {
 					return err
 				}
 				return nil
