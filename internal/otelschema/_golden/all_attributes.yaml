@@ -4,12 +4,18 @@
   Type: string
 - Name: exception.stacktrace
   Type: string
-- Name: faas.trigger
-  Type: enum
+- Enum:
+  - datasource
+  - http
+  - pubsub
+  - timer
+  - other
+  Name: faas.trigger
+  Type: string
 - Name: faas.invoked_name
   Type: string
 - Name: faas.invoked_provider
-  Type: enum
+  Type: string
 - Name: faas.invoked_region
   Type: string
 - Name: peer.service
@@ -24,8 +30,11 @@
   Type: string
 - Name: log.record.uid
   Type: string
-- Name: log.iostream
-  Type: enum
+- Enum:
+  - stdout
+  - stderr
+  Name: log.iostream
+  Type: string
 - Name: log.file.name
   Type: string
 - Name: log.file.path
@@ -34,18 +43,34 @@
   Type: string
 - Name: log.file.path_resolved
   Type: string
-- Name: ios.state
-  Type: enum
-- Name: android.state
-  Type: enum
-- Name: state
-  Type: enum
+- Enum:
+  - active
+  - inactive
+  - background
+  - foreground
+  - terminate
+  Name: ios.state
+  Type: string
+- Enum:
+  - created
+  - background
+  - foreground
+  Name: android.state
+  Type: string
+- Enum:
+  - idle
+  - used
+  Name: state
+  Type: string
 - Name: pool.name
   Type: string
 - Name: jvm.buffer.pool.name
   Type: string
-- Name: jvm.memory.type
-  Type: enum
+- Enum:
+  - heap
+  - non_heap
+  Name: jvm.memory.type
+  Type: string
 - Name: jvm.memory.pool.name
   Type: string
 - Name: jvm.gc.name
@@ -54,40 +79,73 @@
   Type: string
 - Name: jvm.thread.daemon
   Type: boolean
-- Name: jvm.thread.state
-  Type: enum
+- Enum:
+  - new
+  - runnable
+  - blocked
+  - waiting
+  - timed_waiting
+  - terminated
+  Name: jvm.thread.state
+  Type: string
 - Name: system.device
   Type: string
 - Name: system.cpu.state
-  Type: enum
+  Type: string
 - Name: system.cpu.logical_number
   Type: int
 - Name: system.memory.state
-  Type: enum
-- Name: system.paging.state
-  Type: enum
-- Name: system.paging.type
-  Type: enum
-- Name: system.paging.direction
-  Type: enum
-- Name: system.filesystem.state
-  Type: enum
+  Type: string
+- Enum:
+  - used
+  - free
+  Name: system.paging.state
+  Type: string
+- Enum:
+  - major
+  - minor
+  Name: system.paging.type
+  Type: string
+- Enum:
+  - in
+  - out
+  Name: system.paging.direction
+  Type: string
+- Enum:
+  - used
+  - free
+  - reserved
+  Name: system.filesystem.state
+  Type: string
 - Name: system.filesystem.type
-  Type: enum
+  Type: string
 - Name: system.filesystem.mode
   Type: string
 - Name: system.filesystem.mountpoint
   Type: string
-- Name: system.network.state
-  Type: enum
+- Enum:
+  - close
+  - close_wait
+  - closing
+  - delete
+  - established
+  - fin_wait_1
+  - fin_wait_2
+  - last_ack
+  - listen
+  - syn_recv
+  - syn_sent
+  - time_wait
+  Name: system.network.state
+  Type: string
 - Name: system.processes.status
-  Type: enum
+  Type: string
 - Name: client.address
   Type: string
 - Name: client.port
   Type: int
 - Name: cloud.provider
-  Type: enum
+  Type: string
 - Name: cloud.account.id
   Type: string
 - Name: cloud.region
@@ -97,7 +155,7 @@
 - Name: cloud.availability_zone
   Type: string
 - Name: cloud.platform
-  Type: enum
+  Type: string
 - Name: code.function
   Type: string
 - Name: code.namespace
@@ -136,8 +194,20 @@
   Type: string
 - Name: db.cassandra.coordinator.id
   Type: string
-- Name: db.cassandra.consistency_level
-  Type: enum
+- Enum:
+  - all
+  - each_quorum
+  - quorum
+  - local_quorum
+  - one
+  - two
+  - three
+  - local_one
+  - any
+  - serial
+  - local_serial
+  Name: db.cassandra.consistency_level
+  Type: string
 - Name: db.cassandra.idempotence
   Type: boolean
 - Name: db.cassandra.page_size
@@ -150,12 +220,15 @@
   Type: string
 - Name: db.cosmosdb.client_id
   Type: string
-- Name: db.cosmosdb.connection_mode
-  Type: enum
+- Enum:
+  - gateway
+  - direct
+  Name: db.cosmosdb.connection_mode
+  Type: string
 - Name: db.cosmosdb.container
   Type: string
 - Name: db.cosmosdb.operation_type
-  Type: enum
+  Type: string
 - Name: db.cosmosdb.request_charge
   Type: double
 - Name: db.cosmosdb.request_content_length
@@ -187,7 +260,7 @@
 - Name: db.statement
   Type: string
 - Name: db.system
-  Type: enum
+  Type: string
 - Name: db.user
   Type: string
 - Name: http.method
@@ -205,7 +278,7 @@
 - Name: http.response_content_length
   Type: int
 - Name: http.flavor
-  Type: enum
+  Type: string
 - Name: http.user_agent
   Type: string
 - Name: net.sock.peer.name
@@ -227,13 +300,13 @@
 - Name: net.sock.host.port
   Type: int
 - Name: net.transport
-  Type: enum
+  Type: string
 - Name: net.protocol.name
   Type: string
 - Name: net.protocol.version
   Type: string
 - Name: net.sock.family
-  Type: enum
+  Type: string
 - Name: destination.address
   Type: string
 - Name: destination.port
@@ -246,10 +319,13 @@
   Type: string
 - Name: device.model.name
   Type: string
-- Name: disk.io.direction
-  Type: enum
+- Enum:
+  - read
+  - write
+  Name: disk.io.direction
+  Type: string
 - Name: error.type
-  Type: enum
+  Type: string
 - Name: host.id
   Type: string
 - Name: host.name
@@ -257,7 +333,7 @@
 - Name: host.type
   Type: string
 - Name: host.arch
-  Type: enum
+  Type: string
 - Name: host.image.name
   Type: string
 - Name: host.image.id
@@ -285,7 +361,7 @@
 - Name: http.request.header
   Type: template[string[]]
 - Name: http.request.method
-  Type: enum
+  Type: string
 - Name: http.request.method_original
   Type: string
 - Name: http.request.resend_count
@@ -375,13 +451,16 @@
 - Name: messaging.message.body.size
   Type: int
 - Name: messaging.operation
-  Type: enum
+  Type: string
 - Name: messaging.rabbitmq.destination.routing_key
   Type: string
 - Name: messaging.rocketmq.client_group
   Type: string
-- Name: messaging.rocketmq.consumption_model
-  Type: enum
+- Enum:
+  - clustering
+  - broadcasting
+  Name: messaging.rocketmq.consumption_model
+  Type: string
 - Name: messaging.rocketmq.message.delay_time_level
   Type: int
 - Name: messaging.rocketmq.message.delivery_timestamp
@@ -392,14 +471,19 @@
   Type: string[]
 - Name: messaging.rocketmq.message.tag
   Type: string
-- Name: messaging.rocketmq.message.type
-  Type: enum
+- Enum:
+  - normal
+  - fifo
+  - delay
+  - transaction
+  Name: messaging.rocketmq.message.type
+  Type: string
 - Name: messaging.rocketmq.namespace
   Type: string
 - Name: messaging.gcp_pubsub.message.ordering_key
   Type: string
 - Name: messaging.system
-  Type: enum
+  Type: string
 - Name: network.carrier.icc
   Type: string
 - Name: network.carrier.mcc
@@ -409,9 +493,9 @@
 - Name: network.carrier.name
   Type: string
 - Name: network.connection.subtype
-  Type: enum
+  Type: string
 - Name: network.connection.type
-  Type: enum
+  Type: string
 - Name: network.local.address
   Type: string
 - Name: network.local.port
@@ -425,15 +509,18 @@
 - Name: network.protocol.version
   Type: string
 - Name: network.transport
-  Type: enum
+  Type: string
 - Name: network.type
-  Type: enum
-- Name: network.io.direction
-  Type: enum
+  Type: string
+- Enum:
+  - transmit
+  - receive
+  Name: network.io.direction
+  Type: string
 - Name: oci.manifest.digest
   Type: string
 - Name: os.type
-  Type: enum
+  Type: string
 - Name: os.description
   Type: string
 - Name: os.name
@@ -464,14 +551,49 @@
   Type: string
 - Name: process.runtime.description
   Type: string
-- Name: rpc.connect_rpc.error_code
-  Type: enum
+- Enum:
+  - cancelled
+  - unknown
+  - invalid_argument
+  - deadline_exceeded
+  - not_found
+  - already_exists
+  - permission_denied
+  - resource_exhausted
+  - failed_precondition
+  - aborted
+  - out_of_range
+  - unimplemented
+  - internal
+  - unavailable
+  - data_loss
+  - unauthenticated
+  Name: rpc.connect_rpc.error_code
+  Type: string
 - Name: rpc.connect_rpc.request.metadata
   Type: template[string[]]
 - Name: rpc.connect_rpc.response.metadata
   Type: template[string[]]
-- Name: rpc.grpc.status_code
-  Type: enum
+- Enum:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  Name: rpc.grpc.status_code
+  Type: int
 - Name: rpc.grpc.request.metadata
   Type: template[string[]]
 - Name: rpc.grpc.response.metadata
@@ -489,7 +611,7 @@
 - Name: rpc.service
   Type: string
 - Name: rpc.system
-  Type: enum
+  Type: string
 - Name: server.address
   Type: string
 - Name: server.port
@@ -535,7 +657,7 @@
 - Name: tls.next_protocol
   Type: string
 - Name: tls.protocol.name
-  Type: enum
+  Type: string
 - Name: tls.protocol.version
   Type: string
 - Name: tls.resumed
@@ -586,8 +708,11 @@
   Type: string
 - Name: aws.ecs.cluster.arn
   Type: string
-- Name: aws.ecs.launchtype
-  Type: enum
+- Enum:
+  - ec2
+  - fargate
+  Name: aws.ecs.launchtype
+  Type: string
 - Name: aws.ecs.task.arn
   Type: string
 - Name: aws.ecs.task.family
@@ -639,7 +764,7 @@
 - Name: telemetry.sdk.name
   Type: string
 - Name: telemetry.sdk.language
-  Type: enum
+  Type: string
 - Name: telemetry.sdk.version
   Type: string
 - Name: telemetry.distro.name
@@ -676,10 +801,16 @@
   Type: string
 - Name: cloudevents.event_subject
   Type: string
-- Name: opentracing.ref_type
-  Type: enum
-- Name: otel.status_code
-  Type: enum
+- Enum:
+  - child_of
+  - follows_from
+  Name: opentracing.ref_type
+  Type: string
+- Enum:
+  - OK
+  - ERROR
+  Name: otel.status_code
+  Type: string
 - Name: otel.status_description
   Type: string
 - Name: faas.invocation_id
@@ -687,7 +818,7 @@
 - Name: faas.document.collection
   Type: string
 - Name: faas.document.operation
-  Type: enum
+  Type: string
 - Name: faas.document.time
   Type: string
 - Name: faas.document.name
@@ -704,8 +835,11 @@
   Type: string
 - Name: feature_flag.variant
   Type: string
-- Name: message.type
-  Type: enum
+- Enum:
+  - SENT
+  - RECEIVED
+  Name: message.type
+  Type: string
 - Name: message.id
   Type: int
 - Name: message.compressed_size

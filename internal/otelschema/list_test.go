@@ -34,6 +34,7 @@ func TestParseAllAttributes(t *testing.T) {
 	type entry struct {
 		Name string
 		Type string
+		Enum []interface{} `json:"Enum,omitempty"`
 	}
 	var entries []entry
 	for _, group := range parsed {
@@ -46,14 +47,33 @@ func TestParseAllAttributes(t *testing.T) {
 			if prefix, ok := group.Prefix.Get(); ok {
 				name = prefix + "." + name
 			}
-			typ := "enum"
+			var typ string
 			if s, ok := v.Type.GetString(); ok {
 				typ = s
+			}
+			var enum []interface{}
+			if e, ok := v.Type.GetEnum(); ok {
+				typ = "enum"
+				for _, m := range e.Members {
+					switch m.Value.Type {
+					case StringEnumMembersItemValue:
+						enum = append(enum, m.Value.String)
+						typ = "string"
+					case IntEnumMembersItemValue:
+						enum = append(enum, m.Value.Int)
+						typ = "int"
+					}
+				}
+				if e.AllowCustomValues.Value {
+					// Not actually an enum?
+					enum = nil
+				}
 			}
 			t.Logf("%s (%s)", name, typ)
 			entries = append(entries, entry{
 				Name: name,
 				Type: typ,
+				Enum: enum,
 			})
 		}
 	}
