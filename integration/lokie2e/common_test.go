@@ -83,7 +83,11 @@ func runTest(
 	t.Run("Labels", func(t *testing.T) {
 		a := require.New(t)
 
-		r, err := c.Labels(ctx, lokiapi.LabelsParams{})
+		r, err := c.Labels(ctx, lokiapi.LabelsParams{
+			// Always sending time range because default is current time.
+			Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+			End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+		})
 		a.NoError(err)
 		a.Len(r.Data, len(set.Labels))
 		for _, label := range r.Data {
@@ -99,7 +103,12 @@ func runTest(
 				labelValue[t.Value] = struct{}{}
 			}
 
-			r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{Name: labelName})
+			r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
+				Name: labelName,
+				// Always sending time range because default is current time.
+				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+			})
 			a.NoError(err)
 			a.Len(r.Data, len(labelValue))
 			for _, val := range r.Data {
@@ -206,6 +215,7 @@ func runTest(
 
 				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
 					Query: tt.query,
+					// Always sending time range because default is current time.
 					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 					Limit: lokiapi.NewOptInt(1000),
