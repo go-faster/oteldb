@@ -70,7 +70,7 @@ func runTest(
 	querier logstorage.Querier,
 	engineQuerier logqlengine.Querier,
 ) {
-	set, err := readBatchSet("_testdata/logs.json")
+	set, err := readBatchSet("_testdata/logs.jsonl")
 	require.NoError(t, err)
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
