@@ -1,3 +1,4 @@
+// Package integration wraps integration
 package integration
 
 import (
@@ -5,6 +6,7 @@ import (
 	"testing"
 )
 
+// Skip test if E2E env is not set.
 func Skip(t testing.TB) {
 	t.Helper()
 	if os.Getenv("E2E") == "" {
