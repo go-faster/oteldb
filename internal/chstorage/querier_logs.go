@@ -41,7 +41,6 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		}
 		span.End()
 	}()
-
 	var (
 		names proto.ColStr
 		out   []string
@@ -60,7 +59,8 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		Body: fmt.Sprintf(`SELECT DISTINCT 
 arrayJoin(arrayConcat(JSONExtractKeys(attributes), JSONExtractKeys(resource), JSONExtractKeys(scope_attributes))) as key
 FROM %s 
-WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)`,
+WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)
+LIMIT 1000`,
 			table, opts.Start, opts.End,
 		),
 	}); err != nil {
@@ -101,6 +101,7 @@ func (l *labelStaticIterator) Next(t *logstorage.Label) bool {
 		t.Type = int32(pcommon.ValueTypeStr)
 		t.Value = l.values[0].String()
 	}
+	l.values = l.values[1:]
 	return true
 }
 
@@ -124,7 +125,6 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		}
 		span.End()
 	}()
-
 	var (
 		names proto.ColStr
 		out   []jx.Raw
@@ -147,13 +147,12 @@ COALESCE(
 	JSONExtractRaw(resource, %[1]s)
 ) as value
 FROM %s 
-WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)`,
+WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d) LIMIT 1000`,
 			singleQuoted(labelName), table, opts.Start, opts.End,
 		),
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
-
 	return &labelStaticIterator{
 		name:   labelName,
 		values: out,
@@ -250,6 +249,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 
 	// TODO: use streaming.
 	var data []logstorage.Record
+
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
@@ -260,7 +260,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 			}); err != nil {
 				return errors.Wrap(err, "for each")
 			}
-			out.Reset()
 			return nil
 		},
 	}); err != nil {
