@@ -46,5 +46,5 @@ docker compose -f dev/local/ytsaurus/docker-compose.yml up -d
 #### Clickhouse storage
 
 ```shell
-docker compose -f dev/local/clickhouse/docker-compose.yml up -d
+docker compose -f dev/local/ch/docker-compose.yml up -d
 ```

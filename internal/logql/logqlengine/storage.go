@@ -25,19 +25,19 @@ func (caps SupportedOps) Supports(op logql.BinOp) bool {
 	return caps&mask != 0
 }
 
-// QuerierСapabilities defines what operations storage can do.
-type QuerierСapabilities struct {
+// QuerierCapabilities defines what operations storage can do.
+type QuerierCapabilities struct {
 	Label SupportedOps
 	Line  SupportedOps
 }
 
 // Querier does queries to storage.
 type Querier interface {
-	// Сapabilities returns Querier capabilities.
+	// Capabilities returns Querier capabilities.
 	//
 	// NOTE: engine would call once and then save value.
-	// 	Сapabilities should not change over time.
-	Сapabilities() QuerierСapabilities
+	// 	Capabilities should not change over time.
+	Capabilities() QuerierCapabilities
 	// SelectLogs selects log records from storage.
 	SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params SelectLogsParams) (iterators.Iterator[logstorage.Record], error)
 }

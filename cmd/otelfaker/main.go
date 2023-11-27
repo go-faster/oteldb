@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math/rand"
 	"os"
 	"time"
 
@@ -18,7 +19,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func getLogs(ctx context.Context, tracer trace.Tracer, now time.Time) plog.Logs {
+func getLogs(ctx context.Context, tracer trace.Tracer, rnd *rand.Rand, now time.Time) plog.Logs {
 	_, span := tracer.Start(ctx, "getLogs")
 	defer span.End()
 	var (
@@ -49,8 +50,12 @@ func getLogs(ctx context.Context, tracer trace.Tracer, now time.Time) plog.Logs 
 	lg.Attributes().PutStr("http.method", "GET")
 	lg.Attributes().PutBool("http.server", true)
 	lg.Attributes().PutInt("http.status_code", 200)
-	lg.Attributes().PutStr("http.url", "https://example.com")
-	lg.Attributes().PutStr("http.user_agent", "test-agent")
+	if rnd.Float32() < 0.5 {
+		lg.Attributes().PutStr("http.url", "https://example.com")
+		lg.Attributes().PutStr("http.status_text", "OK")
+	} else {
+		lg.Attributes().PutStr("http.user_agent", "test-agent")
+	}
 	lg.Attributes().PutDouble("http.duration_seconds", 1.1054)
 	lg.Attributes().PutInt("http.duration", (time.Second + time.Millisecond*105).Nanoseconds())
 	lg.SetFlags(plog.DefaultLogRecordFlags.WithIsSampled(true))
@@ -77,8 +82,9 @@ func main() {
 		}
 		client := plogotlp.NewGRPCClient(conn)
 		tracer := m.TracerProvider().Tracer("otelfaker")
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404
 		for now := range time.NewTicker(time.Second).C {
-			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(getLogs(ctx, tracer, now))); err != nil {
+			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(getLogs(ctx, tracer, rnd, now))); err != nil {
 				return errors.Wrap(err, "send logs")
 			}
 		}

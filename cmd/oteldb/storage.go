@@ -40,8 +40,8 @@ type combinedYTQuerier struct {
 	*ytstorage.YTQLQuerier
 }
 
-func (q *combinedYTQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
-	return q.yql.Сapabilities()
+func (q *combinedYTQuerier) Capabilities() (caps logqlengine.QuerierCapabilities) {
+	return q.yql.Capabilities()
 }
 
 func (q *combinedYTQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (_ iterators.Iterator[logstorage.Record], rerr error) {
@@ -288,7 +288,7 @@ func setupCH(
 	}
 
 	return otelStorage{
-		logQuerier:      nil,
+		logQuerier:      querier,
 		logInserter:     inserter,
 		traceQuerier:    querier,
 		traceInserter:   inserter,

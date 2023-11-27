@@ -67,7 +67,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			var caps QuerierСapabilities
+			var caps QuerierCapabilities
 			caps.Label.Add(tt.labelCaps...)
 
 			conds, err := extractQueryConditions(caps, tt.sel, nil)
@@ -142,7 +142,7 @@ func TestExtractLineQueryConditions(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			var caps QuerierСapabilities
+			var caps QuerierCapabilities
 			caps.Line.Add(tt.lineCaps...)
 
 			conds, err := extractQueryConditions(caps, logql.Selector{}, tt.stages)

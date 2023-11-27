@@ -10,17 +10,17 @@ import (
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	"go.uber.org/zap/zaptest"
 
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chstorage"
-	"github.com/go-faster/oteldb/internal/logstorage"
 )
 
 func TestCH(t *testing.T) {
-	t.Parallel()
 	integration.Skip(t)
 	ctx := context.Background()
 
@@ -74,12 +74,9 @@ func TestCH(t *testing.T) {
 	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{Tables: tables})
 	require.NoError(t, err)
 
-	consumer := logstorage.NewConsumer(inserter)
-	set, err := readBatchSet("_testdata/logs.json")
+	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
 	require.NoError(t, err)
-	for i, b := range set.Batches {
-		if err := consumer.ConsumeLogs(ctx, b); err != nil {
-			t.Fatalf("Send batch %d: %+v", i, err)
-		}
-	}
+
+	ctx = zctx.Base(ctx, zaptest.NewLogger(t))
+	runTest(ctx, t, inserter, querier, querier)
 }

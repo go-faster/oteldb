@@ -35,7 +35,7 @@ type mockQuerier struct {
 	step  time.Duration
 }
 
-func (m *mockQuerier) Сapabilities() (caps QuerierСapabilities) {
+func (m *mockQuerier) Capabilities() (caps QuerierCapabilities) {
 	return caps
 }
 

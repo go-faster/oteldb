@@ -2,7 +2,9 @@ package chstorage
 
 import (
 	"github.com/ClickHouse/ch-go/proto"
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -60,6 +62,60 @@ func setStrOrEmpty(col proto.ColumnOf[string], m pcommon.Map, k string) {
 	col.Append(v.AsString())
 }
 
+func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
+	for i := 0; i < c.timestamp.Rows(); i++ {
+		r := logstorage.Record{
+			Timestamp:      otelstorage.NewTimestampFromTime(c.timestamp.Row(i)),
+			SeverityText:   c.severityText.Row(i),
+			SeverityNumber: plog.SeverityNumber(c.severityNumber.Row(i)),
+			TraceID:        c.traceID.Row(i),
+			SpanID:         c.spanID.Row(i),
+			Flags:          plog.LogRecordFlags(c.traceFlags.Row(i)),
+			Body:           c.body.Row(i),
+
+			ScopeVersion: c.scopeVersion.Row(i),
+			ScopeName:    c.scopeName.Row(i),
+		}
+		{
+			m, err := decodeAttributes(c.resource.Row(i))
+			if err != nil {
+				return errors.Wrap(err, "decode resource")
+			}
+			v := m.AsMap()
+			if s := c.serviceInstanceID.Row(i); s != "" {
+				v.PutStr("service.instance.id", s)
+			}
+			if s := c.serviceName.Row(i); s != "" {
+				v.PutStr("service.name", s)
+			}
+			if s := c.serviceNamespace.Row(i); s != "" {
+				v.PutStr("service.namespace", s)
+			}
+			r.ResourceAttrs = otelstorage.Attrs(v)
+		}
+		{
+			m, err := decodeAttributes(c.attributes.Row(i))
+			if err != nil {
+				return errors.Wrap(err, "decode attributes")
+			}
+			r.Attrs = otelstorage.Attrs(m.AsMap())
+		}
+		{
+			m, err := decodeAttributes(c.scopeAttributes.Row(i))
+			if err != nil {
+				return errors.Wrap(err, "decode scope attributes")
+			}
+			r.ScopeAttrs = otelstorage.Attrs(m.AsMap())
+		}
+		{
+			// Default just to timestamp.
+			r.ObservedTimestamp = r.Timestamp
+		}
+		f(r)
+	}
+	return nil
+}
+
 func (c *logColumns) AddRow(r logstorage.Record) {
 	{
 		m := r.ResourceAttrs.AsMap()
@@ -112,3 +168,9 @@ func (c *logColumns) columns() tableColumns {
 
 func (c *logColumns) Input() proto.Input    { return c.columns().Input() }
 func (c *logColumns) Result() proto.Results { return c.columns().Result() }
+
+func (c *logColumns) Reset() {
+	for _, col := range c.columns() {
+		col.Data.Reset()
+	}
+}

@@ -9,7 +9,7 @@ type queryConditions struct {
 	params    SelectLogsParams
 }
 
-func extractQueryConditions(caps QuerierСapabilities, sel logql.Selector, stages []logql.PipelineStage) (cond queryConditions, _ error) {
+func extractQueryConditions(caps QuerierCapabilities, sel logql.Selector, stages []logql.PipelineStage) (cond queryConditions, _ error) {
 	var prefilters []Processor
 
 	for _, lm := range sel.Matchers {
