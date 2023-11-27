@@ -213,9 +213,9 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	fmt.Fprintf(&query, " FROM %s WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)", table, start, end)
 	for _, m := range params.Labels {
 		switch m.Op {
-		case logql.OpEq:
+		case logql.OpEq, logql.OpRe:
 			query.WriteString(" AND (")
-		case logql.OpNotEq:
+		case logql.OpNotEq, logql.OpNotRe:
 			query.WriteString(" AND NOT (")
 		default:
 			return nil, errors.Errorf("unexpected op %q", m.Op)
@@ -229,22 +229,31 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				query.WriteString(" OR ")
 			}
 			// TODO: how to match integers, booleans, floats, arrays?
-			fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(m.Label), singleQuoted(m.Value))
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(m.Label), singleQuoted(m.Value))
+			case logql.OpRe, logql.OpNotRe:
+				fmt.Fprintf(&query, "JSONExtractString(%s, %s) REGEXP %s", column, singleQuoted(m.Label), singleQuoted(m.Value))
+			}
 		}
 		query.WriteByte(')')
 	}
 	for _, m := range params.Line {
 		switch m.Op {
-		case logql.OpEq:
+		case logql.OpEq, logql.OpRe:
 			query.WriteString(" AND ")
-		case logql.OpNotEq:
+		case logql.OpNotEq, logql.OpNotRe:
 			query.WriteString(" AND NOT ")
 		default:
 			return nil, errors.Errorf("unexpected op %q", m.Op)
 		}
 
-		// Line filter checks if line contains given value.
-		fmt.Fprintf(&query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
+		switch m.Op {
+		case logql.OpEq, logql.OpNotEq:
+			fmt.Fprintf(&query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
+		case logql.OpRe, logql.OpNotRe:
+			fmt.Fprintf(&query, "body REGEXP %s", singleQuoted(m.Value))
+		}
 	}
 
 	// TODO: use streaming.
