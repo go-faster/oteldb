@@ -10,6 +10,7 @@ type pointColumns struct {
 
 	value proto.ColFloat64
 
+	flags      proto.ColUInt32
 	attributes proto.ColStr
 	resource   proto.ColStr
 }
@@ -28,6 +29,7 @@ func (c *pointColumns) Input() proto.Input {
 
 		{Name: "value", Data: c.value},
 
+		{Name: "flags", Data: c.flags},
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
@@ -41,6 +43,7 @@ func (c *pointColumns) Result() proto.Results {
 
 		{Name: "value", Data: &c.value},
 
+		{Name: "flags", Data: &c.flags},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
 	}
@@ -57,6 +60,7 @@ type histogramColumns struct {
 	bucketCounts   *proto.ColArr[uint64]
 	explicitBounds *proto.ColArr[float64]
 
+	flags      proto.ColUInt32
 	attributes proto.ColStr
 	resource   proto.ColStr
 }
@@ -86,6 +90,7 @@ func (c *histogramColumns) Input() proto.Input {
 		{Name: "histogram_bucket_counts", Data: c.bucketCounts},
 		{Name: "histogram_explicit_bounds", Data: c.explicitBounds},
 
+		{Name: "flags", Data: c.flags},
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
@@ -104,6 +109,7 @@ func (c *histogramColumns) Result() proto.Results {
 		{Name: "histogram_bucket_counts", Data: c.bucketCounts},
 		{Name: "histogram_explicit_bounds", Data: c.explicitBounds},
 
+		{Name: "flags", Data: &c.flags},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
 	}
@@ -124,6 +130,7 @@ type expHistogramColumns struct {
 	negativeOffset       proto.ColInt32
 	negativeBucketCounts *proto.ColArr[uint64]
 
+	flags      proto.ColUInt32
 	attributes proto.ColStr
 	resource   proto.ColStr
 }
@@ -157,6 +164,7 @@ func (c *expHistogramColumns) Input() proto.Input {
 		{Name: "exp_histogram_negative_offset", Data: c.negativeOffset},
 		{Name: "exp_histogram_negative_bucket_counts", Data: c.negativeBucketCounts},
 
+		{Name: "flags", Data: c.flags},
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
@@ -179,6 +187,7 @@ func (c *expHistogramColumns) Result() proto.Results {
 		{Name: "exp_histogram_negative_offset", Data: &c.negativeOffset},
 		{Name: "exp_histogram_negative_bucket_counts", Data: c.negativeBucketCounts},
 
+		{Name: "flags", Data: &c.flags},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
 	}
@@ -193,6 +202,7 @@ type summaryColumns struct {
 	quantiles *proto.ColArr[float64]
 	values    *proto.ColArr[float64]
 
+	flags      proto.ColUInt32
 	attributes proto.ColStr
 	resource   proto.ColStr
 }
@@ -217,6 +227,7 @@ func (c *summaryColumns) Input() proto.Input {
 		{Name: "summary_quantiles", Data: c.quantiles},
 		{Name: "summary_values", Data: c.values},
 
+		{Name: "flags", Data: c.flags},
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
@@ -233,6 +244,7 @@ func (c *summaryColumns) Result() proto.Results {
 		{Name: "summary_quantiles", Data: c.quantiles},
 		{Name: "summary_values", Data: c.values},
 
+		{Name: "flags", Data: &c.flags},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
 	}

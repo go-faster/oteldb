@@ -15,6 +15,7 @@ const (
 
 		value Float64,
 
+		flags	UInt32,
 		attributes	String,
 		resource	String
 	)
@@ -32,6 +33,7 @@ const (
 		histogram_bucket_counts Array(UInt64),
 		histogram_explicit_bounds Array(Float64),
 
+		flags	UInt32,
 		attributes	String,
 		resource	String
 	)
@@ -53,6 +55,7 @@ const (
 		exp_histogram_negative_offset Int32,
 		exp_histogram_negative_bucket_counts Array(UInt64),
 
+		flags	UInt32,
 		attributes	String,
 		resource	String
 	)
@@ -68,6 +71,7 @@ const (
 		summary_quantiles Array(Float64),
 		summary_values Array(Float64),
 
+		flags	UInt32,
 		attributes	String,
 		resource	String
 	)

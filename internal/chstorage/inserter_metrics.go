@@ -85,6 +85,7 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
+		flags := point.Flags()
 		attrs := point.Attributes()
 
 		var val float64
@@ -105,6 +106,7 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 		c.name.Append(name)
 		c.timestamp.Append(ts)
 		c.value.Append(val)
+		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
 	}
@@ -116,6 +118,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
+		flags := point.Flags()
 		attrs := point.Attributes()
 		count := point.Count()
 		sum := proto.Nullable[float64]{
@@ -142,6 +145,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 		c.max.Append(max)
 		c.bucketCounts.Append(bucketCounts)
 		c.explicitBounds.Append(explicitBounds)
+		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
 	}
@@ -160,6 +164,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
+		flags := point.Flags()
 		attrs := point.Attributes()
 		count := point.Count()
 		sum := proto.Nullable[float64]{
@@ -193,6 +198,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 		c.positiveBucketCounts.Append(positiveBucketCounts)
 		c.negativeOffset.Append(negativeOffset)
 		c.negativeBucketCounts.Append(negativeBucketCounts)
+		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
 	}
@@ -204,6 +210,7 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
+		flags := point.Flags()
 		attrs := point.Attributes()
 		count := point.Count()
 		sum := point.Sum()
@@ -227,6 +234,7 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 		c.sum.Append(sum)
 		c.quantiles.Append(quantiles)
 		c.values.Append(values)
+		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
 	}
