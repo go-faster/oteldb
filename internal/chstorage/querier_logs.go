@@ -52,7 +52,10 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < names.Rows(); i++ {
-				out = append(out, names.Row(i))
+				name := names.Row(i)
+				// TODO: add configuration option
+				name = otelstorage.KeyToLabel(name)
+				out = append(out, name)
 			}
 			return nil
 		},

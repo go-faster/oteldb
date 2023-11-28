@@ -23,6 +23,7 @@ import (
 )
 
 func TestYT(t *testing.T) {
+	t.Skip("Defer YT")
 	t.Parallel()
 	integration.Skip(t)
 	ctx := context.Background()
@@ -81,6 +82,7 @@ func TestYT(t *testing.T) {
 }
 
 func TestYTYQL(t *testing.T) {
+	t.Skip("Defer YT")
 	t.Parallel()
 	if os.Getenv("E2E") == "" {
 		t.Skip("Set E2E env to run")

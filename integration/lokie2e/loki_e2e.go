@@ -114,5 +114,6 @@ func (s *BatchSet) addLabel(label logstorage.Label) {
 	if s.Labels == nil {
 		s.Labels = map[string][]logstorage.Label{}
 	}
-	s.Labels[label.Name] = append(s.Labels[label.Name], label)
+	name := otelstorage.KeyToLabel(label.Name)
+	s.Labels[name] = append(s.Labels[name], label)
 }
