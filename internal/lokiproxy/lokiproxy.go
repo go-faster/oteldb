@@ -24,6 +24,15 @@ type Server struct {
 	api *lokiapi.Client
 }
 
+// IndexStats implements indexStats operation.
+//
+// Get index stats.
+//
+// GET /loki/api/v1/index/stats
+func (s *Server) IndexStats(ctx context.Context, params lokiapi.IndexStatsParams) (*lokiapi.IndexStats, error) {
+	return s.api.IndexStats(ctx, params)
+}
+
 // LabelValues implements labelValues operation.
 // Get values of label.
 //

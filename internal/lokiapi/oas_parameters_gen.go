@@ -15,11 +15,182 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+// IndexStatsParams is parameters of indexStats operation.
+type IndexStatsParams struct {
+	Start OptLokiTime
+	End   OptLokiTime
+	// The LogQL matchers to check.
+	Query string
+}
+
+func unpackIndexStatsParams(packed middleware.Parameters) (params IndexStatsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptLokiTime)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptLokiTime)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "query",
+			In:   "query",
+		}
+		params.Query = packed[key].(string)
+	}
+	return params
+}
+
+func decodeIndexStatsParams(args [0]string, argsEscaped bool, r *http.Request) (params IndexStatsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal LokiTime
+				if err := func() error {
+					var paramsDotStartValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotStartValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotStartVal = LokiTime(paramsDotStartValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start.SetTo(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal LokiTime
+				if err := func() error {
+					var paramsDotEndValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEndValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotEndVal = LokiTime(paramsDotEndValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: query.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "query",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Query = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "query",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // LabelValuesParams is parameters of labelValues operation.
 type LabelValuesParams struct {
-	// Grafana username that is passed to datasource when making requests from Grafana. Used for
-	// authentication and authorization.
-	XGrafanaUser OptString
 	// The start time for the query as a nanosecond Unix epoch.
 	// Defaults to 6 hours ago.
 	Start OptLokiTime
@@ -38,15 +209,6 @@ type LabelValuesParams struct {
 }
 
 func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "X-Grafana-User",
-			In:   "header",
-		}
-		if v, ok := packed[key]; ok {
-			params.XGrafanaUser = v.(OptString)
-		}
-	}
 	{
 		key := middleware.ParameterKey{
 			Name: "start",
@@ -95,46 +257,6 @@ func unpackLabelValuesParams(packed middleware.Parameters) (params LabelValuesPa
 
 func decodeLabelValuesParams(args [1]string, argsEscaped bool, r *http.Request) (params LabelValuesParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	h := uri.NewHeaderDecoder(r.Header)
-	// Decode header: X-Grafana-User.
-	if err := func() error {
-		cfg := uri.HeaderParameterDecodingConfig{
-			Name:    "X-Grafana-User",
-			Explode: false,
-		}
-		if err := h.HasParam(cfg); err == nil {
-			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotXGrafanaUserVal string
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotXGrafanaUserVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.XGrafanaUser.SetTo(paramsDotXGrafanaUserVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "X-Grafana-User",
-			In:   "header",
-			Err:  err,
-		}
-	}
 	// Decode query: start.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
@@ -385,9 +507,6 @@ func decodeLabelValuesParams(args [1]string, argsEscaped bool, r *http.Request) 
 
 // LabelsParams is parameters of labels operation.
 type LabelsParams struct {
-	// Grafana username that is passed to datasource when making requests from Grafana. Used for
-	// authentication and authorization.
-	XGrafanaUser OptString
 	// The start time for the query as a nanosecond Unix epoch.
 	// Defaults to 6 hours ago.
 	Start OptLokiTime
@@ -401,15 +520,6 @@ type LabelsParams struct {
 }
 
 func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "X-Grafana-User",
-			In:   "header",
-		}
-		if v, ok := packed[key]; ok {
-			params.XGrafanaUser = v.(OptString)
-		}
-	}
 	{
 		key := middleware.ParameterKey{
 			Name: "start",
@@ -442,46 +552,6 @@ func unpackLabelsParams(packed middleware.Parameters) (params LabelsParams) {
 
 func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (params LabelsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	h := uri.NewHeaderDecoder(r.Header)
-	// Decode header: X-Grafana-User.
-	if err := func() error {
-		cfg := uri.HeaderParameterDecodingConfig{
-			Name:    "X-Grafana-User",
-			Explode: false,
-		}
-		if err := h.HasParam(cfg); err == nil {
-			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotXGrafanaUserVal string
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotXGrafanaUserVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.XGrafanaUser.SetTo(paramsDotXGrafanaUserVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "X-Grafana-User",
-			In:   "header",
-			Err:  err,
-		}
-	}
 	// Decode query: start.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
@@ -646,9 +716,6 @@ func decodeLabelsParams(args [0]string, argsEscaped bool, r *http.Request) (para
 
 // QueryParams is parameters of query operation.
 type QueryParams struct {
-	// Grafana username that is passed to datasource when making requests from Grafana. Used for
-	// authentication and authorization.
-	XGrafanaUser OptString
 	// The LogQL query to perform.
 	Query string
 	// The max number of entries to return.
@@ -665,15 +732,6 @@ type QueryParams struct {
 }
 
 func unpackQueryParams(packed middleware.Parameters) (params QueryParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "X-Grafana-User",
-			In:   "header",
-		}
-		if v, ok := packed[key]; ok {
-			params.XGrafanaUser = v.(OptString)
-		}
-	}
 	{
 		key := middleware.ParameterKey{
 			Name: "query",
@@ -713,46 +771,6 @@ func unpackQueryParams(packed middleware.Parameters) (params QueryParams) {
 
 func decodeQueryParams(args [0]string, argsEscaped bool, r *http.Request) (params QueryParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	h := uri.NewHeaderDecoder(r.Header)
-	// Decode header: X-Grafana-User.
-	if err := func() error {
-		cfg := uri.HeaderParameterDecodingConfig{
-			Name:    "X-Grafana-User",
-			Explode: false,
-		}
-		if err := h.HasParam(cfg); err == nil {
-			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotXGrafanaUserVal string
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotXGrafanaUserVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.XGrafanaUser.SetTo(paramsDotXGrafanaUserVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "X-Grafana-User",
-			In:   "header",
-			Err:  err,
-		}
-	}
 	// Decode query: query.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
@@ -963,11 +981,8 @@ func decodeQueryParams(args [0]string, argsEscaped bool, r *http.Request) (param
 
 // QueryRangeParams is parameters of queryRange operation.
 type QueryRangeParams struct {
-	// Grafana username that is passed to datasource when making requests from Grafana. Used for
-	// authentication and authorization.
-	XGrafanaUser OptString
-	Start        OptLokiTime
-	End          OptLokiTime
+	Start OptLokiTime
+	End   OptLokiTime
 	// A `duration` used to calculate `start` relative to `end`.
 	// If `end` is in the future, `start` is calculated as this duration before now.
 	// Any value specified for start supersedes this parameter.
@@ -991,15 +1006,6 @@ type QueryRangeParams struct {
 }
 
 func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangeParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "X-Grafana-User",
-			In:   "header",
-		}
-		if v, ok := packed[key]; ok {
-			params.XGrafanaUser = v.(OptString)
-		}
-	}
 	{
 		key := middleware.ParameterKey{
 			Name: "start",
@@ -1066,46 +1072,6 @@ func unpackQueryRangeParams(packed middleware.Parameters) (params QueryRangePara
 
 func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (params QueryRangeParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
-	h := uri.NewHeaderDecoder(r.Header)
-	// Decode header: X-Grafana-User.
-	if err := func() error {
-		cfg := uri.HeaderParameterDecodingConfig{
-			Name:    "X-Grafana-User",
-			Explode: false,
-		}
-		if err := h.HasParam(cfg); err == nil {
-			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotXGrafanaUserVal string
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToString(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotXGrafanaUserVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.XGrafanaUser.SetTo(paramsDotXGrafanaUserVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "X-Grafana-User",
-			In:   "header",
-			Err:  err,
-		}
-	}
 	// Decode query: start.
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{

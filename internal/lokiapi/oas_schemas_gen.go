@@ -109,6 +109,54 @@ func (s *FPoint) SetV(val string) {
 	s.V = val
 }
 
+// Ref: #/components/schemas/IndexStats
+type IndexStats struct {
+	Streams int `json:"streams"`
+	Chunks  int `json:"chunks"`
+	Entries int `json:"entries"`
+	Bytes   int `json:"bytes"`
+}
+
+// GetStreams returns the value of Streams.
+func (s *IndexStats) GetStreams() int {
+	return s.Streams
+}
+
+// GetChunks returns the value of Chunks.
+func (s *IndexStats) GetChunks() int {
+	return s.Chunks
+}
+
+// GetEntries returns the value of Entries.
+func (s *IndexStats) GetEntries() int {
+	return s.Entries
+}
+
+// GetBytes returns the value of Bytes.
+func (s *IndexStats) GetBytes() int {
+	return s.Bytes
+}
+
+// SetStreams sets the value of Streams.
+func (s *IndexStats) SetStreams(val int) {
+	s.Streams = val
+}
+
+// SetChunks sets the value of Chunks.
+func (s *IndexStats) SetChunks(val int) {
+	s.Chunks = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *IndexStats) SetEntries(val int) {
+	s.Entries = val
+}
+
+// SetBytes sets the value of Bytes.
+func (s *IndexStats) SetBytes(val int) {
+	s.Bytes = val
+}
+
 // Ref: #/components/schemas/LabelSet
 type LabelSet map[string]string
 

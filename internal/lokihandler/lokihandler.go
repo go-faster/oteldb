@@ -27,6 +27,15 @@ type LokiAPI struct {
 	engine *logqlengine.Engine
 }
 
+// IndexStats implements indexStats operation.
+//
+// Get index stats.
+//
+// GET /loki/api/v1/index/stats
+func (h *LokiAPI) IndexStats(ctx context.Context, params lokiapi.IndexStatsParams) (*lokiapi.IndexStats, error) {
+	return nil, ht.ErrNotImplemented
+}
+
 // NewLokiAPI creates new LokiAPI.
 func NewLokiAPI(q logstorage.Querier, engine *logqlengine.Engine) *LokiAPI {
 	return &LokiAPI{

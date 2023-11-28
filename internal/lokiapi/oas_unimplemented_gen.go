@@ -13,6 +13,15 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// IndexStats implements indexStats operation.
+//
+// Get index stats.
+//
+// GET /loki/api/v1/index/stats
+func (UnimplementedHandler) IndexStats(ctx context.Context, params IndexStatsParams) (r *IndexStats, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // LabelValues implements labelValues operation.
 //
 // Get values of label.

@@ -30,6 +30,30 @@ func (s *FPoint) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *IndexStats) SetFake() {
+	{
+		{
+			s.Streams = int(0)
+		}
+	}
+	{
+		{
+			s.Chunks = int(0)
+		}
+	}
+	{
+		{
+			s.Entries = int(0)
+		}
+	}
+	{
+		{
+			s.Bytes = int(0)
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *LabelSet) SetFake() {
 	var (
 		elem string
