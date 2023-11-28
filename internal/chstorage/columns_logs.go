@@ -168,9 +168,42 @@ func (c *logColumns) columns() tableColumns {
 
 func (c *logColumns) Input() proto.Input    { return c.columns().Input() }
 func (c *logColumns) Result() proto.Results { return c.columns().Result() }
+func (c *logColumns) Reset()                { c.columns().Reset() }
 
-func (c *logColumns) Reset() {
-	for _, col := range c.columns() {
-		col.Data.Reset()
+type logAttrMapColumns struct {
+	name proto.ColStr // http_method
+	key  proto.ColStr // http.method
+}
+
+func newLogAttrMapColumns() *logAttrMapColumns {
+	return &logAttrMapColumns{}
+}
+
+func (c *logAttrMapColumns) columns() tableColumns {
+	return []tableColumn{
+		{Name: "name", Data: &c.name},
+		{Name: "key", Data: &c.key},
 	}
+}
+
+func (c *logAttrMapColumns) Input() proto.Input    { return c.columns().Input() }
+func (c *logAttrMapColumns) Result() proto.Results { return c.columns().Result() }
+func (c *logAttrMapColumns) Reset()                { c.columns().Reset() }
+
+func (c *logAttrMapColumns) ForEach(f func(name, key string)) {
+	for i := 0; i < c.name.Rows(); i++ {
+		f(c.name.Row(i), c.key.Row(i))
+	}
+}
+
+func (c *logAttrMapColumns) AddAttrs(attrs otelstorage.Attrs) {
+	attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+		c.AddRow(otelstorage.KeyToLabel(k), k)
+		return true
+	})
+}
+
+func (c *logAttrMapColumns) AddRow(name, key string) {
+	c.name.Append(name)
+	c.key.Append(key)
 }

@@ -34,4 +34,13 @@ CREATE TABLE IF NOT EXISTS %s
 )
   ENGINE = MergeTree()
   ORDER BY (service_namespace, service_name, service_instance_id, toStartOfFiveMinutes(timestamp));`
+
+	logAttrsSchema = `
+CREATE TABLE IF NOT EXISTS %s
+(
+   name String,   -- foo_bar
+   key  String,   -- foo.bar
+)
+   ENGINE = ReplacingMergeTree
+   ORDER BY name;`
 )

@@ -2,7 +2,8 @@ package lokie2e_test
 
 import (
 	"context"
-	"strings"
+	"crypto/rand"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"go.uber.org/zap/zaptest"
@@ -19,6 +19,12 @@ import (
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chstorage"
 )
+
+func randomPrefix() string {
+	var data [6]byte
+	_, _ = rand.Read(data[:])
+	return fmt.Sprintf("%x", data[:])
+}
 
 func TestCH(t *testing.T) {
 	integration.Skip(t)
@@ -61,7 +67,7 @@ func TestCH(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	prefix := strings.ReplaceAll(uuid.NewString(), "-", "")
+	prefix := randomPrefix()
 	tables := chstorage.DefaultTables()
 	tables.Each(func(name *string) error {
 		old := *name

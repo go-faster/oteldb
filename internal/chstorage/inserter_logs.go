@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 func (i *Inserter) mapRecords(c *logColumns, records []logstorage.Record) {
@@ -18,9 +19,31 @@ func (i *Inserter) mapRecords(c *logColumns, records []logstorage.Record) {
 }
 
 // InsertLogLabels inserts given set of labels to the storage.
-func (i *Inserter) InsertLogLabels(context.Context, map[logstorage.Label]struct{}) error {
-	// No-op.
-	// TODO(ernado): do we really need this or can just use materialized view?
+func (i *Inserter) InsertLogLabels(ctx context.Context, set map[logstorage.Label]struct{}) (rerr error) {
+	table := i.tables.LogAttrs
+	ctx, span := i.tracer.Start(ctx, "InsertLogLabels", trace.WithAttributes(
+		attribute.Int("chstorage.labels_count", len(set)),
+		attribute.String("chstorage.table", table),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	attrs := newLogAttrMapColumns()
+	for label := range set {
+		name := otelstorage.KeyToLabel(label.Name)
+		attrs.AddRow(name, label.Name)
+	}
+	if err := i.ch.Do(ctx, ch.Query{
+		Body:  attrs.Input().Into(table),
+		Input: attrs.Input(),
+	}); err != nil {
+		return errors.Wrap(err, "insert labels")
+	}
+
 	return nil
 }
 
@@ -48,6 +71,19 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 		Input: logs.Input(),
 	}); err != nil {
 		return errors.Wrap(err, "insert records")
+	}
+
+	attrs := newLogAttrMapColumns()
+	for _, record := range records {
+		attrs.AddAttrs(record.Attrs)
+		attrs.AddAttrs(record.ResourceAttrs)
+		attrs.AddAttrs(record.ScopeAttrs)
+	}
+	if err := i.ch.Do(ctx, ch.Query{
+		Body:  attrs.Input().Into(i.tables.LogAttrs),
+		Input: attrs.Input(),
+	}); err != nil {
+		return errors.Wrap(err, "insert labels")
 	}
 
 	return nil

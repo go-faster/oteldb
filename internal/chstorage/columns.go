@@ -38,3 +38,9 @@ func (c tableColumns) Result() proto.Results {
 	}
 	return cols
 }
+
+func (c tableColumns) Reset() {
+	for _, col := range c {
+		col.Data.Reset()
+	}
+}

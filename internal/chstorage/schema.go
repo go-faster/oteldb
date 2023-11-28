@@ -19,7 +19,8 @@ type Tables struct {
 	Summaries     string
 	Labels        string
 
-	Logs string
+	Logs     string
+	LogAttrs string
 }
 
 // Validate checks table names
@@ -48,6 +49,7 @@ func (t *Tables) Each(cb func(name *string) error) error {
 		{&t.Labels, "Labels"},
 
 		{&t.Logs, "Logs"},
+		{&t.LogAttrs, "LogAttrs"},
 	} {
 		if err := cb(table.field); err != nil {
 			return errors.Wrapf(err, "table %s", table.fieldName)
@@ -68,7 +70,8 @@ func DefaultTables() Tables {
 		Summaries:     "metrics_summaries",
 		Labels:        "metrics_labels",
 
-		Logs: "logs",
+		Logs:     "logs",
+		LogAttrs: "logs_attrs",
 	}
 }
 
@@ -97,6 +100,7 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{t.Labels, labelsSchema},
 
 		{t.Logs, logsSchema},
+		{t.LogAttrs, logAttrsSchema},
 	} {
 		if err := c.Do(ctx, ch.Query{
 			Body: fmt.Sprintf(s.query, s.name),

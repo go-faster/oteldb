@@ -108,6 +108,48 @@ func (l *labelStaticIterator) Next(t *logstorage.Label) bool {
 func (l *labelStaticIterator) Err() error   { return nil }
 func (l *labelStaticIterator) Close() error { return nil }
 
+func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[string]string, rerr error) {
+	ctx, span := q.tracer.Start(ctx, "getLabelMapping",
+		trace.WithAttributes(
+			attribute.Int("chstorage.labels_count", len(labels)),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	out := make(map[string]string, len(labels))
+	attrs := newLogAttrMapColumns()
+	var inputData proto.ColStr
+	for _, label := range labels {
+		inputData.Append(label)
+	}
+	if err := q.ch.Do(ctx, ch.Query{
+		Logger: zctx.From(ctx).Named("ch"),
+		Result: attrs.Result(),
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			attrs.ForEach(func(name, key string) {
+				out[name] = key
+			})
+			return nil
+		},
+		ExternalTable: "_labels",
+		ExternalData: []proto.InputColumn{
+			{Name: "name", Data: &inputData},
+		},
+		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s INNER JOIN _labels ON (_labels.name = %[1]s.name)`, q.tables.LogAttrs),
+	}); err != nil {
+		return nil, errors.Wrap(err, "select")
+	}
+
+	fmt.Println("mapped", labels, "to", out)
+
+	return out, nil
+}
+
 // LabelValues implements logstorage.Querier.
 func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logstorage.LabelsOptions) (_ iterators.Iterator[logstorage.Label], rerr error) {
 	table := q.tables.Logs
@@ -125,6 +167,15 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		}
 		span.End()
 	}()
+	{
+		mapping, err := q.getLabelMapping(ctx, []string{labelName})
+		if err != nil {
+			return nil, errors.Wrap(err, "get label mapping")
+		}
+		if key, ok := mapping[labelName]; ok {
+			labelName = key
+		}
+	}
 	var (
 		names proto.ColStr
 		out   []jx.Raw
@@ -201,6 +252,17 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		span.End()
 	}()
 
+	// Gather all labels for mapping fetch.
+	var labels []string
+	for _, m := range params.Labels {
+		labels = append(labels, string(m.Label))
+	}
+	mapping, err := q.getLabelMapping(ctx, labels)
+	if err != nil {
+		return nil, errors.Wrap(err, "get label mapping")
+	}
+	fmt.Println("mapping:", mapping)
+
 	out := newLogColumns()
 	var query strings.Builder
 	query.WriteString("SELECT ")
@@ -212,6 +274,13 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	}
 	fmt.Fprintf(&query, " FROM %s WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)", table, start, end)
 	for _, m := range params.Labels {
+		labelName := string(m.Label)
+		if key, ok := mapping[labelName]; ok {
+			fmt.Println("mapped", labelName, "to", key)
+			labelName = key
+		} else {
+			fmt.Println("no mapping for", labelName)
+		}
 		switch m.Op {
 		case logql.OpEq, logql.OpRe:
 			query.WriteString(" AND (")
@@ -231,9 +300,9 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 			// TODO: how to match integers, booleans, floats, arrays?
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(m.Label), singleQuoted(m.Value))
+				fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(&query, "JSONExtractString(%s, %s) REGEXP %s", column, singleQuoted(m.Label), singleQuoted(m.Value))
+				fmt.Fprintf(&query, "JSONExtractString(%s, %s) REGEXP %s", column, singleQuoted(labelName), singleQuoted(m.Value))
 			}
 		}
 		query.WriteByte(')')
@@ -258,7 +327,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 
 	// TODO: use streaming.
 	var data []logstorage.Record
-
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),

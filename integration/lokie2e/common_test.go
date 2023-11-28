@@ -130,69 +130,69 @@ func runTest(
 		}{
 			// Label matchers.
 			// Effectively match GET.
-			{`{http_method="GET"}`, 21},
-			{`{http_method=~".*GET.*"}`, 21},
-			{`{http_method=~"^GET$"}`, 21},
-			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
+			{`{http.method="GET"}`, 21},
+			{`{http.method=~".*GET.*"}`, 21},
+			{`{http.method=~"^GET$"}`, 21},
+			{`{http.method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
 			// Try other methods.
-			{`{http_method="DELETE"}`, 20},
-			{`{http_method="GET"}`, 21},
-			{`{http_method="HEAD"}`, 22},
-			{`{http_method="PATCH"}`, 19},
-			{`{http_method="POST"}`, 21},
-			{`{http_method="PUT"}`, 20},
-			{`{http_method="GET"} | json`, 21},
+			{`{http.method="DELETE"}`, 20},
+			{`{http.method="GET"}`, 21},
+			{`{http.method="HEAD"}`, 22},
+			{`{http.method="PATCH"}`, 19},
+			{`{http.method="POST"}`, 21},
+			{`{http.method="PUT"}`, 20},
+			{`{http.method="GET"} | json`, 21},
 			// Negative label matcher.
-			{`{http_method!="HEAD"}`, len(set.Records) - 22},
-			{`{http_method!~"^HEAD$"}`, len(set.Records) - 22},
+			{`{http.method!="HEAD"}`, len(set.Records) - 22},
+			{`{http.method!~"^HEAD$"}`, len(set.Records) - 22},
 			// Multiple lables.
-			{`{http_method="HEAD",http_status="500"}`, 2},
-			{`{http_method="HEAD",http_status=~"^500$"}`, 2},
-			{`{http_method=~".*HEAD.*",http_status=~"^500$"}`, 2},
+			{`{http.method="HEAD",http.status="500"}`, 2},
+			{`{http.method="HEAD",http.status=~"^500$"}`, 2},
+			{`{http.method=~".*HEAD.*",http.status=~"^500$"}`, 2},
 
 			// Line filter.
-			{`{http_method=~".+"} |= "\"method\": \"GET\""`, 21},
-			{`{http_method=~".+"} |= "\"method\": \"DELETE\""`, 20},
-			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
-			{`{http_method=~".+"} |~ "\"method\":\\s*\"DELETE\""`, 20},
-			{`{http_method=~".+"} |~ "\"method\":\\s*\"HEAD\"" |= "\"status\":500"`, 2},
+			{`{http.method=~".+"} |= "\"method\": \"GET\""`, 21},
+			{`{http.method=~".+"} |= "\"method\": \"DELETE\""`, 20},
+			{`{http.method=~".+"} |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
+			{`{http.method=~".+"} |~ "\"method\":\\s*\"DELETE\""`, 20},
+			{`{http.method=~".+"} |~ "\"method\":\\s*\"HEAD\"" |= "\"status\":500"`, 2},
 			// Try to not use offloading.
-			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"DELETE\""`, 20},
-			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
-			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" | line_format "{{ __line__ }}" |= "\"status\":500"`, 2},
+			{`{http.method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"DELETE\""`, 20},
+			{`{http.method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
+			{`{http.method=~".+"} |= "\"method\": \"HEAD\"" | line_format "{{ __line__ }}" |= "\"status\":500"`, 2},
 			// Negative line matcher.
-			{`{http_method=~".+"} != "\"method\": \"HEAD\""`, len(set.Records) - 22},
-			{`{http_method=~".+"} !~ "\"method\":\\s*\"HEAD\""`, len(set.Records) - 22},
+			{`{http.method=~".+"} != "\"method\": \"HEAD\""`, len(set.Records) - 22},
+			{`{http.method=~".+"} !~ "\"method\":\\s*\"HEAD\""`, len(set.Records) - 22},
 			// IP line filter.
-			{`{http_method="HEAD"} |= ip("236.7.233.166")`, 1},
+			{`{http.method="HEAD"} |= ip("236.7.233.166")`, 1},
 
 			// Label filter.
-			{`{http_method=~".+"} | http_method = "GET"`, 21},
-			{`{http_method=~".+"} | http_method = "HEAD", http_status = "500"`, 2},
+			{`{http.method=~".+"} | http.method = "GET"`, 21},
+			{`{http.method=~".+"} | http.method = "HEAD", http.status = "500"`, 2},
 			// Number of lines per protocol.
 			//
 			// 	"HTTP/1.0" 55
 			// 	"HTTP/1.1" 38
 			// 	"HTTP/2.0" 30
 			//
-			{`{http_method=~".+"} | json | protocol = "HTTP/1.0"`, 55},
-			{`{http_method=~".+"} | json | protocol =~ "HTTP/1.\\d"`, 55 + 38},
-			{`{http_method=~".+"} | json | protocol != "HTTP/2.0"`, 55 + 38},
-			{`{http_method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 38},
+			{`{http.method=~".+"} | json | protocol = "HTTP/1.0"`, 55},
+			{`{http.method=~".+"} | json | protocol =~ "HTTP/1.\\d"`, 55 + 38},
+			{`{http.method=~".+"} | json | protocol != "HTTP/2.0"`, 55 + 38},
+			{`{http.method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 38},
 			// IP label filter.
-			{`{http_method="HEAD"} | json | host = "236.7.233.166"`, 1},
-			{`{http_method="HEAD"} | json | host == ip("236.7.233.166")`, 1},
-			{`{http_method="HEAD"} | json | host == ip("236.7.233.0/24")`, 1},
-			{`{http_method="HEAD"} | json | host == ip("236.7.233.0-236.7.233.255")`, 1},
+			{`{http.method="HEAD"} | json | host = "236.7.233.166"`, 1},
+			{`{http.method="HEAD"} | json | host == ip("236.7.233.166")`, 1},
+			{`{http.method="HEAD"} | json | host == ip("236.7.233.0/24")`, 1},
+			{`{http.method="HEAD"} | json | host == ip("236.7.233.0-236.7.233.255")`, 1},
 
 			// Distinct filter.
-			{`{http_method=~".+"} | distinct http_method`, 6},
-			{`{http_method=~".+"} | json | distinct method`, 6},
-			{`{http_method=~".+"} | json | distinct protocol`, 3},
+			{`{http.method=~".+"} | distinct http.method`, 6},
+			{`{http.method=~".+"} | json | distinct method`, 6},
+			{`{http.method=~".+"} | json | distinct protocol`, 3},
 
 			// Sure empty queries.
-			{`{http_method="GET"} | json | http_method != "GET"`, 0},
-			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
+			{`{http.method="GET"} | json | http.method != "GET"`, 0},
+			{`{http.method="HEAD"} | clearly_not_exist > 0`, 0},
 		}
 		labelSetHasAttrs := func(t assert.TestingT, set lokiapi.LabelSet, attrs pcommon.Map) {
 			// Do not check length, since label set may contain some parsed labels.
@@ -245,7 +245,7 @@ func runTest(
 	})
 	t.Run("MetricQueries", func(t *testing.T) {
 		resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
-			Query: `sum by (http_method) ( count_over_time({http_method=~".+"} [30s]) )`,
+			Query: `sum by (http.method) ( count_over_time({http.method=~".+"} [30s]) )`,
 			// Query all data in a one step.
 			Start: lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 			End:   lokiapi.NewOptLokiTime(asLokiTime(set.End + otelstorage.Timestamp(10*time.Second))),
@@ -262,9 +262,9 @@ func runTest(
 		methods := map[string]string{}
 		for _, series := range matrix {
 			labels := series.Metric.Value
-			assert.Contains(t, labels, "http_method")
+			assert.Contains(t, labels, "http.method")
 			assert.Len(t, labels, 1)
-			method := labels["http_method"]
+			method := labels["http.method"]
 
 			values := series.Values
 			assert.Len(t, values, 1)
