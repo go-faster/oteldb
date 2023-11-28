@@ -3,20 +3,19 @@ package chstorage
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/prometheus/prometheus/model/histogram"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 	"github.com/prometheus/prometheus/util/annotations"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/errgroup"
 )
 
 var _ storage.Queryable = (*Querier)(nil)
@@ -187,7 +186,6 @@ type seriesKey struct {
 }
 
 func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
-	table := p.tables.Points
 	var (
 		start = p.mint
 		end   = p.maxt
@@ -205,7 +203,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 		trace.WithAttributes(
 			attribute.Int64("chstorage.start_range", start.UnixNano()),
 			attribute.Int64("chstorage.end_range", end.UnixNano()),
-			attribute.String("chstorage.table", table),
 		),
 	)
 	defer func() {
@@ -215,61 +212,104 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 		span.End()
 	}()
 
-	var query strings.Builder
-	fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
-	if !start.IsZero() {
-		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
+	buildQuery := func(table string) (string, error) {
+		var query strings.Builder
+		fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
+		if !start.IsZero() {
+			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
+		}
+		if !end.IsZero() {
+			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
+		}
+		for _, m := range matchers {
+			switch m.Type {
+			case labels.MatchEqual, labels.MatchRegexp:
+				query.WriteString("AND ")
+			case labels.MatchNotEqual, labels.MatchNotRegexp:
+				query.WriteString("AND NOT ")
+			default:
+				return "", errors.Errorf("unexpected type %q", m.Type)
+			}
+
+			{
+				selectors := []string{
+					"name",
+				}
+				if m.Name != "__name__" {
+					selectors = []string{
+						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(m.Name)),
+						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(m.Name)),
+					}
+				}
+				query.WriteString("(\n")
+				for i, sel := range selectors {
+					if i != 0 {
+						query.WriteString("\tOR ")
+					}
+					// Note: predicate negated above.
+					switch m.Type {
+					case labels.MatchEqual, labels.MatchNotEqual:
+						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(m.Value))
+					case labels.MatchRegexp, labels.MatchNotRegexp:
+						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(m.Value))
+					default:
+						return "", errors.Errorf("unexpected type %q", m.Type)
+					}
+				}
+				query.WriteString(")")
+			}
+			query.WriteString("\n")
+		}
+		query.WriteString("ORDER BY timestamp")
+		return query.String(), nil
 	}
-	if !end.IsZero() {
-		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
-	}
-	for _, m := range matchers {
-		switch m.Type {
-		case labels.MatchEqual, labels.MatchRegexp:
-			query.WriteString("AND ")
-		case labels.MatchNotEqual, labels.MatchNotRegexp:
-			query.WriteString("AND NOT ")
-		default:
-			return nil, errors.Errorf("unexpected type %q", m.Type)
+
+	var (
+		points     []storage.Series
+		histSeries []storage.Series
+	)
+	grp, grpCtx := errgroup.WithContext(ctx)
+	grp.Go(func() error {
+		ctx := grpCtx
+
+		query, err := buildQuery(p.tables.Points)
+		if err != nil {
+			return err
 		}
 
-		{
-			selectors := []string{
-				"name",
-			}
-			if m.Name != "__name__" {
-				selectors = []string{
-					fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(m.Name)),
-					fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(m.Name)),
-				}
-			}
-			query.WriteString("(\n")
-			for i, sel := range selectors {
-				if i != 0 {
-					query.WriteString("\tOR ")
-				}
-				// Note: predicate negated above.
-				switch m.Type {
-				case labels.MatchEqual, labels.MatchNotEqual:
-					fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(m.Value))
-				case labels.MatchRegexp, labels.MatchNotRegexp:
-					fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(m.Value))
-				default:
-					return nil, errors.Errorf("unexpected type %q", m.Type)
-				}
-			}
-			query.WriteString(")")
+		result, err := p.queryPoints(ctx, query)
+		if err != nil {
+			return errors.Wrap(err, "query points")
 		}
-		query.WriteString("\n")
-	}
-	query.WriteString("ORDER BY timestamp")
+		points = result
+		return nil
+	})
+	grp.Go(func() error {
+		ctx := grpCtx
 
-	return p.doQuery(ctx, query.String())
+		query, err := buildQuery(p.tables.ExpHistograms)
+		if err != nil {
+			return err
+		}
+
+		result, err := p.queryExpHistrograms(ctx, query)
+		if err != nil {
+			return errors.Wrap(err, "query histrograms")
+		}
+		histSeries = result
+		return nil
+	})
+	if err := grp.Wait(); err != nil {
+		return nil, err
+	}
+
+	points = append(points, histSeries...)
+	return newSeriesSet(points), nil
 }
 
-func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.SeriesSet, error) {
+func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.Series, error) {
 	type seriesWithLabels struct {
-		series *series
+		series *series[pointData]
 		labels map[string]string
 	}
 
@@ -296,13 +336,13 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 				s, ok := set[key]
 				if !ok {
 					s = seriesWithLabels{
-						series: &series{},
+						series: &series[pointData]{},
 						labels: map[string]string{},
 					}
 					set[key] = s
 				}
 
-				s.series.values = append(s.series.values, value)
+				s.series.data.values = append(s.series.data.values, value)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
 				s.labels["__name__"] = name
@@ -320,7 +360,7 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 	}
 
 	var (
-		result = make([]*series, 0, len(set))
+		result = make([]storage.Series, 0, len(set))
 		lb     labels.ScratchBuilder
 	)
 	for _, s := range set {
@@ -333,24 +373,111 @@ func (p *promQuerier) doQuery(ctx context.Context, query string) (storage.Series
 		result = append(result, s.series)
 	}
 
-	return newSeriesSet(result), nil
+	return result, nil
 }
 
-type seriesSet struct {
-	set []*series
+func (p *promQuerier) queryExpHistrograms(ctx context.Context, query string) ([]storage.Series, error) {
+	type seriesWithLabels struct {
+		series *series[expHistData]
+		labels map[string]string
+	}
+
+	var (
+		set = map[seriesKey]seriesWithLabels{}
+		c   = newExpHistogramColumns()
+	)
+	if err := p.ch.Do(ctx, ch.Query{
+		Body:   query,
+		Result: c.Result(),
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < c.timestamp.Rows(); i++ {
+				name := c.name.Row(i)
+				timestamp := c.timestamp.Row(i)
+				count := c.count.Row(i)
+				sum := c.sum.Row(i)
+				min := c.min.Row(i)
+				max := c.max.Row(i)
+				scale := c.scale.Row(i)
+				zerocount := c.zerocount.Row(i)
+				positiveOffset := c.positiveOffset.Row(i)
+				positiveBucketCounts := c.positiveBucketCounts.Row(i)
+				negativeOffset := c.negativeOffset.Row(i)
+				negativeBucketCounts := c.negativeBucketCounts.Row(i)
+				attributes := c.attributes.Row(i)
+				resource := c.resource.Row(i)
+
+				key := seriesKey{
+					name:       name,
+					attributes: attributes,
+					resource:   resource,
+				}
+				s, ok := set[key]
+				if !ok {
+					s = seriesWithLabels{
+						series: &series[expHistData]{},
+						labels: map[string]string{},
+					}
+					set[key] = s
+				}
+
+				s.series.data.count = append(s.series.data.count, count)
+				s.series.data.sum = append(s.series.data.sum, sum)
+				s.series.data.min = append(s.series.data.min, min)
+				s.series.data.max = append(s.series.data.max, max)
+				s.series.data.scale = append(s.series.data.scale, scale)
+				s.series.data.zerocount = append(s.series.data.zerocount, zerocount)
+				s.series.data.positiveOffset = append(s.series.data.positiveOffset, positiveOffset)
+				s.series.data.positiveBucketCounts = append(s.series.data.positiveBucketCounts, positiveBucketCounts)
+				s.series.data.negativeOffset = append(s.series.data.negativeOffset, negativeOffset)
+				s.series.data.negativeBucketCounts = append(s.series.data.negativeBucketCounts, negativeBucketCounts)
+				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
+
+				s.labels["__name__"] = name
+				if err := parseLabels(resource, s.labels); err != nil {
+					return errors.Wrap(err, "parse resource")
+				}
+				if err := parseLabels(attributes, s.labels); err != nil {
+					return errors.Wrap(err, "parse attributes")
+				}
+			}
+			return nil
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "do query")
+	}
+
+	var (
+		result = make([]storage.Series, 0, len(set))
+		lb     labels.ScratchBuilder
+	)
+	for _, s := range set {
+		lb.Reset()
+		for key, value := range s.labels {
+			lb.Add(key, value)
+		}
+		lb.Sort()
+		s.series.labels = lb.Labels()
+		result = append(result, s.series)
+	}
+
+	return result, nil
+}
+
+type seriesSet[S storage.Series] struct {
+	set []S
 	n   int
 }
 
-func newSeriesSet(set []*series) *seriesSet {
-	return &seriesSet{
+func newSeriesSet[S storage.Series](set []S) *seriesSet[S] {
+	return &seriesSet[S]{
 		set: set,
 		n:   -1,
 	}
 }
 
-var _ storage.SeriesSet = (*seriesSet)(nil)
+var _ storage.SeriesSet = (*seriesSet[storage.Series])(nil)
 
-func (s *seriesSet) Next() bool {
+func (s *seriesSet[S]) Next() bool {
 	if s.n+1 >= len(s.set) {
 		return false
 	}
@@ -359,32 +486,36 @@ func (s *seriesSet) Next() bool {
 }
 
 // At returns full series. Returned series should be iterable even after Next is called.
-func (s *seriesSet) At() storage.Series {
+func (s *seriesSet[S]) At() storage.Series {
 	return s.set[s.n]
 }
 
 // The error that iteration as failed with.
 // When an error occurs, set cannot continue to iterate.
-func (s *seriesSet) Err() error {
+func (s *seriesSet[S]) Err() error {
 	return nil
 }
 
 // A collection of warnings for the whole set.
 // Warnings could be return even iteration has not failed with error.
-func (s *seriesSet) Warnings() annotations.Annotations {
+func (s *seriesSet[S]) Warnings() annotations.Annotations {
 	return nil
 }
 
-type series struct {
+type seriesData interface {
+	Iterator(ts []int64) chunkenc.Iterator
+}
+
+type series[Data seriesData] struct {
 	labels labels.Labels
-	values []float64
+	data   Data
 	ts     []int64
 }
 
-var _ storage.Series = (*series)(nil)
+var _ storage.Series = (*series[pointData])(nil)
 
 // Labels returns the complete set of labels. For series it means all labels identifying the series.
-func (s *series) Labels() labels.Labels {
+func (s *series[Data]) Labels() labels.Labels {
 	return s.labels
 }
 
@@ -392,92 +523,6 @@ func (s *series) Labels() labels.Labels {
 // The iterator passed as argument is for re-use, if not nil.
 // Depending on implementation, the iterator can
 // be re-used or a new iterator can be allocated.
-func (s *series) Iterator(chunkenc.Iterator) chunkenc.Iterator {
-	return newPointIterator(s.values, s.ts)
-}
-
-type pointIterator struct {
-	values []float64
-	ts     []int64
-	n      int
-}
-
-var _ chunkenc.Iterator = (*pointIterator)(nil)
-
-func newPointIterator(values []float64, ts []int64) *pointIterator {
-	return &pointIterator{
-		values: values,
-		ts:     ts,
-		n:      -1,
-	}
-}
-
-// Next advances the iterator by one and returns the type of the value
-// at the new position (or ValNone if the iterator is exhausted).
-func (p *pointIterator) Next() chunkenc.ValueType {
-	if p.n+1 >= len(p.values) {
-		return chunkenc.ValNone
-	}
-	p.n++
-	return chunkenc.ValFloat
-}
-
-// Seek advances the iterator forward to the first sample with a
-// timestamp equal or greater than t. If the current sample found by a
-// previous `Next` or `Seek` operation already has this property, Seek
-// has no effect. If a sample has been found, Seek returns the type of
-// its value. Otherwise, it returns ValNone, after which the iterator is
-// exhausted.
-func (p *pointIterator) Seek(seek int64) chunkenc.ValueType {
-	// Find the closest value.
-	idx, _ := slices.BinarySearch(p.ts, seek)
-	switch {
-	case idx >= len(p.ts):
-		// Outside of the range.
-		p.n = len(p.ts)
-		return chunkenc.ValNone
-	case idx < 1:
-		// Move to the first point.
-		p.n = 0
-		return chunkenc.ValFloat
-	default:
-		p.n = idx - 1
-		return chunkenc.ValFloat
-	}
-}
-
-// At returns the current timestamp/value pair if the value is a float.
-// Before the iterator has advanced, the behavior is unspecified.
-func (p *pointIterator) At() (t int64, v float64) {
-	t = p.AtT()
-	v = p.values[p.n]
-	return t, v
-}
-
-// AtHistogram returns the current timestamp/value pair if the value is
-// a histogram with integer counts. Before the iterator has advanced,
-// the behavior is unspecified.
-func (p *pointIterator) AtHistogram() (int64, *histogram.Histogram) {
-	return 0, nil
-}
-
-// AtFloatHistogram returns the current timestamp/value pair if the
-// value is a histogram with floating-point counts. It also works if the
-// value is a histogram with integer counts, in which case a
-// FloatHistogram copy of the histogram is returned. Before the iterator
-// has advanced, the behavior is unspecified.
-func (p *pointIterator) AtFloatHistogram() (int64, *histogram.FloatHistogram) {
-	return 0, nil
-}
-
-// AtT returns the current timestamp.
-// Before the iterator has advanced, the behavior is unspecified.
-func (p *pointIterator) AtT() int64 {
-	return p.ts[p.n]
-}
-
-// Err returns the current error. It should be used only after the
-// iterator is exhausted, i.e. `Next` or `Seek` have returned ValNone.
-func (p *pointIterator) Err() error {
-	return nil
+func (s *series[Data]) Iterator(chunkenc.Iterator) chunkenc.Iterator {
+	return s.data.Iterator(s.ts)
 }
