@@ -19,6 +19,7 @@ datasources:
     url: http://oteldb:3100
     uid: loki-oteldb
     jsonData:
+      httpMethod: GET
       serviceMap:
         datasourceUid: prometheus
 
@@ -29,6 +30,7 @@ datasources:
     url: http://loki:3100
     uid: loki
     jsonData:
+      httpMethod: GET
       serviceMap:
         datasourceUid: promoteldb
 
