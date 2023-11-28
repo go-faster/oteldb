@@ -145,8 +145,6 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 		return nil, errors.Wrap(err, "select")
 	}
 
-	fmt.Println("mapped", labels, "to", out)
-
 	return out, nil
 }
 
