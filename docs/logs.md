@@ -125,7 +125,7 @@ http_status_code="200"
 
 This will allow filtering by this labels in Grafana UI by clicking on it.
 
-Log line search: everywhere except resource attributes and scope.
+Log line search: only in body field.
 Special case for traceID and spanID with additional search in traceID and spanID fields.
 
 Labels extraction: handle first `| json |` explicitly, offloading to underlying log storage
