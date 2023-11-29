@@ -133,7 +133,7 @@ where reverse mapping should be executed.
 
 Extracted labels after `json`:
 ```
-body: "hello world"
+body="hello world"
 trace_id="cacb16ac5ace52ebe8749114234a8e58"
 span_id="36a431d0481b2744"
 severity="INFO"
