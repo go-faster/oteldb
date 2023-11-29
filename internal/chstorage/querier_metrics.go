@@ -330,7 +330,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 			return err
 		}
 
-		result, err := p.queryExpHistograms(ctx, query)
+		result, err := p.querySummaries(ctx, query)
 		if err != nil {
 			return errors.Wrap(err, "query summaries")
 		}
