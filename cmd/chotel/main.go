@@ -182,6 +182,14 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 			ExportedAt proto.ColDateTime
 		}
 	)
+	clickhouseResource, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("clickhouse"),
+		),
+	)
+	if err != nil {
+		return errors.Wrap(err, "clickhouse resource")
+	}
 	var latest time.Time
 	if err := db.Do(ctx, ch.Query{
 		Body:   q,
@@ -192,9 +200,8 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 			for _, r := range t.Rows() {
 				exported.ExportedAt.Append(now)
 				stub := tracetest.SpanStub{
-					Resource: resource.NewSchemaless(
-						semconv.ServiceNameKey.String("clickhouse"),
-					),
+					SpanKind:  r.Kind,
+					Resource:  clickhouseResource,
 					Name:      r.OperationName,
 					StartTime: r.StartTime,
 					EndTime:   r.FinishTime,

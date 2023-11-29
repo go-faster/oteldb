@@ -19,6 +19,7 @@ type Table struct {
 	FinishTimeMicro proto.ColUInt64                  // finish_time_us
 	FinishDate      proto.ColDate                    // finish_date
 	Attributes      proto.ColMap[string, string]     // attribute
+	SpanKind        proto.ColEnum                    // span_kind
 }
 
 // Rows returns Trace per row.
@@ -31,6 +32,20 @@ func (t Table) Rows() []Trace {
 			FinishTime:    time.UnixMicro(int64(t.FinishTimeMicro.Row(i))),
 			Attributes:    t.Attributes.Row(i),
 			OperationName: t.OperationName.Row(i),
+		}
+		switch t.SpanKind.Row(i) {
+		case "SERVER":
+			tt.Kind = trace.SpanKindServer
+		case "CLIENT":
+			tt.Kind = trace.SpanKindClient
+		case "INTERNAL":
+			tt.Kind = trace.SpanKindInternal
+		case "PRODUCER":
+			tt.Kind = trace.SpanKindProducer
+		case "CONSUMER":
+			tt.Kind = trace.SpanKindConsumer
+		default:
+			tt.Kind = trace.SpanKindInternal
 		}
 		binary.BigEndian.PutUint64(tt.SpanID[:], t.SpanID.Row(i))
 		binary.BigEndian.PutUint64(tt.ParentSpanID[:], t.ParentSpanID.Row(i))
@@ -50,6 +65,7 @@ type Trace struct {
 	StartTime     time.Time
 	FinishTime    time.Time
 	Attributes    map[string]string
+	Kind          trace.SpanKind
 }
 
 // Result returns proto.Results for Table.
@@ -63,6 +79,7 @@ func (t *Table) Result() proto.Results {
 		{Name: "finish_time_us", Data: &t.FinishTimeMicro},
 		{Name: "finish_date", Data: &t.FinishDate},
 		{Name: "attribute", Data: &t.Attributes},
+		{Name: "kind", Data: &t.SpanKind},
 	}
 }
 
