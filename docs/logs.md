@@ -115,13 +115,15 @@ service_name="testService"
 service_namespace="testNamespace"
 
 // Not sure about this one, will require storing mapping to support regex
-job="testNamespace/testService" (
+job="testNamespace/testService".
 
 // Optionally:
 http_method="GET"
 http_server="true"
 http_status_code="200"
 ```
+
+This will allow filtering by this labels in Grafana UI by clicking on it.
 
 Log line search: everywhere except resource attributes and scope.
 Special case for traceID and spanID with additional search in traceID and spanID fields.
