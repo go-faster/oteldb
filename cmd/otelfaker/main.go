@@ -48,8 +48,23 @@ func getLogs(ctx context.Context, tracer trace.Tracer, rnd *rand.Rand, now time.
 	}
 	il.SetSchemaUrl("scope_schema")
 	lg := il.LogRecords().AppendEmpty()
-	lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_INFO))
-	lg.SetSeverityText("Info")
+	switch {
+	case rnd.Float32() < 0.1:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_DEBUG))
+		lg.SetSeverityText("Debug")
+	case rnd.Float32() < 0.2:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_ERROR))
+		lg.SetSeverityText("Error")
+	case rnd.Float32() < 0.3:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_FATAL))
+		lg.SetSeverityText("Fatal")
+	case rnd.Float32() < 0.4:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_WARN))
+		lg.SetSeverityText("Warn")
+	default:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_INFO))
+		lg.SetSeverityText("Info")
+	}
 	lg.SetTraceID(pcommon.TraceID(traceID))
 	lg.SetSpanID(pcommon.SpanID(spanID))
 	lg.Body().SetStr("hello world")
