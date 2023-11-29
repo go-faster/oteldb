@@ -61,6 +61,10 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
   otlp/qryn:
     endpoint: qryn-collector:4317
     tls:
@@ -91,7 +95,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, otlp/jaeger, otlp/qryn]
+      exporters: [otlp, otlp/jaeger, otlp/qryn, otlp/tempo]
     metrics:
       receivers: [otlp, prometheus, hostmetrics]
       processors: [batch]

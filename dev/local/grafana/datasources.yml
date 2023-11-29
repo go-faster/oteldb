@@ -6,7 +6,7 @@ datasources:
     access: proxy
     orgId: 1
     url: http://oteldb:3200
-    uid: tempo
+    uid: tempo-oteldb
     jsonData:
       httpMethod: GET
       serviceMap:
@@ -61,6 +61,17 @@ datasources:
     uid: jaeger
     url: http://jaeger:16686
     access: proxy
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    url: http://tempo:3200
+    access: proxy
+    httpMethod: GET
+    jsonData:
+      httpMethod: GET
+      serviceMap:
+        datasourceUid: prometheus
 
   # For qryn
   - name: "qryn: LogQL"

@@ -2,6 +2,7 @@ version: "3"
 
 volumes:
   prom:
+  tempo:
 
 services:
   clickhouse:
@@ -172,6 +173,13 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
 
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yml" ]
+    volumes:
+      - ../tempo.yml:/etc/tempo.yml
+      - tempo:/tmp/tempo
+
   grafana:
     image: "grafana/grafana:10.0.0"
     environment:
@@ -187,7 +195,7 @@ services:
       - "3000:3000"
     volumes:
       - ../grafana/grafana.ini:/etc/grafana/grafana.ini
-      - ../grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ../grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
       - ../grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
