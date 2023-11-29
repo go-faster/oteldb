@@ -97,7 +97,7 @@ Log message:
   "body": "hello world",
   "trace_id": "cacb16ac5ace52ebe8749114234a8e58",
   "span_id": "36a431d0481b2744",
-  "severity": "Info",
+  "severity": "INFO",
   "http.duration": 1105000000,
   "http.duration.seconds": 1.1054,
   "http.method": "GET",
@@ -130,3 +130,25 @@ Special case for traceID and spanID with additional search in traceID and spanID
 
 Labels extraction: handle first `| json |` explicitly, offloading to underlying log storage
 where reverse mapping should be executed.
+
+Extracted labels after `json`:
+```
+body: "hello world"
+trace_id="cacb16ac5ace52ebe8749114234a8e58"
+span_id="36a431d0481b2744"
+severity="INFO"
+http_duration=1105000000
+http_duration_seconds=1.1054
+http_method="GET"
+http_server=true
+http_status_code=200
+http_user_agent=test-agent
+```
+
+So we can have a query like this:
+
+```
+{service_name="testService"} ~= `hello world` | json | http_duration > 30s or http_status_code >= 500
+```
+
+Which can be translated to efficient ClickHouse query.
