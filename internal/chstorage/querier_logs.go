@@ -2,7 +2,9 @@ package chstorage
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/ClickHouse/ch-go"
@@ -11,6 +13,7 @@ import (
 	"github.com/go-faster/jx"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -69,6 +72,28 @@ LIMIT 1000`,
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
+
+	// Append materialized labels.
+	out = append(out,
+		logstorage.LabelTraceID,
+		logstorage.LabelSpanID,
+		logstorage.LabelSeverity,
+		logstorage.LabelBody,
+		logstorage.LabelServiceName,
+		logstorage.LabelServiceInstanceID,
+		logstorage.LabelServiceNamespace,
+	)
+
+	// Deduplicate.
+	seen := make(map[string]struct{}, len(out))
+	for _, v := range out {
+		seen[v] = struct{}{}
+	}
+	out = out[:0]
+	for k := range seen {
+		out = append(out, k)
+	}
+	slices.Sort(out)
 
 	return out, nil
 }
@@ -168,6 +193,26 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		}
 		span.End()
 	}()
+	switch labelName {
+	case logstorage.LabelBody, logstorage.LabelSpanID, logstorage.LabelTraceID:
+		return &labelStaticIterator{
+			name:   labelName,
+			values: nil,
+		}, nil
+	case logstorage.LabelSeverity:
+		return &labelStaticIterator{
+			name: labelName,
+			values: []jx.Raw{
+				jx.Raw(plog.SeverityNumberUnspecified.String()),
+				jx.Raw(plog.SeverityNumberTrace.String()),
+				jx.Raw(plog.SeverityNumberDebug.String()),
+				jx.Raw(plog.SeverityNumberInfo.String()),
+				jx.Raw(plog.SeverityNumberWarn.String()),
+				jx.Raw(plog.SeverityNumberError.String()),
+				jx.Raw(plog.SeverityNumberFatal.String()),
+			},
+		}, nil
+	}
 	{
 		mapping, err := q.getLabelMapping(ctx, []string{labelName})
 		if err != nil {
@@ -290,30 +335,82 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		default:
 			return nil, errors.Errorf("unexpected op %q", m.Op)
 		}
-		for i, column := range []string{
-			"attributes",
-			"resource",
-			"scope_attributes",
-		} {
-			if i != 0 {
-				query.WriteString(" OR ")
-			}
-			// TODO: how to match integers, booleans, floats, arrays?
+		switch labelName {
+		case logstorage.LabelTraceID:
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+				fmt.Fprintf(&query, "trace_id = unhex(%s)", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(&query, "JSONExtractString(%s, %s) REGEXP %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+				fmt.Fprintf(&query, "hex(trace_id) REGEXP %s", singleQuoted(m.Value))
+			}
+		case logstorage.LabelSpanID:
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				fmt.Fprintf(&query, "span_id = unhex(%s)", singleQuoted(m.Value))
+			case logql.OpRe, logql.OpNotRe:
+				fmt.Fprintf(&query, "hex(span_id) REGEXP %s", singleQuoted(m.Value))
+			}
+		case logstorage.LabelSeverity:
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				// Direct comparison with severity number.
+				var severityNumber uint8
+				for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
+					if strings.ToLower(i.String()) == strings.ToLower(m.Value) {
+						severityNumber = uint8(i)
+						break
+					}
+				}
+				fmt.Fprintf(&query, "severity_number = %d", severityNumber)
+			default:
+				// TODO(ernado): just do regex in-place and add `IN (...)` to query.
+				return nil, errors.Errorf("%q not implemented for severity", m.Op)
+			}
+		case logstorage.LabelBody:
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				fmt.Fprintf(&query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
+			case logql.OpRe, logql.OpNotRe:
+				fmt.Fprintf(&query, "service_name REGEXP %s", singleQuoted(m.Value))
+			}
+		case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
+			// Materialized from resource.service.{name,namespace,instance_id}.
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				fmt.Fprintf(&query, "positionUTF8(%s, %s) > 0", labelName, singleQuoted(m.Value))
+			case logql.OpRe, logql.OpNotRe:
+				fmt.Fprintf(&query, "%s REGEXP %s", labelName, singleQuoted(m.Value))
+			}
+		default:
+			// Search in all attributes.
+			for i, column := range []string{
+				"attributes",
+				"resource",
+				"scope_attributes",
+			} {
+				if i != 0 {
+					query.WriteString(" OR ")
+				}
+				// TODO: how to match integers, booleans, floats, arrays?
+				switch m.Op {
+				case logql.OpEq, logql.OpNotEq:
+					fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+				case logql.OpRe, logql.OpNotRe:
+					fmt.Fprintf(&query, "JSONExtractString(%s, %s) REGEXP %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+				}
 			}
 		}
 		query.WriteByte(')')
 	}
+
+	hasTraceID := false
+
 	for _, m := range params.Line {
 		switch m.Op {
 		case logql.OpEq, logql.OpRe:
-			query.WriteString(" AND ")
+			query.WriteString(" AND (")
 		case logql.OpNotEq, logql.OpNotRe:
-			query.WriteString(" AND NOT ")
+			query.WriteString(" AND NOT (")
 		default:
 			return nil, errors.Errorf("unexpected op %q", m.Op)
 		}
@@ -321,12 +418,30 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		switch m.Op {
 		case logql.OpEq, logql.OpNotEq:
 			fmt.Fprintf(&query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
+			{
+				// HACK: check for special case of hex-encoded trace_id and span_id.
+				// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
+				// TODO(ernado): also handle regex?
+				encoded := strings.ToLower(m.Value)
+				v, _ := hex.DecodeString(encoded)
+				switch len(v) {
+				case len(otelstorage.TraceID{}):
+					fmt.Fprintf(&query, " OR trace_id = unhex(%s)", singleQuoted(encoded))
+					hasTraceID = true
+				case len(otelstorage.SpanID{}):
+					fmt.Fprintf(&query, " OR span_id = unhex(%s)", singleQuoted(encoded))
+				}
+			}
 		case logql.OpRe, logql.OpNotRe:
 			fmt.Fprintf(&query, "body REGEXP %s", singleQuoted(m.Value))
 		}
+		query.WriteByte(')')
 	}
 
 	// TODO: use streaming.
+	if hasTraceID {
+		fmt.Println(query.String())
+	}
 	var data []logstorage.Record
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
@@ -343,5 +458,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
+	fmt.Println("got data", len(data))
 	return &logStaticIterator{data: data}, nil
 }

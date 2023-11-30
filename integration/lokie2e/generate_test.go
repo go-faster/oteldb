@@ -2,6 +2,7 @@ package lokie2e_test
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/go-faster/oteldb/integration/lokie2e"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 func appendAttributes(target pcommon.Map, attrs []attribute.KeyValue) {
@@ -34,6 +36,7 @@ func appendAttributes(target pcommon.Map, attrs []attribute.KeyValue) {
 }
 
 type httpLog struct {
+	Severity plog.SeverityNumber
 	Time     time.Time
 	Method   string
 	Status   int
@@ -43,6 +46,8 @@ type httpLog struct {
 	URL      string
 	IP       string
 	Ref      string
+	SpanID   otelstorage.SpanID
+	TraceID  otelstorage.TraceID
 }
 
 func (l httpLog) Append(s *lokie2e.BatchSet) error {
@@ -69,6 +74,9 @@ func (l httpLog) Append(s *lokie2e.BatchSet) error {
 	lg.Body().SetStr(fmt.Sprintf("%s %s %d %d - 0.000 ms", l.Method, l.URL, l.Status, l.Bytes))
 	lg.SetTimestamp(pcommon.NewTimestampFromTime(l.Time))
 	lg.SetObservedTimestamp(pcommon.NewTimestampFromTime(l.Time))
+	lg.SetTraceID(pcommon.TraceID(l.TraceID))
+	lg.SetSpanID(pcommon.SpanID(l.SpanID))
+	lg.SetSeverityNumber(l.Severity)
 	appendAttributes(lg.Attributes(), []attribute.KeyValue{
 		semconv.HTTPMethod(l.Method),
 		semconv.HTTPStatusCode(l.Status),
@@ -82,7 +90,7 @@ func (l httpLog) Append(s *lokie2e.BatchSet) error {
 	return nil
 }
 
-func generateLogs(now time.Time) (s lokie2e.BatchSet, err error) {
+func generateLogs(now time.Time) (*lokie2e.BatchSet, error) {
 	type httpLogBatch struct {
 		Method   string
 		Status   int
@@ -91,7 +99,7 @@ func generateLogs(now time.Time) (s lokie2e.BatchSet, err error) {
 		Protocol string
 	}
 	var lines []httpLog
-	for _, b := range []httpLogBatch{
+	for j, b := range []httpLogBatch{
 		{Method: "GET", Status: 200, Count: 11, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
 		{Method: "GET", Status: 200, Count: 10, IP: "200.1.1.1", Protocol: "HTTP/1.1"},
 		{Method: "DELETE", Status: 200, Count: 20, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
@@ -104,8 +112,36 @@ func generateLogs(now time.Time) (s lokie2e.BatchSet, err error) {
 		{Method: "PUT", Status: 200, Count: 20, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
 	} {
 		for i := 0; i < b.Count; i++ {
+			var (
+				spanID  otelstorage.SpanID
+				traceID otelstorage.TraceID
+			)
+			{
+				// Predictable IDs for testing.
+				binary.PutUvarint(spanID[:], uint64(i+1056123959+j*100))
+				spanID[7] = byte(j)
+				spanID[6] = byte(i)
+				binary.PutUvarint(traceID[:], uint64(i+3959+j*1000))
+				binary.PutUvarint(traceID[8:], uint64(i+13+j*1000))
+				traceID[15] = byte(j)
+				traceID[14] = byte(i)
+			}
 			now = now.Add(time.Millisecond * 120)
+			severity := plog.SeverityNumberInfo
+			switch b.Status / 100 {
+			case 2:
+				severity = plog.SeverityNumberInfo
+			case 3:
+				severity = plog.SeverityNumberWarn
+			case 4:
+				severity = plog.SeverityNumberError
+			case 5:
+				severity = plog.SeverityNumberFatal
+			}
 			lines = append(lines, httpLog{
+				Severity: severity,
+				SpanID:   spanID,
+				TraceID:  traceID,
 				Time:     now,
 				Method:   b.Method,
 				Status:   b.Status,
@@ -118,11 +154,13 @@ func generateLogs(now time.Time) (s lokie2e.BatchSet, err error) {
 		}
 	}
 
+	s := lokie2e.NewBatchSet()
 	for _, l := range lines {
-		if err := l.Append(&s); err != nil {
+		if err := l.Append(s); err != nil {
 			return s, err
 		}
 	}
+
 	return s, nil
 }
 

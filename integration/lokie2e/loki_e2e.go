@@ -20,6 +20,40 @@ type BatchSet struct {
 	End   otelstorage.Timestamp
 }
 
+func NewBatchSet() *BatchSet {
+	s := &BatchSet{}
+	// Init common labels.
+	// Should return blank values.
+	s.Labels = map[string][]logstorage.Label{}
+	for _, v := range []string{
+		logstorage.LabelBody,
+		logstorage.LabelTraceID,
+		logstorage.LabelSpanID,
+		logstorage.LabelServiceInstanceID,
+		logstorage.LabelServiceName,
+		logstorage.LabelServiceNamespace,
+	} {
+		s.Labels[v] = []logstorage.Label{}
+	}
+	for _, i := range []plog.SeverityNumber{
+		plog.SeverityNumberUnspecified,
+		plog.SeverityNumberTrace,
+		plog.SeverityNumberDebug,
+		plog.SeverityNumberInfo,
+		plog.SeverityNumberWarn,
+		plog.SeverityNumberError,
+		plog.SeverityNumberFatal,
+	} {
+		s.addLabel(logstorage.Label{
+			Name:  logstorage.LabelSeverity,
+			Value: i.String(),
+			Type:  int32(pcommon.ValueTypeStr),
+		})
+	}
+
+	return s
+}
+
 func (s *BatchSet) Append(raw plog.Logs) error {
 	s.Batches = append(s.Batches, raw)
 

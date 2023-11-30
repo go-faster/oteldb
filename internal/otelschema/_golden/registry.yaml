@@ -623,6 +623,15 @@ entries:
     group: db
     name: db_elasticsearch_path_parts
     type: template[string]
+  db.instance.id:
+    brief: |
+      An identifier (address, unique name, or any other identifier) of the database instance that is executing queries or mutations on the current connection. This is useful in cases where the database is running in a clustered environment and the instrumentation is able to record the node executing the query. The client may obtain this value in databases like MySQL using queries like `select @@hostname`.
+    column: String
+    examples:
+    - mysql-e26b99z.example.com
+    group: db
+    name: db_instance_id
+    type: string
   db.jdbc.driver_classname:
     brief: |
       The fully-qualified class name of the [Java Database Connectivity (JDBC)](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) driver used to connect.
@@ -1561,6 +1570,17 @@ entries:
     group: k8s
     name: k8s_node_uid
     type: string
+  k8s.pod.labels:
+    brief: |
+      The labels placed on the Pod, the `<key>` being the label name, the value being the label value.
+    column: String
+    examples:
+    - k8s.pod.labels.app=my-app
+    - k8s.pod.labels.mycompany.io/arch=x64
+    - k8s.pod.labels.data=
+    group: k8s
+    name: k8s_pod_labels
+    type: template[string]
   k8s.pod.name:
     brief: |
       The name of the Pod.
@@ -3100,5 +3120,5 @@ entries:
 statistics:
   deprecated: 24
   enum: 23
-  total: 334
+  total: 336
   unknown: 0

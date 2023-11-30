@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 func setupDB(
 	ctx context.Context,
 	t *testing.T,
-	set lokie2e.BatchSet,
+	set *lokie2e.BatchSet,
 	inserter logstorage.Inserter,
 	querier logstorage.Querier,
 	engineQuerier logqlengine.Querier,
@@ -144,6 +144,15 @@ func runTest(
 			entries int
 		}{
 			// Label matchers.
+			// By trace id.
+			{`{trace_id="af36000000000000c517000000000003"}`, 1},
+			{`{trace_id="AF36000000000000C517000000000003"}`, 1},
+			{`{trace_id="badbadbadbadbadbaddeadbeafbadbad"}`, 0},
+			// By severity.
+			{`{level="Info"}`, 121},
+			{`{level="INFO"}`, 121},
+			// All by service name.
+			{`{service_name="testService"}`, len(set.Records)},
 			// Effectively match GET.
 			{`{http_method="GET"}`, 21},
 			{`{http_method=~".*GET.*"}`, 21},
@@ -177,18 +186,20 @@ func runTest(
 			// Line filter.
 			{`{http_method=~".+"} |= "GET"`, 21},
 			{`{http_method=~".+"} |= "DELETE"`, 20},
-			{`{http_method=~".+"} |= "HEAD" |= "500"`, 2},
+			{`{http_method=~".+"} |= "HEAD" |= " 500 "`, 2},
 			{`{http_method=~".+"} |~ "DELETE"`, 20},
-			{`{http_method=~".+"} |~ "HEAD" |= "500"`, 2},
+			{`{http_method=~".+"} |~ "HEAD" |= " 500 "`, 2},
 			// Try to not use offloading.
 			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "DELETE"`, 20},
-			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "HEAD" |= "500"`, 2},
-			{`{http_method=~".+"} |= "HEAD" | line_format "{{ __line__ }}" |= "500"`, 2},
+			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "HEAD" |= " 500 "`, 2},
+			{`{http_method=~".+"} |= "HEAD" | line_format "{{ __line__ }}" |= " 500 "`, 2},
 			// Negative line matcher.
 			{`{http_method=~".+"} != "HEAD"`, len(set.Records) - 22},
 			{`{http_method=~".+"} !~ "HEAD"`, len(set.Records) - 22},
 			// IP line filter.
 			{`{http_method="HEAD"} |= ip("236.7.233.166")`, 1},
+			// Trace to logs.
+			{`{http_method=~".+"} |= "af36000000000000c517000000000003"`, 1},
 
 			// Label filter.
 			{`{http_method=~".+"} | http_method = "GET"`, 21},

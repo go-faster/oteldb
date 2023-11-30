@@ -80,15 +80,15 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	l.reset()
 
 	if traceID := record.TraceID; !traceID.IsEmpty() {
-		l.Set(`trace_id`, pcommon.NewValueStr(traceID.Hex()))
+		l.Set(logstorage.LabelTraceID, pcommon.NewValueStr(traceID.Hex()))
 	}
 	if spanID := record.SpanID; !spanID.IsEmpty() {
-		l.Set(`span_id`, pcommon.NewValueStr(spanID.Hex()))
+		l.Set(logstorage.LabelSpanID, pcommon.NewValueStr(spanID.Hex()))
 	}
 	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
-		l.Set(`level`, pcommon.NewValueStr(severity.String()))
+		l.Set(logstorage.LabelSeverity, pcommon.NewValueStr(severity.String()))
 	}
-	l.Set(`msg`, pcommon.NewValueStr(record.Body))
+	l.Set(logstorage.LabelBody, pcommon.NewValueStr(record.Body))
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
 
