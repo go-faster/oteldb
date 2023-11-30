@@ -88,6 +88,7 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
 		l.Set(`level`, pcommon.NewValueStr(severity.String()))
 	}
+	l.Set(`msg`, pcommon.NewValueStr(record.Body))
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
 
