@@ -164,11 +164,11 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 			})
 			return nil
 		},
-		ExternalTable: "_labels",
+		ExternalTable: "labels",
 		ExternalData: []proto.InputColumn{
 			{Name: "name", Data: &inputData},
 		},
-		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s INNER JOIN _labels ON (_labels.name = %[1]s.name)`, q.tables.LogAttrs),
+		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.LogAttrs),
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
