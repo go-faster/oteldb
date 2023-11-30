@@ -177,27 +177,31 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			labelName = key
 		}
 	}
-	var (
-		names proto.ColStr
-		out   []jx.Raw
-	)
+	var out []jx.Raw
+	values := new(proto.ColStr).Array()
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
 		Result: proto.Results{
-			{Name: "value", Data: &names},
+			{Name: "values", Data: values},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < names.Rows(); i++ {
-				out = append(out, jx.Raw(names.Row(i)))
+			for i := 0; i < values.Rows(); i++ {
+				for _, v := range values.Row(i) {
+					if len(v) == 0 {
+						// HACK: JSONExtractRaw returns empty string if key is not found.
+						continue
+					}
+					out = append(out, jx.Raw(v))
+				}
 			}
 			return nil
 		},
 		Body: fmt.Sprintf(`SELECT DISTINCT 
-COALESCE(
+array(
 	JSONExtractRaw(attributes, %[1]s), 
 	JSONExtractRaw(scope_attributes, %[1]s),
 	JSONExtractRaw(resource, %[1]s)
-) as value
+) as values
 FROM %s 
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d) LIMIT 1000`,
 			singleQuoted(labelName), table, opts.Start, opts.End,

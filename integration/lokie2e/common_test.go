@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"testing"
 	"time"
 
@@ -108,25 +109,33 @@ func runTest(
 		}
 	})
 	t.Run("LabelValues", func(t *testing.T) {
-		a := require.New(t)
-
 		for labelName, labels := range set.Labels {
-			labelValue := map[string]struct{}{}
+			unique := map[string]struct{}{}
 			for _, t := range labels {
-				labelValue[t.Value] = struct{}{}
+				unique[t.Value] = struct{}{}
 			}
+			values := make([]string, 0, len(unique))
+			for v := range unique {
+				values = append(values, v)
+			}
+			slices.Sort(values)
 
-			r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
-				Name: labelName,
-				// Always sending time range because default is current time.
-				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
-				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+			t.Run(labelName, func(t *testing.T) {
+				a := require.New(t)
+				t.Logf("%q: %v", labelName, values)
+				r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
+					Name: labelName,
+					// Always sending time range because default is current time.
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				})
+				a.NoError(err)
+				a.Len(r.Data, len(values))
+				t.Logf("got values %v", r.Data)
+				for _, val := range r.Data {
+					a.Containsf(values, val, "check label %q", labelName)
+				}
 			})
-			a.NoError(err)
-			a.Len(r.Data, len(labelValue))
-			for _, val := range r.Data {
-				a.Containsf(labelValue, val, "check label %q", labelName)
-			}
 		}
 	})
 	t.Run("LogQueries", func(t *testing.T) {
