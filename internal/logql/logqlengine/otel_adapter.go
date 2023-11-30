@@ -15,24 +15,27 @@ func LineFromRecord(record logstorage.Record) string {
 		e.Field(logstorage.LabelBody, func(e *jx.Encoder) {
 			e.Str(record.Body)
 		})
-		record.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
-			e.Field(k, func(e *jx.Encoder) {
-				switch v.Type() {
-				case pcommon.ValueTypeStr:
-					e.Str(v.Str())
-				case pcommon.ValueTypeBool:
-					e.Bool(v.Bool())
-				case pcommon.ValueTypeInt:
-					e.Int64(v.Int())
-				case pcommon.ValueTypeDouble:
-					e.Float64(v.Double())
-				default:
-					// Fallback.
-					e.Str(v.AsString())
-				}
+
+		if m := record.Attrs.AsMap(); m != (pcommon.Map{}) {
+			record.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+				e.Field(k, func(e *jx.Encoder) {
+					switch v.Type() {
+					case pcommon.ValueTypeStr:
+						e.Str(v.Str())
+					case pcommon.ValueTypeBool:
+						e.Bool(v.Bool())
+					case pcommon.ValueTypeInt:
+						e.Int64(v.Int())
+					case pcommon.ValueTypeDouble:
+						e.Float64(v.Double())
+					default:
+						// Fallback.
+						e.Str(v.AsString())
+					}
+				})
+				return true
 			})
-			return true
-		})
+		}
 		// HACK: add trace_id, span_id so "trace to logs" metrics work.
 		// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
 		if !record.TraceID.IsEmpty() {
