@@ -42,7 +42,7 @@ func (i *entryIterator) Next(e *entry) bool {
 		ts := record.Timestamp
 		e.set.SetFromRecord(record)
 
-		line, keep := i.prefilter.Process(ts, record.Body, e.set)
+		line, keep := i.prefilter.Process(ts, LineFromRecord(record), e.set)
 		if !keep {
 			continue
 		}

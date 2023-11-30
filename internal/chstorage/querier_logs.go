@@ -262,7 +262,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
 	}
-	fmt.Println("mapping:", mapping)
 
 	out := newLogColumns()
 	var query strings.Builder
@@ -277,10 +276,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	for _, m := range params.Labels {
 		labelName := string(m.Label)
 		if key, ok := mapping[labelName]; ok {
-			fmt.Println("mapped", labelName, "to", key)
 			labelName = key
-		} else {
-			fmt.Println("no mapping for", labelName)
 		}
 		switch m.Op {
 		case logql.OpEq, logql.OpRe:

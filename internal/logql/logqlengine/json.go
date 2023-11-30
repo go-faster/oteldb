@@ -112,7 +112,7 @@ func extractAll(line string, set LabelSet) error {
 			return nil
 		}
 		// TODO(tdakkota): try string interning
-		set.Set(logql.Label(key), value)
+		set.Set(logql.Label(otelstorage.KeyToLabel(key)), value)
 		return nil
 	})
 }

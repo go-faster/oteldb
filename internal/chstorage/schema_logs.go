@@ -31,9 +31,15 @@ CREATE TABLE IF NOT EXISTS %s
 	scope_name         LowCardinality(String),
 	scope_version      LowCardinality(String),
 	scope_attributes   String, -- json object
+
+	-- for selects by trace_id, span_id to discover service_name, service_namespace and timestamp
+	-- like SELECT service_name, service_namespace, timestamp FROM logs WHERE trace_id = '...'
+	-- probably can be aggregated/grouped
+	PROJECTION tracing (SELECT service_namespace, service_name, timestamp, trace_id, span_id ORDER BY trace_id, span_id)
 )
-  ENGINE = MergeTree()
-  ORDER BY (service_namespace, service_name, service_instance_id, toStartOfFiveMinutes(timestamp));`
+  ENGINE = MergeTree
+  PRIMARY KEY (service_namespace, service_name, toStartOfFiveMinutes(timestamp))
+  ORDER BY (service_namespace, service_name, toStartOfFiveMinutes(timestamp), timestamp);`
 
 	logAttrsSchema = `
 CREATE TABLE IF NOT EXISTS %s

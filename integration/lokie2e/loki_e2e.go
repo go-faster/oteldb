@@ -2,10 +2,7 @@
 package lokie2e
 
 import (
-	"io"
-
 	"github.com/go-faster/errors"
-	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 
@@ -23,30 +20,7 @@ type BatchSet struct {
 	End   otelstorage.Timestamp
 }
 
-// ParseBatchSet parses JSON batches from given reader.
-func ParseBatchSet(r io.Reader) (s BatchSet, _ error) {
-	d := jx.Decode(r, 4096)
-	u := plog.JSONUnmarshaler{}
-
-	for d.Next() != jx.Invalid {
-		data, err := d.Raw()
-		if err != nil {
-			return s, errors.Wrap(err, "read line")
-		}
-
-		raw, err := u.UnmarshalLogs(data)
-		if err != nil {
-			return s, errors.Wrap(err, "parse batch")
-		}
-
-		if err := s.addBatch(raw); err != nil {
-			return s, errors.Wrap(err, "add batch")
-		}
-	}
-	return s, nil
-}
-
-func (s *BatchSet) addBatch(raw plog.Logs) error {
+func (s *BatchSet) Append(raw plog.Logs) error {
 	s.Batches = append(s.Batches, raw)
 
 	resLogs := raw.ResourceLogs()
