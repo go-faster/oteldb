@@ -77,7 +77,7 @@ func main() {
 			ctx = zctx.Base(ctx, lg)
 		}
 
-		root, err := newApp(ctx, lg, m)
+		root, err := newApp(ctx, m)
 		if err != nil {
 			return errors.Wrap(err, "setup")
 		}

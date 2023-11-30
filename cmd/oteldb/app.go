@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/promql"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -37,10 +38,11 @@ type App struct {
 	metrics Metrics
 }
 
-func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err error) {
+func newApp(ctx context.Context, metrics Metrics) (_ *App, err error) {
 	var (
 		storageType = strings.ToLower(os.Getenv("OTELDB_STORAGE"))
 		m           = NewMetricsOverride(metrics)
+		lg          = zctx.From(ctx)
 		app         = &App{
 			services: map[string]func(context.Context) error{},
 			lg:       lg,
