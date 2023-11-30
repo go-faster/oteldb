@@ -130,13 +130,6 @@ func runTest(
 		}
 	})
 	t.Run("LogQueries", func(t *testing.T) {
-		// Example JQ expression to make testdata queries:
-		//
-		// 	.resourceLogs[].scopeLogs[].logRecords[]
-		// 		| .body.stringValue
-		// 		| fromjson
-		// 		| select(.method=="GET")
-		//
 		tests := []struct {
 			query   string
 			entries int
