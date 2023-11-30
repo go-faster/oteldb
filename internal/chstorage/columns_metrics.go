@@ -8,7 +8,8 @@ type pointColumns struct {
 	name      *proto.ColLowCardinality[string]
 	timestamp *proto.ColDateTime64
 
-	value proto.ColFloat64
+	mapping proto.ColEnum8
+	value   proto.ColFloat64
 
 	flags      proto.ColUInt32
 	attributes proto.ColStr
@@ -27,6 +28,7 @@ func (c *pointColumns) Input() proto.Input {
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
+		{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
 		{Name: "value", Data: c.value},
 
 		{Name: "flags", Data: c.flags},
@@ -41,6 +43,7 @@ func (c *pointColumns) Result() proto.Results {
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
+		{Name: "mapping", Data: &c.mapping},
 		{Name: "value", Data: &c.value},
 
 		{Name: "flags", Data: &c.flags},

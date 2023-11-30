@@ -2,6 +2,8 @@ package chstorage
 
 import (
 	"context"
+	"strconv"
+	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/chpool"
@@ -110,6 +112,7 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 		b.addLabels(attrs)
 		c.name.Append(name)
 		c.timestamp.Append(ts)
+		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
 		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
@@ -130,11 +133,11 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 			Set:   point.HasSum(),
 			Value: point.Sum(),
 		}
-		min := proto.Nullable[float64]{
+		_min := proto.Nullable[float64]{
 			Set:   point.HasMin(),
 			Value: point.Min(),
 		}
-		max := proto.Nullable[float64]{
+		_max := proto.Nullable[float64]{
 			Set:   point.HasMax(),
 			Value: point.Max(),
 		}
@@ -142,17 +145,92 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 		explicitBounds := point.ExplicitBounds().AsRaw()
 
 		b.addLabels(attrs)
+		// Save original histogram.
 		c.name.Append(name)
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
-		c.min.Append(min)
-		c.max.Append(max)
+		c.min.Append(_min)
+		c.max.Append(_max)
 		c.bucketCounts.Append(bucketCounts)
 		c.explicitBounds.Append(explicitBounds)
 		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
+
+		// Map histogram as set of series for Prometheus compatibility.
+		series := mappedSeries{
+			ts:    ts,
+			flags: flags,
+			attrs: attrs,
+			res:   res,
+		}
+		if sum.Set {
+			b.addMappedSample(
+				series,
+				name+"_sum",
+				histogramSum,
+				sum.Value,
+				[2]string{},
+			)
+		}
+		if _min.Set {
+			b.addMappedSample(
+				series,
+				name+"_min",
+				histogramMin,
+				_min.Value,
+				[2]string{},
+			)
+		}
+		if _max.Set {
+			b.addMappedSample(
+				series,
+				name+"_max",
+				histogramMax,
+				_max.Value,
+				[2]string{},
+			)
+		}
+		b.addMappedSample(
+			series,
+			name+"_count",
+			histogramCount,
+			float64(count),
+			[2]string{},
+		)
+
+		var (
+			cumCount   uint64
+			bucketName = name + "_bucket"
+		)
+		for i := 0; i < min(len(bucketCounts), len(explicitBounds)); i++ {
+			bound := explicitBounds[i]
+			cumCount += bucketCounts[i]
+
+			// Generate series with "_bucket" suffix and "le" label.
+			b.addMappedSample(
+				series,
+				bucketName,
+				histogramBucket,
+				float64(cumCount),
+				[2]string{
+					"le",
+					strconv.FormatFloat(bound, 'f', -1, 64),
+				},
+			)
+		}
+		// Generate series with "_bucket" suffix and "le" label.
+		b.addMappedSample(
+			series,
+			bucketName,
+			histogramBucket,
+			float64(cumCount),
+			[2]string{
+				"le",
+				"+Inf",
+			},
+		)
 	}
 	return nil
 }
@@ -242,8 +320,51 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 		c.flags.Append(uint32(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
+
+		series := mappedSeries{
+			ts:    ts,
+			flags: flags,
+			attrs: attrs,
+			res:   res,
+		}
+		b.addMappedSample(series, name+"_count", summaryCount, float64(count), [2]string{})
+		b.addMappedSample(series, name+"_sum", summarySum, sum, [2]string{})
+
+		for i := 0; i < min(len(quantiles), len(values)); i++ {
+			quantile := quantiles[i]
+			value := values[i]
+
+			// Generate series with "quantile" label.
+			b.addMappedSample(series, name, summaryQuantile, value, [2]string{
+				"quantile",
+				strconv.FormatFloat(quantile, 'f', -1, 64),
+			})
+		}
 	}
 	return nil
+}
+
+type mappedSeries struct {
+	ts         time.Time
+	flags      pmetric.DataPointFlags
+	attrs, res pcommon.Map
+}
+
+func (b *metricsBatch) addMappedSample(
+	series mappedSeries,
+	name string,
+	mapping metricMapping,
+	val float64,
+	bucketKey [2]string,
+) {
+	c := b.points
+	c.name.Append(name)
+	c.timestamp.Append(series.ts)
+	c.mapping.Append(proto.Enum8(mapping))
+	c.value.Append(val)
+	c.flags.Append(uint32(series.flags))
+	c.attributes.Append(encodeAttributes(series.attrs, bucketKey))
+	c.resource.Append(encodeAttributes(series.res, bucketKey))
 }
 
 func (b *metricsBatch) addLabels(m pcommon.Map) {

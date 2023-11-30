@@ -7,12 +7,27 @@ import (
 	"github.com/go-faster/jx"
 )
 
+type metricMapping int8
+
+const (
+	noMapping metricMapping = iota
+	histogramCount
+	histogramSum
+	histogramMin
+	histogramMax
+	histogramBucket
+	summaryCount
+	summarySum
+	summaryQuantile
+)
+
 const (
 	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
 		timestamp DateTime64(9),
 
+		mapping Enum8(` + metricMappingDDL + `),
 		value Float64,
 
 		flags	UInt32,
@@ -21,6 +36,17 @@ const (
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp;`
+	metricMappingDDL = `
+		'NO_MAPPING' = 0,
+		'HISTOGRAM_COUNT' = 1,
+		'HISTOGRAM_SUM' = 2,
+		'HISTOGRAM_MIN' = 3,
+		'HISTOGRAM_MAX' = 4,
+		'HISTOGRAM_BUCKET' = 5,
+		'SUMMARY_COUNT' = 6,
+		'SUMMARY_SUM' = 7,
+		'SUMMARY_QUANTILE' = 8
+		`
 	histogramsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),

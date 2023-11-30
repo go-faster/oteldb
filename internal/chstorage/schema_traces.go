@@ -52,11 +52,11 @@ PRIMARY KEY (trace_id, span_id);`
 	valueTypeDDL = `'EMPTY' = 0,'STR' = 1,'INT' = 2,'DOUBLE' = 3,'BOOL' = 4,'MAP' = 5,'SLICE' = 6,'BYTES' = 7`
 )
 
-func encodeAttributes(attrs pcommon.Map) string {
+func encodeAttributes(attrs pcommon.Map, additional ...[2]string) string {
 	e := jx.GetEncoder()
 	defer jx.PutEncoder(e)
 
-	encodeMap(e, attrs)
+	encodeMap(e, attrs, additional...)
 	return e.String()
 }
 
@@ -87,8 +87,8 @@ func encodeValue(e *jx.Encoder, v pcommon.Value) {
 	}
 }
 
-func encodeMap(e *jx.Encoder, m pcommon.Map) {
-	if otelstorage.Attrs(m).IsZero() {
+func encodeMap(e *jx.Encoder, m pcommon.Map, additional ...[2]string) {
+	if otelstorage.Attrs(m).IsZero() && len(additional) == 0 {
 		e.ObjEmpty()
 		return
 	}
@@ -98,6 +98,10 @@ func encodeMap(e *jx.Encoder, m pcommon.Map) {
 		encodeValue(e, v)
 		return true
 	})
+	for _, pair := range additional {
+		e.FieldStart(pair[0])
+		e.Str(pair[1])
+	}
 	e.ObjEnd()
 }
 
