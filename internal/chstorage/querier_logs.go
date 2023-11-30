@@ -403,8 +403,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		query.WriteByte(')')
 	}
 
-	hasTraceID := false
-
 	for _, m := range params.Line {
 		switch m.Op {
 		case logql.OpEq, logql.OpRe:
@@ -427,7 +425,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				switch len(v) {
 				case len(otelstorage.TraceID{}):
 					fmt.Fprintf(&query, " OR trace_id = unhex(%s)", singleQuoted(encoded))
-					hasTraceID = true
 				case len(otelstorage.SpanID{}):
 					fmt.Fprintf(&query, " OR span_id = unhex(%s)", singleQuoted(encoded))
 				}
@@ -438,10 +435,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		query.WriteByte(')')
 	}
 
-	// TODO: use streaming.
-	if hasTraceID {
-		fmt.Println(query.String())
-	}
 	var data []logstorage.Record
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
@@ -458,6 +451,5 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
-	fmt.Println("got data", len(data))
 	return &logStaticIterator{data: data}, nil
 }
