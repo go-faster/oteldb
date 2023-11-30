@@ -29,7 +29,7 @@ type metricsBatch struct {
 	histograms    *histogramColumns
 	expHistograms *expHistogramColumns
 	summaries     *summaryColumns
-	labels        *labelsColumns
+	labels        map[[2]string]struct{}
 }
 
 func newMetricBatch() *metricsBatch {
@@ -38,13 +38,18 @@ func newMetricBatch() *metricsBatch {
 		histograms:    newHistogramColumns(),
 		expHistograms: newExpHistogramColumns(),
 		summaries:     newSummaryColumns(),
-		labels:        newLabelsColumns(),
+		labels:        map[[2]string]struct{}{},
 	}
 }
 
 func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool.Pool) error {
-	grp, grpCtx := errgroup.WithContext(ctx)
+	labels := newLabelsColumns()
+	for pair := range b.labels {
+		labels.name.Append(pair[0])
+		labels.value.Append(pair[1])
+	}
 
+	grp, grpCtx := errgroup.WithContext(ctx)
 	type columns interface {
 		Input() proto.Input
 	}
@@ -56,7 +61,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		{tables.Histograms, b.histograms},
 		{tables.ExpHistograms, b.expHistograms},
 		{tables.Summaries, b.summaries},
-		{tables.Labels, b.labels},
+		{tables.Labels, labels},
 	} {
 		table := table
 		grp.Go(func() error {
@@ -242,10 +247,13 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 }
 
 func (b *metricsBatch) addLabels(m pcommon.Map) {
-	m.Range(func(k string, v pcommon.Value) bool {
-		b.labels.name.Append(k)
-		// FIXME(tdakkota): annoying allocations
-		b.labels.value.Append(v.AsString())
+	m.Range(func(name string, value pcommon.Value) bool {
+		key := [2]string{
+			name,
+			// FIXME(tdakkota): annoying allocations
+			value.AsString(),
+		}
+		b.labels[key] = struct{}{}
 		return true
 	})
 }
