@@ -140,6 +140,11 @@ func runTest(
 			{`{http_method=~".*GET.*"}`, 21},
 			{`{http_method=~"^GET$"}`, 21},
 			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
+			// Also with dots.
+			{`{http.method="GET"}`, 21},
+			{`{http.method=~".*GET.*"}`, 21},
+			{`{http.method=~"^GET$"}`, 21},
+			{`{http.method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
 			// Try other methods.
 			{`{http_method="DELETE"}`, 20},
 			{`{http_method="GET"}`, 21},
@@ -155,6 +160,10 @@ func runTest(
 			{`{http_method="HEAD",http_status_code="500"}`, 2},
 			{`{http_method="HEAD",http_status_code=~"^500$"}`, 2},
 			{`{http_method=~".*HEAD.*",http_status_code=~"^500$"}`, 2},
+			// Also with dots.
+			{`{http.method="HEAD",http.status_code="500"}`, 2},
+			{`{http.method="HEAD",http.status_code=~"^500$"}`, 2},
+			{`{http.method=~".*HEAD.*",http.status_code=~"^500$"}`, 2},
 
 			// Line filter.
 			{`{http_method=~".+"} |= "GET"`, 21},
