@@ -15,20 +15,6 @@ func LineFromRecord(record logstorage.Record) string {
 		e.Field(logstorage.LabelBody, func(e *jx.Encoder) {
 			e.Str(record.Body)
 		})
-
-		// HACK: add trace_id, span_id so "trace to logs" metrics work.
-		// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
-		if !record.TraceID.IsEmpty() {
-			e.Field(logstorage.LabelTraceID, func(e *jx.Encoder) {
-				e.Str(record.TraceID.Hex())
-			})
-		}
-		if !record.SpanID.IsEmpty() {
-			e.Field(logstorage.LabelSpanID, func(e *jx.Encoder) {
-				e.Str(record.SpanID.Hex())
-			})
-		}
-
 		record.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
 			e.Field(k, func(e *jx.Encoder) {
 				switch v.Type() {
@@ -47,6 +33,18 @@ func LineFromRecord(record logstorage.Record) string {
 			})
 			return true
 		})
+		// HACK: add trace_id, span_id so "trace to logs" metrics work.
+		// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
+		if !record.TraceID.IsEmpty() {
+			e.Field(logstorage.LabelTraceID, func(e *jx.Encoder) {
+				e.Str(record.TraceID.Hex())
+			})
+		}
+		if !record.SpanID.IsEmpty() {
+			e.Field(logstorage.LabelSpanID, func(e *jx.Encoder) {
+				e.Str(record.SpanID.Hex())
+			})
+		}
 	})
 	return e.String()
 }
