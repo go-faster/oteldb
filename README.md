@@ -8,30 +8,25 @@ The OpenTelemetry-compatible telemetry aggregation, storage and processing.
 
 Work in progress.
 
+> [!WARNING]  
+> Work in progress.
+
 ## Storage
 
 The oteldb is stateless and uses external storage systems for data persistence, processing and aggregation.
 
-### YTsaurus
+We focus on the following storage systems:
+- [ClickHouse](https://clickhouse.com/)
+- [YTsaurus](https://ytsaurus.tech/)
 
-The [YTsaurus](https://ytsaurus.tech/) is a primary storage for telemetry data.
-An open source big data platform for distributed storage and processing.
-
-- Hierarchical multi-tenancy with secure resource isolation
-- OLAP and OLTP
-- MapReduce, ACID
-- ClickHouse protocol compatible
-- Exabyte scale, up to 1M CPU, 10K+ nodes
-
-### ClickHouse
-
-The oteldb also supports [ClickHouse](https://clickhouse.com/) storage.
+Currently, ClickHouse looks more promising.
 
 ## Query
 
 Supported query languages:
 - LogQL (loki) for logs
 - TraceQL (Tempo) for traces
+- PromQL (Prometheus) for metrics
 
 ## Local development
 
