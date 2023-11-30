@@ -106,7 +106,7 @@ func runTest(
 		}
 	})
 	t.Run("Series", func(t *testing.T) {
-		t.Run("ByName", func(t *testing.T) {
+		t.Run("PointByName", func(t *testing.T) {
 			a := require.New(t)
 
 			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
@@ -121,6 +121,40 @@ func runTest(
 			a.NotEmpty(r.Data)
 			for _, labels := range r.Data {
 				a.Equal("prometheus_http_requests_total", labels["__name__"])
+			}
+		})
+		t.Run("HistogramByName", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`prometheus_http_request_duration_seconds_count{}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, labels := range r.Data {
+				a.Equal("prometheus_http_request_duration_seconds_count", labels["__name__"])
+			}
+		})
+		t.Run("SummaryByName", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+				Match: []string{
+					`go_gc_duration_seconds{}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, labels := range r.Data {
+				a.Equal("go_gc_duration_seconds", labels["__name__"])
 			}
 		})
 		t.Run("OneMatcher", func(t *testing.T) {
