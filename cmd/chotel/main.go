@@ -231,7 +231,8 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		return errors.Wrap(err, "export")
 	}
 	if err := db.Do(ctx, ch.Query{
-		Body: "INSERT INTO opentelemetry_span_export (trace_id, span_id, exported_at) VALUES",
+		Logger: zctx.From(ctx),
+		Body:   "INSERT INTO opentelemetry_span_export (trace_id, span_id, exported_at) VALUES",
 		Input: proto.Input{
 			{Name: "trace_id", Data: exported.TraceID},
 			{Name: "span_id", Data: exported.SpanID},
