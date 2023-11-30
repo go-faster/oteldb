@@ -5,6 +5,7 @@ import (
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -33,8 +34,9 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 	}
 	input := c.Input()
 	return i.ch.Do(ctx, ch.Query{
-		Body:  input.Into(table),
-		Input: input,
+		Logger: zctx.From(ctx),
+		Body:   input.Into(table),
+		Input:  input,
 	})
 }
 
@@ -73,7 +75,8 @@ func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]str
 	}
 
 	return i.ch.Do(ctx, ch.Query{
-		Body:  input.Into(table),
-		Input: input,
+		Logger: zctx.From(ctx),
+		Body:   input.Into(table),
+		Input:  input,
 	})
 }

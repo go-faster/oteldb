@@ -5,6 +5,7 @@ import (
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -38,8 +39,9 @@ func (i *Inserter) InsertLogLabels(ctx context.Context, set map[logstorage.Label
 		attrs.AddRow(name, label.Name)
 	}
 	if err := i.ch.Do(ctx, ch.Query{
-		Body:  attrs.Input().Into(table),
-		Input: attrs.Input(),
+		Logger: zctx.From(ctx),
+		Body:   attrs.Input().Into(table),
+		Input:  attrs.Input(),
 	}); err != nil {
 		return errors.Wrap(err, "insert labels")
 	}
@@ -67,8 +69,9 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 	i.mapRecords(logs, records)
 
 	if err := i.ch.Do(ctx, ch.Query{
-		Body:  logs.Input().Into(table),
-		Input: logs.Input(),
+		Logger: zctx.From(ctx),
+		Body:   logs.Input().Into(table),
+		Input:  logs.Input(),
 	}); err != nil {
 		return errors.Wrap(err, "insert records")
 	}
@@ -80,8 +83,9 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 		attrs.AddAttrs(record.ScopeAttrs)
 	}
 	if err := i.ch.Do(ctx, ch.Query{
-		Body:  attrs.Input().Into(i.tables.LogAttrs),
-		Input: attrs.Input(),
+		Logger: zctx.From(ctx),
+		Body:   attrs.Input().Into(i.tables.LogAttrs),
+		Input:  attrs.Input(),
 	}); err != nil {
 		return errors.Wrap(err, "insert labels")
 	}

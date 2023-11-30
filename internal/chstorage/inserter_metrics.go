@@ -9,6 +9,7 @@ import (
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"golang.org/x/sync/errgroup"
@@ -71,8 +72,9 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 
 			input := table.columns.Input()
 			if err := client.Do(ctx, ch.Query{
-				Body:  input.Into(table.name),
-				Input: input,
+				Logger: zctx.From(ctx),
+				Body:   input.Into(table.name),
+				Input:  input,
 			}); err != nil {
 				return errors.Wrapf(err, "insert %q", table.name)
 			}

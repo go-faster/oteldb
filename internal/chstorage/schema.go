@@ -6,6 +6,7 @@ import (
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 )
 
 // Tables define table names.
@@ -103,7 +104,8 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{t.LogAttrs, logAttrsSchema},
 	} {
 		if err := c.Do(ctx, ch.Query{
-			Body: fmt.Sprintf(s.query, s.name),
+			Logger: zctx.From(ctx),
+			Body:   fmt.Sprintf(s.query, s.name),
 		}); err != nil {
 			return errors.Wrapf(err, "create %q", s.name)
 		}
