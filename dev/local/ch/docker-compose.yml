@@ -70,6 +70,9 @@ services:
       - OTEL_METRICS_EXPORTER=prometheus
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
     ports:
       # Querier ports

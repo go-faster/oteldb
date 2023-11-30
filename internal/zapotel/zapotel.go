@@ -17,14 +17,15 @@ import (
 )
 
 // New initializes new zapcore.Core from grpc client and resource.
-func New(res *resource.Resource, client plogotlp.GRPCClient) zapcore.Core {
-	return &contextObserver{
-		client: client,
-		res:    res,
+func New(enab zapcore.LevelEnabler, res *resource.Resource, client plogotlp.GRPCClient) zapcore.Core {
+	return &exporter{
+		LevelEnabler: enab,
+		client:       client,
+		res:          res,
 	}
 }
 
-type contextObserver struct {
+type exporter struct {
 	zapcore.LevelEnabler
 	context []zapcore.Field
 	client  plogotlp.GRPCClient
@@ -32,36 +33,38 @@ type contextObserver struct {
 }
 
 var (
-	_ zapcore.Core         = (*contextObserver)(nil)
-	_ zapcore.LevelEnabler = (*contextObserver)(nil)
+	_ zapcore.Core         = (*exporter)(nil)
+	_ zapcore.LevelEnabler = (*exporter)(nil)
 )
 
-func (co *contextObserver) Level() zapcore.Level {
-	return zapcore.LevelOf(co.LevelEnabler)
+func (e *exporter) Level() zapcore.Level {
+	return zapcore.LevelOf(e.LevelEnabler)
 }
 
-func (co *contextObserver) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if co.Enabled(ent.Level) {
-		return ce.AddCore(ent, co)
+func (e *exporter) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+	if e.Enabled(ent.Level) {
+		return ce.AddCore(ent, e)
 	}
 	return ce
 }
 
-func (co *contextObserver) With(fields []zapcore.Field) zapcore.Core {
-	return &contextObserver{
-		LevelEnabler: co.LevelEnabler,
-		context:      append(co.context[:len(co.context):len(co.context)], fields...),
+func (e *exporter) With(fields []zapcore.Field) zapcore.Core {
+	return &exporter{
+		LevelEnabler: e.LevelEnabler,
+		client:       e.client,
+		res:          e.res,
+		context:      append(e.context[:len(e.context):len(e.context)], fields...),
 	}
 }
 
-func (co *contextObserver) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
+func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
 	var (
 		ld = plog.NewLogs()
 		rl = ld.ResourceLogs().AppendEmpty()
 	)
 	{
 		a := rl.Resource().Attributes()
-		for _, kv := range co.res.Attributes() {
+		for _, kv := range e.res.Attributes() {
 			k := string(kv.Key)
 			switch kv.Value.Type() {
 			case attribute.STRING:
@@ -82,6 +85,24 @@ func (co *contextObserver) toLogs(ent zapcore.Entry, fields []zapcore.Field) plo
 
 	lg := il.LogRecords().AppendEmpty()
 	lg.Body().SetStr(ent.Message)
+	// TODO: update mapping from spec
+	switch ent.Level {
+	case zapcore.DebugLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberDebug)
+	case zapcore.InfoLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberInfo)
+	case zapcore.WarnLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberWarn)
+	case zapcore.ErrorLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberError)
+	case zapcore.DPanicLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberFatal)
+	case zapcore.PanicLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberFatal)
+	case zapcore.FatalLevel:
+		lg.SetSeverityNumber(plog.SeverityNumberFatal)
+	}
+	lg.SetSeverityText(ent.Level.String())
 	lg.SetTimestamp(pcommon.NewTimestampFromTime(ent.Time))
 	lg.SetObservedTimestamp(pcommon.NewTimestampFromTime(ent.Time))
 	{
@@ -135,19 +156,19 @@ func (co *contextObserver) toLogs(ent zapcore.Entry, fields []zapcore.Field) plo
 	return ld
 }
 
-func (co *contextObserver) Write(ent zapcore.Entry, fields []zapcore.Field) error {
-	all := make([]zapcore.Field, 0, len(fields)+len(co.context))
-	all = append(all, co.context...)
+func (e *exporter) Write(ent zapcore.Entry, fields []zapcore.Field) error {
+	all := make([]zapcore.Field, 0, len(fields)+len(e.context))
+	all = append(all, e.context...)
 	all = append(all, fields...)
 
 	ctx := context.TODO()
-
-	logs := co.toLogs(ent, all)
-	if _, err := co.client.Export(ctx, plogotlp.NewExportRequestFromLogs(logs)); err != nil {
+	logs := e.toLogs(ent, all)
+	req := plogotlp.NewExportRequestFromLogs(logs)
+	if _, err := e.client.Export(ctx, req); err != nil {
 		return errors.Wrap(err, "send logs")
 	}
 
 	return nil
 }
 
-func (co *contextObserver) Sync() error { return nil }
+func (e *exporter) Sync() error { return nil }
