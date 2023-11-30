@@ -435,6 +435,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		query.WriteByte(')')
 	}
 
+	query.WriteString(" ORDER BY timestamp")
+
 	var data []logstorage.Record
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
