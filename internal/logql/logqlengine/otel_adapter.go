@@ -12,10 +12,11 @@ func LineFromRecord(record logstorage.Record) string {
 	// Create JSON object from record.
 	e := &jx.Encoder{}
 	e.Obj(func(e *jx.Encoder) {
-		e.Field(logstorage.LabelBody, func(e *jx.Encoder) {
-			e.Str(record.Body)
-		})
-
+		if len(record.Body) != 0 {
+			e.Field(logstorage.LabelBody, func(e *jx.Encoder) {
+				e.Str(record.Body)
+			})
+		}
 		if m := record.Attrs.AsMap(); m != (pcommon.Map{}) {
 			record.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
 				e.Field(k, func(e *jx.Encoder) {
