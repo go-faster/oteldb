@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/gold"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -85,7 +86,7 @@ func (l httpLog) Append(s *lokie2e.BatchSet) error {
 	})
 	lg.SetFlags(plog.DefaultLogRecordFlags.WithIsSampled(true))
 	if err := s.Append(ld); err != nil {
-		return err
+		return errors.Wrap(err, "append log")
 	}
 	return nil
 }

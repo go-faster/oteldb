@@ -43,7 +43,6 @@ func main() {
 			// Override for context propagation.
 			otel.SetTracerProvider(wrapperTracerProvider)
 			m = m.WithTracerProvider(wrapperTracerProvider)
-
 		}
 		if os.Getenv("OTEL_LOGS_EXPORTER") == "otlp" {
 			// Setting zap -> otel.

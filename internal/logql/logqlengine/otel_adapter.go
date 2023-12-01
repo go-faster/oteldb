@@ -12,7 +12,7 @@ func LineFromRecord(record logstorage.Record) string {
 	// Create JSON object from record.
 	e := &jx.Encoder{}
 	e.Obj(func(e *jx.Encoder) {
-		if len(record.Body) != 0 {
+		if record.Body != "" {
 			e.Field(logstorage.LabelBody, func(e *jx.Encoder) {
 				e.Str(record.Body)
 			})

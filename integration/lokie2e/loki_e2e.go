@@ -20,6 +20,7 @@ type BatchSet struct {
 	End   otelstorage.Timestamp
 }
 
+// NewBatchSet creates and initializes a new BatchSet.
 func NewBatchSet() *BatchSet {
 	s := &BatchSet{}
 	// Init common labels.
@@ -54,6 +55,7 @@ func NewBatchSet() *BatchSet {
 	return s
 }
 
+// Append appends a batch to the set.
 func (s *BatchSet) Append(raw plog.Logs) error {
 	s.Batches = append(s.Batches, raw)
 

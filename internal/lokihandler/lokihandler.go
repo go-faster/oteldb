@@ -32,7 +32,7 @@ type LokiAPI struct {
 // Get index stats.
 //
 // GET /loki/api/v1/index/stats
-func (h *LokiAPI) IndexStats(ctx context.Context, params lokiapi.IndexStatsParams) (*lokiapi.IndexStats, error) {
+func (h *LokiAPI) IndexStats(context.Context, lokiapi.IndexStatsParams) (*lokiapi.IndexStats, error) {
 	return nil, ht.ErrNotImplemented
 }
 

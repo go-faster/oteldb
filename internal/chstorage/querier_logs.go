@@ -234,7 +234,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < values.Rows(); i++ {
 				for _, v := range values.Row(i) {
-					if len(v) == 0 {
+					if v == "" {
 						// HACK: JSONExtractRaw returns empty string if key is not found.
 						continue
 					}
@@ -358,7 +358,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				// Direct comparison with severity number.
 				var severityNumber uint8
 				for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
-					if strings.ToLower(i.String()) == strings.ToLower(m.Value) {
+					if strings.EqualFold(i.String(), m.Value) {
 						severityNumber = uint8(i)
 						break
 					}
