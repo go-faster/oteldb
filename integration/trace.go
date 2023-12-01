@@ -19,7 +19,7 @@ type randomIDGenerator struct {
 func (gen *randomIDGenerator) NewSpanID(context.Context, trace.TraceID) (sid trace.SpanID) {
 	gen.Lock()
 	defer gen.Unlock()
-	gen.rand.Read(sid[:])
+	gen.rand.Read(sid[:]) // #nosec G104
 	return sid
 }
 
@@ -28,8 +28,8 @@ func (gen *randomIDGenerator) NewSpanID(context.Context, trace.TraceID) (sid tra
 func (gen *randomIDGenerator) NewIDs(context.Context) (tid trace.TraceID, sid trace.SpanID) {
 	gen.Lock()
 	defer gen.Unlock()
-	gen.rand.Read(tid[:])
-	gen.rand.Read(sid[:])
+	gen.rand.Read(tid[:]) // #nosec G104
+	gen.rand.Read(sid[:]) // #nosec G104
 	return tid, sid
 }
 
@@ -40,6 +40,7 @@ type Provider struct {
 	Exporter *tracetest.InMemoryExporter
 }
 
+// Reset clears the current in-memory storage.
 func (p *Provider) Reset() {
 	p.Exporter.Reset()
 }
@@ -58,6 +59,7 @@ func NewProvider() *Provider {
 	tp := tracesdk.NewTracerProvider(
 		// Using deterministic random ids.
 		tracesdk.WithIDGenerator(&randomIDGenerator{
+			// #nosec G404
 			rand: rand.New(randSource),
 		}),
 		tracesdk.WithBatcher(exporter,
