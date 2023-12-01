@@ -1,16 +1,21 @@
 package lokie2e_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"testing"
 	"time"
 
+	"github.com/go-faster/sdk/gold"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/plog"
+	"sigs.k8s.io/yaml"
 
 	"github.com/go-faster/oteldb/integration/lokie2e"
 	"github.com/go-faster/oteldb/internal/logql"
@@ -21,31 +26,38 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-func readBatchSet(p string) (s lokie2e.BatchSet, _ error) {
-	f, err := os.Open(p)
-	if err != nil {
-		return s, err
-	}
-	defer func() {
-		_ = f.Close()
-	}()
-	return lokie2e.ParseBatchSet(f)
+func TestMain(m *testing.M) {
+	// Explicitly registering flags for golden files.
+	gold.Init()
+
+	os.Exit(m.Run())
 }
 
 func setupDB(
 	ctx context.Context,
 	t *testing.T,
-	set lokie2e.BatchSet,
+	set *lokie2e.BatchSet,
 	inserter logstorage.Inserter,
 	querier logstorage.Querier,
 	engineQuerier logqlengine.Querier,
 ) *lokiapi.Client {
 	consumer := logstorage.NewConsumer(inserter)
+
+	logEncoder := plog.JSONMarshaler{}
+	var out bytes.Buffer
 	for i, b := range set.Batches {
 		if err := consumer.ConsumeLogs(ctx, b); err != nil {
 			t.Fatalf("Send batch %d: %+v", i, err)
 		}
+		data, err := logEncoder.MarshalLogs(b)
+		require.NoError(t, err)
+		outData, err := yaml.JSONToYAML(data)
+		require.NoError(t, err)
+		out.WriteString("---\n")
+		out.Write(outData)
 	}
+
+	gold.Str(t, out.String(), "logs.yml")
 
 	engine := logqlengine.NewEngine(engineQuerier, logqlengine.Options{
 		ParseOptions: logql.ParseOptions{AllowDots: true},
@@ -70,7 +82,9 @@ func runTest(
 	querier logstorage.Querier,
 	engineQuerier logqlengine.Querier,
 ) {
-	set, err := readBatchSet("_testdata/logs.json")
+	now := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
+	set, err := generateLogs(now)
+	require.NoError(t, err)
 	require.NoError(t, err)
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
@@ -83,7 +97,11 @@ func runTest(
 	t.Run("Labels", func(t *testing.T) {
 		a := require.New(t)
 
-		r, err := c.Labels(ctx, lokiapi.LabelsParams{})
+		r, err := c.Labels(ctx, lokiapi.LabelsParams{
+			// Always sending time range because default is current time.
+			Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+			End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+		})
 		a.NoError(err)
 		a.Len(r.Data, len(set.Labels))
 		for _, label := range r.Data {
@@ -91,40 +109,63 @@ func runTest(
 		}
 	})
 	t.Run("LabelValues", func(t *testing.T) {
-		a := require.New(t)
-
 		for labelName, labels := range set.Labels {
-			labelValue := map[string]struct{}{}
+			unique := map[string]struct{}{}
 			for _, t := range labels {
-				labelValue[t.Value] = struct{}{}
+				unique[t.Value] = struct{}{}
 			}
+			values := make([]string, 0, len(unique))
+			for v := range unique {
+				values = append(values, v)
+			}
+			slices.Sort(values)
 
-			r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{Name: labelName})
-			a.NoError(err)
-			a.Len(r.Data, len(labelValue))
-			for _, val := range r.Data {
-				a.Containsf(labelValue, val, "check label %q", labelName)
-			}
+			t.Run(labelName, func(t *testing.T) {
+				a := require.New(t)
+				t.Logf("%q: %v", labelName, values)
+				r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
+					Name: labelName,
+					// Always sending time range because default is current time.
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				})
+				a.NoError(err)
+				a.Len(r.Data, len(values))
+				t.Logf("got values %v", r.Data)
+				for _, val := range r.Data {
+					a.Containsf(values, val, "check label %q", labelName)
+				}
+			})
 		}
 	})
 	t.Run("LogQueries", func(t *testing.T) {
-		// Example JQ expression to make testdata queries:
-		//
-		// 	.resourceLogs[].scopeLogs[].logRecords[]
-		// 		| .body.stringValue
-		// 		| fromjson
-		// 		| select(.method=="GET")
-		//
 		tests := []struct {
 			query   string
 			entries int
 		}{
 			// Label matchers.
+			// By trace id.
+			{`{trace_id="af36000000000000c517000000000003"}`, 1},
+			{`{trace_id="AF36000000000000C517000000000003"}`, 1},
+			{`{trace_id=~"AF3600.+000C517000.+00003"}`, 1},
+			{`{trace_id="badbadbadbadbadbaddeadbeafbadbad"}`, 0},
+			{`{trace_id=~"bad.+"}`, 0},
+			// By severity.
+			{`{level="Info"}`, 121},
+			{`{level="INFO"}`, 121},
+			// All by service name.
+			{`{service_name="testService"}`, len(set.Records)},
+			{`{service_name=~"test.+"}`, len(set.Records)},
 			// Effectively match GET.
 			{`{http_method="GET"}`, 21},
 			{`{http_method=~".*GET.*"}`, 21},
 			{`{http_method=~"^GET$"}`, 21},
 			{`{http_method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
+			// Also with dots.
+			{`{http.method="GET"}`, 21},
+			{`{http.method=~".*GET.*"}`, 21},
+			{`{http.method=~"^GET$"}`, 21},
+			{`{http.method!~"(HEAD|POST|DELETE|PUT|PATCH|TRACE|OPTIONS)"}`, 21},
 			// Try other methods.
 			{`{http_method="DELETE"}`, 20},
 			{`{http_method="GET"}`, 21},
@@ -137,57 +178,67 @@ func runTest(
 			{`{http_method!="HEAD"}`, len(set.Records) - 22},
 			{`{http_method!~"^HEAD$"}`, len(set.Records) - 22},
 			// Multiple lables.
-			{`{http_method="HEAD",http_status="500"}`, 2},
-			{`{http_method="HEAD",http_status=~"^500$"}`, 2},
-			{`{http_method=~".*HEAD.*",http_status=~"^500$"}`, 2},
+			{`{http_method="HEAD",http_status_code="500"}`, 2},
+			{`{http_method="HEAD",http_status_code=~"^500$"}`, 2},
+			{`{http_method=~".*HEAD.*",http_status_code=~"^500$"}`, 2},
+			// Also with dots.
+			{`{http.method="HEAD",http.status_code="500"}`, 2},
+			{`{http.method="HEAD",http.status_code=~"^500$"}`, 2},
+			{`{http.method=~".*HEAD.*",http.status_code=~"^500$"}`, 2},
 
 			// Line filter.
-			{`{http_method=~".+"} |= "\"method\": \"GET\""`, 21},
-			{`{http_method=~".+"} |= "\"method\": \"DELETE\""`, 20},
-			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
-			{`{http_method=~".+"} |~ "\"method\":\\s*\"DELETE\""`, 20},
-			{`{http_method=~".+"} |~ "\"method\":\\s*\"HEAD\"" |= "\"status\":500"`, 2},
+			{`{http_method=~".+"} |= "GET"`, 21},
+			{`{http_method=~".+"} |= "DELETE"`, 20},
+			{`{http_method=~".+"} |= "HEAD" |= " 500 "`, 2},
+			{`{http_method=~".+"} |~ "DELETE"`, 20},
+			{`{http_method=~".+"} |~ "HEAD" |= " 500 "`, 2},
+			{`{http_method=~".+"} |~ "(GET|HEAD)"`, 43},
+			{`{http_method=~".+"} |~ "GE.+"`, 21},
 			// Try to not use offloading.
-			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"DELETE\""`, 20},
-			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "\"method\": \"HEAD\"" |= "\"status\":500"`, 2},
-			{`{http_method=~".+"} |= "\"method\": \"HEAD\"" | line_format "{{ __line__ }}" |= "\"status\":500"`, 2},
+			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "DELETE"`, 20},
+			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "HEAD" |= " 500 "`, 2},
+			{`{http_method=~".+"} |= "HEAD" | line_format "{{ __line__ }}" |= " 500 "`, 2},
 			// Negative line matcher.
-			{`{http_method=~".+"} != "\"method\": \"HEAD\""`, len(set.Records) - 22},
-			{`{http_method=~".+"} !~ "\"method\":\\s*\"HEAD\""`, len(set.Records) - 22},
+			{`{http_method=~".+"} != "HEAD"`, len(set.Records) - 22},
+			{`{http_method=~".+"} !~ "HEAD"`, len(set.Records) - 22},
 			// IP line filter.
 			{`{http_method="HEAD"} |= ip("236.7.233.166")`, 1},
+			// Trace to logs.
+			{`{http_method=~".+"} |= "af36000000000000c517000000000003"`, 1},
 
 			// Label filter.
 			{`{http_method=~".+"} | http_method = "GET"`, 21},
-			{`{http_method=~".+"} | http_method = "HEAD", http_status = "500"`, 2},
+			{`{http_method=~".+"} | http_method = "HEAD", http_status_code = "500"`, 2},
 			// Number of lines per protocol.
 			//
 			// 	"HTTP/1.0" 55
-			// 	"HTTP/1.1" 38
-			// 	"HTTP/2.0" 30
+			// 	"HTTP/1.1" 10
+			// 	"HTTP/2.0" 58
 			//
 			{`{http_method=~".+"} | json | protocol = "HTTP/1.0"`, 55},
-			{`{http_method=~".+"} | json | protocol =~ "HTTP/1.\\d"`, 55 + 38},
-			{`{http_method=~".+"} | json | protocol != "HTTP/2.0"`, 55 + 38},
-			{`{http_method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 38},
+			{`{http_method=~".+"} | json | protocol = "HTTP/1.1"`, 10},
+			{`{http_method=~".+"} | json | protocol = "HTTP/2.0"`, 58},
+			{`{http_method=~".+"} | json | protocol =~ "HTTP/1.\\d"`, 55 + 10},
+			{`{http_method=~".+"} | json | protocol != "HTTP/2.0"`, 55 + 10},
+			{`{http_method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 10},
 			// IP label filter.
-			{`{http_method="HEAD"} | json | host = "236.7.233.166"`, 1},
-			{`{http_method="HEAD"} | json | host == ip("236.7.233.166")`, 1},
-			{`{http_method="HEAD"} | json | host == ip("236.7.233.0/24")`, 1},
-			{`{http_method="HEAD"} | json | host == ip("236.7.233.0-236.7.233.255")`, 1},
+			{`{http_method="HEAD"} | client_address = "236.7.233.166"`, 1},
+			{`{http_method="HEAD"} | client_address == ip("236.7.233.166")`, 1},
+			{`{http_method="HEAD"} | client_address == ip("236.7.233.0/24")`, 1},
+			{`{http_method="HEAD"} | client_address == ip("236.7.233.0-236.7.233.255")`, 1},
 
 			// Distinct filter.
 			{`{http_method=~".+"} | distinct http_method`, 6},
-			{`{http_method=~".+"} | json | distinct method`, 6},
-			{`{http_method=~".+"} | json | distinct protocol`, 3},
+			{`{http_method=~".+"} | distinct protocol`, 3},
 
 			// Sure empty queries.
-			{`{http_method="GET"} | json | http_method != "GET"`, 0},
+			{`{http_method="GET"} | http_method != "GET"`, 0},
 			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
 		}
 		labelSetHasAttrs := func(t assert.TestingT, set lokiapi.LabelSet, attrs pcommon.Map) {
 			// Do not check length, since label set may contain some parsed labels.
 			attrs.Range(func(k string, v pcommon.Value) bool {
+				k = otelstorage.KeyToLabel(k)
 				assert.Contains(t, set, k)
 				assert.Equal(t, v.AsString(), set[k])
 				return true
@@ -206,6 +257,7 @@ func runTest(
 
 				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
 					Query: tt.query,
+					// Always sending time range because default is current time.
 					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 					Limit: lokiapi.NewOptInt(1000),
@@ -223,7 +275,9 @@ func runTest(
 						record, ok := set.Records[pcommon.Timestamp(entry.T)]
 						require.Truef(t, ok, "can't find log record %d", entry.T)
 
-						line := record.Body().AsString()
+						line := logqlengine.LineFromRecord(
+							logstorage.NewRecordFromOTEL(pcommon.NewResource(), pcommon.NewInstrumentationScope(), record),
+						)
 						assert.Equal(t, line, entry.V)
 
 						labelSetHasAttrs(t, stream.Stream.Value, record.Attributes())

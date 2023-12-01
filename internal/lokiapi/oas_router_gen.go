@@ -60,6 +60,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			switch elem[0] {
+			case 'i': // Prefix: "index/stats"
+				if l := len("index/stats"); len(elem) >= l && elem[0:l] == "index/stats" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleIndexStatsRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
 			case 'l': // Prefix: "label"
 				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
 					elem = elem[l:]
@@ -296,6 +314,28 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				break
 			}
 			switch elem[0] {
+			case 'i': // Prefix: "index/stats"
+				if l := len("index/stats"); len(elem) >= l && elem[0:l] == "index/stats" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: IndexStats
+						r.name = "IndexStats"
+						r.summary = ""
+						r.operationID = "indexStats"
+						r.pathPattern = "/loki/api/v1/index/stats"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
 			case 'l': // Prefix: "label"
 				if l := len("label"); len(elem) >= l && elem[0:l] == "label" {
 					elem = elem[l:]

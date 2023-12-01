@@ -1,0 +1,37 @@
+<clickhouse>
+    <listen_host>0.0.0.0</listen_host>
+    <logger>
+        <level>information</level>
+        <console>true</console>
+        <log remove="remove"/>
+        <errorlog remove="remove"/>
+    </logger>
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>8080</port>
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+    </prometheus>
+    <opentelemetry_span_log>
+        <!-- TODO(ernado): add exporter -->
+        <!--
+            The default table creation code is insufficient, this <engine> spec
+            is a workaround. There is no 'event_time' for this log, but two times,
+            start and finish. It is sorted by finish time, to avoid inserting
+            data too far away in the past (probably we can sometimes insert a span
+            that is seconds earlier than the last span in the table, due to a race
+            between several spans inserted in parallel). This gives the spans a
+            global order that we can use to e.g. retry insertion into some external
+            system.
+        -->
+        <engine>
+            engine MergeTree
+            order by (start_time_us, trace_id)
+            ttl toDateTime(finish_time_us/1000000) + toIntervalMinute(15)
+        </engine>
+        <database>system</database>
+        <table>opentelemetry_span_log</table>
+        <flush_interval_milliseconds>1000</flush_interval_milliseconds>
+    </opentelemetry_span_log>
+</clickhouse>

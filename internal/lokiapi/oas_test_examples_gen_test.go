@@ -35,6 +35,18 @@ func TestFPoint_EncodeDecode(t *testing.T) {
 	var typ2 FPoint
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestIndexStats_EncodeDecode(t *testing.T) {
+	var typ IndexStats
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 IndexStats
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestLabelSet_EncodeDecode(t *testing.T) {
 	var typ LabelSet
 	typ = make(LabelSet)

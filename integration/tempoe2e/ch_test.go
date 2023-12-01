@@ -2,7 +2,6 @@ package tempoe2e_test
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -15,19 +14,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 
+	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chstorage"
 )
 
 func TestCH(t *testing.T) {
 	t.Parallel()
-	if os.Getenv("E2E") == "" {
-		t.Skip("Set E2E env to run")
-	}
+	integration.Skip(t)
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{
 		Name:         "oteldb-tempoe2e-clickhouse",
-		Image:        "clickhouse/clickhouse-server:23.4",
+		Image:        "clickhouse/clickhouse-server:23.10",
 		ExposedPorts: []string{"8123/tcp", "9000/tcp"},
 	}
 	chContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -62,11 +60,13 @@ func TestCH(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	prefix := "traces_" + strings.ReplaceAll(uuid.NewString(), "-", "")
-	tables := chstorage.Tables{
-		Spans: prefix + "_spans",
-		Tags:  prefix + "_tags",
-	}
+	prefix := strings.ReplaceAll(uuid.NewString(), "-", "")
+	tables := chstorage.DefaultTables()
+	tables.Each(func(name *string) error {
+		old := *name
+		*name = prefix + "_" + old
+		return nil
+	})
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
 

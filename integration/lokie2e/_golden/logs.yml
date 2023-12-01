@@ -1,0 +1,5658 @@
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200120000000"
+      severityNumber: 9
+      spanId: b7d8ccf703000000
+      timeUnixNano: "1609459200120000000"
+      traceId: f71e0000000000000d00000000000000
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200240000000"
+      severityNumber: 9
+      spanId: b8d8ccf703000100
+      timeUnixNano: "1609459200240000000"
+      traceId: f81e0000000000000e00000000000100
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200360000000"
+      severityNumber: 9
+      spanId: b9d8ccf703000200
+      timeUnixNano: "1609459200360000000"
+      traceId: f91e0000000000000f00000000000200
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200480000000"
+      severityNumber: 9
+      spanId: bad8ccf703000300
+      timeUnixNano: "1609459200480000000"
+      traceId: fa1e0000000000001000000000000300
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200600000000"
+      severityNumber: 9
+      spanId: bbd8ccf703000400
+      timeUnixNano: "1609459200600000000"
+      traceId: fb1e0000000000001100000000000400
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200720000000"
+      severityNumber: 9
+      spanId: bcd8ccf703000500
+      timeUnixNano: "1609459200720000000"
+      traceId: fc1e0000000000001200000000000500
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200840000000"
+      severityNumber: 9
+      spanId: bdd8ccf703000600
+      timeUnixNano: "1609459200840000000"
+      traceId: fd1e0000000000001300000000000600
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459200960000000"
+      severityNumber: 9
+      spanId: bed8ccf703000700
+      timeUnixNano: "1609459200960000000"
+      traceId: fe1e0000000000001400000000000700
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201080000000"
+      severityNumber: 9
+      spanId: bfd8ccf703000800
+      timeUnixNano: "1609459201080000000"
+      traceId: ff1e0000000000001500000000000800
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201200000000"
+      severityNumber: 9
+      spanId: c0d8ccf703000900
+      timeUnixNano: "1609459201200000000"
+      traceId: 801f0000000000001600000000000900
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201320000000"
+      severityNumber: 9
+      spanId: c1d8ccf703000a00
+      timeUnixNano: "1609459201320000000"
+      traceId: 811f0000000000001700000000000a00
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201440000000"
+      severityNumber: 9
+      spanId: 9bd9ccf703000001
+      timeUnixNano: "1609459201440000000"
+      traceId: df26000000000000f507000000000001
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201560000000"
+      severityNumber: 9
+      spanId: 9cd9ccf703000101
+      timeUnixNano: "1609459201560000000"
+      traceId: e026000000000000f607000000000101
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201680000000"
+      severityNumber: 9
+      spanId: 9dd9ccf703000201
+      timeUnixNano: "1609459201680000000"
+      traceId: e126000000000000f707000000000201
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201800000000"
+      severityNumber: 9
+      spanId: 9ed9ccf703000301
+      timeUnixNano: "1609459201800000000"
+      traceId: e226000000000000f807000000000301
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459201920000000"
+      severityNumber: 9
+      spanId: 9fd9ccf703000401
+      timeUnixNano: "1609459201920000000"
+      traceId: e326000000000000f907000000000401
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202040000000"
+      severityNumber: 9
+      spanId: a0d9ccf703000501
+      timeUnixNano: "1609459202040000000"
+      traceId: e426000000000000fa07000000000501
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202160000000"
+      severityNumber: 9
+      spanId: a1d9ccf703000601
+      timeUnixNano: "1609459202160000000"
+      traceId: e526000000000000fb07000000000601
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202280000000"
+      severityNumber: 9
+      spanId: a2d9ccf703000701
+      timeUnixNano: "1609459202280000000"
+      traceId: e626000000000000fc07000000000701
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202400000000"
+      severityNumber: 9
+      spanId: a3d9ccf703000801
+      timeUnixNano: "1609459202400000000"
+      traceId: e726000000000000fd07000000000801
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: GET
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.1
+      body:
+        stringValue: GET /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202520000000"
+      severityNumber: 9
+      spanId: a4d9ccf703000901
+      timeUnixNano: "1609459202520000000"
+      traceId: e826000000000000fe07000000000901
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202640000000"
+      severityNumber: 9
+      spanId: ffd9ccf703000002
+      timeUnixNano: "1609459202640000000"
+      traceId: c72e000000000000dd0f000000000002
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202760000000"
+      severityNumber: 9
+      spanId: 80daccf703000102
+      timeUnixNano: "1609459202760000000"
+      traceId: c82e000000000000de0f000000000102
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459202880000000"
+      severityNumber: 9
+      spanId: 81daccf703000202
+      timeUnixNano: "1609459202880000000"
+      traceId: c92e000000000000df0f000000000202
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203000000000"
+      severityNumber: 9
+      spanId: 82daccf703000302
+      timeUnixNano: "1609459203000000000"
+      traceId: ca2e000000000000e00f000000000302
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203120000000"
+      severityNumber: 9
+      spanId: 83daccf703000402
+      timeUnixNano: "1609459203120000000"
+      traceId: cb2e000000000000e10f000000000402
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203240000000"
+      severityNumber: 9
+      spanId: 84daccf703000502
+      timeUnixNano: "1609459203240000000"
+      traceId: cc2e000000000000e20f000000000502
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203360000000"
+      severityNumber: 9
+      spanId: 85daccf703000602
+      timeUnixNano: "1609459203360000000"
+      traceId: cd2e000000000000e30f000000000602
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203480000000"
+      severityNumber: 9
+      spanId: 86daccf703000702
+      timeUnixNano: "1609459203480000000"
+      traceId: ce2e000000000000e40f000000000702
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203600000000"
+      severityNumber: 9
+      spanId: 87daccf703000802
+      timeUnixNano: "1609459203600000000"
+      traceId: cf2e000000000000e50f000000000802
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203720000000"
+      severityNumber: 9
+      spanId: 88daccf703000902
+      timeUnixNano: "1609459203720000000"
+      traceId: d02e000000000000e60f000000000902
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203840000000"
+      severityNumber: 9
+      spanId: 89daccf703000a02
+      timeUnixNano: "1609459203840000000"
+      traceId: d12e000000000000e70f000000000a02
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459203960000000"
+      severityNumber: 9
+      spanId: 8adaccf703000b02
+      timeUnixNano: "1609459203960000000"
+      traceId: d22e000000000000e80f000000000b02
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204080000000"
+      severityNumber: 9
+      spanId: 8bdaccf703000c02
+      timeUnixNano: "1609459204080000000"
+      traceId: d32e000000000000e90f000000000c02
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204200000000"
+      severityNumber: 9
+      spanId: 8cdaccf703000d02
+      timeUnixNano: "1609459204200000000"
+      traceId: d42e000000000000ea0f000000000d02
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204320000000"
+      severityNumber: 9
+      spanId: 8ddaccf703000e02
+      timeUnixNano: "1609459204320000000"
+      traceId: d52e000000000000eb0f000000000e02
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204440000000"
+      severityNumber: 9
+      spanId: 8edaccf703000f02
+      timeUnixNano: "1609459204440000000"
+      traceId: d62e000000000000ec0f000000000f02
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204560000000"
+      severityNumber: 9
+      spanId: 8fdaccf703001002
+      timeUnixNano: "1609459204560000000"
+      traceId: d72e000000000000ed0f000000001002
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204680000000"
+      severityNumber: 9
+      spanId: 90daccf703001102
+      timeUnixNano: "1609459204680000000"
+      traceId: d82e000000000000ee0f000000001102
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204800000000"
+      severityNumber: 9
+      spanId: 91daccf703001202
+      timeUnixNano: "1609459204800000000"
+      traceId: d92e000000000000ef0f000000001202
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: DELETE
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: DELETE /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459204920000000"
+      severityNumber: 9
+      spanId: 92daccf703001302
+      timeUnixNano: "1609459204920000000"
+      traceId: da2e000000000000f00f000000001302
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205040000000"
+      severityNumber: 9
+      spanId: e3daccf703000003
+      timeUnixNano: "1609459205040000000"
+      traceId: af36000000000000c517000000000003
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205160000000"
+      severityNumber: 9
+      spanId: e4daccf703000103
+      timeUnixNano: "1609459205160000000"
+      traceId: b036000000000000c617000000000103
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205280000000"
+      severityNumber: 9
+      spanId: e5daccf703000203
+      timeUnixNano: "1609459205280000000"
+      traceId: b136000000000000c717000000000203
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205400000000"
+      severityNumber: 9
+      spanId: e6daccf703000303
+      timeUnixNano: "1609459205400000000"
+      traceId: b236000000000000c817000000000303
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205520000000"
+      severityNumber: 9
+      spanId: e7daccf703000403
+      timeUnixNano: "1609459205520000000"
+      traceId: b336000000000000c917000000000403
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205640000000"
+      severityNumber: 9
+      spanId: e8daccf703000503
+      timeUnixNano: "1609459205640000000"
+      traceId: b436000000000000ca17000000000503
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205760000000"
+      severityNumber: 9
+      spanId: e9daccf703000603
+      timeUnixNano: "1609459205760000000"
+      traceId: b536000000000000cb17000000000603
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459205880000000"
+      severityNumber: 9
+      spanId: eadaccf703000703
+      timeUnixNano: "1609459205880000000"
+      traceId: b636000000000000cc17000000000703
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206000000000"
+      severityNumber: 9
+      spanId: ebdaccf703000803
+      timeUnixNano: "1609459206000000000"
+      traceId: b736000000000000cd17000000000803
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206120000000"
+      severityNumber: 9
+      spanId: ecdaccf703000903
+      timeUnixNano: "1609459206120000000"
+      traceId: b836000000000000ce17000000000903
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206240000000"
+      severityNumber: 9
+      spanId: eddaccf703000a03
+      timeUnixNano: "1609459206240000000"
+      traceId: b936000000000000cf17000000000a03
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206360000000"
+      severityNumber: 9
+      spanId: eedaccf703000b03
+      timeUnixNano: "1609459206360000000"
+      traceId: ba36000000000000d017000000000b03
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206480000000"
+      severityNumber: 9
+      spanId: efdaccf703000c03
+      timeUnixNano: "1609459206480000000"
+      traceId: bb36000000000000d117000000000c03
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206600000000"
+      severityNumber: 9
+      spanId: f0daccf703000d03
+      timeUnixNano: "1609459206600000000"
+      traceId: bc36000000000000d217000000000d03
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206720000000"
+      severityNumber: 9
+      spanId: f1daccf703000e03
+      timeUnixNano: "1609459206720000000"
+      traceId: bd36000000000000d317000000000e03
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206840000000"
+      severityNumber: 9
+      spanId: f2daccf703000f03
+      timeUnixNano: "1609459206840000000"
+      traceId: be36000000000000d417000000000f03
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459206960000000"
+      severityNumber: 9
+      spanId: f3daccf703001003
+      timeUnixNano: "1609459206960000000"
+      traceId: bf36000000000000d517000000001003
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207080000000"
+      severityNumber: 9
+      spanId: f4daccf703001103
+      timeUnixNano: "1609459207080000000"
+      traceId: c036000000000000d617000000001103
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207200000000"
+      severityNumber: 9
+      spanId: f5daccf703001203
+      timeUnixNano: "1609459207200000000"
+      traceId: c136000000000000d717000000001203
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207320000000"
+      severityNumber: 9
+      spanId: f6daccf703001303
+      timeUnixNano: "1609459207320000000"
+      traceId: c236000000000000d817000000001303
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: POST
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: POST /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207440000000"
+      severityNumber: 9
+      spanId: f7daccf703001403
+      timeUnixNano: "1609459207440000000"
+      traceId: c336000000000000d917000000001403
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207560000000"
+      severityNumber: 9
+      spanId: c7dbccf703000004
+      timeUnixNano: "1609459207560000000"
+      traceId: 973e000000000000ad1f000000000004
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207680000000"
+      severityNumber: 9
+      spanId: c8dbccf703000104
+      timeUnixNano: "1609459207680000000"
+      traceId: 983e000000000000ae1f000000000104
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207800000000"
+      severityNumber: 9
+      spanId: c9dbccf703000204
+      timeUnixNano: "1609459207800000000"
+      traceId: 993e000000000000af1f000000000204
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459207920000000"
+      severityNumber: 9
+      spanId: cadbccf703000304
+      timeUnixNano: "1609459207920000000"
+      traceId: 9a3e000000000000b01f000000000304
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208040000000"
+      severityNumber: 9
+      spanId: cbdbccf703000404
+      timeUnixNano: "1609459208040000000"
+      traceId: 9b3e000000000000b11f000000000404
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208160000000"
+      severityNumber: 9
+      spanId: ccdbccf703000504
+      timeUnixNano: "1609459208160000000"
+      traceId: 9c3e000000000000b21f000000000504
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208280000000"
+      severityNumber: 9
+      spanId: cddbccf703000604
+      timeUnixNano: "1609459208280000000"
+      traceId: 9d3e000000000000b31f000000000604
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208400000000"
+      severityNumber: 9
+      spanId: cedbccf703000704
+      timeUnixNano: "1609459208400000000"
+      traceId: 9e3e000000000000b41f000000000704
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208520000000"
+      severityNumber: 9
+      spanId: cfdbccf703000804
+      timeUnixNano: "1609459208520000000"
+      traceId: 9f3e000000000000b51f000000000804
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208640000000"
+      severityNumber: 9
+      spanId: d0dbccf703000904
+      timeUnixNano: "1609459208640000000"
+      traceId: a03e000000000000b61f000000000904
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208760000000"
+      severityNumber: 9
+      spanId: d1dbccf703000a04
+      timeUnixNano: "1609459208760000000"
+      traceId: a13e000000000000b71f000000000a04
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459208880000000"
+      severityNumber: 9
+      spanId: d2dbccf703000b04
+      timeUnixNano: "1609459208880000000"
+      traceId: a23e000000000000b81f000000000b04
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209000000000"
+      severityNumber: 9
+      spanId: d3dbccf703000c04
+      timeUnixNano: "1609459209000000000"
+      traceId: a33e000000000000b91f000000000c04
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209120000000"
+      severityNumber: 9
+      spanId: d4dbccf703000d04
+      timeUnixNano: "1609459209120000000"
+      traceId: a43e000000000000ba1f000000000d04
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209240000000"
+      severityNumber: 9
+      spanId: d5dbccf703000e04
+      timeUnixNano: "1609459209240000000"
+      traceId: a53e000000000000bb1f000000000e04
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209360000000"
+      severityNumber: 9
+      spanId: d6dbccf703000f04
+      timeUnixNano: "1609459209360000000"
+      traceId: a63e000000000000bc1f000000000f04
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209480000000"
+      severityNumber: 9
+      spanId: d7dbccf703001004
+      timeUnixNano: "1609459209480000000"
+      traceId: a73e000000000000bd1f000000001004
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209600000000"
+      severityNumber: 9
+      spanId: d8dbccf703001104
+      timeUnixNano: "1609459209600000000"
+      traceId: a83e000000000000be1f000000001104
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PATCH
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: PATCH /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209720000000"
+      severityNumber: 9
+      spanId: d9dbccf703001204
+      timeUnixNano: "1609459209720000000"
+      traceId: a93e000000000000bf1f000000001204
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209840000000"
+      severityNumber: 9
+      spanId: abdcccf703000005
+      timeUnixNano: "1609459209840000000"
+      traceId: ff450000000000009527000000000005
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459209960000000"
+      severityNumber: 9
+      spanId: acdcccf703000105
+      timeUnixNano: "1609459209960000000"
+      traceId: "80460000000000009627000000000105"
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210080000000"
+      severityNumber: 9
+      spanId: addcccf703000205
+      timeUnixNano: "1609459210080000000"
+      traceId: "81460000000000009727000000000205"
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210200000000"
+      severityNumber: 9
+      spanId: aedcccf703000305
+      timeUnixNano: "1609459210200000000"
+      traceId: "82460000000000009827000000000305"
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210320000000"
+      severityNumber: 9
+      spanId: afdcccf703000405
+      timeUnixNano: "1609459210320000000"
+      traceId: "83460000000000009927000000000405"
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210440000000"
+      severityNumber: 9
+      spanId: b0dcccf703000505
+      timeUnixNano: "1609459210440000000"
+      traceId: 84460000000000009a27000000000505
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210560000000"
+      severityNumber: 9
+      spanId: b1dcccf703000605
+      timeUnixNano: "1609459210560000000"
+      traceId: 85460000000000009b27000000000605
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210680000000"
+      severityNumber: 9
+      spanId: b2dcccf703000705
+      timeUnixNano: "1609459210680000000"
+      traceId: 86460000000000009c27000000000705
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210800000000"
+      severityNumber: 9
+      spanId: b3dcccf703000805
+      timeUnixNano: "1609459210800000000"
+      traceId: 87460000000000009d27000000000805
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459210920000000"
+      severityNumber: 9
+      spanId: b4dcccf703000905
+      timeUnixNano: "1609459210920000000"
+      traceId: 88460000000000009e27000000000905
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211040000000"
+      severityNumber: 9
+      spanId: b5dcccf703000a05
+      timeUnixNano: "1609459211040000000"
+      traceId: 89460000000000009f27000000000a05
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211160000000"
+      severityNumber: 9
+      spanId: b6dcccf703000b05
+      timeUnixNano: "1609459211160000000"
+      traceId: 8a46000000000000a027000000000b05
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211280000000"
+      severityNumber: 9
+      spanId: b7dcccf703000c05
+      timeUnixNano: "1609459211280000000"
+      traceId: 8b46000000000000a127000000000c05
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211400000000"
+      severityNumber: 9
+      spanId: b8dcccf703000d05
+      timeUnixNano: "1609459211400000000"
+      traceId: 8c46000000000000a227000000000d05
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211520000000"
+      severityNumber: 9
+      spanId: b9dcccf703000e05
+      timeUnixNano: "1609459211520000000"
+      traceId: 8d46000000000000a327000000000e05
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211640000000"
+      severityNumber: 9
+      spanId: 8fddccf703000006
+      timeUnixNano: "1609459211640000000"
+      traceId: e74d000000000000fd2e000000000006
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211760000000"
+      severityNumber: 9
+      spanId: 90ddccf703000106
+      timeUnixNano: "1609459211760000000"
+      traceId: e84d000000000000fe2e000000000106
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459211880000000"
+      severityNumber: 9
+      spanId: 91ddccf703000206
+      timeUnixNano: "1609459211880000000"
+      traceId: e94d000000000000ff2e000000000206
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/1.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212000000000"
+      severityNumber: 9
+      spanId: 92ddccf703000306
+      timeUnixNano: "1609459212000000000"
+      traceId: ea4d000000000000802f000000000306
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 236.7.233.166
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212120000000"
+      severityNumber: 9
+      spanId: f3ddccf703000007
+      timeUnixNano: "1609459212120000000"
+      traceId: cf55000000000000e536000000000007
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "500"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 500 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212240000000"
+      severityNumber: 21
+      spanId: d7deccf703000008
+      timeUnixNano: "1609459212240000000"
+      traceId: b75d000000000000cd3e000000000008
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: HEAD
+      - key: http.status_code
+        value:
+          intValue: "500"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: HEAD /api/v1/series 500 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212360000000"
+      severityNumber: 21
+      spanId: d8deccf703000108
+      timeUnixNano: "1609459212360000000"
+      traceId: b85d000000000000ce3e000000000108
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212480000000"
+      severityNumber: 9
+      spanId: bbdfccf703000009
+      timeUnixNano: "1609459212480000000"
+      traceId: 9f65000000000000b546000000000009
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212600000000"
+      severityNumber: 9
+      spanId: bcdfccf703000109
+      timeUnixNano: "1609459212600000000"
+      traceId: a065000000000000b646000000000109
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212720000000"
+      severityNumber: 9
+      spanId: bddfccf703000209
+      timeUnixNano: "1609459212720000000"
+      traceId: a165000000000000b746000000000209
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212840000000"
+      severityNumber: 9
+      spanId: bedfccf703000309
+      timeUnixNano: "1609459212840000000"
+      traceId: a265000000000000b846000000000309
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459212960000000"
+      severityNumber: 9
+      spanId: bfdfccf703000409
+      timeUnixNano: "1609459212960000000"
+      traceId: a365000000000000b946000000000409
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213080000000"
+      severityNumber: 9
+      spanId: c0dfccf703000509
+      timeUnixNano: "1609459213080000000"
+      traceId: a465000000000000ba46000000000509
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213200000000"
+      severityNumber: 9
+      spanId: c1dfccf703000609
+      timeUnixNano: "1609459213200000000"
+      traceId: a565000000000000bb46000000000609
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213320000000"
+      severityNumber: 9
+      spanId: c2dfccf703000709
+      timeUnixNano: "1609459213320000000"
+      traceId: a665000000000000bc46000000000709
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213440000000"
+      severityNumber: 9
+      spanId: c3dfccf703000809
+      timeUnixNano: "1609459213440000000"
+      traceId: a765000000000000bd46000000000809
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213560000000"
+      severityNumber: 9
+      spanId: c4dfccf703000909
+      timeUnixNano: "1609459213560000000"
+      traceId: a865000000000000be46000000000909
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213680000000"
+      severityNumber: 9
+      spanId: c5dfccf703000a09
+      timeUnixNano: "1609459213680000000"
+      traceId: a965000000000000bf46000000000a09
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213800000000"
+      severityNumber: 9
+      spanId: c6dfccf703000b09
+      timeUnixNano: "1609459213800000000"
+      traceId: aa65000000000000c046000000000b09
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459213920000000"
+      severityNumber: 9
+      spanId: c7dfccf703000c09
+      timeUnixNano: "1609459213920000000"
+      traceId: ab65000000000000c146000000000c09
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214040000000"
+      severityNumber: 9
+      spanId: c8dfccf703000d09
+      timeUnixNano: "1609459214040000000"
+      traceId: ac65000000000000c246000000000d09
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214160000000"
+      severityNumber: 9
+      spanId: c9dfccf703000e09
+      timeUnixNano: "1609459214160000000"
+      traceId: ad65000000000000c346000000000e09
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214280000000"
+      severityNumber: 9
+      spanId: cadfccf703000f09
+      timeUnixNano: "1609459214280000000"
+      traceId: ae65000000000000c446000000000f09
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214400000000"
+      severityNumber: 9
+      spanId: cbdfccf703001009
+      timeUnixNano: "1609459214400000000"
+      traceId: af65000000000000c546000000001009
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214520000000"
+      severityNumber: 9
+      spanId: ccdfccf703001109
+      timeUnixNano: "1609459214520000000"
+      traceId: b065000000000000c646000000001109
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214640000000"
+      severityNumber: 9
+      spanId: cddfccf703001209
+      timeUnixNano: "1609459214640000000"
+      traceId: b165000000000000c746000000001209
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version
+---
+resourceLogs:
+- resource:
+    attributes:
+    - key: service.name
+      value:
+        stringValue: testService
+    - key: service.version
+      value:
+        stringValue: testVersion
+    - key: service.namespace
+      value:
+        stringValue: testNamespace
+  schemaUrl: https://opentelemetry.io/schemas/1.21.0
+  scopeLogs:
+  - logRecords:
+    - attributes:
+      - key: http.method
+        value:
+          stringValue: PUT
+      - key: http.status_code
+        value:
+          intValue: "200"
+      - key: client.address
+        value:
+          stringValue: 200.1.1.1
+      - key: protocol
+        value:
+          stringValue: HTTP/2.0
+      body:
+        stringValue: PUT /api/v1/series 200 250 - 0.000 ms
+      flags: 1
+      observedTimeUnixNano: "1609459214760000000"
+      severityNumber: 9
+      spanId: cedfccf703001309
+      timeUnixNano: "1609459214760000000"
+      traceId: b265000000000000c846000000001309
+    schemaUrl: https://opentelemetry.io/schemas/1.21.0
+    scope:
+      attributes:
+      - key: oteldb.name
+        value:
+          stringValue: testDB
+      droppedAttributesCount: 1
+      name: name
+      version: version

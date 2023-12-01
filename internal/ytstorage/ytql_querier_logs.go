@@ -77,8 +77,8 @@ func (q *YTQLQuerier) LabelValues(ctx context.Context, labelName string, opts lo
 
 var _ logqlengine.Querier = (*YTQLQuerier)(nil)
 
-// Сapabilities defines storage capabilities.
-func (q *YTQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
+// Capabilities defines storage capabilities.
+func (q *YTQLQuerier) Capabilities() (caps logqlengine.QuerierCapabilities) {
 	// FIXME(tdakkota): we don't add OpRe and OpNotRe because YT QL query executer throws an exception
 	//	when regexp function are used.
 	caps.Label.Add(logql.OpEq, logql.OpNotEq)

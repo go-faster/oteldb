@@ -1,11 +1,18 @@
 package otelstorage
 
 import (
+	"strings"
+
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.ytsaurus.tech/yt/go/yson"
 
 	"github.com/go-faster/errors"
 )
+
+// KeyToLabel converts key to label name.
+func KeyToLabel(key string) string {
+	return strings.ReplaceAll(key, ".", "_")
+}
 
 // Attrs is a YSON wrapper for attributes.
 type Attrs pcommon.Map

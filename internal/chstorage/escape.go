@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 )
 
-func singleQuoted[S string | []byte](s S) string {
+func singleQuoted[S ~[]byte | ~string](s S) string {
 	const lowerhex = "0123456789abcdef"
 
 	var sb strings.Builder

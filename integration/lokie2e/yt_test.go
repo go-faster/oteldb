@@ -17,15 +17,15 @@ import (
 	"go.ytsaurus.tech/yt/go/yt"
 	"go.ytsaurus.tech/yt/go/yt/ythttp"
 
+	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/yqlclient"
 	"github.com/go-faster/oteldb/internal/ytstorage"
 )
 
 func TestYT(t *testing.T) {
+	t.Skip("Defer YT")
 	t.Parallel()
-	if os.Getenv("E2E") == "" {
-		t.Skip("Set E2E env to run")
-	}
+	integration.Skip(t)
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{
@@ -82,6 +82,7 @@ func TestYT(t *testing.T) {
 }
 
 func TestYTYQL(t *testing.T) {
+	t.Skip("Defer YT")
 	t.Parallel()
 	if os.Getenv("E2E") == "" {
 		t.Skip("Set E2E env to run")

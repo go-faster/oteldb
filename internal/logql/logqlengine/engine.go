@@ -21,7 +21,7 @@ import (
 // Engine is a LogQL evaluation engine.
 type Engine struct {
 	querier     Querier
-	querierCaps QuerierСapabilities
+	querierCaps QuerierCapabilities
 
 	lookbackDuration time.Duration
 	parseOpts        logql.ParseOptions
@@ -58,7 +58,7 @@ func NewEngine(querier Querier, opts Options) *Engine {
 
 	return &Engine{
 		querier:          querier,
-		querierCaps:      querier.Сapabilities(),
+		querierCaps:      querier.Capabilities(),
 		lookbackDuration: opts.LookbackDuration,
 		parseOpts:        opts.ParseOptions,
 		tracer:           opts.TracerProvider.Tracer("logql.Engine"),

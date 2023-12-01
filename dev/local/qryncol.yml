@@ -1,0 +1,89 @@
+receivers:
+  loki:
+    use_incoming_timestamp: true
+    protocols:
+      http:
+        endpoint: 0.0.0.0:3100
+      grpc:
+        endpoint: 0.0.0.0:3200
+  syslog:
+    protocol: rfc5424
+    tcp:
+      listen_address: "0.0.0.0:5514"
+  fluentforward:
+    endpoint: 0.0.0.0:24224
+  splunk_hec:
+    endpoint: 0.0.0.0:8088
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14250
+      thrift_http:
+        endpoint: 0.0.0.0:14268
+  zipkin:
+    endpoint: 0.0.0.0:9411
+  skywalking:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:11800
+      http:
+        endpoint: 0.0.0.0:12800
+  influxdb:
+    endpoint: 0.0.0.0:8086
+processors:
+  batch:
+    send_batch_size: 10000
+    timeout: 5s
+  memory_limiter:
+    check_interval: 2s
+    limit_mib: 1800
+    spike_limit_mib: 500
+
+exporters:
+  qryn:
+    dsn: tcp://clickhouse:9000/cloki
+    timeout: 10s
+    sending_queue:
+      queue_size: 100
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    logs:
+      format: raw
+  otlp:
+    endpoint: localhost:4317
+    tls:
+      insecure: true
+extensions:
+  health_check:
+  pprof:
+  zpages:
+  memory_ballast:
+    size_mib: 1000
+
+service:
+  telemetry:
+    logs:
+      level: "info"
+  extensions: [pprof, zpages, health_check]
+  pipelines:
+    logs:
+      receivers: [fluentforward, otlp, loki]
+      processors: [memory_limiter, batch]
+      exporters: [qryn]
+    traces:
+      receivers: [otlp, jaeger, zipkin, skywalking]
+      processors: [memory_limiter, batch]
+      exporters: [qryn]
+    metrics:
+      receivers: [otlp, influxdb]
+      processors: [memory_limiter, batch]
+      exporters: [qryn]

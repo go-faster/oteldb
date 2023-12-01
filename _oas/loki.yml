@@ -13,7 +13,6 @@ paths:
       operationId: query
       description: Query
       parameters:
-        - $ref: "#/components/parameters/GrafanaUser"
         - name: query
           description: The LogQL query to perform.
           in: query
@@ -59,7 +58,6 @@ paths:
       operationId: queryRange
       description: Query range
       parameters:
-        - $ref: "#/components/parameters/GrafanaUser"
         - name: start
           in: query
           schema:
@@ -126,7 +124,6 @@ paths:
         Get labels.
         Used by Grafana to test connection to Loki.
       parameters:
-        - $ref: "#/components/parameters/GrafanaUser"
         - name: start
           description: |
             The start time for the query as a nanosecond Unix epoch.
@@ -163,7 +160,6 @@ paths:
       operationId: labelValues
       description: Get values of label
       parameters:
-        - $ref: "#/components/parameters/GrafanaUser"
         - name: start
           description: |
             The start time for the query as a nanosecond Unix epoch.
@@ -262,16 +258,35 @@ paths:
           description: Successful push
         default:
           $ref: "#/components/responses/Error"
+  /loki/api/v1/index/stats:
+    get:
+      operationId: indexStats
+      description: Get index stats
+      parameters:
+        - name: start
+          in: query
+          schema:
+            $ref: "#/components/schemas/LokiTime"
+        - name: end
+          in: query
+          schema:
+            $ref: "#/components/schemas/LokiTime"
+        - name: query
+          description: The LogQL matchers to check.
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Index stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IndexStats"
+        default:
+          $ref: "#/components/responses/Error"
 components:
-  parameters:
-    # TODO(ernado): extract to separate file? Same for all datasources
-    GrafanaUser:
-      name: X-Grafana-User
-      in: header
-      required: false
-      description: "Grafana username that is passed to datasource when making requests from Grafana. Used for authentication and authorization."
-      schema:
-        type: string
   responses:
     Error:
       description: Error while processing request
@@ -402,6 +417,22 @@ components:
         - type: string
           description: value
           x-ogen-name: V
+    IndexStats:
+      type: object
+      required:
+        - streams
+        - chunks
+        - entries
+        - bytes
+      properties:
+        streams:
+          type: integer
+        chunks:
+          type: integer
+        entries:
+          type: integer
+        bytes:
+          type: integer
     Stats:
       type: object
     Direction:

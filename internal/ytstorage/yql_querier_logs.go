@@ -19,8 +19,8 @@ import (
 
 var _ logqlengine.Querier = (*YQLQuerier)(nil)
 
-// Сapabilities defines storage capabilities.
-func (q *YQLQuerier) Сapabilities() (caps logqlengine.QuerierСapabilities) {
+// Capabilities defines storage capabilities.
+func (q *YQLQuerier) Capabilities() (caps logqlengine.QuerierCapabilities) {
 	caps.Label.Add(logql.OpEq, logql.OpNotEq, logql.OpRe, logql.OpNotRe)
 	caps.Line.Add(logql.OpEq, logql.OpNotEq, logql.OpRe, logql.OpNotRe)
 	return caps

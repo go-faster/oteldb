@@ -7,6 +7,18 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
+// Labels to use where prometheus compatible labels are required, e.g. loki.
+const (
+	LabelTraceID  = "trace_id"
+	LabelSpanID   = "span_id"
+	LabelSeverity = "level"
+	LabelBody     = "msg"
+
+	LabelServiceName       = "service_name"        // resource.service.name
+	LabelServiceNamespace  = "service_namespace"   // resource.service.namespace
+	LabelServiceInstanceID = "service_instance_id" // resource.service.instance_id
+)
+
 // Record is a log record.
 type Record struct {
 	Timestamp         otelstorage.Timestamp `json:"timestamp" yson:"timestamp"`

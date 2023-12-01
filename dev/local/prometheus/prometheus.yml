@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+  scrape_timeout: 2s
+  evaluation_interval: 5s
+
+alerting:
+
+# scraping is done in otelcol
+# metrics are ingested by prometheus remote write
+scrape_configs: []
+
+# this is experimental
+tracing:
+  endpoint: otelcol:4317
+  insecure: true

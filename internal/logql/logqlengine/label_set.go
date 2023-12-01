@@ -80,16 +80,16 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	l.reset()
 
 	if traceID := record.TraceID; !traceID.IsEmpty() {
-		l.Set(logql.Label(`trace_id`), pcommon.NewValueStr(traceID.Hex()))
+		l.Set(logstorage.LabelTraceID, pcommon.NewValueStr(traceID.Hex()))
 	}
 	if spanID := record.SpanID; !spanID.IsEmpty() {
-		l.Set(logql.Label(`span_id`), pcommon.NewValueStr(spanID.Hex()))
-	}
-	if severity := record.SeverityText; severity != "" {
-		l.Set(logql.Label(`severity_text`), pcommon.NewValueStr(severity))
+		l.Set(logstorage.LabelSpanID, pcommon.NewValueStr(spanID.Hex()))
 	}
 	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
-		l.Set(logql.Label(`severity_number`), pcommon.NewValueInt(int64(severity)))
+		l.Set(logstorage.LabelSeverity, pcommon.NewValueStr(severity.String()))
+	}
+	if body := record.Body; body != "" {
+		l.Set(logstorage.LabelBody, pcommon.NewValueStr(body))
 	}
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
@@ -102,10 +102,7 @@ func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) {
 			continue
 		}
 		m.Range(func(k string, v pcommon.Value) bool {
-			if err := logql.IsValidLabel(k, l.allowDots()); err != nil {
-				l.SetError("record extraction", err)
-				return false
-			}
+			k = otelstorage.KeyToLabel(k)
 			l.Set(logql.Label(k), v)
 			return true
 		})

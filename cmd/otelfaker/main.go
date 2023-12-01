@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"math/rand"
+	"os"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -17,41 +19,72 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func getLogs(ctx context.Context, tracer trace.Tracer, now time.Time) plog.Logs {
+func getLogs(ctx context.Context, tracer trace.Tracer, rnd *rand.Rand, now time.Time) plog.Logs {
 	_, span := tracer.Start(ctx, "getLogs")
 	defer span.End()
 	var (
 		spanContext = span.SpanContext()
 		traceID     = spanContext.TraceID()
 		spanID      = spanContext.SpanID()
+		ld          = plog.NewLogs()
+		rl          = ld.ResourceLogs().AppendEmpty()
 	)
-	ld := plog.NewLogs()
-	rl := ld.ResourceLogs().AppendEmpty()
-	rl.Resource().Attributes().PutStr("host.name", "testHost")
+	{
+		a := rl.Resource().Attributes()
+		a.PutStr("service.name", "testService")
+		a.PutStr("service.version", "1.0.0")
+		a.PutStr("service.instance.id", "testInstance")
+		a.PutStr("service.namespace", "testNamespace")
+		a.PutStr("host.name", "testHost")
+	}
 	rl.SetSchemaUrl("resource_schema")
 	il := rl.ScopeLogs().AppendEmpty()
-	il.Scope().SetName("name")
-	il.Scope().SetVersion("version")
-	il.Scope().Attributes().PutStr("oteldb.name", "testDB")
-	il.Scope().SetDroppedAttributesCount(1)
+	{
+		s := il.Scope()
+		s.SetName("name")
+		s.SetVersion("version")
+		s.Attributes().PutStr("oteldb.name", "testDB")
+		s.SetDroppedAttributesCount(1)
+	}
 	il.SetSchemaUrl("scope_schema")
 	lg := il.LogRecords().AppendEmpty()
-	lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_INFO))
-	lg.SetSeverityText("Info")
-	lg.SetFlags(plog.LogRecordFlags(logspb.LogRecordFlags_LOG_RECORD_FLAGS_DO_NOT_USE))
+	switch {
+	case rnd.Float32() < 0.1:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_DEBUG))
+		lg.SetSeverityText("Debug")
+	case rnd.Float32() < 0.2:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_ERROR))
+		lg.SetSeverityText("Error")
+	case rnd.Float32() < 0.3:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_FATAL))
+		lg.SetSeverityText("Fatal")
+	case rnd.Float32() < 0.4:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_WARN))
+		lg.SetSeverityText("Warn")
+	default:
+		lg.SetSeverityNumber(plog.SeverityNumber(logspb.SeverityNumber_SEVERITY_NUMBER_INFO))
+		lg.SetSeverityText("Info")
+	}
 	lg.SetTraceID(pcommon.TraceID(traceID))
 	lg.SetSpanID(pcommon.SpanID(spanID))
 	lg.Body().SetStr("hello world")
 	lg.SetTimestamp(pcommon.Timestamp(now.UnixNano()))
 	lg.SetObservedTimestamp(pcommon.Timestamp(now.UnixNano()))
-	lg.Attributes().PutStr("sdkVersion", "1.0.1")
-	lg.Attributes().PutStr("http.method", "GET")
-	lg.Attributes().PutBool("http.server", true)
-	lg.Attributes().PutInt("http.status_code", 200)
-	lg.Attributes().PutStr("http.url", "https://example.com")
-	lg.Attributes().PutStr("http.user_agent", "test-agent")
-	lg.Attributes().PutDouble("http.duration_seconds", 1.1054)
-	lg.Attributes().PutInt("http.duration", (time.Second + time.Millisecond*105).Nanoseconds())
+	{
+		a := lg.Attributes()
+		a.PutStr("sdkVersion", "1.0.1")
+		a.PutStr("http.method", "GET")
+		a.PutBool("http.server", true)
+		a.PutInt("http.status_code", 200)
+		if rnd.Float32() < 0.5 {
+			a.PutStr("http.url", "https://example.com")
+			a.PutStr("http.status_text", "OK")
+		} else {
+			a.PutStr("http.user_agent", "test-agent")
+		}
+		a.PutDouble("http.duration_seconds", 1.1054)
+		a.PutInt("http.duration", (time.Second + time.Millisecond*105).Nanoseconds())
+	}
 	lg.SetFlags(plog.DefaultLogRecordFlags.WithIsSampled(true))
 	return ld
 }
@@ -63,7 +96,11 @@ func main() {
 			otelgrpc.WithTracerProvider(m.TracerProvider()),
 			otelgrpc.WithMeterProvider(m.MeterProvider()),
 		}
-		conn, err := grpc.DialContext(ctx, "oteldb.faster.svc.cluster.local:4317",
+		target := os.Getenv("OTEL_TARGET")
+		if target == "" {
+			target = "oteldb.faster.svc.cluster.local:4317"
+		}
+		conn, err := grpc.DialContext(ctx, target,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithStatsHandler(otelgrpc.NewClientHandler(otelOptions...)),
 		)
@@ -72,8 +109,9 @@ func main() {
 		}
 		client := plogotlp.NewGRPCClient(conn)
 		tracer := m.TracerProvider().Tracer("otelfaker")
+		rnd := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec G404
 		for now := range time.NewTicker(time.Second).C {
-			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(getLogs(ctx, tracer, now))); err != nil {
+			if _, err := client.Export(ctx, plogotlp.NewExportRequestFromLogs(getLogs(ctx, tracer, rnd, now))); err != nil {
 				return errors.Wrap(err, "send logs")
 			}
 		}

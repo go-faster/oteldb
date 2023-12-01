@@ -8,6 +8,12 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// IndexStats implements indexStats operation.
+	//
+	// Get index stats.
+	//
+	// GET /loki/api/v1/index/stats
+	IndexStats(ctx context.Context, params IndexStatsParams) (*IndexStats, error)
 	// LabelValues implements labelValues operation.
 	//
 	// Get values of label.

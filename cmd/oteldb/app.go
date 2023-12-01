@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/promql"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -31,16 +32,17 @@ import (
 type App struct {
 	services map[string]func(context.Context) error
 
-	storage
+	otelStorage
 
 	lg      *zap.Logger
 	metrics Metrics
 }
 
-func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err error) {
+func newApp(ctx context.Context, metrics Metrics) (_ *App, err error) {
 	var (
 		storageType = strings.ToLower(os.Getenv("OTELDB_STORAGE"))
 		m           = NewMetricsOverride(metrics)
+		lg          = zctx.From(ctx)
 		app         = &App{
 			services: map[string]func(context.Context) error{},
 			lg:       lg,
@@ -50,18 +52,17 @@ func newApp(ctx context.Context, lg *zap.Logger, metrics Metrics) (_ *App, err e
 
 	switch storageType {
 	case "ch":
-		inserter, querier, err := setupCH(ctx, os.Getenv("CH_DSN"), lg, m)
+		store, err := setupCH(ctx, os.Getenv("CH_DSN"), lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
-		app.traceInserter = inserter
-		app.traceQuerier = querier
+		app.otelStorage = store
 	case "yt", "":
 		store, err := setupYT(ctx, lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
-		app.storage = store
+		app.otelStorage = store
 	default:
 		return nil, errors.Errorf("unknown storage %q", storageType)
 	}
@@ -191,12 +192,19 @@ func (app *App) trySetupLoki() error {
 }
 
 func (app *App) trySetupProm() error {
-	q := app.metricShard
+	q := app.metricsQuerier
 	if q == nil {
 		return nil
 	}
 
-	engine := promql.NewEngine(promql.EngineOpts{})
+	engine := promql.NewEngine(promql.EngineOpts{
+		// These fields are zero by default, which makes
+		// all queries to fail with error.
+		//
+		// TODO(tdakkota): make configurable.
+		Timeout:    time.Minute,
+		MaxSamples: 1_000_000,
+	})
 	prom := promhandler.NewPromAPI(engine, q, promhandler.PromAPIOptions{})
 
 	s, err := promapi.NewServer(prom,
@@ -220,7 +228,7 @@ func (app *App) setupReceiver() error {
 	if i := app.logInserter; i != nil {
 		consumers.Logs = logstorage.NewConsumer(i)
 	}
-	if c := app.metricConsumer; c != nil {
+	if c := app.metricsConsumer; c != nil {
 		consumers.Metrics = c
 	}
 
