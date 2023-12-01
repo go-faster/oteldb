@@ -3,9 +3,7 @@ package chotele2e
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -15,37 +13,12 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chtrace"
 )
-
-type randomIDGenerator struct {
-	sync.Mutex
-	rand *rand.Rand
-}
-
-// NewSpanID returns a non-zero span ID from a randomly-chosen sequence.
-func (gen *randomIDGenerator) NewSpanID(context.Context, trace.TraceID) (sid trace.SpanID) {
-	gen.Lock()
-	defer gen.Unlock()
-	gen.rand.Read(sid[:])
-	return sid
-}
-
-// NewIDs returns a non-zero trace ID and a non-zero span ID from a
-// randomly-chosen sequence.
-func (gen *randomIDGenerator) NewIDs(context.Context) (tid trace.TraceID, sid trace.SpanID) {
-	gen.Lock()
-	defer gen.Unlock()
-	gen.rand.Read(tid[:])
-	gen.rand.Read(sid[:])
-	return tid, sid
-}
 
 func discardResult() proto.Result {
 	return (&proto.Results{}).Auto()
@@ -90,30 +63,13 @@ func ConnectOpt(t *testing.T, connOpt ch.Options) *ch.Client {
 	return conn
 }
 
-func Connect(t *testing.T) *ch.Client {
-	t.Helper()
-	return ConnectOpt(t, ch.Options{
-		Logger: zap.NewNop(),
-	})
-}
-
 func TestIntegrationTrace(t *testing.T) {
 	ctx := context.Background()
-	exporter := tracetest.NewInMemoryExporter()
-	randSource := rand.NewSource(15)
-	tp := tracesdk.NewTracerProvider(
-		// Using deterministic random ids.
-		tracesdk.WithIDGenerator(&randomIDGenerator{
-			rand: rand.New(randSource),
-		}),
-		tracesdk.WithBatcher(exporter,
-			tracesdk.WithBatchTimeout(0), // instant
-		),
-	)
+	provider := integration.NewProvider()
 	conn := ConnectOpt(t, ch.Options{
 		Logger:                       zap.NewNop(),
 		OpenTelemetryInstrumentation: true,
-		TracerProvider:               tp,
+		TracerProvider:               provider,
 		Settings: []ch.Setting{
 			{
 				Key:       "send_logs_level",
@@ -140,8 +96,8 @@ func TestIntegrationTrace(t *testing.T) {
 	t.Log("trace_id", traceID)
 
 	// Force flushing.
-	require.NoError(t, tp.ForceFlush(ctx))
-	spans := exporter.GetSpans()
+	provider.Flush()
+	spans := provider.Exporter.GetSpans()
 	require.NotEmpty(t, spans)
 	require.NoError(t, conn.Do(ctx, ch.Query{Body: "system flush logs"}))
 
