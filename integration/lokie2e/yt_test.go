@@ -78,7 +78,7 @@ func TestYT(t *testing.T) {
 	querier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{Tables: tables})
 	require.NoError(t, err)
 
-	runTest(ctx, t, inserter, querier, querier)
+	runTest(ctx, t, nil, inserter, querier, querier)
 }
 
 func TestYTYQL(t *testing.T) {
@@ -135,5 +135,5 @@ func TestYTYQL(t *testing.T) {
 	engineQuerier, err := ytstorage.NewYQLQuerier(yql, ytstorage.YQLQuerierOptions{Tables: tables})
 	require.NoError(t, err)
 
-	runTest(ctx, t, inserter, labelQuerier, engineQuerier)
+	runTest(ctx, t, nil, inserter, labelQuerier, engineQuerier)
 }

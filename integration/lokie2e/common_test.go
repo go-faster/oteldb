@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"sigs.k8s.io/yaml"
 
+	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/integration/lokie2e"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
@@ -33,14 +34,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func setupDB(
-	ctx context.Context,
-	t *testing.T,
-	set *lokie2e.BatchSet,
-	inserter logstorage.Inserter,
-	querier logstorage.Querier,
-	engineQuerier logqlengine.Querier,
-) *lokiapi.Client {
+func setupDB(ctx context.Context, t *testing.T, provider *integration.Provider, set *lokie2e.BatchSet, inserter logstorage.Inserter, querier logstorage.Querier, engineQuerier logqlengine.Querier) *lokiapi.Client {
 	consumer := logstorage.NewConsumer(inserter)
 
 	logEncoder := plog.JSONMarshaler{}
@@ -60,28 +54,28 @@ func setupDB(
 	gold.Str(t, out.String(), "logs.yml")
 
 	engine := logqlengine.NewEngine(engineQuerier, logqlengine.Options{
-		ParseOptions: logql.ParseOptions{AllowDots: true},
+		TracerProvider: provider,
+		ParseOptions:   logql.ParseOptions{AllowDots: true},
 	})
 
 	api := lokihandler.NewLokiAPI(querier, engine)
-	lokih, err := lokiapi.NewServer(api)
+	lokih, err := lokiapi.NewServer(api,
+		lokiapi.WithTracerProvider(provider),
+	)
 	require.NoError(t, err)
 
 	s := httptest.NewServer(lokih)
 	t.Cleanup(s.Close)
 
-	c, err := lokiapi.NewClient(s.URL, lokiapi.WithClient(s.Client()))
+	c, err := lokiapi.NewClient(s.URL,
+		lokiapi.WithClient(s.Client()),
+		lokiapi.WithTracerProvider(provider),
+	)
 	require.NoError(t, err)
 	return c
 }
 
-func runTest(
-	ctx context.Context,
-	t *testing.T,
-	inserter logstorage.Inserter,
-	querier logstorage.Querier,
-	engineQuerier logqlengine.Querier,
-) {
+func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, inserter logstorage.Inserter, querier logstorage.Querier, engineQuerier logqlengine.Querier) {
 	now := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 	set, err := generateLogs(now)
 	require.NoError(t, err)
@@ -92,16 +86,20 @@ func runTest(
 	require.NotZero(t, set.Start)
 	require.NotZero(t, set.End)
 	require.GreaterOrEqual(t, set.End, set.Start)
-	c := setupDB(ctx, t, set, inserter, querier, engineQuerier)
+
+	tracer := provider.TracerProvider.Tracer("test")
+	c := setupDB(ctx, t, provider, set, inserter, querier, engineQuerier)
 
 	t.Run("Labels", func(t *testing.T) {
+		ctx, span := tracer.Start(ctx, "Labels")
 		a := require.New(t)
-
 		r, err := c.Labels(ctx, lokiapi.LabelsParams{
 			// Always sending time range because default is current time.
 			Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 			End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 		})
+		span.End()
+		provider.Flush()
 		a.NoError(err)
 		a.Len(r.Data, len(set.Labels))
 		for _, label := range r.Data {

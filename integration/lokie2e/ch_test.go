@@ -77,12 +77,19 @@ func TestCH(t *testing.T) {
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
 
-	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{Tables: tables})
+	provider := integration.NewProvider()
+	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{
+		Tables:         tables,
+		TracerProvider: provider,
+	})
 	require.NoError(t, err)
 
-	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
+	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{
+		Tables:         tables,
+		TracerProvider: provider,
+	})
 	require.NoError(t, err)
 
 	ctx = zctx.Base(ctx, zaptest.NewLogger(t))
-	runTest(ctx, t, inserter, querier, querier)
+	runTest(ctx, t, provider, inserter, querier, querier)
 }
