@@ -345,6 +345,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				fmt.Fprintf(&query, "trace_id = unhex(%s)", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
 				fmt.Fprintf(&query, "match(hex(trace_id), %s)", singleQuoted(m.Value))
+			default:
+				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
 		case logstorage.LabelSpanID:
 			switch m.Op {
@@ -352,6 +354,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				fmt.Fprintf(&query, "span_id = unhex(%s)", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
 				fmt.Fprintf(&query, "match(hex(span_id), %s)", singleQuoted(m.Value))
+			default:
+				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
 		case logstorage.LabelSeverity:
 			switch m.Op {
@@ -365,7 +369,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 					}
 				}
 				fmt.Fprintf(&query, "severity_number = %d", severityNumber)
-			default:
+			case logql.OpRe, logql.OpNotRe:
 				re, err := regexp.Compile(m.Value)
 				if err != nil {
 					return nil, errors.Wrap(err, "compile regex")
@@ -391,6 +395,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 					fmt.Fprintf(&query, "%d", v)
 				}
 				query.WriteByte(')')
+			default:
+				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
 		case logstorage.LabelBody:
 			switch m.Op {
@@ -398,6 +404,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				fmt.Fprintf(&query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
 				fmt.Fprintf(&query, "match(body, %s)", singleQuoted(m.Value))
+			default:
+				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
 		case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
 			// Materialized from resource.service.{name,namespace,instance_id}.
@@ -406,6 +414,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				fmt.Fprintf(&query, "%s = %s", labelName, singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
 				fmt.Fprintf(&query, "match(%s, %s)", labelName, singleQuoted(m.Value))
+			default:
+				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
 		default:
 			// Search in all attributes.
@@ -423,6 +433,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 					fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
 				case logql.OpRe, logql.OpNotRe:
 					fmt.Fprintf(&query, "match(JSONExtractString(%s, %s), %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
+				default:
+					return nil, errors.Errorf("unexpected op %q", m.Op)
 				}
 			}
 		}
