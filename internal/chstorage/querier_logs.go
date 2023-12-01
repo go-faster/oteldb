@@ -24,8 +24,10 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-var _ logstorage.Querier = (*Querier)(nil)
-var _ logqlengine.Querier = (*Querier)(nil)
+var (
+	_ logstorage.Querier  = (*Querier)(nil)
+	_ logqlengine.Querier = (*Querier)(nil)
+)
 
 // LabelNames implements logstorage.Querier.
 func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions) (_ []string, rerr error) {
@@ -62,9 +64,9 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 			}
 			return nil
 		},
-		Body: fmt.Sprintf(`SELECT DISTINCT 
+		Body: fmt.Sprintf(`SELECT DISTINCT
 arrayJoin(arrayConcat(JSONExtractKeys(attributes), JSONExtractKeys(resource), JSONExtractKeys(scope_attributes))) as key
-FROM %s 
+FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)
 LIMIT 1000`,
 			table, opts.Start, opts.End,
@@ -241,13 +243,13 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			}
 			return nil
 		},
-		Body: fmt.Sprintf(`SELECT DISTINCT 
+		Body: fmt.Sprintf(`SELECT DISTINCT
 array(
-	JSONExtractRaw(attributes, %[1]s), 
+	JSONExtractRaw(attributes, %[1]s),
 	JSONExtractRaw(scope_attributes, %[1]s),
 	JSONExtractRaw(resource, %[1]s)
 ) as values
-FROM %s 
+FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d) LIMIT 1000`,
 			singleQuoted(labelName), table, opts.Start, opts.End,
 		),
@@ -377,7 +379,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 			// Materialized from resource.service.{name,namespace,instance_id}.
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(&query, "positionUTF8(%s, %s) > 0", labelName, singleQuoted(m.Value))
+				fmt.Fprintf(&query, "%s = %s", labelName, singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
 				fmt.Fprintf(&query, "%s REGEXP %s", labelName, singleQuoted(m.Value))
 			}
