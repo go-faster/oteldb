@@ -6,8 +6,6 @@
 
 The OpenTelemetry-compatible telemetry aggregation, storage and processing.
 
-Work in progress.
-
 > [!WARNING]  
 > Work in progress.
 
@@ -19,7 +17,7 @@ We focus on the following storage systems:
 - [ClickHouse](https://clickhouse.com/)
 - [YTsaurus](https://ytsaurus.tech/)
 
-Currently, ClickHouse looks more promising.
+Currently, we focus on ClickHouse for realtime queries on hot/warm data.
 
 ## Query
 
