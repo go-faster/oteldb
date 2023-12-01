@@ -7,6 +7,10 @@ ignore:
   - "internal/metricsharding/"
   - "internal/ytlocal/"
   - "internal/ytstorage/"
+  - "internal/yqlclient/"
+  # Skip non-production code.
+  - "internal/lokiproxy/"
+  - "internal/pyroproxy/"
 coverage:
   status:
     project: false
