@@ -147,12 +147,15 @@ func runTest(
 			// By trace id.
 			{`{trace_id="af36000000000000c517000000000003"}`, 1},
 			{`{trace_id="AF36000000000000C517000000000003"}`, 1},
+			{`{trace_id=~"AF3600.+000C517000.+00003"}`, 1},
 			{`{trace_id="badbadbadbadbadbaddeadbeafbadbad"}`, 0},
+			{`{trace_id=~"bad.+"}`, 0},
 			// By severity.
 			{`{level="Info"}`, 121},
 			{`{level="INFO"}`, 121},
 			// All by service name.
 			{`{service_name="testService"}`, len(set.Records)},
+			{`{service_name=~"test.+"}`, len(set.Records)},
 			// Effectively match GET.
 			{`{http_method="GET"}`, 21},
 			{`{http_method=~".*GET.*"}`, 21},
@@ -189,6 +192,8 @@ func runTest(
 			{`{http_method=~".+"} |= "HEAD" |= " 500 "`, 2},
 			{`{http_method=~".+"} |~ "DELETE"`, 20},
 			{`{http_method=~".+"} |~ "HEAD" |= " 500 "`, 2},
+			{`{http_method=~".+"} |~ "(GET|HEAD)"`, 43},
+			{`{http_method=~".+"} |~ "GE.+"`, 21},
 			// Try to not use offloading.
 			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "DELETE"`, 20},
 			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "HEAD" |= " 500 "`, 2},

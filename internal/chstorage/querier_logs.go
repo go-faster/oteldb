@@ -343,14 +343,14 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 			case logql.OpEq, logql.OpNotEq:
 				fmt.Fprintf(&query, "trace_id = unhex(%s)", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(&query, "hex(trace_id) REGEXP %s", singleQuoted(m.Value))
+				fmt.Fprintf(&query, "match(hex(trace_id), %s)", singleQuoted(m.Value))
 			}
 		case logstorage.LabelSpanID:
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
 				fmt.Fprintf(&query, "span_id = unhex(%s)", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(&query, "hex(span_id) REGEXP %s", singleQuoted(m.Value))
+				fmt.Fprintf(&query, "match(hex(span_id), %s)", singleQuoted(m.Value))
 			}
 		case logstorage.LabelSeverity:
 			switch m.Op {
@@ -373,7 +373,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 			case logql.OpEq, logql.OpNotEq:
 				fmt.Fprintf(&query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(&query, "service_name REGEXP %s", singleQuoted(m.Value))
+				fmt.Fprintf(&query, "match(body, %s)", singleQuoted(m.Value))
 			}
 		case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
 			// Materialized from resource.service.{name,namespace,instance_id}.
@@ -381,7 +381,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 			case logql.OpEq, logql.OpNotEq:
 				fmt.Fprintf(&query, "%s = %s", labelName, singleQuoted(m.Value))
 			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(&query, "%s REGEXP %s", labelName, singleQuoted(m.Value))
+				fmt.Fprintf(&query, "match(%s, %s)", labelName, singleQuoted(m.Value))
 			}
 		default:
 			// Search in all attributes.
@@ -398,7 +398,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				case logql.OpEq, logql.OpNotEq:
 					fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
 				case logql.OpRe, logql.OpNotRe:
-					fmt.Fprintf(&query, "JSONExtractString(%s, %s) REGEXP %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "match(JSONExtractString(%s, %s), %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
 				}
 			}
 		}
@@ -432,7 +432,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				}
 			}
 		case logql.OpRe, logql.OpNotRe:
-			fmt.Fprintf(&query, "body REGEXP %s", singleQuoted(m.Value))
+			fmt.Fprintf(&query, "match(body, %s)", singleQuoted(m.Value))
 		}
 		query.WriteByte(')')
 	}
