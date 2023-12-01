@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -365,8 +366,31 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				}
 				fmt.Fprintf(&query, "severity_number = %d", severityNumber)
 			default:
-				// TODO(ernado): just do regex in-place and add `IN (...)` to query.
-				return nil, errors.Errorf("%q not implemented for severity", m.Op)
+				re, err := regexp.Compile(m.Value)
+				if err != nil {
+					return nil, errors.Wrap(err, "compile regex")
+				}
+				var matches []int
+				for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
+					for _, s := range []string{
+						i.String(),
+						strings.ToLower(i.String()),
+						strings.ToUpper(i.String()),
+					} {
+						if re.MatchString(s) {
+							matches = append(matches, int(i))
+							break
+						}
+					}
+				}
+				query.WriteString("severity_number IN (")
+				for i, v := range matches {
+					if i != 0 {
+						query.WriteByte(',')
+					}
+					fmt.Fprintf(&query, "%d", v)
+				}
+				query.WriteByte(')')
 			}
 		case logstorage.LabelBody:
 			switch m.Op {

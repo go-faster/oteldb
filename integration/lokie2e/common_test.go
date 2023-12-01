@@ -153,6 +153,9 @@ func runTest(
 			// By severity.
 			{`{level="Info"}`, 121},
 			{`{level="INFO"}`, 121},
+			{`{level=~"I.+"}`, 121},
+			{`{level!~"(WARN|DEBUG)"}`, 123},
+			{`{level=~"(WARN|DEBUG)"}`, 0},
 			// All by service name.
 			{`{service_name="testService"}`, len(set.Records)},
 			{`{service_name=~"test.+"}`, len(set.Records)},
