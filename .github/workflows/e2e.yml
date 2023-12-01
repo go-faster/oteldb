@@ -42,4 +42,33 @@ jobs:
         env:
           E2E: "1"
           TESTCONTAINERS_RYUK_DISABLED: "true"
-        run: go test -v -timeout 15m ./integration/...
+        run: go test -timeout 15m -race -v -coverpkg=./... -coverprofile=profile.out ./...
+
+      - name: Emit coverage
+        run: go tool cover -func profile.out
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: profile.out
+          if-no-files-found: error
+          retention-days: 1
+
+  send:
+    runs-on: ubuntu-latest
+    needs:
+      - run
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage
+
+      - name: Send coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: profile.out
