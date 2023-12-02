@@ -294,7 +294,9 @@ spec:
         - effect: NoSchedule
           key: node.kubernetes.io/network-unavailable
           operator: Exists
-
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
       containers:
         - command:
             - "/otelcol-contrib"
@@ -303,6 +305,8 @@ spec:
           name: otel-agent
           securityContext:
             privileged: true
+            runAsNonRoot: false
+            runAsUser: 0
           resources:
             limits:
               cpu: "1"
