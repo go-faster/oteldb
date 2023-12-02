@@ -72,6 +72,7 @@ jobs:
           go build -v ./cmd/oteldb
           go build -v ./cmd/otelproxy
           go build -v ./cmd/otelfaker
+          go build -v ./cmd/chotel
 
       - name: Base image
         uses: docker/build-push-action@v5
