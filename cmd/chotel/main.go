@@ -182,7 +182,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 	defer span.End()
 
 	db, err := ch.Dial(ctx, ch.Options{
-		Logger:      a.log.Named("logs"),
+		Logger:      zctx.From(ctx),
 		Address:     a.clickHouseAddr,
 		Compression: ch.CompressionZSTD,
 		User:        a.clickHouseUser,
@@ -230,6 +230,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 	if err := db.Do(ctx, ch.Query{
 		Body:   q,
 		Result: t.Result(),
+		Logger: zctx.From(ctx),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			exported.TraceID = append(exported.TraceID, t.TraceID...)
 			exported.SpanID = append(exported.SpanID, t.SpanID...)
