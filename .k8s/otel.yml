@@ -192,6 +192,21 @@ data:
           - container
         extra_metadata_labels:
           - container.id
+    hostmetrics:
+      collection_interval: 1s
+      scrapers:
+        cpu:
+        load:
+        memory:
+        network:
+        process:
+        processes:
+        paging:
+    hostmetrics/disks:
+      collection_interval: 30s
+      scrapers:
+        disk:
+        filesystem:
     processors:
       batch:
       memory_limiter:
@@ -224,7 +239,7 @@ data:
       extensions: [zpages, memory_ballast]
       pipelines:
         metrics:
-          receivers: [kubeletstats]
+          receivers: [kubeletstats, hostmetrics, hostmetrics/disks]
           processors: [memory_limiter, batch]
           exporters: [otlp]
           
