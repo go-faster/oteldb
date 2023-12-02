@@ -4,8 +4,11 @@ package zapotel
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"math"
+	"reflect"
 	"strings"
+	"time"
 
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -143,9 +146,16 @@ func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
 				a.PutDouble(k, float64(math.Float32frombits(uint32(f.Integer))))
 			case zapcore.Float64Type:
 				a.PutDouble(k, math.Float64frombits(uint64(f.Integer)))
+			case zapcore.TimeType:
+				a.PutInt(f.Key, f.Integer)
+			case zapcore.TimeFullType:
+				a.PutStr(k, f.Interface.(time.Time).Format(time.RFC3339Nano))
+			case zapcore.ErrorType:
+				encodeError(a, k, f.Interface.(error))
+			case zapcore.DurationType:
+				a.PutDouble(k, time.Duration(f.Integer).Seconds())
 			default:
-				// Time, duration, "any", ...
-				// TODO(ernado): support
+				// "Any", ...
 				skipped++
 			}
 		}
@@ -154,6 +164,41 @@ func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
 		}
 	}
 	return ld
+}
+
+func encodeError(a pcommon.Map, key string, err error) {
+	// TODO: update mapping from spec
+
+	// Try to capture panics (from nil references or otherwise) when calling
+	// the Error() method
+	defer func() {
+		if rerr := recover(); rerr != nil {
+			// If it's a nil pointer, just say "<nil>". The likeliest causes are a
+			// error that fails to guard against nil or a nil pointer for a
+			// value receiver, and in either case, "<nil>" is a nice result.
+			if v := reflect.ValueOf(err); v.Kind() == reflect.Ptr && v.IsNil() {
+				a.PutStr(key, "<nil>")
+			}
+		}
+	}()
+
+	basic := err.Error()
+	a.PutStr(key, basic)
+
+	switch e := err.(type) {
+	case interface{ Errors() []error }:
+		for i, v := range e.Errors() {
+			k := fmt.Sprintf("%s.%d", key, i)
+			a.PutStr(k, v.Error())
+		}
+	case fmt.Formatter:
+		verbose := fmt.Sprintf("%+v", e)
+		if verbose != basic {
+			// This is a rich error type, like those produced by
+			// github.com/pkg/errors.
+			a.PutStr(key+".verbose", verbose)
+		}
+	}
 }
 
 func (e *exporter) Write(ent zapcore.Entry, fields []zapcore.Field) error {
