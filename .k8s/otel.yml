@@ -301,6 +301,8 @@ spec:
             - "--config=/conf/otel-collector-config.yaml"
           image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest
           name: otel-agent
+          securityContext:
+            privileged: true
           resources:
             limits:
               cpu: "1"
