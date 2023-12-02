@@ -177,7 +177,7 @@ metadata:
   name: otel-agent
   labels:
     app: opentelemetry
-    component: otel-collector
+    component: otel-agent
 data:
   config: |
     receivers:
