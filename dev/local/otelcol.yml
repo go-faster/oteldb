@@ -22,6 +22,7 @@ receivers:
         # For PromQL compliance tester
         # https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-tester
         - job_name: 'demo'
+          scrape_interval: 5s
           static_configs:
             - targets:
                 - 'demo-1:8080'
@@ -46,10 +47,6 @@ receivers:
           scrape_interval: 5s
           static_configs:
             - targets: [clickhouse:9090]
-        - job_name: oteldb
-          scrape_interval: 5s
-          static_configs:
-            - targets: [oteldb:9090]
 
 processors:
   batch:
@@ -102,13 +99,9 @@ service:
       processors: [batch]
       exporters: [otlp, otlp/jaeger, otlp/qryn, otlp/tempo]
     metrics:
-      receivers: [otlp, prometheus, hostmetrics]
+      receivers: [otlp, prometheus, prometheus/compliance, hostmetrics]
       processors: [batch]
       exporters: [otlp, prometheusremotewrite, otlp/qryn]
-    metrics/compliance:
-      receivers: [prometheus/compliance]
-      processors: [batch]
-      exporters: [otlp, otlp/qryn]
     logs:
       receivers: [otlp]
       processors: [batch]

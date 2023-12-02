@@ -7,13 +7,7 @@ alerting:
 
 # scraping is done in otelcol
 # metrics are ingested by prometheus remote write
-scrape_configs:
-- job_name: 'demo'
-  static_configs:
-    - targets:
-      - 'demo-1:8080'
-      - 'demo-2:8080'
-      - 'demo-3:8080'
+scrape_configs: []
 
 # this is experimental
 tracing:

@@ -30,6 +30,9 @@
 # You will then also need to replace the host "demo.promlabs.com" in the test queries below with whatever
 # host you are running the instances on.
 test_cases:
+  # Node exporter
+  - query: 'node_memory_MemTotal_bytes{instance="node-exporter:9100",job="node-exporter"}'
+
   # Scalar literals.
   - query: '42'
   - query: '1.234'
