@@ -83,7 +83,7 @@ func TestLogRequests(t *testing.T) {
 	})
 
 	entries := logs.All()
-	require.Len(t, entries, 2)
+	require.Len(t, entries, 4)
 
 	entry := entries[0]
 	require.Equal(t, "Got request", entry.Message)
