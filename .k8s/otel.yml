@@ -200,9 +200,6 @@ data:
           load:
           memory:
           network:
-          process:
-          processes:
-          paging:
       hostmetrics/disks:
         root_path: /host
         collection_interval: 30s
