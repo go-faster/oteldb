@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
 	"go.opentelemetry.io/collector/consumer"
@@ -98,7 +99,7 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 	if impl := consumers.Traces; impl != nil {
 		tracesConsumer, err = consumer.NewTraces(func(ctx context.Context, ld ptrace.Traces) error {
 			if err := impl.ConsumeTraces(ctx, ld); err != nil {
-				shim.logger.Error("Consume traces", zap.Error(err))
+				zctx.From(ctx).Error("Consume traces", zap.Error(err))
 			}
 			return nil
 		})
@@ -114,7 +115,7 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 	if impl := consumers.Metrics; impl != nil {
 		metricsConsumer, err = consumer.NewMetrics(func(ctx context.Context, ld pmetric.Metrics) error {
 			if err := impl.ConsumeMetrics(ctx, ld); err != nil {
-				shim.logger.Error("Consume metrics", zap.Error(err))
+				zctx.From(ctx).Error("Consume metrics", zap.Error(err))
 			}
 			return nil
 		})
@@ -130,7 +131,7 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 	if impl := consumers.Logs; impl != nil {
 		logsConsumer, err = consumer.NewLogs(func(ctx context.Context, ld plog.Logs) error {
 			if err := impl.ConsumeLogs(ctx, ld); err != nil {
-				shim.logger.Error("Consume logs", zap.Error(err))
+				zctx.From(ctx).Error("Consume logs", zap.Error(err))
 			}
 			return nil
 		})
