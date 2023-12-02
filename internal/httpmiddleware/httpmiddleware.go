@@ -68,6 +68,7 @@ func Instrument(serviceName string, find RouteFinder, m Metrics) Middleware {
 			otelhttp.WithPropagators(m.TextMapPropagator()),
 			otelhttp.WithTracerProvider(m.TracerProvider()),
 			otelhttp.WithMeterProvider(m.MeterProvider()),
+			otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
 			otelhttp.WithServerName(serviceName),
 			otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
 				op, ok := find(r.Method, r.URL)
