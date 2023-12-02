@@ -265,6 +265,7 @@ spec:
         app: opentelemetry
         component: otel-agent
     spec:
+      hostPID: true
       serviceAccountName: otel-collector-opentelemetry-collector
       automountServiceAccountToken: true
       tolerations:
