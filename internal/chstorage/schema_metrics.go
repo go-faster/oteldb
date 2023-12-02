@@ -106,11 +106,11 @@ const (
 
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
-		name LowCardinality(String),
+		name  LowCardinality(String),
 		value String
 	)
-	ENGINE = MergeTree()
-	PRIMARY KEY (name);`
+	ENGINE = ReplacingMergeTree
+	ORDER BY (name, value);`
 )
 
 func parseLabels(s string, to map[string]string) error {
