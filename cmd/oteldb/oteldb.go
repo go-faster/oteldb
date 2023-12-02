@@ -53,6 +53,12 @@ func main() {
 			// Only PoC, should be replaced with real initialization
 			// and moved to go-faster/sdk.
 			endpoint := os.Getenv("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT")
+			if endpoint == "" {
+				endpoint = "OTEL_EXPORTER_OTLP_ENDPOINT"
+			}
+			if endpoint == "" {
+				endpoint = "localhost:4317"
+			}
 			endpoint = strings.TrimPrefix(endpoint, "http://")
 			conn, err := grpc.DialContext(ctx, endpoint,
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
