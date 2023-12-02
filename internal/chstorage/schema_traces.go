@@ -47,8 +47,8 @@ PRIMARY KEY (trace_id, span_id);`
 		value String,
 		value_type Enum8(` + valueTypeDDL + `)
 	)
-	ENGINE = MergeTree()
-	PRIMARY KEY (name);`
+	ENGINE = ReplacingMergeTree
+	ORDER BY (value_type, name, value);`
 	valueTypeDDL = `'EMPTY' = 0,'STR' = 1,'INT' = 2,'DOUBLE' = 3,'BOOL' = 4,'MAP' = 5,'SLICE' = 6,'BYTES' = 7`
 )
 
