@@ -16,17 +16,11 @@ spec:
       labels:
         app: oteldb
         service.opentelemetry.io/name: go-faster.oteldb
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8090"
     spec:
       containers:
         - name: oteldb
           image: ghcr.io/go-faster/oteldb:main
           ports:
-            - containerPort: 8090
-              protocol: TCP
-              name: metrics
             - containerPort: 3200
               protocol: TCP
               name: tempo-http
@@ -55,25 +49,19 @@ spec:
             - name: GOMAXPROCS
               value: "4"
             - name: OTEL_METRICS_EXPORTER
-              value: "prometheus"
-            - name: OTEL_EXPORTER_PROMETHEUS_PORT
-              value: "8090"
-            - name: OTEL_EXPORTER_PROMETHEUS_HOST
-              value: "0.0.0.0"
+              value: "grpc"
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.name=go-faster.oteldb"
             - name: OTEL_LOG_LEVEL
               value: "DEBUG"
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: "grpc"
-            - name: OTEL_TRACES_EXPORTER
-              value: "otlp"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://otel-collector.monitoring.svc.cluster.local:4317"
-            - name: YT_YQL_CLUSTER
-              value: yt
-            - name: YT_PROXY
-              value: http-proxies.yt.svc.cluster.local
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"
             - name: OTELDB_STORAGE
               value: ch
             - name: CH_DSN
@@ -81,11 +69,6 @@ spec:
                 secretKeyRef:
                   name: oteldb
                   key: CH_DSN
-            - name: YT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: oteldb
-                  key: YT_TOKEN
 ---
 apiVersion: apps/v1
 kind: Deployment
