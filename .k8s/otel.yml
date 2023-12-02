@@ -33,6 +33,8 @@ data:
 
     processors:
       batch:
+        timeout: 500ms
+        send_batch_max_size: 1000
       memory_limiter:
         # 80% of maximum memory up to 2G
         limit_mib: 1500
@@ -208,6 +210,8 @@ data:
           filesystem:
     processors:
       batch:
+        timeout: 500ms
+        send_batch_max_size: 1000
       memory_limiter:
         # 80% of maximum memory up to 2G
         limit_mib: 1500
