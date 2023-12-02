@@ -75,7 +75,7 @@ data:
           processors: [memory_limiter, batch, k8sattributes]
           exporters: [otlp/oteldb]
         metrics:
-          receivers: [otlp]
+          receivers: [otlp, k8s_cluster]
           processors: [memory_limiter, batch, k8sattributes]
           exporters: [otlp/oteldb]
 ---
