@@ -408,7 +408,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				return nil, errors.Errorf("unexpected op %q", m.Op)
 			}
 		case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
-			// Materialized from resource.service.{name,namespace,instance_id}.
+			// Materialized from resource.service.{name,namespace,instance.id}.
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
 				fmt.Fprintf(&query, "%s = %s", labelName, singleQuoted(m.Value))

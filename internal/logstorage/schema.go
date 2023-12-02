@@ -16,7 +16,7 @@ const (
 
 	LabelServiceName       = "service_name"        // resource.service.name
 	LabelServiceNamespace  = "service_namespace"   // resource.service.namespace
-	LabelServiceInstanceID = "service_instance_id" // resource.service.instance_id
+	LabelServiceInstanceID = "service_instance_id" // resource.service.instance.id
 )
 
 // Record is a log record.
