@@ -109,11 +109,10 @@ func addOgen[
 		routeFinder := httpmiddleware.MakeRouteFinder(server)
 		httpServer := &http.Server{
 			Addr: addr,
-			Handler: httpmiddleware.Wrap(
-				server,
-				httpmiddleware.InjectLogger(lg),
-				httpmiddleware.LogRequests(routeFinder),
+			Handler: httpmiddleware.Wrap(server,
+				httpmiddleware.InjectLogger(zctx.From(ctx)),
 				httpmiddleware.Instrument("oteldb", routeFinder, app.metrics),
+				httpmiddleware.LogRequests(routeFinder),
 			),
 			ReadHeaderTimeout: 15 * time.Second,
 		}

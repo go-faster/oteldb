@@ -30,7 +30,11 @@ func InjectLogger(lg *zap.Logger) Middleware {
 func LogRequests(find RouteFinder) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			lg := zctx.From(r.Context())
+			ctx := r.Context()
+			lg := zctx.From(ctx)
+			if cx := trace.SpanContextFromContext(ctx); !cx.IsValid() {
+				lg.Warn("No span context")
+			}
 			var (
 				opName = zap.Skip()
 				opID   = zap.Skip()

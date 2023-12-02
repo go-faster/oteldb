@@ -67,11 +67,10 @@ func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error 
 
 // ServiceMiddleware is a generic middleware for any service.
 func ServiceMiddleware(s service, lg *zap.Logger, m *app.Metrics) http.Handler {
-	return httpmiddleware.Wrap(
-		s.handler,
+	return httpmiddleware.Wrap(s.handler,
 		httpmiddleware.InjectLogger(lg),
-		httpmiddleware.LogRequests(s.findRoute),
 		httpmiddleware.Instrument(s.name, s.findRoute, m),
+		httpmiddleware.LogRequests(s.findRoute),
 	)
 }
 
