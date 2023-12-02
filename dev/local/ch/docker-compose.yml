@@ -122,19 +122,6 @@ services:
       - ../prometheus:/etc/prometheus
       - prom:/prometheus
 
-  compliance:
-    image: go-faster/oteldb/prometheus/compliance
-    restart: always
-    command:
-      - '-output-passing'
-      - '-config-file=/etc/compliance/config/promql-test-queries.yml'
-      - '-config-file=/etc/compliance/config/test.yml'
-    volumes:
-      - ../promql:/etc/compliance/config
-    build:
-      context: ../compliance/promql
-      dockerfile: Dockerfile
-
   demo-1:
     image: julius/prometheus-demo-service:latest
   demo-2:
