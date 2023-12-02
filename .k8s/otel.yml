@@ -130,7 +130,8 @@ spec:
         app: opentelemetry
         component: otel-collector
     spec:
-      serviceAccountName: otel
+      serviceAccountName: otel-collector-opentelemetry-collector
+      automountServiceAccountToken: true
       containers:
       - command:
           - "/otelcol-contrib"
@@ -183,12 +184,14 @@ data:
       kubeletstats:
         collection_interval: 10s
         auth_type: 'serviceAccount'
-        endpoint: '${env:K8S_NODE_NAME}:10250'
+        endpoint: '${env:HOST_IP}:10250'
         insecure_skip_verify: true
         metric_groups:
           - node
           - pod
           - container
+        extra_metadata_labels:
+          - container.id
     processors:
       batch:
       memory_limiter:
@@ -223,8 +226,8 @@ data:
         metrics:
           receivers: [kubeletstats]
           processors: [memory_limiter, batch]
-          exporters: [otlp]          
-
+          exporters: [otlp]
+          
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -245,7 +248,8 @@ spec:
         app: opentelemetry
         component: otel-agent
     spec:
-      serviceAccountName: otel
+      serviceAccountName: otel-collector-opentelemetry-collector
+      automountServiceAccountToken: true
       containers:
         - command:
             - "/otelcol-contrib"
@@ -269,6 +273,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           volumeMounts:
             - name: otel-collector-config-vol
               mountPath: /conf
@@ -283,7 +291,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: otel
+  name: otel-collector-opentelemetry-collector
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -346,6 +354,16 @@ rules:
       - get
       - list
       - watch
+
+  - apiGroups: [""]
+    resources: ["nodes/stats"]
+    verbs: ["get"]
+
+  # Only needed if you are using extra_metadata_labels or
+  # are collecting the request/limit utilization metrics
+  - apiGroups: [""]
+    resources: ["nodes/proxy"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -358,4 +376,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: otel-collector-opentelemetry-collector
-    namespace: default
+    namespace: monitoring
