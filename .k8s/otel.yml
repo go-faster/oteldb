@@ -192,23 +192,23 @@ data:
           - container
         extra_metadata_labels:
           - container.id
-    hostmetrics:
-      root_path: /host
-      collection_interval: 1s
-      scrapers:
-        cpu:
-        load:
-        memory:
-        network:
-        process:
-        processes:
-        paging:
-    hostmetrics/disks:
-      root_path: /host
-      collection_interval: 30s
-      scrapers:
-        disk:
-        filesystem:
+      hostmetrics:
+        root_path: /host
+        collection_interval: 1s
+        scrapers:
+          cpu:
+          load:
+          memory:
+          network:
+          process:
+          processes:
+          paging:
+      hostmetrics/disks:
+        root_path: /host
+        collection_interval: 30s
+        scrapers:
+          disk:
+          filesystem:
     processors:
       batch:
       memory_limiter:
