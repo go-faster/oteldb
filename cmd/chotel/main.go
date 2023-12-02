@@ -50,6 +50,7 @@ type App struct {
 	clickHouseAddr     string
 	clickHousePassword string
 	clickHouseUser     string
+	clickHouseDB       string
 
 	otlpAddr string
 
@@ -78,6 +79,7 @@ func NewApp(logger *zap.Logger, metrics *app.Metrics) (*App, error) {
 		clickHouseAddr:     "clickhouse:9000",
 		clickHouseUser:     "default",
 		clickHousePassword: "",
+		clickHouseDB:       "default",
 		otlpAddr:           "otelcol:4317",
 	}
 	if v := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); v != "" {
@@ -96,6 +98,9 @@ func NewApp(logger *zap.Logger, metrics *app.Metrics) (*App, error) {
 			if pass, ok := auth.Password(); ok {
 				a.clickHousePassword = pass
 			}
+		}
+		if db := strings.TrimPrefix(u.Path, "/"); db != "" {
+			a.clickHouseDB = db
 		}
 	}
 	{
@@ -131,6 +136,7 @@ func (a *App) setup(ctx context.Context) error {
 		Logger:   a.log.Named("ch"),
 		User:     a.clickHouseUser,
 		Password: a.clickHousePassword,
+		Database: a.clickHouseDB,
 
 		OpenTelemetryInstrumentation: true,
 
@@ -181,6 +187,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		Compression: ch.CompressionZSTD,
 		User:        a.clickHouseUser,
 		Password:    a.clickHousePassword,
+		Database:    a.clickHouseDB,
 
 		OpenTelemetryInstrumentation: true,
 
