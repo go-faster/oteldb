@@ -49,7 +49,7 @@ spec:
             - name: GOMAXPROCS
               value: "4"
             - name: OTEL_METRICS_EXPORTER
-              value: "grpc"
+              value: "otlp"
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.name=go-faster.oteldb"
             - name: OTEL_LOG_LEVEL
@@ -126,7 +126,7 @@ spec:
             - name: GOMAXPROCS
               value: "2"
             - name: OTEL_METRICS_EXPORTER
-              value: "prometheus"
+              value: "otlp"
             - name: OTEL_EXPORTER_PROMETHEUS_PORT
               value: "8090"
             - name: OTEL_EXPORTER_PROMETHEUS_HOST
@@ -183,7 +183,7 @@ spec:
             - name: GOMAXPROCS
               value: "2"
             - name: OTEL_METRICS_EXPORTER
-              value: "prometheus"
+              value: "otlp"
             - name: OTEL_EXPORTER_PROMETHEUS_PORT
               value: "8090"
             - name: OTEL_EXPORTER_PROMETHEUS_HOST
@@ -235,7 +235,7 @@ spec:
             - name: GOMAXPROCS
               value: "2"
             - name: OTEL_METRICS_EXPORTER
-              value: "grpc"
+              value: "otlp"
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.name=go-faster.chotel"
             - name: OTEL_LOG_LEVEL
