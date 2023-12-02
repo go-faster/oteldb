@@ -40,7 +40,7 @@ func TestInjectLogger(t *testing.T) {
 	)
 	h.ServeHTTP(nil, &http.Request{})
 
-	entries := logs.All()
+	entries := logs.FilterLevelExact(zapcore.InfoLevel).All()
 	require.Len(t, entries, 1)
 
 	entry := entries[0]
@@ -64,8 +64,7 @@ func (testOgenRoute) OperationID() string { return "testOgenRoute" }
 func TestLogRequests(t *testing.T) {
 	core, logs := observer.New(zapcore.DebugLevel)
 
-	h := Wrap(
-		&testHandler{},
+	h := Wrap(&testHandler{},
 		InjectLogger(zap.New(core)),
 		LogRequests(MakeRouteFinder(&testOgenServer{})),
 	)
@@ -82,8 +81,8 @@ func TestLogRequests(t *testing.T) {
 		},
 	})
 
-	entries := logs.All()
-	require.Len(t, entries, 4)
+	entries := logs.FilterLevelExact(zapcore.InfoLevel).All()
+	require.Len(t, entries, 2)
 
 	entry := entries[0]
 	require.Equal(t, "Got request", entry.Message)
