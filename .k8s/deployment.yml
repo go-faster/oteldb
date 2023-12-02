@@ -46,16 +46,16 @@ spec:
               name: otlp-http
           resources:
             requests:
-              cpu: "4"
-              memory: 256M
+              cpu: "3"
+              memory: 512Mi
             limits:
-              cpu: "4"
-              memory: 512M
+              cpu: "6"
+              memory: 4Gi
           env:
             - name: GOMEMLIMIT
-              value: "256MiB"
+              value: "4GiB"
             - name: GOMAXPROCS
-              value: "4"
+              value: "6"
             - name: OTEL_METRICS_EXPORTER
               value: "otlp"
             - name: OTEL_RESOURCE_ATTRIBUTES
