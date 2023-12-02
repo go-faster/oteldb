@@ -20,6 +20,14 @@ spec:
       containers:
         - name: oteldb
           image: ghcr.io/go-faster/oteldb:main
+          livenessProbe:
+            tcpSocket:
+              port: 4317
+            initialDelaySeconds: 1
+            periodSeconds: 1
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
           ports:
             - containerPort: 3200
               protocol: TCP
