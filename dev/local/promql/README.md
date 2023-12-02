@@ -1,5 +1,15 @@
 # PromQL Compatibility
 
+To build and install:
+```
+cd ../compliance/promql && go install ./cmd/promql-compliance-tester && cd -
+```
+
+To run with targets in docker-compose:
+```console
+promql-compliance-tester -config-file promql-test-queries.yml -config-file test.local.yml
+```
+
 This check was disabled as being broken on latest prometheus reference:
 ```yaml
 # label_replace fails when there would be duplicated identical output label sets.
