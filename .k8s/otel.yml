@@ -306,6 +306,8 @@ rules:
       - namespaces/status
       - nodes
       - nodes/spec
+      - nodes/stats
+      - nodes/proxy
       - pods
       - pods/status
       - replicationcontrollers
@@ -354,16 +356,6 @@ rules:
       - get
       - list
       - watch
-
-  - apiGroups: [""]
-    resources: ["nodes/stats"]
-    verbs: ["get"]
-
-  # Only needed if you are using extra_metadata_labels or
-  # are collecting the request/limit utilization metrics
-  - apiGroups: [""]
-    resources: ["nodes/proxy"]
-    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
