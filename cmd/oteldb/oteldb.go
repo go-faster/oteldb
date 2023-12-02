@@ -54,7 +54,7 @@ func main() {
 			// and moved to go-faster/sdk.
 			endpoint := os.Getenv("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT")
 			if endpoint == "" {
-				endpoint = "OTEL_EXPORTER_OTLP_ENDPOINT"
+				endpoint = os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 			}
 			if endpoint == "" {
 				endpoint = "localhost:4317"
