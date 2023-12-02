@@ -206,7 +206,7 @@ test_cases:
     should_fail: true
 
     # label_replace fails when there would be duplicated identical output label sets.
-    # !!! HACK: This was disabled because current prometheus !!!
+    # !!! HACK: This was disabled because current prometheus reference implementation does not fail !!!
     # - query: 'label_replace(demo_num_cpus, "instance", "", "", "")'
     #  should_fail: true
 
