@@ -36,7 +36,7 @@ func main() {
 		{
 			// Setting OpenTelemetry/OpenTracing Bridge.
 			// https://github.com/open-telemetry/opentelemetry-go/tree/main/bridge/opentracing#opentelemetryopentracing-bridge
-			otelTracer := metrics.TracerProvider().Tracer("yt")
+			otelTracer := metrics.TracerProvider().Tracer("go-faster/oteldb")
 			bridgeTracer, wrapperTracerProvider := otelBridge.NewTracerPair(otelTracer)
 			opentracing.SetGlobalTracer(bridgeTracer)
 
