@@ -1,0 +1,8 @@
+# promql-compliance-tester -config-file promql-test-queries.yml -config-file test.local.yml
+# for testing locally
+
+reference_target_config:
+  query_url: http://localhost:9091
+
+test_target_config:
+  query_url: http://localhost:9090

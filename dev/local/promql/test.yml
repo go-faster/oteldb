@@ -1,0 +1,7 @@
+# for testing inside docker-compose
+
+reference_target_config:
+  query_url: http://prometheus:9090
+
+test_target_config:
+  query_url: http://oteldb:9090
