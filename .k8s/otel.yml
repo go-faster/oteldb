@@ -22,6 +22,15 @@ data:
           grpc:
             endpoint: ${env:MY_POD_IP}:3500
         use_incoming_timestamp: true
+      k8s_cluster:
+        auth_type: serviceAccount
+        node_conditions_to_report:
+          - Ready
+          - MemoryPressure
+        allocatable_types_to_report:
+          - cpu
+          - memory
+
     processors:
       batch:
       memory_limiter:
@@ -30,6 +39,16 @@ data:
         # 25% of limit up to 2G
         spike_limit_mib: 512
         check_interval: 5s
+      k8sattributes:
+        auth_type: 'serviceAccount'
+        extract:
+          metadata: # extracted from the pod
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.pod.start_time
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.node.name
     extensions:
       zpages: {}
       memory_ballast:
@@ -49,11 +68,15 @@ data:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [memory_limiter, batch]
+          processors: [memory_limiter, batch, k8sattributes]
           exporters: [otlp/tempo, otlp/oteldb]
         logs:
           receivers: [otlp, loki]
-          processors: [memory_limiter, batch]
+          processors: [memory_limiter, batch, k8sattributes]
+          exporters: [otlp/oteldb]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, k8sattributes]
           exporters: [otlp/oteldb]
 ---
 apiVersion: v1
@@ -107,6 +130,7 @@ spec:
         app: opentelemetry
         component: otel-collector
     spec:
+      serviceAccountName: otel
       containers:
       - command:
           - "/otelcol-contrib"
@@ -138,8 +162,6 @@ spec:
         volumeMounts:
         - name: otel-collector-config-vol
           mountPath: /conf
-#        - name: otel-collector-secrets
-#          mountPath: /secrets
       volumes:
         - configMap:
             name: otel-collector
@@ -147,10 +169,193 @@ spec:
               - key: config
                 path: otel-collector-config.yaml
           name: otel-collector-config-vol
-#        - secret:
-#            name: otel-collector-secrets
-#            items:
-#              - key: cert.pem
-#                path: cert.pem
-#              - key: key.pem
-#                path: key.pem
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-agent
+  labels:
+    app: opentelemetry
+    component: otel-collector
+data:
+  config: |
+    receivers:
+      kubeletstats:
+        collection_interval: 10s
+        auth_type: 'serviceAccount'
+        endpoint: '${env:K8S_NODE_NAME}:10250'
+        insecure_skip_verify: true
+        metric_groups:
+          - node
+          - pod
+          - container
+    processors:
+      batch:
+      memory_limiter:
+        # 80% of maximum memory up to 2G
+        limit_mib: 1500
+        # 25% of limit up to 2G
+        spike_limit_mib: 512
+        check_interval: 5s
+      k8sattributes:
+        auth_type: 'serviceAccount'
+        extract:
+          metadata: # extracted from the pod
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.pod.start_time
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.node.name
+    extensions:
+      zpages: {}
+      memory_ballast:
+        # Memory Ballast size should be max 1/3 to 1/2 of memory.
+        size_mib: 683
+    exporters:
+      otlp:
+        endpoint: otel-collector.monitoring.svc.cluster.local:4317
+        tls:
+          insecure: true
+    service:
+      extensions: [zpages, memory_ballast]
+      pipelines:
+        metrics:
+          receivers: [kubeletstats]
+          processors: [memory_limiter, batch]
+          exporters: [otlp]          
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: otel-agent
+  labels:
+    app: opentelemetry
+    component: otel-agent
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry
+      component: otel-agent
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: opentelemetry
+        component: otel-agent
+    spec:
+      serviceAccountName: otel
+      containers:
+        - command:
+            - "/otelcol-contrib"
+            - "--config=/conf/otel-collector-config.yaml"
+          image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest
+          name: otel-agent
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 400Mi
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: otel-collector-config-vol
+              mountPath: /conf
+      volumes:
+        - configMap:
+            name: otel-agent
+            items:
+              - key: config
+                path: otel-collector-config.yaml
+          name: otel-collector-config-vol
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-collector-opentelemetry-collector
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - events
+      - namespaces
+      - namespaces/status
+      - nodes
+      - nodes/spec
+      - pods
+      - pods/status
+      - replicationcontrollers
+      - replicationcontrollers/status
+      - resourcequotas
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-collector-opentelemetry-collector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-collector-opentelemetry-collector
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector-opentelemetry-collector
+    namespace: default
