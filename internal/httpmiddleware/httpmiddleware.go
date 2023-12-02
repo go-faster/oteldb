@@ -7,6 +7,7 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
@@ -53,12 +54,14 @@ func LogRequests(find RouteFinder) Middleware {
 type Metrics interface {
 	TracerProvider() trace.TracerProvider
 	MeterProvider() metric.MeterProvider
+	TextMapPropagator() propagation.TextMapPropagator
 }
 
 // Instrument setups otelhttp.
 func Instrument(serviceName string, find RouteFinder, m Metrics) Middleware {
 	return func(h http.Handler) http.Handler {
 		return otelhttp.NewHandler(h, "",
+			otelhttp.WithPropagators(m.TextMapPropagator()),
 			otelhttp.WithTracerProvider(m.TracerProvider()),
 			otelhttp.WithMeterProvider(m.MeterProvider()),
 			otelhttp.WithServerName(serviceName),

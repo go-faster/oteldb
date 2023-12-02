@@ -2,6 +2,7 @@ package main
 
 import (
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -9,12 +10,14 @@ import (
 type Metrics interface {
 	TracerProvider() trace.TracerProvider
 	MeterProvider() metric.MeterProvider
+	TextMapPropagator() propagation.TextMapPropagator
 }
 
 // MetricsOverride implements Metrics overrider.
 type MetricsOverride struct {
 	tracerProvider trace.TracerProvider
 	meterProvider  metric.MeterProvider
+	propagator     propagation.TextMapPropagator
 }
 
 // NewMetricsOverride initializes a new MetricsOverride from parent Metrics.
@@ -22,7 +25,13 @@ func NewMetricsOverride(m Metrics) *MetricsOverride {
 	return &MetricsOverride{
 		tracerProvider: m.TracerProvider(),
 		meterProvider:  m.MeterProvider(),
+		propagator:     m.TextMapPropagator(),
 	}
+}
+
+// TextMapPropagator returns the propagation.TextMapPropagator.
+func (m *MetricsOverride) TextMapPropagator() propagation.TextMapPropagator {
+	return m.propagator
 }
 
 // TracerProvider returns the trace.TracerProvider.
