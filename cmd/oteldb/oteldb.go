@@ -71,7 +71,7 @@ func main() {
 			if err != nil {
 				return errors.Wrap(err, "get resource")
 			}
-			otelCore := zapotel.New(zap.InfoLevel, res, plogotlp.NewGRPCClient(conn))
+			otelCore := zapotel.New(lg.Level(), res, plogotlp.NewGRPCClient(conn))
 			// Update logger down the stack.
 			lg.Info("Setting up OTLP log exporter")
 			lg = lg.WithOptions(
