@@ -25,17 +25,17 @@ const (
 	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9),
+		timestamp DateTime64(9) CODEC(DoubleDelta),
 
-		mapping Enum8(` + metricMappingDDL + `),
-		value Float64,
+		mapping Enum8(` + metricMappingDDL + `) CODEC(T64),
+		value Float64 CODEC(Gorilla),
 
-		flags	UInt32,
+		flags	    UInt32 CODEC(T64),
 		attributes	String,
 		resource	String
 	)
 	ENGINE = MergeTree()
-	ORDER BY timestamp;`
+	ORDER BY (name, mapping, timestamp);`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -50,7 +50,7 @@ const (
 	histogramsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9),
+		timestamp DateTime64(9) CODEC(DoubleDelta),
 
 		histogram_count UInt64,
 		histogram_sum Nullable(Float64),
@@ -68,7 +68,7 @@ const (
 	expHistogramsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9),
+		timestamp DateTime64(9) CODEC(DoubleDelta),
 
 		exp_histogram_count UInt64,
 		exp_histogram_sum Nullable(Float64),
@@ -90,7 +90,7 @@ const (
 	summariesSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9),
+		timestamp DateTime64(9) CODEC(DoubleDelta),
 
 		summary_count UInt64,
 		summary_sum Float64,
