@@ -12,6 +12,7 @@ import (
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/storage"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -59,7 +60,7 @@ type otelStorage struct {
 	metricsConsumer otelreceiver.MetricsConsumer
 }
 
-func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (otelStorage, error) {
+func setupYT(ctx context.Context, lg *zap.Logger, m *app.Metrics) (otelStorage, error) {
 	cfg := &yt.Config{
 		Logger:                &ytzap.Logger{L: lg.Named("yc")},
 		DisableProxyDiscovery: true,
@@ -71,7 +72,7 @@ func setupYT(ctx context.Context, lg *zap.Logger, m Metrics) (otelStorage, error
 	return setupYTQL(ctx, lg, m, cfg)
 }
 
-func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string, cfg *yt.Config) (otelStorage, error) {
+func setupYQL(ctx context.Context, lg *zap.Logger, m *app.Metrics, clusterName string, cfg *yt.Config) (otelStorage, error) {
 	zctx.From(ctx).Info("Setting up YQL")
 	yc, err := ythttp.NewClient(cfg)
 	if err != nil {
@@ -150,7 +151,7 @@ func setupYQL(ctx context.Context, lg *zap.Logger, m Metrics, clusterName string
 	}, nil
 }
 
-func setupYTQL(ctx context.Context, lg *zap.Logger, m Metrics, cfg *yt.Config) (otelStorage, error) {
+func setupYTQL(ctx context.Context, lg *zap.Logger, m *app.Metrics, cfg *yt.Config) (otelStorage, error) {
 	zctx.From(ctx).Info("Setting up YTQL")
 	yc, err := ythttp.NewClient(cfg)
 	if err != nil {
@@ -213,7 +214,7 @@ func setupCH(
 	ctx context.Context,
 	dsn string,
 	lg *zap.Logger,
-	m Metrics,
+	m *app.Metrics,
 ) (store otelStorage, _ error) {
 	u, err := url.Parse(dsn)
 	if err != nil {

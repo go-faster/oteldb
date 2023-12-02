@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	sdkapp "github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/promql"
 	"go.uber.org/zap"
@@ -35,18 +36,17 @@ type App struct {
 	otelStorage
 
 	lg      *zap.Logger
-	metrics Metrics
+	metrics *sdkapp.Metrics
 }
 
-func newApp(ctx context.Context, metrics Metrics) (_ *App, err error) {
+func newApp(ctx context.Context, m *sdkapp.Metrics) (_ *App, err error) {
 	var (
 		storageType = strings.ToLower(os.Getenv("OTELDB_STORAGE"))
-		m           = NewMetricsOverride(metrics)
 		lg          = zctx.From(ctx)
 		app         = &App{
 			services: map[string]func(context.Context) error{},
 			lg:       lg,
-			metrics:  metrics,
+			metrics:  m,
 		}
 	)
 
