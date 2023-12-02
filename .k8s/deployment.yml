@@ -198,3 +198,58 @@ spec:
               value: "otlp"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: faster
+  name: chotel
+  labels:
+    app: chotel
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: chotel
+  template:
+    metadata:
+      labels:
+        app: chotel
+        service.opentelemetry.io/name: go-faster.chotel
+    spec:
+      containers:
+        - name: oteldb
+          image: ghcr.io/go-faster/oteldb/chotel:main
+          resources:
+            requests:
+              cpu: 500m
+              memory: 128M
+            limits:
+              cpu: 1500m
+              memory: 256M
+          env:
+            - name: GOMEMLIMIT
+              value: "256MiB"
+            - name: GOMAXPROCS
+              value: "2"
+            - name: OTEL_METRICS_EXPORTER
+              value: "grpc"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=go-faster.chotel"
+            - name: OTEL_LOG_LEVEL
+              value: "DEBUG"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+            - name: OTEL_TRACES_EXPORTER
+              value: "otlp"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"
+            - name: CH_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: oteldb
+                  key: CH_DSN

@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -45,8 +47,11 @@ type App struct {
 	log     *zap.Logger
 	metrics *app.Metrics
 
-	clickHouseAddr string
-	otlpAddr       string
+	clickHouseAddr     string
+	clickHousePassword string
+	clickHouseUser     string
+
+	otlpAddr string
 
 	latest time.Time
 
@@ -68,10 +73,30 @@ const DDL = `CREATE TABLE IF NOT EXISTS opentelemetry_span_export
 // NewApp initializes the trace exporter application.
 func NewApp(logger *zap.Logger, metrics *app.Metrics) (*App, error) {
 	a := &App{
-		log:            logger,
-		metrics:        metrics,
-		clickHouseAddr: "clickhouse:9000",
-		otlpAddr:       "otelcol:4317",
+		log:                logger,
+		metrics:            metrics,
+		clickHouseAddr:     "clickhouse:9000",
+		clickHouseUser:     "default",
+		clickHousePassword: "",
+		otlpAddr:           "otelcol:4317",
+	}
+	if v := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); v != "" {
+		a.otlpAddr = strings.TrimPrefix(v, "http://")
+	}
+	if v := os.Getenv("CH_DSN"); v != "" {
+		u, err := url.Parse(v)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse DSN")
+		}
+		a.clickHouseAddr = u.Host
+		if auth := u.User; auth != nil {
+			if user := auth.Username(); user != "" {
+				a.clickHouseUser = user
+			}
+			if pass, ok := auth.Password(); ok {
+				a.clickHousePassword = pass
+			}
+		}
 	}
 	{
 		meter := metrics.MeterProvider().Meter("chotel")
@@ -102,8 +127,10 @@ func (a *App) setup(ctx context.Context) error {
 
 	a.log.Info("Connecting to clickhouse")
 	db, err := ch.Dial(ctx, ch.Options{
-		Address: a.clickHouseAddr,
-		Logger:  a.log.Named("ch"),
+		Address:  a.clickHouseAddr,
+		Logger:   a.log.Named("ch"),
+		User:     a.clickHouseUser,
+		Password: a.clickHousePassword,
 
 		OpenTelemetryInstrumentation: true,
 
@@ -152,6 +179,8 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		Logger:      a.log.Named("logs"),
 		Address:     a.clickHouseAddr,
 		Compression: ch.CompressionZSTD,
+		User:        a.clickHouseUser,
+		Password:    a.clickHousePassword,
 
 		OpenTelemetryInstrumentation: true,
 
