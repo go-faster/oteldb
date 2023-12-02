@@ -23,8 +23,7 @@ CREATE TABLE IF NOT EXISTS %s
 	span_id            FixedString(8),   -- SpanId
 	trace_flags        UInt8,            -- TraceFlags
 
-	-- can be arbitrary json
-	body               String, -- json
+	body               String, -- string or json object
 	attributes         String, -- json object
 	resource           String, -- json object
 
@@ -35,11 +34,12 @@ CREATE TABLE IF NOT EXISTS %s
 	-- for selects by trace_id, span_id to discover service_name, service_namespace and timestamp
 	-- like SELECT service_name, service_namespace, timestamp FROM logs WHERE trace_id = '...'
 	-- probably can be aggregated/grouped
+	-- TODO(ernado): actually use this
 	PROJECTION tracing (SELECT service_namespace, service_name, timestamp, trace_id, span_id ORDER BY trace_id, span_id)
 )
   ENGINE = MergeTree
-  PRIMARY KEY (service_namespace, service_name, toStartOfFiveMinutes(timestamp))
-  ORDER BY (service_namespace, service_name, toStartOfFiveMinutes(timestamp), timestamp);`
+  PRIMARY KEY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp))
+  ORDER BY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp), timestamp);`
 
 	logAttrsSchema = `
 CREATE TABLE IF NOT EXISTS %s
