@@ -4,3 +4,6 @@
 [submodule "dev/local/compliance"]
 	path = dev/local/compliance
 	url = https://github.com/prometheus/compliance.git
+[submodule "dev/local/opentelemetry-collector-contrib"]
+	path = dev/local/opentelemetry-collector-contrib
+	url = https://github.com/open-telemetry/opentelemetry-collector-contrib.git

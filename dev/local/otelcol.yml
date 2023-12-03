@@ -3,7 +3,8 @@ receivers:
     protocols:
       grpc:
       http:
-
+  fluentforward:
+    endpoint: 0.0.0.0:24224
   hostmetrics:
     scrapers:
       cpu:
@@ -50,11 +51,34 @@ receivers:
 
 processors:
   batch:
-    timeout: 500ms
+    timeout: 1s
     send_batch_max_size: 1024
     send_batch_size: 500
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 256
+    spike_limit_mib: 500
+  resourcedetection/system:
+    detectors: [ "system" ]
+    system:
+      hostname_sources: [ "os" ]
 
 exporters:
+  clickhouse:
+    endpoint: tcp://clickhouse:9000
+    database: otel
+    logs_table_name: otel_logs
+    traces_table_name: otel_traces
+    metrics_table_name: otel_metrics
+    ttl_days: 1
+    timeout: 10s
+    sending_queue:
+      queue_size: 10000
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
   otlp:
     endpoint: oteldb:4317
     tls:
@@ -92,20 +116,20 @@ extensions:
   zpages:
 
 service:
-  extensions: [health_check, pprof, zpages]
+  extensions: [health_check, pprof, zpages, health_check]
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, otlp/jaeger, otlp/qryn, otlp/tempo]
+      exporters: [otlp, otlp/jaeger, otlp/qryn, otlp/tempo, clickhouse]
     metrics:
       receivers: [otlp, prometheus, prometheus/compliance, hostmetrics]
       processors: [batch]
-      exporters: [otlp, prometheusremotewrite, otlp/qryn]
+      exporters: [otlp, prometheusremotewrite, otlp/qryn, clickhouse]
     logs:
-      receivers: [otlp]
+      receivers: [otlp, fluentforward]
       processors: [batch]
-      exporters: [otlp, otlp/qryn, loki]
+      exporters: [otlp, otlp/qryn, loki, clickhouse]
   # https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/observability.md#how-we-expose-telemetry
   telemetry:
     metrics:
