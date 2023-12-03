@@ -31,15 +31,14 @@ CREATE TABLE IF NOT EXISTS %s
 	scope_version      LowCardinality(String),
 	scope_attributes   String, -- json object
 
-	-- for selects by trace_id, span_id to discover service_name, service_namespace and timestamp
-	-- like SELECT service_name, service_namespace, timestamp FROM logs WHERE trace_id = '...'
-	-- probably can be aggregated/grouped
-	-- TODO(ernado): actually use this
-	PROJECTION tracing (SELECT service_namespace, service_name, timestamp, trace_id, span_id ORDER BY trace_id, span_id)
+    INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
+    INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1
 )
   ENGINE = MergeTree
   PRIMARY KEY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp))
-  ORDER BY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp), timestamp);`
+  ORDER BY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp), timestamp)
+  SETTINGS index_granularity=8192, ttl_only_drop_parts = 1;
+`
 
 	logAttrsSchema = `
 CREATE TABLE IF NOT EXISTS %s
