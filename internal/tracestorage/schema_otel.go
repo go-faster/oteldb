@@ -64,7 +64,6 @@ func NewSpanFromOTEL(
 
 // FillOTELSpan fills given OpenTelemetry span using span fields.
 func (span Span) FillOTELSpan(s ptrace.Span) {
-	// FIXME(tdakkota): probably, we can just implement YSON (en/de)coder for UUID.
 	s.SetTraceID(pcommon.TraceID(span.TraceID))
 	s.SetSpanID(pcommon.SpanID(span.SpanID))
 	s.TraceState().FromRaw(span.TraceState)

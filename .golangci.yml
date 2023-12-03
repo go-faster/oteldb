@@ -140,12 +140,7 @@ issues:
       text: "method Seek"
 
     # Not gonna use const, does not make any sense.
-    - path: internal/ytstorage
-      linters: [goconst]
-      text: "try_get_int64"
     - path: internal/chstorage
       linters: [goconst]
       text: "int"
-    - path: internal/ytlocal
-      linters: [goconst]
-      text: ".yson"
+
