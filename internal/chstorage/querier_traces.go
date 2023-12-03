@@ -44,7 +44,7 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 
 	var query strings.Builder
 	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
-		SELECT trace_id FROM %#[1]q WHERE true
+		SELECT DISTINCT trace_id FROM %#[1]q WHERE true
 	`, table)
 	for key, value := range tags {
 		if key == "name" {
@@ -68,6 +68,16 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 			query.WriteByte('\n')
 		}
 		query.WriteByte(')')
+	}
+	{
+		// HACK(ernado): start
+		if s := opts.Start; s != 0 {
+			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
+		}
+		if e := opts.End; e != 0 {
+			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
+		}
+		// HACK(ernado): end
 	}
 	query.WriteByte(')')
 
