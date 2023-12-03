@@ -3,6 +3,7 @@ package logqlengine
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -116,6 +117,12 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 }
 
 func (e *Engine) evalExpr(ctx context.Context, expr logql.Expr, params EvalParams) (data lokiapi.QueryResponseData, _ error) {
+	ctx, span := e.tracer.Start(ctx, "evalExpr",
+		trace.WithAttributes(
+			attribute.String("logql.expr", fmt.Sprintf("%T", expr)),
+		),
+	)
+	defer span.End()
 	switch expr := logql.UnparenExpr(expr).(type) {
 	case *logql.LogExpr:
 		streams, err := e.evalLogExpr(ctx, expr, params)

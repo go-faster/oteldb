@@ -1095,9 +1095,9 @@ func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps
 		}
 	}
 	{
-		// Encode "match" parameter.
+		// Encode "match[]" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
-			Name:    "match",
+			Name:    "match[]",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}

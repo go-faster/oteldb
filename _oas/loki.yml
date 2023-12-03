@@ -224,7 +224,7 @@ paths:
           in: query
           schema:
             $ref: "#/components/schemas/PrometheusDuration"
-        - name: match
+        - name: match[]
           in: query
           schema:
             type: array

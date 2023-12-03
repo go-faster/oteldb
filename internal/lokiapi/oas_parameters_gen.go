@@ -1495,7 +1495,7 @@ func unpackSeriesParams(packed middleware.Parameters) (params SeriesParams) {
 	}
 	{
 		key := middleware.ParameterKey{
-			Name: "match",
+			Name: "match[]",
 			In:   "query",
 		}
 		if v, ok := packed[key]; ok {
@@ -1666,10 +1666,10 @@ func decodeSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (para
 			Err:  err,
 		}
 	}
-	// Decode query: match.
+	// Decode query: match[].
 	if err := func() error {
 		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "match",
+			Name:    "match[]",
 			Style:   uri.QueryStyleForm,
 			Explode: true,
 		}
@@ -1704,7 +1704,7 @@ func decodeSeriesParams(args [0]string, argsEscaped bool, r *http.Request) (para
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "match",
+			Name: "match[]",
 			In:   "query",
 			Err:  err,
 		}

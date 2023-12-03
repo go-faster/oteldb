@@ -866,7 +866,7 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 					In:   "query",
 				}: params.Since,
 				{
-					Name: "match",
+					Name: "match[]",
 					In:   "query",
 				}: params.Match,
 			},

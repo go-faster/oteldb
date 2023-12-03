@@ -33,7 +33,8 @@ type LokiAPI struct {
 //
 // GET /loki/api/v1/index/stats
 func (h *LokiAPI) IndexStats(context.Context, lokiapi.IndexStatsParams) (*lokiapi.IndexStats, error) {
-	return nil, ht.ErrNotImplemented
+	// No stats for now.
+	return &lokiapi.IndexStats{}, nil
 }
 
 // NewLokiAPI creates new LokiAPI.
@@ -210,8 +211,42 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 // Get series.
 //
 // GET /loki/api/v1/series
-func (h *LokiAPI) Series(context.Context, lokiapi.SeriesParams) (*lokiapi.Maps, error) {
-	return nil, ht.ErrNotImplemented
+func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lokiapi.Maps, error) {
+	start, end, err := parseTimeRange(
+		time.Now(),
+		params.Start,
+		params.End,
+		params.Since,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse time range")
+	}
+	out := make([]lokiapi.MapsDataItem, 0, len(params.Match))
+	zctx.From(ctx).Info("Series", zap.Int("match", len(params.Match)))
+	for _, q := range params.Match {
+		// TODO(ernado): offload
+		data, err := h.engine.Eval(ctx, q, logqlengine.EvalParams{
+			Start:     otelstorage.NewTimestampFromTime(start),
+			End:       otelstorage.NewTimestampFromTime(end),
+			Direction: string(lokiapi.DirectionBackward),
+			Limit:     1_000,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "eval")
+		}
+		if streams, ok := data.GetStreamsResult(); ok {
+			for _, stream := range streams.Result {
+				if labels, ok := stream.Stream.Get(); ok {
+					// TODO(ernado): should be MapsDataItem 1:1 match?
+					out = append(out, lokiapi.MapsDataItem(labels))
+				}
+			}
+		}
+	}
+	return &lokiapi.Maps{
+		Status: "success",
+		Data:   out,
+	}, nil
 }
 
 // NewError creates *ErrorStatusCode from error returned by handler.
