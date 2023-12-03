@@ -3,11 +3,6 @@ ignore:
   - "**/*_enum.go"
   - "*_enum.go"
   - "**/*_gen.go"
-  # Skip YTsaurus-related code for now.
-  - "internal/metricsharding/"
-  - "internal/ytlocal/"
-  - "internal/ytstorage/"
-  - "internal/yqlclient/"
   # Skip non-production code.
   - "internal/lokiproxy/"
   - "internal/pyroproxy/"

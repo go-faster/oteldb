@@ -24,22 +24,6 @@ tasks:
     cmds:
       - go build -o ./oteldb ./cmd/oteldb
 
-  yt-metric-bench:local:
-    desc: Build and push the yt-metric-bench image
-    env:
-      KO_DOCKER_REPO: "ghcr.io/go-faster/oteldb"
-      KO_DEFAULTBASEIMAGE: "ubuntu:latest"
-    cmds:
-      - ko build -B --local ./cmd/yt-metric-bench
-
-  yt-metric-bench:push:
-    desc: Build and push the yt-metric-bench image
-    env:
-      KO_DOCKER_REPO: "ghcr.io/go-faster/oteldb"
-      KO_DEFAULTBASEIMAGE: "ubuntu:latest"
-    cmds:
-      - ko build -B ./cmd/yt-metric-bench
-
   test:
     desc: Run tests
     env:

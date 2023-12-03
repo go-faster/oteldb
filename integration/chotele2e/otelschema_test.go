@@ -2,12 +2,14 @@ package chotele2e
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/jx"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.uber.org/zap/zaptest"
@@ -30,7 +32,8 @@ func TestSchema(t *testing.T) {
 	require.NotEmpty(t, table.Columns)
 
 	var ddl strings.Builder
-	ddl.WriteString("CREATE TABLE columns (")
+	tableName := fmt.Sprintf("t%x", uuid.New().String()[:3])
+	ddl.WriteString(fmt.Sprintf(`CREATE TABLE %s (`, tableName))
 	for _, c := range table.Columns {
 		ddl.WriteString(c.Name)
 		ddl.WriteString(" ")
@@ -59,7 +62,7 @@ func TestSchema(t *testing.T) {
 	t.Log(data)
 
 	require.NoError(t, c.Do(ctx, ch.Query{
-		Body:  input.Into("columns"),
+		Body:  input.Into(tableName),
 		Input: input,
 	}))
 }

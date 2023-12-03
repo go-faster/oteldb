@@ -13,10 +13,6 @@ The OpenTelemetry-compatible telemetry aggregation, storage and processing.
 
 The oteldb is stateless and uses external storage systems for data persistence, processing and aggregation.
 
-We focus on the following storage systems:
-- [ClickHouse](https://clickhouse.com/)
-- [YTsaurus](https://ytsaurus.tech/)
-
 Currently, we focus on ClickHouse for realtime queries on hot/warm data.
 
 ## Query
@@ -30,13 +26,7 @@ Supported query languages:
 
 Setups Grafana, oteldb, storage and trace generator.
 
-#### YTSaurus storage
-
-```shell
-docker compose -f dev/local/ytsaurus/docker-compose.yml up -d
-```
-
-#### Clickhouse storage
+#### Clickhouse
 
 ```shell
 docker compose -f dev/local/ch/docker-compose.yml up -d

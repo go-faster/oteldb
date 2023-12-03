@@ -57,12 +57,6 @@ func newApp(ctx context.Context, m *sdkapp.Metrics) (_ *App, err error) {
 			return nil, errors.Wrapf(err, "create storage %q", storageType)
 		}
 		app.otelStorage = store
-	case "yt", "":
-		store, err := setupYT(ctx, lg, m)
-		if err != nil {
-			return nil, errors.Wrapf(err, "create storage %q", storageType)
-		}
-		app.otelStorage = store
 	default:
 		return nil, errors.Errorf("unknown storage %q", storageType)
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -13,41 +12,15 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
-	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/storage"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	ytzap "go.ytsaurus.tech/library/go/core/log/zap"
-	"go.ytsaurus.tech/yt/go/migrate"
-	"go.ytsaurus.tech/yt/go/ypath"
-	"go.ytsaurus.tech/yt/go/yt"
-	"go.ytsaurus.tech/yt/go/yt/ythttp"
 
 	"github.com/go-faster/oteldb/internal/chstorage"
-	"github.com/go-faster/oteldb/internal/iterators"
-	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
-	"github.com/go-faster/oteldb/internal/metricsharding"
 	"github.com/go-faster/oteldb/internal/otelreceiver"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
-	"github.com/go-faster/oteldb/internal/yqlclient"
-	"github.com/go-faster/oteldb/internal/ytstorage"
 )
-
-type combinedYTQuerier struct {
-	yql *ytstorage.YQLQuerier
-	*ytstorage.YTQLQuerier
-}
-
-func (q *combinedYTQuerier) Capabilities() (caps logqlengine.QuerierCapabilities) {
-	return q.yql.Capabilities()
-}
-
-func (q *combinedYTQuerier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (_ iterators.Iterator[logstorage.Record], rerr error) {
-	return q.yql.SelectLogs(ctx, start, end, params)
-}
 
 type otelStorage struct {
 	logQuerier  logQuerier
@@ -58,156 +31,6 @@ type otelStorage struct {
 
 	metricsQuerier  storage.Queryable
 	metricsConsumer otelreceiver.MetricsConsumer
-}
-
-func setupYT(ctx context.Context, lg *zap.Logger, m *app.Metrics) (otelStorage, error) {
-	cfg := &yt.Config{
-		Logger:                &ytzap.Logger{L: lg.Named("yc")},
-		DisableProxyDiscovery: true,
-	}
-	clusterName, useYQL := os.LookupEnv("YT_YQL_CLUSTER")
-	if useYQL {
-		return setupYQL(ctx, lg, m, clusterName, cfg)
-	}
-	return setupYTQL(ctx, lg, m, cfg)
-}
-
-func setupYQL(ctx context.Context, lg *zap.Logger, m *app.Metrics, clusterName string, cfg *yt.Config) (otelStorage, error) {
-	zctx.From(ctx).Info("Setting up YQL")
-	yc, err := ythttp.NewClient(cfg)
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "yt")
-	}
-
-	proxy, err := cfg.GetProxy()
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "get proxy addr")
-	}
-
-	yqlClient, err := yqlclient.NewClient("http://"+proxy, yqlclient.ClientOptions{
-		Token: cfg.GetToken(),
-		Client: &http.Client{
-			Transport: otelhttp.NewTransport(
-				http.DefaultTransport,
-				otelhttp.WithTracerProvider(m.TracerProvider()),
-				otelhttp.WithMeterProvider(m.MeterProvider()),
-			),
-		},
-		TracerProvider: m.TracerProvider(),
-		MeterProvider:  m.MeterProvider(),
-	})
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "create YQL client")
-	}
-
-	tables := ytstorage.NewStaticTables(ypath.Path("//oteldb"))
-	if err := migrateYT(ctx, yc, lg, tables); err != nil {
-		return otelStorage{}, errors.Wrap(err, "migrate")
-	}
-
-	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{
-		Tables:         tables,
-		MeterProvider:  m.MeterProvider(),
-		TracerProvider: m.TracerProvider(),
-	})
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "create inserter")
-	}
-
-	engineQuerier, err := ytstorage.NewYQLQuerier(yqlClient, ytstorage.YQLQuerierOptions{
-		Tables:         tables,
-		ClusterName:    clusterName,
-		MeterProvider:  m.MeterProvider(),
-		TracerProvider: m.TracerProvider(),
-	})
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "create engine querier")
-	}
-
-	labelQuerier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{
-		Tables:         tables,
-		MeterProvider:  m.MeterProvider(),
-		TracerProvider: m.TracerProvider(),
-	})
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "create label querier")
-	}
-
-	querier := &combinedYTQuerier{
-		yql:         engineQuerier,
-		YTQLQuerier: labelQuerier,
-	}
-
-	shardOpts := metricsharding.ShardingOptions{}
-	metricShard := metricsharding.NewSharder(yc, yqlClient, shardOpts)
-	metricConsumer := metricsharding.NewConsumer(yc, shardOpts)
-	return otelStorage{
-		logQuerier:      querier,
-		logInserter:     inserter,
-		traceQuerier:    querier,
-		traceInserter:   inserter,
-		metricsQuerier:  metricShard,
-		metricsConsumer: metricConsumer,
-	}, nil
-}
-
-func setupYTQL(ctx context.Context, lg *zap.Logger, m *app.Metrics, cfg *yt.Config) (otelStorage, error) {
-	zctx.From(ctx).Info("Setting up YTQL")
-	yc, err := ythttp.NewClient(cfg)
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "yt")
-	}
-
-	tables := ytstorage.NewTables(ypath.Path("//oteldb"))
-	if err := migrateYT(ctx, yc, lg, tables); err != nil {
-		return otelStorage{}, errors.Wrap(err, "migrate")
-	}
-
-	inserter, err := ytstorage.NewInserter(yc, ytstorage.InserterOptions{
-		Tables:         tables,
-		MeterProvider:  m.MeterProvider(),
-		TracerProvider: m.TracerProvider(),
-	})
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "create inserter")
-	}
-
-	querier, err := ytstorage.NewYTQLQuerier(yc, ytstorage.YTQLQuerierOptions{
-		Tables:         tables,
-		MeterProvider:  m.MeterProvider(),
-		TracerProvider: m.TracerProvider(),
-	})
-	if err != nil {
-		return otelStorage{}, errors.Wrap(err, "create querier")
-	}
-
-	return otelStorage{
-		logQuerier:      querier,
-		logInserter:     inserter,
-		traceQuerier:    querier,
-		traceInserter:   inserter,
-		metricsQuerier:  nil,
-		metricsConsumer: nil,
-	}, nil
-}
-
-func migrateYT(ctx context.Context, yc yt.Client, lg *zap.Logger, tables ytstorage.Tables) error {
-	migrateBackoff := backoff.NewExponentialBackOff()
-	migrateBackoff.InitialInterval = 2 * time.Second
-	migrateBackoff.MaxElapsedTime = time.Minute
-
-	return backoff.Retry(func() error {
-		err := tables.Migrate(ctx, yc, migrate.OnConflictTryAlter(ctx, yc))
-		if err != nil {
-			lg.Error("Migration failed", zap.Error(err))
-			// FIXME(tdakkota): client does not return a proper error to check
-			//  the error message and there is no specific ErrorCode for this error.
-			if !strings.Contains(err.Error(), "no healthy tablet cells") {
-				return backoff.Permanent(err)
-			}
-		}
-		return err
-	}, migrateBackoff)
 }
 
 func setupCH(

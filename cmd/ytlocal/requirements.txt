@@ -1,3 +1,0 @@
-ytsaurus-local
-ytsaurus-client
-ytsaurus-yson

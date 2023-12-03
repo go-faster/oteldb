@@ -4,11 +4,8 @@ import (
 	"encoding/binary"
 	"strings"
 
-	"go.opentelemetry.io/collector/pdata/pcommon"
-	"go.ytsaurus.tech/yt/go/yson"
-
-	"github.com/go-faster/errors"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 )
 
 // TraceID is OpenTelemetry trace ID.
@@ -43,11 +40,6 @@ func ParseTraceID(input string) (_ TraceID, err error) {
 	return TraceID(id), err
 }
 
-var (
-	_ yson.StreamMarshaler   = TraceID{}
-	_ yson.StreamUnmarshaler = (*TraceID)(nil)
-)
-
 // IsEmpty returns true if span ID is empty.
 func (id TraceID) IsEmpty() bool {
 	return pcommon.TraceID(id).IsEmpty()
@@ -65,38 +57,8 @@ func (id TraceID) Hex() string {
 	return sb.String()
 }
 
-// MarshalYSON implemenets yson.StreamMarshaler.
-func (id TraceID) MarshalYSON(w *yson.Writer) error {
-	w.Bytes(id[:])
-	return nil
-}
-
-// UnmarshalYSON implemenets yson.StreamUnmarshaler.
-func (id *TraceID) UnmarshalYSON(r *yson.Reader) error {
-	if id == nil {
-		return errors.Errorf("can't unmarshal to %#v", id)
-	}
-	if err := consumeYsonLiteral(r, yson.TypeString); err != nil {
-		return err
-	}
-	data := r.Bytes()
-
-	const expectedLen = len(TraceID{})
-	if got := len(data); expectedLen != got {
-		return errors.Errorf("expected %d bytes, got %d", expectedLen, got)
-	}
-
-	copy(id[:], data)
-	return nil
-}
-
 // SpanID is OpenTelemetry span ID.
 type SpanID [8]byte
-
-var (
-	_ yson.StreamMarshaler   = SpanID{}
-	_ yson.StreamUnmarshaler = (*SpanID)(nil)
-)
 
 // SpanIDFromUint64 creates new SpanID from uint64.
 func SpanIDFromUint64(v uint64) (r SpanID) {
@@ -124,35 +86,4 @@ func (id SpanID) Hex() string {
 		sb.WriteByte(hextable[c&0x0f])
 	}
 	return sb.String()
-}
-
-// MarshalYSON implemenets yson.StreamMarshaler.
-func (id SpanID) MarshalYSON(w *yson.Writer) error {
-	if id.IsEmpty() {
-		w.Entity()
-	} else {
-		w.Uint64(id.AsUint64())
-	}
-	return nil
-}
-
-// UnmarshalYSON implemenets yson.StreamUnmarshaler.
-func (id *SpanID) UnmarshalYSON(r *yson.Reader) error {
-	if id == nil {
-		return errors.Errorf("can't unmarshal to %#v", id)
-	}
-	if err := ysonNext(r, yson.EventLiteral, false); err != nil {
-		return err
-	}
-	switch got := r.Type(); got {
-	case yson.TypeEntity:
-		// It's null
-		*id = SpanID{}
-		return nil
-	case yson.TypeUint64:
-		*id = SpanIDFromUint64(r.Uint64())
-		return nil
-	default:
-		return errors.Errorf("expected %s or %s, got %s", yson.TypeEntity, yson.TypeUint64, got)
-	}
 }
