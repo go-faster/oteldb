@@ -42,9 +42,6 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 		span.End()
 	}()
 
-	// HACK(ernado): another one prevention from full-scan
-	const defaultLimit = 1_000
-
 	var query strings.Builder
 	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
 		SELECT DISTINCT trace_id FROM %#[1]q WHERE true
@@ -72,17 +69,6 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 		}
 		query.WriteByte(')')
 	}
-	{
-		// HACK(ernado): start
-		if s := opts.Start; s != 0 {
-			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
-		}
-		if e := opts.End; e != 0 {
-			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
-		}
-		fmt.Fprintf(&query, " LIMIT %d", defaultLimit)
-		// HACK(ernado): end
-	}
 	query.WriteByte(')')
 
 	if s := opts.Start; s != 0 {
@@ -96,11 +82,6 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 	}
 	if d := opts.MaxDuration; d != 0 {
 		fmt.Fprintf(&query, " AND (toUnixTimestamp64Nano(end) - toUnixTimestamp64Nano(start)) <= %d", d)
-	}
-	{
-		// HACK(ernado): start
-		fmt.Fprintf(&query, " LIMIT %d", defaultLimit)
-		// HACK(ernado): end
 	}
 	return q.querySpans(ctx, query.String())
 }
@@ -407,20 +388,6 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 			}
 			query.WriteString("\n)")
 		}
-	}
-	{
-		// HACK(ernado): start
-		// Limiting to prevent fullscans.
-		if s := params.Start; s != 0 {
-			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
-		}
-		if e := params.End; e != 0 {
-			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
-		}
-		if params.Limit > 0 {
-			fmt.Fprintf(&query, " LIMIT %d", params.Limit)
-		}
-		// HACK(ernado): end
 	}
 	query.WriteString("\n)")
 	if s := params.Start; s != 0 {
