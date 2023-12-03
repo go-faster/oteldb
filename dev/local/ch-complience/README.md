@@ -1,4 +1,8 @@
-# PromQL Compatibility
+# PromQL Compatibility testing
+
+```
+cd ../promql
+```
 
 To build and install:
 ```
