@@ -51,6 +51,7 @@ datasources:
 
   - name: ClickHouse
     type: grafana-clickhouse-datasource
+    uid: clickhouse
     jsonData:
       port: 9000
       server: clickhouse
