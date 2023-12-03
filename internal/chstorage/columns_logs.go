@@ -5,6 +5,7 @@ import (
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -83,13 +84,13 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			}
 			v := m.AsMap()
 			if s := c.serviceInstanceID.Row(i); s != "" {
-				v.PutStr("service.instance.id", s)
+				v.PutStr(string(semconv.ServiceInstanceIDKey), s)
 			}
 			if s := c.serviceName.Row(i); s != "" {
-				v.PutStr("service.name", s)
+				v.PutStr(string(semconv.ServiceNameKey), s)
 			}
 			if s := c.serviceNamespace.Row(i); s != "" {
-				v.PutStr("service.namespace", s)
+				v.PutStr(string(semconv.ServiceNamespaceKey), s)
 			}
 			r.ResourceAttrs = otelstorage.Attrs(v)
 		}
@@ -119,9 +120,9 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 func (c *logColumns) AddRow(r logstorage.Record) {
 	{
 		m := r.ResourceAttrs.AsMap()
-		setStrOrEmpty(c.serviceInstanceID, m, "service.instance.id")
-		setStrOrEmpty(c.serviceName, m, "service.name")
-		setStrOrEmpty(c.serviceNamespace, m, "service.namespace")
+		setStrOrEmpty(c.serviceInstanceID, m, string(semconv.ServiceInstanceIDKey))
+		setStrOrEmpty(c.serviceName, m, string(semconv.ServiceNameKey))
+		setStrOrEmpty(c.serviceNamespace, m, string(semconv.ServiceNamespaceKey))
 	}
 	c.timestamp.Append(r.Timestamp.AsTime())
 
