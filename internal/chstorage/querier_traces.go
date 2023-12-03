@@ -42,7 +42,7 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 		span.End()
 	}()
 
-	// HACK(ernado): another one preveintion from full-scan
+	// HACK(ernado): another one prevention from full-scan
 	const defaultLimit = 1_000
 
 	var query strings.Builder
