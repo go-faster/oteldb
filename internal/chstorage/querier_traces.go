@@ -25,7 +25,7 @@ import (
 func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (_ iterators.Iterator[tracestorage.Span], rerr error) {
 	table := q.tables.Spans
 
-	ctx, span := q.tracer.Start(ctx, "TagNames",
+	ctx, span := q.tracer.Start(ctx, "SearchTags",
 		trace.WithAttributes(
 			attribute.Int("chstorage.tags_count", len(tags)),
 			attribute.Int64("chstorage.start_range", int64(opts.Start)),
@@ -268,7 +268,7 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 	)
 
 	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
-		SELECT trace_id FROM %#[1]q WHERE true
+		SELECT DISTINCT trace_id FROM %#[1]q WHERE true
 	`, table)
 
 	var (
