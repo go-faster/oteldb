@@ -61,6 +61,7 @@ func (e *exporter) With(fields []zapcore.Field) zapcore.Core {
 }
 
 func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
+	// https://github.com/open-telemetry/oteps/blob/main/text/logs/0097-log-data-model.md#zap
 	var (
 		ld = plog.NewLogs()
 		rl = ld.ResourceLogs().AppendEmpty()
@@ -110,6 +111,15 @@ func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
 	lg.SetObservedTimestamp(pcommon.NewTimestampFromTime(ent.Time))
 	{
 		a := lg.Attributes()
+		if ent.Caller.Defined {
+			a.PutStr("caller", ent.Caller.TrimmedPath())
+		}
+		if ent.Stack != "" {
+			a.PutStr("stack", ent.Stack)
+		}
+		if ent.LoggerName != "" {
+			a.PutStr("logger", ent.LoggerName)
+		}
 		var skipped uint32
 		for _, f := range fields {
 			k := f.Key
