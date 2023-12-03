@@ -389,6 +389,20 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 			query.WriteString("\n)")
 		}
 	}
+	{
+		// HACK(ernado): start
+		// Limiting to prevent fullscans.
+		if s := params.Start; s != 0 {
+			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
+		}
+		if e := params.End; e != 0 {
+			fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
+		}
+		if params.Limit > 0 {
+			fmt.Fprintf(&query, " LIMIT %d", params.Limit)
+		}
+		// HACK(ernado): end
+	}
 	query.WriteString("\n)")
 	if s := params.Start; s != 0 {
 		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
@@ -396,7 +410,6 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 	if e := params.End; e != 0 {
 		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
 	}
-
 	span.SetAttributes(
 		attribute.Int("chstorage.unsupported_span_matchers", dropped),
 		attribute.String("chstorage.table", table),

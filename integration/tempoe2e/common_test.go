@@ -387,7 +387,8 @@ func runTest(
 
 					a := require.New(t)
 					r, err := c.Search(ctx, tempoapi.SearchParams{
-						Q: tempoapi.NewOptString(tt.query),
+						Q:     tempoapi.NewOptString(tt.query),
+						Limit: tempoapi.NewOptInt(1_000),
 					})
 					a.NoError(err)
 
