@@ -34,7 +34,7 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 	}
 	input := c.Input()
 	return i.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   input.Into(table),
 		Input:  input,
 	})
@@ -75,7 +75,7 @@ func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]str
 	}
 
 	return i.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   input.Into(table),
 		Input:  input,
 	})

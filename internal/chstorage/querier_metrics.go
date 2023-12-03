@@ -81,7 +81,7 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 
 	var column proto.ColStr
 	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
 		Result: proto.Results{
 			{Name: "value", Data: &column},
@@ -125,7 +125,7 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 
 	column := new(proto.ColStr).LowCardinality()
 	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
 		Result: proto.Results{
 			{Name: "name", Data: column},
@@ -326,7 +326,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 		c   = newPointColumns()
 	)
 	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query,
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
@@ -396,7 +396,7 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 		c   = newExpHistogramColumns()
 	)
 	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query,
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {

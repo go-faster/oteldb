@@ -72,7 +72,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 
 			input := table.columns.Input()
 			if err := client.Do(ctx, ch.Query{
-				Logger: zctx.From(ctx),
+				Logger: zctx.From(ctx).Named("ch"),
 				Body:   input.Into(table.name),
 				Input:  input,
 			}); err != nil {

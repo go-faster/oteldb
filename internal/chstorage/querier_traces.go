@@ -104,7 +104,7 @@ func (q *Querier) TagNames(ctx context.Context) (r []string, rerr error) {
 
 	data := new(proto.ColStr).LowCardinality()
 	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   fmt.Sprintf("SELECT DISTINCT name FROM %#q", table),
 		Result: proto.ResultColumn{
 			Name: "name",
@@ -145,7 +145,7 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (_ iterators.It
 	)
 
 	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   fmt.Sprintf("SELECT DISTINCT value, value_type FROM %#q WHERE name = %s", table, singleQuoted(tagName)),
 		Result: proto.Results{
 			{Name: "value", Data: &value},
@@ -447,7 +447,7 @@ func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Itera
 
 	var r []tracestorage.Span
 	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query,
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) (err error) {

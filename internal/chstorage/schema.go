@@ -104,7 +104,7 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{t.LogAttrs, logAttrsSchema},
 	} {
 		if err := c.Do(ctx, ch.Query{
-			Logger: zctx.From(ctx),
+			Logger: zctx.From(ctx).Named("ch"),
 			Body:   fmt.Sprintf(s.query, s.name),
 		}); err != nil {
 			return errors.Wrapf(err, "create %q", s.name)

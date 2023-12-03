@@ -39,7 +39,7 @@ func (i *Inserter) InsertLogLabels(ctx context.Context, set map[logstorage.Label
 		attrs.AddRow(name, label.Name)
 	}
 	if err := i.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   attrs.Input().Into(table),
 		Input:  attrs.Input(),
 	}); err != nil {
@@ -69,7 +69,7 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 	i.mapRecords(logs, records)
 
 	if err := i.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   logs.Input().Into(table),
 		Input:  logs.Input(),
 	}); err != nil {
@@ -83,7 +83,7 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 		attrs.AddAttrs(record.ScopeAttrs)
 	}
 	if err := i.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx),
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   attrs.Input().Into(i.tables.LogAttrs),
 		Input:  attrs.Input(),
 	}); err != nil {
