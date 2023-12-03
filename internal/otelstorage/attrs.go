@@ -11,7 +11,7 @@ func KeyToLabel(key string) string {
 	return strings.ReplaceAll(key, ".", "_")
 }
 
-// Attrs is a YSON wrapper for attributes.
+// Attrs wraps attributes.
 type Attrs pcommon.Map
 
 // AsMap returns Attrs as [pcommon.Map].
