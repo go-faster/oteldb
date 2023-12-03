@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -393,7 +394,28 @@ func runTest(
 					for _, metadata := range r.Traces {
 						validateMetadata(a, metadata, tt.matcherSet)
 					}
-					a.Len(r.Traces, len(tt.matcherSet))
+					assert.Equal(t, len(tt.matcherSet), len(r.Traces), "matcher set length")
+					for traceID, v := range tt.matcherSet {
+						for spanID := range v {
+							found := false
+							for _, metadata := range r.Traces {
+								if metadata.TraceID != traceID.String() {
+									continue
+								}
+								for _, gotSpan := range metadata.SpanSet.Value.Spans {
+									if gotSpan.SpanID == spanID.String() {
+										found = true
+										break
+									}
+								}
+							}
+							if found {
+								t.Logf("[%s-%s] ok", traceID, spanID)
+							} else {
+								t.Logf("[%s-%s] not found", traceID, spanID)
+							}
+						}
+					}
 
 					// Ensure that local in-memory engine gives the same result.
 					r2, err := set.Engine.Eval(ctx, tt.query, traceqlengine.EvalParams{Limit: 200})
@@ -402,7 +424,27 @@ func runTest(
 					for _, metadata := range r2.Traces {
 						validateMetadata(a, metadata, tt.matcherSet)
 					}
-					a.Len(r2.Traces, len(tt.matcherSet))
+					assert.Equal(t, len(r2.Traces), len(r.Traces), "in-memory engine length")
+
+					// Log difference.
+					inMemory := map[string]struct{}{}
+					for _, metadata := range r2.Traces {
+						inMemory[metadata.TraceID] = struct{}{}
+					}
+					got := map[string]struct{}{}
+					for _, metadata := range r.Traces {
+						got[metadata.TraceID] = struct{}{}
+						if _, ok := inMemory[metadata.TraceID]; ok {
+							continue
+						}
+						t.Logf("[%q]: unexpexted", metadata.TraceID)
+					}
+					for _, metadata := range r2.Traces {
+						if _, ok := got[metadata.TraceID]; ok {
+							continue
+						}
+						t.Logf("[%q]: missing", metadata.TraceID)
+					}
 				})
 			}
 		})
