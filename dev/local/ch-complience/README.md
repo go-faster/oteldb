@@ -1,12 +1,9 @@
 # PromQL Compatibility testing
 
-```
-cd ../promql
-```
 
 To build and install:
 ```
-cd ../compliance/promql && go install ./cmd/promql-compliance-tester && cd -
+cd ./compliance/promql && go install ./cmd/promql-compliance-tester && cd -
 ```
 
 To run with targets in docker-compose:

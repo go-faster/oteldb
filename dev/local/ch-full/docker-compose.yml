@@ -213,7 +213,7 @@ services:
   # Telemetry generator
   gen-traces:
     build:
-      context: ../opentelemetry-collector-contrib/cmd/telemetrygen/
+      context: ./opentelemetry-collector-contrib/cmd/telemetrygen/
     command:
       - traces
       - --otlp-endpoint=otelcol:4317
@@ -223,7 +223,7 @@ services:
     depends_on: [otelcol]
   gen-logs:
     build:
-      context: ../opentelemetry-collector-contrib/cmd/telemetrygen/
+      context: ./opentelemetry-collector-contrib/cmd/telemetrygen/
     command:
       - logs
       - --otlp-endpoint=otelcol:4317

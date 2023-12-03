@@ -1,9 +1,9 @@
 [submodule "internal/otelschema/_testdata/semantic-conventions"]
 	path = internal/otelschema/_testdata/semantic-conventions
 	url = https://github.com/open-telemetry/semantic-conventions.git
-[submodule "dev/local/compliance"]
-	path = dev/local/compliance
+[submodule "dev/local/ch-complience/compliance"]
+	path = dev/local/ch-complience/compliance
 	url = https://github.com/prometheus/compliance.git
-[submodule "dev/local/opentelemetry-collector-contrib"]
-	path = dev/local/opentelemetry-collector-contrib
+[submodule "dev/local/ch-full/opentelemetry-collector-contrib"]
+	path = dev/local/ch-full/opentelemetry-collector-contrib
 	url = https://github.com/open-telemetry/opentelemetry-collector-contrib.git
