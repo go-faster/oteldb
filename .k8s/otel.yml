@@ -25,6 +25,7 @@ data:
           - memory
     processors:
       probabilistic_sampler:
+        hash_seed: 10
         sampling_percentage: 5
       batch:
         timeout: 5s
@@ -171,7 +172,7 @@ spec:
       component: otel-collector
   minReadySeconds: 5
   progressDeadlineSeconds: 120
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
