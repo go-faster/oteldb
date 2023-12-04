@@ -64,6 +64,8 @@ data:
             - from: connection
     extensions:
       zpages: { }
+      health_check:
+        endpoint: "${env:MY_POD_IP}:13133"
       memory_ballast:
         # Memory Ballast size should be max 1/3 to 1/2 of memory.
         size_mib: 683
@@ -84,7 +86,7 @@ data:
           level: "info"
           encoding: "json"
           disable_stacktrace: true
-      extensions: [ zpages, memory_ballast ]
+      extensions: [ zpages, memory_ballast, health_check ]
       pipelines:
         traces:
           receivers: [ otlp ]
@@ -165,15 +167,29 @@ spec:
           requests:
             cpu: 200m
             memory: 400Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: health-check
         ports:
-        - containerPort: 3500 # Default endpoint for Loki gRPC receiver.
-        - containerPort: 3600 # Default endpoint for Loki HTTP receiver.
-        - containerPort: 55679 # Default endpoint for ZPages.
-        - containerPort: 4317 # Default endpoint for OpenTelemetry receiver.
-        - containerPort: 14250 # Default endpoint for Jaeger gRPC receiver.
-        - containerPort: 14268 # Default endpoint for Jaeger HTTP receiver.
-        - containerPort: 9411 # Default endpoint for Zipkin receiver.
-        - containerPort: 8888  # Default endpoint for querying metrics.
+        - containerPort: 3500
+          name: "loki-grpc"
+        - containerPort: 3600
+          name: "loki-http"
+        - containerPort: 55679
+          name: "zpages"
+        - containerPort: 4317
+          name: "otlp-grpc"
+        - containerPort: 14250
+          name: "jaeger-thrift-grpc"
+        - containerPort: 14268
+          name: "jaeger-http"
+        - containerPort: 9411
+          name: "zipkin"
+        - containerPort: 8888
+          name: "metrics"
+        - containerPort: 13133
+          name: "health-check"
         env:
           - name: MY_POD_IP
             valueFrom:
@@ -328,6 +344,8 @@ data:
             - k8s.deployment.name
             - k8s.node.name
     extensions:
+      health_check:
+        endpoint: "${env:MY_POD_IP}:13133"
       zpages: {}
       memory_ballast:
         # Memory Ballast size should be max 1/3 to 1/2 of memory.
@@ -343,7 +361,7 @@ data:
           level: "info"
           encoding: "json"
           disable_stacktrace: true
-      extensions: [zpages, memory_ballast]
+      extensions: [zpages, memory_ballast, health_check]
       pipelines:
         metrics:
           receivers: [kubeletstats, hostmetrics, hostmetrics/disks]
@@ -411,6 +429,17 @@ spec:
             - "--config=/conf/otel-collector-config.yaml"
           image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest
           name: otel-agent
+          livenessProbe:
+            httpGet:
+              path: /
+              port: health-check
+          ports:
+            - containerPort: 55679
+              name: "zpages"
+            - containerPort: 4317
+              name: "otlp-grpc"
+            - containerPort: 13133
+              name: "health-check"
           securityContext:
             privileged: true
             runAsNonRoot: false
