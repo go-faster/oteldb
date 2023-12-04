@@ -28,7 +28,7 @@ data:
         hash_seed: 10
         sampling_percentage: 5
       batch:
-        timeout: 5s
+        timeout: 500ms
         send_batch_max_size: 512
         send_batch_size: 256
       resource:
@@ -37,9 +37,8 @@ data:
             from_attribute: k8s.pod.uid
             key: service.instance.id
       memory_limiter:
-        limit_mib: 4500
-        spike_limit_mib: 4000
-        check_interval: 10s
+        limit_percentage: 80
+        check_interval: 1s
       k8sattributes:
         extract:
           metadata:
@@ -216,6 +215,8 @@ spec:
         - containerPort: 13133
           name: "health-check"
         env:
+          - name: GOMAXPROCS
+            value: "2"
           - name: MY_POD_IP
             valueFrom:
               fieldRef:
@@ -483,6 +484,8 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: status.podIP
+            - name: GOMAXPROCS
+              value: "2"
             - name: K8S_NODE_NAME
               valueFrom:
                 fieldRef:
