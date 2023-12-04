@@ -45,8 +45,7 @@ CREATE TABLE IF NOT EXISTS %s
 	INDEX idx_log_attr_value mapValues(attributes) TYPE bloom_filter(0.01) GRANULARITY 1
 )
   ENGINE = MergeTree
-  PRIMARY KEY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp))
-  ORDER BY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp), timestamp)
+  PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
   SETTINGS index_granularity=8192, ttl_only_drop_parts = 1;
 `
 
