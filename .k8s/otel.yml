@@ -28,6 +28,11 @@ data:
         timeout: 500ms
         send_batch_max_size: 1024
         send_batch_size: 512
+      resource:
+        attributes:
+          - action: insert
+            from_attribute: k8s.pod.uid
+            key: service.instance.id
       memory_limiter:
         # 80% of maximum memory up to 2G
         limit_mib: 1500
@@ -71,6 +76,8 @@ data:
         endpoint: oteldb.faster.svc.cluster.local:4317
         tls:
           insecure: true
+    connectors:
+      spanmetrics: null
     service:
       telemetry:
         logs:
@@ -81,15 +88,15 @@ data:
       pipelines:
         traces:
           receivers: [ otlp ]
-          processors: [ k8sattributes, memory_limiter, batch ]
+          processors: [ k8sattributes, resource, memory_limiter, spanmetrics, batch ]
           exporters: [ otlp/tempo, otlp/oteldb ]
         logs:
           receivers: [ otlp ]
-          processors: [ k8sattributes, memory_limiter, batch ]
+          processors: [ k8sattributes, resource, memory_limiter, batch ]
           exporters: [ otlp/oteldb ]
         metrics:
-          receivers: [ otlp, k8s_cluster ]
-          processors: [ k8sattributes, memory_limiter, batch ]
+          receivers: [ otlp, k8s_cluster, spanmetrics ]
+          processors: [ k8sattributes, resource, memory_limiter, batch ]
           exporters: [ otlp/oteldb ]
 ---
 apiVersion: v1
