@@ -11,6 +11,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
@@ -382,12 +383,12 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 		default:
 			// SpanAttribute
 			query.WriteString("(\n")
-			switch attr.Name {
-			case "service.namespace":
+			switch attribute.Key(attr.Name) {
+			case semconv.ServiceNamespaceKey:
 				fmt.Fprintf(&query, "service.namespace %s %s", cmp, singleQuoted(value))
-			case "service.name":
+			case semconv.ServiceNameKey:
 				fmt.Fprintf(&query, "service_name %s %s", cmp, singleQuoted(value))
-			case "service.instance.id":
+			case semconv.ServiceInstanceIDKey:
 				fmt.Fprintf(&query, "service_instance_id %s %s", cmp, singleQuoted(value))
 			default:
 				for i, column := range getTraceQLAttributeColumns(attr) {
