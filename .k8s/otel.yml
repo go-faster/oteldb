@@ -189,11 +189,11 @@ spec:
         name: otel-collector
         resources:
           limits:
-            cpu: "6"
-            memory: 5G
+            cpu: "2"
+            memory: 4G
           requests:
-            cpu: "6"
-            memory: 5G
+            cpu: "2"
+            memory: 4G
         livenessProbe:
           httpGet:
             path: /
