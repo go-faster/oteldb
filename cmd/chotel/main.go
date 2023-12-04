@@ -75,6 +75,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS opentelemetry_span_export
 // NewApp initializes the trace exporter application.
 func NewApp(lg *zap.Logger, metrics *app.Metrics) (*App, error) {
 	a := &App{
+		log:                lg,
 		metrics:            metrics,
 		clickHouseAddr:     "clickhouse:9000",
 		clickHouseUser:     "default",
