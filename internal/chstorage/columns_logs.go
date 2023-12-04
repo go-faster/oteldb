@@ -3,6 +3,7 @@ package chstorage
 import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
@@ -26,12 +27,47 @@ type logColumns struct {
 	spanID     proto.ColRawOf[otelstorage.SpanID]
 
 	body       proto.ColStr
-	attributes proto.ColStr
-	resource   proto.ColStr
+	attributes *proto.ColMap[string, string]
+	resource   *proto.ColMap[string, string]
 
 	scopeName       *proto.ColLowCardinality[string]
 	scopeVersion    *proto.ColLowCardinality[string]
-	scopeAttributes proto.ColStr
+	scopeAttributes *proto.ColMap[string, string]
+}
+
+func newAttributesColumn() *proto.ColMap[string, string] {
+	return proto.NewMap[string, string](
+		new(proto.ColStr).LowCardinality(),
+		new(proto.ColStr),
+	)
+}
+
+func decodeAttributesRow(s []attrKV) (otelstorage.Attrs, error) {
+	m := pcommon.NewMap()
+	for _, kv := range s {
+		d := jx.DecodeStr(kv.Value)
+		v := m.PutEmpty(kv.Key)
+		if err := decodeValue(d, v); err != nil {
+			return otelstorage.Attrs{}, errors.Wrap(err, "decode value")
+		}
+	}
+	return otelstorage.Attrs(m), nil
+}
+
+type attrKV = proto.KV[string, string]
+
+func encodeAttributesRow(attrs pcommon.Map) []attrKV {
+	out := make([]attrKV, 0, attrs.Len())
+	attrs.Range(func(k string, v pcommon.Value) bool {
+		e := &jx.Encoder{}
+		encodeValue(e, v)
+		out = append(out, proto.KV[string, string]{
+			Key:   k,
+			Value: e.String(),
+		})
+		return true
+	})
+	return out
 }
 
 func newLogColumns() *logColumns {
@@ -41,8 +77,11 @@ func newLogColumns() *logColumns {
 		serviceNamespace:  new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		severityText:      new(proto.ColStr).LowCardinality(),
+		attributes:        newAttributesColumn(),
+		resource:          newAttributesColumn(),
 		scopeName:         new(proto.ColStr).LowCardinality(),
 		scopeVersion:      new(proto.ColStr).LowCardinality(),
+		scopeAttributes:   newAttributesColumn(),
 	}
 }
 
@@ -78,7 +117,7 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			ScopeName:    c.scopeName.Row(i),
 		}
 		{
-			m, err := decodeAttributes(c.resource.Row(i))
+			m, err := decodeAttributesRow(c.resource.RowKV(i))
 			if err != nil {
 				return errors.Wrap(err, "decode resource")
 			}
@@ -95,14 +134,14 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			r.ResourceAttrs = otelstorage.Attrs(v)
 		}
 		{
-			m, err := decodeAttributes(c.attributes.Row(i))
+			m, err := decodeAttributesRow(c.attributes.RowKV(i))
 			if err != nil {
 				return errors.Wrap(err, "decode attributes")
 			}
 			r.Attrs = otelstorage.Attrs(m.AsMap())
 		}
 		{
-			m, err := decodeAttributes(c.scopeAttributes.Row(i))
+			m, err := decodeAttributesRow(c.scopeAttributes.RowKV(i))
 			if err != nil {
 				return errors.Wrap(err, "decode scope attributes")
 			}
@@ -134,12 +173,12 @@ func (c *logColumns) AddRow(r logstorage.Record) {
 	c.traceFlags.Append(uint8(r.Flags))
 
 	c.body.Append(r.Body)
-	c.attributes.Append(encodeAttributes(r.Attrs.AsMap()))
-	c.resource.Append(encodeAttributes(r.ResourceAttrs.AsMap()))
+	c.attributes.AppendKV(encodeAttributesRow(r.Attrs.AsMap()))
+	c.resource.AppendKV(encodeAttributesRow(r.ResourceAttrs.AsMap()))
 
 	c.scopeName.Append(r.ScopeName)
 	c.scopeVersion.Append(r.ScopeVersion)
-	c.scopeAttributes.Append(encodeAttributes(r.ScopeAttrs.AsMap()))
+	c.scopeAttributes.AppendKV(encodeAttributesRow(r.ScopeAttrs.AsMap()))
 }
 
 func (c *logColumns) columns() tableColumns {
@@ -158,12 +197,12 @@ func (c *logColumns) columns() tableColumns {
 		{Name: "trace_flags", Data: &c.traceFlags},
 
 		{Name: "body", Data: &c.body},
-		{Name: "attributes", Data: &c.attributes},
-		{Name: "resource", Data: &c.resource},
+		{Name: "attributes", Data: c.attributes},
+		{Name: "resource", Data: c.resource},
 
 		{Name: "scope_name", Data: c.scopeName},
 		{Name: "scope_version", Data: c.scopeVersion},
-		{Name: "scope_attributes", Data: &c.scopeAttributes},
+		{Name: "scope_attributes", Data: c.scopeAttributes},
 	}
 }
 

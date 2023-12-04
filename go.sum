@@ -27,8 +27,8 @@ github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1/go.mod h1:xomTg6
 github.com/AzureAD/microsoft-authentication-library-for-go v1.1.1 h1:WpB/QDNLpMw72xHJc34BNNykqSOeEJDAWkhf0u12/Jk=
 github.com/AzureAD/microsoft-authentication-library-for-go v1.1.1/go.mod h1:wP83P5OoQ5p6ip3ScPr0BAq0BvuPAvacpEuSzyouqAI=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/ClickHouse/ch-go v0.60.0 h1:kDZcVIKKHk7jwqSP5RYdTvabrAyUQYvGFRUdtDVkISA=
-github.com/ClickHouse/ch-go v0.60.0/go.mod h1:POJBl0MxEMS91Zd0uTgDDt05KfXEjf5KIwW6lNhje9Y=
+github.com/ClickHouse/ch-go v0.61.0 h1:22JYeFJoFNAU/Vod4etAeUEY28cYt7Ixnwqj1+EUfro=
+github.com/ClickHouse/ch-go v0.61.0/go.mod h1:POJBl0MxEMS91Zd0uTgDDt05KfXEjf5KIwW6lNhje9Y=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.2.0 h1:3MEsd0SM6jqZojhjLWWeBY+Kcjy9i6MQAeY7YgDP83g=

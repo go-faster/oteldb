@@ -3,7 +3,7 @@ module github.com/go-faster/oteldb
 go 1.21.0
 
 require (
-	github.com/ClickHouse/ch-go v0.60.0
+	github.com/ClickHouse/ch-go v0.61.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cespare/xxhash/v2 v2.2.0

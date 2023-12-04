@@ -66,7 +66,7 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 			return nil
 		},
 		Body: fmt.Sprintf(`SELECT DISTINCT
-arrayJoin(arrayConcat(JSONExtractKeys(attributes), JSONExtractKeys(resource), JSONExtractKeys(scope_attributes))) as key
+arrayJoin(arrayConcat(mapKeys(attributes), mapKeys(resource), mapKeys(scope_attributes))) as key
 FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)
 LIMIT 1000`,
@@ -246,9 +246,9 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		},
 		Body: fmt.Sprintf(`SELECT DISTINCT
 array(
-	JSONExtractRaw(attributes, %[1]s),
-	JSONExtractRaw(scope_attributes, %[1]s),
-	JSONExtractRaw(resource, %[1]s)
+	attributes[%[1]s],
+	scope_attributes[%[1]s],
+	resource[%[1]s]
 ) as values
 FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d) LIMIT 1000`,
@@ -430,9 +430,9 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				// TODO: how to match integers, booleans, floats, arrays?
 				switch m.Op {
 				case logql.OpEq, logql.OpNotEq:
-					fmt.Fprintf(&query, "JSONExtractString(%s, %s) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "JSONExtractString(%s[%s]) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
 				case logql.OpRe, logql.OpNotRe:
-					fmt.Fprintf(&query, "match(JSONExtractString(%s, %s), %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "match(JSONExtractString(%s[%s]), %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
 				default:
 					return nil, errors.Errorf("unexpected op %q", m.Op)
 				}
@@ -474,6 +474,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	}
 
 	query.WriteString(" ORDER BY timestamp")
+
+	fmt.Println(query.String())
 
 	var data []logstorage.Record
 	if err := q.ch.Do(ctx, ch.Query{

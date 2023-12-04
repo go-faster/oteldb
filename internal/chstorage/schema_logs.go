@@ -23,13 +23,13 @@ CREATE TABLE IF NOT EXISTS %s
 	span_id            FixedString(8),   -- SpanId
 	trace_flags        UInt8,            -- TraceFlags
 
-	body               String, -- string or json object
-	attributes         String, -- json object
-	resource           String, -- json object
+	body               String CODEC(ZSTD(1)), -- string or json object
+	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
+	resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
 
 	scope_name         LowCardinality(String),
 	scope_version      LowCardinality(String),
-	scope_attributes   String, -- json object
+	scope_attributes   Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
 
     INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
     INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1
