@@ -34,10 +34,8 @@ data:
             from_attribute: k8s.pod.uid
             key: service.instance.id
       memory_limiter:
-        # 80% of maximum memory up to 2G
-        limit_mib: 1500
-        # 25% of limit up to 2G
-        spike_limit_mib: 512
+        limit_mib: 2500
+        spike_limit_mib: 1000
         check_interval: 5s
       k8sattributes:
         extract:
@@ -162,11 +160,11 @@ spec:
         name: otel-collector
         resources:
           limits:
-            cpu: "1"
-            memory: 2Gi
+            cpu: "3"
+            memory: 2.5Gi
           requests:
-            cpu: 200m
-            memory: 400Mi
+            cpu: "2"
+            memory: 2Gi
         livenessProbe:
           httpGet:
             path: /
