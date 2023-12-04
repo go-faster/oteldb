@@ -11,6 +11,7 @@ import (
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
@@ -264,7 +265,13 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 	}); err != nil {
 		return errors.Wrap(err, "query")
 	}
-	if err := a.traceExporter.ExportSpans(ctx, batch); err != nil {
+	eb := backoff.NewExponentialBackOff()
+	if err := backoff.Retry(func() error {
+		if err := a.traceExporter.ExportSpans(ctx, batch); err != nil {
+			return errors.Wrap(err, "export")
+		}
+		return nil
+	}, eb); err != nil {
 		return errors.Wrap(err, "export")
 	}
 	if err := db.Do(ctx, ch.Query{
