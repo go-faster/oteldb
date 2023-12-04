@@ -6,28 +6,47 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/go-faster/jx"
 	"github.com/go-faster/sdk/gold"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGenericJSONParser_Parse(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("_testdata", "genericjson", "zap.jsonl"))
+	files, err := os.ReadDir(filepath.Join("_testdata", "genericjson"))
 	require.NoError(t, err, "read testdata")
 
-	var parser GenericJSONParser
-	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for _, file := range files {
+		t.Run(file.Name(), func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join("_testdata", "genericjson", file.Name()))
+			require.NoError(t, err, "read testdata")
 
-	var i int
-	for scanner.Scan() {
-		i++
-		t.Run(fmt.Sprintf("Line%02d", i), func(t *testing.T) {
-			line, err := parser.Parse(scanner.Bytes())
-			require.NoError(t, err, "parse")
+			var parser GenericJSONParser
 
-			name := fmt.Sprintf("genericjson_%02d.json", i)
-			gold.Str(t, line.String(), name)
+			scanner := bufio.NewScanner(bytes.NewReader(data))
+
+			var i int
+			for scanner.Scan() {
+				s := strings.TrimSpace(scanner.Text())
+				if s == "" {
+					continue
+				}
+				i++
+				t.Run(fmt.Sprintf("Line%02d", i), func(t *testing.T) {
+					t.Logf("%s", s)
+					if !jx.Valid(scanner.Bytes()) {
+						t.Fatal("invalid")
+					}
+					line, err := parser.Parse([]byte(s))
+					require.NoError(t, err, "parse")
+					name := fmt.Sprintf("genericjson_%s_%02d.json",
+						strings.TrimSuffix(file.Name(), filepath.Ext(file.Name())), i,
+					)
+					gold.Str(t, line.String(), name)
+				})
+			}
 		})
 	}
 }

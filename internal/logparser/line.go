@@ -36,6 +36,9 @@ func (l Line) Encode(e *jx.Encoder) {
 			e.Field("severity_number_str", func(e *jx.Encoder) {
 				e.Str(l.SeverityNumber.String())
 			})
+			e.Field("severity_number", func(e *jx.Encoder) {
+				e.Int64(int64(l.SeverityNumber))
+			})
 		}
 		if l.SeverityText != "" {
 			e.Field("severity_text", func(e *jx.Encoder) {
@@ -47,7 +50,7 @@ func (l Line) Encode(e *jx.Encoder) {
 				e.Str(l.Body)
 			})
 		}
-		if !l.Timestamp.AsTime().IsZero() {
+		if !l.Timestamp.AsTime().IsZero() && l.Timestamp != 0 {
 			e.Field("timestamp", func(e *jx.Encoder) {
 				e.Str(l.Timestamp.AsTime().Format(time.RFC3339Nano))
 			})

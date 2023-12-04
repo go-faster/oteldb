@@ -1,5 +1,6 @@
 {
   "severity_number_str": "Info",
+  "severity_number": 9,
   "severity_text": "info",
   "body": "Events",
   "timestamp": "2023-12-04T09:11:59.1613184Z",

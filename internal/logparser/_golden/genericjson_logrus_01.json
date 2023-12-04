@@ -1,0 +1,9 @@
+{
+  "severity_number_str": "Info",
+  "severity_number": 9,
+  "severity_text": "info",
+  "body": "A group of walrus emerges from the ocean",
+  "timestamp": "2023-12-04T10:54:23Z",
+  "animal": "walrus",
+  "size": 10
+}

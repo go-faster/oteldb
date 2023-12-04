@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
@@ -250,7 +251,7 @@ func (GenericJSONParser) Parse(data []byte) (*Line, error) {
 				return nil
 			}
 			line.SeverityText = v
-			line.SeverityNumber = _severityMap[rune(v[0])]
+			line.SeverityNumber = _severityMap[unicode.ToLower(rune(v[0]))]
 		case msgField:
 			if d.Next() != jx.String {
 				return addJSONMapKey(attrs, string(k), d)
