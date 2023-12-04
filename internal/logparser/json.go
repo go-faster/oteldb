@@ -238,7 +238,7 @@ func (GenericJSONParser) Parse(data []byte) (*Line, error) {
 			var spanID otelstorage.SpanID
 			copy(spanID[:], raw)
 			line.SpanID = spanID
-		case "level", "lvl", "levelStr", "severity_text", "severity":
+		case "level", "lvl", "levelStr", "severity_text", "severity", "levelname":
 			if d.Next() != jx.String {
 				return addJSONMapKey(attrs, string(k), d)
 			}

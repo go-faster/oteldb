@@ -32,17 +32,24 @@ func (l Line) String() string {
 // Encode line as json.
 func (l Line) Encode(e *jx.Encoder) {
 	e.Obj(func(e *jx.Encoder) {
-		if l.SeverityNumber != 0 {
-			e.Field("severity_number_str", func(e *jx.Encoder) {
-				e.Str(l.SeverityNumber.String())
-			})
-			e.Field("severity_number", func(e *jx.Encoder) {
-				e.Int64(int64(l.SeverityNumber))
-			})
-		}
-		if l.SeverityText != "" {
-			e.Field("severity_text", func(e *jx.Encoder) {
-				e.Str(l.SeverityText)
+		hasSeverity := l.SeverityNumber != 0 || l.SeverityText != ""
+		if hasSeverity {
+			e.Field("severity", func(e *jx.Encoder) {
+				e.Obj(func(e *jx.Encoder) {
+					if l.SeverityNumber != 0 {
+						e.Field("str", func(e *jx.Encoder) {
+							e.Str(l.SeverityNumber.String())
+						})
+						e.Field("number", func(e *jx.Encoder) {
+							e.Int64(int64(l.SeverityNumber))
+						})
+					}
+					if l.SeverityText != "" {
+						e.Field("text", func(e *jx.Encoder) {
+							e.Str(l.SeverityText)
+						})
+					}
+				})
 			})
 		}
 		if l.Body != "" {
@@ -55,13 +62,6 @@ func (l Line) Encode(e *jx.Encoder) {
 				e.Str(l.Timestamp.AsTime().Format(time.RFC3339Nano))
 			})
 		}
-		if !l.Attrs.IsZero() {
-			l.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
-				return !e.Field(k, func(e *jx.Encoder) {
-					encodeValue(v, e)
-				})
-			})
-		}
 		if !l.TraceID.IsEmpty() {
 			e.Field("trace_id", func(e *jx.Encoder) {
 				e.Str(hex.EncodeToString(l.TraceID[:]))
@@ -70,6 +70,17 @@ func (l Line) Encode(e *jx.Encoder) {
 		if !l.SpanID.IsEmpty() {
 			e.Field("span_id", func(e *jx.Encoder) {
 				e.Str(hex.EncodeToString(l.SpanID[:]))
+			})
+		}
+		if !l.Attrs.IsZero() {
+			e.Field("attrs", func(e *jx.Encoder) {
+				e.Obj(func(e *jx.Encoder) {
+					l.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+						return !e.Field(k, func(e *jx.Encoder) {
+							encodeValue(v, e)
+						})
+					})
+				})
 			})
 		}
 	})

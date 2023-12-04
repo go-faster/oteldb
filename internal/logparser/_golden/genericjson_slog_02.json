@@ -1,6 +1,8 @@
 {
-  "severity_number_str": "Info",
-  "severity_number": 9,
-  "severity_text": "INFO",
+  "severity": {
+    "str": "Info",
+    "number": 9,
+    "text": "INFO"
+  },
   "body": "No time"
 }

@@ -1,9 +1,13 @@
 {
-  "severity_number_str": "Debug",
-  "severity_number": 5,
-  "severity_text": "debug",
+  "severity": {
+    "str": "Debug",
+    "number": 5,
+    "text": "debug"
+  },
   "body": "Fibonacci is everywhere",
   "timestamp": "2023-12-04T10:59:00Z",
-  "Scale": "833 cents",
-  "Interval": 833.09
+  "attrs": {
+    "Scale": "833 cents",
+    "Interval": 833.09
+  }
 }

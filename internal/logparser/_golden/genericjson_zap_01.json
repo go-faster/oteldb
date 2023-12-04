@@ -1,22 +1,26 @@
 {
-  "severity_number_str": "Info",
-  "severity_number": 9,
-  "severity_text": "info",
+  "severity": {
+    "str": "Info",
+    "number": 9,
+    "text": "info"
+  },
   "body": "Events",
   "timestamp": "2023-12-04T09:11:59.1613184Z",
-  "logger": "poll",
-  "caller": "gh-archived/main.go:197",
-  "duration": 0.437301455,
-  "integers": [
-    1,
-    2,
-    3
-  ],
-  "new_count": 100,
-  "remaining": 1040,
-  "used": 3960,
-  "reset": 660.838704106,
-  "reset_human": "in 12 minutes",
-  "sleep": 0.198120375,
-  "target_rate": 0.63542183
+  "attrs": {
+    "logger": "poll",
+    "caller": "gh-archived/main.go:197",
+    "duration": 0.437301455,
+    "integers": [
+      1,
+      2,
+      3
+    ],
+    "new_count": 100,
+    "remaining": 1040,
+    "used": 3960,
+    "reset": 660.838704106,
+    "reset_human": "in 12 minutes",
+    "sleep": 0.198120375,
+    "target_rate": 0.63542183
+  }
 }

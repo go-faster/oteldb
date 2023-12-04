@@ -1,0 +1,21 @@
+{
+  "severity": {
+    "str": "Debug",
+    "number": 5,
+    "text": "DEBUG"
+  },
+  "body": "Debug message",
+  "attrs": {
+    "instant": {
+      "epochSecond": 1696419692,
+      "nanoOfSecond": 479118362
+    },
+    "thread": "main",
+    "loggerName": "CONSOLE_JSON_APPENDER",
+    "endOfBatch": false,
+    "loggerFqcn": "org.apache.logging.log4j.spi.AbstractLogger",
+    "threadId": 1,
+    "threadPriority": 5,
+    "myCustomField": "myCustomValue"
+  }
+}

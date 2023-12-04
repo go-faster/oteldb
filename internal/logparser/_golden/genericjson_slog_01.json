@@ -1,8 +1,12 @@
 {
-  "severity_number_str": "Info",
-  "severity_number": 9,
-  "severity_text": "INFO",
+  "severity": {
+    "str": "Info",
+    "number": 9,
+    "text": "INFO"
+  },
   "body": "hello world",
   "timestamp": "2023-12-04T10:54:23.012381337Z",
-  "answer": 42
+  "attrs": {
+    "answer": 42
+  }
 }
