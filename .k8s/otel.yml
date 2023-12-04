@@ -246,13 +246,18 @@ data:
         tls:
           insecure: true
     service:
+      telemetry:
+        logs:
+          level: "info"
+          encoding: "json"
+          disable_stacktrace: true
       extensions: [zpages, memory_ballast]
       pipelines:
         metrics:
           receivers: [kubeletstats, hostmetrics, hostmetrics/disks]
           processors: [memory_limiter, batch]
           exporters: [otlp]
-          
+
 ---
 apiVersion: apps/v1
 kind: DaemonSet
