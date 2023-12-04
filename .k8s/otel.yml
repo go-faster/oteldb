@@ -67,19 +67,24 @@ data:
         tls:
           insecure: true
     service:
+      telemetry:
+        logs:
+          level: "info"
+          encoding: "json"
+          disable_stacktrace: true
       extensions: [zpages, memory_ballast]
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [memory_limiter, batch, k8sattributes]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/tempo, otlp/oteldb]
         logs:
           receivers: [otlp, loki]
-          processors: [memory_limiter, batch, k8sattributes]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/oteldb]
         metrics:
           receivers: [otlp, k8s_cluster]
-          processors: [memory_limiter, batch, k8sattributes]
+          processors: [k8sattributes, memory_limiter, batch]
           exporters: [otlp/oteldb]
 ---
 apiVersion: v1
