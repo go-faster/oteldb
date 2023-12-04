@@ -104,7 +104,6 @@ func setJSONValue(v pcommon.Value, d *jx.Decoder) error {
 			return setJSONValue(vs, d)
 		})
 	case jx.Object:
-		fmt.Println("object")
 		m := v.SetEmptyMap()
 		return d.Obj(func(d *jx.Decoder, key string) error {
 			return addJSONMapKey(m, key, d)
