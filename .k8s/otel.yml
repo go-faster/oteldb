@@ -23,7 +23,6 @@ data:
         allocatable_types_to_report:
           - cpu
           - memory
-
     processors:
       batch:
         timeout: 500ms
@@ -36,17 +35,30 @@ data:
         spike_limit_mib: 512
         check_interval: 5s
       k8sattributes:
-        auth_type: 'serviceAccount'
         extract:
-          metadata: # extracted from the pod
+          metadata:
             - k8s.namespace.name
-            - k8s.pod.name
-            - k8s.pod.start_time
-            - k8s.pod.uid
             - k8s.deployment.name
+            - k8s.statefulset.name
+            - k8s.daemonset.name
+            - k8s.cronjob.name
+            - k8s.job.name
             - k8s.node.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.pod.start_time
+        passthrough: false
+        pod_association:
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.uid
+          - sources:
+            - from: connection
     extensions:
-      zpages: {}
+      zpages: { }
       memory_ballast:
         # Memory Ballast size should be max 1/3 to 1/2 of memory.
         size_mib: 683
@@ -65,20 +77,20 @@ data:
           level: "info"
           encoding: "json"
           disable_stacktrace: true
-      extensions: [zpages, memory_ballast]
+      extensions: [ zpages, memory_ballast ]
       pipelines:
         traces:
-          receivers: [otlp]
-          processors: [k8sattributes, memory_limiter, batch]
-          exporters: [otlp/tempo, otlp/oteldb]
+          receivers: [ otlp ]
+          processors: [ k8sattributes, memory_limiter, batch ]
+          exporters: [ otlp/tempo, otlp/oteldb ]
         logs:
-          receivers: [otlp]
-          processors: [k8sattributes, memory_limiter, batch]
-          exporters: [otlp/oteldb]
+          receivers: [ otlp ]
+          processors: [ k8sattributes, memory_limiter, batch ]
+          exporters: [ otlp/oteldb ]
         metrics:
-          receivers: [otlp, k8s_cluster]
-          processors: [k8sattributes, memory_limiter, batch]
-          exporters: [otlp/oteldb]
+          receivers: [ otlp, k8s_cluster ]
+          processors: [ k8sattributes, memory_limiter, batch ]
+          exporters: [ otlp/oteldb ]
 ---
 apiVersion: v1
 kind: Service
