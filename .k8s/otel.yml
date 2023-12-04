@@ -272,7 +272,7 @@ data:
         extra_metadata_labels:
           - container.id
       hostmetrics:
-        root_path: /host
+        root_path: /hostfs
         collection_interval: 1s
         scrapers:
           cpu:
@@ -280,7 +280,7 @@ data:
           memory:
           network:
       hostmetrics/disks:
-        root_path: /host
+        root_path: /hostfs
         collection_interval: 30s
         scrapers:
           disk:
@@ -418,12 +418,14 @@ spec:
           volumeMounts:
             - name: otel-collector-config-vol
               mountPath: /conf
-            - name: host
-              mountPath: /host
+            - name: hostfs
+              mountPath: /hostfs
+              readOnly: true
+              mountPropagation: HostToContainer
       volumes:
-        - name: host
+        - name: hostfs
           hostPath:
-              path: /
+            path: /
         - configMap:
             name: otel-agent
             items:
