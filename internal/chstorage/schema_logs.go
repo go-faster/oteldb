@@ -12,16 +12,16 @@ CREATE TABLE IF NOT EXISTS %s
 	service_namespace   LowCardinality(String) COMMENT 'service.namespace',
 
 	-- Timestamp, or ObservedTimestamp if not present.
-	timestamp          DateTime64(9) CODEC(DoubleDelta),
+	timestamp          DateTime64(9) CODEC(Delta),
 
 	-- Severity Fields
 	severity_text      LowCardinality(String), -- SeverityText
 	severity_number    UInt8,                  -- SeverityNumber [1, 24]
 
 	-- Trace Context Fields
-	trace_id           FixedString(16),  -- TraceId
-	span_id            FixedString(8),   -- SpanId
-	trace_flags        UInt8,            -- TraceFlags
+	trace_id           FixedString(16) CODEC(ZSTD(1)),  -- TraceId
+	span_id            FixedString(8)  CODEC(ZSTD(1)),  -- SpanId
+	trace_flags        UInt8 CODEC(T64, ZSTD(1)),       -- TraceFlags
 
 	body               String CODEC(ZSTD(1)), -- string or json object
 	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
@@ -32,7 +32,13 @@ CREATE TABLE IF NOT EXISTS %s
 	scope_attributes   Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
 
     INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
-    INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1
+    INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,
+	INDEX idx_res_attr_key mapKeys(resource) TYPE bloom_filter(0.01) GRANULARITY 1,
+	INDEX idx_res_attr_value mapValues(resource) TYPE bloom_filter(0.01) GRANULARITY 1,
+	INDEX idx_scope_attr_key mapKeys(scope_attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
+	INDEX idx_scope_attr_value mapValues(scope_attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
+	INDEX idx_log_attr_key mapKeys(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
+	INDEX idx_log_attr_value mapValues(attributes) TYPE bloom_filter(0.01) GRANULARITY 1
 )
   ENGINE = MergeTree
   PRIMARY KEY (severity_number, service_namespace, service_name, toStartOfFiveMinutes(timestamp))
