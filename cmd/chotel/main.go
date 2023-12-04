@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -250,7 +251,27 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 						SpanID:  r.ParentSpanID,
 					}),
 				}
+			Attribute:
 				for k, v := range r.Attributes {
+					for _, marker := range []string{
+						"count",
+						"thread_id",
+						"_bytes",
+						"_rows",
+						"memory_usage",
+						"thread_num",
+						"exception_code",
+					} {
+						if !strings.Contains(k, marker) {
+							continue
+						}
+						n, err := strconv.ParseInt(v, 10, 64)
+						if err != nil {
+							break
+						}
+						stub.Attributes = append(stub.Attributes, attribute.Int64(k, n))
+						continue Attribute
+					}
 					stub.Attributes = append(stub.Attributes, attribute.String(k, v))
 				}
 				if latest.Before(stub.EndTime) {
