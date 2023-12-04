@@ -178,10 +178,8 @@ spec:
           name: "zpages"
         - containerPort: 4317
           name: "otlp-grpc"
-        - containerPort: 14250
-          name: "jaeger-thrift-grpc"
-        - containerPort: 14268
-          name: "jaeger-http"
+        - containerPort: 14250 # jaeger-thrift-grpc"
+        - containerPort: 14268 # "jaeger-http"
         - containerPort: 9411
           name: "zipkin"
         - containerPort: 8888
