@@ -106,8 +106,8 @@ data:
       pipelines:
         traces:
           receivers: [ otlp ]
-          processors: [ k8sattributes, resource, memory_limiter, spanmetrics, batch ]
-          exporters: [ otlp/tempo, otlp/oteldb ]
+          processors: [ k8sattributes, resource, memory_limiter, batch ]
+          exporters: [ otlp/tempo, otlp/oteldb, spanmetrics ]
         logs:
           receivers: [ otlp ]
           processors: [ k8sattributes, resource, memory_limiter, batch ]
