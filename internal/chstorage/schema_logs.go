@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS %s
 	service_namespace   LowCardinality(String) COMMENT 'service.namespace',
 
 	-- Timestamp, or ObservedTimestamp if not present.
-	timestamp          DateTime64(9) CODEC(Delta),
+	timestamp          DateTime64(9),
 
 	-- Severity Fields
 	severity_text      LowCardinality(String), -- SeverityText
@@ -24,12 +24,16 @@ CREATE TABLE IF NOT EXISTS %s
 	trace_flags        UInt8 CODEC(T64, ZSTD(1)),       -- TraceFlags
 
 	body               String CODEC(ZSTD(1)), -- string or json object
-	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
-	resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
 
-	scope_name         LowCardinality(String),
-	scope_version      LowCardinality(String),
-	scope_attributes   Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string -> json
+	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+	attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+	resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+	resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+
+	scope_name             LowCardinality(String),
+	scope_version          LowCardinality(String),
+	scope_attributes       Map(LowCardinality(String), String) CODEC(ZSTD(1)),  -- string[str | json]
+	scope_attributes_types Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)),  -- string[type]
 
     INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
     INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,

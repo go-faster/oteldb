@@ -26,13 +26,16 @@ type logColumns struct {
 	traceID    proto.ColRawOf[otelstorage.TraceID]
 	spanID     proto.ColRawOf[otelstorage.SpanID]
 
-	body       proto.ColStr
-	attributes *proto.ColMap[string, string]
-	resource   *proto.ColMap[string, string]
+	body            proto.ColStr
+	attributes      *proto.ColMap[string, string]
+	attributesTypes *proto.ColMap[string, uint8]
+	resource        *proto.ColMap[string, string]
+	resourceTypes   *proto.ColMap[string, uint8]
 
-	scopeName       *proto.ColLowCardinality[string]
-	scopeVersion    *proto.ColLowCardinality[string]
-	scopeAttributes *proto.ColMap[string, string]
+	scopeName            *proto.ColLowCardinality[string]
+	scopeVersion         *proto.ColLowCardinality[string]
+	scopeAttributes      *proto.ColMap[string, string]
+	scopeAttributesTypes *proto.ColMap[string, uint8]
 }
 
 func newAttributesColumn() *proto.ColMap[string, string] {
@@ -42,12 +45,22 @@ func newAttributesColumn() *proto.ColMap[string, string] {
 	)
 }
 
-func decodeAttributesRow(s []attrKV) (otelstorage.Attrs, error) {
+func newTypesColumn() *proto.ColMap[string, uint8] {
+	return proto.NewMap[string, uint8](
+		new(proto.ColStr).LowCardinality(),
+		new(proto.ColUInt8),
+	)
+}
+
+func decodeAttributesRow(s []attrKV, st []typKV) (otelstorage.Attrs, error) {
 	m := pcommon.NewMap()
-	for _, kv := range s {
-		d := jx.DecodeStr(kv.Value)
+	if len(s) != len(st) {
+		return otelstorage.Attrs{}, errors.New("length mismatch")
+	}
+	for i, kv := range s {
+		t := st[i].Value
 		v := m.PutEmpty(kv.Key)
-		if err := decodeValue(d, v); err != nil {
+		if err := valueFromStrType(v, kv.Value, t); err != nil {
 			return otelstorage.Attrs{}, errors.Wrap(err, "decode value")
 		}
 	}
@@ -55,33 +68,59 @@ func decodeAttributesRow(s []attrKV) (otelstorage.Attrs, error) {
 }
 
 type attrKV = proto.KV[string, string]
+type typKV = proto.KV[string, uint8]
 
-func encodeAttributesRow(attrs pcommon.Map) []attrKV {
+func valueToStrType(v pcommon.Value) (string, uint8) {
+	if t := v.Type(); t == pcommon.ValueTypeStr {
+		return v.Str(), uint8(t)
+	}
+	e := &jx.Encoder{}
+	encodeValue(e, v)
+	return e.String(), uint8(v.Type())
+}
+
+func valueFromStrType(v pcommon.Value, s string, t uint8) error {
+	if t := pcommon.ValueType(t); t == pcommon.ValueTypeStr {
+		v.SetStr(s)
+		return nil
+	}
+	d := jx.DecodeStr(s)
+	return decodeValue(d, v)
+}
+
+func encodeAttributesRow(attrs pcommon.Map) ([]attrKV, []typKV) {
 	out := make([]attrKV, 0, attrs.Len())
+	outTypes := make([]typKV, 0, attrs.Len())
 	attrs.Range(func(k string, v pcommon.Value) bool {
-		e := &jx.Encoder{}
-		encodeValue(e, v)
+		s, t := valueToStrType(v)
 		out = append(out, proto.KV[string, string]{
 			Key:   k,
-			Value: e.String(),
+			Value: s,
+		})
+		outTypes = append(outTypes, proto.KV[string, uint8]{
+			Key:   k,
+			Value: t,
 		})
 		return true
 	})
-	return out
+	return out, outTypes
 }
 
 func newLogColumns() *logColumns {
 	return &logColumns{
-		serviceName:       new(proto.ColStr).LowCardinality(),
-		serviceInstanceID: new(proto.ColStr).LowCardinality(),
-		serviceNamespace:  new(proto.ColStr).LowCardinality(),
-		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		severityText:      new(proto.ColStr).LowCardinality(),
-		attributes:        newAttributesColumn(),
-		resource:          newAttributesColumn(),
-		scopeName:         new(proto.ColStr).LowCardinality(),
-		scopeVersion:      new(proto.ColStr).LowCardinality(),
-		scopeAttributes:   newAttributesColumn(),
+		serviceName:          new(proto.ColStr).LowCardinality(),
+		serviceInstanceID:    new(proto.ColStr).LowCardinality(),
+		serviceNamespace:     new(proto.ColStr).LowCardinality(),
+		timestamp:            new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		severityText:         new(proto.ColStr).LowCardinality(),
+		attributes:           newAttributesColumn(),
+		attributesTypes:      newTypesColumn(),
+		resource:             newAttributesColumn(),
+		resourceTypes:        newTypesColumn(),
+		scopeName:            new(proto.ColStr).LowCardinality(),
+		scopeVersion:         new(proto.ColStr).LowCardinality(),
+		scopeAttributes:      newAttributesColumn(),
+		scopeAttributesTypes: newTypesColumn(),
 	}
 }
 
@@ -117,7 +156,7 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			ScopeName:    c.scopeName.Row(i),
 		}
 		{
-			m, err := decodeAttributesRow(c.resource.RowKV(i))
+			m, err := decodeAttributesRow(c.resource.RowKV(i), c.resourceTypes.RowKV(i))
 			if err != nil {
 				return errors.Wrap(err, "decode resource")
 			}
@@ -134,14 +173,14 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			r.ResourceAttrs = otelstorage.Attrs(v)
 		}
 		{
-			m, err := decodeAttributesRow(c.attributes.RowKV(i))
+			m, err := decodeAttributesRow(c.attributes.RowKV(i), c.attributesTypes.RowKV(i))
 			if err != nil {
 				return errors.Wrap(err, "decode attributes")
 			}
 			r.Attrs = otelstorage.Attrs(m.AsMap())
 		}
 		{
-			m, err := decodeAttributesRow(c.scopeAttributes.RowKV(i))
+			m, err := decodeAttributesRow(c.scopeAttributes.RowKV(i), c.scopeAttributesTypes.RowKV(i))
 			if err != nil {
 				return errors.Wrap(err, "decode scope attributes")
 			}
@@ -154,6 +193,12 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 		f(r)
 	}
 	return nil
+}
+
+func appendAttributes(values *proto.ColMap[string, string], types *proto.ColMap[string, uint8], attrs otelstorage.Attrs) {
+	a, t := encodeAttributesRow(attrs.AsMap())
+	values.AppendKV(a)
+	types.AppendKV(t)
 }
 
 func (c *logColumns) AddRow(r logstorage.Record) {
@@ -173,12 +218,12 @@ func (c *logColumns) AddRow(r logstorage.Record) {
 	c.traceFlags.Append(uint8(r.Flags))
 
 	c.body.Append(r.Body)
-	c.attributes.AppendKV(encodeAttributesRow(r.Attrs.AsMap()))
-	c.resource.AppendKV(encodeAttributesRow(r.ResourceAttrs.AsMap()))
+	appendAttributes(c.attributes, c.attributesTypes, r.Attrs)
+	appendAttributes(c.resource, c.resourceTypes, r.ResourceAttrs)
 
 	c.scopeName.Append(r.ScopeName)
 	c.scopeVersion.Append(r.ScopeVersion)
-	c.scopeAttributes.AppendKV(encodeAttributesRow(r.ScopeAttrs.AsMap()))
+	appendAttributes(c.scopeAttributes, c.scopeAttributesTypes, r.ScopeAttrs)
 }
 
 func (c *logColumns) columns() tableColumns {
@@ -198,11 +243,14 @@ func (c *logColumns) columns() tableColumns {
 
 		{Name: "body", Data: &c.body},
 		{Name: "attributes", Data: c.attributes},
+		{Name: "attributes_types", Data: c.attributesTypes},
 		{Name: "resource", Data: c.resource},
+		{Name: "resource_types", Data: c.resourceTypes},
 
 		{Name: "scope_name", Data: c.scopeName},
 		{Name: "scope_version", Data: c.scopeVersion},
 		{Name: "scope_attributes", Data: c.scopeAttributes},
+		{Name: "scope_attributes_types", Data: c.scopeAttributesTypes},
 	}
 }
 

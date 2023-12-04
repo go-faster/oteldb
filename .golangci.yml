@@ -35,6 +35,7 @@ linters-settings:
       - redundantSprint
       - octalLiteral
       - typeDefFirst
+      - unnamedResult
 
 linters:
   disable-all: true

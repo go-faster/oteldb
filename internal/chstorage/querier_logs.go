@@ -11,9 +11,7 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/jx"
 	"github.com/go-faster/sdk/zctx"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -103,7 +101,7 @@ LIMIT 1000`,
 
 type labelStaticIterator struct {
 	name   string
-	values []jx.Raw
+	values []string
 }
 
 func (l *labelStaticIterator) Next(t *logstorage.Label) bool {
@@ -111,27 +109,7 @@ func (l *labelStaticIterator) Next(t *logstorage.Label) bool {
 		return false
 	}
 	t.Name = l.name
-	e := jx.DecodeBytes(l.values[0])
-	switch e.Next() {
-	case jx.String:
-		t.Type = int32(pcommon.ValueTypeStr)
-		s, _ := e.Str()
-		t.Value = s
-	case jx.Number:
-		n, _ := e.Num()
-		if n.IsInt() {
-			t.Type = int32(pcommon.ValueTypeInt)
-			v, _ := n.Int64()
-			t.Value = fmt.Sprintf("%d", v)
-		} else {
-			t.Type = int32(pcommon.ValueTypeDouble)
-			v, _ := n.Float64()
-			t.Value = fmt.Sprintf("%f", v)
-		}
-	default:
-		t.Type = int32(pcommon.ValueTypeStr)
-		t.Value = l.values[0].String()
-	}
+	t.Value = l.values[0]
 	l.values = l.values[1:]
 	return true
 }
@@ -205,14 +183,14 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 	case logstorage.LabelSeverity:
 		return &labelStaticIterator{
 			name: labelName,
-			values: []jx.Raw{
-				jx.Raw(plog.SeverityNumberUnspecified.String()),
-				jx.Raw(plog.SeverityNumberTrace.String()),
-				jx.Raw(plog.SeverityNumberDebug.String()),
-				jx.Raw(plog.SeverityNumberInfo.String()),
-				jx.Raw(plog.SeverityNumberWarn.String()),
-				jx.Raw(plog.SeverityNumberError.String()),
-				jx.Raw(plog.SeverityNumberFatal.String()),
+			values: []string{
+				plog.SeverityNumberUnspecified.String(),
+				plog.SeverityNumberTrace.String(),
+				plog.SeverityNumberDebug.String(),
+				plog.SeverityNumberInfo.String(),
+				plog.SeverityNumberWarn.String(),
+				plog.SeverityNumberError.String(),
+				plog.SeverityNumberFatal.String(),
 			},
 		}, nil
 	}
@@ -225,7 +203,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			labelName = key
 		}
 	}
-	var out []jx.Raw
+	var out []string
 	values := new(proto.ColStr).Array()
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
@@ -239,7 +217,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 						// HACK: JSONExtractRaw returns empty string if key is not found.
 						continue
 					}
-					out = append(out, jx.Raw(v))
+					out = append(out, v)
 				}
 			}
 			return nil
@@ -430,9 +408,9 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 				// TODO: how to match integers, booleans, floats, arrays?
 				switch m.Op {
 				case logql.OpEq, logql.OpNotEq:
-					fmt.Fprintf(&query, "JSONExtractString(%s[%s]) = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "%s[%s] = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
 				case logql.OpRe, logql.OpNotRe:
-					fmt.Fprintf(&query, "match(JSONExtractString(%s[%s]), %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "match(%s[%s], %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
 				default:
 					return nil, errors.Errorf("unexpected op %q", m.Op)
 				}
@@ -474,8 +452,6 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	}
 
 	query.WriteString(" ORDER BY timestamp")
-
-	fmt.Println(query.String())
 
 	var data []logstorage.Record
 	if err := q.ch.Do(ctx, ch.Query{
