@@ -10,6 +10,7 @@ data:
   config: |
     receivers:
       otlp:
+        sending_queue: 10000
         protocols:
           grpc:
             endpoint: ${env:MY_POD_IP}:4317
