@@ -75,7 +75,6 @@ const DDL = `CREATE TABLE IF NOT EXISTS opentelemetry_span_export
 // NewApp initializes the trace exporter application.
 func NewApp(logger *zap.Logger, metrics *app.Metrics) (*App, error) {
 	a := &App{
-		log:                logger,
 		metrics:            metrics,
 		clickHouseAddr:     "clickhouse:9000",
 		clickHouseUser:     "default",
@@ -134,7 +133,6 @@ func (a *App) setup(ctx context.Context) error {
 	a.log.Info("Connecting to clickhouse")
 	db, err := ch.Dial(ctx, ch.Options{
 		Address:  a.clickHouseAddr,
-		Logger:   a.log.Named("ch"),
 		User:     a.clickHouseUser,
 		Password: a.clickHousePassword,
 		Database: a.clickHouseDB,
@@ -183,7 +181,6 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 	defer span.End()
 
 	db, err := ch.Dial(ctx, ch.Options{
-		Logger:      zctx.From(ctx).Named("ch"),
 		Address:     a.clickHouseAddr,
 		Compression: ch.CompressionZSTD,
 		User:        a.clickHouseUser,
