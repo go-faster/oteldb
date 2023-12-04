@@ -15,7 +15,6 @@ data:
             endpoint: ${env:MY_POD_IP}:4317
           http:
             endpoint: ${env:MY_POD_IP}:4318
-        use_incoming_timestamp: true
       k8s_cluster:
         auth_type: serviceAccount
         node_conditions_to_report:
@@ -183,6 +182,12 @@ metadata:
 data:
   config: |
     receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
       filelog:
         include:
           - /var/log/pods/*/*/*.log
