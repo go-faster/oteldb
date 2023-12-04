@@ -371,11 +371,10 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 			fmt.Fprintf(&query, "status_code %s %s", cmp, singleQuoted(value))
 		case traceql.SpanKind:
 			fmt.Fprintf(&query, "kind %s %s", cmp, singleQuoted(value))
-		case traceql.RootServiceName:
-			fmt.Fprintf(&query, "service_name %s %s", cmp, singleQuoted(value))
 		case traceql.SpanParent,
 			traceql.SpanChildCount,
 			traceql.RootSpanName,
+			traceql.RootServiceName,
 			traceql.TraceDuration:
 			// Unsupported yet.
 			dropped++
@@ -383,14 +382,23 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 		default:
 			// SpanAttribute
 			query.WriteString("(\n")
-			for i, column := range getTraceQLAttributeColumns(attr) {
-				if i != 0 {
-					query.WriteString("\nOR ")
+			switch attr.Name {
+			case "service.namespace":
+				fmt.Fprintf(&query, "service.namespace %s %s", cmp, singleQuoted(value))
+			case "service.name":
+				fmt.Fprintf(&query, "service_name %s %s", cmp, singleQuoted(value))
+			case "service.instance.id":
+				fmt.Fprintf(&query, "service_instance_id %s %s", cmp, singleQuoted(value))
+			default:
+				for i, column := range getTraceQLAttributeColumns(attr) {
+					if i != 0 {
+						query.WriteString("\nOR ")
+					}
+					fmt.Fprintf(&query, "%s[%s] %s %s",
+						column, singleQuoted(attr.Name),
+						cmp, singleQuoted(value),
+					)
 				}
-				fmt.Fprintf(&query, "%s[%s] %s %s",
-					column, singleQuoted(attr.Name),
-					cmp, singleQuoted(value),
-				)
 			}
 			query.WriteString("\n)")
 		}
