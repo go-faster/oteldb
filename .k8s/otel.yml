@@ -37,7 +37,7 @@ data:
             from_attribute: k8s.pod.uid
             key: service.instance.id
       memory_limiter:
-        limit_percentage: 80
+        limit_mib: 4000
         check_interval: 1s
       k8sattributes:
         extract:
@@ -355,11 +355,8 @@ data:
         send_batch_max_size: 1024
         send_batch_size: 512
       memory_limiter:
-        # 80% of maximum memory up to 2G
-        limit_mib: 1500
-        # 25% of limit up to 2G
-        spike_limit_mib: 512
-        check_interval: 5s
+        limit_mib: 500
+        check_interval: 1s
       k8sattributes:
         auth_type: 'serviceAccount'
         extract:
