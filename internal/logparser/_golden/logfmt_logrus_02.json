@@ -1,0 +1,14 @@
+{
+  "severity": {
+    "str": "Fatal",
+    "number": 21,
+    "text": "fatal"
+  },
+  "body": "The ice breaks!",
+  "timestamp": "2015-03-26T05:27:38Z",
+  "attrs": {
+    "err": "&{0x2082280c0 map[animal:orca size:9009] 2015-03-26 01:27:38.441574009 -0400 EDT panic It's over 9000!}",
+    "number": 100,
+    "omg": true
+  }
+}

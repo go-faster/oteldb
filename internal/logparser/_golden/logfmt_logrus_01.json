@@ -1,0 +1,13 @@
+{
+  "severity": {
+    "str": "Warn",
+    "number": 13,
+    "text": "warning"
+  },
+  "body": "The group's number increased tremendously!",
+  "timestamp": "2015-03-26T05:27:38Z",
+  "attrs": {
+    "number": 122,
+    "omg": true
+  }
+}

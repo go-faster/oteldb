@@ -14,6 +14,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/google/uuid v1.4.0
 	github.com/grafana/pyroscope-go v1.0.4
+	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/ogen-go/ogen v0.79.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.90.1
 	github.com/prometheus/common v0.45.0
