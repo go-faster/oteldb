@@ -25,7 +25,7 @@ data:
           - memory
     processors:
       batch:
-        timeout: 500ms
+        timeout: 5s
         send_batch_max_size: 512
         send_batch_size: 256
       resource:
@@ -34,9 +34,9 @@ data:
             from_attribute: k8s.pod.uid
             key: service.instance.id
       memory_limiter:
-        limit_mib: 2500
-        spike_limit_mib: 1000
-        check_interval: 5s
+        limit_mib: 4500
+        spike_limit_mib: 4000
+        check_interval: 10s
       k8sattributes:
         extract:
           metadata:
@@ -178,11 +178,11 @@ spec:
         name: otel-collector
         resources:
           limits:
-            cpu: "3"
-            memory: 2.5Gi
+            cpu: "6"
+            memory: 5G
           requests:
-            cpu: "2"
-            memory: 2Gi
+            cpu: "6"
+            memory: 5G
         livenessProbe:
           httpGet:
             path: /
@@ -313,7 +313,7 @@ data:
             from: attributes.uid
             to: resource["k8s.pod.uid"]
       kubeletstats:
-        collection_interval: 10s
+        collection_interval: 15s
         auth_type: 'serviceAccount'
         endpoint: '${env:HOST_IP}:10250'
         insecure_skip_verify: true
@@ -325,7 +325,7 @@ data:
           - container.id
       hostmetrics:
         root_path: /hostfs
-        collection_interval: 1s
+        collection_interval: 15s
         scrapers:
           cpu:
           load:
@@ -461,11 +461,11 @@ spec:
             runAsUser: 0
           resources:
             limits:
-              cpu: "1"
-              memory: 2Gi
+              cpu: "2"
+              memory: 1Gi
             requests:
               cpu: 200m
-              memory: 400Mi
+              memory: 512Mi
           env:
             - name: MY_POD_IP
               valueFrom:
