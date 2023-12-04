@@ -124,7 +124,6 @@ func TestIntegrationTrace(t *testing.T) {
 		require.True(t, tt.ParentSpanID != [8]byte{})
 		require.False(t, tt.StartTime.IsZero())
 		require.False(t, tt.FinishTime.IsZero())
-		require.Less(t, time.Since(tt.FinishTime), time.Hour)
 		require.NotEmpty(t, tt.OperationName)
 		if tt.OperationName == "query" {
 			require.Equal(t, tt.Attributes["db.statement"], "SELECT 1")

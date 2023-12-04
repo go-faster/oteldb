@@ -1,6 +1,7 @@
 package tracestorage
 
 import (
+	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
@@ -9,7 +10,7 @@ import (
 
 // NewSpanFromOTEL creates new Span.
 func NewSpanFromOTEL(
-	batchID string,
+	batchID uuid.UUID,
 	res pcommon.Resource,
 	scope pcommon.InstrumentationScope,
 	span ptrace.Span,

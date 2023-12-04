@@ -214,7 +214,6 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			for i := 0; i < values.Rows(); i++ {
 				for _, v := range values.Row(i) {
 					if v == "" {
-						// HACK: JSONExtractRaw returns empty string if key is not found.
 						continue
 					}
 					out = append(out, v)

@@ -43,7 +43,7 @@ func (c *Consumer) ConsumeTraces(ctx context.Context, traces ptrace.Traces) erro
 		resSpans    = traces.ResourceSpans()
 	)
 	for i := 0; i < resSpans.Len(); i++ {
-		batchID := uuid.New().String()
+		batchID := uuid.New()
 		resSpan := resSpans.At(i)
 		res := resSpan.Resource()
 		addTags(res.Attributes())

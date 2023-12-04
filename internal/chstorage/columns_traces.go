@@ -5,31 +5,38 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/google/uuid"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 type spanColumns struct {
-	traceID       proto.ColUUID
-	spanID        proto.ColUInt64
+	serviceInstanceID *proto.ColLowCardinality[string]
+	serviceName       *proto.ColLowCardinality[string]
+	serviceNamespace  *proto.ColLowCardinality[string]
+
+	traceID       proto.ColRawOf[otelstorage.TraceID]
+	spanID        proto.ColRawOf[otelstorage.SpanID]
 	traceState    proto.ColStr
-	parentSpanID  proto.ColUInt64
+	parentSpanID  proto.ColRawOf[otelstorage.SpanID]
 	name          *proto.ColLowCardinality[string]
 	kind          proto.ColEnum8
 	start         *proto.ColDateTime64
 	end           *proto.ColDateTime64
-	statusCode    proto.ColInt32
+	statusCode    proto.ColUInt8
 	statusMessage proto.ColStr
+	batchID       proto.ColUUID
 
-	batchID    proto.ColUUID
-	attributes proto.ColStr
-	resource   proto.ColStr
+	attributes      *proto.ColMap[string, string]
+	attributesTypes *proto.ColMap[string, uint8]
+	resource        *proto.ColMap[string, string]
+	resourceTypes   *proto.ColMap[string, uint8]
 
-	scopeName       proto.ColStr
-	scopeVersion    proto.ColStr
-	scopeAttributes proto.ColStr
+	scopeName            *proto.ColLowCardinality[string]
+	scopeVersion         *proto.ColLowCardinality[string]
+	scopeAttributes      *proto.ColMap[string, string]
+	scopeAttributesTypes *proto.ColMap[string, uint8]
 
 	events eventsColumns
 	links  linksColumns
@@ -42,61 +49,48 @@ func newSpanColumns() *spanColumns {
 		end:    new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		events: newEventsColumns(),
 		links:  newLinksColumns(),
+
+		serviceInstanceID:    new(proto.ColStr).LowCardinality(),
+		serviceName:          new(proto.ColStr).LowCardinality(),
+		serviceNamespace:     new(proto.ColStr).LowCardinality(),
+		attributes:           newAttributesColumn(),
+		attributesTypes:      newTypesColumn(),
+		resource:             newAttributesColumn(),
+		resourceTypes:        newTypesColumn(),
+		scopeName:            new(proto.ColStr).LowCardinality(),
+		scopeVersion:         new(proto.ColStr).LowCardinality(),
+		scopeAttributes:      newAttributesColumn(),
+		scopeAttributesTypes: newTypesColumn(),
 	}
 }
 
-func (c *spanColumns) Input() proto.Input {
-	return proto.Input{
-		{Name: "trace_id", Data: c.traceID},
-		{Name: "span_id", Data: c.spanID},
-		{Name: "trace_state", Data: c.traceState},
-		{Name: "parent_span_id", Data: c.parentSpanID},
-		{Name: "name", Data: c.name},
-		{Name: "kind", Data: proto.Wrap(&c.kind, kindDDL)},
-		{Name: "start", Data: c.start},
-		{Name: "end", Data: c.end},
-		{Name: "status_code", Data: c.statusCode},
-		{Name: "status_message", Data: c.statusMessage},
+func (c *spanColumns) columns() tableColumns {
+	return []tableColumn{
+		{Name: "service_instance_id", Data: c.serviceInstanceID},
+		{Name: "service_name", Data: c.serviceName},
+		{Name: "service_namespace", Data: c.serviceNamespace},
 
-		{Name: "batch_id", Data: c.batchID},
-		{Name: "attributes", Data: c.attributes},
-		{Name: "resource", Data: c.resource},
-
-		{Name: "scope_name", Data: c.scopeName},
-		{Name: "scope_version", Data: c.scopeVersion},
-		{Name: "scope_attributes", Data: c.scopeAttributes},
-
-		{Name: "events_timestamps", Data: c.events.timestamps},
-		{Name: "events_names", Data: c.events.names},
-		{Name: "events_attributes", Data: c.events.attributes},
-
-		{Name: "links_trace_ids", Data: c.links.traceIDs},
-		{Name: "links_span_ids", Data: c.links.spanIDs},
-		{Name: "links_tracestates", Data: c.links.tracestates},
-		{Name: "links_attributes", Data: c.links.attributes},
-	}
-}
-
-func (c *spanColumns) Result() proto.Results {
-	return proto.Results{
 		{Name: "trace_id", Data: &c.traceID},
 		{Name: "span_id", Data: &c.spanID},
 		{Name: "trace_state", Data: &c.traceState},
 		{Name: "parent_span_id", Data: &c.parentSpanID},
 		{Name: "name", Data: c.name},
-		{Name: "kind", Data: &c.kind},
+		{Name: "kind", Data: proto.Wrap(&c.kind, kindDDL)},
 		{Name: "start", Data: c.start},
 		{Name: "end", Data: c.end},
 		{Name: "status_code", Data: &c.statusCode},
 		{Name: "status_message", Data: &c.statusMessage},
-
 		{Name: "batch_id", Data: &c.batchID},
-		{Name: "attributes", Data: &c.attributes},
-		{Name: "resource", Data: &c.resource},
 
-		{Name: "scope_name", Data: &c.scopeName},
-		{Name: "scope_version", Data: &c.scopeVersion},
-		{Name: "scope_attributes", Data: &c.scopeAttributes},
+		{Name: "attributes", Data: c.attributes},
+		{Name: "attributes_types", Data: c.attributesTypes},
+		{Name: "resource", Data: c.resource},
+		{Name: "resource_types", Data: c.resourceTypes},
+
+		{Name: "scope_name", Data: c.scopeName},
+		{Name: "scope_version", Data: c.scopeVersion},
+		{Name: "scope_attributes", Data: c.scopeAttributes},
+		{Name: "scope_attributes_types", Data: c.scopeAttributesTypes},
 
 		{Name: "events_timestamps", Data: c.events.timestamps},
 		{Name: "events_names", Data: c.events.names},
@@ -109,26 +103,38 @@ func (c *spanColumns) Result() proto.Results {
 	}
 }
 
+func (c *spanColumns) Input() proto.Input {
+	return c.columns().Input()
+}
+
+func (c *spanColumns) Result() proto.Results {
+	return c.columns().Result()
+}
+
 func (c *spanColumns) AddRow(s tracestorage.Span) {
-	c.traceID.Append(uuid.UUID(s.TraceID))
-	c.spanID.Append(s.SpanID.AsUint64())
+	c.traceID.Append(s.TraceID)
+	c.spanID.Append(s.SpanID)
 	c.traceState.Append(s.TraceState)
-	c.parentSpanID.Append(s.ParentSpanID.AsUint64())
+	c.parentSpanID.Append(s.ParentSpanID)
 	c.name.Append(s.Name)
 	c.kind.Append(proto.Enum8(s.Kind))
 	c.start.Append(time.Unix(0, int64(s.Start)))
 	c.end.Append(time.Unix(0, int64(s.End)))
-	c.statusCode.Append(s.StatusCode)
+	c.statusCode.Append(uint8(s.StatusCode))
 	c.statusMessage.Append(s.StatusMessage)
 
-	// FIXME(tdakkota): use UUID in Span.
-	c.batchID.Append(uuid.MustParse(s.BatchID))
-	c.attributes.Append(encodeAttributes(s.Attrs.AsMap()))
-	c.resource.Append(encodeAttributes(s.ResourceAttrs.AsMap()))
-
+	c.batchID.Append(s.BatchID)
+	appendAttributes(c.attributes, c.attributesTypes, s.Attrs)
+	appendAttributes(c.resource, c.resourceTypes, s.ResourceAttrs)
+	{
+		m := s.ResourceAttrs.AsMap()
+		setStrOrEmpty(c.serviceInstanceID, m, string(semconv.ServiceInstanceIDKey))
+		setStrOrEmpty(c.serviceName, m, string(semconv.ServiceNameKey))
+		setStrOrEmpty(c.serviceNamespace, m, string(semconv.ServiceNamespaceKey))
+	}
 	c.scopeName.Append(s.ScopeName)
 	c.scopeVersion.Append(s.ScopeVersion)
-	c.scopeAttributes.Append(encodeAttributes(s.ScopeAttrs.AsMap()))
+	appendAttributes(c.scopeAttributes, c.scopeAttributesTypes, s.ScopeAttrs)
 
 	c.events.AddRow(s.Events)
 	c.links.AddRow(s.Links)
@@ -136,15 +142,27 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 
 func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span, error) {
 	for i := 0; i < c.traceID.Rows(); i++ {
-		attrs, err := decodeAttributes(c.attributes.Row(i))
+		attrs, err := decodeAttributesRow(c.attributes, c.attributesTypes, i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode attributes")
 		}
-		resource, err := decodeAttributes(c.resource.Row(i))
+		resource, err := decodeAttributesRow(c.resource, c.resourceTypes, i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode resource")
 		}
-		scopeAttrs, err := decodeAttributes(c.scopeAttributes.Row(i))
+		{
+			v := resource.AsMap()
+			if s := c.serviceInstanceID.Row(i); s != "" {
+				v.PutStr(string(semconv.ServiceInstanceIDKey), s)
+			}
+			if s := c.serviceName.Row(i); s != "" {
+				v.PutStr(string(semconv.ServiceNameKey), s)
+			}
+			if s := c.serviceNamespace.Row(i); s != "" {
+				v.PutStr(string(semconv.ServiceNamespaceKey), s)
+			}
+		}
+		scopeAttrs, err := decodeAttributesRow(c.scopeAttributes, c.scopeAttributesTypes, i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode scope attributes")
 		}
@@ -158,18 +176,18 @@ func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span
 		}
 
 		spans = append(spans, tracestorage.Span{
-			TraceID:       otelstorage.TraceID(c.traceID.Row(i)),
-			SpanID:        otelstorage.SpanIDFromUint64(c.spanID.Row(i)),
+			TraceID:       c.traceID.Row(i),
+			SpanID:        c.spanID.Row(i),
 			TraceState:    c.traceState.Row(i),
-			ParentSpanID:  otelstorage.SpanIDFromUint64(c.parentSpanID.Row(i)),
+			ParentSpanID:  c.parentSpanID.Row(i),
 			Name:          c.name.Row(i),
 			Kind:          int32(c.kind.Row(i)),
 			Start:         otelstorage.NewTimestampFromTime(c.start.Row(i)),
 			End:           otelstorage.NewTimestampFromTime(c.end.Row(i)),
 			Attrs:         attrs,
-			StatusCode:    c.statusCode.Row(i),
+			StatusCode:    int32(c.statusCode.Row(i)),
 			StatusMessage: c.statusMessage.Row(i),
-			BatchID:       c.batchID.Row(i).String(),
+			BatchID:       c.batchID.Row(i),
 			ResourceAttrs: resource,
 			ScopeName:     c.scopeName.Row(i),
 			ScopeVersion:  c.scopeVersion.Row(i),
@@ -241,16 +259,16 @@ func (c *eventsColumns) Row(row int) (events []tracestorage.Event, _ error) {
 }
 
 type linksColumns struct {
-	traceIDs    *proto.ColArr[uuid.UUID]
-	spanIDs     *proto.ColArr[uint64]
+	traceIDs    *proto.ColArr[otelstorage.TraceID]
+	spanIDs     *proto.ColArr[otelstorage.SpanID]
 	tracestates *proto.ColArr[string]
 	attributes  *proto.ColArr[string]
 }
 
 func newLinksColumns() linksColumns {
 	return linksColumns{
-		traceIDs:    new(proto.ColUUID).Array(),
-		spanIDs:     new(proto.ColUInt64).Array(),
+		traceIDs:    proto.NewArray[otelstorage.TraceID](&proto.ColRawOf[otelstorage.TraceID]{}),
+		spanIDs:     proto.NewArray[otelstorage.SpanID](&proto.ColRawOf[otelstorage.SpanID]{}),
 		tracestates: new(proto.ColStr).Array(),
 		attributes:  new(proto.ColStr).Array(),
 	}
@@ -258,14 +276,14 @@ func newLinksColumns() linksColumns {
 
 func (c *linksColumns) AddRow(links []tracestorage.Link) {
 	var (
-		traceIDs    []uuid.UUID
-		spanIDs     []uint64
+		traceIDs    []otelstorage.TraceID
+		spanIDs     []otelstorage.SpanID
 		tracestates []string
 		attributes  []string
 	)
 	for _, l := range links {
-		traceIDs = append(traceIDs, uuid.UUID(l.TraceID))
-		spanIDs = append(spanIDs, l.SpanID.AsUint64())
+		traceIDs = append(traceIDs, l.TraceID)
+		spanIDs = append(spanIDs, l.SpanID)
 		tracestates = append(tracestates, l.TraceState)
 		attributes = append(attributes, encodeAttributes(l.Attrs.AsMap()))
 	}
@@ -297,8 +315,8 @@ func (c *linksColumns) Row(row int) (links []tracestorage.Link, _ error) {
 		}
 
 		links = append(links, tracestorage.Link{
-			TraceID:    otelstorage.TraceID(traceIDs[i]),
-			SpanID:     otelstorage.SpanIDFromUint64(spanIDs[i]),
+			TraceID:    traceIDs[i],
+			SpanID:     spanIDs[i],
 			TraceState: tracestates[i],
 			Attrs:      attrs,
 		})

@@ -1,6 +1,7 @@
 package tempohandler
 
 import (
+	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -58,14 +59,14 @@ func (b *metadataCollector) Result() (r []tempoapi.TraceSearchMetadata) {
 }
 
 type spanKey struct {
-	batchID      string
+	batchID      uuid.UUID
 	scopeName    string
 	scopeVersion string
 }
 
 type batchCollector struct {
 	traces     ptrace.Traces
-	resSpans   map[string]ptrace.ResourceSpans
+	resSpans   map[uuid.UUID]ptrace.ResourceSpans
 	scopeSpans map[spanKey]ptrace.SpanSlice
 }
 
@@ -75,7 +76,7 @@ func (b *batchCollector) init() {
 		b.traces = ptrace.NewTraces()
 	}
 	if b.resSpans == nil {
-		b.resSpans = make(map[string]ptrace.ResourceSpans)
+		b.resSpans = make(map[uuid.UUID]ptrace.ResourceSpans)
 	}
 	if b.scopeSpans == nil {
 		b.scopeSpans = make(map[spanKey]ptrace.SpanSlice)

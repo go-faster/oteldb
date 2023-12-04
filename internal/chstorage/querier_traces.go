@@ -62,7 +62,7 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 				query.WriteString(" OR ")
 			}
 			fmt.Fprintf(&query,
-				`JSONExtract(%s, %s, 'String') = %s`,
+				`%s[%s] = %s`,
 				column, singleQuoted(key), singleQuoted(value),
 			)
 			query.WriteByte('\n')
@@ -188,7 +188,7 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 		span.End()
 	}()
 
-	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = %s", table, singleQuoted(id.Hex()))
+	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = unhex(%s)", table, singleQuoted(id.Hex()))
 	if s := opts.Start; s != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)
 	}
@@ -293,7 +293,7 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 					query.WriteString(" OR ")
 				}
 				fmt.Fprintf(&query,
-					`JSONHas(%s, %s) = 1`,
+					`mapContains(%s, %s) = 1`,
 					column, singleQuoted(attr.Name),
 				)
 				query.WriteByte('\n')
@@ -326,7 +326,7 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 		var value, typeName string
 		switch s := matcher.Static; s.Type {
 		case traceql.TypeString:
-			value = singleQuoted(s.Str)
+			value = s.Str
 			typeName = "String"
 		case traceql.TypeInt:
 			value = strconv.FormatInt(s.AsInt(), 10)
@@ -356,20 +356,26 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 			continue
 		}
 
+		{
+			_ = typeName
+			// TODO(ernado): use it with "_types".
+		}
+
 		writeNext()
 		switch attr := matcher.Attribute; attr.Prop {
 		case traceql.SpanDuration:
 			fmt.Fprintf(&query, "(toUnixTimestamp64Nano(end)-toUnixTimestamp64Nano(start)) %s %s", cmp, value)
 		case traceql.SpanName:
-			fmt.Fprintf(&query, "name %s %s", cmp, value)
+			fmt.Fprintf(&query, "name %s %s", cmp, singleQuoted(value))
 		case traceql.SpanStatus:
-			fmt.Fprintf(&query, "status_code %s %s", cmp, value)
+			fmt.Fprintf(&query, "status_code %s %s", cmp, singleQuoted(value))
 		case traceql.SpanKind:
-			fmt.Fprintf(&query, "kind %s %s", cmp, value)
+			fmt.Fprintf(&query, "kind %s %s", cmp, singleQuoted(value))
+		case traceql.RootServiceName:
+			fmt.Fprintf(&query, "service_name %s %s", cmp, singleQuoted(value))
 		case traceql.SpanParent,
 			traceql.SpanChildCount,
 			traceql.RootSpanName,
-			traceql.RootServiceName,
 			traceql.TraceDuration:
 			// Unsupported yet.
 			dropped++
@@ -381,9 +387,9 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 				if i != 0 {
 					query.WriteString("\nOR ")
 				}
-				fmt.Fprintf(&query, "JSONExtract(%s, %s, %s) %s %s",
-					column, singleQuoted(attr.Name), singleQuoted(typeName),
-					cmp, value,
+				fmt.Fprintf(&query, "%s[%s] %s %s",
+					column, singleQuoted(attr.Name),
+					cmp, singleQuoted(value),
 				)
 			}
 			query.WriteString("\n)")
@@ -430,6 +436,8 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
 
 func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Iterator[tracestorage.Span], error) {
 	c := newSpanColumns()
+
+	fmt.Println(query)
 
 	var r []tracestorage.Span
 	if err := q.ch.Do(ctx, ch.Query{

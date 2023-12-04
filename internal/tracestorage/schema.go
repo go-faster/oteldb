@@ -1,6 +1,8 @@
 package tracestorage
 
 import (
+	"github.com/google/uuid"
+
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -18,7 +20,7 @@ type Span struct {
 	StatusCode    int32                 `json:"status_code"`
 	StatusMessage string                `json:"status_message"`
 
-	BatchID       string            `json:"batch_id"`
+	BatchID       uuid.UUID         `json:"batch_id"`
 	ResourceAttrs otelstorage.Attrs `json:"resource_attrs"`
 
 	ScopeName    string            `json:"scope_name"`

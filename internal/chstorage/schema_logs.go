@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS %s
 	service_namespace   LowCardinality(String) COMMENT 'service.namespace',
 
 	-- Timestamp, or ObservedTimestamp if not present.
-	timestamp          DateTime64(9),
+	timestamp          DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 	-- Severity Fields
 	severity_text      LowCardinality(String), -- SeverityText

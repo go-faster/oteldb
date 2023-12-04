@@ -48,7 +48,7 @@ func ParseBatchSet(r io.Reader) (s BatchSet, _ error) {
 
 func (s *BatchSet) addBatch(raw ptrace.Traces) {
 	s.Batches = append(s.Batches, raw)
-	batchID := uuid.NewString()
+	batchID := uuid.New()
 
 	resSpans := raw.ResourceSpans()
 	for i := 0; i < resSpans.Len(); i++ {

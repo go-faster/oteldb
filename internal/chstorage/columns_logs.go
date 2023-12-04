@@ -52,8 +52,10 @@ func newTypesColumn() *proto.ColMap[string, uint8] {
 	)
 }
 
-func decodeAttributesRow(s []attrKV, st []typKV) (otelstorage.Attrs, error) {
+func decodeAttributesRow(values *proto.ColMap[string, string], types *proto.ColMap[string, uint8], i int) (otelstorage.Attrs, error) {
 	m := pcommon.NewMap()
+	s := values.RowKV(i)
+	st := types.RowKV(i)
 	if len(s) != len(st) {
 		return otelstorage.Attrs{}, errors.New("length mismatch")
 	}
@@ -156,7 +158,7 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			ScopeName:    c.scopeName.Row(i),
 		}
 		{
-			m, err := decodeAttributesRow(c.resource.RowKV(i), c.resourceTypes.RowKV(i))
+			m, err := decodeAttributesRow(c.resource, c.resourceTypes, i)
 			if err != nil {
 				return errors.Wrap(err, "decode resource")
 			}
@@ -173,14 +175,14 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			r.ResourceAttrs = otelstorage.Attrs(v)
 		}
 		{
-			m, err := decodeAttributesRow(c.attributes.RowKV(i), c.attributesTypes.RowKV(i))
+			m, err := decodeAttributesRow(c.attributes, c.attributesTypes, i)
 			if err != nil {
 				return errors.Wrap(err, "decode attributes")
 			}
 			r.Attrs = otelstorage.Attrs(m.AsMap())
 		}
 		{
-			m, err := decodeAttributesRow(c.scopeAttributes.RowKV(i), c.scopeAttributesTypes.RowKV(i))
+			m, err := decodeAttributesRow(c.scopeAttributes, c.scopeAttributesTypes, i)
 			if err != nil {
 				return errors.Wrap(err, "decode scope attributes")
 			}
