@@ -26,8 +26,8 @@ data:
     processors:
       batch:
         timeout: 500ms
-        send_batch_max_size: 1024
-        send_batch_size: 512
+        send_batch_max_size: 512
+        send_batch_size: 256
       resource:
         attributes:
           - action: insert
