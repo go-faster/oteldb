@@ -27,7 +27,7 @@ const (
 	start DateTime64(9) CODEC(Delta, ZSTD(1)),
 	end   DateTime64(9) CODEC(Delta, ZSTD(1)),
 	status_code UInt8 CODEC(T64, ZSTD(1)),
-	status_message String,
+	status_message LowCardinality(String),
 
 	batch_id UUID,
 	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]

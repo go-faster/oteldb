@@ -25,7 +25,7 @@ type spanColumns struct {
 	start         *proto.ColDateTime64
 	end           *proto.ColDateTime64
 	statusCode    proto.ColUInt8
-	statusMessage proto.ColStr
+	statusMessage *proto.ColLowCardinality[string]
 	batchID       proto.ColUUID
 
 	attributes      *proto.ColMap[string, string]
@@ -44,11 +44,12 @@ type spanColumns struct {
 
 func newSpanColumns() *spanColumns {
 	return &spanColumns{
-		name:   new(proto.ColStr).LowCardinality(),
-		start:  new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		end:    new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		events: newEventsColumns(),
-		links:  newLinksColumns(),
+		name:          new(proto.ColStr).LowCardinality(),
+		start:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		end:           new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		statusMessage: new(proto.ColStr).LowCardinality(),
+		events:        newEventsColumns(),
+		links:         newLinksColumns(),
 
 		serviceInstanceID:    new(proto.ColStr).LowCardinality(),
 		serviceName:          new(proto.ColStr).LowCardinality(),
@@ -79,7 +80,7 @@ func (c *spanColumns) columns() tableColumns {
 		{Name: "start", Data: c.start},
 		{Name: "end", Data: c.end},
 		{Name: "status_code", Data: &c.statusCode},
-		{Name: "status_message", Data: &c.statusMessage},
+		{Name: "status_message", Data: c.statusMessage},
 		{Name: "batch_id", Data: &c.batchID},
 
 		{Name: "attributes", Data: c.attributes},
