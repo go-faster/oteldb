@@ -24,6 +24,8 @@ data:
           - cpu
           - memory
     processors:
+      probabilistic_sampler:
+        sampling_percentage: 5
       batch:
         timeout: 5s
         send_batch_max_size: 512
@@ -104,17 +106,25 @@ data:
           disable_stacktrace: true
       extensions: [ zpages, memory_ballast, health_check ]
       pipelines:
+        traces/spanmetrics:
+          receivers: [ otlp ]
+          processors: [ probabilistic_sampler, memory_limiter, k8sattributes, resource, batch ]
+          exporters: [ spanmetrics ]
         traces:
           receivers: [ otlp ]
-          processors: [ k8sattributes, resource, memory_limiter, batch ]
-          exporters: [ otlp/tempo, otlp/oteldb, spanmetrics ]
+          processors: [ memory_limiter, k8sattributes, resource, batch ]
+          exporters: [ otlp/tempo, otlp/oteldb ]
         logs:
           receivers: [ otlp ]
-          processors: [ k8sattributes, resource, memory_limiter, batch ]
+          processors: [ memory_limiter, k8sattributes, resource, batch ]
           exporters: [ otlp/oteldb ]
         metrics:
           receivers: [ otlp, k8s_cluster, spanmetrics ]
-          processors: [ k8sattributes, resource, memory_limiter, batch ]
+          processors: [ memory_limiter, k8sattributes, resource, batch ]
+          exporters: [ otlp/oteldb ]
+        metrics/spanmetrics:
+          receivers: [ spanmetrics ]
+          processors: [ probabilistic_sampler, memory_limiter, batch ]
           exporters: [ otlp/oteldb ]
 ---
 apiVersion: v1
