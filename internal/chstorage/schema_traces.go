@@ -24,8 +24,11 @@ const (
 	parent_span_id FixedString(8),
 	name LowCardinality(String),
 	kind Enum8(` + kindDDL + `),
+
 	start DateTime64(9) CODEC(Delta, ZSTD(1)),
 	end   DateTime64(9) CODEC(Delta, ZSTD(1)),
+	duration_ns UInt64 Materialized toUnixTimestamp64Nano(end)-toUnixTimestamp64Nano(start) CODEC(T64, ZSTD(1)),
+
 	status_code UInt8 CODEC(T64, ZSTD(1)),
 	status_message LowCardinality(String),
 

@@ -365,7 +365,7 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 		writeNext()
 		switch attr := matcher.Attribute; attr.Prop {
 		case traceql.SpanDuration:
-			fmt.Fprintf(&query, "(toUnixTimestamp64Nano(end)-toUnixTimestamp64Nano(start)) %s %s", cmp, value)
+			fmt.Fprintf(&query, "duration_ns %s %s", cmp, value)
 		case traceql.SpanName:
 			fmt.Fprintf(&query, "name %s %s", cmp, singleQuoted(value))
 		case traceql.SpanStatus:
