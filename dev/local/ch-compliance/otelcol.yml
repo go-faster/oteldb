@@ -26,6 +26,17 @@ exporters:
     resource_to_telemetry_conversion:
       enabled: true
 
+processors:
+  # normalize between prometheus and otel
+  resource/normalize:
+    attributes:
+      - key: instance
+        from_attribute: service.instance.id
+        action: insert
+      - key: job
+        from_attribute: service.name
+        action: insert
+
 extensions:
   health_check:
   zpages:
@@ -38,6 +49,7 @@ service:
       exporters: [otlp]
     metrics:
       receivers: [otlp, prometheus/compliance]
+      processors: [resource/normalize]
       exporters: [otlp, prometheusremotewrite]
     logs:
       receivers: [otlp]
