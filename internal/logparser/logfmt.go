@@ -116,5 +116,8 @@ func (LogFmtParser) Parse(data []byte) (*Line, error) {
 
 // Detect if line is parsable by this parser.
 func (LogFmtParser) Detect(line string) bool {
-	return jx.DecodeStr(line).Next() == jx.Object
+	noop := logfmt.HandlerFunc(func(key, val []byte) error {
+		return nil
+	})
+	return logfmt.Unmarshal([]byte(line), noop) == nil
 }
