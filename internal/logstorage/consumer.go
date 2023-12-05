@@ -106,6 +106,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 			}
 
 			insertBatch[i] = record
+			break
 		}
 	}
 
