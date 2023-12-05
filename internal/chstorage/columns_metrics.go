@@ -11,7 +11,7 @@ type pointColumns struct {
 	mapping proto.ColEnum8
 	value   proto.ColFloat64
 
-	flags      proto.ColUInt32
+	flags      proto.ColUInt8
 	attributes proto.ColStr
 	resource   proto.ColStr
 }

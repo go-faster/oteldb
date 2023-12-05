@@ -121,7 +121,7 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
-		c.flags.Append(uint32(flags))
+		c.flags.Append(uint8(flags))
 		c.attributes.Append(encodeAttributes(attrs))
 		c.resource.Append(encodeAttributes(res))
 	}
@@ -372,7 +372,7 @@ func (b *metricsBatch) addMappedSample(
 	c.timestamp.Append(series.ts)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
-	c.flags.Append(uint32(series.flags))
+	c.flags.Append(uint8(series.flags))
 	c.attributes.Append(encodeAttributes(series.attrs, bucketKey))
 	c.resource.Append(encodeAttributes(series.res, bucketKey))
 }
