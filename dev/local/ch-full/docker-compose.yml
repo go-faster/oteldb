@@ -233,7 +233,7 @@ services:
     depends_on: [otelcol]
   gen-metrics:
     build:
-      context: ../opentelemetry-collector-contrib/cmd/telemetrygen/
+      context: ./opentelemetry-collector-contrib/cmd/telemetrygen/
     command:
       - metrics
       - --otlp-endpoint=otelcol:4317
