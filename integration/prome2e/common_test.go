@@ -44,8 +44,9 @@ func setupDB(
 	}
 
 	engine := promql.NewEngine(promql.EngineOpts{
-		Timeout:    time.Minute,
-		MaxSamples: 1_000_000,
+		Timeout:              time.Minute,
+		MaxSamples:           1_000_000,
+		EnableNegativeOffset: true,
 	})
 	api := promhandler.NewPromAPI(engine, querier, promhandler.PromAPIOptions{})
 	promh, err := promapi.NewServer(api)
