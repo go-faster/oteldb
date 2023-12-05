@@ -22,6 +22,13 @@ Supported query languages:
 - TraceQL (Tempo) for traces
 - PromQL (Prometheus) for metrics
 
+### Prometheus Compatibility
+
+```console
+$ promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml | tee result.oteldb.txt || true
+Total: 547 / 548 (99.82%) passed, 0 unsupported
+```
+
 ## Local development
 
 Setups oteldb, clickhouse server, grafana, and telemetry generators:
