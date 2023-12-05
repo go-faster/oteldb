@@ -18,7 +18,7 @@ Currently, we focus on ClickHouse for realtime queries on hot/warm data.
 ## Query
 
 Supported query languages:
-- LogQL (Logi) for logs
+- LogQL (Loki) for logs
 - TraceQL (Tempo) for traces
 - PromQL (Prometheus) for metrics
 
