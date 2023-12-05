@@ -72,6 +72,7 @@ func (s *BatchSet) addBatch(raw pmetric.Metrics) error {
 }
 
 func (s *BatchSet) addMetric(metric pmetric.Metric) error {
+	s.addLabel("__name__", metric.Name())
 	switch t := metric.Type(); t {
 	case pmetric.MetricTypeGauge:
 		points := metric.Gauge().DataPoints()

@@ -115,6 +115,7 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 			return errors.Errorf("unexpected metric %q value type: %v", name, typ)
 		}
 
+		b.addName(name)
 		b.addLabels(attrs)
 		c.name.Append(name)
 		c.timestamp.Append(ts)
@@ -150,6 +151,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 		bucketCounts := point.BucketCounts().AsRaw()
 		explicitBounds := point.ExplicitBounds().AsRaw()
 
+		b.addName(name)
 		b.addLabels(attrs)
 		// Save original histogram.
 		c.name.Append(name)
@@ -274,6 +276,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 		positiveOffset, positiveBucketCounts := mapBuckets(point.Positive())
 		negativeOffset, negativeBucketCounts := mapBuckets(point.Negative())
 
+		b.addName(name)
 		b.addLabels(attrs)
 		c.name.Append(name)
 		c.timestamp.Append(ts)
@@ -316,6 +319,7 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 			values[i] = p.Value()
 		}
 
+		b.addName(name)
 		b.addLabels(attrs)
 		c.name.Append(name)
 		c.timestamp.Append(ts)
@@ -371,6 +375,10 @@ func (b *metricsBatch) addMappedSample(
 	c.flags.Append(uint32(series.flags))
 	c.attributes.Append(encodeAttributes(series.attrs, bucketKey))
 	c.resource.Append(encodeAttributes(series.res, bucketKey))
+}
+
+func (b *metricsBatch) addName(name string) {
+	b.labels[[2]string{"__name__", name}] = struct{}{}
 }
 
 func (b *metricsBatch) addLabels(m pcommon.Map) {
