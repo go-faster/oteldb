@@ -31,11 +31,11 @@ const (
 		value Float64 CODEC(Gorilla),
 
 		flags	    UInt32 CODEC(T64),
-		attributes	String,
-		resource	String
+		attributes	String CODEC(ZSTD(1)),
+		resource	String CODEC(ZSTD(1))
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name, mapping, timestamp);`
+	ORDER BY (name, mapping, cityHash64(resource), cityHash64(attributes), timestamp);`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
