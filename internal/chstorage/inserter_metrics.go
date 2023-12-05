@@ -13,6 +13,8 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // ConsumeMetrics inserts given metrics.
@@ -48,7 +50,9 @@ func newMetricBatch() *metricsBatch {
 func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool.Pool) error {
 	labels := newLabelsColumns()
 	for pair := range b.labels {
-		labels.name.Append(pair[0])
+		key := pair[0]
+		labels.name.Append(otelstorage.KeyToLabel(key))
+		labels.key.Append(key)
 		labels.value.Append(pair[1])
 	}
 
@@ -370,13 +374,13 @@ func (b *metricsBatch) addMappedSample(
 }
 
 func (b *metricsBatch) addLabels(m pcommon.Map) {
-	m.Range(func(name string, value pcommon.Value) bool {
-		key := [2]string{
-			name,
+	m.Range(func(key string, value pcommon.Value) bool {
+		pair := [2]string{
+			key,
 			// FIXME(tdakkota): annoying allocations
 			value.AsString(),
 		}
-		b.labels[key] = struct{}{}
+		b.labels[pair] = struct{}{}
 		return true
 	})
 }

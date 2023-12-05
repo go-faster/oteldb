@@ -17,6 +17,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 var _ storage.Queryable = (*Querier)(nil)
@@ -166,6 +168,52 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 	return nil
 }
 
+func (p *promQuerier) getLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
+	ctx, span := p.tracer.Start(ctx, "getLabelMapping",
+		trace.WithAttributes(
+			attribute.Int("chstorage.labels_count", len(input)),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	out := make(map[string]string, len(input))
+	var (
+		name = new(proto.ColStr).LowCardinality()
+		key  = new(proto.ColStr).LowCardinality()
+	)
+	var inputData proto.ColStr
+	for _, label := range input {
+		inputData.Append(label)
+	}
+	if err := p.ch.Do(ctx, ch.Query{
+		Result: proto.Results{
+			{Name: "name", Data: name},
+			{Name: "key", Data: key},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			l := min(name.Rows(), key.Rows())
+			for i := 0; i < l; i++ {
+				out[name.Row(i)] = key.Row(i)
+			}
+			return nil
+		},
+		ExternalTable: "labels",
+		ExternalData: []proto.InputColumn{
+			{Name: "name", Data: &inputData},
+		},
+		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, p.tables.Labels),
+	}); err != nil {
+		return nil, errors.Wrap(err, "select")
+	}
+
+	return out, nil
+}
+
 // Close releases the resources of the Querier.
 func (p *promQuerier) Close() error {
 	return nil
@@ -216,6 +264,15 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 		span.End()
 	}()
 
+	var queryLabels []string
+	for _, m := range matchers {
+		queryLabels = append(queryLabels, m.Name)
+	}
+	mapping, err := p.getLabelMapping(ctx, queryLabels)
+	if err != nil {
+		return nil, errors.Wrap(err, "get label mapping")
+	}
+
 	buildQuery := func(table string) (string, error) {
 		var query strings.Builder
 		fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
@@ -239,10 +296,13 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 				selectors := []string{
 					"name",
 				}
-				if m.Name != "__name__" {
+				if name := m.Name; name != "__name__" {
+					if mapped, ok := mapping[name]; ok {
+						name = mapped
+					}
 					selectors = []string{
-						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(m.Name)),
-						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(m.Name)),
+						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(name)),
+						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
 					}
 				}
 				query.WriteString("(\n")
@@ -373,12 +433,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 		lb     labels.ScratchBuilder
 	)
 	for _, s := range set {
-		lb.Reset()
-		for key, value := range s.labels {
-			lb.Add(key, value)
-		}
-		lb.Sort()
-		s.series.labels = lb.Labels()
+		s.series.labels = buildPromLabels(&lb, s.labels)
 		result = append(result, s.series)
 	}
 
@@ -461,16 +516,21 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 		lb     labels.ScratchBuilder
 	)
 	for _, s := range set {
-		lb.Reset()
-		for key, value := range s.labels {
-			lb.Add(key, value)
-		}
-		lb.Sort()
-		s.series.labels = lb.Labels()
+		s.series.labels = buildPromLabels(&lb, s.labels)
 		result = append(result, s.series)
 	}
 
 	return result, nil
+}
+
+func buildPromLabels(lb *labels.ScratchBuilder, set map[string]string) labels.Labels {
+	lb.Reset()
+	for key, value := range set {
+		key = otelstorage.KeyToLabel(key)
+		lb.Add(key, value)
+	}
+	lb.Sort()
+	return lb.Labels()
 }
 
 type seriesSet[S storage.Series] struct {

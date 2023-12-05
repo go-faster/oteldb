@@ -8,6 +8,8 @@ import (
 	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+
+	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // BatchSet is a set of batches.
@@ -142,6 +144,7 @@ func (s *BatchSet) addLabel(label, val string) {
 	if s.Labels == nil {
 		s.Labels = map[string]map[string]struct{}{}
 	}
+	label = otelstorage.KeyToLabel(label)
 	m := s.Labels[label]
 	if m == nil {
 		m = map[string]struct{}{}

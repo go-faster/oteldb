@@ -107,6 +107,7 @@ const (
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name  LowCardinality(String),
+		key  LowCardinality(String),
 		value String
 	)
 	ENGINE = ReplacingMergeTree
