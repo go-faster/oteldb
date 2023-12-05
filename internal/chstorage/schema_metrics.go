@@ -50,7 +50,7 @@ const (
 	histogramsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9) CODEC(DoubleDelta),
+		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		histogram_count UInt64,
 		histogram_sum Nullable(Float64),
@@ -68,7 +68,7 @@ const (
 	expHistogramsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9) CODEC(DoubleDelta),
+		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		exp_histogram_count UInt64,
 		exp_histogram_sum Nullable(Float64),
@@ -90,7 +90,7 @@ const (
 	summariesSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9) CODEC(DoubleDelta),
+		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		summary_count UInt64,
 		summary_sum Float64,
@@ -107,7 +107,7 @@ const (
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name  LowCardinality(String),
-		key  LowCardinality(String),
+		key   LowCardinality(String),
 		value String
 	)
 	ENGINE = ReplacingMergeTree
