@@ -501,7 +501,7 @@
             "type": "loki",
             "uid": "loki-oteldb"
           },
-          "expr": "{service_name=\"go-default.oteldb\", level!=\"DEBUG\"}",
+          "expr": "{service_name=\"go-faster.oteldb\", level!=\"DEBUG\"}",
           "queryType": "range",
           "refId": "A"
         }
