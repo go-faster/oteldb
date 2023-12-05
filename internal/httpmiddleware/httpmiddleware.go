@@ -32,9 +32,6 @@ func LogRequests(find RouteFinder) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			lg := zctx.From(ctx)
-			if cx := trace.SpanContextFromContext(ctx); !cx.IsValid() {
-				lg.Warn("No span context")
-			}
 			var (
 				opName = zap.Skip()
 				opID   = zap.Skip()
