@@ -141,7 +141,5 @@ issues:
       text: "method Seek"
 
     # Not gonna use const, does not make any sense.
-    - path: internal/chstorage
-      linters: [goconst]
-      text: "int"
-
+    - linters: [goconst]
+      text: "(Int64|int)"
