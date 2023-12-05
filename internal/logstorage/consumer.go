@@ -61,7 +61,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 	}
 
 	// Parse logs.
-	for _, record := range insertBatch {
+	for i, record := range insertBatch {
 		if record.Attrs.IsZero() || record.ResourceAttrs.IsZero() {
 			continue
 		}
@@ -86,9 +86,25 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 			if err != nil {
 				continue
 			}
-			record.Body = line.Body
 			attrs.Remove(logMessageKey)
 			line.Attrs.CopyTo(attrs)
+
+			record.Body = line.Body
+			if line.Timestamp != 0 {
+				record.Timestamp = line.Timestamp
+			}
+			if line.SeverityNumber != 0 {
+				record.SeverityNumber = line.SeverityNumber
+				record.SeverityText = line.SeverityText
+			}
+			if !line.SpanID.IsEmpty() {
+				record.SpanID = line.SpanID
+			}
+			if !line.TraceID.IsEmpty() {
+				record.TraceID = line.TraceID
+			}
+
+			insertBatch[i] = record
 		}
 	}
 
