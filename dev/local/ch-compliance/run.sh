@@ -6,6 +6,11 @@ cd ./compliance/promql && go install ./cmd/promql-compliance-tester && cd -
 
 docker compose up -d --remove-orphans --build --force-recreate
 go run ./cmd/compliance-wait
-promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml || true
+
+echo ">> Testing reference implementation"
+promql-compliance-tester -config-file promql-test-queries.yml -config-file test.prom.yml | tee result.prom.txt || true
+
+echo ">> Testing oteldb implementation"
+promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml | tee result.oteldb.txt || true
 
 docker compose down -v
