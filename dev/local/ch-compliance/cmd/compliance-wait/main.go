@@ -18,7 +18,7 @@ func main() {
 			"http://localhost:9095",
 			"http://localhost:9096",
 		} {
-			res, err := http.Get(s)
+			res, err := http.Get(s) // #nosec G107
 			if err != nil {
 				return err
 			}
