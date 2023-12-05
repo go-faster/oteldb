@@ -25,7 +25,7 @@ const (
 	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
-		timestamp DateTime64(9) CODEC(DoubleDelta),
+		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		mapping Enum8(` + metricMappingDDL + `) CODEC(T64),
 		value Float64 CODEC(Gorilla),
