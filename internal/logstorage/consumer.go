@@ -78,7 +78,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 			logparser.GenericJSONParser{},
 			logparser.LogFmtParser{},
 		} {
-			if parser.Detect(v.Str()) {
+			if !parser.Detect(v.Str()) {
 				continue
 			}
 			data := []byte(v.Str())
