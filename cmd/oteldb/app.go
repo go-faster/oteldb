@@ -195,8 +195,9 @@ func (app *App) trySetupProm() error {
 		// all queries to fail with error.
 		//
 		// TODO(tdakkota): make configurable.
-		Timeout:    time.Minute,
-		MaxSamples: 1_000_000,
+		Timeout:              time.Minute,
+		MaxSamples:           1_000_000,
+		EnableNegativeOffset: true,
 	})
 	prom := promhandler.NewPromAPI(engine, q, promhandler.PromAPIOptions{})
 
