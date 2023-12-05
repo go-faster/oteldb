@@ -25,7 +25,7 @@ Supported query languages:
 ### Prometheus Compatibility
 
 ```console
-$ promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml | tee result.oteldb.txt || true
+$ promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml
 Total: 547 / 548 (99.82%) passed, 0 unsupported
 ```
 
