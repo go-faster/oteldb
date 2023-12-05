@@ -23,13 +23,19 @@ func mapResult(query string, r *promql.Result) (*promapi.QueryResponse, error) {
 			Result: make([]promapi.MatrixResultItem, len(r)),
 		}
 		for i, e := range r {
-			values := make([]promapi.FPoint, len(e.Floats))
-			for i, val := range e.Floats {
-				values[i] = mapFPoint(val.T, val.F)
+			var values []promapi.FPoint
+			if len(e.Floats) > 0 {
+				values = make([]promapi.FPoint, len(e.Floats))
+				for i, val := range e.Floats {
+					values[i] = mapFPoint(val.T, val.F)
+				}
 			}
-			histograms := make([]promapi.HPoint, len(e.Histograms))
-			for i, val := range e.Histograms {
-				histograms[i] = mapHPoint(val.T, val.H)
+			var histograms []promapi.HPoint
+			if len(e.Histograms) > 0 {
+				histograms = make([]promapi.HPoint, len(e.Histograms))
+				for i, val := range e.Histograms {
+					histograms[i] = mapHPoint(val.T, val.H)
+				}
 			}
 			mat.Result[i] = promapi.MatrixResultItem{
 				Metric:     e.Metric.Map(),
