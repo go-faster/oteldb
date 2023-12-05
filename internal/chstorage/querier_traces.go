@@ -446,8 +446,6 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
 func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Iterator[tracestorage.Span], error) {
 	c := newSpanColumns()
 
-	fmt.Println(query)
-
 	var r []tracestorage.Span
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
