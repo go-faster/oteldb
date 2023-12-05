@@ -88,7 +88,11 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 			}
 			attrs.PutStr("logparser.type", parser.String())
 			if !line.Attrs.IsZero() {
-				line.Attrs.CopyTo(attrs)
+				line.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+					target := attrs.PutEmpty(k)
+					v.CopyTo(target)
+					return true
+				})
 			}
 			record.Body = line.Body
 			if line.Timestamp != 0 {
