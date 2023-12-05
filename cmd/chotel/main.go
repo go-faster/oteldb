@@ -312,7 +312,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 }
 
 func (a *App) runSender(ctx context.Context) error {
-	ticker := time.NewTicker(time.Second * 5)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
 	// First immediate tick.
