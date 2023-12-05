@@ -24,6 +24,15 @@ data:
           - cpu
           - memory
     processors:
+      # normalize between prometheus and otel
+      resource/normalize:
+        attributes:
+          - key: instance
+            from_attribute: service.instance.id
+            action: insert
+          - key: job
+            from_attribute: service.name
+            action: insert
       probabilistic_sampler:
         hash_seed: 10
         sampling_percentage: 5
