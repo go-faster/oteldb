@@ -86,7 +86,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 			if err != nil {
 				continue
 			}
-			attrs.Remove(logMessageKey)
+			attrs.PutStr("logparser.type", parser.String())
 			if !line.Attrs.IsZero() {
 				line.Attrs.CopyTo(attrs)
 			}

@@ -5,4 +5,5 @@ package logparser
 type Parser interface {
 	Parse(data []byte) (*Line, error)
 	Detect(line string) bool
+	String() string
 }

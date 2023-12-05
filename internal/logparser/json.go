@@ -341,3 +341,7 @@ func (GenericJSONParser) Parse(data []byte) (*Line, error) {
 func (GenericJSONParser) Detect(line string) bool {
 	return jx.DecodeStr(line).Next() == jx.Object
 }
+
+func (GenericJSONParser) String() string {
+	return "generic-json"
+}

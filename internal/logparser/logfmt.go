@@ -114,6 +114,10 @@ func (LogFmtParser) Parse(data []byte) (*Line, error) {
 	return line, nil
 }
 
+func (LogFmtParser) String() string {
+	return "logfmt"
+}
+
 // Detect if line is parsable by this parser.
 func (LogFmtParser) Detect(line string) bool {
 	noop := logfmt.HandlerFunc(func(key, val []byte) error {
