@@ -120,6 +120,12 @@ func (LogFmtParser) String() string {
 
 // Detect if line is parsable by this parser.
 func (LogFmtParser) Detect(line string) bool {
+	if line == "" {
+		return false
+	}
+	if line[0] == '{' {
+		return false
+	}
 	noop := logfmt.HandlerFunc(func(key, val []byte) error {
 		return nil
 	})
