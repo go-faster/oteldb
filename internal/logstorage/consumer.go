@@ -87,6 +87,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 				continue
 			}
 			attrs.PutStr("logparser.type", parser.String())
+			attrs.Remove(logMessageKey)
 			if !line.Attrs.IsZero() {
 				line.Attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
 					target := attrs.PutEmpty(k)
