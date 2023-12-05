@@ -15,18 +15,22 @@ receivers:
                 - 'demo-1:8080'
                 - 'demo-2:8080'
                 - 'demo-3:8080'
-  prometheus/compliance:
-    config:
-      scrape_configs:
-        # For PromQL compliance tester
-        # https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-tester
-        - job_name: 'demo'
+        - job_name: otel-collector
           scrape_interval: 5s
           static_configs:
-            - targets:
-                - 'demo-1:8080'
-                - 'demo-2:8080'
-                - 'demo-3:8080'
+            - targets: [localhost:8888]
+        - job_name: node-exporter
+          scrape_interval: 5s
+          static_configs:
+            - targets: [node-exporter:9100]
+        - job_name: prometheus
+          scrape_interval: 5s
+          static_configs:
+            - targets: [prometheus:9090]
+        - job_name: clickhouse
+          scrape_interval: 5s
+          static_configs:
+            - targets: [clickhouse:8080]
 processors:
   batch:
     timeout: 1s
@@ -36,7 +40,15 @@ processors:
     check_interval: 1s
     limit_mib: 256
     spike_limit_mib: 500
-
+  # normalize between prometheus and otel
+  resource/normalize:
+    attributes:
+      - key: instance
+        from_attribute: service.instance.id
+        action: insert
+      - key: job
+        from_attribute: service.name
+        action: insert
 exporters:
   otlp:
     endpoint: oteldb:4317
@@ -67,6 +79,10 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
+      exporters: [otlp, prometheusremotewrite]
+    metrics/scrape:
+      receivers: [prometheus]
+      processors: [resource/normalize, batch]
       exporters: [otlp, prometheusremotewrite]
     logs:
       receivers: [otlp]

@@ -62,7 +62,15 @@ processors:
     detectors: [ "system" ]
     system:
       hostname_sources: [ "os" ]
-
+  # normalize between prometheus and otel
+  resource/normalize:
+    attributes:
+      - key: instance
+        from_attribute: service.instance.id
+        action: insert
+      - key: job
+        from_attribute: service.name
+        action: insert
 exporters:
   clickhouse:
     endpoint: tcp://clickhouse:9000
@@ -123,8 +131,12 @@ service:
       processors: [batch]
       exporters: [otlp, otlp/jaeger, otlp/qryn, otlp/tempo, clickhouse]
     metrics:
-      receivers: [otlp, prometheus, prometheus/compliance, hostmetrics]
+      receivers: [otlp, hostmetrics]
       processors: [batch]
+      exporters: [otlp, prometheusremotewrite, otlp/qryn, clickhouse]
+    metrics/scrape:
+      receivers: [prometheus, prometheus/compliance]
+      processors: [resource/normalize, batch]
       exporters: [otlp, prometheusremotewrite, otlp/qryn, clickhouse]
     logs:
       receivers: [otlp, fluentforward]
