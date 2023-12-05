@@ -18,16 +18,16 @@ Currently, we focus on ClickHouse for realtime queries on hot/warm data.
 ## Query
 
 Supported query languages:
-- LogQL (loki) for logs
+- LogQL (Logi) for logs
 - TraceQL (Tempo) for traces
 - PromQL (Prometheus) for metrics
 
 ## Local development
 
-Setups Grafana, oteldb, storage and trace generator.
-
-#### Clickhouse
+Setups oteldb, clickhouse server, grafana, and telemetry generators:
 
 ```shell
 docker compose -f dev/local/ch/docker-compose.yml up -d
 ```
+
+You can open Grafana dashboard at http://localhost:3000/d/oteldb/oteldb
