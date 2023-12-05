@@ -77,7 +77,7 @@
       },
       "gridPos": {
         "h": 16,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 1
       },
@@ -133,7 +133,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 17
       },
       "id": 8,
       "panels": [],
@@ -178,7 +178,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 18
       },
       "id": 7,
       "options": {
@@ -242,7 +242,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 29
       },
       "id": 9,
       "panels": [],
@@ -258,7 +258,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 30
       },
       "id": 4,
       "options": {
@@ -295,9 +295,9 @@
     "list": [
       {
         "current": {
-          "selected": true,
-          "text": "otel",
-          "value": "otel"
+          "selected": false,
+          "text": "default",
+          "value": "default"
         },
         "datasource": {
           "type": "grafana-clickhouse-datasource",
@@ -313,16 +313,22 @@
         "options": [],
         "query": "SHOW DATABASES",
         "refresh": 1,
-        "regex": "",
+        "regex": "(default|otel)",
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"
       },
       {
         "current": {
-          "selected": false,
-          "text": "otel_traces_trace_id_ts",
-          "value": "otel_traces_trace_id_ts"
+          "selected": true,
+          "text": [
+            "traces_spans",
+            "logs"
+          ],
+          "value": [
+            "traces_spans",
+            "logs"
+          ]
         },
         "datasource": {
           "type": "grafana-clickhouse-datasource",
