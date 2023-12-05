@@ -87,8 +87,9 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 				continue
 			}
 			attrs.Remove(logMessageKey)
-			line.Attrs.CopyTo(attrs)
-
+			if !line.Attrs.IsZero() {
+				line.Attrs.CopyTo(attrs)
+			}
 			record.Body = line.Body
 			if line.Timestamp != 0 {
 				record.Timestamp = line.Timestamp
