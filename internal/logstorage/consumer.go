@@ -6,6 +6,8 @@ import (
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
+
+	"github.com/go-faster/oteldb/internal/logparser"
 )
 
 // Consumer consumes given logs and inserts them using given Inserter.
@@ -55,6 +57,38 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 				insertBatch = append(insertBatch, NewRecordFromOTEL(res, scope, record))
 				addLabels(record.Attributes())
 			}
+		}
+	}
+
+	// Parse logs.
+	for _, record := range insertBatch {
+		if record.Attrs.IsZero() || record.ResourceAttrs.IsZero() {
+			continue
+		}
+
+		// Assuming filelog.
+		// Should contain "log" attribute.
+		attrs := record.Attrs.AsMap()
+		const logMessageKey = "log"
+		v, ok := attrs.Get(logMessageKey)
+		if !ok || v.Type() != pcommon.ValueTypeStr {
+			continue
+		}
+		for _, parser := range []logparser.Parser{
+			logparser.GenericJSONParser{},
+			logparser.LogFmtParser{},
+		} {
+			if parser.Detect(v.Str()) {
+				continue
+			}
+			data := []byte(v.Str())
+			line, err := parser.Parse(data)
+			if err != nil {
+				continue
+			}
+			record.Body = line.Body
+			attrs.Remove(logMessageKey)
+			line.Attrs.CopyTo(attrs)
 		}
 	}
 
