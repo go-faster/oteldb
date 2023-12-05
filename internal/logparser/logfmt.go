@@ -28,6 +28,10 @@ func (LogFmtParser) Parse(data []byte) (*Line, error) {
 		case "msg":
 			line.Body = v
 		case "level", "lvl", "levelStr", "severity_text", "severity", "levelname":
+			if v == "" {
+				attrs.PutStr(k, v)
+				return nil
+			}
 			line.SeverityText = v
 			line.SeverityNumber = _severityMap[unicode.ToLower(rune(v[0]))]
 		case "span_id", "spanid", "spanID", "spanId":
