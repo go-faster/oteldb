@@ -64,10 +64,10 @@ func New(refAPI, testAPI PromAPI, queryTweaks []*config.QueryTweak) *Comparer {
 // Result tracks a single test case's query comparison result.
 type Result struct {
 	TestCase          *TestCase `json:"testCase"`
-	Diff              string    `json:"diff"`
-	UnexpectedFailure string    `json:"unexpectedFailure"`
+	Diff              string    `json:"diff,omitempty"`
+	UnexpectedFailure string    `json:"unexpectedFailure,omitempty"`
 	UnexpectedSuccess bool      `json:"unexpectedSuccess"`
-	Unsupported       bool      `json:"unsupported"`
+	Unsupported       bool      `json:"unsupported,omitempty"`
 }
 
 // Success returns true if the comparison result was successful.
