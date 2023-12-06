@@ -216,14 +216,13 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 			}
 
 			recv, err := factoryBase.CreateTracesReceiver(ctx, params, componentCfg, c)
-			if err != nil {
-				if errors.Is(err, component.ErrDataTypeIsNotSupported) {
-					continue
-				}
+			switch {
+			case errors.Is(err, component.ErrDataTypeIsNotSupported):
+			case err != nil:
 				return nil, errors.Wrap(err, "create traces receiver")
+			default:
+				shim.receivers = append(shim.receivers, recv)
 			}
-
-			shim.receivers = append(shim.receivers, recv)
 		}
 		if c := metricsConsumer; c != nil {
 			lg := logger.Named("metrics")
@@ -237,14 +236,13 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 			}
 
 			recv, err := factoryBase.CreateMetricsReceiver(ctx, params, componentCfg, c)
-			if err != nil {
-				if errors.Is(err, component.ErrDataTypeIsNotSupported) {
-					continue
-				}
-				return nil, errors.Wrap(err, "create metrics receiver")
+			switch {
+			case errors.Is(err, component.ErrDataTypeIsNotSupported):
+			case err != nil:
+				return nil, errors.Wrap(err, "create traces receiver")
+			default:
+				shim.receivers = append(shim.receivers, recv)
 			}
-
-			shim.receivers = append(shim.receivers, recv)
 		}
 		if c := logsConsumer; c != nil {
 			lg := logger.Named("logs")
@@ -258,14 +256,13 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 			}
 
 			recv, err := factoryBase.CreateLogsReceiver(ctx, params, componentCfg, c)
-			if err != nil {
-				if errors.Is(err, component.ErrDataTypeIsNotSupported) {
-					continue
-				}
-				return nil, errors.Wrap(err, "create logs receiver")
+			switch {
+			case errors.Is(err, component.ErrDataTypeIsNotSupported):
+			case err != nil:
+				return nil, errors.Wrap(err, "create traces receiver")
+			default:
+				shim.receivers = append(shim.receivers, recv)
 			}
-
-			shim.receivers = append(shim.receivers, recv)
 		}
 	}
 
