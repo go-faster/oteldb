@@ -29,6 +29,9 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           ports:
+            - containerPort: 19291
+              protocol: TCP
+              name: prom-rw
             - containerPort: 3200
               protocol: TCP
               name: tempo-http

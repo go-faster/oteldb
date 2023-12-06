@@ -9,6 +9,10 @@ metadata:
     prometheus: "true"
 spec:
   ports:
+    - port: 19291
+      protocol: TCP
+      targetPort: 19291
+      name: prom-rw
     - port: 8090
       protocol: TCP
       targetPort: 8090
