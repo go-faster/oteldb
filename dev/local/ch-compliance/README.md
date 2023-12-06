@@ -4,7 +4,7 @@ https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-test
 
 To build and install:
 ```
-cd ./compliance/promql && go install ./cmd/promql-compliance-tester && cd -
+go install github.com/go-faster/oteldb/cmd/promql-compliance-tester
 ```
 
 To run with targets in docker-compose:

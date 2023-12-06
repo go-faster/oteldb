@@ -1,3 +1,13 @@
+// Binary promql-compliance-tester performs promql compliance testing based on provided
+// configuration, comparing results with reference implementation.
+//
+// Fork of https://github.com/prometheus/compliance.
+//
+// Changes:
+// - Added more configuration arguments
+// - Embedded default HTML template
+// - Cleaned up JSON output with omitempty
+// - Fixed issues reported by linters
 package main
 
 import (
@@ -79,7 +89,7 @@ func main() {
 	outputHTMLTemplate := flag.String("output-html-template", "", "The HTML template to use when using HTML as the output format.")
 	outputPassing := flag.Bool("output-passing", false, "Whether to also include passing test cases in the output.")
 	queryParallelism := flag.Int("query-parallelism", 20, "Maximum number of comparison queries to run in parallel.")
-	startDelta := flag.Duration("start", 12*time.Minute, "The delta between the start time and current time, negated")
+	endDelta := flag.Duration("end", 12*time.Minute, "The delta between the end time and current time, negated")
 	rangeDuration := flag.Duration("range", 10*time.Minute, "The duration of the query range.")
 	resolutionDuration := flag.Duration("resolution", 10*time.Second, "The resolution of the query.")
 	flag.Parse()
@@ -117,7 +127,7 @@ func main() {
 
 	comp := comparer.New(refAPI, testAPI, cfg.QueryTweaks)
 
-	end := getTime(cfg.QueryTimeParameters.EndTime, time.Now().Add(-*startDelta))
+	end := getTime(cfg.QueryTimeParameters.EndTime, time.Now().Add(-*endDelta))
 	start := end.Add(
 		-getNonZeroDuration(cfg.QueryTimeParameters.RangeInSeconds, *rangeDuration),
 	)
