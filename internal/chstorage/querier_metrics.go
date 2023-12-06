@@ -3,6 +3,7 @@ package chstorage
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -222,8 +223,8 @@ func (p *promQuerier) Close() error {
 // Select returns a set of series that matches the given label matchers.
 // Caller can specify if it requires returned series to be sorted. Prefer not requiring sorting for better performance.
 // It allows passing hints that can help in optimizing select, but it's up to implementation how this is used if used at all.
-func (p *promQuerier) Select(ctx context.Context, _ bool, hints *storage.SelectHints, matchers ...*labels.Matcher) storage.SeriesSet {
-	ss, err := p.selectSeries(ctx, hints, matchers...)
+func (p *promQuerier) Select(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) storage.SeriesSet {
+	ss, err := p.selectSeries(ctx, sortSeries, hints, matchers...)
 	if err != nil {
 		return storage.ErrSeriesSet(err)
 	}
@@ -237,7 +238,7 @@ type seriesKey struct {
 	bucketKey  [2]string
 }
 
-func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
+func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
 	var (
 		start = p.mint
 		end   = p.maxt
@@ -273,6 +274,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
+	// TODO(tdakkota): optimize query by func hint (e.g. func "series").
 	buildQuery := func(table string) (string, error) {
 		var query strings.Builder
 		fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
@@ -372,6 +374,11 @@ func (p *promQuerier) selectSeries(ctx context.Context, hints *storage.SelectHin
 	points = append(points, histSeries...)
 	points = append(points, expHistSeries...)
 	points = append(points, summarySeries...)
+	if sortSeries {
+		slices.SortFunc(points, func(a, b storage.Series) int {
+			return labels.Compare(a.Labels(), b.Labels())
+		})
+	}
 	return newSeriesSet(points), nil
 }
 
