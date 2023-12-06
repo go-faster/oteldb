@@ -6,6 +6,8 @@ ignore:
   # Skip non-production code.
   - "internal/lokiproxy/"
   - "internal/pyroproxy/"
+  # Skip vendored-forked
+  - "internal/promcompliance/"
 coverage:
   status:
     project: false

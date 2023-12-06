@@ -116,8 +116,16 @@ issues:
       text: "ST1003" # underscores lol
 
     - path: (internal|cmd)
+      linters: [revive, stylecheck]
+      text: "comment"
+
+    - path: 'internal/promcompliance'
       linters: [revive]
-      text: "package-comments"
+      text: "exported:"
+
+    - path: 'internal/promcompliance'
+      linters: [gocritic]
+      text: "ifElseChain:"
 
     - linters: [revive]
       text: "comment on exported const .+ should be of the form"

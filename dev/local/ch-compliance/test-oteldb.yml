@@ -1,4 +1,4 @@
-# promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml
+# promql-compliance-tester -config-file promql-test-queries.yml -config-file test-oteldb.yml
 
 reference_target_config:
   query_url: http://localhost:9091
