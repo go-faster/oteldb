@@ -18,12 +18,14 @@ package prometheusremotewritereceiver
 import (
 	"context"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"sync"
 
 	"github.com/prometheus/prometheus/storage/remote"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/receiverhelper"
@@ -81,7 +83,12 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 	rec.startOnce.Do(func() {
 		err = nil
 		rec.host = host
-		rec.server, err = rec.config.HTTPServerSettings.ToServer(host, rec.params.TelemetrySettings, rec)
+		rec.server, err = rec.config.HTTPServerSettings.ToServer(host, rec.params.TelemetrySettings, rec,
+			// HACK: Pass "snappy" encoding as-is to avoid "unsupported encoding" error.
+			confighttp.WithDecoder("snappy", func(body io.ReadCloser) (io.ReadCloser, error) {
+				return body, nil
+			}),
+		)
 		var listener net.Listener
 		listener, err = rec.config.HTTPServerSettings.ToListener()
 		if err != nil {
