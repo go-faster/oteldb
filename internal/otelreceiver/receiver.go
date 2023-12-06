@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
@@ -18,15 +19,14 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/receiver"
+	"go.opentelemetry.io/collector/receiver/otlpreceiver"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
-	"github.com/go-faster/errors"
-
-	"go.opentelemetry.io/collector/receiver/otlpreceiver"
-	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/go-faster/oteldb/internal/otelreceiver/prometheusremotewritereceiver"
 )
 
 // Receiver is a OpenTelemetry-compatible trace receiver.
@@ -45,6 +45,7 @@ var defaultReceivers = map[string]any{
 			"http": nil,
 		},
 	},
+	"prometheusremotewrite": map[string]any{},
 }
 
 // ReceiverConfig is a config struct for Receiver.
@@ -78,7 +79,10 @@ func NewReceiver(consumers Consumers, cfg ReceiverConfig) (*Receiver, error) {
 		logger: cfg.Logger.Named("shim"),
 	}
 
-	receiverFactories, err := receiver.MakeFactoryMap(otlpreceiver.NewFactory())
+	receiverFactories, err := receiver.MakeFactoryMap(
+		otlpreceiver.NewFactory(),
+		prometheusremotewritereceiver.NewFactory(),
+	)
 	if err != nil {
 		return nil, err
 	}
