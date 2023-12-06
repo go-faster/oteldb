@@ -16,6 +16,7 @@
 package prometheusremotewritereceiver
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -23,7 +24,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/prometheus/prometheus/storage/remote"
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/snappy"
+	"github.com/prometheus/prometheus/prompb"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/consumer"
@@ -84,9 +87,25 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 		err = nil
 		rec.host = host
 		rec.server, err = rec.config.HTTPServerSettings.ToServer(host, rec.params.TelemetrySettings, rec,
-			// HACK: Pass "snappy" encoding as-is to avoid "unsupported encoding" error.
 			confighttp.WithDecoder("snappy", func(body io.ReadCloser) (io.ReadCloser, error) {
-				return body, nil
+				// TODO(tdakkota): use buffer pool
+				compressed, err := io.ReadAll(body)
+				if err != nil {
+					return nil, err
+				}
+
+				decompressed, err := snappy.Decode(nil, compressed)
+				if err != nil {
+					return nil, err
+				}
+
+				return struct {
+					io.Closer
+					io.Reader
+				}{
+					Closer: body,
+					Reader: bytes.NewReader(decompressed),
+				}, nil
 			}),
 		)
 		var listener net.Listener
@@ -105,9 +124,23 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 	return err
 }
 
+func decodeRequest(r io.Reader) (*prompb.WriteRequest, error) {
+	// TODO(tdakkota): use buffer pool
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var req prompb.WriteRequest
+	if err := proto.Unmarshal(data, &req); err != nil {
+		return nil, err
+	}
+	return &req, nil
+}
+
 func (rec *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := rec.obsrecv.StartMetricsOp(r.Context())
-	req, err := remote.DecodeWriteRequest(r.Body)
+	req, err := decodeRequest(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
