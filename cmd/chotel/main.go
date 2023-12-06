@@ -140,10 +140,7 @@ func (a *App) setup(ctx context.Context) error {
 		Password: a.clickHousePassword,
 		Database: a.clickHouseDB,
 
-		OpenTelemetryInstrumentation: true,
-
-		MeterProvider:  a.metrics.MeterProvider(),
-		TracerProvider: a.metrics.TracerProvider(),
+		OpenTelemetryInstrumentation: false,
 	})
 	if err != nil {
 		return errors.Wrap(err, "clickhouse")
@@ -190,10 +187,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		Password:    a.clickHousePassword,
 		Database:    a.clickHouseDB,
 
-		OpenTelemetryInstrumentation: true,
-
-		MeterProvider:  a.metrics.MeterProvider(),
-		TracerProvider: a.metrics.TracerProvider(),
+		OpenTelemetryInstrumentation: false,
 	})
 	if err != nil {
 		return errors.Wrap(err, "clickhouse")
