@@ -21,7 +21,6 @@ require (
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/ogen-go/ogen v0.79.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.90.1
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheus v0.90.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.45.0
@@ -41,7 +40,6 @@ require (
 	go.opentelemetry.io/collector/pdata v1.0.0
 	go.opentelemetry.io/collector/receiver v0.90.1
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.90.1
-	go.opentelemetry.io/collector/semconv v0.90.1
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.1
 	go.opentelemetry.io/contrib/zpages v0.46.1
@@ -177,6 +175,7 @@ require (
 	go.opentelemetry.io/collector/extension/auth v0.90.0 // indirect
 	go.opentelemetry.io/collector/featuregate v1.0.0 // indirect
 	go.opentelemetry.io/collector/processor v0.90.0 // indirect
+	go.opentelemetry.io/collector/semconv v0.90.1 // indirect
 	go.opentelemetry.io/collector/service v0.90.0 // indirect
 	go.opentelemetry.io/contrib/config v0.1.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.46.1 // indirect
