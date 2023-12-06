@@ -15,8 +15,6 @@ func main() {
 		for _, s := range []string{
 			"http://localhost:9090",
 			"http://localhost:9091",
-			"http://localhost:9095",
-			"http://localhost:9096",
 		} {
 			res, err := http.Get(s) // #nosec G107
 			if err != nil {

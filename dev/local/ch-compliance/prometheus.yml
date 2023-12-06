@@ -14,3 +14,4 @@ scrape_configs:
 
 remote_write:
   - url: http://prometheus-remote:9090/api/v1/write
+  - url: http://oteldb:19291

@@ -1,5 +1,6 @@
 # PromQL Compatibility testing
 
+https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-tester
 
 To build and install:
 ```
@@ -28,5 +29,5 @@ FATA[0000] Error running comparison: expected reference API query "label_replace
 
 Latest result:
 ```
-Total: 147 / 548 (26.82%) passed, 0 unsupported
+Total: 547 / 548 (99.82%) passed, 0 unsupported
 ```

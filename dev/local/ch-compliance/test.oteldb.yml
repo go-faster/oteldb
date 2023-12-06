@@ -1,9 +1,13 @@
 # promql-compliance-tester -config-file promql-test-queries.yml -config-file test.oteldb.yml
 
 reference_target_config:
-  # prometheus (remote write from otelcol)
   query_url: http://localhost:9091
 
 test_target_config:
-  # oteldb (otlp from otelcol)
   query_url: http://localhost:9090
+
+query_tweaks:
+  - note: 'The prometheusremotewritereceiver adds key_name label, leading to extra labels in query results. These need to be stripped before comparisons.'
+    no_bug: true
+    drop_result_labels:
+      - key_name

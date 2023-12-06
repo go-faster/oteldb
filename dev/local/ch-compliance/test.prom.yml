@@ -1,9 +1,0 @@
-# promql-compliance-tester -config-file promql-test-queries.yml -config-file test.prom.yml
-
-reference_target_config:
-  # prometheus-remote
-  query_url: http://localhost:9095
-
-test_target_config:
-  # prometheus-remote
-  query_url: http://localhost:9096
