@@ -4,16 +4,16 @@ https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-test
 
 To build and install:
 ```
-cd ./compliance/promql && go install ./cmd/promql-compliance-tester && cd -
+go install github.com/go-faster/oteldb/cmd/promql-compliance-tester
 ```
 
 To run with targets in docker-compose:
 ```console
-promql-compliance-tester -config-file promql-test-queries.yml -config-file test.local.yml
+promql-compliance-tester -config-file promql-test-queries.yml -config-file test-oteldb.yml
 ```
 
 **NOTE:**
-Results will be false-positive until enough data (5-10min?) is gathered.
+Results will be false-positive until enough data (~20min) is gathered.
 
 This check was disabled as being broken on latest prometheus reference:
 ```yaml

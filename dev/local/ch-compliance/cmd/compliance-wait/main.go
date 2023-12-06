@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,6 +10,12 @@ import (
 )
 
 func main() {
+	var arg struct {
+		Wait time.Duration
+	}
+	flag.DurationVar(&arg.Wait, "wait", time.Second*5, "wait time")
+	flag.Parse()
+
 	fmt.Println(">> waiting for prometheus API")
 	bo := backoff.NewExponentialBackOff()
 	_ = backoff.RetryNotify(func() error {
@@ -27,7 +34,7 @@ func main() {
 		fmt.Println(err)
 	})
 	fmt.Println(">> prometheus api ready")
-	for i := 0; i < 3; i++ {
+	for i := 0; i < int(arg.Wait.Seconds()); i++ {
 		fmt.Println(">> waiting for some scrapes")
 		time.Sleep(time.Second * 1)
 	}
