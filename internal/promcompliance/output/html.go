@@ -1,12 +1,10 @@
 package output
 
 import (
+	_ "embed"
 	"html/template"
 	"log"
 	"os"
-	"path"
-
-	"github.com/pkg/errors"
 
 	"github.com/go-faster/oteldb/internal/promcompliance/comparer"
 	"github.com/go-faster/oteldb/internal/promcompliance/config"
@@ -42,11 +40,22 @@ var funcMap = map[string]interface{}{
 	},
 }
 
+//go:embed example-output.html
+var defaultTemplateSource string
+
+func getTemplate(templatePath string) (*template.Template, error) {
+	t := template.New("output.html").Funcs(funcMap)
+	if templatePath == "" {
+		return t.Parse(defaultTemplateSource)
+	}
+	return t.ParseFiles(templatePath)
+}
+
 // HTML produces HTML output for a number of query results.
 func HTML(tplFile string) (Outputter, error) {
-	t, err := template.New(path.Base(tplFile)).Funcs(funcMap).ParseFiles(tplFile)
+	t, err := getTemplate(tplFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "parsing template file %q", tplFile)
+		return nil, err
 	}
 
 	return func(results []*comparer.Result, includePassing bool, tweaks []*config.QueryTweak) {

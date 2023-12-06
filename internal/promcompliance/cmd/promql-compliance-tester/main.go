@@ -76,9 +76,12 @@ func main() {
 	var configFiles arrayFlags
 	flag.Var(&configFiles, "config-file", "The path to the configuration file. If repeated, the specified files will be concatenated before YAML parsing.")
 	outputFormat := flag.String("output-format", "text", "The comparison output format. Valid values: [text, html, json]")
-	outputHTMLTemplate := flag.String("output-html-template", "./output/example-output.html", "The HTML template to use when using HTML as the output format.")
+	outputHTMLTemplate := flag.String("output-html-template", "", "The HTML template to use when using HTML as the output format.")
 	outputPassing := flag.Bool("output-passing", false, "Whether to also include passing test cases in the output.")
 	queryParallelism := flag.Int("query-parallelism", 20, "Maximum number of comparison queries to run in parallel.")
+	startDelta := flag.Duration("start", 12*time.Minute, "The delta between the start time and current time, negated")
+	rangeDuration := flag.Duration("range", 10*time.Minute, "The duration of the query range.")
+	resolutionDuration := flag.Duration("resolution", 10*time.Second, "The resolution of the query.")
 	flag.Parse()
 
 	var outp output.Outputter
@@ -114,11 +117,13 @@ func main() {
 
 	comp := comparer.New(refAPI, testAPI, cfg.QueryTweaks)
 
-	end := getTime(cfg.QueryTimeParameters.EndTime, time.Now().UTC().Add(-12*time.Minute))
+	end := getTime(cfg.QueryTimeParameters.EndTime, time.Now().Add(-*startDelta))
 	start := end.Add(
-		-getNonZeroDuration(cfg.QueryTimeParameters.RangeInSeconds, 10*time.Minute))
+		-getNonZeroDuration(cfg.QueryTimeParameters.RangeInSeconds, *rangeDuration),
+	)
 	resolution := getNonZeroDuration(
-		cfg.QueryTimeParameters.ResolutionInSeconds, 10*time.Second)
+		cfg.QueryTimeParameters.ResolutionInSeconds, *resolutionDuration,
+	)
 	expandedTestCases := testcases.ExpandTestCases(cfg.TestCases, cfg.QueryTweaks, start, end, resolution)
 
 	var wg sync.WaitGroup
