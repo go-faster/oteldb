@@ -10,6 +10,7 @@ import (
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/util/annotations"
 	"golang.org/x/exp/maps"
@@ -27,18 +28,25 @@ type Engine interface {
 
 // PromAPI implements promapi.Handler.
 type PromAPI struct {
-	eng   Engine
-	store storage.Queryable
+	eng       Engine
+	store     storage.Queryable
+	exemplars storage.ExemplarQueryable
 
 	lookbackDelta time.Duration
 }
 
 // NewPromAPI creates new PromAPI.
-func NewPromAPI(eng Engine, store storage.Queryable, opts PromAPIOptions) *PromAPI {
+func NewPromAPI(
+	eng Engine,
+	store storage.Queryable,
+	exemplars storage.ExemplarQueryable,
+	opts PromAPIOptions,
+) *PromAPI {
 	opts.setDefaults()
 	return &PromAPI{
 		eng:           eng,
 		store:         store,
+		exemplars:     exemplars,
 		lookbackDelta: opts.LookbackDelta,
 	}
 }
@@ -287,8 +295,59 @@ func (h *PromAPI) PostQueryRange(ctx context.Context, req *promapi.QueryRangeFor
 // Query Prometheus.
 //
 // GET /api/v1/query_exemplars
-func (h *PromAPI) GetQueryExemplars(context.Context, promapi.GetQueryExemplarsParams) (*promapi.QueryExemplarsResponse, error) {
-	return nil, ht.ErrNotImplemented
+func (h *PromAPI) GetQueryExemplars(ctx context.Context, params promapi.GetQueryExemplarsParams) (*promapi.QueryExemplarsResponse, error) {
+	if h.exemplars == nil {
+		return nil, ht.ErrNotImplemented
+	}
+	start, err := parseTimestamp(params.Start)
+	if err != nil {
+		return nil, validationErr("parse start", err)
+	}
+	end, err := parseTimestamp(params.End)
+	if err != nil {
+		return nil, validationErr("parse end", err)
+	}
+	if end.Before(start) {
+		err := errors.New("end timestamp must not be before start time")
+		return nil, validationErr("check range", err)
+	}
+	expr, err := parser.ParseExpr(params.Query)
+	if err != nil {
+		return nil, validationErr("parse query", err)
+	}
+	matcherSets := parser.ExtractSelectors(expr)
+
+	q, err := h.exemplars.ExemplarQuerier(ctx)
+	if err != nil {
+		return nil, executionErr("get querier", err)
+	}
+	queryResults, err := q.Select(start.UnixMilli(), end.UnixMilli(), matcherSets...)
+	if err != nil {
+		return nil, executionErr("select", err)
+	}
+	result := make(promapi.Exemplars, len(queryResults))
+	for i, r := range queryResults {
+		exemplars := make([]promapi.Exemplar, len(r.Exemplars))
+		for i, e := range r.Exemplars {
+			exemplars[i] = promapi.Exemplar{
+				Labels: promapi.NewOptLabelSet(e.Labels.Map()),
+				Value:  promapi.NewOptFloat64(e.Value),
+				Timestamp: promapi.OptInt64{
+					Value: e.Ts,
+					Set:   e.HasTs,
+				},
+			}
+		}
+		result[i] = promapi.ExemplarsSet{
+			SeriesLabels: promapi.NewOptLabelSet(r.SeriesLabels.Map()),
+			Exemplars:    exemplars,
+		}
+	}
+
+	return &promapi.QueryExemplarsResponse{
+		Status: "success",
+		Data:   result,
+	}, nil
 }
 
 // PostQueryExemplars implements postQueryExemplars operation.
@@ -296,8 +355,12 @@ func (h *PromAPI) GetQueryExemplars(context.Context, promapi.GetQueryExemplarsPa
 // Query Prometheus.
 //
 // POST /api/v1/query_exemplars
-func (h *PromAPI) PostQueryExemplars(context.Context) (*promapi.QueryExemplarsResponse, error) {
-	return nil, ht.ErrNotImplemented
+func (h *PromAPI) PostQueryExemplars(ctx context.Context, params *promapi.ExemplarsForm) (*promapi.QueryExemplarsResponse, error) {
+	return h.GetQueryExemplars(ctx, promapi.GetQueryExemplarsParams{
+		Query: params.Query,
+		Start: params.Start,
+		End:   params.End,
+	})
 }
 
 // GetMetadata implements getMetadata operation.
