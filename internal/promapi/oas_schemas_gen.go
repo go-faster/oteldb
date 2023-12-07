@@ -412,18 +412,18 @@ func NewStringData(v String) Data {
 
 // Ref: #/components/schemas/Exemplar
 type Exemplar struct {
-	Labels    OptLabelSet `json:"labels"`
-	Value     OptFloat64  `json:"value"`
-	Timestamp OptInt64    `json:"timestamp"`
+	Labels    LabelSet `json:"labels"`
+	Value     float64  `json:"value"`
+	Timestamp OptInt64 `json:"timestamp"`
 }
 
 // GetLabels returns the value of Labels.
-func (s *Exemplar) GetLabels() OptLabelSet {
+func (s *Exemplar) GetLabels() LabelSet {
 	return s.Labels
 }
 
 // GetValue returns the value of Value.
-func (s *Exemplar) GetValue() OptFloat64 {
+func (s *Exemplar) GetValue() float64 {
 	return s.Value
 }
 
@@ -433,12 +433,12 @@ func (s *Exemplar) GetTimestamp() OptInt64 {
 }
 
 // SetLabels sets the value of Labels.
-func (s *Exemplar) SetLabels(val OptLabelSet) {
+func (s *Exemplar) SetLabels(val LabelSet) {
 	s.Labels = val
 }
 
 // SetValue sets the value of Value.
-func (s *Exemplar) SetValue(val OptFloat64) {
+func (s *Exemplar) SetValue(val float64) {
 	s.Value = val
 }
 

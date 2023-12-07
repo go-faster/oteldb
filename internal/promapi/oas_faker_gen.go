@@ -150,7 +150,7 @@ func (s *Exemplar) SetFake() {
 	}
 	{
 		{
-			s.Value.SetFake()
+			s.Value = float64(0)
 		}
 	}
 	{
