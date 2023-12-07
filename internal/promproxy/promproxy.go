@@ -109,8 +109,8 @@ func (s *Server) PostQuery(ctx context.Context, req *promapi.QueryForm) (*promap
 // Query Prometheus.
 //
 // POST /api/v1/query_examplars
-func (s *Server) PostQueryExemplars(ctx context.Context) (*promapi.QueryExemplarsResponse, error) {
-	return s.api.PostQueryExemplars(ctx)
+func (s *Server) PostQueryExemplars(ctx context.Context, req *promapi.ExemplarsForm) (*promapi.QueryExemplarsResponse, error) {
+	return s.api.PostQueryExemplars(ctx, req)
 }
 
 // PostQueryRange implements postQueryRange operation.
