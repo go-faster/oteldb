@@ -330,8 +330,8 @@ func (h *PromAPI) GetQueryExemplars(ctx context.Context, params promapi.GetQuery
 		exemplars := make([]promapi.Exemplar, len(r.Exemplars))
 		for i, e := range r.Exemplars {
 			exemplars[i] = promapi.Exemplar{
-				Labels: promapi.NewOptLabelSet(e.Labels.Map()),
-				Value:  promapi.NewOptFloat64(e.Value),
+				Labels: e.Labels.Map(),
+				Value:  e.Value,
 				Timestamp: promapi.OptInt64{
 					Value: e.Ts,
 					Set:   e.HasTs,
