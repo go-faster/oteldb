@@ -103,6 +103,22 @@ const (
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp;`
+	exemplarsSchema = `CREATE TABLE IF NOT EXISTS %s
+	(
+		name LowCardinality(String),
+		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
+
+		filtered_attributes String,
+		exemplar_timestamp DateTime(9) CODEC(Delta, ZSTD(1)),
+		value Float64,
+		span_id FixedString(8),
+		trace_id FixedString(16),
+
+		attributes	String,
+		resource	String
+	)
+	ENGINE = MergeTree()
+	ORDER BY (name, cityHash64(resource), cityHash64(attributes), timestamp);`
 
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(

@@ -37,9 +37,10 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		mint: minTime,
 		maxt: maxTime,
 
-		ch:     q.ch,
-		tables: q.tables,
-		tracer: q.tracer,
+		ch:              q.ch,
+		tables:          q.tables,
+		tracer:          q.tracer,
+		getLabelMapping: q.getMetricsLabelMapping,
 	}, nil
 }
 
@@ -47,8 +48,9 @@ type promQuerier struct {
 	mint time.Time
 	maxt time.Time
 
-	ch     chClient
-	tables Tables
+	ch              chClient
+	tables          Tables
+	getLabelMapping func(context.Context, []string) (map[string]string, error)
 
 	tracer trace.Tracer
 }
@@ -169,8 +171,8 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 	return nil
 }
 
-func (p *promQuerier) getLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
-	ctx, span := p.tracer.Start(ctx, "getLabelMapping",
+func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
+	ctx, span := q.tracer.Start(ctx, "getMetricsLabelMapping",
 		trace.WithAttributes(
 			attribute.Int("chstorage.labels_count", len(input)),
 		),
@@ -191,7 +193,7 @@ func (p *promQuerier) getLabelMapping(ctx context.Context, input []string) (_ ma
 	for _, label := range input {
 		inputData.Append(label)
 	}
-	if err := p.ch.Do(ctx, ch.Query{
+	if err := q.ch.Do(ctx, ch.Query{
 		Result: proto.Results{
 			{Name: "name", Data: name},
 			{Name: "key", Data: key},
@@ -207,7 +209,7 @@ func (p *promQuerier) getLabelMapping(ctx context.Context, input []string) (_ ma
 		ExternalData: []proto.InputColumn{
 			{Name: "name", Data: &inputData},
 		},
-		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, p.tables.Labels),
+		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.Labels),
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
