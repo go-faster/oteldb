@@ -208,10 +208,6 @@ func (e *exporter) With(fields []zapcore.Field) zapcore.Core {
 	}
 }
 
-func (e *exporter) append(ent zapcore.Entry, fields []zapcore.Field) {
-
-}
-
 func encodeError(a pcommon.Map, key string, err error) {
 	// TODO: update mapping from spec
 
