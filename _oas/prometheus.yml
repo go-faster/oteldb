@@ -735,7 +735,8 @@ components:
         labels:
           $ref: "#/components/schemas/LabelSet"
         value:
-          type: number
+          type: string
+          format: float64
         timestamp:
           type: integer
           format: int64
