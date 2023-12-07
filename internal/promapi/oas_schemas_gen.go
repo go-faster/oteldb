@@ -412,9 +412,9 @@ func NewStringData(v String) Data {
 
 // Ref: #/components/schemas/Exemplar
 type Exemplar struct {
-	Labels    LabelSet `json:"labels"`
-	Value     float64  `json:"value"`
-	Timestamp OptInt64 `json:"timestamp"`
+	Labels    LabelSet   `json:"labels"`
+	Value     float64    `json:"value"`
+	Timestamp OptFloat64 `json:"timestamp"`
 }
 
 // GetLabels returns the value of Labels.
@@ -428,7 +428,7 @@ func (s *Exemplar) GetValue() float64 {
 }
 
 // GetTimestamp returns the value of Timestamp.
-func (s *Exemplar) GetTimestamp() OptInt64 {
+func (s *Exemplar) GetTimestamp() OptFloat64 {
 	return s.Timestamp
 }
 
@@ -443,7 +443,7 @@ func (s *Exemplar) SetValue(val float64) {
 }
 
 // SetTimestamp sets the value of Timestamp.
-func (s *Exemplar) SetTimestamp(val OptInt64) {
+func (s *Exemplar) SetTimestamp(val OptFloat64) {
 	s.Timestamp = val
 }
 
@@ -1491,52 +1491,6 @@ func (o OptInt) Get() (v int, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt) Or(d int) int {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptInt64 returns new OptInt64 with value set to v.
-func NewOptInt64(v int64) OptInt64 {
-	return OptInt64{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptInt64 is optional int64.
-type OptInt64 struct {
-	Value int64
-	Set   bool
-}
-
-// IsSet returns true if OptInt64 was set.
-func (o OptInt64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptInt64) Reset() {
-	var v int64
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptInt64) SetTo(v int64) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptInt64) Get() (v int64, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptInt64) Or(d int64) int64 {
 	if v, ok := o.Get(); ok {
 		return v
 	}

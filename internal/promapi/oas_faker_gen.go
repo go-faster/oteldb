@@ -552,15 +552,6 @@ func (s *OptInt) SetFake() {
 }
 
 // SetFake set fake values.
-func (s *OptInt64) SetFake() {
-	var elem int64
-	{
-		elem = int64(0)
-	}
-	s.SetTo(elem)
-}
-
-// SetFake set fake values.
 func (s *OptLabelSet) SetFake() {
 	var elem LabelSet
 	{
