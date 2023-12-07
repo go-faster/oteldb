@@ -29,9 +29,9 @@ require (
 	github.com/testcontainers/testcontainers-go v0.26.0
 	github.com/zeebo/xxh3 v1.0.2
 	go.opentelemetry.io/collector/component v0.90.1
-	go.opentelemetry.io/collector/config/configauth v0.90.0
-	go.opentelemetry.io/collector/config/confighttp v0.90.0
-	go.opentelemetry.io/collector/config/configtls v0.90.0
+	go.opentelemetry.io/collector/config/configauth v0.90.1
+	go.opentelemetry.io/collector/config/confighttp v0.90.1
+	go.opentelemetry.io/collector/config/configtls v0.90.1
 	go.opentelemetry.io/collector/confmap v0.90.1
 	go.opentelemetry.io/collector/consumer v0.90.1
 	go.opentelemetry.io/collector/exporter v0.90.1
