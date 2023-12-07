@@ -739,8 +739,8 @@ components:
           type: string
           format: float64
         timestamp:
-          type: integer
-          format: int64
+          type: number
+          format: float64
 
     Series:
       type: array
