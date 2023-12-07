@@ -8,6 +8,7 @@ import (
 	"math"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -23,52 +24,33 @@ import (
 func New(enab zapcore.LevelEnabler, res *resource.Resource, client plogotlp.GRPCClient) zapcore.Core {
 	return &exporter{
 		LevelEnabler: enab,
-		client:       client,
-		res:          res,
+
+		sender: &sender{
+			client:   client,
+			res:      res,
+			logs:     plog.NewLogs(),
+			rate:     time.Second * 3,
+			maxBatch: 5000,
+		},
 	}
 }
 
-type exporter struct {
-	zapcore.LevelEnabler
-	context []zapcore.Field
-	client  plogotlp.GRPCClient
-	res     *resource.Resource
+type sender struct {
+	client   plogotlp.GRPCClient
+	res      *resource.Resource
+	logs     plog.Logs
+	rate     time.Duration
+	maxBatch int
+	mux      sync.Mutex
+	sent     time.Time
 }
 
-var (
-	_ zapcore.Core         = (*exporter)(nil)
-	_ zapcore.LevelEnabler = (*exporter)(nil)
-)
-
-func (e *exporter) Level() zapcore.Level {
-	return zapcore.LevelOf(e.LevelEnabler)
-}
-
-func (e *exporter) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if e.Enabled(ent.Level) {
-		return ce.AddCore(ent, e)
-	}
-	return ce
-}
-
-func (e *exporter) With(fields []zapcore.Field) zapcore.Core {
-	return &exporter{
-		LevelEnabler: e.LevelEnabler,
-		client:       e.client,
-		res:          e.res,
-		context:      append(e.context[:len(e.context):len(e.context)], fields...),
-	}
-}
-
-func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
+func (s *sender) append(ent zapcore.Entry, fields []zapcore.Field) {
 	// https://github.com/open-telemetry/oteps/blob/main/text/logs/0097-log-data-model.md#zap
-	var (
-		ld = plog.NewLogs()
-		rl = ld.ResourceLogs().AppendEmpty()
-	)
+	rl := s.logs.ResourceLogs().AppendEmpty()
 	{
 		a := rl.Resource().Attributes()
-		for _, kv := range e.res.Attributes() {
+		for _, kv := range s.res.Attributes() {
 			k := string(kv.Key)
 			switch kv.Value.Type() {
 			case attribute.STRING:
@@ -173,7 +155,61 @@ func (e *exporter) toLogs(ent zapcore.Entry, fields []zapcore.Field) plog.Logs {
 			scope.SetDroppedAttributesCount(skipped)
 		}
 	}
-	return ld
+}
+
+func (s *sender) send(ctx context.Context) error {
+	req := plogotlp.NewExportRequestFromLogs(s.logs)
+	if _, err := s.client.Export(ctx, req); err != nil {
+		return errors.Wrap(err, "send logs")
+	}
+	s.logs = plog.NewLogs()
+	s.sent = time.Now()
+	return nil
+}
+
+func (s *sender) Send(ctx context.Context, ent zapcore.Entry, fields []zapcore.Field) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.append(ent, fields)
+	if time.Since(s.sent) > s.rate || s.logs.LogRecordCount() >= s.maxBatch {
+		return s.send(ctx)
+	}
+	return nil
+}
+
+type exporter struct {
+	zapcore.LevelEnabler
+	context []zapcore.Field
+	sender  *sender
+}
+
+var (
+	_ zapcore.Core         = (*exporter)(nil)
+	_ zapcore.LevelEnabler = (*exporter)(nil)
+)
+
+func (e *exporter) Level() zapcore.Level {
+	return zapcore.LevelOf(e.LevelEnabler)
+}
+
+func (e *exporter) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+	if e.Enabled(ent.Level) {
+		return ce.AddCore(ent, e)
+	}
+	return ce
+}
+
+func (e *exporter) With(fields []zapcore.Field) zapcore.Core {
+	return &exporter{
+		LevelEnabler: e.LevelEnabler,
+
+		context: append(e.context[:len(e.context):len(e.context)], fields...),
+		sender:  e.sender,
+	}
+}
+
+func (e *exporter) append(ent zapcore.Entry, fields []zapcore.Field) {
+
 }
 
 func encodeError(a pcommon.Map, key string, err error) {
@@ -215,15 +251,7 @@ func (e *exporter) Write(ent zapcore.Entry, fields []zapcore.Field) error {
 	all := make([]zapcore.Field, 0, len(fields)+len(e.context))
 	all = append(all, e.context...)
 	all = append(all, fields...)
-
-	ctx := context.TODO()
-	logs := e.toLogs(ent, all)
-	req := plogotlp.NewExportRequestFromLogs(logs)
-	if _, err := e.client.Export(ctx, req); err != nil {
-		return errors.Wrap(err, "send logs")
-	}
-
-	return nil
+	return e.sender.Send(context.Background(), ent, all)
 }
 
 func (e *exporter) Sync() error { return nil }
