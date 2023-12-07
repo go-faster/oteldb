@@ -146,6 +146,12 @@ paths:
     post:
       operationId: postQueryExemplars
       description: Query Prometheus
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ExemplarsForm"
       responses:
         200:
           $ref: "#/components/responses/QueryExemplarsResponse"
@@ -555,6 +561,16 @@ components:
           type: array
           items:
             type: string
+    ExemplarsForm:
+      type: object
+      required: ["query", "start", "end"]
+      properties:
+        query:
+          type: string
+        start:
+          $ref: "#/components/schemas/PrometheusTimestamp"
+        end:
+          $ref: "#/components/schemas/PrometheusTimestamp"
 
     Scalar:
       type: object
