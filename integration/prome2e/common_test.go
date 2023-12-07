@@ -19,6 +19,8 @@ import (
 	"github.com/go-faster/oteldb/internal/promhandler"
 )
 
+type metricQuerier interface{}
+
 func readBatchSet(p string) (s prome2e.BatchSet, _ error) {
 	f, err := os.Open(p)
 	if err != nil {
@@ -36,6 +38,7 @@ func setupDB(
 	set prome2e.BatchSet,
 	consumer otelreceiver.MetricsConsumer,
 	querier storage.Queryable,
+	exemplarQuerier storage.ExemplarQueryable,
 ) *promapi.Client {
 	for i, b := range set.Batches {
 		if err := consumer.ConsumeMetrics(ctx, b); err != nil {
@@ -48,7 +51,7 @@ func setupDB(
 		MaxSamples:           1_000_000,
 		EnableNegativeOffset: true,
 	})
-	api := promhandler.NewPromAPI(engine, querier, promhandler.PromAPIOptions{})
+	api := promhandler.NewPromAPI(engine, querier, exemplarQuerier, promhandler.PromAPIOptions{})
 	promh, err := promapi.NewServer(api)
 	require.NoError(t, err)
 
@@ -65,12 +68,13 @@ func runTest(
 	t *testing.T,
 	consumer otelreceiver.MetricsConsumer,
 	querier storage.Queryable,
+	exemplarQuerier storage.ExemplarQueryable,
 ) {
 	set, err := readBatchSet("_testdata/metrics.json")
 	require.NoError(t, err)
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
-	c := setupDB(ctx, t, set, consumer, querier)
+	c := setupDB(ctx, t, set, consumer, querier, exemplarQuerier)
 
 	t.Run("Labels", func(t *testing.T) {
 		t.Run("GetLabels", func(t *testing.T) {

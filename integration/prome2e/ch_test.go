@@ -76,5 +76,5 @@ func TestCH(t *testing.T) {
 	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
 	require.NoError(t, err)
 
-	runTest(ctx, t, inserter, querier)
+	runTest(ctx, t, inserter, querier, querier)
 }
