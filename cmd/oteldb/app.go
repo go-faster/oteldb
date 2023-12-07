@@ -11,6 +11,7 @@ import (
 	sdkapp "github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/promql"
+	"github.com/prometheus/prometheus/storage"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
@@ -199,7 +200,7 @@ func (app *App) trySetupProm() error {
 		MaxSamples:           1_000_000,
 		EnableNegativeOffset: true,
 	})
-	prom := promhandler.NewPromAPI(engine, q, promhandler.PromAPIOptions{})
+	prom := promhandler.NewPromAPI(engine, q, q, promhandler.PromAPIOptions{})
 
 	s, err := promapi.NewServer(prom,
 		promapi.WithTracerProvider(app.metrics.TracerProvider()),
@@ -264,4 +265,9 @@ type logQuerier interface {
 type traceQuerier interface {
 	tracestorage.Querier
 	traceqlengine.Querier
+}
+
+type metricQuerier interface {
+	storage.Queryable
+	storage.ExemplarQueryable
 }
