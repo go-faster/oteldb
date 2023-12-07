@@ -731,6 +731,7 @@ components:
             $ref: "#/components/schemas/Exemplar"
     Exemplar:
       type: object
+      required: ["labels", "value"]
       properties:
         labels:
           $ref: "#/components/schemas/LabelSet"
