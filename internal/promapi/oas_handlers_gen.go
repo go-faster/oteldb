@@ -1304,8 +1304,27 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 			span.SetStatus(codes.Error, stage)
 			s.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 		}
-		err error
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: "PostQueryExemplars",
+			ID:   "postQueryExemplars",
+		}
 	)
+	request, close, err := s.decodePostQueryExemplarsRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
 
 	var response *QueryExemplarsResponse
 	if m := s.cfg.Middleware; m != nil {
@@ -1314,13 +1333,13 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 			OperationName:    "PostQueryExemplars",
 			OperationSummary: "",
 			OperationID:      "postQueryExemplars",
-			Body:             nil,
+			Body:             request,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
 
 		type (
-			Request  = struct{}
+			Request  = *ExemplarsForm
 			Params   = struct{}
 			Response = *QueryExemplarsResponse
 		)
@@ -1333,12 +1352,12 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 			mreq,
 			nil,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.PostQueryExemplars(ctx)
+				response, err = s.h.PostQueryExemplars(ctx, request)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.PostQueryExemplars(ctx)
+		response, err = s.h.PostQueryExemplars(ctx, request)
 	}
 	if err != nil {
 		if errRes, ok := errors.Into[*FailStatusCode](err); ok {

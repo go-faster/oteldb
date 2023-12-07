@@ -98,7 +98,7 @@ func (UnimplementedHandler) PostQuery(ctx context.Context, req *QueryForm) (r *Q
 // Query Prometheus.
 //
 // POST /api/v1/query_exemplars
-func (UnimplementedHandler) PostQueryExemplars(ctx context.Context) (r *QueryExemplarsResponse, _ error) {
+func (UnimplementedHandler) PostQueryExemplars(ctx context.Context, req *ExemplarsForm) (r *QueryExemplarsResponse, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

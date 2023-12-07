@@ -449,6 +449,43 @@ func (s *Exemplar) SetTimestamp(val OptInt64) {
 
 type Exemplars []ExemplarsSet
 
+// Ref: #/components/schemas/ExemplarsForm
+type ExemplarsForm struct {
+	Query string              `json:"query"`
+	Start PrometheusTimestamp `json:"start"`
+	End   PrometheusTimestamp `json:"end"`
+}
+
+// GetQuery returns the value of Query.
+func (s *ExemplarsForm) GetQuery() string {
+	return s.Query
+}
+
+// GetStart returns the value of Start.
+func (s *ExemplarsForm) GetStart() PrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *ExemplarsForm) GetEnd() PrometheusTimestamp {
+	return s.End
+}
+
+// SetQuery sets the value of Query.
+func (s *ExemplarsForm) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetStart sets the value of Start.
+func (s *ExemplarsForm) SetStart(val PrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *ExemplarsForm) SetEnd(val PrometheusTimestamp) {
+	s.End = val
+}
+
 // Ref: #/components/schemas/ExemplarsSet
 type ExemplarsSet struct {
 	SeriesLabels OptLabelSet `json:"seriesLabels"`
