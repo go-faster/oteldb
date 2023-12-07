@@ -78,7 +78,7 @@ type Invoker interface {
 	// Query Prometheus.
 	//
 	// POST /api/v1/query_exemplars
-	PostQueryExemplars(ctx context.Context) (*QueryExemplarsResponse, error)
+	PostQueryExemplars(ctx context.Context, request *ExemplarsForm) (*QueryExemplarsResponse, error)
 	// PostQueryRange invokes postQueryRange operation.
 	//
 	// Query Prometheus.
@@ -1455,12 +1455,12 @@ func (c *Client) sendPostQuery(ctx context.Context, request *QueryForm) (res *Qu
 // Query Prometheus.
 //
 // POST /api/v1/query_exemplars
-func (c *Client) PostQueryExemplars(ctx context.Context) (*QueryExemplarsResponse, error) {
-	res, err := c.sendPostQueryExemplars(ctx)
+func (c *Client) PostQueryExemplars(ctx context.Context, request *ExemplarsForm) (*QueryExemplarsResponse, error) {
+	res, err := c.sendPostQueryExemplars(ctx, request)
 	return res, err
 }
 
-func (c *Client) sendPostQueryExemplars(ctx context.Context) (res *QueryExemplarsResponse, err error) {
+func (c *Client) sendPostQueryExemplars(ctx context.Context, request *ExemplarsForm) (res *QueryExemplarsResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryExemplars"),
 		semconv.HTTPMethodKey.String("POST"),
@@ -1504,6 +1504,9 @@ func (c *Client) sendPostQueryExemplars(ctx context.Context) (res *QueryExemplar
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePostQueryExemplarsRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
 	}
 
 	stage = "SendRequest"

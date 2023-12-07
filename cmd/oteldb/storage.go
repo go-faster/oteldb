@@ -12,7 +12,6 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
-	"github.com/prometheus/prometheus/storage"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -29,7 +28,7 @@ type otelStorage struct {
 	traceQuerier  traceQuerier
 	traceInserter tracestorage.Inserter
 
-	metricsQuerier  storage.Queryable
+	metricsQuerier  metricQuerier
 	metricsConsumer otelreceiver.MetricsConsumer
 }
 

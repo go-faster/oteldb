@@ -34,6 +34,7 @@ type metricsBatch struct {
 	histograms    *histogramColumns
 	expHistograms *expHistogramColumns
 	summaries     *summaryColumns
+	exemplars     *exemplarColumns
 	labels        map[[2]string]struct{}
 }
 
@@ -43,6 +44,7 @@ func newMetricBatch() *metricsBatch {
 		histograms:    newHistogramColumns(),
 		expHistograms: newExpHistogramColumns(),
 		summaries:     newSummaryColumns(),
+		exemplars:     newExemplarColumns(),
 		labels:        map[[2]string]struct{}{},
 	}
 }
@@ -68,6 +70,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		{tables.Histograms, b.histograms},
 		{tables.ExpHistograms, b.expHistograms},
 		{tables.Summaries, b.summaries},
+		{tables.Exemplars, b.exemplars},
 		{tables.Labels, labels},
 	} {
 		table := table
@@ -117,6 +120,18 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 
 		b.addName(name)
 		b.addLabels(attrs)
+
+		if err := b.addExemplars(
+			exemplarSeries{
+				Name:       name,
+				Timestamp:  ts,
+				Attributes: attrs,
+				Resource:   res,
+			},
+			point.Exemplars(),
+		); err != nil {
+			return errors.Wrap(err, "map exemplars")
+		}
 		c.name.Append(name)
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
@@ -278,6 +293,17 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 
 		b.addName(name)
 		b.addLabels(attrs)
+		if err := b.addExemplars(
+			exemplarSeries{
+				Name:       name,
+				Timestamp:  ts,
+				Attributes: attrs,
+				Resource:   res,
+			},
+			point.Exemplars(),
+		); err != nil {
+			return errors.Wrap(err, "map exemplars")
+		}
 		c.name.Append(name)
 		c.timestamp.Append(ts)
 		c.count.Append(count)
@@ -375,6 +401,53 @@ func (b *metricsBatch) addMappedSample(
 	c.flags.Append(uint8(series.flags))
 	c.attributes.Append(encodeAttributes(series.attrs, bucketKey))
 	c.resource.Append(encodeAttributes(series.res, bucketKey))
+}
+
+type exemplarSeries struct {
+	Name       string
+	Timestamp  time.Time
+	Attributes pcommon.Map
+	Resource   pcommon.Map
+}
+
+func (b *metricsBatch) addExemplars(p exemplarSeries, exemplars pmetric.ExemplarSlice) error {
+	for i := 0; i < exemplars.Len(); i++ {
+		if err := b.addExemplar(p, exemplars.At(i)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar) error {
+	c := b.exemplars
+
+	var val float64
+	switch typ := e.ValueType(); typ {
+	case pmetric.ExemplarValueTypeEmpty:
+		// Just ignore it.
+		return nil
+	case pmetric.ExemplarValueTypeInt:
+		// TODO(tdakkota): check for overflow
+		val = float64(e.IntValue())
+	case pmetric.ExemplarValueTypeDouble:
+		val = e.DoubleValue()
+	default:
+		return errors.Errorf("unexpected exemplar value type: %v", typ)
+	}
+
+	c.name.Append(p.Name)
+	c.timestamp.Append(p.Timestamp)
+
+	c.filteredAttributes.Append(encodeAttributes(e.FilteredAttributes()))
+	c.exemplarTimestamp.Append(e.Timestamp().AsTime())
+	c.value.Append(val)
+	c.spanID.Append(e.SpanID())
+	c.traceID.Append(e.TraceID())
+
+	c.attributes.Append(encodeAttributes(p.Attributes))
+	c.resource.Append(encodeAttributes(p.Resource))
+	return nil
 }
 
 func (b *metricsBatch) addName(name string) {

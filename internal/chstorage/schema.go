@@ -20,6 +20,7 @@ type Tables struct {
 	Histograms    string
 	ExpHistograms string
 	Summaries     string
+	Exemplars     string
 	Labels        string
 
 	Logs     string
@@ -51,6 +52,7 @@ func (t *Tables) Each(cb func(name *string) error) error {
 		{&t.Histograms, "Histograms"},
 		{&t.ExpHistograms, "ExpHistograms"},
 		{&t.Summaries, "Summaries"},
+		{&t.Exemplars, "Exemplars"},
 		{&t.Labels, "Labels"},
 
 		{&t.Logs, "Logs"},
@@ -75,6 +77,7 @@ func DefaultTables() Tables {
 		Histograms:    "metrics_histograms",
 		ExpHistograms: "metrics_exp_histograms",
 		Summaries:     "metrics_summaries",
+		Exemplars:     "metrics_exemplars",
 		Labels:        "metrics_labels",
 
 		Logs:     "logs",
@@ -146,6 +149,7 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{t.Histograms, histogramsSchema},
 		{t.ExpHistograms, expHistogramsSchema},
 		{t.Summaries, summariesSchema},
+		{t.Exemplars, exemplarsSchema},
 		{t.Labels, labelsSchema},
 
 		{t.Logs, logsSchema},

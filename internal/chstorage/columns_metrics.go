@@ -24,7 +24,7 @@ func newPointColumns() *pointColumns {
 }
 
 func (c *pointColumns) Input() proto.Input {
-	input := proto.Input{
+	return proto.Input{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
@@ -35,11 +35,10 @@ func (c *pointColumns) Input() proto.Input {
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
-	return input
 }
 
 func (c *pointColumns) Result() proto.Results {
-	return proto.Results{
+	results := proto.Results{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
@@ -50,6 +49,8 @@ func (c *pointColumns) Result() proto.Results {
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
 	}
+
+	return results
 }
 
 type histogramColumns struct {
@@ -82,7 +83,7 @@ func newHistogramColumns() *histogramColumns {
 }
 
 func (c *histogramColumns) Input() proto.Input {
-	input := proto.Input{
+	return proto.Input{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
@@ -97,7 +98,6 @@ func (c *histogramColumns) Input() proto.Input {
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
-	return input
 }
 
 func (c *histogramColumns) Result() proto.Results {
@@ -152,7 +152,7 @@ func newExpHistogramColumns() *expHistogramColumns {
 }
 
 func (c *expHistogramColumns) Input() proto.Input {
-	input := proto.Input{
+	return proto.Input{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
@@ -171,7 +171,6 @@ func (c *expHistogramColumns) Input() proto.Input {
 		{Name: "attributes", Data: c.attributes},
 		{Name: "resource", Data: c.resource},
 	}
-	return input
 }
 
 func (c *expHistogramColumns) Result() proto.Results {
@@ -280,5 +279,60 @@ func (c *labelsColumns) Result() proto.Results {
 		{Name: "name", Data: c.name},
 		{Name: "key", Data: c.key},
 		{Name: "value", Data: &c.value},
+	}
+}
+
+type exemplarColumns struct {
+	name      *proto.ColLowCardinality[string]
+	timestamp *proto.ColDateTime64
+
+	filteredAttributes proto.ColStr
+	exemplarTimestamp  *proto.ColDateTime64
+	value              proto.ColFloat64
+	spanID             proto.ColFixedStr8
+	traceID            proto.ColFixedStr16
+
+	attributes proto.ColStr
+	resource   proto.ColStr
+}
+
+func newExemplarColumns() *exemplarColumns {
+	return &exemplarColumns{
+		name:              new(proto.ColStr).LowCardinality(),
+		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+	}
+}
+
+func (c *exemplarColumns) Input() proto.Input {
+	input := proto.Input{
+		{Name: "name", Data: c.name},
+		{Name: "timestamp", Data: c.timestamp},
+
+		{Name: "filtered_attributes", Data: c.filteredAttributes},
+		{Name: "exemplar_timestamp", Data: c.exemplarTimestamp},
+		{Name: "value", Data: c.value},
+		{Name: "span_id", Data: c.spanID},
+		{Name: "trace_id", Data: c.traceID},
+
+		{Name: "attributes", Data: &c.attributes},
+		{Name: "resource", Data: &c.resource},
+	}
+	return input
+}
+
+func (c *exemplarColumns) Result() proto.Results {
+	return proto.Results{
+		{Name: "name", Data: c.name},
+		{Name: "timestamp", Data: c.timestamp},
+
+		{Name: "filtered_attributes", Data: &c.filteredAttributes},
+		{Name: "exemplar_timestamp", Data: c.exemplarTimestamp},
+		{Name: "value", Data: &c.value},
+		{Name: "span_id", Data: &c.spanID},
+		{Name: "trace_id", Data: &c.traceID},
+
+		{Name: "attributes", Data: &c.attributes},
+		{Name: "resource", Data: &c.resource},
 	}
 }

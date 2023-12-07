@@ -150,7 +150,7 @@ func (s *Exemplar) SetFake() {
 	}
 	{
 		{
-			s.Value.SetFake()
+			s.Value = float64(0)
 		}
 	}
 	{
@@ -547,15 +547,6 @@ func (s *OptInt) SetFake() {
 	var elem int
 	{
 		elem = int(0)
-	}
-	s.SetTo(elem)
-}
-
-// SetFake set fake values.
-func (s *OptInt64) SetFake() {
-	var elem int64
-	{
-		elem = int64(0)
 	}
 	s.SetTo(elem)
 }

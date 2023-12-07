@@ -412,42 +412,79 @@ func NewStringData(v String) Data {
 
 // Ref: #/components/schemas/Exemplar
 type Exemplar struct {
-	Labels    OptLabelSet `json:"labels"`
-	Value     OptFloat64  `json:"value"`
-	Timestamp OptInt64    `json:"timestamp"`
+	Labels    LabelSet   `json:"labels"`
+	Value     float64    `json:"value"`
+	Timestamp OptFloat64 `json:"timestamp"`
 }
 
 // GetLabels returns the value of Labels.
-func (s *Exemplar) GetLabels() OptLabelSet {
+func (s *Exemplar) GetLabels() LabelSet {
 	return s.Labels
 }
 
 // GetValue returns the value of Value.
-func (s *Exemplar) GetValue() OptFloat64 {
+func (s *Exemplar) GetValue() float64 {
 	return s.Value
 }
 
 // GetTimestamp returns the value of Timestamp.
-func (s *Exemplar) GetTimestamp() OptInt64 {
+func (s *Exemplar) GetTimestamp() OptFloat64 {
 	return s.Timestamp
 }
 
 // SetLabels sets the value of Labels.
-func (s *Exemplar) SetLabels(val OptLabelSet) {
+func (s *Exemplar) SetLabels(val LabelSet) {
 	s.Labels = val
 }
 
 // SetValue sets the value of Value.
-func (s *Exemplar) SetValue(val OptFloat64) {
+func (s *Exemplar) SetValue(val float64) {
 	s.Value = val
 }
 
 // SetTimestamp sets the value of Timestamp.
-func (s *Exemplar) SetTimestamp(val OptInt64) {
+func (s *Exemplar) SetTimestamp(val OptFloat64) {
 	s.Timestamp = val
 }
 
 type Exemplars []ExemplarsSet
+
+// Ref: #/components/schemas/ExemplarsForm
+type ExemplarsForm struct {
+	Query string              `json:"query"`
+	Start PrometheusTimestamp `json:"start"`
+	End   PrometheusTimestamp `json:"end"`
+}
+
+// GetQuery returns the value of Query.
+func (s *ExemplarsForm) GetQuery() string {
+	return s.Query
+}
+
+// GetStart returns the value of Start.
+func (s *ExemplarsForm) GetStart() PrometheusTimestamp {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *ExemplarsForm) GetEnd() PrometheusTimestamp {
+	return s.End
+}
+
+// SetQuery sets the value of Query.
+func (s *ExemplarsForm) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetStart sets the value of Start.
+func (s *ExemplarsForm) SetStart(val PrometheusTimestamp) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *ExemplarsForm) SetEnd(val PrometheusTimestamp) {
+	s.End = val
+}
 
 // Ref: #/components/schemas/ExemplarsSet
 type ExemplarsSet struct {
@@ -1454,52 +1491,6 @@ func (o OptInt) Get() (v int, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt) Or(d int) int {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptInt64 returns new OptInt64 with value set to v.
-func NewOptInt64(v int64) OptInt64 {
-	return OptInt64{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptInt64 is optional int64.
-type OptInt64 struct {
-	Value int64
-	Set   bool
-}
-
-// IsSet returns true if OptInt64 was set.
-func (o OptInt64) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptInt64) Reset() {
-	var v int64
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptInt64) SetTo(v int64) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptInt64) Get() (v int64, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptInt64) Or(d int64) int64 {
 	if v, ok := o.Get(); ok {
 		return v
 	}
