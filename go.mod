@@ -19,7 +19,7 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/grafana/pyroscope-go v1.0.4
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-	github.com/ogen-go/ogen v0.79.1
+	github.com/ogen-go/ogen v0.80.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.90.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.17.0
