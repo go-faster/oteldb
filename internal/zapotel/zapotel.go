@@ -167,9 +167,21 @@ func (s *sender) send(ctx context.Context) error {
 	return nil
 }
 
+func (s *sender) Flush(ctx context.Context) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	if s.logs.LogRecordCount() < 1 {
+		// Nothing to send.
+		return nil
+	}
+	return s.send(ctx)
+}
+
 func (s *sender) Send(ctx context.Context, ent zapcore.Entry, fields []zapcore.Field) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+
 	s.append(ent, fields)
 	if time.Since(s.sent) > s.rate || s.logs.LogRecordCount() >= s.maxBatch {
 		return s.send(ctx)
@@ -250,4 +262,6 @@ func (e *exporter) Write(ent zapcore.Entry, fields []zapcore.Field) error {
 	return e.sender.Send(context.Background(), ent, all)
 }
 
-func (e *exporter) Sync() error { return nil }
+func (e *exporter) Sync() error {
+	return e.sender.Flush(context.Background())
+}
