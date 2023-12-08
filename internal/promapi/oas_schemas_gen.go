@@ -795,9 +795,9 @@ func (s *Histogram) SetBuckets(val []Bucket) {
 
 // HistogramOrValue represents sum type.
 type HistogramOrValue struct {
-	Type      HistogramOrValueType // switch on this field
-	Histogram Histogram
-	Float64   float64
+	Type          HistogramOrValueType // switch on this field
+	Histogram     Histogram
+	StringFloat64 float64
 }
 
 // HistogramOrValueType is oneOf type of HistogramOrValue.
@@ -805,15 +805,15 @@ type HistogramOrValueType string
 
 // Possible values for HistogramOrValueType.
 const (
-	HistogramHistogramOrValue HistogramOrValueType = "Histogram"
-	Float64HistogramOrValue   HistogramOrValueType = "float64"
+	HistogramHistogramOrValue     HistogramOrValueType = "Histogram"
+	StringFloat64HistogramOrValue HistogramOrValueType = "float64"
 )
 
 // IsHistogram reports whether HistogramOrValue is Histogram.
 func (s HistogramOrValue) IsHistogram() bool { return s.Type == HistogramHistogramOrValue }
 
-// IsFloat64 reports whether HistogramOrValue is float64.
-func (s HistogramOrValue) IsFloat64() bool { return s.Type == Float64HistogramOrValue }
+// IsStringFloat64 reports whether HistogramOrValue is float64.
+func (s HistogramOrValue) IsStringFloat64() bool { return s.Type == StringFloat64HistogramOrValue }
 
 // SetHistogram sets HistogramOrValue to Histogram.
 func (s *HistogramOrValue) SetHistogram(v Histogram) {
@@ -836,24 +836,24 @@ func NewHistogramHistogramOrValue(v Histogram) HistogramOrValue {
 	return s
 }
 
-// SetFloat64 sets HistogramOrValue to float64.
-func (s *HistogramOrValue) SetFloat64(v float64) {
-	s.Type = Float64HistogramOrValue
-	s.Float64 = v
+// SetStringFloat64 sets HistogramOrValue to float64.
+func (s *HistogramOrValue) SetStringFloat64(v float64) {
+	s.Type = StringFloat64HistogramOrValue
+	s.StringFloat64 = v
 }
 
-// GetFloat64 returns float64 and true boolean if HistogramOrValue is float64.
-func (s HistogramOrValue) GetFloat64() (v float64, ok bool) {
-	if !s.IsFloat64() {
+// GetStringFloat64 returns float64 and true boolean if HistogramOrValue is float64.
+func (s HistogramOrValue) GetStringFloat64() (v float64, ok bool) {
+	if !s.IsStringFloat64() {
 		return v, false
 	}
-	return s.Float64, true
+	return s.StringFloat64, true
 }
 
-// NewFloat64HistogramOrValue returns new HistogramOrValue from float64.
-func NewFloat64HistogramOrValue(v float64) HistogramOrValue {
+// NewStringFloat64HistogramOrValue returns new HistogramOrValue from float64.
+func NewStringFloat64HistogramOrValue(v float64) HistogramOrValue {
 	var s HistogramOrValue
-	s.SetFloat64(v)
+	s.SetStringFloat64(v)
 	return s
 }
 

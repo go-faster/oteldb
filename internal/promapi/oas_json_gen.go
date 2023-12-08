@@ -1438,8 +1438,8 @@ func (s HistogramOrValue) Encode(e *jx.Encoder) {
 	switch s.Type {
 	case HistogramHistogramOrValue:
 		s.Histogram.Encode(e)
-	case Float64HistogramOrValue:
-		json.EncodeStringFloat64(e, s.Float64)
+	case StringFloat64HistogramOrValue:
+		json.EncodeStringFloat64(e, s.StringFloat64)
 	}
 }
 
@@ -1457,11 +1457,11 @@ func (s *HistogramOrValue) Decode(d *jx.Decoder) error {
 		s.Type = HistogramHistogramOrValue
 	case jx.String:
 		v, err := json.DecodeStringFloat64(d)
-		s.Float64 = v
+		s.StringFloat64 = v
 		if err != nil {
 			return err
 		}
-		s.Type = Float64HistogramOrValue
+		s.Type = StringFloat64HistogramOrValue
 	default:
 		return errors.Errorf("unexpected json type %q", t)
 	}

@@ -114,7 +114,7 @@ func TestPrometheusOAS(t *testing.T) {
 		vr := v.Result[0]
 		assert.Equal(t, "go_info", vr.Metric["__name__"], "metric name")
 		assert.Greater(t, vr.Value.T, 0.0, "value")
-		assert.Equal(t, vr.Value.HistogramOrValue.Float64, 1.0)
+		assert.Equal(t, vr.Value.HistogramOrValue.StringFloat64, 1.0)
 	}
 
 	var (

@@ -78,7 +78,7 @@ func mapSample(s promql.Sample) promapi.Sample {
 	if h := s.H; h != nil {
 		val.SetHistogram(mapHistogram(h))
 	} else {
-		val.SetFloat64(s.F)
+		val.SetStringFloat64(s.F)
 	}
 	return promapi.Sample{
 		T:                apiTimestamp(s.T),

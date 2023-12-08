@@ -491,8 +491,8 @@ func (s HistogramOrValue) Validate() error {
 			return err
 		}
 		return nil
-	case Float64HistogramOrValue:
-		if err := (validate.Float{}).ValidateStringified(float64(s.Float64)); err != nil {
+	case StringFloat64HistogramOrValue:
+		if err := (validate.Float{}).ValidateStringified(float64(s.StringFloat64)); err != nil {
 			return errors.Wrap(err, "float")
 		}
 		return nil
