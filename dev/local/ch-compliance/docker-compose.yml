@@ -15,6 +15,7 @@ services:
       retries: 30
 
   oteldb:
+    image: ghcr.io/go-fater/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile
