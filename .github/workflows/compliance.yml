@@ -47,6 +47,12 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Go build
+        env:
+          CGO_ENABLED: 0
+        run: |
+          go build -v ./cmd/oteldb
+
       - name: Build docker-compose
         # Before the cache, it was "run: docker compose build".
         working-directory: dev/local/ch-compliance
