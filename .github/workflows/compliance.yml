@@ -80,4 +80,4 @@ jobs:
 
       - name: Cleanup
         working-directory: dev/local/ch-compliance
-        run: docker compose down -v
+        run: docker compose down -t 1 -v
