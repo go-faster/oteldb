@@ -1,0 +1,15 @@
+{
+  "target": {
+    "oteldb": {
+      "cache-from": [
+        "type=registry,ref=ghcr.io/go-faster/oteldb:cache"
+      ],
+      "cache-to": [
+        "type=registry,ref=ghcr.io/go-faster/oteldb:cache"
+      ],
+      "output": [
+        "type=docker"
+      ]
+    }
+  }
+}
