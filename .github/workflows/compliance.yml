@@ -32,13 +32,14 @@ jobs:
         run: | 
           go run github.com/go-faster/oteldb/cmd/promql-compliance-tester \
           -config-file promql-test-queries.yml -config-file test-oteldb.yml \
-          -end 1m -range 1m | tee result.oteldb.txt || true
+          -output-format json \
+          -end 1m -range 1m | tee result.oteldb.json || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: result.oteldb.txt
-          path: dev/local/ch-compliance/result.oteldb.txt
+          name: result.oteldb.json
+          path: dev/local/ch-compliance/result.oteldb.json
           if-no-files-found: error
           retention-days: 1
 
