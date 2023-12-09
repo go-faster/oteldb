@@ -27,7 +27,7 @@ func main() {
 		// Read all from stdin.
 		data, err = io.ReadAll(os.Stdin)
 	} else {
-		data, err = os.ReadFile(filePath)
+		data, err = os.ReadFile(filePath) // #nosec G304
 	}
 	if err != nil {
 		panic(err)
@@ -60,10 +60,11 @@ func main() {
 		successes, len(info.Results), successPercentage, unsupported,
 	)
 	fmt.Printf("Target: %.2f%%\n", arg.minimumPercentage)
+
 	if successPercentage < arg.minimumPercentage {
 		fmt.Println(color.RedString("FAILED"))
 		os.Exit(1)
-	} else {
-		fmt.Println(color.GreenString("PASSED"))
 	}
+
+	fmt.Println(color.GreenString("PASSED"))
 }
