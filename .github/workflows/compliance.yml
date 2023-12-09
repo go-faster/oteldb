@@ -62,13 +62,13 @@ jobs:
         run: go run ./cmd/compliance-wait -wait 10s
         working-directory: dev/local/ch-compliance
 
-      - name: Test
+      - name: Run
         working-directory: dev/local/ch-compliance
         run: | 
           go run github.com/go-faster/oteldb/cmd/promql-compliance-tester \
           -config-file promql-test-queries.yml -config-file test-oteldb.yml \
           -output-format json \
-          -end 1m -range 1m | tee result.oteldb.json || true
+          -end 1m -range 1m > result.oteldb.json || true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -77,6 +77,10 @@ jobs:
           path: dev/local/ch-compliance/result.oteldb.json
           if-no-files-found: error
           retention-days: 1
+
+      - name: Verify
+        working-directory: dev/local/ch-compliance
+        run: go run ./cmd/compliance-verify --target 99.60 result.oteldb.json
 
       - name: Cleanup
         working-directory: dev/local/ch-compliance
