@@ -18,6 +18,7 @@ jobs:
         with:
           go-version: stable
           cache: false
+      - uses: docker/setup-buildx-action@v3
       - uses: actions/checkout@v4
       - name: Start
         run: docker compose up -d
