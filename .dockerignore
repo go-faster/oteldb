@@ -1,0 +1,5 @@
+/.k8s
+/.github
+/docs
+*.md
+*.Dockerfile
