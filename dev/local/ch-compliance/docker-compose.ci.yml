@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.10
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    volumes:
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  oteldb:
+    image: ghcr.io/go-fater/oteldb
+    build:
+      context: ../../../
+      dockerfile: deploy.Dockerfile
+    environment:
+      - OTELDB_STORAGE=ch
+      - CH_DSN=clickhouse://clickhouse:9000
+      - OTEL_LOG_LEVEL=info
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=stdout
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+    ports:
+      - "9090:9090"
+    depends_on:
+      - clickhouse
+
+  prometheus:
+    image: prom/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - './prometheus.yml:/etc/prometheus/prometheus.yml'
+    ports:
+      - "9091:9090"
+    restart: unless-stopped
+
+  demo-1:
+    image: julius/prometheus-demo-service:latest
+  demo-2:
+    image: julius/prometheus-demo-service:latest
+  demo-3:
+    image: julius/prometheus-demo-service:latest
+

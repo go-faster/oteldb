@@ -49,23 +49,13 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Go build
-        env:
-          CGO_ENABLED: 0
-        run: go build -v ./cmd/oteldb
-
-      - name: Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: deploy.Dockerfile
-          push: false
-          tags: ghcr.io/go-fater/oteldb
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build docker-compose
+        # Before the cache, it was "run: docker compose build".
+        working-directory: dev/local/ch-compliance
+        run: docker buildx bake --file docker-compose.ci.yml --file docker-compose-cache.json
 
       - name: Start
-        run: docker compose up -d
+        run: docker compose up -f docker-compose.ci.yml -d
         working-directory: dev/local/ch-compliance
 
       - name: Wait
@@ -91,7 +81,3 @@ jobs:
       - name: Verify
         working-directory: dev/local/ch-compliance
         run: go run ./cmd/compliance-verify --target 99.60 result.oteldb.json
-
-      - name: Cleanup
-        working-directory: dev/local/ch-compliance
-        run: docker compose down -t 1 -v
