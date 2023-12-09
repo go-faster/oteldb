@@ -76,7 +76,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 		}
 		for _, parser := range []logparser.Parser{
 			logparser.GenericJSONParser{},
-			logparser.LogFmtParser{},
+			// Disable for lots of false-positive detections // logparser.LogFmtParser{},
 		} {
 			if !parser.Detect(v.Str()) {
 				continue
