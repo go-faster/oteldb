@@ -13,6 +13,11 @@ jobs:
   PromQL:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
       - uses: actions/checkout@v4
       - name: Start
         run: docker compose up -d
