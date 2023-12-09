@@ -6,8 +6,10 @@ on:
   workflow_dispatch:
   pull_request:
 
-permissions:
-  contents: read
+env:
+  REGISTRY: ghcr.io
+  IMAGE_TAG: ghcr.io/${{ github.repository }}
+  KUBECTL_VERSION: v1.27.1
 
 jobs:
   PromQL:
