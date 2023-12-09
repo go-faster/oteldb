@@ -1,0 +1,40 @@
+name: 'Compliance'
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  PromQL:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start
+        run: docker compose up -d
+        working-directory: dev/local/ch-compliance
+      - name: Wait
+        run: go run ./cmd/compliance-wait -wait 10s
+        working-directory: dev/local/ch-compliance
+
+      - name: Test
+        working-directory: dev/local/ch-compliance
+        run: | 
+          go run github.com/go-faster/oteldb/cmd/promql-compliance-tester \
+          -config-file promql-test-queries.yml -config-file test-oteldb.yml \
+          -end 1m -range 1m | tee result.oteldb.txt || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: result.oteldb.txt
+          path: dev/local/ch-compliance/result.oteldb.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Cleanup
+        run: docker compose -f dev/local/ch-compliance/docker-compose.yml down -v
