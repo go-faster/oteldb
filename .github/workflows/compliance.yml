@@ -8,8 +8,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_TAG: ghcr.io/${{ github.repository }}
-  KUBECTL_VERSION: v1.27.1
 
 jobs:
   PromQL:
@@ -52,7 +50,7 @@ jobs:
       - name: Build docker-compose
         # Before the cache, it was "run: docker compose build".
         working-directory: dev/local/ch-compliance
-        run: docker buildx bake --file docker-compose.ci.yml --file docker-compose-cache.json
+        run: docker buildx bake --file docker-compose.ci.yml --file docker-cache.json
 
       - name: Start
         run: docker compose up -f docker-compose.ci.yml -d
