@@ -37,4 +37,5 @@ jobs:
           retention-days: 1
 
       - name: Cleanup
-        run: docker compose -f dev/local/ch-compliance/docker-compose.yml down -v
+        working-directory: dev/local/ch-compliance
+        run: docker compose down -v
