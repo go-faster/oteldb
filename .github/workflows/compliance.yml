@@ -59,12 +59,12 @@ jobs:
         run: docker buildx bake --file docker-compose.ci.yml --file docker-cache.json
 
       - name: Start
-        run: docker compose up -f docker-compose.ci.yml -d
         working-directory: dev/local/ch-compliance
+        run: docker compose -f docker-compose.ci.yml up -d
 
       - name: Wait
-        run: go run ./cmd/compliance-wait -wait 10s
         working-directory: dev/local/ch-compliance
+        run: go run ./cmd/compliance-wait -wait 10s
 
       - name: Run
         working-directory: dev/local/ch-compliance
