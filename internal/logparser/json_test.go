@@ -76,3 +76,40 @@ func BenchmarkGenericJSONParser_Parse(b *testing.B) {
 		})
 	}
 }
+
+func FuzzGenericJSONParser(f *testing.F) {
+	files, err := os.ReadDir(filepath.Join("_testdata", "genericjson"))
+	require.NoError(f, err, "read testdata")
+	for _, file := range files {
+		data, err := os.ReadFile(filepath.Join("_testdata", "genericjson", file.Name()))
+		require.NoError(f, err, "read testdata")
+		s := bufio.NewScanner(bytes.NewReader(data))
+		for s.Scan() {
+			f.Add(s.Bytes())
+		}
+	}
+	f.Fuzz(func(t *testing.T, input []byte) {
+		{
+			d := jx.DecodeBytes(input)
+			if d.Next() != jx.Object || !jx.Valid(input) {
+				t.Skip()
+			}
+		}
+		var parser GenericJSONParser
+		if !parser.Detect(string(input)) {
+			t.Error("Should detect")
+		}
+		line, err := parser.Parse(input)
+		if err != nil {
+			return
+		}
+		if line == nil {
+			t.Fatal("line is nil")
+		}
+		e := &jx.Encoder{}
+		line.Encode(e)
+		if !jx.Valid(e.Bytes()) {
+			t.Fatal("invalid encoded line")
+		}
+	})
+}
