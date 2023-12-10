@@ -6,12 +6,10 @@ receivers:
   prometheus:
     config:
       scrape_configs:
-        - job_name: demo
+        - job_name: server
           scrape_interval: 1s
           static_configs:
-            - targets:
-              - api:8080
-              - server:8080
+            - targets: [server:8080]
 processors:
   batch:
     timeout: 5s
@@ -21,15 +19,6 @@ processors:
     check_interval: 5s
     limit_mib: 256
     spike_limit_mib: 500
-  # normalize between prometheus and otel
-  resource/normalize:
-    attributes:
-      - key: service.name
-        from_attribute: service_name
-        action: insert
-      - key: service.namespace
-        from_attribute: service_namespace
-        action: insert
 
 exporters:
   otlp:
@@ -55,7 +44,7 @@ service:
       exporters: [otlp]
     metrics/scrape:
       receivers: [prometheus]
-      processors: [resource/normalize, attributes/cleanup, batch]
+      processors: [batch]
       exporters: [otlp]
     logs:
       receivers: [otlp]

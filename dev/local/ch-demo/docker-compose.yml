@@ -43,7 +43,7 @@ services:
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
       - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=api,service.namespace=demo,oteldb.faker=true
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=client
   server:
     restart: always
     command: ["server"]
@@ -55,7 +55,7 @@ services:
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
       - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=server,service.namespace=demo,oteldb.faker=true
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=server
 
   oteldb:
     build:

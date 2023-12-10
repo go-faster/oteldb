@@ -27,17 +27,10 @@ func server(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 	})
 
 	registry := prometheus.NewRegistry()
-	registerer := prometheus.WrapRegistererWith(prometheus.Labels{
-		"service_name":      "client",
-		"service_namespace": "demo",
-	}, registry)
-	registerer.MustRegister(
-		requestDurations,
-	)
+	registry.MustRegister(requestDurations)
 
 	// Expose /metrics HTTP endpoint using the created custom registry.
 	mux.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
-		Registry:          registerer,
 		EnableOpenMetrics: true,
 	}))
 	tracer := m.TracerProvider().Tracer("server")
