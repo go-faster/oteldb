@@ -3,4 +3,4 @@ FROM $IMG:nonroot
 
 COPY oteldb /usr/bin/local/oteldb
 
-ENTRYPOINT ["/usr/bin/local/simon"]
+ENTRYPOINT ["/usr/bin/local/oteldb"]
