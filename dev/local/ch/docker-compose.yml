@@ -63,7 +63,7 @@ services:
       - "9091:9090"
     restart: unless-stopped
     volumes:
-      - prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prom:/prometheus
 
   # For compliance testing.
