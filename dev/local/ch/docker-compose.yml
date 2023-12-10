@@ -31,18 +31,6 @@ services:
     depends_on:
       - clickhouse
 
-  faker-api:
-    restart: always
-    build:
-      context: ../../../
-      dockerfile: otelfaker.Dockerfile
-    environment:
-      - OTEL_METRICS_EXPORTER=prometheus
-      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
-      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=fuck,service.namespace=demo,oteldb.faker=true
-
   oteldb:
     build:
       context: ../../../
@@ -75,7 +63,7 @@ services:
       - "9091:9090"
     restart: unless-stopped
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus.yml:/etc/prometheus/prometheus.yml
       - prom:/prometheus
 
   # For compliance testing.

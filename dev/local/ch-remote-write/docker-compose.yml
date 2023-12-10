@@ -2,7 +2,6 @@ version: "3"
 
 volumes:
   prom:
-  tempo:
 
 services:
   clickhouse:
@@ -18,29 +17,6 @@ services:
       timeout: 1s
       retries: 30
 
-  # Add https://github.com/metrico/qryn for compatibility testing.
-  qryn:
-    image: qxip/qryn:latest
-    ports:
-      - "3101:3100"
-    restart: on-failure
-    environment:
-      - CLICKHOUSE_SERVER=clickhouse
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
-      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_INSECURE=true
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=qryn
-    depends_on:
-      - clickhouse
-
-  qryn-collector:
-    image: ghcr.io/metrico/qryn-otel-collector:latest
-    volumes:
-      - ./qryncol.yml:/etc/otel/config.yaml
-    restart: on-failure
-    depends_on:
-      - clickhouse
-
   # Exports traces from clickhouse internal table to otel.
   chotel:
     restart: always
@@ -55,6 +31,18 @@ services:
     depends_on:
       - clickhouse
 
+  faker-api:
+    restart: always
+    build:
+      context: ../../../
+      dockerfile: otelfaker.Dockerfile
+    environment:
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=fuck,service.namespace=demo,oteldb.faker=true
+
   oteldb:
     build:
       context: ../../../
@@ -64,7 +52,7 @@ services:
       - CH_DSN=clickhouse://clickhouse:9000
       - OTEL_LOG_LEVEL=debug
       - METRICS_ADDR=:3201
-      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_METRICS_EXPORTER=otlp
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
       - OTEL_LOGS_EXPORTER=otlp
@@ -75,25 +63,6 @@ services:
       - "9090:9090"   # prometheus API
     depends_on:
       - clickhouse
-
-  otelfaker:
-    build:
-      context: ../../../
-      dockerfile: otelfaker.Dockerfile
-    environment:
-      - OTEL_TARGET=otelcol:4317
-    depends_on:
-      - oteldb
-      - otelcol
-
-  # Generates traces.
-  k6-tracing:
-    image: ghcr.io/grafana/xk6-client-tracing:v0.0.2
-    environment:
-      - ENDPOINT=oteldb:4317
-    restart: always
-    depends_on:
-      - oteldb
 
   # to scrape node-exporter
   # also can remote-write to otelcol
@@ -106,7 +75,7 @@ services:
       - "9091:9090"
     restart: unless-stopped
     volumes:
-      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prom:/prometheus
 
   # For compliance testing.
@@ -117,11 +86,6 @@ services:
   demo-3:
     image: julius/prometheus-demo-service:latest
 
-  # for LogQL
-  loki:
-    image: grafana/loki:2.9.0
-    command: -config.file=/etc/loki/local-config.yaml
-
   # https://opentelemetry.io/docs/collector/installation/#docker-compose
   otelcol:
     image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0
@@ -131,7 +95,6 @@ services:
       - prometheus
       - oteldb
       - node-exporter
-      - jaeger
     environment:
       # probably excessive
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
@@ -159,17 +122,6 @@ services:
       - '--web.max-requests=40'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
-  # for compatibility testing
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-
-  tempo:
-    image: grafana/tempo:latest
-    command: [ "-config.file=/etc/tempo.yml" ]
-    volumes:
-      - ./tempo.yml:/etc/tempo.yml
-      - tempo:/tmp/tempo
-
   grafana:
     image: "grafana/grafana:10.0.0"
     environment:
@@ -192,52 +144,3 @@ services:
       - oteldb
       - prometheus
       - otelcol
-
-  # Log generator
-  flog:
-    image: mingrammer/flog:0.4.3
-    # Output fake log in JSON format
-    command: [ "--format=json", "--loop", "--delay=100ms"]
-    depends_on: [otelcol]
-    logging:
-      driver: fluentd
-      options:
-        mode: non-blocking
-        fluentd-address: otelcol:24224
-        # Allow time for otel-collector to spin up, then forward fluentd logs to the fluentforwarder receiver.
-        fluentd-async-connect: "true"
-        # Use nanosecond precision
-        fluentd-sub-second-precision: "true"
-    stop_signal: SIGKILL
-
-  # Telemetry generator
-  gen-traces:
-    build:
-      context: ./opentelemetry-collector-contrib/cmd/telemetrygen/
-    command:
-      - traces
-      - --otlp-endpoint=otelcol:4317
-      - --otlp-insecure
-      - --rate=10
-      - --duration=10000h
-    depends_on: [otelcol]
-  gen-logs:
-    build:
-      context: ./opentelemetry-collector-contrib/cmd/telemetrygen/
-    command:
-      - logs
-      - --otlp-endpoint=otelcol:4317
-      - --otlp-insecure
-      - --rate=10
-      - --duration=10000h
-    depends_on: [otelcol]
-  gen-metrics:
-    build:
-      context: ./opentelemetry-collector-contrib/cmd/telemetrygen/
-    command:
-      - metrics
-      - --otlp-endpoint=otelcol:4317
-      - --otlp-insecure
-      - --rate=10
-      - --duration=10000h
-    depends_on: [otelcol]
