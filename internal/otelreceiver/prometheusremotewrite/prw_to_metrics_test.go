@@ -153,6 +153,7 @@ func TestIsValidUnit(t *testing.T) {
 		})
 	}
 }
+
 func Test_finalName(t *testing.T) {
 	type args struct {
 		labels []prompb.Label
@@ -235,7 +236,7 @@ func TestPrwConfig_FromTimeSeries(t *testing.T) {
 					},
 				},
 			},
-			want:    getMetrics(getSumMetric(value71, "", true, getAttributes("key_name", value71, label12, value12), 1., uint64(time.Now().UnixNano()))),
+			want:    getMetrics(getSumMetric(value71, "", true, getAttributes(label12, value12), 1., uint64(time.Now().UnixNano()))),
 			wantErr: assert.NoError,
 		},
 		{
@@ -261,7 +262,7 @@ func TestPrwConfig_FromTimeSeries(t *testing.T) {
 					},
 				},
 			},
-			want:    getMetrics(getSumMetric(value61, "", true, getAttributes("key_name", value61, label12, value12), 2., uint64(time.Now().UnixNano()))),
+			want:    getMetrics(getSumMetric(value61, "", true, getAttributes(label12, value12), 2., uint64(time.Now().UnixNano()))),
 			wantErr: assert.NoError,
 		},
 		{
@@ -287,7 +288,7 @@ func TestPrwConfig_FromTimeSeries(t *testing.T) {
 					},
 				},
 			},
-			want:    getMetrics(getDoubleGaugeMetric(value81, "bytes", getAttributes("key_name", value81, label12, value12), 2., uint64(time.Now().UnixNano()))),
+			want:    getMetrics(getDoubleGaugeMetric(value81, "bytes", getAttributes(label12, value12), 2., uint64(time.Now().UnixNano()))),
 			wantErr: assert.NoError,
 		},
 		{

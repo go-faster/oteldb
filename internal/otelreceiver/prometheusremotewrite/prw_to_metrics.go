@@ -68,7 +68,7 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 			for _, l := range ts.Labels {
 				labelName := l.Name
 				if l.Name == nameStr {
-					labelName = "key_name"
+					continue
 				}
 				ppoint.Attributes().PutStr(labelName, l.Value)
 			}
