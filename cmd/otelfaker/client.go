@@ -29,8 +29,9 @@ func client(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		Registry:          registerer,
 	}))
 	srv := &http.Server{
-		Addr:    "0.0.0.0:8080",
-		Handler: mux,
+		ReadHeaderTimeout: time.Second,
+		Addr:              "0.0.0.0:8080",
+		Handler:           mux,
 	}
 	g.Go(func() error {
 		lg.Info("server listening", zap.String("addr", srv.Addr))
@@ -58,7 +59,7 @@ func client(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 			ctx, span := tracer.Start(ctx, "sendRequest")
 			defer span.End()
 
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://server:8080/api/hello", nil)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://server:8080/api/hello", http.NoBody)
 			if err != nil {
 				lg.Error("create request", zap.Error(err))
 				return

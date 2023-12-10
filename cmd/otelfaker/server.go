@@ -60,10 +60,9 @@ func server(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		w.WriteHeader(http.StatusOK)
 	})
 	srv := &http.Server{
-		Addr: "0.0.0.0:8080",
-		BaseContext: func(net.Listener) context.Context {
-			return ctx
-		},
+		Addr:              "0.0.0.0:8080",
+		ReadHeaderTimeout: time.Second,
+		BaseContext:       func(net.Listener) context.Context { return ctx },
 		Handler: otelhttp.NewHandler(mux, "",
 			otelhttp.WithMeterProvider(m.MeterProvider()),
 			otelhttp.WithTracerProvider(m.TracerProvider()),
