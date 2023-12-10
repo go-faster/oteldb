@@ -27,10 +27,5 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: [clickhouse:8080]
-  - job_name: faker
-    scrape_interval: 5s
-    static_configs:
-      - targets:
-          - 'faker-api:9464'
 remote_write:
   - url: http://oteldb:19291

@@ -1,0 +1,63 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: demo
+          scrape_interval: 1s
+          static_configs:
+            - targets:
+              - api:8080
+              - server:8080
+processors:
+  batch:
+    timeout: 5s
+    send_batch_max_size: 1024
+    send_batch_size: 500
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 256
+    spike_limit_mib: 500
+  # normalize between prometheus and otel
+  resource/normalize:
+    attributes:
+      - key: service.name
+        from_attribute: service_name
+        action: insert
+      - key: service.namespace
+        from_attribute: service_namespace
+        action: insert
+
+exporters:
+  otlp:
+    endpoint: oteldb:4317
+    tls:
+      insecure: true
+
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+service:
+  extensions: [health_check, pprof, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics/scrape:
+      receivers: [prometheus]
+      processors: [resource/normalize, attributes/cleanup, batch]
+      exporters: [otlp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]

@@ -38,6 +38,14 @@ release:
     owner: go-faster
     name: oteldb
 
+  prerelease: auto
+
+  # Templates: allowed
+  footer: |
+    ## Thanks
+
+    Those were the changes on {{ .Tag }}!
+
   extra_files:
     # cosign key
     - glob: "cosign.pub"

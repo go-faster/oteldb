@@ -27,9 +27,35 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_INSECURE=true
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb.chotel
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=chotel
     depends_on:
       - clickhouse
+
+  client:
+    restart: always
+    build:
+      context: ../../../
+      dockerfile: otelfaker.Dockerfile
+    command: ["client"]
+    environment:
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=api,service.namespace=demo,oteldb.faker=true
+  server:
+    restart: always
+    command: ["server"]
+    build:
+      context: ../../../
+      dockerfile: otelfaker.Dockerfile
+    environment:
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=server,service.namespace=demo,oteldb.faker=true
 
   oteldb:
     build:
@@ -40,39 +66,15 @@ services:
       - CH_DSN=clickhouse://clickhouse:9000
       - OTEL_LOG_LEVEL=debug
       - METRICS_ADDR=:3201
-      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=none
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
-      - OTEL_LOGS_EXPORTER=otlp
-      - OTEL_EXPORTER_OTLP_LOGS_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otelcol:4317
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
     ports:
       - "9090:9090"   # prometheus API
     depends_on:
       - clickhouse
-
-  # to scrape node-exporter
-  # also can remote-write to otelcol
-  prometheus:
-    image: prom/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.enable-remote-write-receiver'
-    ports:
-      - "9091:9090"
-    restart: unless-stopped
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prom:/prometheus
-
-  # For compliance testing.
-  demo-1:
-    image: julius/prometheus-demo-service:latest
-  demo-2:
-    image: julius/prometheus-demo-service:latest
-  demo-3:
-    image: julius/prometheus-demo-service:latest
 
   # https://opentelemetry.io/docs/collector/installation/#docker-compose
   otelcol:
@@ -80,9 +82,7 @@ services:
     volumes:
       - ./otelcol.yml:/etc/otelcol-contrib/config.yaml
     depends_on:
-      - prometheus
       - oteldb
-      - node-exporter
     environment:
       # probably excessive
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
@@ -93,22 +93,6 @@ services:
       #  https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/observability.md#how-we-expose-telemetry
       - '--feature-gates=telemetry.useOtelForInternalMetrics'
       - '--feature-gates=telemetry.useOtelWithSDKConfigurationForInternalTelemetry'
-
-  # to produce some metrics
-  node-exporter:
-    image: prom/node-exporter
-    restart: unless-stopped
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.processes'
-      - '--web.max-requests=40'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
   grafana:
     image: "grafana/grafana:10.0.0"
@@ -124,11 +108,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ../grafana/grafana.ini:/etc/grafana/grafana.ini
-      - ../grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - ../grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
-      - ../grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - oteldb
-      - prometheus
       - otelcol
