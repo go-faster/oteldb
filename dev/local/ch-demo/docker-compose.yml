@@ -28,6 +28,7 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
       - OTEL_RESOURCE_ATTRIBUTES=service.name=chotel
     depends_on:
       - clickhouse
@@ -39,10 +40,13 @@ services:
       dockerfile: otelfaker.Dockerfile
     command: ["client"]
     environment:
-      - OTEL_METRICS_EXPORTER=none
-      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
-      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_LOG_LEVEL=debug
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=client
   server:
     restart: always
@@ -51,10 +55,13 @@ services:
       context: ../../../
       dockerfile: otelfaker.Dockerfile
     environment:
-      - OTEL_METRICS_EXPORTER=none
-      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
-      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_LOG_LEVEL=debug
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=server
 
   oteldb:
@@ -64,12 +71,14 @@ services:
     environment:
       - OTELDB_STORAGE=ch
       - CH_DSN=clickhouse://clickhouse:9000
-      - OTEL_LOG_LEVEL=debug
       - METRICS_ADDR=:3201
-      - OTEL_METRICS_EXPORTER=none
-      - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
-      - OTEL_LOGS_EXPORTER=none
+      - OTEL_LOG_LEVEL=info
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
     ports:
       - "9090:9090"   # prometheus API
