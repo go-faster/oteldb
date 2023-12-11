@@ -12,7 +12,7 @@ receivers:
             - targets: [server:8080]
 processors:
   batch:
-    timeout: 5s
+    timeout: 1s
     send_batch_max_size: 1024
     send_batch_size: 500
   memory_limiter:
