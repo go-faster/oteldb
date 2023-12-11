@@ -168,6 +168,17 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 
 		b.addName(name)
 		b.addLabels(attrs)
+		if err := b.addExemplars(
+			exemplarSeries{
+				Name:       name,
+				Timestamp:  ts,
+				Attributes: attrs,
+				Resource:   res,
+			},
+			point.Exemplars(),
+		); err != nil {
+			return errors.Wrap(err, "map exemplars")
+		}
 		// Save original histogram.
 		c.name.Append(name)
 		c.timestamp.Append(ts)
