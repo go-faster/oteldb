@@ -54,9 +54,8 @@ jobs:
           go build -v ./cmd/oteldb
 
       - name: Build docker-compose
-        # Before the cache, it was "run: docker compose build".
         working-directory: dev/local/ch-compliance
-        run: docker buildx bake --file docker-compose.ci.yml --file docker-cache.json
+        run: docker buildx bake --file docker-compose.ci.yml
 
       - name: Start
         working-directory: dev/local/ch-compliance
