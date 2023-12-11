@@ -71,7 +71,6 @@ jobs:
         run: |
           go build -v ./cmd/oteldb
           go build -v ./cmd/otelproxy
-          go build -v ./cmd/otelfaker
           go build -v ./cmd/chotel
 
       - name: Base image
@@ -91,16 +90,6 @@ jobs:
           file: deploy.proxy.Dockerfile
           push: true
           tags: "${{ env.IMAGE_TAG }}/proxy:${{ env.sha }}"
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Faker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: deploy.faker.Dockerfile
-          push: true
-          tags: "${{ env.IMAGE_TAG }}/faker:${{ env.sha }}"
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

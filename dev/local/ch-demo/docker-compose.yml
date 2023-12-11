@@ -37,7 +37,7 @@ services:
     restart: always
     build:
       context: ../../../
-      dockerfile: otelfaker.Dockerfile
+      dockerfile: oteldemo.Dockerfile
     command: ["client"]
     environment:
       - OTEL_LOG_LEVEL=debug
@@ -53,7 +53,7 @@ services:
     command: ["server"]
     build:
       context: ../../../
-      dockerfile: otelfaker.Dockerfile
+      dockerfile: oteldemo.Dockerfile
     environment:
       - OTEL_LOG_LEVEL=debug
       - OTEL_METRICS_EXPORTER=otlp
