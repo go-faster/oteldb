@@ -266,7 +266,7 @@ func (GenericJSONParser) Parse(data []byte) (*Line, error) {
 				if err != nil {
 					return errors.Wrap(err, "ts")
 				}
-				if num := jx.Num(v); num.IsInt() {
+				if num, err := jx.DecodeStr(v).Num(); err == nil && num.IsInt() {
 					// Quoted integer.
 					ts, err := num.Int64()
 					if err != nil {
