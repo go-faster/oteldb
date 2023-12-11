@@ -423,7 +423,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				s.series.data.values = append(s.series.data.values, value)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
-				s.labels["__name__"] = name
+				s.labels["__name__"] = otelstorage.KeyToLabel(name)
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
@@ -506,7 +506,7 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 				s.series.data.negativeBucketCounts = append(s.series.data.negativeBucketCounts, negativeBucketCounts)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
-				s.labels["__name__"] = name
+				s.labels["__name__"] = otelstorage.KeyToLabel(name)
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
