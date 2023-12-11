@@ -1,0 +1,11 @@
+{
+  "severity": {
+    "str": "Info",
+    "number": 9,
+    "text": "info"
+  },
+  "body": "BadTimestamp",
+  "attrs": {
+    "ts": "-"
+  }
+}
