@@ -51,7 +51,7 @@ func server(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 			),
 		)
 		defer span.End()
-		zctx.From(ctx).Info("processing")
+		zctx.From(ctx).Info("processing", zap.String("step", step))
 		// Sleep some random time.
 		duration := time.Duration(100+rand.Intn(100)) * time.Millisecond // #nosec G404
 		time.Sleep(duration)
@@ -75,14 +75,11 @@ func server(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		Addr:              "0.0.0.0:8080",
 		ReadHeaderTimeout: time.Second,
 		BaseContext:       func(net.Listener) context.Context { return ctx },
-		Handler: otelhttp.NewHandler(mux, "",
+		Handler: otelhttp.NewHandler(mux, "Hello",
 			otelhttp.WithMeterProvider(m.MeterProvider()),
 			otelhttp.WithTracerProvider(m.TracerProvider()),
-			otelhttp.WithSpanNameFormatter(func(operation string, r *http.Request) string {
-				if r.URL.Path == "/api/hello" {
-					return "hello"
-				}
-				return "metrics"
+			otelhttp.WithFilter(func(r *http.Request) bool {
+				return r.URL.Path != "/metrics"
 			}),
 		),
 	}
