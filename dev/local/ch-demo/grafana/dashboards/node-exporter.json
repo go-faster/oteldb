@@ -23647,7 +23647,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "Prometheus",
           "value": "Prometheus"
         },
@@ -23665,64 +23665,20 @@
         "type": "datasource"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "node-exporter",
-          "value": "node-exporter"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "",
-        "hide": 0,
-        "includeAll": false,
+        "hide": 2,
         "label": "Job",
-        "multi": false,
         "name": "job",
-        "options": [],
-        "query": {
-          "query": "label_values(node_uname_info, job)",
-          "refId": "Prometheus-job-Variable-Query"
-        },
-        "refresh": 1,
-        "regex": "",
+        "query": "node-exporter",
         "skipUrlSync": false,
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+        "type": "constant"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "node-exporter:9100",
-          "value": "node-exporter:9100"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(node_uname_info{job=\"$job\"}, instance)",
-        "hide": 0,
-        "includeAll": false,
+        "hide": 2,
         "label": "Host",
-        "multi": false,
         "name": "node",
-        "options": [],
-        "query": {
-          "query": "label_values(node_uname_info{job=\"$job\"}, instance)",
-          "refId": "Prometheus-node-Variable-Query"
-        },
-        "refresh": 1,
-        "regex": "",
+        "query": "node-exporter:9100",
         "skipUrlSync": false,
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+        "type": "constant"
       },
       {
         "current": {
@@ -23753,6 +23709,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
+      "500ms",
+      "1s",
       "5s",
       "10s",
       "30s",
@@ -23770,6 +23728,6 @@
   "timezone": "browser",
   "title": "Node Exporter Full",
   "uid": "node-exporter",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }
