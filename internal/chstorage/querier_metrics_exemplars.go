@@ -10,6 +10,7 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/prometheus/prometheus/model/exemplar"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/storage"
@@ -194,7 +195,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					HasTs:  true,
 				})
 
-				s.labels["__name__"] = name
+				s.labels["__name__"] = otelstorage.KeyToLabel(name)
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
