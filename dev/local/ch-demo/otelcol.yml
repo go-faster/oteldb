@@ -10,6 +10,10 @@ receivers:
           scrape_interval: 1s
           static_configs:
             - targets: [server:8080]
+        - job_name: node-exporter
+          scrape_interval: 5s
+          static_configs:
+            - targets: [node-exporter:9100]
 processors:
   batch:
     timeout: 1s

@@ -103,6 +103,21 @@ services:
       - '--feature-gates=telemetry.useOtelForInternalMetrics'
       - '--feature-gates=telemetry.useOtelWithSDKConfigurationForInternalTelemetry'
 
+  node-exporter:
+    image: prom/node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.processes'
+      - '--web.max-requests=40'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
   grafana:
     image: "grafana/grafana:10.0.0"
     environment:
