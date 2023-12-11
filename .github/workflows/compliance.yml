@@ -53,10 +53,6 @@ jobs:
         run: |
           go build -v ./cmd/oteldb
 
-      - name: Build docker-compose
-        working-directory: dev/local/ch-compliance
-        run: docker buildx bake --file docker-compose.ci.yml
-
       - name: Start
         working-directory: dev/local/ch-compliance
         run: docker compose -f docker-compose.ci.yml up -d
