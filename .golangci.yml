@@ -119,11 +119,11 @@ issues:
       linters: [revive, stylecheck]
       text: "comment"
 
-    - path: 'internal/promcompliance'
+    - path: "internal/promcompliance"
       linters: [revive]
       text: "exported:"
 
-    - path: 'internal/promcompliance'
+    - path: "internal/promcompliance"
       linters: [gocritic]
       text: "ifElseChain:"
 
@@ -138,12 +138,6 @@ issues:
       text: "G(306|301|204)"
 
     # False positive.
-    - path: internal/cmp
-      linters: [gocritic]
-      source: "return x != x"
-      text: "dupSubExpr"
-
-    # False positive.
     - linters: [govet]
       source: func.+Seek\(.+int64\).+chunkenc\.ValueType
       text: "method Seek"
@@ -151,3 +145,6 @@ issues:
     # Not gonna use const, does not make any sense.
     - linters: [goconst]
       text: "(Int64|int)"
+    - path: "internal/logparser"
+      linters: [goconst]
+      text: "(trace|span)_?[Ii][Dd]"
