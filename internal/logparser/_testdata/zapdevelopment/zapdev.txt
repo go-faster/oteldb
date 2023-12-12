@@ -1,0 +1,4 @@
+2023-12-12T15:49:36.355+0300	DEBUG	logparser/zap_development_test.go:123	Intruder alert	{"red_spy": "in the base", "pin": 1111, "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736", "span_id": "00f067aa0ba902b7"}
+2023-12-12T15:49:36.355+0300	INFO	named	logparser/zap_development_test.go:129	Intruder alert	{"red_spy": "in the base", "pin": 1111, "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736", "span_id": "00f067aa0ba902b7"}
+2023-12-12T15:49:36.355+0300	WARN	logparser/zap_development_test.go:135	Intruder alert
+2023-12-12T15:49:36.355+0300	ERROR	named	logparser/zap_development_test.go:136	Intruder alert

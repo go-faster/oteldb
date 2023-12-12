@@ -1,0 +1,13 @@
+{
+  "severity": {
+    "str": "Error",
+    "number": 17,
+    "text": "ERROR"
+  },
+  "body": "Intruder alert",
+  "timestamp": "2023-12-12T12:49:36.355Z",
+  "attrs": {
+    "logger": "named",
+    "filename": "logparser/zap_development_test.go:136"
+  }
+}
