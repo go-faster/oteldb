@@ -1,5 +1,3 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
 project_name: oteldb
 builds:
   - env:
@@ -42,9 +40,11 @@ release:
 
   # Templates: allowed
   footer: |
-    ## Thanks
+    ## Docker images
 
-    Those were the changes on {{ .Tag }}!
+    ```
+    {{ .Env.IMAGE }}:{{ .Version }}
+    ```
 
   extra_files:
     # cosign key
