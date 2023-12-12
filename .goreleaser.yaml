@@ -36,6 +36,7 @@ release:
     owner: go-faster
     name: oteldb
 
+  mode: replace
   prerelease: auto
 
   # Templates: allowed
