@@ -210,6 +210,9 @@ changelog:
     - title: 'Build process updates'
       regexp: ^.*?build(\([[:word:]]+\))??!?:.+$
       order: 400
+    - title: 'CI/CD updates'
+      regexp: ^.*?ci(\([[:word:]]+\))??!?:.+$
+      order: 400
     - title: Other work
       order: 9999
 
