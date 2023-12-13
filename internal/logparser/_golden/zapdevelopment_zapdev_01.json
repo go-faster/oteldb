@@ -1,0 +1,16 @@
+{
+  "severity": {
+    "str": "Debug",
+    "number": 5,
+    "text": "DEBUG"
+  },
+  "body": "Intruder alert",
+  "timestamp": "2023-12-12T12:49:36.355Z",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "span_id": "00f067aa0ba902b7",
+  "attrs": {
+    "filename": "logparser/zap_development_test.go:123",
+    "red_spy": "in the base",
+    "pin": 1111
+  }
+}
