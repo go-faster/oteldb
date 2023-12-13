@@ -16,8 +16,6 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-const iso8601Format = "2006-01-02T15:04:05.000Z0700"
-
 // ZapDevelopmentParser parses zap's development mode lines.
 type ZapDevelopmentParser struct{}
 
@@ -35,7 +33,7 @@ func (ZapDevelopmentParser) Parse(data []byte) (*Line, error) {
 	if !ok {
 		return nil, errors.New("expected a timestamp")
 	}
-	ts, err := time.Parse(iso8601Format, string(rawTimestamp))
+	ts, err := time.Parse(ISO8601Millis, string(rawTimestamp))
 	if err != nil {
 		return nil, errors.Wrap(err, "parse timestamp")
 	}
@@ -158,7 +156,7 @@ func (ZapDevelopmentParser) Detect(line string) bool {
 	if !ok {
 		return false
 	}
-	if _, err := time.Parse(iso8601Format, ts); err != nil {
+	if _, err := time.Parse(ISO8601Millis, ts); err != nil {
 		return false
 	}
 
