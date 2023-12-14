@@ -80,4 +80,26 @@ func (span Span) FillOTELSpan(s ptrace.Span) {
 	status := s.Status()
 	status.SetCode(ptrace.StatusCode(span.StatusCode))
 	status.SetMessage(span.StatusMessage)
+
+	mapSpanEvents(span.Events, s.Events())
+	mapSpanLinks(span.Links, s.Links())
+}
+
+func mapSpanEvents(events []Event, to ptrace.SpanEventSlice) {
+	for _, event := range events {
+		e := to.AppendEmpty()
+		e.SetTimestamp(event.Timestamp)
+		e.SetName(event.Name)
+		event.Attrs.CopyTo(e.Attributes())
+	}
+}
+
+func mapSpanLinks(links []Link, to ptrace.SpanLinkSlice) {
+	for _, link := range links {
+		l := to.AppendEmpty()
+		l.SetTraceID(pcommon.TraceID(link.TraceID))
+		l.SetSpanID(pcommon.SpanID(link.SpanID))
+		l.TraceState().FromRaw(link.TraceState)
+		link.Attrs.CopyTo(l.Attributes())
+	}
 }
