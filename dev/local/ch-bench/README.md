@@ -20,11 +20,13 @@ The `scapedMetrics` depends on machine where node exporter runs, but it averages
 The `scrapeConfigUpdateInterval` and `scrapeConfigUpdatePercent` controls new "tags" generation.
 This does not impact metrics per second, but will generate more unique metrics.
 
-To start:
+## Attacking
 
 ```
 docker compose up -d
 ```
+
+## Profiling
 
 To collect profiles:
 ```
@@ -36,4 +38,16 @@ This will emit profiles as `cpu.out` and `mem.out`:
 ```
 go tool pprof -alloc_space mem.out
 go tool pprof cpu.out
+```
+
+## Checking
+
+To check that points actually made to database, one can use following query:
+```clickhouse
+SELECT toDateTime(toStartOfSecond(timestamp)) as ts, COUNT()
+FROM metrics_points
+WHERE timestamp < (now() - toIntervalSecond(5))
+GROUP BY ts
+ORDER BY ts DESC
+LIMIT 15;
 ```
