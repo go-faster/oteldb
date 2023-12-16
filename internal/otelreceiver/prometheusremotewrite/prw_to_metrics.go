@@ -16,7 +16,6 @@ package prometheusremotewrite
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -56,13 +55,15 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 				pm.SetUnit(lastSuffixInMetricName)
 			}
 		}
-		settings.Logger.Debug("Metric unit", zap.String("metric name", pm.Name()), zap.String("metric_unit", pm.Unit()))
 		for _, s := range ts.Samples {
 			ppoint := pmetric.NewNumberDataPoint()
 			ppoint.SetDoubleValue(s.Value)
 			ppoint.SetTimestamp(pcommon.NewTimestampFromTime(time.Unix(0, s.Timestamp*int64(time.Millisecond))))
 			if ppoint.Timestamp().AsTime().Before(time.Now().Add(-time.Duration(settings.TimeThreshold) * time.Hour)) {
-				settings.Logger.Debug("Metric older than the threshold", zap.String("metric name", pm.Name()), zap.Time("metric_timestamp", ppoint.Timestamp().AsTime()))
+				settings.Logger.Debug("Metric older than the threshold",
+					zap.String("metric name", pm.Name()),
+					zap.Time("metric_timestamp", ppoint.Timestamp().AsTime()),
+				)
 				continue
 			}
 			for _, l := range ts.Labels {
@@ -81,13 +82,6 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 				pm.SetEmptyGauge()
 				ppoint.CopyTo(pm.Gauge().DataPoints().AppendEmpty())
 			}
-			settings.Logger.Debug("Metric sample",
-				zap.String("metric_name", pm.Name()),
-				zap.String("metric_unit", pm.Unit()),
-				zap.Float64("metric_value", ppoint.DoubleValue()),
-				zap.Time("metric_timestamp", ppoint.Timestamp().AsTime()),
-				zap.String("metric_labels", fmt.Sprintf("%#v", ppoint.Attributes())),
-			)
 		}
 		pm.MoveTo(empty)
 	}
