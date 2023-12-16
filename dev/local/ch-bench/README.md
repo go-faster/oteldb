@@ -43,7 +43,7 @@ go tool pprof cpu.out
 ## Checking
 
 To check that points actually made to database, one can use following query:
-```clickhouse
+```sql
 SELECT toDateTime(toStartOfSecond(timestamp)) as ts, COUNT()
 FROM metrics_points
 WHERE timestamp < (now() - toIntervalSecond(5))
