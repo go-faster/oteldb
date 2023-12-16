@@ -183,7 +183,11 @@ LIMIT 15`,
 	}); err != nil {
 		return errors.Wrap(err, "query")
 	}
-	a.pointsPerSecond.Store(slices.Max(points))
+	if len(points) == 0 {
+		a.pointsPerSecond.Store(0)
+	} else {
+		a.pointsPerSecond.Store(slices.Max(points))
+	}
 	return nil
 }
 
