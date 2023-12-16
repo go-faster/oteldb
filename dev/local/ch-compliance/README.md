@@ -14,9 +14,9 @@ To run with targets in docker-compose:
 promql-compliance-tester -config-file promql-test-queries.yml -config-file test-oteldb.yml
 ```
 
-**NOTE:**
-Results will be false-positive until enough data (~1h) is gathered.
-To fix that, change `-end` and `-range` flags.
+> [!WARNING]  
+> Results will be false-positive until enough data (~1h) is gathered.
+> To fix that, change `-end` and `-range` flags.
 
 For example, running for a couple of seconds is enough to get a relatively good result:
 ```console
