@@ -1,3 +1,4 @@
+// Binary prombench implements https://github.com/VictoriaMetrics/prometheus-benchmark as a single binary.
 package main
 
 import (
@@ -112,6 +113,7 @@ func (a *App) HandleConfig(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (a *App) ProgressConfig(ctx context.Context) error {
+	// https://github.com/VictoriaMetrics/prometheus-benchmark/blob/50c5891/services/vmagent-config-updater/main.go#L33-L48
 	rev := 0
 	r := rand.New(rand.NewSource(1)) // #nosec G404
 	p := a.scrapeConfigUpdatePercent / 100
