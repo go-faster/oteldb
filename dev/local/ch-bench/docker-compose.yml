@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.10
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    volumes:
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  attacker:
+    build:
+      context: ../../../
+      dockerfile: prombench.Dockerfile
+    command:
+      - --scrapeInterval=1s
+      - --targetsCount=100
+      - --scrapeConfigUpdateInterval=5s
+      - --scrapeConfigUpdatePercent=3
+      - http://oteldb:19291
+    depends_on:
+      - clickhouse
+      - oteldb
+
+  oteldb:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    environment:
+      - OTELDB_STORAGE=ch
+      - CH_DSN=clickhouse://clickhouse:9000
+      - METRICS_ADDR=:3201
+      - OTEL_LOG_LEVEL=warn
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
+      - PPROF_ADDR=:9010
+    ports:
+      - "9010:9010"   # pprof http://localhost:9010/debug/pprof/
+    depends_on:
+      - clickhouse
