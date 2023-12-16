@@ -1,6 +1,14 @@
 #!/bin/bash
 
-set -e -x
+clean_up () {
+    ARG=$?
+    echo ">> Stopping"
+    docker compose down -v
+    exit $ARG
+}
+trap clean_up EXIT
+
+set -e
 
 docker compose up -d --remove-orphans --build --force-recreate
 
@@ -11,6 +19,8 @@ RANGE="1m"
 END="1m"
 go run github.com/go-faster/oteldb/cmd/promql-compliance-tester \
   -end "${END}" -range "${RANGE}" \
-  -config-file promql-test-queries.yml -config-file test-oteldb.yml | tee result.oteldb.txt || true
+  -config-file promql-test-queries.yml -config-file test-oteldb.yml -output-format json > result.oteldb.json || true
 
-docker compose down -v
+go run ./cmd/compliance-verify result.oteldb.json
+
+
