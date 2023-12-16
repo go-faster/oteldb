@@ -23,6 +23,8 @@ For example, running for a couple of seconds is enough to get a relatively good 
 promql-compliance-tester -end 2m -range 1m -config-file promql-test-queries.yml -config-file test-oteldb.yml
 ```
 
+This will configure tester to check range from T-2m to T-1m.
+
 ## Notes
 
 This check was disabled as being broken on latest prometheus reference:
