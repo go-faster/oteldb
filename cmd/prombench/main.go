@@ -21,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
@@ -203,6 +204,7 @@ func (a *App) RunAgent(ctx context.Context) error {
 		"--remoteWrite.showURL",
 		"--promscrape.config=http://" + a.addr + "/config",
 		"--remoteWrite.url=" + a.targets[0],
+		"--remoteWrite.forceVMProto",
 	}
 	// #nosec G204
 	cmd := exec.CommandContext(ctx, "vmagent", arg...)
@@ -285,8 +287,42 @@ func (a *App) parseTargets() {
 	}
 }
 
+func (a *App) waitForTarget(ctx context.Context, target string) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*15)
+	defer cancel()
+
+	e := backoff.NewExponentialBackOff()
+	return backoff.RetryNotify(func() error {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, http.NoBody)
+		if err != nil {
+			return err
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = res.Body.Close()
+		}()
+		if !(res.StatusCode >= 200 && res.StatusCode < 300) {
+			return fmt.Errorf("unexpected status %s", res.Status)
+		}
+		zctx.From(ctx).Info("Target ready", zap.String("target", target))
+		return nil
+	}, backoff.WithContext(e, ctx), func(err error, duration time.Duration) {
+		zctx.From(ctx).Warn("cannot fetch target", zap.Error(err), zap.Duration("duration", duration))
+	})
+}
+
 func (a *App) run(ctx context.Context, _ *zap.Logger, _ *app.Metrics) error {
 	a.cfg.Store(a.prometheusConfig())
+
+	// First, wait for target to be available.
+	for _, target := range a.targets {
+		if err := a.waitForTarget(ctx, target); err != nil {
+			return err
+		}
+	}
 
 	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
