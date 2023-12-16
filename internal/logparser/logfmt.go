@@ -71,7 +71,7 @@ func (LogFmtParser) Parse(data []byte) (*Line, error) {
 				attrs.PutStr(k, v)
 			}
 		default:
-			// Try deduct a type.
+			// Try to deduct a type.
 			if v == "" {
 				attrs.PutBool(k, true)
 				return nil
