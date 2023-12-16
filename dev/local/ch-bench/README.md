@@ -4,10 +4,11 @@ This docker compose project will run a [prometheus-benchmark](https://github.com
 composed as a single binary (see ./cmd/prombench) against single instance of oteldb.
 
 The `probmench` runs `node_exporter` and `vmagent`, acting as a dynamic configuration source for `vmagent` scrape targets
-and caching proxy before `node_exporter`, also logging some metrics.
-This generates load as `vmagent` scrapes generated config and sends to configured remote write address per `scrapeInterval`.
+and a caching proxy before `node_exporter`.
 
-Total generated load are controlled by following arguments:
+This generates load as a `vmagent` scrapes generated config and sends metrics to the configured remote write address per `scrapeInterval`.
+
+Total generated load is controlled by following arguments:
 - `-targetsCount`, number of targets to generate (i.e. "virtual" node exporter instances)
 - `-scrapeInterval`, interval between scrapes of each target
 
