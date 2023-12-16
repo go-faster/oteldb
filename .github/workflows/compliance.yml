@@ -70,7 +70,7 @@ jobs:
           -end 1m -range 1m > result.oteldb.json || true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: result.oteldb.json
           path: dev/local/ch-compliance/result.oteldb.json
