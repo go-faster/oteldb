@@ -18,6 +18,12 @@ services:
     build:
       context: ../../../
       dockerfile: prombench.Dockerfile
+    environment:
+      - OTEL_LOG_LEVEL=info
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=attacker
     command:
       - --scrapeInterval=1s
       - --targetsCount=100
