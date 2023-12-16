@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -16,12 +15,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
 
+	"github.com/ClickHouse/ch-go"
+	"github.com/ClickHouse/ch-go/proto"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
@@ -33,6 +36,7 @@ type App struct {
 	node                       atomic.Pointer[[]byte]
 	cfg                        atomic.Pointer[config]
 	nodeExporterAddr           string
+	clickhouseAddr             string
 	agentAddr                  string
 	targetsCount               int
 	scrapeInterval             time.Duration
@@ -41,6 +45,7 @@ type App struct {
 	useVictoria                bool
 	targets                    []string
 	metricsInfo                atomic.Pointer[metricsInfo]
+	pointsPerSecond            atomic.Uint64
 }
 
 type metricsInfo struct {
@@ -150,6 +155,53 @@ func (a *App) HandleNodeExporter(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(*v)
 }
 
+func (a *App) fetchClickhouseStats(ctx context.Context) error {
+	client, err := ch.Dial(ctx, ch.Options{
+		Address: a.clickhouseAddr,
+	})
+	if err != nil {
+		return errors.Wrap(err, "dial")
+	}
+	defer func() {
+		_ = client.Close()
+	}()
+	var (
+		seconds proto.ColDateTime
+		points  proto.ColUInt64
+	)
+	if err := client.Do(ctx, ch.Query{
+		Body: `SELECT toDateTime(toStartOfSecond(timestamp)) as ts, COUNT() as total
+FROM metrics_points
+WHERE timestamp < (now() - toIntervalSecond(3))
+GROUP BY ts
+ORDER BY ts DESC
+LIMIT 15`,
+		Result: proto.Results{
+			{Name: "ts", Data: &seconds},
+			{Name: "total", Data: &points},
+		},
+	}); err != nil {
+		return errors.Wrap(err, "query")
+	}
+	a.pointsPerSecond.Store(slices.Max(points))
+	return nil
+}
+
+func (a *App) RunClickhouseReporter(ctx context.Context) error {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			if err := a.fetchClickhouseStats(ctx); err != nil {
+				zctx.From(ctx).Error("cannot fetch clickhouse tats", zap.Error(err))
+			}
+		}
+	}
+}
+
 func (a *App) RunReporter(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second * 2)
 	defer ticker.Stop()
@@ -163,12 +215,16 @@ func (a *App) RunReporter(ctx context.Context) error {
 				zctx.From(ctx).Info("no metrics info")
 				continue
 			}
-			zctx.From(ctx).Info("Reporting",
+			fields := []zap.Field{
 				zap.String("hash", info.Hash),
 				zap.Int("scraped.total", info.Count),
 				zap.Int("scraped.size", info.Size),
 				zap.Int("metrics.total", info.Count*a.targetsCount),
-			)
+			}
+			if a.clickhouseAddr != "" {
+				fields = append(fields, zap.Uint64("points_per_sec", a.pointsPerSecond.Load()))
+			}
+			zctx.From(ctx).Info("Reporting", fields...)
 		}
 	}
 }
@@ -328,6 +384,11 @@ func (a *App) run(ctx context.Context, _ *zap.Logger, _ *app.Metrics) error {
 	g.Go(func() error {
 		return a.ProgressConfig(ctx)
 	})
+	if a.clickhouseAddr != "" {
+		g.Go(func() error {
+			return a.RunClickhouseReporter(ctx)
+		})
+	}
 	g.Go(func() error {
 		return a.RunReporter(ctx)
 	})
@@ -381,6 +442,7 @@ func main() {
 	flag.DurationVar(&a.scrapeInterval, "scrapeInterval", time.Second*5, "The scrape_interval to set at the scrape config returned from -httpListenAddr")
 	flag.DurationVar(&a.scrapeConfigUpdateInterval, "scrapeConfigUpdateInterval", time.Minute*10, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr every -scrapeConfigUpdateInterval")
 	flag.Float64Var(&a.scrapeConfigUpdatePercent, "scrapeConfigUpdatePercent", 1, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr ever -scrapeConfigUpdateInterval")
+	flag.StringVar(&a.clickhouseAddr, "clickhouseAddr", "", "clickhouse tcp protocol addr to get actual stats from")
 	flag.BoolVar(&a.useVictoria, "useVictoria", true, "use vmagent instead of prometheus")
 	flag.Parse()
 	a.parseTargets()

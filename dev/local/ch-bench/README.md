@@ -51,3 +51,21 @@ GROUP BY ts
 ORDER BY ts DESC
 LIMIT 15;
 ```
+
+Or see attacker logs, points_per_sec attribute:
+
+```console
+docker compose logs attacker --no-log-prefix | grep Reporting | tail -n5 | jq -c
+```
+```json
+{"level":"info","ts":1702747705.4254293,"caller":"prombench/main.go:227","msg":"Reporting","hash":"9659488dfc5b1296","scraped.total":1437,"scraped.size":102828,"metrics.total":143700,"points_per_sec":144300}
+```
+
+```console
+$ docker compose logs attacker --no-log-prefix | grep Reporting | tail -n5 | jq -r .points_per_sec
+144400
+144400
+144400
+144353
+144353
+```

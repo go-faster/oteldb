@@ -23,6 +23,7 @@ services:
       - --targetsCount=100
       - --scrapeConfigUpdateInterval=5s
       - --scrapeConfigUpdatePercent=3
+      - --clickhouseAddr=clickhouse:9000
       - http://oteldb:19291
     depends_on:
       - clickhouse
