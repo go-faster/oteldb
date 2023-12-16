@@ -2,6 +2,8 @@
 
 https://github.com/prometheus/compliance/tree/main/promql#promql-compliance-tester
 
+## Running
+
 To build and install:
 ```
 go install github.com/go-faster/oteldb/cmd/promql-compliance-tester
@@ -13,7 +15,15 @@ promql-compliance-tester -config-file promql-test-queries.yml -config-file test-
 ```
 
 **NOTE:**
-Results will be false-positive until enough data (~20min) is gathered.
+Results will be false-positive until enough data (~1h) is gathered.
+To fix that, change `-end` and `-range` flags.
+
+For example, running for a couple of seconds is enough to get a relatively good result:
+```console
+promql-compliance-tester -end 2m -range 1m -config-file promql-test-queries.yml -config-file test-oteldb.yml
+```
+
+## Notes
 
 This check was disabled as being broken on latest prometheus reference:
 ```yaml
@@ -27,7 +37,11 @@ Was producing an error:
 FATA[0000] Error running comparison: expected reference API query "label_replace(demo_num_cpus, \"instance\", \"\", \"\", \"\")" to fail, but succeeded  source="main.go:137
 ```
 
+## Results
+
 Latest result:
 ```
 Total: 547 / 548 (99.82%) passed, 0 unsupported
 ```
+
+We are getting (99.6, 100] percent and current target is compatibility not less than 99.6%.
