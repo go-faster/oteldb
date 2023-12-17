@@ -37,7 +37,7 @@ release:
     name: oteldb
 
   mode: replace
-  draft: true
+  draft: false
   prerelease: auto
 
   # Templates: allowed
