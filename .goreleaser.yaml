@@ -223,7 +223,7 @@ nfpms:
   - package_name: oteldb
     homepage: https://github.com/go-faster/oteldb
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
-    description: OpenTelemetry-compatible telemetry storage
+    description: OpenTelemetry signal storage
     license: Apache 2.0
     formats:
       - apk
