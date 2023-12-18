@@ -13,6 +13,7 @@ require (
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
 	github.com/go-faster/sdk v0.12.0
+	github.com/go-faster/yaml v0.4.6
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/snappy v0.0.4
@@ -36,9 +37,10 @@ require (
 	go.opentelemetry.io/collector/confmap v0.91.0
 	go.opentelemetry.io/collector/consumer v0.91.0
 	go.opentelemetry.io/collector/exporter v0.91.0
-	go.opentelemetry.io/collector/extension v0.91.0
 	go.opentelemetry.io/collector/otelcol v0.91.0
 	go.opentelemetry.io/collector/pdata v1.0.0
+	go.opentelemetry.io/collector/processor v0.91.0
+	go.opentelemetry.io/collector/processor/batchprocessor v0.91.0
 	go.opentelemetry.io/collector/receiver v0.91.0
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.91.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1
@@ -95,7 +97,6 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
-	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -171,9 +172,9 @@ require (
 	go.opentelemetry.io/collector/config/configtelemetry v0.91.0 // indirect
 	go.opentelemetry.io/collector/config/internal v0.91.0 // indirect
 	go.opentelemetry.io/collector/connector v0.91.0 // indirect
+	go.opentelemetry.io/collector/extension v0.91.0 // indirect
 	go.opentelemetry.io/collector/extension/auth v0.91.0 // indirect
 	go.opentelemetry.io/collector/featuregate v1.0.0 // indirect
-	go.opentelemetry.io/collector/processor v0.91.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.91.0 // indirect
 	go.opentelemetry.io/collector/service v0.91.0 // indirect
 	go.opentelemetry.io/contrib/config v0.1.1 // indirect
