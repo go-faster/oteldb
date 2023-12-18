@@ -50,10 +50,15 @@ const (
 	links_trace_ids Array(FixedString(16)),
 	links_span_ids Array(FixedString(8)),
 	links_tracestates Array(String),
-	links_attributes Array(String)
+	links_attributes Array(String),
+
+	INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
 )
 ENGINE = MergeTree()
-ORDER BY (service_namespace, service_name, cityHash64(resource), start);`
+PARTITION BY toYYYYMMDD(start)
+PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
+ORDER BY (service_namespace, service_name, cityHash64(resource), start);
+`
 	kindDDL    = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
 	tagsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(

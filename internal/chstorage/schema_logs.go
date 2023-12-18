@@ -37,16 +37,13 @@ CREATE TABLE IF NOT EXISTS %s
 
     INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
     INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,
-	INDEX idx_res_attr_key mapKeys(resource) TYPE bloom_filter(0.01) GRANULARITY 1,
-	INDEX idx_res_attr_value mapValues(resource) TYPE bloom_filter(0.01) GRANULARITY 1,
-	INDEX idx_scope_attr_key mapKeys(scope_attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
-	INDEX idx_scope_attr_value mapValues(scope_attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
-	INDEX idx_log_attr_key mapKeys(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
-	INDEX idx_log_attr_value mapValues(attributes) TYPE bloom_filter(0.01) GRANULARITY 1
+	INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
 )
   ENGINE = MergeTree
-  PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
-  SETTINGS index_granularity=8192, ttl_only_drop_parts = 1;
+  PARTITION BY toYYYYMMDD(timestamp)
+  PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource))
+  ORDER BY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
+  SETTINGS index_granularity=8192;
 `
 
 	logAttrsSchema = `
