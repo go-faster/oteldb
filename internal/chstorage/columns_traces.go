@@ -28,15 +28,12 @@ type spanColumns struct {
 	statusMessage *proto.ColLowCardinality[string]
 	batchID       proto.ColUUID
 
-	attributes      *proto.ColMap[string, string]
-	attributesTypes *proto.ColMap[string, uint8]
-	resource        *proto.ColMap[string, string]
-	resourceTypes   *proto.ColMap[string, uint8]
+	attributes *Attributes
+	resource   *Attributes
 
-	scopeName            *proto.ColLowCardinality[string]
-	scopeVersion         *proto.ColLowCardinality[string]
-	scopeAttributes      *proto.ColMap[string, string]
-	scopeAttributesTypes *proto.ColMap[string, uint8]
+	scopeName       *proto.ColLowCardinality[string]
+	scopeVersion    *proto.ColLowCardinality[string]
+	scopeAttributes *Attributes
 
 	events eventsColumns
 	links  linksColumns
@@ -51,22 +48,19 @@ func newSpanColumns() *spanColumns {
 		events:        newEventsColumns(),
 		links:         newLinksColumns(),
 
-		serviceInstanceID:    new(proto.ColStr).LowCardinality(),
-		serviceName:          new(proto.ColStr).LowCardinality(),
-		serviceNamespace:     new(proto.ColStr).LowCardinality(),
-		attributes:           newAttributesColumn(),
-		attributesTypes:      newTypesColumn(),
-		resource:             newAttributesColumn(),
-		resourceTypes:        newTypesColumn(),
-		scopeName:            new(proto.ColStr).LowCardinality(),
-		scopeVersion:         new(proto.ColStr).LowCardinality(),
-		scopeAttributes:      newAttributesColumn(),
-		scopeAttributesTypes: newTypesColumn(),
+		serviceInstanceID: new(proto.ColStr).LowCardinality(),
+		serviceName:       new(proto.ColStr).LowCardinality(),
+		serviceNamespace:  new(proto.ColStr).LowCardinality(),
+		attributes:        NewAttributes("attributes"),
+		resource:          NewAttributes("resource"),
+		scopeName:         new(proto.ColStr).LowCardinality(),
+		scopeVersion:      new(proto.ColStr).LowCardinality(),
+		scopeAttributes:   NewAttributes("scope_attributes"),
 	}
 }
 
-func (c *spanColumns) columns() tableColumns {
-	return []tableColumn{
+func (c *spanColumns) columns() Columns {
+	return MergeColumns(Columns{
 		{Name: "service_instance_id", Data: c.serviceInstanceID},
 		{Name: "service_name", Data: c.serviceName},
 		{Name: "service_namespace", Data: c.serviceNamespace},
@@ -83,15 +77,8 @@ func (c *spanColumns) columns() tableColumns {
 		{Name: "status_message", Data: c.statusMessage},
 		{Name: "batch_id", Data: &c.batchID},
 
-		{Name: "attributes", Data: c.attributes},
-		{Name: "attributes_types", Data: c.attributesTypes},
-		{Name: "resource", Data: c.resource},
-		{Name: "resource_types", Data: c.resourceTypes},
-
 		{Name: "scope_name", Data: c.scopeName},
 		{Name: "scope_version", Data: c.scopeVersion},
-		{Name: "scope_attributes", Data: c.scopeAttributes},
-		{Name: "scope_attributes_types", Data: c.scopeAttributesTypes},
 
 		{Name: "events_timestamps", Data: c.events.timestamps},
 		{Name: "events_names", Data: c.events.names},
@@ -101,7 +88,11 @@ func (c *spanColumns) columns() tableColumns {
 		{Name: "links_span_ids", Data: c.links.spanIDs},
 		{Name: "links_tracestates", Data: c.links.tracestates},
 		{Name: "links_attributes", Data: c.links.attributes},
-	}
+	},
+		c.attributes.Columns(),
+		c.resource.Columns(),
+		c.scopeAttributes.Columns(),
+	)
 }
 
 func (c *spanColumns) Input() proto.Input {
@@ -125,8 +116,8 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 	c.statusMessage.Append(s.StatusMessage)
 
 	c.batchID.Append(s.BatchID)
-	appendAttributes(c.attributes, c.attributesTypes, s.Attrs)
-	appendAttributes(c.resource, c.resourceTypes, s.ResourceAttrs)
+	c.attributes.Append(s.Attrs)
+	c.resource.Append(s.ResourceAttrs)
 	{
 		m := s.ResourceAttrs.AsMap()
 		setStrOrEmpty(c.serviceInstanceID, m, string(semconv.ServiceInstanceIDKey))
@@ -135,7 +126,7 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 	}
 	c.scopeName.Append(s.ScopeName)
 	c.scopeVersion.Append(s.ScopeVersion)
-	appendAttributes(c.scopeAttributes, c.scopeAttributesTypes, s.ScopeAttrs)
+	c.scopeAttributes.Append(s.ScopeAttrs)
 
 	c.events.AddRow(s.Events)
 	c.links.AddRow(s.Links)
@@ -143,11 +134,11 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 
 func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span, error) {
 	for i := 0; i < c.traceID.Rows(); i++ {
-		attrs, err := decodeAttributesRow(c.attributes, c.attributesTypes, i)
+		attrs, err := c.attributes.Row(i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode attributes")
 		}
-		resource, err := decodeAttributesRow(c.resource, c.resourceTypes, i)
+		resource, err := c.resource.Row(i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode resource")
 		}
@@ -163,7 +154,7 @@ func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span
 				v.PutStr(string(semconv.ServiceNamespaceKey), s)
 			}
 		}
-		scopeAttrs, err := decodeAttributesRow(c.scopeAttributes, c.scopeAttributesTypes, i)
+		scopeAttrs, err := c.scopeAttributes.Row(i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode scope attributes")
 		}

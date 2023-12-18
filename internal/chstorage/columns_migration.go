@@ -9,8 +9,8 @@ type migrationColumns struct {
 	ddl   proto.ColStr // SHA256(DDL)
 }
 
-func (c *migrationColumns) columns() tableColumns {
-	return []tableColumn{
+func (c *migrationColumns) columns() Columns {
+	return []Column{
 		{Name: "table", Data: &c.table},
 		{Name: "ddl", Data: &c.ddl},
 	}
