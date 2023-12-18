@@ -24,17 +24,21 @@ const (
 const (
 	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
-		name LowCardinality(String) CODEC(ZSTD(1)),
+		name LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
-		mapping Enum8(` + metricMappingDDL + `) CODEC(T64, ZSTD(1)),
-		value Float64 CODEC(Gorilla, ZSTD(1)),
+		mapping Enum8(` + metricMappingDDL + `) CODEC(T64),
+		value Float64 CODEC(Gorilla),
 
-		flags	    UInt8  CODEC(T64, ZSTD(1)),
-		attributes	String CODEC(ZSTD(1)),
-		resource	String CODEC(ZSTD(1))
+		flags	    UInt8  CODEC(T64),
+		attributes	String,
+		resource	String,
+	
+		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192
 	)
 	ENGINE = MergeTree()
+	PARTITION BY toYYYYMMDD(timestamp)
+	PRIMARY KEY (name, mapping, cityHash64(resource), cityHash64(attributes))
 	ORDER BY (name, mapping, cityHash64(resource), cityHash64(attributes), timestamp);`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
