@@ -25,10 +25,10 @@ services:
       - OTEL_TRACES_EXPORTER=none
       - OTEL_RESOURCE_ATTRIBUTES=service.name=attacker
     command:
-      - --scrapeInterval=1s
-      - --targetsCount=100
-      - --scrapeConfigUpdateInterval=5s
-      - --scrapeConfigUpdatePercent=3
+      - --scrapeInterval=5s
+      - --targetsCount=500
+      - --scrapeConfigUpdateInterval=1m
+      - --scrapeConfigUpdatePercent=1
       - --clickhouseAddr=clickhouse:9000
       - http://oteldb:19291
     depends_on:
