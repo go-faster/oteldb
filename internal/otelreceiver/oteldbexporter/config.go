@@ -24,13 +24,8 @@ func (c *Config) connect(ctx context.Context, settings exporter.CreateSettings) 
 		return nil, errors.Wrap(err, "dial clickhouse")
 	}
 
-	tables := chstorage.DefaultTables()
-	if err := tables.Create(ctx, pool); err != nil {
-		return nil, errors.Wrap(err, "create tables")
-	}
-
 	inserter, err := chstorage.NewInserter(pool, chstorage.InserterOptions{
-		Tables:         tables,
+		Tables:         chstorage.DefaultTables(),
 		MeterProvider:  settings.MeterProvider,
 		TracerProvider: settings.TracerProvider,
 	})

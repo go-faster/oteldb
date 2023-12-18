@@ -50,7 +50,12 @@ func setupCH(
 	if err != nil {
 		return store, errors.Wrap(err, "dial clickhouse")
 	}
+
+	// FIXME(tdakkota): this is not a good place for migration
 	tables := chstorage.DefaultTables()
+	if err := tables.Create(ctx, c); err != nil {
+		return store, errors.Wrap(err, "create tables")
+	}
 
 	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{
 		Tables:         tables,
