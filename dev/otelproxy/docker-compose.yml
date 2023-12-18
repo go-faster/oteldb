@@ -79,7 +79,6 @@ services:
       - "PYROSCOPE_URL=http://pyroscope:4040"
       - "TEMPO_URL=http://tempo:3200"
       - "PROMETHEUS_URL=http://prometheus:9090"
-      - "METRICS_ADDR=:9000"
       - "OTEL_METRICS_EXPORTER=prometheus"
       - "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc"
       - "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://tempo:4317"

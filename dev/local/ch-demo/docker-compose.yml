@@ -71,7 +71,6 @@ services:
     environment:
       - OTELDB_STORAGE=ch
       - CH_DSN=clickhouse://clickhouse:9000
-      - METRICS_ADDR=:3201
       - OTEL_LOG_LEVEL=info
       - OTEL_METRICS_EXPORTER=otlp
       - OTEL_LOGS_EXPORTER=otlp
