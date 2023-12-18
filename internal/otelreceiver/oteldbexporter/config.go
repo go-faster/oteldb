@@ -11,11 +11,11 @@ import (
 
 // Config defines [Exporter] config.
 type Config struct {
-	DSL string `mapstructure:"dsl"`
+	DSN string `mapstructure:"dsn"`
 }
 
 func (c *Config) connect(ctx context.Context, settings exporter.CreateSettings) (*chstorage.Inserter, error) {
-	pool, err := chstorage.Dial(ctx, c.DSL, chstorage.DialOptions{
+	pool, err := chstorage.Dial(ctx, c.DSN, chstorage.DialOptions{
 		MeterProvider:  settings.MeterProvider,
 		TracerProvider: settings.TracerProvider,
 		Logger:         settings.Logger,

@@ -30,7 +30,7 @@ func NewFactory() exporter.Factory {
 
 func createDefaultConfig() component.Config {
 	return &Config{
-		DSL: "clickhouse://localhost:9000",
+		DSN: "clickhouse://localhost:9000",
 	}
 }
 
