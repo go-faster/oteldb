@@ -44,9 +44,9 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 	}()
 
 	var query strings.Builder
-	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
-		SELECT DISTINCT trace_id FROM %#[1]q WHERE true
-	`, table)
+	fmt.Fprintf(&query, `SELECT %s FROM %#[2]q WHERE trace_id IN (
+		SELECT DISTINCT trace_id FROM %#[2]q WHERE true
+	`, newSpanColumns().columns().All(), table)
 	for key, value := range tags {
 		if key == "name" {
 			fmt.Fprintf(&query, " AND name = %s", singleQuoted(value))
@@ -189,7 +189,9 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 		span.End()
 	}()
 
-	query := fmt.Sprintf("SELECT * FROM %#q WHERE trace_id = unhex(%s)", table, singleQuoted(id.Hex()))
+	query := fmt.Sprintf("SELECT %s FROM %#q WHERE trace_id = unhex(%s)",
+		newSpanColumns().columns().All(), table, singleQuoted(id.Hex()),
+	)
 	if s := opts.Start; s != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)
 	}
@@ -268,9 +270,9 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 		table = q.tables.Spans
 	)
 
-	fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE trace_id IN (
-		SELECT DISTINCT trace_id FROM %#[1]q WHERE true
-	`, table)
+	fmt.Fprintf(&query, `SELECT %s FROM %#[2]q WHERE trace_id IN (
+		SELECT DISTINCT trace_id FROM %#[2]q WHERE true
+	`, newSpanColumns().columns().All(), table)
 
 	var (
 		dropped   int

@@ -1,15 +1,31 @@
 package chstorage
 
-import "github.com/ClickHouse/ch-go/proto"
+import (
+	"strings"
 
-type tableColumn struct {
+	"github.com/ClickHouse/ch-go/proto"
+)
+
+// Column is a column with name and data that can be used in INSERT or SELECT query.
+type Column struct {
 	Name string
 	Data proto.Column
 }
 
-type tableColumns []tableColumn
+// MergeColumns merges multiple sets of columns into one.
+func MergeColumns(sets ...Columns) Columns {
+	var cols Columns
+	for _, set := range sets {
+		cols = append(cols, set...)
+	}
+	return cols
+}
 
-func (c tableColumns) Names() []string {
+// Columns is a set of Columns.
+type Columns []Column
+
+// Names returns a slice of column names.
+func (c Columns) Names() []string {
 	var names []string
 	for _, col := range c {
 		names = append(names, col.Name)
@@ -17,7 +33,14 @@ func (c tableColumns) Names() []string {
 	return names
 }
 
-func (c tableColumns) Input() proto.Input {
+// All returns comma-separated column names for using in SELECT query
+// instead of `SELECT *`.
+func (c Columns) All() string {
+	return strings.Join(c.Names(), ", ")
+}
+
+// Input returns columns for using in INSERT query.
+func (c Columns) Input() proto.Input {
 	var cols proto.Input
 	for _, col := range c {
 		cols = append(cols, proto.InputColumn{
@@ -28,7 +51,8 @@ func (c tableColumns) Input() proto.Input {
 	return cols
 }
 
-func (c tableColumns) Result() proto.Results {
+// Result returns columns for using in SELECT query.
+func (c Columns) Result() proto.Results {
 	var cols proto.Results
 	for _, col := range c {
 		cols = append(cols, proto.ResultColumn{
@@ -39,7 +63,8 @@ func (c tableColumns) Result() proto.Results {
 	return cols
 }
 
-func (c tableColumns) Reset() {
+// Reset columns.
+func (c Columns) Reset() {
 	for _, col := range c {
 		col.Data.Reset()
 	}
