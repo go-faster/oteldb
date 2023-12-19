@@ -87,26 +87,7 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 		err = nil
 		rec.host = host
 		rec.server, err = rec.config.HTTPServerSettings.ToServer(host, rec.params.TelemetrySettings, rec,
-			confighttp.WithDecoder("snappy", func(body io.ReadCloser) (io.ReadCloser, error) {
-				// TODO(tdakkota): use buffer pool
-				compressed, err := io.ReadAll(body)
-				if err != nil {
-					return nil, err
-				}
-
-				decompressed, err := snappy.Decode(nil, compressed)
-				if err != nil {
-					return nil, err
-				}
-
-				return struct {
-					io.Closer
-					io.Reader
-				}{
-					Closer: body,
-					Reader: bytes.NewReader(decompressed),
-				}, nil
-			}),
+			confighttp.WithDecoder("snappy", snappyDecoder),
 		)
 		var listener net.Listener
 		listener, err = rec.config.HTTPServerSettings.ToListener()
@@ -124,11 +105,37 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 	return err
 }
 
-func decodeRequest(r io.Reader) (*prompb.WriteRequest, error) {
-	// TODO(tdakkota): use buffer pool
-	data, err := io.ReadAll(r)
+func snappyDecoder(body io.ReadCloser) (io.ReadCloser, error) {
+	compressed := getBuf()
+	defer putBuf(compressed)
+
+	if _, err := io.Copy(compressed, body); err != nil {
+		return nil, err
+	}
+
+	decompressed, err := snappy.Decode(nil, compressed.Bytes())
 	if err != nil {
 		return nil, err
+	}
+
+	return &closerReader{
+		data:   decompressed,
+		Reader: *bytes.NewReader(decompressed),
+	}, nil
+}
+
+func decodeRequest(r io.Reader) (*prompb.WriteRequest, error) {
+	var data []byte
+	switch r := r.(type) {
+	case *closerReader:
+		// Do not make an unnecessary copy of data.
+		data = r.data
+	default:
+		var err error
+		data, err = io.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var req prompb.WriteRequest
