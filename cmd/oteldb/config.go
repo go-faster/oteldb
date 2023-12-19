@@ -9,6 +9,33 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+func loadConfig(name string) (cfg Config, _ error) {
+	defer func() {
+		// Environment variable has higher precedence.
+		if dsn := os.Getenv("CH_DSN"); dsn != "" {
+			cfg.DSN = dsn
+		}
+	}()
+
+	if name == "" {
+		name = "oteldb.yml"
+		if _, err := os.Stat(name); err != nil {
+			return cfg, nil
+		}
+	}
+
+	data, err := os.ReadFile(filepath.Clean(name))
+	if err != nil {
+		return cfg, err
+	}
+
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return cfg, err
+	}
+
+	return cfg, nil
+}
+
 // Config is a oteldb config.
 type Config struct {
 	DSN        string           `json:"dsn" yaml:"dsn"`
@@ -62,26 +89,6 @@ func (cfg *Config) setDefaults() {
 			},
 		}
 	}
-}
-
-func loadConfig(name string) (cfg Config, _ error) {
-	if name == "" {
-		name = "oteldb.yml"
-		if _, err := os.Stat(name); err != nil {
-			return cfg, nil
-		}
-	}
-
-	data, err := os.ReadFile(filepath.Clean(name))
-	if err != nil {
-		return cfg, err
-	}
-
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return cfg, err
-	}
-
-	return cfg, nil
 }
 
 // TempoConfig is Tempo API config.
