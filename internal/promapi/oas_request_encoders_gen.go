@@ -20,7 +20,7 @@ func encodePostLabelsRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "start" form field.
 		cfg := uri.QueryParameterEncodingConfig{
@@ -93,7 +93,7 @@ func encodePostQueryRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "query" form field.
 		cfg := uri.QueryParameterEncodingConfig{
@@ -170,7 +170,7 @@ func encodePostQueryExemplarsRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "query" form field.
 		cfg := uri.QueryParameterEncodingConfig{
@@ -228,7 +228,7 @@ func encodePostQueryRangeRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "query" form field.
 		cfg := uri.QueryParameterEncodingConfig{
@@ -331,7 +331,7 @@ func encodePostSeriesRequest(
 	const contentType = "application/x-www-form-urlencoded"
 	request := req
 
-	q := uri.NewQueryEncoder()
+	q := uri.NewFormEncoder(map[string]string{})
 	{
 		// Encode "start" form field.
 		cfg := uri.QueryParameterEncodingConfig{
