@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/autologs"
+	"github.com/go-faster/oteldb/internal/autopyro"
 	"github.com/go-faster/oteldb/internal/autozpages"
 )
 
@@ -35,6 +36,15 @@ func main() {
 		cfg, err := loadConfig(*cfgPath)
 		if err != nil {
 			return errors.Wrap(err, "load config")
+		}
+		{
+			stop, err := autopyro.Setup(ctx)
+			if err != nil {
+				return errors.Wrap(err, "setup pyroscope")
+			}
+			defer func() {
+				_ = stop(context.Background())
+			}()
 		}
 
 		root, err := newApp(ctx, cfg, m)
