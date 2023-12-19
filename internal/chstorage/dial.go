@@ -79,9 +79,18 @@ func Dial(ctx context.Context, dsn string, opts DialOptions) (*chpool.Pool, erro
 	connectBackoff := backoff.NewExponentialBackOff()
 	connectBackoff.InitialInterval = 2 * time.Second
 	connectBackoff.MaxElapsedTime = time.Minute
-	return backoff.RetryWithData(func() (*chpool.Pool, error) {
-		return chpool.Dial(ctx, chpool.Options{
-			ClientOptions: chOpts,
-		})
-	}, connectBackoff)
+	return backoff.RetryNotifyWithData(
+		func() (*chpool.Pool, error) {
+			return chpool.Dial(ctx, chpool.Options{
+				ClientOptions: chOpts,
+			})
+		},
+		connectBackoff,
+		func(err error, d time.Duration) {
+			lg.Warn("Clickhouse dial failed",
+				zap.Error(err),
+				zap.Duration("retry_after", d),
+			)
+		},
+	)
 }
