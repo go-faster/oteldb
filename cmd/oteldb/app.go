@@ -11,14 +11,17 @@ import (
 	sdkapp "github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/promql"
-	"github.com/prometheus/prometheus/storage"
+	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/confmap"
+	"go.opentelemetry.io/collector/confmap/converter/expandconverter"
+	"go.opentelemetry.io/collector/otelcol"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/httpmiddleware"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
-	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokihandler"
 	"github.com/go-faster/oteldb/internal/otelreceiver"
@@ -27,43 +30,43 @@ import (
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tempohandler"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
-	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 // App contains application dependencies and services.
 type App struct {
-	services map[string]func(context.Context) error
+	cfg Config
 
+	services map[string]func(context.Context) error
 	otelStorage
 
 	lg      *zap.Logger
 	metrics *sdkapp.Metrics
 }
 
-func newApp(ctx context.Context, m *sdkapp.Metrics) (_ *App, err error) {
-	var (
-		storageType = strings.ToLower(os.Getenv("OTELDB_STORAGE"))
-		lg          = zctx.From(ctx)
-		app         = &App{
-			services: map[string]func(context.Context) error{},
-			lg:       lg,
-			metrics:  m,
-		}
-	)
+func newApp(ctx context.Context, cfg Config, m *sdkapp.Metrics) (_ *App, err error) {
+	cfg.setDefaults()
 
-	switch storageType {
-	case "ch":
-		store, err := setupCH(ctx, os.Getenv("CH_DSN"), lg, m)
-		if err != nil {
-			return nil, errors.Wrapf(err, "create storage %q", storageType)
-		}
-		app.otelStorage = store
-	default:
-		return nil, errors.Errorf("unknown storage %q", storageType)
+	app := &App{
+		cfg:      cfg,
+		services: map[string]func(context.Context) error{},
+		lg:       zctx.From(ctx),
+		metrics:  m,
 	}
 
-	if err := app.setupReceiver(); err != nil {
-		return nil, errors.Wrap(err, "otelreceiver")
+	{
+		dsn := os.Getenv("CH_DSN")
+		if dsn == "" {
+			dsn = cfg.DSN
+		}
+		store, err := setupCH(ctx, dsn, app.lg, m)
+		if err != nil {
+			return nil, errors.Wrapf(err, "create storage")
+		}
+		app.otelStorage = store
+	}
+
+	if err := app.setupCollector(); err != nil {
+		return nil, errors.Wrap(err, "otelcol")
 	}
 	if err := app.trySetupTempo(); err != nil {
 		return nil, errors.Wrap(err, "tempo")
@@ -141,6 +144,8 @@ func (app *App) trySetupTempo() error {
 	if q == nil {
 		return nil
 	}
+	cfg := app.cfg.Tempo
+	cfg.setDefaults()
 
 	engine := traceqlengine.NewEngine(app.traceQuerier, traceqlengine.Options{
 		TracerProvider: app.metrics.TracerProvider(),
@@ -155,7 +160,7 @@ func (app *App) trySetupTempo() error {
 		return err
 	}
 
-	addOgen[tempoapi.Route](app, "tempo", s, ":3200")
+	addOgen[tempoapi.Route](app, "tempo", s, cfg.Bind)
 	return nil
 }
 
@@ -164,12 +169,15 @@ func (app *App) trySetupLoki() error {
 	if q == nil {
 		return nil
 	}
+	cfg := app.cfg.LokiConfig
+	cfg.setDefaults()
 
 	engine := logqlengine.NewEngine(q, logqlengine.Options{
-		TracerProvider: app.metrics.TracerProvider(),
 		ParseOptions: logql.ParseOptions{
 			AllowDots: true,
 		},
+		LookbackDuration: cfg.LookbackDelta,
+		TracerProvider:   app.metrics.TracerProvider(),
 	})
 	loki := lokihandler.NewLokiAPI(q, engine)
 
@@ -181,7 +189,7 @@ func (app *App) trySetupLoki() error {
 		return err
 	}
 
-	addOgen[lokiapi.Route](app, "loki", s, ":3100")
+	addOgen[lokiapi.Route](app, "loki", s, cfg.Bind)
 	return nil
 }
 
@@ -190,15 +198,18 @@ func (app *App) trySetupProm() error {
 	if q == nil {
 		return nil
 	}
+	cfg := app.cfg.Prometheus
+	cfg.setDefaults()
 
 	engine := promql.NewEngine(promql.EngineOpts{
-		// These fields are zero by default, which makes
+		// NOTE: zero-value MaxSamples and Timeout makes
 		// all queries to fail with error.
-		//
-		// TODO(tdakkota): make configurable.
-		Timeout:              time.Minute,
-		MaxSamples:           1_000_000,
-		EnableNegativeOffset: true,
+		MaxSamples:           cfg.MaxSamples,
+		Timeout:              cfg.Timeout,
+		LookbackDelta:        cfg.LookbackDelta,
+		EnableAtModifier:     cfg.EnableAtModifier,
+		EnableNegativeOffset: *cfg.EnableNegativeOffset,
+		EnablePerStepStats:   cfg.EnablePerStepStats,
 	})
 	prom := promhandler.NewPromAPI(engine, q, q, promhandler.PromAPIOptions{})
 
@@ -211,36 +222,44 @@ func (app *App) trySetupProm() error {
 		return err
 	}
 
-	addOgen[promapi.Route](app, "prom", s, ":9090")
+	addOgen[promapi.Route](app, "prom", s, cfg.Bind)
 	return nil
 }
 
-func (app *App) setupReceiver() error {
-	var consumers otelreceiver.Consumers
-	if i := app.traceInserter; i != nil {
-		consumers.Traces = tracestorage.NewConsumer(i)
-	}
-	if i := app.logInserter; i != nil {
-		consumers.Logs = logstorage.NewConsumer(i)
-	}
-	if c := app.metricsConsumer; c != nil {
-		consumers.Metrics = c
-	}
-
-	recv, err := otelreceiver.NewReceiver(
-		consumers,
-		otelreceiver.ReceiverConfig{
-			Logger:         app.lg.Named("receiver"),
-			TracerProvider: app.metrics.TracerProvider(),
-			MeterProvider:  app.metrics.MeterProvider(),
+func (app *App) setupCollector() error {
+	conf, err := otelcol.NewConfigProvider(otelcol.ConfigProviderSettings{
+		ResolverSettings: confmap.ResolverSettings{
+			URIs: []string{"oteldb:/"},
+			Providers: map[string]confmap.Provider{
+				"oteldb": otelreceiver.NewMapProvider("oteldb", app.cfg.Collector),
+			},
+			Converters: []confmap.Converter{
+				expandconverter.New(),
+			},
 		},
-	)
+	})
 	if err != nil {
-		return errors.Wrap(err, "create OTEL receiver")
+		return errors.Wrap(err, "create otelcol config provider")
 	}
 
-	app.services["otelreceiver"] = func(ctx context.Context) error {
-		return recv.Run(ctx)
+	col, err := otelcol.NewCollector(otelcol.CollectorSettings{
+		Factories: otelreceiver.Factories,
+		BuildInfo: component.NewDefaultBuildInfo(),
+		LoggingOptions: []zap.Option{
+			zap.WrapCore(func(zapcore.Core) zapcore.Core {
+				return app.lg.Core()
+			}),
+		},
+		DisableGracefulShutdown: false,
+		ConfigProvider:          conf,
+		SkipSettingGRPCLogger:   false,
+	})
+	if err != nil {
+		return errors.Wrap(err, "create collector")
+	}
+
+	app.services["otelcol"] = func(ctx context.Context) error {
+		return col.Run(ctx)
 	}
 	return nil
 }
@@ -255,19 +274,4 @@ func (app *App) Run(ctx context.Context) error {
 		})
 	}
 	return g.Wait()
-}
-
-type logQuerier interface {
-	logstorage.Querier
-	logqlengine.Querier
-}
-
-type traceQuerier interface {
-	tracestorage.Querier
-	traceqlengine.Querier
-}
-
-type metricQuerier interface {
-	storage.Queryable
-	storage.ExemplarQueryable
 }

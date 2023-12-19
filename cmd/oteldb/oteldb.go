@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"os"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
@@ -23,7 +25,19 @@ func main() {
 		if ctx, err = autologs.Setup(ctx, m); err != nil {
 			return errors.Wrap(err, "setup logs")
 		}
-		root, err := newApp(ctx, m)
+
+		set := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+		cfgPath := set.String("config", "", "Path to config (defaults to oteldb.yml)")
+		if err := set.Parse(os.Args[1:]); err != nil {
+			return err
+		}
+
+		cfg, err := loadConfig(*cfgPath)
+		if err != nil {
+			return errors.Wrap(err, "load config")
+		}
+
+		root, err := newApp(ctx, cfg, m)
 		if err != nil {
 			return errors.Wrap(err, "setup")
 		}

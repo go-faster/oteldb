@@ -12,14 +12,17 @@ import (
 	"github.com/prometheus/prometheus/storage"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/pmetric"
 
 	"github.com/go-faster/oteldb/integration/prome2e"
-	"github.com/go-faster/oteldb/internal/otelreceiver"
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/promhandler"
 )
 
-type metricQuerier interface{}
+// MetricsConsumer is metrics consumer.
+type MetricsConsumer interface {
+	ConsumeMetrics(ctx context.Context, ld pmetric.Metrics) error
+}
 
 func readBatchSet(p string) (s prome2e.BatchSet, _ error) {
 	f, err := os.Open(p)
@@ -36,7 +39,7 @@ func setupDB(
 	ctx context.Context,
 	t *testing.T,
 	set prome2e.BatchSet,
-	consumer otelreceiver.MetricsConsumer,
+	consumer MetricsConsumer,
 	querier storage.Queryable,
 	exemplarQuerier storage.ExemplarQueryable,
 ) *promapi.Client {
@@ -66,7 +69,7 @@ func setupDB(
 func runTest(
 	ctx context.Context,
 	t *testing.T,
-	consumer otelreceiver.MetricsConsumer,
+	consumer MetricsConsumer,
 	querier storage.Queryable,
 	exemplarQuerier storage.ExemplarQueryable,
 ) {
