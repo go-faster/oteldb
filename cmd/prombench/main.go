@@ -30,6 +30,8 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/promapi"
 )
 
 type App struct {
@@ -38,8 +40,11 @@ type App struct {
 	cfg                        atomic.Pointer[config]
 	nodeExporterAddr           string
 	clickhouseAddr             string
+	queryAddr                  string
+	queryInterval              time.Duration
 	agentAddr                  string
 	targetsCount               int
+	pollExporterInterval       time.Duration
 	scrapeInterval             time.Duration
 	scrapeConfigUpdateInterval time.Duration
 	scrapeConfigUpdatePercent  float64
@@ -56,8 +61,11 @@ type metricsInfo struct {
 }
 
 func (a *App) PollNodeExporter(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(a.pollExporterInterval)
 	defer ticker.Stop()
+	if err := a.fetchNodeExporter(ctx); err != nil {
+		zctx.From(ctx).Error("cannot fetch node exporter", zap.Error(err))
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -158,7 +166,8 @@ func (a *App) HandleNodeExporter(w http.ResponseWriter, _ *http.Request) {
 
 type storageInfo struct {
 	Start            time.Time
-	End              time.Time
+	Latest           time.Time
+	Delta            time.Duration
 	Rows             int
 	DiskSizeBytes    int
 	PrimaryKeySize   int
@@ -180,33 +189,35 @@ func (a *App) fetchClickhouseStats(ctx context.Context) error {
 	}()
 	var info storageInfo
 	{
-		var start, end proto.ColDateTime64
+		var start proto.ColDateTime64
 		if err := client.Do(ctx, ch.Query{
-			Body: `SELECT min(timestamp) as start, max(timestamp) as end FROM metrics_points`,
+			Body: `SELECT min(timestamp) as start FROM metrics_points`,
 			Result: proto.Results{
 				{Name: "start", Data: &start},
-				{Name: "end", Data: &end},
 			},
 		}); err != nil {
 			return errors.Wrap(err, "query")
 		}
 		info.Start = start.Row(0)
-		info.End = end.Row(0)
 	}
 	{
 		var (
 			seconds proto.ColDateTime
+			delta   proto.ColInt32
 			points  proto.ColUInt64
 		)
+		// Select aggregated points per second for last 100 seconds.
 		if err := client.Do(ctx, ch.Query{
-			Body: `SELECT toDateTime(toStartOfSecond(timestamp)) as ts, COUNT() as total
+			Body: `SELECT toDateTime(toStartOfSecond(timestamp)) as ts, (now() - toDateTime(ts)) as delta, COUNT() as total
 FROM metrics_points
-WHERE timestamp < (now() - toIntervalSecond(3))
+WHERE timestamp > (now() - toIntervalSecond(100))
 GROUP BY ts
+HAVING total > 0
 ORDER BY ts DESC
-LIMIT 15`,
+LIMIT 100`,
 			Result: proto.Results{
 				{Name: "ts", Data: &seconds},
+				{Name: "delta", Data: &delta},
 				{Name: "total", Data: &points},
 			},
 		}); err != nil {
@@ -214,6 +225,20 @@ LIMIT 15`,
 		}
 		if len(points) > 0 {
 			info.PointsPerSecond = int(slices.Max(points))
+			info.Delta = time.Duration(slices.Min(delta)) * time.Second
+		} else {
+			info.PointsPerSecond = 0
+			info.Delta = -1
+		}
+		for i := 0; i < points.Rows(); i++ {
+			ts := seconds.Row(i)
+			v := points.Row(i)
+			if v == 0 {
+				continue
+			}
+			if ts.After(info.Latest) {
+				info.Latest = ts
+			}
 		}
 	}
 	{
@@ -284,7 +309,7 @@ order by parts.disk_size desc`
 }
 
 func (a *App) RunClickhouseReporter(ctx context.Context) error {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 	for {
 		select {
@@ -337,7 +362,11 @@ func (a *App) RunReporter(ctx context.Context) error {
 				s.WriteString(" ")
 				s.WriteString(fmt.Sprintf("uptime=%s", now.Sub(v.Start).Round(time.Second)))
 				s.WriteString(" ")
-				s.WriteString(fmt.Sprintf("lag=%s", now.Sub(v.End).Round(time.Millisecond)))
+				if v.Delta != -1 {
+					s.WriteString(fmt.Sprintf("lag=%s", v.Delta.Round(time.Second)))
+				} else {
+					s.WriteString("lag=N/A")
+				}
 				s.WriteString(" ")
 				s.WriteString(fmt.Sprintf("pps=%s", fmtInt(v.PointsPerSecond)))
 				s.WriteString(" ")
@@ -534,6 +563,11 @@ func (a *App) run(ctx context.Context, _ *zap.Logger, _ *app.Metrics) error {
 			return a.RunClickhouseReporter(ctx)
 		})
 	}
+	if a.queryAddr != "" {
+		g.Go(func() error {
+			return a.RunQueryReporter(ctx)
+		})
+	}
 	g.Go(func() error {
 		return a.RunReporter(ctx)
 	})
@@ -578,6 +612,93 @@ func (a *App) run(ctx context.Context, _ *zap.Logger, _ *app.Metrics) error {
 	return g.Wait()
 }
 
+func prometheusTimestamp(t time.Time) promapi.PrometheusTimestamp {
+	return promapi.PrometheusTimestamp(t.Format(time.RFC3339Nano))
+}
+
+type cpuQueryStats struct {
+	Count    int
+	Duration time.Duration
+	Latest   time.Time
+}
+
+func (a *App) runQueryCPU(ctx context.Context, client promapi.Invoker) (*cpuQueryStats, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*15)
+	defer cancel()
+
+	const q = `count(count(node_cpu_seconds_total{instance="host-0",job="node_exporter"}) by (cpu))`
+	start := time.Now()
+	res, err := client.PostQueryRange(ctx, &promapi.QueryRangeForm{
+		Query: q,
+		Start: prometheusTimestamp(start.Add(-time.Minute)),
+		End:   prometheusTimestamp(start),
+		Step:  "1s",
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "query")
+	}
+	stats := &cpuQueryStats{
+		Count:    -1,
+		Duration: time.Since(start),
+	}
+	matrix, ok := res.Data.GetMatrix()
+	if !ok {
+		return nil, errors.Errorf("unexpected response type %q", res.Data.Type)
+	}
+	for _, result := range matrix.Result {
+		for _, point := range result.Values {
+			if stats.Count == -1 {
+				stats.Count = int(point.V)
+			}
+			if point.V == 0 || stats.Count != int(point.V) {
+				return nil, errors.Errorf("unexpected value %f", point.V)
+			}
+			ts := time.Unix(int64(point.T), 0)
+			if ts.After(stats.Latest) {
+				stats.Latest = ts
+			}
+		}
+	}
+	return stats, nil
+}
+
+func (a *App) RunQueryReporter(ctx context.Context) error {
+	client, err := promapi.NewClient(a.queryAddr)
+	if err != nil {
+		return errors.Wrap(err, "create prometheus client")
+	}
+
+	ticker := time.NewTicker(a.queryInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			stats, err := a.runQueryCPU(ctx, client)
+			var s strings.Builder
+			s.WriteString("query: ")
+			if err != nil {
+				s.WriteString(err.Error())
+				continue
+			}
+			if stats.Count > 0 {
+				s.WriteString(fmt.Sprintf("cpu=%s", fmtInt(stats.Count)))
+			} else {
+				s.WriteString("cpu=N/A")
+			}
+			s.WriteString(" ")
+			s.WriteString(fmt.Sprintf("d=%s", stats.Duration.Round(time.Millisecond)))
+			if !stats.Latest.IsZero() {
+				s.WriteString(" ")
+				s.WriteString(fmt.Sprintf("lag=%s", time.Since(stats.Latest).Round(time.Millisecond)))
+			}
+			fmt.Println(s.String())
+		}
+	}
+}
+
 func main() {
 	var a App
 	flag.StringVar(&a.nodeExporterAddr, "nodeExporterAddr", "127.0.0.1:9301", "address for node exporter to listen")
@@ -585,9 +706,12 @@ func main() {
 	flag.StringVar(&a.agentAddr, "agentAddr", "127.0.0.1:8429", "address for vmagent to listen")
 	flag.IntVar(&a.targetsCount, "targetsCount", 100, "The number of scrape targets to return from -httpListenAddr. Each target has the same address defined by -targetAddr")
 	flag.DurationVar(&a.scrapeInterval, "scrapeInterval", time.Second*5, "The scrape_interval to set at the scrape config returned from -httpListenAddr")
+	flag.DurationVar(&a.pollExporterInterval, "pollExporterInterval", time.Second, "Interval to poll the node exporter filling up cache")
 	flag.DurationVar(&a.scrapeConfigUpdateInterval, "scrapeConfigUpdateInterval", time.Minute*10, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr every -scrapeConfigUpdateInterval")
 	flag.Float64Var(&a.scrapeConfigUpdatePercent, "scrapeConfigUpdatePercent", 1, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr ever -scrapeConfigUpdateInterval")
 	flag.StringVar(&a.clickhouseAddr, "clickhouseAddr", "", "clickhouse tcp protocol addr to get actual stats from")
+	flag.StringVar(&a.queryAddr, "queryAddr", "", "addr to query PromQL from")
+	flag.DurationVar(&a.queryInterval, "queryInterval", time.Second*5, "interval to query PromQL")
 	flag.BoolVar(&a.useVictoria, "useVictoria", true, "use vmagent instead of prometheus")
 	flag.Parse()
 	a.parseTargets()
