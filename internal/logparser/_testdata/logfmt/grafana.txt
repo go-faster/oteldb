@@ -1,0 +1,2 @@
+logger=tracing t=2023-12-19T06:57:42.301691427Z level=error msg="OpenTelemetry handler returned an error" err="traces export: context deadline exceeded: rpc error: code = Unavailable desc = connection error: desc = \"transport: Error while dialing dial tcp: lookup otelcol on 127.0.0.11:53: no such host\""
+logger=settings t=2023-12-19T06:56:47.296531181Z level=warn msg="\"sentry\" frontend logging provider is deprecated and will be removed in the next major version. Use \"grafana\" provider instead."

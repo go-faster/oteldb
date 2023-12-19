@@ -1,0 +1,12 @@
+{
+  "severity": {
+    "str": "Warn",
+    "number": 13,
+    "text": "warn"
+  },
+  "body": "\"sentry\" frontend logging provider is deprecated and will be removed in the next major version. Use \"grafana\" provider instead.",
+  "timestamp": "2023-12-19T06:56:47.296531181Z",
+  "attrs": {
+    "logger": "settings"
+  }
+}

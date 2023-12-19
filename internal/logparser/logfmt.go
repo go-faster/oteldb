@@ -55,7 +55,7 @@ func (LogFmtParser) Parse(data []byte) (*Line, error) {
 				traceID = otelstorage.TraceID(id)
 			}
 			line.TraceID = traceID
-		case "ts", "time", "@timestamp", "timestamp":
+		case "t", "ts", "time", "@timestamp", "timestamp":
 			for _, layout := range []string{
 				time.RFC3339Nano,
 				time.RFC3339,
