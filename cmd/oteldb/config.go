@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-faster/yaml"
-	"golang.org/x/exp/maps"
 )
 
 func loadConfig(name string) (cfg Config, _ error) {
@@ -52,8 +51,8 @@ func (cfg *Config) setDefaults() {
 		cfg.DSN = "clickhouse://localhost:9000"
 	}
 	if cfg.Collector == nil {
-		var (
-			receivers = map[string]any{
+		cfg.Collector = map[string]any{
+			"receivers": map[string]any{
 				"otlp": map[string]any{
 					"protocols": map[string]any{
 						"grpc": nil,
@@ -61,31 +60,27 @@ func (cfg *Config) setDefaults() {
 					},
 				},
 				"prometheusremotewrite": map[string]any{},
-			}
-			receiverNames = maps.Keys(receivers)
-
-			pipelines = map[string]any{}
-		)
-		for _, name := range []string{
-			"traces",
-			"metrics",
-			"logs",
-		} {
-			pipelines[name] = map[string]any{
-				"receivers": receiverNames,
-				"exporters": []string{"oteldbexporter"},
-			}
-		}
-
-		cfg.Collector = map[string]any{
-			"receivers": receivers,
+			},
 			"exporters": map[string]any{
 				"oteldbexporter": map[string]any{
 					"dsn": cfg.DSN,
 				},
 			},
 			"service": map[string]any{
-				"pipelines": pipelines,
+				"pipelines": map[string]any{
+					"traces": map[string]any{
+						"receivers": []string{"otlp"},
+						"exporters": []string{"oteldbexporter"},
+					},
+					"metrics": map[string]any{
+						"receivers": []string{"otlp", "prometheusremotewrite"},
+						"exporters": []string{"oteldbexporter"},
+					},
+					"logs": map[string]any{
+						"receivers": []string{"otlp"},
+						"exporters": []string{"oteldbexporter"},
+					},
+				},
 			},
 		}
 	}
