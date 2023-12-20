@@ -52,6 +52,7 @@ var (
 	value61            = "test_value61_count"
 	value71            = "test_value71_sum"
 	value81            = "test_value81_bytes"
+	value91            = "test_value91_bytes_sum"
 	dirty1             = "%"
 	dirty2             = "?"
 	traceIDValue1      = "4303853f086f4f8c86cf198b6551df84"
@@ -130,7 +131,7 @@ var (
 		validDoubleGauge: getDoubleGaugeMetric(validDoubleGauge, "", lbs1, floatVal1, time1),
 		validIntSum:      getIntSumMetric(validIntSum, lbs1, intVal1, time1),
 		suffixedCounter:  getIntSumMetric(suffixedCounter, lbs1, intVal1, time1),
-		validSum:         getSumMetric(validSum, "", false, lbs1, floatVal1, time1),
+		validSum:         getSumMetric(validSum, "", false, lbs1, numberPoint{floatVal1, time1}),
 		validHistogram:   getHistogramMetric(validHistogram, lbs1, time1, floatVal1, uint64(intVal1), bounds, buckets),
 		validSummary:     getSummaryMetric(validSummary, lbs1, time1, floatVal1, uint64(intVal1), quantiles),
 	}
@@ -324,21 +325,28 @@ func getEmptyCumulativeSumMetric(name string) pmetric.Metric {
 	return metric
 }
 
-func getSumMetric(name string, unit string, monotonic bool, attributes pcommon.Map, value float64, ts uint64) pmetric.Metric {
+type numberPoint struct {
+	value float64
+	ts    uint64
+}
+
+func getSumMetric(name string, unit string, monotonic bool, attributes pcommon.Map, points ...numberPoint) pmetric.Metric {
 	metric := pmetric.NewMetric()
 	metric.SetName(name)
 	metric.SetUnit(unit)
 	metric.SetEmptySum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
 	metric.SetEmptySum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
-	dp := metric.Sum().DataPoints().AppendEmpty()
-	if strings.HasPrefix(name, "staleNaN") {
-		dp.SetFlags(pmetric.DefaultDataPointFlags.WithNoRecordedValue(true))
-	}
-	dp.SetDoubleValue(value)
-	attributes.CopyTo(dp.Attributes())
+	for _, p := range points {
+		dp := metric.Sum().DataPoints().AppendEmpty()
+		if strings.HasPrefix(name, "staleNaN") {
+			dp.SetFlags(pmetric.DefaultDataPointFlags.WithNoRecordedValue(true))
+		}
+		dp.SetDoubleValue(p.value)
+		attributes.CopyTo(dp.Attributes())
 
-	dp.SetStartTimestamp(pcommon.Timestamp(0))
-	dp.SetTimestamp(pcommon.Timestamp(ts))
+		dp.SetStartTimestamp(pcommon.Timestamp(0))
+		dp.SetTimestamp(pcommon.Timestamp(p.ts))
+	}
 	metric.Sum().SetIsMonotonic(monotonic)
 	return metric
 }

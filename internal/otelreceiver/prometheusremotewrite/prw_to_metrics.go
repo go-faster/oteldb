@@ -26,19 +26,21 @@ import (
 
 // FromTimeSeries converts TimeSeries to OTLP metrics.
 func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics, error) {
-	pms := pmetric.NewMetrics()
+	var (
+		pms           = pmetric.NewMetrics()
+		timeThreshold = time.Now().Add(-time.Duration(settings.TimeThreshold) * time.Hour)
+	)
 	for _, ts := range tss {
-		empty := pms.ResourceMetrics().AppendEmpty().ScopeMetrics().AppendEmpty().Metrics().AppendEmpty()
-		pm := pmetric.NewMetric()
+		pm := pms.ResourceMetrics().AppendEmpty().ScopeMetrics().AppendEmpty().Metrics().AppendEmpty()
+
 		metricName, err := finalName(ts.Labels)
 		if err != nil {
 			return pms, err
 		}
 		pm.SetName(metricName)
-		settings.Logger.Debug("Metric name", zap.String("metric_name", pm.Name()))
 
 		s1, s2 := metricSuffixes(metricName)
-		metricsType := ""
+		var metricsType string
 		if s1 != "" || s2 != "" {
 			lastSuffixInMetricName := s2
 			if IsValidSuffix(lastSuffixInMetricName) {
@@ -53,37 +55,52 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 				pm.SetUnit(lastSuffixInMetricName)
 			}
 		}
-		for _, s := range ts.Samples {
-			ppoint := pmetric.NewNumberDataPoint()
-			ppoint.SetDoubleValue(s.Value)
-			ppoint.SetTimestamp(pcommon.NewTimestampFromTime(time.Unix(0, s.Timestamp*int64(time.Millisecond))))
-			if ppoint.Timestamp().AsTime().Before(time.Now().Add(-time.Duration(settings.TimeThreshold) * time.Hour)) {
-				settings.Logger.Debug("Metric older than the threshold",
-					zap.String("metric name", pm.Name()),
-					zap.Time("metric_timestamp", ppoint.Timestamp().AsTime()),
-				)
-				continue
-			}
-			for _, l := range ts.Labels {
-				labelName := l.Name
-				if l.Name == nameStr {
-					continue
-				}
-				ppoint.Attributes().PutStr(labelName, l.Value)
-			}
+
+		if countSamples(ts, timeThreshold) != 0 {
+			var slice pmetric.NumberDataPointSlice
 			if IsValidCumulativeSuffix(metricsType) {
 				pm.SetEmptySum()
 				pm.Sum().SetIsMonotonic(true)
 				pm.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
-				ppoint.CopyTo(pm.Sum().DataPoints().AppendEmpty())
+				slice = pm.Sum().DataPoints()
 			} else {
 				pm.SetEmptyGauge()
-				ppoint.CopyTo(pm.Gauge().DataPoints().AppendEmpty())
+				slice = pm.Gauge().DataPoints()
+			}
+
+			for _, s := range ts.Samples {
+				ppoint := slice.AppendEmpty()
+				ppoint.SetDoubleValue(s.Value)
+				ppoint.SetTimestamp(pcommon.NewTimestampFromTime(time.Unix(0, s.Timestamp*int64(time.Millisecond))))
+				if ppoint.Timestamp().AsTime().Before(timeThreshold) {
+					settings.Logger.Debug("Metric older than the threshold",
+						zap.String("metric name", pm.Name()),
+						zap.Time("metric_timestamp", ppoint.Timestamp().AsTime()),
+					)
+					continue
+				}
+				for _, l := range ts.Labels {
+					labelName := l.Name
+					if l.Name == nameStr {
+						continue
+					}
+					ppoint.Attributes().PutStr(labelName, l.Value)
+				}
 			}
 		}
-		pm.MoveTo(empty)
 	}
 	return pms, nil
+}
+
+func countSamples(ts prompb.TimeSeries, timeThreshold time.Time) (samples int) {
+	for _, s := range ts.Samples {
+		ts := time.Unix(0, s.Timestamp*int64(time.Millisecond))
+		if ts.Before(timeThreshold) {
+			continue
+		}
+		samples++
+	}
+	return samples
 }
 
 func finalName(labels []prompb.Label) (ret string, err error) {

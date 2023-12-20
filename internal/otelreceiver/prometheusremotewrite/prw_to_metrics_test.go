@@ -47,11 +47,18 @@ func TestPrwConfig_FromTimeSeries(t *testing.T) {
 								Value: value12,
 							},
 						},
-						Samples: []prompb.Sample{{Value: 1.0, Timestamp: nowMillis}},
+						Samples: []prompb.Sample{
+							{Value: 1.0, Timestamp: nowMillis},
+							{Value: 2.0, Timestamp: nowMillis},
+						},
 					},
 				},
 			},
-			want:    getMetrics(getSumMetric(value71, "", true, getAttributes(label12, value12), 1., uint64(time.Now().UnixNano()))),
+			want: getMetrics(getSumMetric(
+				value71, "", true, getAttributes(label12, value12),
+				numberPoint{1., uint64(time.Now().UnixNano())},
+				numberPoint{2., uint64(time.Now().UnixNano())},
+			)),
 			wantErr: assert.NoError,
 		},
 		{
@@ -73,11 +80,18 @@ func TestPrwConfig_FromTimeSeries(t *testing.T) {
 								Value: value12,
 							},
 						},
-						Samples: []prompb.Sample{{Value: 2.0, Timestamp: nowMillis}},
+						Samples: []prompb.Sample{
+							{Value: 2.0, Timestamp: nowMillis},
+							{Value: 3.0, Timestamp: nowMillis},
+						},
 					},
 				},
 			},
-			want:    getMetrics(getSumMetric(value61, "", true, getAttributes(label12, value12), 2., uint64(time.Now().UnixNano()))),
+			want: getMetrics(getSumMetric(
+				value61, "", true, getAttributes(label12, value12),
+				numberPoint{2., uint64(time.Now().UnixNano())},
+				numberPoint{3., uint64(time.Now().UnixNano())},
+			)),
 			wantErr: assert.NoError,
 		},
 		{
@@ -104,6 +118,35 @@ func TestPrwConfig_FromTimeSeries(t *testing.T) {
 				},
 			},
 			want:    getMetrics(getDoubleGaugeMetric(value81, "bytes", getAttributes(label12, value12), 2., uint64(time.Now().UnixNano()))),
+			wantErr: assert.NoError,
+		},
+		{
+			name: "bytes_total",
+			settings: Settings{
+				Logger:        *zap.NewNop(),
+				TimeThreshold: 24,
+			},
+			args: args{
+				[]prompb.TimeSeries{
+					{
+						Labels: []prompb.Label{
+							{
+								Name:  nameStr,
+								Value: value91,
+							},
+							{
+								Name:  label12,
+								Value: value12,
+							},
+						},
+						Samples: []prompb.Sample{{Value: 2.0, Timestamp: nowMillis}},
+					},
+				},
+			},
+			want: getMetrics(getSumMetric(
+				value91, "bytes", true, getAttributes(label12, value12),
+				numberPoint{2., uint64(time.Now().UnixNano())},
+			)),
 			wantErr: assert.NoError,
 		},
 		{
