@@ -16,7 +16,6 @@ package prometheusremotewrite
 
 import (
 	"errors"
-	"regexp"
 	"time"
 
 	"github.com/prometheus/prometheus/prompb"
@@ -24,8 +23,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
 )
-
-var reg = regexp.MustCompile(`(\w+)_(\w+)_(\w+)\z`)
 
 // FromTimeSeries converts TimeSeries to OTLP metrics.
 func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics, error) {
@@ -39,14 +36,15 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 		}
 		pm.SetName(metricName)
 		settings.Logger.Debug("Metric name", zap.String("metric_name", pm.Name()))
-		match := reg.FindStringSubmatch(metricName)
+
+		s1, s2 := metricSuffixes(metricName)
 		metricsType := ""
-		if len(match) > 1 {
-			lastSuffixInMetricName := match[len(match)-1]
+		if s1 != "" || s2 != "" {
+			lastSuffixInMetricName := s2
 			if IsValidSuffix(lastSuffixInMetricName) {
 				metricsType = lastSuffixInMetricName
-				if len(match) > 2 {
-					secondSuffixInMetricName := match[len(match)-2]
+				if s2 != "" {
+					secondSuffixInMetricName := s1
 					if IsValidUnit(secondSuffixInMetricName) {
 						pm.SetUnit(secondSuffixInMetricName)
 					}
@@ -95,31 +93,4 @@ func finalName(labels []prompb.Label) (ret string, err error) {
 		}
 	}
 	return "", errors.New("label name not found")
-}
-
-// IsValidSuffix checks suffix of histogram series.
-func IsValidSuffix(suffix string) bool {
-	switch suffix {
-	case "max", "sum", "count", "total":
-		return true
-	}
-	return false
-}
-
-// IsValidCumulativeSuffix checks suffix of summary series.
-func IsValidCumulativeSuffix(suffix string) bool {
-	switch suffix {
-	case "sum", "count", "total":
-		return true
-	}
-	return false
-}
-
-// IsValidUnit checks unit suffix.
-func IsValidUnit(unit string) bool {
-	switch unit {
-	case "seconds", "bytes":
-		return true
-	}
-	return false
 }

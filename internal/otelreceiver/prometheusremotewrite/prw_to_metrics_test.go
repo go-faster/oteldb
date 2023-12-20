@@ -17,191 +17,6 @@ var (
 	nowMillis = now.UnixNano() / int64(time.Millisecond)
 )
 
-func TestIsValidCumulativeSuffix(t *testing.T) {
-	type args struct {
-		suffix string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "sum",
-			args: args{
-				suffix: "sum",
-			},
-			want: true,
-		},
-		{
-			name: "count",
-			args: args{
-				suffix: "count",
-			},
-			want: true,
-		},
-		{
-			name: "total",
-			args: args{
-				suffix: "total",
-			},
-			want: true,
-		},
-		{
-			name: "foo",
-			args: args{
-				suffix: "bar",
-			},
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, IsValidCumulativeSuffix(tt.args.suffix), "IsValidCumulativeSuffix(%v)", tt.args.suffix)
-		})
-	}
-}
-
-func TestIsValidSuffix(t *testing.T) {
-	type args struct {
-		suffix string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "max",
-			args: args{
-				suffix: "max",
-			},
-			want: true,
-		},
-		{
-			name: "sum",
-			args: args{
-				suffix: "sum",
-			},
-			want: true,
-		},
-		{
-			name: "count",
-			args: args{
-				suffix: "count",
-			},
-			want: true,
-		},
-		{
-			name: "total",
-			args: args{
-				suffix: "total",
-			},
-			want: true,
-		},
-		{
-			name: "foo",
-			args: args{
-				suffix: "bar",
-			},
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, IsValidSuffix(tt.args.suffix), "IsValidSuffix(%v)", tt.args.suffix)
-		})
-	}
-}
-
-func TestIsValidUnit(t *testing.T) {
-	type args struct {
-		unit string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "seconds",
-			args: args{
-				unit: "seconds",
-			},
-			want: true,
-		},
-		{
-			name: "bytes",
-			args: args{
-				unit: "bytes",
-			},
-			want: true,
-		},
-		{
-			name: "foo",
-			args: args{
-				unit: "bar",
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, IsValidUnit(tt.args.unit), "IsValidUnit(%v)", tt.args.unit)
-		})
-	}
-}
-
-func Test_finalName(t *testing.T) {
-	type args struct {
-		labels []prompb.Label
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantRet string
-		wantErr assert.ErrorAssertionFunc
-	}{
-		{
-			name: "test if __name__ label is set",
-			args: args{
-				labels: []prompb.Label{
-					{
-						Name:  nameStr,
-						Value: "foo",
-					},
-				},
-			},
-			wantRet: "foo",
-			wantErr: assert.NoError,
-		},
-		{
-			name: "test if __name__ label is not set",
-			args: args{
-				labels: []prompb.Label{
-					{
-						Name:  "foo",
-						Value: "bar",
-					},
-				},
-			},
-			wantRet: "",
-			wantErr: assert.Error,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotRet, err := finalName(tt.args.labels)
-			if !tt.wantErr(t, err, fmt.Sprintf("finalName(%v)", tt.args.labels)) {
-				return
-			}
-			assert.Equalf(t, tt.wantRet, gotRet, "finalName(%v)", tt.args.labels)
-		})
-	}
-}
-
 func TestPrwConfig_FromTimeSeries(t *testing.T) {
 	type args struct {
 		ts []prompb.TimeSeries
@@ -367,4 +182,52 @@ func getMetrics(metric pmetric.Metric) pmetric.Metrics {
 	pm.MoveTo(empty)
 	metric.MoveTo(empty)
 	return metrics
+}
+
+func Test_finalName(t *testing.T) {
+	type args struct {
+		labels []prompb.Label
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRet string
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "test if __name__ label is set",
+			args: args{
+				labels: []prompb.Label{
+					{
+						Name:  nameStr,
+						Value: "foo",
+					},
+				},
+			},
+			wantRet: "foo",
+			wantErr: assert.NoError,
+		},
+		{
+			name: "test if __name__ label is not set",
+			args: args{
+				labels: []prompb.Label{
+					{
+						Name:  "foo",
+						Value: "bar",
+					},
+				},
+			},
+			wantRet: "",
+			wantErr: assert.Error,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRet, err := finalName(tt.args.labels)
+			if !tt.wantErr(t, err, fmt.Sprintf("finalName(%v)", tt.args.labels)) {
+				return
+			}
+			assert.Equalf(t, tt.wantRet, gotRet, "finalName(%v)", tt.args.labels)
+		})
+	}
 }
