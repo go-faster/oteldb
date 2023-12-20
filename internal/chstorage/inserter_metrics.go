@@ -34,9 +34,7 @@ func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 
 type metricsBatch struct {
 	points        *pointColumns
-	histograms    *histogramColumns
 	expHistograms *expHistogramColumns
-	summaries     *summaryColumns
 	exemplars     *exemplarColumns
 	labels        map[[2]string]struct{}
 }
@@ -44,9 +42,7 @@ type metricsBatch struct {
 func newMetricBatch() *metricsBatch {
 	return &metricsBatch{
 		points:        newPointColumns(),
-		histograms:    newHistogramColumns(),
 		expHistograms: newExpHistogramColumns(),
-		summaries:     newSummaryColumns(),
 		exemplars:     newExemplarColumns(),
 		labels:        map[[2]string]struct{}{},
 	}
@@ -70,9 +66,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		columns columns
 	}{
 		{tables.Points, b.points},
-		{tables.Histograms, b.histograms},
 		{tables.ExpHistograms, b.expHistograms},
-		{tables.Summaries, b.summaries},
 		{tables.Exemplars, b.exemplars},
 		{tables.Labels, labels},
 	} {
@@ -147,7 +141,6 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 }
 
 func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pmetric.HistogramDataPointSlice) error {
-	c := b.histograms
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
@@ -171,18 +164,6 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 
 		b.addName(name)
 		b.addLabels(attrs)
-		// Save original histogram.
-		c.name.Append(name)
-		c.timestamp.Append(ts)
-		c.count.Append(count)
-		c.sum.Append(sum)
-		c.min.Append(_min)
-		c.max.Append(_max)
-		c.bucketCounts.Append(bucketCounts)
-		c.explicitBounds.Append(explicitBounds)
-		c.flags.Append(uint32(flags))
-		c.attributes.Append(encodeAttributes(attrs))
-		c.resource.Append(encodeAttributes(res))
 
 		// Map histogram as set of series for Prometheus compatibility.
 		series := mappedSeries{
@@ -396,7 +377,6 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 }
 
 func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmetric.SummaryDataPointSlice) error {
-	c := b.summaries
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
@@ -419,15 +399,6 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 
 		b.addName(name)
 		b.addLabels(attrs)
-		c.name.Append(name)
-		c.timestamp.Append(ts)
-		c.count.Append(count)
-		c.sum.Append(sum)
-		c.quantiles.Append(quantiles)
-		c.values.Append(values)
-		c.flags.Append(uint32(flags))
-		c.attributes.Append(encodeAttributes(attrs))
-		c.resource.Append(encodeAttributes(res))
 
 		series := mappedSeries{
 			ts:    ts,

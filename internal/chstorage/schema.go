@@ -17,9 +17,7 @@ type Tables struct {
 	Tags  string
 
 	Points        string
-	Histograms    string
 	ExpHistograms string
-	Summaries     string
 	Exemplars     string
 	Labels        string
 
@@ -49,9 +47,7 @@ func (t *Tables) Each(cb func(name *string) error) error {
 		{&t.Tags, "Tags"},
 
 		{&t.Points, "Points"},
-		{&t.Histograms, "Histograms"},
 		{&t.ExpHistograms, "ExpHistograms"},
-		{&t.Summaries, "Summaries"},
 		{&t.Exemplars, "Exemplars"},
 		{&t.Labels, "Labels"},
 
@@ -74,9 +70,7 @@ func DefaultTables() Tables {
 		Tags:  "traces_tags",
 
 		Points:        "metrics_points",
-		Histograms:    "metrics_histograms",
 		ExpHistograms: "metrics_exp_histograms",
-		Summaries:     "metrics_summaries",
 		Exemplars:     "metrics_exemplars",
 		Labels:        "metrics_labels",
 
@@ -146,9 +140,7 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{t.Tags, tagsSchema},
 
 		{t.Points, pointsSchema},
-		{t.Histograms, histogramsSchema},
 		{t.ExpHistograms, expHistogramsSchema},
-		{t.Summaries, summariesSchema},
 		{t.Exemplars, exemplarsSchema},
 		{t.Labels, labelsSchema},
 
