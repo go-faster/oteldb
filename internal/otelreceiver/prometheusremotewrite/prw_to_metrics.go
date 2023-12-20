@@ -15,6 +15,7 @@
 package prometheusremotewrite
 
 import (
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -71,7 +72,7 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 			for _, s := range ts.Samples {
 				ppoint := slice.AppendEmpty()
 				ppoint.SetDoubleValue(s.Value)
-				ppoint.SetTimestamp(pcommon.NewTimestampFromTime(time.Unix(0, s.Timestamp*int64(time.Millisecond))))
+				ppoint.SetTimestamp(mapTimestamp(s.Timestamp))
 				if ppoint.Timestamp().AsTime().Before(timeThreshold) {
 					settings.Logger.Debug("Metric older than the threshold",
 						zap.String("metric name", pm.Name()),
@@ -79,13 +80,16 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 					)
 					continue
 				}
+
+				attrs := ppoint.Attributes()
 				for _, l := range ts.Labels {
 					labelName := l.Name
 					if l.Name == nameStr {
 						continue
 					}
-					ppoint.Attributes().PutStr(labelName, l.Value)
+					attrs.PutStr(labelName, l.Value)
 				}
+				mapExemplars(ts.Exemplars, ppoint.Exemplars())
 			}
 		}
 	}
@@ -101,6 +105,44 @@ func countSamples(ts prompb.TimeSeries, timeThreshold time.Time) (samples int) {
 		samples++
 	}
 	return samples
+}
+
+func mapExemplars(exemplars []prompb.Exemplar, slice pmetric.ExemplarSlice) {
+	for _, from := range exemplars {
+		to := slice.AppendEmpty()
+		to.SetDoubleValue(from.Value)
+		to.SetTimestamp(mapTimestamp(from.Timestamp))
+
+		attrs := to.FilteredAttributes()
+		for _, l := range from.Labels {
+			switch l.Name {
+			case "span_id":
+				var spanID pcommon.SpanID
+				if hex.DecodedLen(len(l.Value)) != len(spanID) {
+					break
+				}
+				if _, err := hex.Decode(spanID[:], []byte(l.Value)); err != nil {
+					break
+				}
+				to.SetSpanID(spanID)
+			case "trace_id":
+				var traceID pcommon.TraceID
+				if hex.DecodedLen(len(l.Value)) != len(traceID) {
+					break
+				}
+				if _, err := hex.Decode(traceID[:], []byte(l.Value)); err != nil {
+					break
+				}
+				to.SetTraceID(traceID)
+			}
+			attrs.PutStr(l.Name, l.Value)
+		}
+	}
+}
+
+func mapTimestamp(val int64) pcommon.Timestamp {
+	t := time.Unix(0, val*int64(time.Millisecond))
+	return pcommon.NewTimestampFromTime(t)
 }
 
 func finalName(labels []prompb.Label) (ret string, err error) {
