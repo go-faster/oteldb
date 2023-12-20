@@ -204,9 +204,6 @@ changelog:
     - title: 'Bug fixes'
       regexp: '^.*?fix(\(\S+\))??!?:.+$'
       order: 200
-    - title: 'Tests updates'
-      regexp: '^.*?test(\(\S+\))??!?:.+$'
-      order: 250
     - title: 'Dependency updates'
       regexp: '^.*?(feat|fix|chore)\(deps\)!?:.+$'
       order: 300
