@@ -109,7 +109,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					selectors := []string{
 						"name",
 					}
-					if name := m.Name; name != "__name__" {
+					if name := m.Name; name != labels.MetricName {
 						if mapped, ok := mapping[name]; ok {
 							name = mapped
 						}
@@ -196,7 +196,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					HasTs:  true,
 				})
 
-				s.labels["__name__"] = otelstorage.KeyToLabel(name)
+				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}

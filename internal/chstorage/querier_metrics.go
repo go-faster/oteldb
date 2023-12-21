@@ -100,6 +100,14 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 	}); err != nil {
 		return nil, nil, errors.Wrap(err, "do query")
 	}
+
+	if name == labels.MetricName {
+		// Map label names.
+		for i := range result {
+			result[i] = otelstorage.KeyToLabel(name)
+		}
+	}
+
 	return result, nil, nil
 }
 
@@ -300,7 +308,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 				selectors := []string{
 					"name",
 				}
-				if name := m.Name; name != "__name__" {
+				if name := m.Name; name != labels.MetricName {
 					if mapped, ok := mapping[name]; ok {
 						name = mapped
 					}
@@ -423,7 +431,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				s.series.data.values = append(s.series.data.values, value)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
-				s.labels["__name__"] = otelstorage.KeyToLabel(name)
+				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
@@ -506,7 +514,7 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 				s.series.data.negativeBucketCounts = append(s.series.data.negativeBucketCounts, negativeBucketCounts)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
-				s.labels["__name__"] = otelstorage.KeyToLabel(name)
+				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}

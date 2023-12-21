@@ -13,6 +13,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
+	"github.com/prometheus/prometheus/model/labels"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"golang.org/x/sync/errgroup"
@@ -53,12 +54,12 @@ func newMetricBatch() *metricsBatch {
 }
 
 func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool.Pool) error {
-	labels := newLabelsColumns()
+	labelColumns := newLabelsColumns()
 	for pair := range b.labels {
 		key := pair[0]
-		labels.name.Append(otelstorage.KeyToLabel(key))
-		labels.key.Append(key)
-		labels.value.Append(pair[1])
+		labelColumns.name.Append(otelstorage.KeyToLabel(key))
+		labelColumns.key.Append(key)
+		labelColumns.value.Append(pair[1])
 	}
 
 	grp, grpCtx := errgroup.WithContext(ctx)
@@ -74,7 +75,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		{tables.ExpHistograms, b.expHistograms},
 		{tables.Summaries, b.summaries},
 		{tables.Exemplars, b.exemplars},
-		{tables.Labels, labels},
+		{tables.Labels, labelColumns},
 	} {
 		table := table
 		grp.Go(func() error {
@@ -523,7 +524,7 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 }
 
 func (b *metricsBatch) addName(name string) {
-	b.labels[[2]string{"__name__", name}] = struct{}{}
+	b.labels[[2]string{labels.MetricName, name}] = struct{}{}
 }
 
 func (b *metricsBatch) addLabels(m pcommon.Map) {
