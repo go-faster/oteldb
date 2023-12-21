@@ -104,7 +104,7 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 	if name == labels.MetricName {
 		// Map label names.
 		for i := range result {
-			result[i] = otelstorage.KeyToLabel(name)
+			result[i] = otelstorage.KeyToLabel(result[i])
 		}
 	}
 
