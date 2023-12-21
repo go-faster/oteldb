@@ -92,14 +92,16 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 	return nil
 }
 
-func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.NumberDataPointSlice) error {
+func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric.NumberDataPointSlice) error {
 	c := b.points
 
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
 		flags := point.Flags()
-		attrs := point.Attributes()
+		attrs := &lazyAttributes{
+			orig: point.Attributes(),
+		}
 
 		var val float64
 		switch typ := point.ValueType(); typ {
@@ -134,18 +136,20 @@ func (b *metricsBatch) addPoints(name string, res pcommon.Map, slice pmetric.Num
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
 		c.flags.Append(uint8(flags))
-		c.attributes.Append(encodeAttributes(attrs))
-		c.resource.Append(encodeAttributes(res))
+		c.attributes.Append(attrs.Encode())
+		c.resource.Append(res.Encode())
 	}
 	return nil
 }
 
-func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pmetric.HistogramDataPointSlice) error {
+func (b *metricsBatch) addHistogramPoints(name string, res *lazyAttributes, slice pmetric.HistogramDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
 		flags := point.Flags()
-		attrs := point.Attributes()
+		attrs := &lazyAttributes{
+			orig: point.Attributes(),
+		}
 		count := point.Count()
 		sum := proto.Nullable[float64]{
 			Set:   point.HasSum(),
@@ -167,10 +171,10 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 
 		// Map histogram as set of series for Prometheus compatibility.
 		series := mappedSeries{
-			ts:    ts,
-			flags: flags,
-			attrs: attrs,
-			res:   res,
+			Timestamp:  ts,
+			Flags:      flags,
+			Attributes: attrs,
+			Resource:   res,
 		}
 		if sum.Set {
 			b.addMappedSample(
@@ -178,7 +182,6 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 				name+"_sum",
 				histogramSum,
 				sum.Value,
-				[2]string{},
 			)
 		}
 		if _min.Set {
@@ -187,7 +190,6 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 				name+"_min",
 				histogramMin,
 				_min.Value,
-				[2]string{},
 			)
 		}
 		if _max.Set {
@@ -196,7 +198,6 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 				name+"_max",
 				histogramMax,
 				_max.Value,
-				[2]string{},
 			)
 		}
 		b.addMappedSample(
@@ -204,7 +205,6 @@ func (b *metricsBatch) addHistogramPoints(name string, res pcommon.Map, slice pm
 			name+"_count",
 			histogramCount,
 			float64(count),
-			[2]string{},
 		)
 
 		var (
@@ -311,7 +311,7 @@ type histogramBucketBounds struct {
 	bucketKey [2]string
 }
 
-func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice pmetric.ExponentialHistogramDataPointSlice) error {
+func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, slice pmetric.ExponentialHistogramDataPointSlice) error {
 	var (
 		c          = b.expHistograms
 		mapBuckets = func(b pmetric.ExponentialHistogramDataPointBuckets) (offset int32, counts []uint64) {
@@ -324,7 +324,9 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
 		flags := point.Flags()
-		attrs := point.Attributes()
+		attrs := &lazyAttributes{
+			orig: point.Attributes(),
+		}
 		count := point.Count()
 		sum := proto.Nullable[float64]{
 			Set:   point.HasSum(),
@@ -370,18 +372,20 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res pcommon.Map, slice
 		c.negativeOffset.Append(negativeOffset)
 		c.negativeBucketCounts.Append(negativeBucketCounts)
 		c.flags.Append(uint32(flags))
-		c.attributes.Append(encodeAttributes(attrs))
-		c.resource.Append(encodeAttributes(res))
+		c.attributes.Append(attrs.Encode())
+		c.resource.Append(res.Encode())
 	}
 	return nil
 }
 
-func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmetric.SummaryDataPointSlice) error {
+func (b *metricsBatch) addSummaryPoints(name string, res *lazyAttributes, slice pmetric.SummaryDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
 		flags := point.Flags()
-		attrs := point.Attributes()
+		attrs := &lazyAttributes{
+			orig: point.Attributes(),
+		}
 		count := point.Count()
 		sum := point.Sum()
 		var (
@@ -401,13 +405,13 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 		b.addLabels(attrs)
 
 		series := mappedSeries{
-			ts:    ts,
-			flags: flags,
-			attrs: attrs,
-			res:   res,
+			Timestamp:  ts,
+			Flags:      flags,
+			Attributes: attrs,
+			Resource:   res,
 		}
-		b.addMappedSample(series, name+"_count", summaryCount, float64(count), [2]string{})
-		b.addMappedSample(series, name+"_sum", summarySum, sum, [2]string{})
+		b.addMappedSample(series, name+"_count", summaryCount, float64(count))
+		b.addMappedSample(series, name+"_sum", summarySum, sum)
 
 		for i := 0; i < min(len(quantiles), len(values)); i++ {
 			quantile := quantiles[i]
@@ -424,9 +428,10 @@ func (b *metricsBatch) addSummaryPoints(name string, res pcommon.Map, slice pmet
 }
 
 type mappedSeries struct {
-	ts         time.Time
-	flags      pmetric.DataPointFlags
-	attrs, res pcommon.Map
+	Timestamp  time.Time
+	Flags      pmetric.DataPointFlags
+	Attributes *lazyAttributes
+	Resource   *lazyAttributes
 }
 
 func (b *metricsBatch) addMappedSample(
@@ -434,35 +439,35 @@ func (b *metricsBatch) addMappedSample(
 	name string,
 	mapping metricMapping,
 	val float64,
-	bucketKey [2]string,
+	bucketKey ...[2]string,
 ) {
 	c := b.points
 	c.name.Append(name)
-	c.timestamp.Append(series.ts)
+	c.timestamp.Append(series.Timestamp)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
-	c.flags.Append(uint8(series.flags))
-	c.attributes.Append(encodeAttributes(series.attrs, bucketKey))
-	c.resource.Append(encodeAttributes(series.res, bucketKey))
+	c.flags.Append(uint8(series.Flags))
+	c.attributes.Append(series.Attributes.Encode(bucketKey...))
+	c.resource.Append(series.Resource.Encode(bucketKey...))
 }
 
 type exemplarSeries struct {
 	Name       string
 	Timestamp  time.Time
-	Attributes pcommon.Map
-	Resource   pcommon.Map
+	Attributes *lazyAttributes
+	Resource   *lazyAttributes
 }
 
 func (b *metricsBatch) addExemplars(p exemplarSeries, exemplars pmetric.ExemplarSlice) error {
 	for i := 0; i < exemplars.Len(); i++ {
-		if err := b.addExemplar(p, exemplars.At(i), [2]string{}); err != nil {
+		if err := b.addExemplar(p, exemplars.At(i)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketKey [2]string) error {
+func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketKey ...[2]string) error {
 	c := b.exemplars
 
 	var val float64
@@ -488,8 +493,8 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	c.spanID.Append(e.SpanID())
 	c.traceID.Append(e.TraceID())
 
-	c.attributes.Append(encodeAttributes(p.Attributes, bucketKey))
-	c.resource.Append(encodeAttributes(p.Resource))
+	c.attributes.Append(p.Attributes.Encode(bucketKey...))
+	c.resource.Append(p.Resource.Encode())
 	return nil
 }
 
@@ -497,8 +502,8 @@ func (b *metricsBatch) addName(name string) {
 	b.labels[[2]string{"__name__", name}] = struct{}{}
 }
 
-func (b *metricsBatch) addLabels(m pcommon.Map) {
-	m.Range(func(key string, value pcommon.Value) bool {
+func (b *metricsBatch) addLabels(attrs *lazyAttributes) {
+	attrs.orig.Range(func(key string, value pcommon.Value) bool {
 		pair := [2]string{
 			key,
 			// FIXME(tdakkota): annoying allocations
@@ -513,7 +518,9 @@ func (i *Inserter) mapMetrics(b *metricsBatch, metrics pmetric.Metrics) error {
 	resMetrics := metrics.ResourceMetrics()
 	for i := 0; i < resMetrics.Len(); i++ {
 		resMetric := resMetrics.At(i)
-		resAttrs := resMetric.Resource().Attributes()
+		resAttrs := &lazyAttributes{
+			orig: resMetric.Resource().Attributes(),
+		}
 		b.addLabels(resAttrs)
 
 		scopeMetrics := resMetric.ScopeMetrics()
