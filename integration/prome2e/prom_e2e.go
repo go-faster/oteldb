@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
+	"github.com/prometheus/prometheus/model/labels"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 
@@ -150,6 +151,9 @@ func (s *BatchSet) addLabel(label, val string) {
 	if m == nil {
 		m = map[string]struct{}{}
 		s.Labels[label] = m
+	}
+	if label == labels.MetricName {
+		val = otelstorage.KeyToLabel(val)
 	}
 	m[val] = struct{}{}
 }
