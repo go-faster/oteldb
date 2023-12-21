@@ -4,8 +4,8 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:23.10
     ports:
-      - "9000:9000"
-      - "8123:8123"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:8123:8123"
     volumes:
       - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
     healthcheck:
@@ -50,7 +50,7 @@ services:
       - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
       - PPROF_ADDR=:9010
     ports:
-      - "9010:9010"   # pprof http://localhost:9010/debug/pprof/
+      - "127.0.0.1:9010:9010"   # pprof http://localhost:9010/debug/pprof/
     depends_on:
       - clickhouse
 
@@ -67,7 +67,7 @@ services:
       - GF_LOG_LEVEL=warn
       - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
