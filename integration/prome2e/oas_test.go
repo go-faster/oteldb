@@ -59,13 +59,11 @@ func TestPrometheusOAS(t *testing.T) {
 			"--web.console.templates=/usr/share/prometheus/consoles",
 		},
 		WaitingFor: wait.ForLog("Server is ready to receive web requests"),
-		Mounts: testcontainers.ContainerMounts{
+		Files: []testcontainers.ContainerFile{
 			{
-				Source: testcontainers.GenericBindMountSource{
-					HostPath: configPath,
-				},
-				Target:   "/etc/prometheus/prometheus.yml",
-				ReadOnly: true,
+				HostFilePath:      configPath,
+				ContainerFilePath: "/etc/prometheus/prometheus.yml",
+				FileMode:          644,
 			},
 		},
 	}
