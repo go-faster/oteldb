@@ -7,9 +7,33 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
+    - port: 19291
       protocol: TCP
-      name: http
+      targetPort: 19291
+      name: prom-rw
+    - port: 8090
+      protocol: TCP
+      targetPort: 8090
+      name: metrics
+    - port: 3200
+      protocol: TCP
+      targetPort: 3200
+      name: tempo-http
+    - port: 3100
+      protocol: TCP
+      targetPort: 3100
+      name: loki-http
+    - port: 9090
+      protocol: TCP
+      targetPort: 9090
+      name: prom-http
+    - port: 4317
+      protocol: TCP
+      targetPort: 4317
+      name: otlp-grpc
+    - port: 4318
+      protocol: TCP
+      targetPort: 4318
+      name: otlp-http
   selector:
     {{- include "oteldb.selectorLabels" . | nindent 4 }}

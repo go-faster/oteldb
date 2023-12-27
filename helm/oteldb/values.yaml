@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/go-faster/oteldb:0.3.1
+  repository: ghcr.io/go-faster/oteldb
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -38,7 +38,6 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
 
 ingress:
   enabled: false
