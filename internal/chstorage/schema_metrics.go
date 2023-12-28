@@ -33,7 +33,7 @@ const (
 		flags	    UInt8  CODEC(T64),
 		attributes	String,
 		resource	String,
-	
+
 		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192
 	)
 	ENGINE = MergeTree()
@@ -51,24 +51,6 @@ const (
 		'SUMMARY_SUM' = 7,
 		'SUMMARY_QUANTILE' = 8
 		`
-	histogramsSchema = `CREATE TABLE IF NOT EXISTS %s
-	(
-		name LowCardinality(String),
-		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
-
-		histogram_count UInt64,
-		histogram_sum Nullable(Float64),
-		histogram_min Nullable(Float64),
-		histogram_max Nullable(Float64),
-		histogram_bucket_counts Array(UInt64),
-		histogram_explicit_bounds Array(Float64),
-
-		flags	UInt32,
-		attributes	String,
-		resource	String
-	)
-	ENGINE = MergeTree()
-	ORDER BY timestamp;`
 	expHistogramsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
 		name LowCardinality(String),
@@ -84,22 +66,6 @@ const (
 		exp_histogram_positive_bucket_counts Array(UInt64),
 		exp_histogram_negative_offset Int32,
 		exp_histogram_negative_bucket_counts Array(UInt64),
-
-		flags	UInt32,
-		attributes	String,
-		resource	String
-	)
-	ENGINE = MergeTree()
-	ORDER BY timestamp;`
-	summariesSchema = `CREATE TABLE IF NOT EXISTS %s
-	(
-		name LowCardinality(String),
-		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
-
-		summary_count UInt64,
-		summary_sum Float64,
-		summary_quantiles Array(Float64),
-		summary_values Array(Float64),
 
 		flags	UInt32,
 		attributes	String,
