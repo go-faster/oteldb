@@ -378,12 +378,13 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
 					}
 				}
+				value := m.Value
 				if m.Name == labels.MetricName {
 					mappedValue, err := p.getMetricName(ctx, m.Value)
 					if err != nil {
 						return "", errors.Wrap(err, "get metric name mapping")
 					}
-					m.Value = mappedValue
+					value = mappedValue
 				}
 				query.WriteString("(\n")
 				for i, sel := range selectors {
@@ -393,9 +394,9 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 					// Note: predicate negated above.
 					switch m.Type {
 					case labels.MatchEqual, labels.MatchNotEqual:
-						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(m.Value))
+						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(value))
 					case labels.MatchRegexp, labels.MatchNotRegexp:
-						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(m.Value))
+						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(value))
 					default:
 						return "", errors.Errorf("unexpected type %q", m.Type)
 					}
