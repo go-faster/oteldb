@@ -29,8 +29,8 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 	ctx, span := q.tracer.Start(ctx, "SearchTags",
 		trace.WithAttributes(
 			attribute.Int("chstorage.tags_count", len(tags)),
-			attribute.Int64("chstorage.start_range", int64(opts.Start)),
-			attribute.Int64("chstorage.end_range", int64(opts.End)),
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
 			attribute.Int64("chstorage.max_duration", int64(opts.MaxDuration)),
 			attribute.Int64("chstorage.min_duration", int64(opts.MinDuration)),
 			attribute.String("chstorage.table", table),
@@ -177,8 +177,8 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 	ctx, span := q.tracer.Start(ctx, "TraceByID",
 		trace.WithAttributes(
 			attribute.String("chstorage.id_to_query", id.Hex()),
-			attribute.Int64("chstorage.start_range", int64(opts.Start)),
-			attribute.Int64("chstorage.end_range", int64(opts.End)),
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -209,8 +209,8 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 		trace.WithAttributes(
 			attribute.String("chstorage.span_matcher_operation", params.Op.String()),
 			attribute.Int("chstorage.span_matchers", len(params.Matchers)),
-			attribute.Int64("chstorage.start_range", int64(params.Start)),
-			attribute.Int64("chstorage.end_range", int64(params.End)),
+			attribute.Int64("chstorage.range.start", int64(params.Start)),
+			attribute.Int64("chstorage.range.end", int64(params.End)),
 			attribute.Int64("chstorage.max_duration", int64(params.MaxDuration)),
 			attribute.Int64("chstorage.min_duration", int64(params.MinDuration)),
 			attribute.Int("chstorage.limit", params.Limit),

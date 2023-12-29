@@ -41,6 +41,7 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		tables:          q.tables,
 		tracer:          q.tracer,
 		getLabelMapping: q.getMetricsLabelMapping,
+		getMetricName:   q.getMetricName,
 	}, nil
 }
 
@@ -51,6 +52,7 @@ type promQuerier struct {
 	ch              chClient
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
+	getMetricName   func(context.Context, string) (string, error)
 
 	tracer trace.Tracer
 }
@@ -179,6 +181,48 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 	return nil
 }
 
+func (q *Querier) getMetricName(ctx context.Context, name string) (metricMapped string, rerr error) {
+	ctx, span := q.tracer.Start(ctx, "getMetricName",
+		trace.WithAttributes(
+			attribute.String("chstorage.metric.name", name),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+	var mapped = new(proto.ColStr)
+	if err := q.ch.Do(ctx, ch.Query{
+		Result: proto.Results{
+			{Name: "value", Data: mapped},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < mapped.Rows(); i++ {
+				metricMapped = mapped.Row(i)
+			}
+			return nil
+		},
+		Body: fmt.Sprintf(`SELECT value FROM %[1]s WHERE name = %[2]s AND key = %[2]s AND value_normalized = %[3]s`,
+			q.tables.Labels, singleQuoted(labels.MetricName), singleQuoted(name),
+		),
+	}); err != nil {
+		return "", errors.Wrap(err, "select")
+	}
+	if metricMapped == "" {
+		// No mapping found.
+		metricMapped = name
+	}
+	fmt.Println("mapped", name, metricMapped)
+	span.AddEvent("fetched_metric_name_mapping",
+		trace.WithAttributes(
+			attribute.String("chstorage.metric.mapped", metricMapped),
+		),
+	)
+	return metricMapped, nil
+}
+
 func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
 	ctx, span := q.tracer.Start(ctx, "getMetricsLabelMapping",
 		trace.WithAttributes(
@@ -207,8 +251,7 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 			{Name: "key", Data: key},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			l := min(name.Rows(), key.Rows())
-			for i := 0; i < l; i++ {
+			for i := 0; i < name.Rows(); i++ {
 				out[name.Row(i)] = key.Row(i)
 			}
 			return nil
@@ -221,7 +264,18 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
-
+	{
+		var mapping []string
+		for k, v := range out {
+			mapping = append(mapping, fmt.Sprintf("%s=%s", k, v))
+		}
+		slices.Sort(mapping)
+		span.AddEvent("labels_fetched",
+			trace.WithAttributes(
+				attribute.StringSlice("chstorage.mapping", mapping),
+			),
+		)
+	}
 	return out, nil
 }
 
@@ -261,11 +315,15 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			end = t
 		}
 	}
-
+	var queryLabels []string
+	for _, m := range matchers {
+		queryLabels = append(queryLabels, m.Name)
+	}
 	ctx, span := p.tracer.Start(ctx, "SelectSeries",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.start_range", start.UnixNano()),
-			attribute.Int64("chstorage.end_range", end.UnixNano()),
+			attribute.Int64("chstorage.range.start", start.UnixNano()),
+			attribute.Int64("chstorage.range.end", end.UnixNano()),
+			attribute.StringSlice("chstorage.matchers.labels", queryLabels),
 		),
 	)
 	defer func() {
@@ -274,11 +332,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		}
 		span.End()
 	}()
-
-	var queryLabels []string
-	for _, m := range matchers {
-		queryLabels = append(queryLabels, m.Name)
-	}
 	mapping, err := p.getLabelMapping(ctx, queryLabels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
@@ -324,6 +377,13 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(name)),
 						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
 					}
+				}
+				if m.Name == labels.MetricName {
+					mappedValue, err := p.getMetricName(ctx, m.Value)
+					if err != nil {
+						return "", errors.Wrap(err, "get metric name mapping")
+					}
+					m.Value = mappedValue
 				}
 				query.WriteString("(\n")
 				for i, sel := range selectors {

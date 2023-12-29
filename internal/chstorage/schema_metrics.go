@@ -92,9 +92,11 @@ const (
 
 	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
 	(
-		name  LowCardinality(String),
-		key   LowCardinality(String),
-		value String
+		name         LowCardinality(String),
+		key          LowCardinality(String),
+
+		value            String,  -- original value, i.e. 'foo.bar'
+		value_normalized String   -- normalized value, 'foo_bar''
 	)
 	ENGINE = ReplacingMergeTree
 	ORDER BY (name, value);`

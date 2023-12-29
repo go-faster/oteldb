@@ -99,9 +99,11 @@ func (c *expHistogramColumns) Input() proto.Input    { return c.Columns().Input(
 func (c *expHistogramColumns) Result() proto.Results { return c.Columns().Result() }
 
 type labelsColumns struct {
-	name  *proto.ColLowCardinality[string]
-	key   *proto.ColLowCardinality[string]
-	value proto.ColStr
+	name *proto.ColLowCardinality[string]
+	key  *proto.ColLowCardinality[string]
+
+	value           proto.ColStr
+	valueNormalized proto.ColStr
 }
 
 func newLabelsColumns() *labelsColumns {
@@ -111,22 +113,16 @@ func newLabelsColumns() *labelsColumns {
 	}
 }
 
-func (c *labelsColumns) Input() proto.Input {
-	input := proto.Input{
-		{Name: "name", Data: c.name},
-		{Name: "key", Data: c.key},
-		{Name: "value", Data: c.value},
-	}
-	return input
-}
-
-func (c *labelsColumns) Result() proto.Results {
-	return proto.Results{
+func (c *labelsColumns) Columns() Columns {
+	return Columns{
 		{Name: "name", Data: c.name},
 		{Name: "key", Data: c.key},
 		{Name: "value", Data: &c.value},
+		{Name: "value_normalized", Data: &c.valueNormalized},
 	}
 }
+func (c *labelsColumns) Input() proto.Input    { return c.Columns().Input() }
+func (c *labelsColumns) Result() proto.Results { return c.Columns().Result() }
 
 type exemplarColumns struct {
 	name      *proto.ColLowCardinality[string]

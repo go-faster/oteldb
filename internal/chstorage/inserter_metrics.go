@@ -56,6 +56,11 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		labelColumns.name.Append(otelstorage.KeyToLabel(key))
 		labelColumns.key.Append(key)
 		labelColumns.value.Append(pair[1])
+		if key == labels.MetricName {
+			labelColumns.valueNormalized.Append(otelstorage.KeyToLabel(pair[1]))
+		} else {
+			labelColumns.valueNormalized.Append("")
+		}
 	}
 
 	grp, grpCtx := errgroup.WithContext(ctx)

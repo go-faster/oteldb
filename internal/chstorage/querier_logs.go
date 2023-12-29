@@ -34,8 +34,8 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 
 	ctx, span := q.tracer.Start(ctx, "LabelNames",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.start_range", int64(opts.Start)),
-			attribute.Int64("chstorage.end_range", int64(opts.End)),
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -163,8 +163,8 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 
 	ctx, span := q.tracer.Start(ctx, "LabelValues",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.start_range", int64(opts.Start)),
-			attribute.Int64("chstorage.end_range", int64(opts.End)),
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -270,8 +270,8 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	ctx, span := q.tracer.Start(ctx, "SelectLogs",
 		trace.WithAttributes(
 			attribute.Int("chstorage.labels_count", len(params.Labels)),
-			attribute.Int64("chstorage.start_range", int64(start)),
-			attribute.Int64("chstorage.end_range", int64(end)),
+			attribute.Int64("chstorage.range.start", int64(start)),
+			attribute.Int64("chstorage.range.end", int64(end)),
 			attribute.String("chstorage.table", table),
 		),
 	)
