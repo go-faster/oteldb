@@ -15,10 +15,6 @@ receivers:
                 - 'demo-1:8080'
                 - 'demo-2:8080'
                 - 'demo-3:8080'
-        - job_name: otel-collector
-          scrape_interval: 5s
-          static_configs:
-            - targets: [localhost:8888]
         - job_name: node-exporter
           scrape_interval: 5s
           static_configs:

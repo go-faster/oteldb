@@ -109,6 +109,39 @@ services:
       - '--web.max-requests=40'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
+  # demo client
+  client:
+    restart: always
+    build:
+      context: ../../../
+      dockerfile: oteldemo.Dockerfile
+    command: ["client"]
+    environment:
+      - OTEL_LOG_LEVEL=debug
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=client
+  # demo server
+  server:
+    restart: always
+    command: ["server"]
+    build:
+      context: ../../../
+      dockerfile: oteldemo.Dockerfile
+    environment:
+      - OTEL_LOG_LEVEL=debug
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=server
+
   grafana:
     image: "grafana/grafana:10.0.0"
     environment:

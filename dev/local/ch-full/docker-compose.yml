@@ -182,8 +182,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ../grafana/grafana.ini:/etc/grafana/grafana.ini
-      - ../grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ../grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
       - ../grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
