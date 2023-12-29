@@ -287,7 +287,16 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	// TODO(tdakkota): optimize query by func hint (e.g. func "series").
 	buildQuery := func(table string) (string, error) {
 		var query strings.Builder
-		fmt.Fprintf(&query, "SELECT * FROM %#[1]q WHERE true\n", table)
+		columns := "_bug"
+		switch table {
+		case p.tables.Points:
+			columns = newPointColumns().Columns().All()
+		case p.tables.ExpHistograms:
+			columns = newExpHistogramColumns().Columns().All()
+		default:
+			return "", errors.Errorf("unexpected table %q", table)
+		}
+		fmt.Fprintf(&query, "SELECT %[1]s FROM %#[2]q WHERE true\n", columns, table)
 		if !start.IsZero() {
 			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
 		}
@@ -303,7 +312,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			default:
 				return "", errors.Errorf("unexpected type %q", m.Type)
 			}
-
 			{
 				selectors := []string{
 					"name",

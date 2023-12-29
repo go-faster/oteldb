@@ -84,8 +84,8 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 
 	buildQuery := func(table string) (string, error) {
 		var query strings.Builder
-		fmt.Fprintf(&query, `SELECT * FROM %#[1]q WHERE true
-		`, table)
+		fmt.Fprintf(&query, `SELECT %[1]s FROM %#[2]q WHERE true
+		`, newExemplarColumns().Columns().All(), table)
 		if !start.IsZero() {
 			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
 		}
@@ -160,15 +160,16 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
-				name := c.name.Row(i)
-				filteredAttributes := c.filteredAttributes.Row(i)
-				exemplarTimestamp := c.exemplarTimestamp.Row(i)
-				value := c.value.Row(i)
-				spanID := c.spanID.Row(i)
-				traceID := c.traceID.Row(i)
-				attributes := c.attributes.Row(i)
-				resource := c.resource.Row(i)
-
+				var (
+					name               = c.name.Row(i)
+					filteredAttributes = c.filteredAttributes.Row(i)
+					exemplarTimestamp  = c.exemplarTimestamp.Row(i)
+					value              = c.value.Row(i)
+					spanID             = c.spanID.Row(i)
+					traceID            = c.traceID.Row(i)
+					attributes         = c.attributes.Row(i)
+					resource           = c.resource.Row(i)
+				)
 				key := seriesKey{
 					name:       name,
 					attributes: attributes,

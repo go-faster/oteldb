@@ -23,35 +23,22 @@ func newPointColumns() *pointColumns {
 	}
 }
 
-func (c *pointColumns) Input() proto.Input {
-	return proto.Input{
+func (c *pointColumns) Columns() Columns {
+	return Columns{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
 		{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
-		{Name: "value", Data: c.value},
-
-		{Name: "flags", Data: c.flags},
-		{Name: "attributes", Data: c.attributes},
-		{Name: "resource", Data: c.resource},
-	}
-}
-
-func (c *pointColumns) Result() proto.Results {
-	results := proto.Results{
-		{Name: "name", Data: c.name},
-		{Name: "timestamp", Data: c.timestamp},
-
-		{Name: "mapping", Data: &c.mapping},
 		{Name: "value", Data: &c.value},
 
 		{Name: "flags", Data: &c.flags},
 		{Name: "attributes", Data: &c.attributes},
 		{Name: "resource", Data: &c.resource},
 	}
-
-	return results
 }
+
+func (c *pointColumns) Input() proto.Input    { return c.Columns().Input() }
+func (c *pointColumns) Result() proto.Results { return c.Columns().Result() }
 
 type expHistogramColumns struct {
 	name      *proto.ColLowCardinality[string]
@@ -86,30 +73,8 @@ func newExpHistogramColumns() *expHistogramColumns {
 	}
 }
 
-func (c *expHistogramColumns) Input() proto.Input {
-	return proto.Input{
-		{Name: "name", Data: c.name},
-		{Name: "timestamp", Data: c.timestamp},
-
-		{Name: "exp_histogram_count", Data: c.count},
-		{Name: "exp_histogram_sum", Data: c.sum},
-		{Name: "exp_histogram_min", Data: c.min},
-		{Name: "exp_histogram_max", Data: c.max},
-		{Name: "exp_histogram_scale", Data: c.scale},
-		{Name: "exp_histogram_zerocount", Data: c.zerocount},
-		{Name: "exp_histogram_positive_offset", Data: c.positiveOffset},
-		{Name: "exp_histogram_positive_bucket_counts", Data: c.positiveBucketCounts},
-		{Name: "exp_histogram_negative_offset", Data: c.negativeOffset},
-		{Name: "exp_histogram_negative_bucket_counts", Data: c.negativeBucketCounts},
-
-		{Name: "flags", Data: c.flags},
-		{Name: "attributes", Data: c.attributes},
-		{Name: "resource", Data: c.resource},
-	}
-}
-
-func (c *expHistogramColumns) Result() proto.Results {
-	return proto.Results{
+func (c *expHistogramColumns) Columns() Columns {
+	return Columns{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
@@ -129,6 +94,9 @@ func (c *expHistogramColumns) Result() proto.Results {
 		{Name: "resource", Data: &c.resource},
 	}
 }
+
+func (c *expHistogramColumns) Input() proto.Input    { return c.Columns().Input() }
+func (c *expHistogramColumns) Result() proto.Results { return c.Columns().Result() }
 
 type labelsColumns struct {
 	name  *proto.ColLowCardinality[string]
@@ -182,25 +150,8 @@ func newExemplarColumns() *exemplarColumns {
 	}
 }
 
-func (c *exemplarColumns) Input() proto.Input {
-	input := proto.Input{
-		{Name: "name", Data: c.name},
-		{Name: "timestamp", Data: c.timestamp},
-
-		{Name: "filtered_attributes", Data: c.filteredAttributes},
-		{Name: "exemplar_timestamp", Data: c.exemplarTimestamp},
-		{Name: "value", Data: c.value},
-		{Name: "span_id", Data: c.spanID},
-		{Name: "trace_id", Data: c.traceID},
-
-		{Name: "attributes", Data: &c.attributes},
-		{Name: "resource", Data: &c.resource},
-	}
-	return input
-}
-
-func (c *exemplarColumns) Result() proto.Results {
-	return proto.Results{
+func (c *exemplarColumns) Columns() Columns {
+	return Columns{
 		{Name: "name", Data: c.name},
 		{Name: "timestamp", Data: c.timestamp},
 
@@ -214,3 +165,6 @@ func (c *exemplarColumns) Result() proto.Results {
 		{Name: "resource", Data: &c.resource},
 	}
 }
+
+func (c *exemplarColumns) Input() proto.Input    { return c.Columns().Input() }
+func (c *exemplarColumns) Result() proto.Results { return c.Columns().Result() }
