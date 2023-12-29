@@ -287,7 +287,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	// TODO(tdakkota): optimize query by func hint (e.g. func "series").
 	buildQuery := func(table string) (string, error) {
 		var query strings.Builder
-		columns := "_bug"
+		var columns string
 		switch table {
 		case p.tables.Points:
 			columns = newPointColumns().Columns().All()
