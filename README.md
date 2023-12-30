@@ -4,7 +4,7 @@
 
 # oteldb [![codecov](https://img.shields.io/codecov/c/github/go-faster/oteldb?label=cover)](https://codecov.io/gh/go-faster/oteldb) [![experimental](https://img.shields.io/badge/-experimental-blueviolet)](https://go-faster.org/docs/projects/status#experimental)
 
-The next generation, [OpenTelemetry][otel]-first signal aggregation system for metrics, traces and logs.
+The next generation, [OpenTelemetry-first][otel] aggregation system for metrics, traces and logs.
 
 Compatible with [PromQL][promql], [TraceQL][traceql] and [LogQL][logql].
 
