@@ -29,6 +29,7 @@ datasources:
     orgId: 1
     url: http://oteldb:9090
     uid: promoteldb
+    isDefault: true
 
   - name: Prometheus
     type: prometheus
@@ -36,7 +37,6 @@ datasources:
     orgId: 1
     url: http://prometheus:9090
     uid: prometheus
-    isDefault: true
 
   - name: ClickHouse
     type: grafana-clickhouse-datasource

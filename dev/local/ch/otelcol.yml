@@ -23,6 +23,10 @@ receivers:
           scrape_interval: 5s
           static_configs:
             - targets: [prometheus:9090]
+        - job_name: grafana
+          scrape_interval: 5s
+          static_configs:
+            - targets: [grafana:3000]
         - job_name: clickhouse
           scrape_interval: 5s
           static_configs:

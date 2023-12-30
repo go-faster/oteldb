@@ -24,12 +24,18 @@ func client(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		otelhttp.WithTracerProvider(m.TracerProvider()),
 		otelhttp.WithMeterProvider(m.MeterProvider()),
 	)
+	meter := m.MeterProvider().Meter("oteldemo.client")
+	sentRequestsCount, err := meter.Int64Counter("oteldemo.client.sent_requests")
+	if err != nil {
+		return errors.Wrap(err, "create counter")
+	}
 	httpClient := &http.Client{
 		Transport: httpTransport,
 		Timeout:   time.Second * 10,
 	}
 	tracer := m.TracerProvider().Tracer("client")
 	sendRequest := func(ctx context.Context) {
+		sentRequestsCount.Add(ctx, 1)
 		ctx, cancel := context.WithTimeout(ctx, time.Second*2)
 		defer cancel()
 
