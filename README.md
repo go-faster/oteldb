@@ -17,9 +17,9 @@ Based on [ClickHouse][clickhouse], fastest open-source column-oriented database.
 > Work in progress.
 
 Supported query languages:
-- [PromQL][promql] (Prometheus) for metrics, [>99% compatibility][compliance]
-- [TraceQL][traceql] (Tempo) for traces
-- [LogQL][logql] (Loki) for logs
+- [PromQL][promql] ([Prometheus][prometheus]) for metrics, [>99% compatibility][compliance]
+- [TraceQL][traceql] ([Grafana Tempo][tempo]) for traces
+- [LogQL][logql] ([Grafana Loki][loki]) for logs
 
 [traceql]: https://grafana.com/docs/tempo/latest/traceql/
 [logql]: https://grafana.com/docs/loki/latest/query/
