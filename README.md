@@ -36,7 +36,7 @@ Supported ingestion protocols:
 Ingestion is possible with [OpenTelemetry collector][otelcol], supporting [over 90 protocols][otelcol-contrib].
 
 [otelcol]: https://opentelemetry.io/docs/collector/
-[otelcol-contrib]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter
+[otelcol-contrib]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver
 [exemplars]: https://grafana.com/docs/grafana/latest/fundamentals/exemplars/
 
 ## Prometheus Compatibility
