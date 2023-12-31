@@ -1,0 +1,6 @@
+(
+	`a` Int32,
+	`b` LowCardinality(String) CODEC(ZSTD(1))
+)
+ENGINE = MergeTree()
+ORDER BY (`a`, `b`)
