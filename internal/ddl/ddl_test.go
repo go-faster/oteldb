@@ -19,7 +19,7 @@ func TestGenerate(t *testing.T) {
 			},
 			{
 				Name:  "b",
-				Type:  proto.ColumnType("LowCardinality").With(proto.ColumnTypeString.String()),
+				Type:  proto.ColumnType("LowCardinality").Sub(proto.ColumnTypeString),
 				Codec: "ZSTD(1)",
 			},
 		},
