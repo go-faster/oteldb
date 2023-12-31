@@ -8,7 +8,7 @@ The next generation, [OpenTelemetry-first][otel] aggregation system for metrics,
 
 Compatible with [PromQL][promql], [TraceQL][traceql] and [LogQL][logql].
 
-Based on [ClickHouse][clickhouse], fastest open-source column-oriented database.
+Based on [ClickHouse][clickhouse], fastest open-source (Apache 2.0) column-oriented database.
 
 [clickhouse]: https://clickhouse.com/
 [otel]: https://opentelemetry.io/
