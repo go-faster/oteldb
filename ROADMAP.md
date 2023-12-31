@@ -11,6 +11,12 @@ In no particular order:
   - [ ] Writes resource isolation
   - [ ] Reads resource isolation
 - [ ] Cluster support
+- [ ] OpenTelemetry collector distribution
+  - [ ] ClickHouse (oteldb) direct exporter
+  - [ ] Prometheus remote write receiver
+  - [ ] Reduced scope high-performance collector
+  - [ ] YDB streams exporter/receiver
+  - [ ] Protocol for low-overhead telemetry export/import
 - [ ] Down-sampling
 - [ ] Aggregation
 - [ ] Traces tail sampling
