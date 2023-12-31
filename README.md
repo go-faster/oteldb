@@ -14,7 +14,7 @@ Based on [ClickHouse][clickhouse], fastest open-source column-oriented database.
 [otel]: https://opentelemetry.io/
 
 > [!WARNING]
-> Work in progress.
+> Work in progress. Not ready for production use.
 
 Supported query languages:
 - [PromQL][promql] ([Prometheus][prometheus]) for metrics, [>99% compatibility][compliance]
