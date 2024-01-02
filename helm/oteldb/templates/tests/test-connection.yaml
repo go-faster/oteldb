@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "oteldb.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "oteldb.fullname" . }}:13133/liveness']
   restartPolicy: Never

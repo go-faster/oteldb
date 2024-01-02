@@ -35,5 +35,9 @@ spec:
       protocol: TCP
       targetPort: 4318
       name: otlp-http
+    - port: 13133
+      protocol: TCP
+      targetPort: 13133
+      name: health-check
   selector:
     {{- include "oteldb.selectorLabels" . | nindent 4 }}

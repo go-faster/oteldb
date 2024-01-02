@@ -37,11 +37,12 @@ func loadConfig(name string) (cfg Config, _ error) {
 
 // Config is a oteldb config.
 type Config struct {
-	DSN        string           `json:"dsn" yaml:"dsn"`
-	TTL        time.Duration    `json:"ttl" yaml:"ttl"`
-	Tempo      TempoConfig      `json:"tempo" yaml:"tempo"`
-	Prometheus PrometheusConfig `json:"prometheus" yaml:"prometheus"`
-	LokiConfig LokiConfig       `json:"loki" yaml:"loki"`
+	DSN         string            `json:"dsn" yaml:"dsn"`
+	TTL         time.Duration     `json:"ttl" yaml:"ttl"`
+	Tempo       TempoConfig       `json:"tempo" yaml:"tempo"`
+	Prometheus  PrometheusConfig  `json:"prometheus" yaml:"prometheus"`
+	LokiConfig  LokiConfig        `json:"loki" yaml:"loki"`
+	HealthCheck HealthCheckConfig `json:"health_check" yaml:"health_check"`
 
 	// Collector is an otelcol config.
 	Collector map[string]any `json:"otelcol" yaml:"otelcol"`
@@ -136,5 +137,16 @@ type LokiConfig struct {
 func (cfg *LokiConfig) setDefaults() {
 	if cfg.Bind == "" {
 		cfg.Bind = ":3100"
+	}
+}
+
+// HealthCheckConfig is health check config.
+type HealthCheckConfig struct {
+	Bind string `json:"bind" yaml:"bind"`
+}
+
+func (cfg *HealthCheckConfig) setDefaults() {
+	if cfg.Bind == "" {
+		cfg.Bind = ":13133"
 	}
 }

@@ -33,6 +33,18 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: health-check
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: health-check
+          startupProbe:
+            httpGet:
+              path: /startup
+              port: health-check
           ports:
             - containerPort: 19291
               protocol: TCP
@@ -52,6 +64,9 @@ spec:
             - containerPort: 4318
               protocol: TCP
               name: otlp-http
+            - containerPort: 13133
+              protocol: TCP
+              name: health-check
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
