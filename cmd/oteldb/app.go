@@ -65,9 +65,7 @@ func newApp(ctx context.Context, cfg Config, m *sdkapp.Metrics) (_ *App, err err
 		app.otelStorage = store
 	}
 
-	if err := app.setupHealthCheck(); err != nil {
-		return nil, errors.Wrap(err, "healthcheck")
-	}
+	app.setupHealthCheck()
 	if err := app.setupCollector(); err != nil {
 		return nil, errors.Wrap(err, "otelcol")
 	}
@@ -229,7 +227,7 @@ func (app *App) trySetupProm() error {
 	return nil
 }
 
-func (app *App) setupHealthCheck() error {
+func (app *App) setupHealthCheck() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/readinness", app.handleReadinessProbe)
 	mux.HandleFunc("/liveness", app.handleLivenessProbe)
@@ -248,12 +246,19 @@ func (app *App) setupHealthCheck() error {
 		}()
 		return srv.ListenAndServe()
 	}
-	return nil
 }
 
-func (app *App) handleReadinessProbe(w http.ResponseWriter, r *http.Request) {}
-func (app *App) handleLivenessProbe(w http.ResponseWriter, r *http.Request)  {}
-func (app *App) handleStartupProbe(w http.ResponseWriter, r *http.Request)   {}
+func (app *App) handleReadinessProbe(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *App) handleLivenessProbe(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *App) handleStartupProbe(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
 
 func (app *App) setupCollector() error {
 	conf, err := otelcol.NewConfigProvider(otelcol.ConfigProviderSettings{
