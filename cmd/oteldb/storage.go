@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
@@ -39,6 +40,7 @@ type metricQuerier interface {
 func setupCH(
 	ctx context.Context,
 	dsn string,
+	ttl time.Duration,
 	lg *zap.Logger,
 	m *app.Metrics,
 ) (store otelStorage, _ error) {
@@ -53,6 +55,8 @@ func setupCH(
 
 	// FIXME(tdakkota): this is not a good place for migration
 	tables := chstorage.DefaultTables()
+	tables.TTL = ttl
+
 	if err := tables.Create(ctx, c); err != nil {
 		return store, errors.Wrap(err, "create tables")
 	}

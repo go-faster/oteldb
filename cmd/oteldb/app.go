@@ -58,7 +58,7 @@ func newApp(ctx context.Context, cfg Config, m *sdkapp.Metrics) (_ *App, err err
 		if dsn == "" {
 			dsn = cfg.DSN
 		}
-		store, err := setupCH(ctx, dsn, app.lg, m)
+		store, err := setupCH(ctx, dsn, cfg.TTL, app.lg, m)
 		if err != nil {
 			return nil, errors.Wrapf(err, "create storage")
 		}
