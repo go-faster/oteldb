@@ -22,7 +22,7 @@ const (
 )
 
 const (
-	pointsSchema = `CREATE TABLE IF NOT EXISTS %s
+	pointsSchema = `
 	(
 		name LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
@@ -39,7 +39,7 @@ const (
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
 	PRIMARY KEY (name, mapping, cityHash64(resource), cityHash64(attributes))
-	ORDER BY (name, mapping, cityHash64(resource), cityHash64(attributes), timestamp);`
+	ORDER BY (name, mapping, cityHash64(resource), cityHash64(attributes), timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -51,7 +51,7 @@ const (
 		'SUMMARY_SUM' = 7,
 		'SUMMARY_QUANTILE' = 8
 		`
-	expHistogramsSchema = `CREATE TABLE IF NOT EXISTS %s
+	expHistogramsSchema = `
 	(
 		name LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
@@ -72,8 +72,8 @@ const (
 		resource	String
 	)
 	ENGINE = MergeTree()
-	ORDER BY timestamp;`
-	exemplarsSchema = `CREATE TABLE IF NOT EXISTS %s
+	ORDER BY timestamp`
+	exemplarsSchema = `
 	(
 		name LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
@@ -88,9 +88,9 @@ const (
 		resource	String
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name, cityHash64(resource), cityHash64(attributes), timestamp);`
+	ORDER BY (name, cityHash64(resource), cityHash64(attributes), timestamp)`
 
-	labelsSchema = `CREATE TABLE IF NOT EXISTS %s
+	labelsSchema = `
 	(
 		name         LowCardinality(String),
 		key          LowCardinality(String),
@@ -99,7 +99,7 @@ const (
 		value_normalized String   -- normalized value, 'foo_bar''
 	)
 	ENGINE = ReplacingMergeTree
-	ORDER BY (name, value);`
+	ORDER BY (name, value)`
 )
 
 func parseLabels(s string, to map[string]string) error {

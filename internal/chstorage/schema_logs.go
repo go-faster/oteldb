@@ -3,7 +3,6 @@ package chstorage
 const (
 	logsSchema = `
 -- https://opentelemetry.io/docs/specs/otel/logs/data-model/#log-and-event-record-definition
-CREATE TABLE IF NOT EXISTS %s
 (
 	-- materialized fields from semantic conventions
 	-- NB: They MUST NOT be present in the 'resource' field.
@@ -43,15 +42,14 @@ CREATE TABLE IF NOT EXISTS %s
   PARTITION BY toYYYYMMDD(timestamp)
   PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource))
   ORDER BY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
-  SETTINGS index_granularity=8192;
+  SETTINGS index_granularity=8192
 `
 
 	logAttrsSchema = `
-CREATE TABLE IF NOT EXISTS %s
 (
    name String,   -- foo_bar
    key  String,   -- foo.bar
 )
    ENGINE = ReplacingMergeTree
-   ORDER BY name;`
+   ORDER BY name`
 )

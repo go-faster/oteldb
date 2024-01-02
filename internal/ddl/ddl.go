@@ -24,14 +24,15 @@ type Table struct {
 	Engine      string
 }
 
-func backtick(s string) string {
+// Backtick adds backticks to the string.
+func Backtick(s string) string {
 	return "`" + s + "`"
 }
 
 func backticks(ss []string) []string {
 	out := make([]string, len(ss))
 	for i, s := range ss {
-		out[i] = backtick(s)
+		out[i] = Backtick(s)
 	}
 	return out
 }
@@ -43,7 +44,7 @@ func Generate(table Table) (string, error) {
 	for i, c := range table.Columns {
 		var col strings.Builder
 		col.WriteString("\t")
-		col.WriteString(backtick(c.Name))
+		col.WriteString(Backtick(c.Name))
 		col.WriteString(" ")
 		col.WriteString(c.Type.String())
 		if c.Codec != "" {

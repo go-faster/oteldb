@@ -1,7 +1,7 @@
 package chstorage
 
 const (
-	spansSchema = `CREATE TABLE IF NOT EXISTS %s
+	spansSchema = `
 (
 	-- materialized fields from semantic conventions
 	-- NB: They MUST NOT be present in the 'resource' field.
@@ -50,10 +50,10 @@ const (
 ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(start)
 PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
-ORDER BY (service_namespace, service_name, cityHash64(resource), start);
+ORDER BY (service_namespace, service_name, cityHash64(resource), start)
 `
 	kindDDL    = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
-	tagsSchema = `CREATE TABLE IF NOT EXISTS %s
+	tagsSchema = `
 	(
 		name LowCardinality(String),
 		value String,

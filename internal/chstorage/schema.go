@@ -4,11 +4,15 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
+
+	"github.com/go-faster/oteldb/internal/ddl"
 )
 
 // Tables define table names.
@@ -25,6 +29,9 @@ type Tables struct {
 	LogAttrs string
 
 	Migration string
+
+	TTL     time.Duration
+	Cluster string
 }
 
 // Validate checks table names
@@ -110,65 +117,86 @@ func (t Tables) saveHashes(ctx context.Context, c chClient, m map[string]string)
 	return nil
 }
 
+type generateOptions struct {
+	Name     string
+	DDL      string
+	TTLField string
+}
+
+func (t Tables) generateQuery(opts generateOptions) string {
+	var s strings.Builder
+	s.WriteString("CREATE TABLE IF NOT EXISTS ")
+	s.WriteString(ddl.Backtick(opts.Name))
+	if t.Cluster != "" {
+		s.WriteString(" ON CLUSTER ")
+		s.WriteString(ddl.Backtick(t.Cluster))
+	}
+	s.WriteString("\n")
+	s.WriteString(opts.DDL)
+	if t.TTL > 0 && opts.TTLField != "" {
+		s.WriteString("\n")
+		s.WriteString("TTL ")
+		s.WriteString(opts.TTLField)
+		s.WriteString(" + INTERVAL ")
+		s.WriteString(fmt.Sprintf("%d", t.TTL/time.Second))
+		s.WriteString(" SECOND")
+	}
+
+	return s.String()
+}
+
 // Create creates tables.
 func (t Tables) Create(ctx context.Context, c chClient) error {
 	if err := t.Validate(); err != nil {
 		return errors.Wrap(err, "validate")
 	}
 
-	type schema struct {
-		name  string
-		query string
+	if err := c.Do(ctx, ch.Query{
+		Logger: zctx.From(ctx).Named("ch"),
+		Body:   t.generateQuery(generateOptions{Name: t.Migration, DDL: schemaMigration}),
+	}); err != nil {
+		return errors.Wrapf(err, "create %q", t.Migration)
 	}
-	for _, s := range []schema{
-		{t.Migration, schemaMigration},
-	} {
-		if err := c.Do(ctx, ch.Query{
-			Logger: zctx.From(ctx).Named("ch"),
-			Body:   fmt.Sprintf(s.query, s.name),
-		}); err != nil {
-			return errors.Wrapf(err, "create %q", s.name)
-		}
-	}
+
 	hashes, err := t.getHashes(ctx, c)
 	if err != nil {
 		return errors.Wrap(err, "get hashes")
 	}
 
-	for _, s := range []schema{
-		{t.Spans, spansSchema},
-		{t.Tags, tagsSchema},
-
-		{t.Points, pointsSchema},
-		{t.ExpHistograms, expHistogramsSchema},
-		{t.Exemplars, exemplarsSchema},
-		{t.Labels, labelsSchema},
-
-		{t.Logs, logsSchema},
-		{t.LogAttrs, logAttrsSchema},
+	for _, s := range []generateOptions{
+		{Name: t.Spans, DDL: spansSchema, TTLField: "start"},
+		{Name: t.Tags, DDL: tagsSchema},
+		{Name: t.Points, DDL: pointsSchema, TTLField: "timestamp"},
+		{Name: t.ExpHistograms, DDL: expHistogramsSchema, TTLField: "timestamp"},
+		{Name: t.Exemplars, DDL: exemplarsSchema, TTLField: "timestamp"},
+		{Name: t.Labels, DDL: labelsSchema},
+		{Name: t.Logs, DDL: logsSchema, TTLField: "timestamp"},
+		{Name: t.LogAttrs, DDL: logAttrsSchema},
 	} {
-		target := fmt.Sprintf("%x", sha256.Sum256([]byte(s.query)))
-		if current, ok := hashes[s.name]; ok && current != target {
+		query := t.generateQuery(s)
+		name := s.Name
+		target := fmt.Sprintf("%x", sha256.Sum256([]byte(query)))
+		if current, ok := hashes[s.Name]; ok && current != target {
 			// HACK: this will DROP all data in the table
 			// TODO: implement ALTER TABLE
 			zctx.From(ctx).Warn("DROPPING TABLE (schema changed!)",
-				zap.String("table", s.name),
+				zap.String("table", name),
 				zap.String("current", current),
 				zap.String("target", target),
 			)
 			if err := c.Do(ctx, ch.Query{
 				Logger: zctx.From(ctx).Named("ch"),
-				Body:   fmt.Sprintf("DROP TABLE %s", s.name),
+				Body:   fmt.Sprintf("DROP TABLE %s", name),
 			}); err != nil {
-				return errors.Wrapf(err, "drop %q", s.name)
+				return errors.Wrapf(err, "drop %q", name)
 			}
 		}
-		hashes[s.name] = target
+		hashes[name] = target
 		if err := c.Do(ctx, ch.Query{
 			Logger: zctx.From(ctx).Named("ch"),
-			Body:   fmt.Sprintf(s.query, s.name),
+			Body:   query,
 		}); err != nil {
-			return errors.Wrapf(err, "create %q", s.name)
+			return errors.Wrapf(err, "create %q", name)
 		}
 	}
 	if err := t.saveHashes(ctx, c, hashes); err != nil {
