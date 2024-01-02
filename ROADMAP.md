@@ -20,7 +20,9 @@ In no particular order:
 - [ ] Down-sampling
 - [ ] Aggregation
 - [ ] Traces tail sampling
-- [ ] Well-known attribute materialization
+- [ ] Attribute materialization
+  - [ ] Well-known attributes
+  - [ ] Allow user to specify additional attributes to materialize
 - [ ] Benchmark suite
   - [ ] Telemetry generation (faster than realtime)
   - [ ] Performance tracking commit-to-commit
