@@ -186,7 +186,7 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 			)
 			if err := c.Do(ctx, ch.Query{
 				Logger: zctx.From(ctx).Named("ch"),
-				Body:   fmt.Sprintf("DROP TABLE %s", name),
+				Body:   fmt.Sprintf("DROP TABLE IF EXISTS %s", name),
 			}); err != nil {
 				return errors.Wrapf(err, "drop %q", name)
 			}
