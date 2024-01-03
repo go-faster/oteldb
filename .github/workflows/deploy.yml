@@ -129,10 +129,20 @@ jobs:
           KUBE: ${{ secrets.KUBE }}
         run: .k8s/kubeconfig.sh
 
+      - uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        id: install
+
       - name: Deploy
         run: |
           /tmp/kubectl apply -f .k8s/deployment.deploy.yml -f .k8s/service.yaml
           /tmp/kubectl -n faster rollout status deployment oteldb otelproxy --timeout=1m
+
+      - name: Deploy (Helm)
+        run: |
+          helm upgrade --install otel .helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
+
   otel:
     environment: prod
     runs-on: ubuntu-latest

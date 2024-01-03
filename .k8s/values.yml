@@ -1,0 +1,40 @@
+env:
+  - name: GOMEMLIMIT
+    value: "4GiB"
+  - name: GOMAXPROCS
+    value: "6"
+  - name: OTEL_METRICS_EXPORTER
+    value: "otlp"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.name=go-faster.oteldb"
+  - name: OTEL_LOG_LEVEL
+    value: "DEBUG"
+  - name: OTEL_EXPORTER_OTLP_PROTOCOL
+    value: "grpc"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: OTEL_TRACES_EXPORTER
+    value: "otlp"
+  - name: OTEL_LOGS_EXPORTER
+    value: "otlp"
+  - name: OTELDB_STORAGE
+    value: ch
+  - name: CH_DSN
+    valueFrom:
+      secretKeyRef:
+        name: oteldb
+        key: CH_DSN
+  - name: PYROSCOPE_ENABLE
+    value: "true"
+  - name: PYROSCOPE_URL
+    value: http://pyroscope.pyroscope.svc.cluster.local:4040
+  - name: PYROSCOPE_APP_NAME
+    value: oteldb
+
+resources:
+  requests:
+    cpu: "3"
+    memory: 512Mi
+  limits:
+    cpu: "6"
+    memory: 4Gi
