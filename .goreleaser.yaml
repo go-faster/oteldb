@@ -45,7 +45,7 @@ release:
     ## Docker images
 
     ```
-    {{ .Env.IMAGE }}:{{ .Version }}
+    {{ .Env.IMAGE }}:v{{ .Version }}
     ```
 
   extra_files:
@@ -60,6 +60,7 @@ dockers:
     goarch: amd64
     image_templates:
       - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
+      - "{{ .Env.IMAGE }}:v{{ .Version }}-amd64"
       - "{{ .Env.IMAGE }}:latest-amd64"
     build_flag_templates:
       - "--platform=linux/amd64"
@@ -80,6 +81,7 @@ dockers:
     dockerfile: release.Dockerfile
     image_templates:
       - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
+      - "{{ .Env.IMAGE }}:v{{ .Version }}-arm64"
       - "{{ .Env.IMAGE }}:latest-arm64"
     build_flag_templates:
       - "--platform=linux/arm64/v8"
@@ -100,6 +102,7 @@ dockers:
     dockerfile: release.Dockerfile
     image_templates:
       - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
+      - "{{ .Env.IMAGE }}:v{{ .Version }}-riscv64"
       - "{{ .Env.IMAGE }}:latest-riscv64"
     build_flag_templates:
       - "--platform=linux/riscv64"
@@ -126,6 +129,11 @@ docker_manifests:
       - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
       - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
       - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
+  - name_template: "{{ .Env.IMAGE }}:v{{ .Version }}"
+    image_templates:
+      - "{{ .Env.IMAGE }}:v{{ .Version }}-amd64"
+      - "{{ .Env.IMAGE }}:v{{ .Version }}-arm64"
+      - "{{ .Env.IMAGE }}:v{{ .Version }}-riscv64"
   - name_template: "{{ .Env.IMAGE }}:latest"
     image_templates:
       - "{{ .Env.IMAGE }}:latest-amd64"
@@ -216,6 +224,8 @@ changelog:
     - title: 'CI/CD updates'
       regexp: '^.*?ci(\(\S+\))??!?:.+$'
       order: 600
+    - title: 'Helm chart updates'
+      regexp: '^.*?(feat|fix|chore)\(helm\)!?:.+$'
     - title: Other work
       order: 9999
 
