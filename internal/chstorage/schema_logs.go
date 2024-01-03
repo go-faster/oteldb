@@ -42,7 +42,6 @@ const (
   PARTITION BY toYYYYMMDD(timestamp)
   PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource))
   ORDER BY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
-  SETTINGS index_granularity=8192
 `
 
 	logAttrsSchema = `

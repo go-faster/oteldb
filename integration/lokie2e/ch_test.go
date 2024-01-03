@@ -69,6 +69,7 @@ func TestCH(t *testing.T) {
 
 	prefix := randomPrefix()
 	tables := chstorage.DefaultTables()
+	tables.TTL = time.Since(time.Date(2010, 1, 1, 1, 1, 1, 1, time.UTC))
 	tables.Each(func(name *string) error {
 		old := *name
 		*name = prefix + "_" + old

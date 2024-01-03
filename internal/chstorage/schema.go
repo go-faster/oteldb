@@ -132,10 +132,9 @@ func (t Tables) generateQuery(opts generateOptions) string {
 		s.WriteString(ddl.Backtick(t.Cluster))
 	}
 	s.WriteString("\n")
-	s.WriteString(opts.DDL)
+	s.WriteString(strings.TrimSpace(opts.DDL))
 	if t.TTL > 0 && opts.TTLField != "" {
-		s.WriteString("\n")
-		s.WriteString("TTL toDateTime(")
+		s.WriteString("  TTL toDateTime(")
 		s.WriteString(opts.TTLField)
 		s.WriteString(") + INTERVAL ")
 		s.WriteString(fmt.Sprintf("%d", t.TTL/time.Second))
