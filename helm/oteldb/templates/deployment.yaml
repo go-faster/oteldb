@@ -54,6 +54,10 @@ spec:
               name: config
           args:
             - --config=/etc/otel/config.yml
+          env:
+            {{- if .Values.env }}
+            {{- toYaml .Values.env | nindent 12 }}
+            {{- end }}
           ports:
             - containerPort: 19291
               protocol: TCP
