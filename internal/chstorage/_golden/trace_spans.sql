@@ -1,7 +1,4 @@
-package chstorage
-
-const (
-	spansSchema = `
+CREATE TABLE IF NOT EXISTS `trace_spans`
 (
 	-- materialized fields from semantic conventions
 	-- NB: They MUST NOT be present in the 'resource' field.
@@ -16,7 +13,7 @@ const (
 	trace_state String,
 	parent_span_id FixedString(8),
 	name LowCardinality(String),
-	kind Enum8(` + kindDDL + `),
+	kind Enum8('KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5),
 
 	start DateTime64(9) CODEC(Delta, ZSTD(1)),
 	end   DateTime64(9) CODEC(Delta, ZSTD(1)),
@@ -51,15 +48,4 @@ ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(start)
 PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
 ORDER BY (service_namespace, service_name, cityHash64(resource), start)
-`
-	kindDDL    = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
-	tagsSchema = `
-	(
-		name LowCardinality(String),
-		value String,
-		value_type Enum8(` + valueTypeDDL + `)
-	)
-	ENGINE = ReplacingMergeTree
-	ORDER BY (value_type, name, value);`
-	valueTypeDDL = `'EMPTY' = 0,'STR' = 1,'INT' = 2,'DOUBLE' = 3,'BOOL' = 4,'MAP' = 5,'SLICE' = 6,'BYTES' = 7`
-)
+TTL toDateTime(`start`) + toIntervalSecond(259200)
