@@ -136,7 +136,7 @@ jobs:
 
       - name: Deploy
         run: |
-          /tmp/kubectl apply -f .k8s/deployment.deploy.yml -f .k8s/service.yaml
+          /tmp/kubectl apply -f .k8s/deployment.deploy.yml
           /tmp/kubectl -n faster rollout status deployment otelproxy chotel --timeout=1m
       - name: Deploy (Helm)
         run: |
