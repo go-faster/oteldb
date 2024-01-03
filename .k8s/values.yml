@@ -38,3 +38,6 @@ resources:
   limits:
     cpu: "6"
     memory: 4Gi
+
+config:
+  ttl: 72h
