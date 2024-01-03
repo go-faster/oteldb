@@ -229,7 +229,7 @@ func (app *App) trySetupProm() error {
 
 func (app *App) setupHealthCheck() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/readinness", app.handleReadinessProbe)
+	mux.HandleFunc("/readiness", app.handleReadinessProbe)
 	mux.HandleFunc("/liveness", app.handleLivenessProbe)
 	mux.HandleFunc("/startup", app.handleStartupProbe)
 	cfg := app.cfg.HealthCheck
