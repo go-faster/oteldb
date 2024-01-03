@@ -200,6 +200,12 @@ changelog:
       - Merge branch
       - go mod tidy
   groups:
+    - title: 'Helm chart updates'
+      order: 700
+      regexp: '^.*?(feat|fix|chore)\(helm\)!?:.+$'
+    - title: 'Dependency updates'
+      regexp: '^.*?(feat|fix|chore)\(deps\)!?:.+$'
+      order: 300
     - title: 'New Features'
       regexp: '^.*?feat(\(\S+\))??!?:.+$'
       order: 100
@@ -212,11 +218,8 @@ changelog:
     - title: 'Bug fixes'
       regexp: '^.*?fix(\(\S+\))??!?:.+$'
       order: 200
-    - title: 'Dependency updates'
-      regexp: '^.*?(feat|fix|chore)\(deps\)!?:.+$'
-      order: 300
     - title: 'Documentation updates'
-      regexp: '^.*?doc(\(\S+\))??!?:.+$'
+      regexp: '^.*?docs(\(\S+\))??!?:.+$'
       order: 400
     - title: 'Build process updates'
       regexp: '^.*?build(\(\S+\))??!?:.+$'
@@ -224,8 +227,7 @@ changelog:
     - title: 'CI/CD updates'
       regexp: '^.*?ci(\(\S+\))??!?:.+$'
       order: 600
-    - title: 'Helm chart updates'
-      regexp: '^.*?(feat|fix|chore)\(helm\)!?:.+$'
+
     - title: Other work
       order: 9999
 
