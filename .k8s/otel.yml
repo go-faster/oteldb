@@ -84,7 +84,7 @@ data:
         tls:
           insecure: true
       otlp/oteldb:
-        endpoint: oteldb.faster.svc.cluster.local:4317
+        endpoint: otel-oteldb.faster.svc.cluster.local:4317
         tls:
           insecure: true
     connectors:

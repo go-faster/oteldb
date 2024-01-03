@@ -137,12 +137,11 @@ jobs:
       - name: Deploy
         run: |
           /tmp/kubectl apply -f .k8s/deployment.deploy.yml -f .k8s/service.yaml
-          /tmp/kubectl -n faster rollout status deployment oteldb otelproxy --timeout=1m
-
+          /tmp/kubectl -n faster rollout status deployment otelproxy chotel --timeout=1m
       - name: Deploy (Helm)
         run: |
           helm upgrade --install otel ./helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
-
+          /tmp/kubectl -n faster rollout status deployment otel-oteldb --timeout=1m
   otel:
     environment: prod
     runs-on: ubuntu-latest
