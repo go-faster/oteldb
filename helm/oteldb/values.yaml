@@ -67,6 +67,21 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+config:
+  dsn: "tcp://localhost:9000?username=default&password=secret&database=default"
+  ttl: 0
+  tempo:
+    bind: 0.0.0.0:3200
+  prometheus:
+    bind: 0.0.0.0:9090
+    max_samples: 1_000_000
+    timeout: 1m
+    enable_negative_offset: true
+  loki:
+    bind: 0.0.0.0:3100
+  health_check:
+    bind: 0.0.0.0:13133
+
 autoscaling:
   enabled: false
   minReplicas: 1
