@@ -86,8 +86,8 @@ autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 100
-  CPUUtilizationPercentage: 80
-  #MemoryUtilizationPercentage: 80
+  cpuUtilizationPercentage: 80
+  memoryUtilizationPercentage: 80
 
 nodeSelector: {}
 
