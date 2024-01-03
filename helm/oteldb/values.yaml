@@ -69,7 +69,7 @@ resources: {}
 
 config:
   dsn: "tcp://localhost:9000?username=default&password=secret&database=default"
-  ttl: 0
+  ttl:
   tempo:
     bind: 0.0.0.0:3200
   prometheus:

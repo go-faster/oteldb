@@ -30,7 +30,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "oteldb.fullname" . }}
+            name: {{ include "oteldb.fullname" . }}-cfg
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -50,8 +50,10 @@ spec:
               path: /startup
               port: health-check
           volumeMounts:
-            - mountPath: /etc/otel/config.yaml
+            - mountPath: /etc/otel/
               name: config
+          args:
+            - --config=/etc/otel/config.yml
           ports:
             - containerPort: 19291
               protocol: TCP

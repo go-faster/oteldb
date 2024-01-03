@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "oteldb.fullname" . }}
+  name: {{ include "oteldb.fullname" . }}-cfg
   labels:
     {{- include "oteldb.labels" . | nindent 4 }}
 data:
-  oteldb.yaml: |-
+  config.yml: |-
     {{ .Values.config | toYaml | nindent 4 }}
