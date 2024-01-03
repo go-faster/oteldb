@@ -1,4 +1,4 @@
-1. Get the application URL by running these commands:
+Set up datasources:
 {{- if .Values.ingress.enabled }}
 {{- range $host := .Values.ingress.hosts }}
   {{- range .paths }}
@@ -20,3 +20,8 @@
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
 {{- end }}
+To start sending telemetry:
+- name: OTEL_EXPORTER_OTLP_PROTOCOL
+  value: "grpc"
+- name: OTEL_EXPORTER_OTLP_ENDPOINT
+  value: "http://{{ include "oteldb.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:4317"
