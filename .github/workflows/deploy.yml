@@ -141,7 +141,7 @@ jobs:
 
       - name: Deploy (Helm)
         run: |
-          helm upgrade --install otel .helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
+          helm upgrade --install otel ./helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
 
   otel:
     environment: prod
