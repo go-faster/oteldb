@@ -79,10 +79,6 @@ data:
         # Memory Ballast size should be max 1/3 to 1/2 of memory.
         size_mib: 683
     exporters:
-      otlp/tempo:
-        endpoint: tempo-distributor.monitoring.svc.cluster.local:4317
-        tls:
-          insecure: true
       otlp/oteldb:
         endpoint: otel-oteldb.faster.svc.cluster.local:4317
         tls:
@@ -122,7 +118,7 @@ data:
         traces:
           receivers: [ otlp ]
           processors: [ memory_limiter, k8sattributes, resource, batch ]
-          exporters: [ otlp/tempo, otlp/oteldb ]
+          exporters: [ otlp/oteldb ]
         logs:
           receivers: [ otlp ]
           processors: [ memory_limiter, k8sattributes, resource, batch ]
