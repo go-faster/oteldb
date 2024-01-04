@@ -28,4 +28,6 @@ In no particular order:
   - [ ] Performance tracking commit-to-commit
   - [ ] Write performance
   - [ ] Query set for read performance testing
+- [ ] Documentation for contributors and developers
+- [ ] Documentation for users
 
