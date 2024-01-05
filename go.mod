@@ -58,7 +58,7 @@ require (
 	go.uber.org/zap v1.26.0
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/sync v0.5.0
+	golang.org/x/sync v0.6.0
 	golang.org/x/tools v0.16.1
 	google.golang.org/grpc v1.60.1
 	gopkg.in/yaml.v2 v2.4.0
