@@ -1,0 +1,36 @@
+version: "3"
+
+volumes:
+  prom:
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.10
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:8123:8123"
+    volumes:
+      - ../clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  oteldb:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    environment:
+      - OTELDB_STORAGE=ch
+      - CH_DSN=clickhouse://clickhouse:9000
+      - OTEL_LOG_LEVEL=debug
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+    ports:
+      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:19291:19291"
+    depends_on:
+      - clickhouse

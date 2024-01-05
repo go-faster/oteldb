@@ -22,6 +22,8 @@ secret.yaml
 /otelfaker
 /chotel
 
+vmagent-remotewrite-data
+
 # goreleaser
 dist
 coverage.txt
