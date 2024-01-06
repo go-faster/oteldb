@@ -34,36 +34,35 @@ func (r *Recorder) read(req *http.Request) ([]byte, error) {
 	if t := req.Header.Get("Content-Type"); t != "application/x-protobuf" {
 		return nil, errors.Errorf("unsupported content type %q", t)
 	}
-	switch e := req.Header.Get("Content-Encoding"); e {
-	case "zstd":
-		compressedData, err := io.ReadAll(req.Body)
-		if err != nil {
-			return nil, errors.Wrap(err, "read compressed data")
-		}
-
-		d, err := zstd.NewReader(bytes.NewReader(compressedData))
-		if err != nil {
-			return nil, errors.Wrap(err, "create decoder")
-		}
-		defer d.Close()
-
-		data, err := io.ReadAll(d)
-		if err != nil {
-			return nil, errors.Wrap(err, "read data")
-		}
-		var writeRequest prompb.WriteRequest
-		if err := writeRequest.Unmarshal(data); err != nil {
-			return nil, errors.Wrap(err, "unmarshal request")
-		}
-
-		r.points.Add(uint64(len(writeRequest.Timeseries)))
-		r.requests.Inc()
-		r.bytes.Add(uint64(len(compressedData)))
-
-		return compressedData, nil
-	default:
+	if e := req.Header.Get("Content-Encoding"); e != "zstd" {
 		return nil, errors.Errorf("unsupported encoding %q", e)
 	}
+
+	compressedData, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "read compressed data")
+	}
+
+	d, err := zstd.NewReader(bytes.NewReader(compressedData))
+	if err != nil {
+		return nil, errors.Wrap(err, "create decoder")
+	}
+	defer d.Close()
+
+	data, err := io.ReadAll(d)
+	if err != nil {
+		return nil, errors.Wrap(err, "read data")
+	}
+	var writeRequest prompb.WriteRequest
+	if err := writeRequest.Unmarshal(data); err != nil {
+		return nil, errors.Wrap(err, "unmarshal request")
+	}
+
+	r.points.Add(uint64(len(writeRequest.Timeseries)))
+	r.requests.Inc()
+	r.bytes.Add(uint64(len(compressedData)))
+
+	return compressedData, nil
 }
 
 func fmtInt(v int) string {
