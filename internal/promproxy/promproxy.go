@@ -15,15 +15,17 @@ import (
 var _ promapi.Handler = &Server{}
 
 // NewServer initializes new proxy Server from openapi client.
-func NewServer(api *promapi.Client) *Server {
+func NewServer(api *promapi.Client, rec *Recorder) *Server {
 	return &Server{
 		api: api,
+		rec: rec,
 	}
 }
 
 // Server implement proxy server.
 type Server struct {
 	api *promapi.Client
+	rec *Recorder
 }
 
 // GetLabelValues implements getLabelValues operation.
@@ -70,6 +72,9 @@ func (s *Server) GetQueryExemplars(ctx context.Context, params promapi.GetQueryE
 //
 // GET /api/v1/query_range
 func (s *Server) GetQueryRange(ctx context.Context, params promapi.GetQueryRangeParams) (*promapi.QueryResponse, error) {
+	if err := s.rec.RecordGetQueryRange(params); err != nil {
+		return nil, errors.Wrap(err, "record")
+	}
 	return s.api.GetQueryRange(ctx, params)
 }
 
@@ -85,6 +90,9 @@ func (s *Server) GetRules(ctx context.Context, params promapi.GetRulesParams) (*
 //
 // GET /api/v1/series
 func (s *Server) GetSeries(ctx context.Context, params promapi.GetSeriesParams) (*promapi.SeriesResponse, error) {
+	if err := s.rec.RecordSeriesQuery(params); err != nil {
+		return nil, errors.Wrap(err, "record")
+	}
 	return s.api.GetSeries(ctx, params)
 }
 

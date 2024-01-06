@@ -16,7 +16,7 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://oteldb:9090
+    url: http://otelproxy:9090
     uid: promoteldb
     isDefault: true
 

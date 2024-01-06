@@ -30,9 +30,17 @@ type service struct {
 	name      string
 	handler   http.Handler
 	findRoute httpmiddleware.RouteFinder
+	cleanup   func() error
 }
 
 func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+	if s.cleanup != nil {
+		defer func() {
+			if err := s.cleanup(); err != nil {
+				lg.Error("Cleanup failed", zap.Error(err))
+			}
+		}()
+	}
 	httpServer := &http.Server{
 		Addr:              s.addr,
 		Handler:           ServiceMiddleware(s, lg, m),
@@ -108,9 +116,25 @@ func (s *services) Prometheus(m *app.Metrics) error {
 	if err != nil {
 		return errors.Wrap(err, "create client")
 	}
-
+	var (
+		rec     *promproxy.Recorder
+		cleanup func() error
+	)
+	if fName := os.Getenv(prefix + "_RECORD"); fName != "" {
+		f, err := os.Create(fName) // #nosec G304
+		if err != nil {
+			return errors.Wrap(err, "create record file")
+		}
+		rec = promproxy.NewRecorder(f)
+		cleanup = func() error {
+			if err := f.Close(); err != nil {
+				return errors.Wrap(err, "close record file")
+			}
+			return nil
+		}
+	}
 	server, err := promapi.NewServer(
-		promproxy.NewServer(client),
+		promproxy.NewServer(client, rec),
 		promapi.WithTracerProvider(m.TracerProvider()),
 		promapi.WithMeterProvider(m.MeterProvider()),
 	)
@@ -127,6 +151,7 @@ func (s *services) Prometheus(m *app.Metrics) error {
 		name:      strings.ToLower(prefix),
 		handler:   server,
 		findRoute: httpmiddleware.MakeRouteFinder[promapi.Route](server),
+		cleanup:   cleanup,
 	})
 }
 

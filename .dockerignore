@@ -3,3 +3,6 @@
 /docs
 *.md
 *.Dockerfile
+
+# remore write queries
+*.rwq

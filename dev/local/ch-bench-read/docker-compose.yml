@@ -24,7 +24,7 @@ services:
     environment:
       - OTELDB_STORAGE=ch
       - CH_DSN=clickhouse://clickhouse:9000
-      - OTEL_LOG_LEVEL=debug
+      - OTEL_LOG_LEVEL=info
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
       - OTEL_TRACES_EXPORTER=none
@@ -39,6 +39,21 @@ services:
       - "127.0.0.1:19291:19291"
     depends_on:
       - clickhouse
+
+  otelproxy:
+    build:
+      context: ../../../
+      dockerfile: otelproxy.Dockerfile
+    volumes:
+      - ./record:/record
+    environment:
+      - PROMETHEUS_URL=http://oteldb:9090
+      - PROMETHEUS_RECORD=/record/queries.jsonl
+      - OTEL_LOG_LEVEL=info
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.otelproxy
 
   grafana:
     image: "grafana/grafana:10.0.0"

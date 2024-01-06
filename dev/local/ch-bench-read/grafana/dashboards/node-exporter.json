@@ -23636,7 +23636,7 @@
       "type": "row"
     }
   ],
-  "refresh": "5s",
+  "refresh": false,
   "revision": 1,
   "schemaVersion": 38,
   "style": "dark",
@@ -23648,8 +23648,8 @@
       {
         "current": {
           "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
+          "text": "PromQL",
+          "value": "PromQL"
         },
         "hide": 0,
         "includeAll": false,
@@ -23667,8 +23667,8 @@
       {
         "current": {
           "selected": false,
-          "text": "node-exporter",
-          "value": "node-exporter"
+          "text": "node_exporter",
+          "value": "node_exporter"
         },
         "datasource": {
           "type": "prometheus",
@@ -23685,7 +23685,7 @@
           "query": "label_values(node_uname_info, job)",
           "refId": "Prometheus-job-Variable-Query"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -23697,8 +23697,8 @@
       {
         "current": {
           "selected": false,
-          "text": "node-exporter:9100",
-          "value": "node-exporter:9100"
+          "text": "host-0",
+          "value": "host-0"
         },
         "datasource": {
           "type": "prometheus",
@@ -23715,7 +23715,7 @@
           "query": "label_values(node_uname_info{job=\"$job\"}, instance)",
           "refId": "Prometheus-node-Variable-Query"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -23748,8 +23748,8 @@
     ]
   },
   "time": {
-    "from": "now-5m",
-    "to": "now"
+    "from": "2024-01-06T14:05:29.481Z",
+    "to": "2024-01-06T15:01:09.313Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -23770,6 +23770,6 @@
   "timezone": "browser",
   "title": "Node Exporter Full",
   "uid": "node-exporter",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }
