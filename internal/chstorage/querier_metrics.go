@@ -214,7 +214,6 @@ func (q *Querier) getMetricName(ctx context.Context, name string) (metricMapped 
 		// No mapping found.
 		metricMapped = name
 	}
-	fmt.Println("mapped", name, metricMapped)
 	span.AddEvent("fetched_metric_name_mapping",
 		trace.WithAttributes(
 			attribute.String("chstorage.metric.mapped", metricMapped),
