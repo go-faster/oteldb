@@ -28,3 +28,6 @@ vmagent-remotewrite-data
 dist
 coverage.txt
 .task
+
+# remore write queries
+*.rwq
