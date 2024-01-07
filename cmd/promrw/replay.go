@@ -124,9 +124,10 @@ func (r *Replay) Run(ctx context.Context) error {
 func newReplayCommand() *cobra.Command {
 	var replay Replay
 	cmd := &cobra.Command{
-		Use:   "replay",
-		Short: "Send recorded requests to remote write server",
-		Args:  cobra.NoArgs,
+		Use:     "replay",
+		Aliases: []string{"send"},
+		Short:   "Send recorded requests to remote write server",
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return replay.Run(cmd.Context())
 		},
