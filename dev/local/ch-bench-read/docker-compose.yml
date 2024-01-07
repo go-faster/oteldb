@@ -21,9 +21,12 @@ services:
     build:
       context: ../../../
       dockerfile: Dockerfile
+    command:
+      - --config=/etc/otel/cfg.yml
+    volumes:
+      - ./oteldb.yml:/etc/otel/cfg.yml:ro
     environment:
       - OTELDB_STORAGE=ch
-      - CH_DSN=clickhouse://clickhouse:9000
       - OTEL_LOG_LEVEL=info
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none

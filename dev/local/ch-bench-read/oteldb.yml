@@ -1,0 +1,20 @@
+prometheus:
+  bind: 0.0.0.0:9090
+  max_samples: 1_000_000
+  timeout: 1m
+  enable_negative_offset: true
+health_check:
+  bind: 0.0.0.0:13133
+otelcol:
+  receivers:
+    prometheusremotewrite:
+      endpoint: 0.0.0.0:19291
+      time_threshold: 100_000 # hours
+  exporters:
+    oteldbexporter:
+      dsn: clickhouse://clickhouse:9000
+  service:
+    pipelines:
+      metrics:
+        receivers: [prometheusremotewrite]
+        exporters: [oteldbexporter]

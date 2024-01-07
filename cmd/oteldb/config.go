@@ -35,7 +35,7 @@ func loadConfig(name string) (cfg Config, _ error) {
 	return cfg, nil
 }
 
-// Config is a oteldb config.
+// Config is the oteldb config.
 type Config struct {
 	DSN         string            `json:"dsn" yaml:"dsn"`
 	TTL         time.Duration     `json:"ttl" yaml:"ttl"`
