@@ -38,8 +38,8 @@ services:
       timeout: 1s
       retries: 30
     ports:
-      - "127.0.0.1:9090:9090"
-      - "127.0.0.1:19291:19291"
+      - "127.0.0.1:9090:9090"   # promql
+      - "127.0.0.1:19291:19291" # prometheus remote write
     depends_on:
       - clickhouse
 
