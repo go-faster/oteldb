@@ -17,14 +17,14 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type Sender struct {
+type Replay struct {
 	Target  string
 	Source  string
 	Workers int
 }
 
-func (s *Sender) Run(ctx context.Context) error {
-	f, err := os.Open(s.Source)
+func (r *Replay) Run(ctx context.Context) error {
+	f, err := os.Open(r.Source)
 	if err != nil {
 		return errors.Wrap(err, "open file")
 	}
@@ -50,7 +50,7 @@ func (s *Sender) Run(ctx context.Context) error {
 	fn := func(data []byte) error {
 		ctx, cancel := context.WithTimeout(ctx, time.Minute)
 		defer cancel()
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.Target, bytes.NewReader(data))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, r.Target, bytes.NewReader(data))
 		if err != nil {
 			return errors.Wrap(err, "create request")
 		}
@@ -75,7 +75,7 @@ func (s *Sender) Run(ctx context.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	inputs := make(chan []byte)
-	for i := 0; i < s.Workers; i++ {
+	for i := 0; i < r.Workers; i++ {
 		g.Go(func() error {
 			for {
 				select {
@@ -121,18 +121,18 @@ func (s *Sender) Run(ctx context.Context) error {
 	return nil
 }
 
-func newSenderCommand() *cobra.Command {
-	var sender Sender
+func newReplayCommand() *cobra.Command {
+	var replay Replay
 	cmd := &cobra.Command{
-		Use:   "send",
+		Use:   "replay",
 		Short: "Send recorded requests to remote write server",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return sender.Run(cmd.Context())
+			return replay.Run(cmd.Context())
 		},
 	}
-	cmd.Flags().StringVar(&sender.Target, "target", "http://127.0.0.1:19291", "Target server")
-	cmd.Flags().StringVarP(&sender.Source, "input", "i", "requests.rwq", "Source file")
-	cmd.Flags().IntVarP(&sender.Workers, "workers", "j", 8, "Number of workers")
+	cmd.Flags().StringVar(&replay.Target, "target", "http://127.0.0.1:19291", "Target server")
+	cmd.Flags().StringVarP(&replay.Source, "input", "i", "requests.rwq", "Source file")
+	cmd.Flags().IntVarP(&replay.Workers, "workers", "j", 8, "Number of workers")
 	return cmd
 }

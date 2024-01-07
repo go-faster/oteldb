@@ -1,4 +1,3 @@
-// Binary prombench implements https://github.com/VictoriaMetrics/prometheus-benchmark as a single binary.
 package main
 
 import (
@@ -17,7 +16,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -26,15 +24,16 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
+	"github.com/spf13/cobra"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/promapi"
 )
 
-type App struct {
+type Bench struct {
 	addr                       string
 	node                       atomic.Pointer[[]byte]
 	cfg                        atomic.Pointer[config]
@@ -60,10 +59,10 @@ type metricsInfo struct {
 	Hash  string
 }
 
-func (a *App) PollNodeExporter(ctx context.Context) {
-	ticker := time.NewTicker(a.pollExporterInterval)
+func (s *Bench) PollNodeExporter(ctx context.Context) {
+	ticker := time.NewTicker(s.pollExporterInterval)
 	defer ticker.Stop()
-	if err := a.fetchNodeExporter(ctx); err != nil {
+	if err := s.fetchNodeExporter(ctx); err != nil {
 		zctx.From(ctx).Error("cannot fetch node exporter", zap.Error(err))
 	}
 	for {
@@ -71,18 +70,18 @@ func (a *App) PollNodeExporter(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := a.fetchNodeExporter(ctx); err != nil {
+			if err := s.fetchNodeExporter(ctx); err != nil {
 				zctx.From(ctx).Error("cannot fetch node exporter", zap.Error(err))
 			}
 		}
 	}
 }
 
-func (a *App) fetchNodeExporter(ctx context.Context) error {
+func (s *Bench) fetchNodeExporter(ctx context.Context) error {
 	u := &url.URL{
 		Scheme: "http",
 		Path:   "/metrics",
-		Host:   a.nodeExporterAddr,
+		Host:   s.nodeExporterAddr,
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), http.NoBody)
 	if err != nil {
@@ -99,13 +98,13 @@ func (a *App) fetchNodeExporter(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	a.node.Store(&data)
+	s.node.Store(&data)
 
 	// Count metrics.
 	var metricsCount int
-	s := bufio.NewScanner(bytes.NewReader(data))
-	for s.Scan() {
-		text := strings.TrimSpace(s.Text())
+	sc := bufio.NewScanner(bytes.NewReader(data))
+	for sc.Scan() {
+		text := strings.TrimSpace(sc.Text())
 		if text == "" || strings.HasPrefix(text, "#") {
 			continue
 		}
@@ -113,7 +112,7 @@ func (a *App) fetchNodeExporter(ctx context.Context) error {
 	}
 	d := sha256.Sum256(data)
 	h := fmt.Sprintf("%x", d[:8])
-	a.metricsInfo.Store(&metricsInfo{
+	s.metricsInfo.Store(&metricsInfo{
 		Count: metricsCount,
 		Size:  len(data),
 		Hash:  h,
@@ -121,18 +120,18 @@ func (a *App) fetchNodeExporter(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) HandleConfig(w http.ResponseWriter, _ *http.Request) {
+func (s *Bench) HandleConfig(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	v := a.cfg.Load()
+	v := s.cfg.Load()
 	_, _ = w.Write(v.marshalYAML())
 }
 
-func (a *App) ProgressConfig(ctx context.Context) error {
+func (s *Bench) ProgressConfig(ctx context.Context) error {
 	// https://github.com/VictoriaMetrics/prometheus-benchmark/blob/50c5891/services/vmagent-config-updater/main.go#L33-L48
 	rev := 0
 	r := rand.New(rand.NewSource(1)) // #nosec G404
-	p := a.scrapeConfigUpdatePercent / 100
-	ticker := time.NewTicker(a.scrapeConfigUpdateInterval)
+	p := s.scrapeConfigUpdatePercent / 100
+	ticker := time.NewTicker(s.scrapeConfigUpdateInterval)
 	for {
 		select {
 		case <-ctx.Done():
@@ -140,7 +139,7 @@ func (a *App) ProgressConfig(ctx context.Context) error {
 		case <-ticker.C:
 			rev++
 			revStr := fmt.Sprintf("r%d", rev)
-			cfg := a.cfg.Load()
+			cfg := s.cfg.Load()
 			for _, sc := range cfg.ScrapeConfigs {
 				for _, stc := range sc.StaticConfigs {
 					if r.Float64() >= p {
@@ -149,14 +148,14 @@ func (a *App) ProgressConfig(ctx context.Context) error {
 					stc.Labels["revision"] = revStr
 				}
 			}
-			a.cfg.Store(cfg)
+			s.cfg.Store(cfg)
 		}
 	}
 }
 
-func (a *App) HandleNodeExporter(w http.ResponseWriter, _ *http.Request) {
+func (s *Bench) HandleNodeExporter(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	v := a.node.Load()
+	v := s.node.Load()
 	if v == nil {
 		_, _ = w.Write([]byte("# no data"))
 		return
@@ -177,9 +176,9 @@ type storageInfo struct {
 	PointsPerSecond  int
 }
 
-func (a *App) fetchClickhouseStats(ctx context.Context) error {
+func (s *Bench) fetchClickhouseStats(ctx context.Context) error {
 	client, err := ch.Dial(ctx, ch.Options{
-		Address: a.clickhouseAddr,
+		Address: s.clickhouseAddr,
 	})
 	if err != nil {
 		return errors.Wrap(err, "dial")
@@ -303,12 +302,12 @@ order by parts.disk_size desc`
 		}
 	}
 
-	a.storageInfo.Store(&info)
+	s.storageInfo.Store(&info)
 
 	return nil
 }
 
-func (a *App) RunClickhouseReporter(ctx context.Context) error {
+func (s *Bench) RunClickhouseReporter(ctx context.Context) error {
 	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 	for {
@@ -316,17 +315,11 @@ func (a *App) RunClickhouseReporter(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := a.fetchClickhouseStats(ctx); err != nil {
+			if err := s.fetchClickhouseStats(ctx); err != nil {
 				zctx.From(ctx).Error("cannot fetch clickhouse stats", zap.Error(err))
 			}
 		}
 	}
-}
-
-func fmtInt(v int) string {
-	s := humanize.SIWithDigits(float64(v), 0, "")
-	s = strings.ReplaceAll(s, " ", "")
-	return s
 }
 
 func compactBytes(v int) string {
@@ -335,7 +328,7 @@ func compactBytes(v int) string {
 	return s
 }
 
-func (a *App) RunReporter(ctx context.Context) error {
+func (s *Bench) RunReporter(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second * 2)
 	defer ticker.Stop()
 	var lastHash string
@@ -344,7 +337,7 @@ func (a *App) RunReporter(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			info := a.metricsInfo.Load()
+			info := s.metricsInfo.Load()
 			if info == nil {
 				zctx.From(ctx).Info("no metrics info")
 				continue
@@ -355,24 +348,24 @@ func (a *App) RunReporter(ctx context.Context) error {
 				}
 				lastHash = info.Hash
 			}
-			var s strings.Builder
-			s.WriteString(fmt.Sprintf("m=%s", fmtInt(info.Count*a.targetsCount)))
-			if v := a.storageInfo.Load(); v != nil && a.clickhouseAddr != "" {
+			var b strings.Builder
+			b.WriteString(fmt.Sprintf("m=%s", fmtInt(info.Count*s.targetsCount)))
+			if v := s.storageInfo.Load(); v != nil && s.clickhouseAddr != "" {
 				now := time.Now()
-				s.WriteString(" ")
-				s.WriteString(fmt.Sprintf("uptime=%s", now.Sub(v.Start).Round(time.Second)))
-				s.WriteString(" ")
+				b.WriteString(" ")
+				b.WriteString(fmt.Sprintf("uptime=%s", now.Sub(v.Start).Round(time.Second)))
+				b.WriteString(" ")
 				if v.Delta != -1 {
-					s.WriteString(fmt.Sprintf("lag=%s", v.Delta.Round(time.Second)))
+					b.WriteString(fmt.Sprintf("lag=%s", v.Delta.Round(time.Second)))
 				} else {
-					s.WriteString("lag=N/A")
+					b.WriteString("lag=N/A")
 				}
-				s.WriteString(" ")
-				s.WriteString(fmt.Sprintf("pps=%s", fmtInt(v.PointsPerSecond)))
-				s.WriteString(" ")
-				s.WriteString(fmt.Sprintf("rows=%s", fmtInt(v.Rows)))
-				s.WriteString(" ")
-				s.WriteString(
+				b.WriteString(" ")
+				b.WriteString(fmt.Sprintf("pps=%s", fmtInt(v.PointsPerSecond)))
+				b.WriteString(" ")
+				b.WriteString(fmt.Sprintf("rows=%s", fmtInt(v.Rows)))
+				b.WriteString(" ")
+				b.WriteString(
 					fmt.Sprintf("%s -> %s (%.0fx)",
 						compactBytes(v.CompressedSize),
 						compactBytes(v.UncompressedSize),
@@ -380,8 +373,8 @@ func (a *App) RunReporter(ctx context.Context) error {
 					),
 				)
 				bytesPerPoint := float64(v.CompressedSize) / float64(v.Rows)
-				s.WriteString(" ")
-				s.WriteString(fmt.Sprintf("%.1f b/point", bytesPerPoint))
+				b.WriteString(" ")
+				b.WriteString(fmt.Sprintf("%.1f b/point", bytesPerPoint))
 
 				type metric struct {
 					Name    string
@@ -394,16 +387,16 @@ func (a *App) RunReporter(ctx context.Context) error {
 				} {
 					rowsPerDay := v.PointsPerSecond * m.Seconds
 					dataPerDay := float64(rowsPerDay) / float64(v.Rows) * float64(v.CompressedSize)
-					s.WriteString(" ")
-					s.WriteString(fmt.Sprintf("%s/%s", compactBytes(int(dataPerDay)), m.Name))
+					b.WriteString(" ")
+					b.WriteString(fmt.Sprintf("%s/%s", compactBytes(int(dataPerDay)), m.Name))
 				}
 			}
-			fmt.Println(s.String())
+			fmt.Println(b.String())
 		}
 	}
 }
 
-func (a *App) RunNodeExporter(ctx context.Context) error {
+func (s *Bench) RunNodeExporter(ctx context.Context) error {
 	args := []string{
 		"--no-collector.wifi",
 		"--no-collector.hwmon",
@@ -414,7 +407,7 @@ func (a *App) RunNodeExporter(ctx context.Context) error {
 		"--no-collector.netstat",
 		"--collector.processes",
 		"--web.max-requests=40",
-		"--web.listen-address=" + a.nodeExporterAddr,
+		"--web.listen-address=" + s.nodeExporterAddr,
 		"--log.format=json",
 	}
 	// #nosec G204
@@ -424,16 +417,16 @@ func (a *App) RunNodeExporter(ctx context.Context) error {
 	return cmd.Run()
 }
 
-func (a *App) RunAgent(ctx context.Context) error {
-	if len(a.targets) != 1 {
+func (s *Bench) RunAgent(ctx context.Context) error {
+	if len(s.targets) != 1 {
 		return errors.New("expected one target")
 	}
 	arg := []string{
-		"--httpListenAddr=" + a.agentAddr,
+		"--httpListenAddr=" + s.agentAddr,
 		"--loggerFormat=json",
 		"--remoteWrite.showURL",
-		"--promscrape.config=http://" + a.addr + "/config",
-		"--remoteWrite.url=" + a.targets[0],
+		"--promscrape.config=http://" + s.addr + "/config",
+		"--remoteWrite.url=" + s.targets[0],
 		"--remoteWrite.forceVMProto",
 	}
 	// #nosec G204
@@ -443,18 +436,18 @@ func (a *App) RunAgent(ctx context.Context) error {
 	return cmd.Run()
 }
 
-func (a *App) RunPrometheus(ctx context.Context, dir string) error {
+func (s *Bench) RunPrometheus(ctx context.Context, dir string) error {
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
 	prometheusConfigFile := filepath.Join(dir, "prometheus.yml")
-	if err := os.WriteFile(prometheusConfigFile, a.cfg.Load().marshalYAML(), 0o600); err != nil {
+	if err := os.WriteFile(prometheusConfigFile, s.cfg.Load().marshalYAML(), 0o600); err != nil {
 		return err
 	}
 	// #nosec G204
 	cmd := exec.CommandContext(ctx, "prometheus",
 		"--config.file="+filepath.Join(dir, "prometheus.yml"),
-		"--web.listen-address="+a.agentAddr,
+		"--web.listen-address="+s.agentAddr,
 		"--enable-feature=agent",
 		"--enable-feature=new-service-discovery-manager",
 		"--log.format=json",
@@ -471,7 +464,7 @@ func (a *App) RunPrometheus(ctx context.Context, dir string) error {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				if err := os.WriteFile(prometheusConfigFile, a.cfg.Load().marshalYAML(), 0o600); err != nil {
+				if err := os.WriteFile(prometheusConfigFile, s.cfg.Load().marshalYAML(), 0o600); err != nil {
 					zctx.From(ctx).Error("cannot update prometheus config", zap.Error(err))
 				}
 				if err := cmd.Process.Signal(syscall.SIGHUP); err != nil {
@@ -483,11 +476,11 @@ func (a *App) RunPrometheus(ctx context.Context, dir string) error {
 	return cmd.Run()
 }
 
-func (a *App) prometheusConfig() *config {
-	cfg := newConfig(a.targetsCount, a.scrapeInterval, a.addr)
-	if !a.useVictoria {
+func (s *Bench) prometheusConfig() *config {
+	cfg := newConfig(s.targetsCount, s.scrapeInterval, s.addr)
+	if !s.useVictoria {
 		var remotes []*remoteWriteConfig
-		for i, target := range a.targets {
+		for i, target := range s.targets {
 			remotes = append(remotes, &remoteWriteConfig{
 				URL:  target,
 				Name: fmt.Sprintf("target-%d", i),
@@ -502,22 +495,22 @@ func (a *App) prometheusConfig() *config {
 	return cfg
 }
 
-func (a *App) parseTargets() {
+func (s *Bench) parseTargets() {
 	for _, arg := range flag.Args() {
 		u, err := url.Parse(arg)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "invalid target:", err)
 			os.Exit(1)
 		}
-		a.targets = append(a.targets, u.String())
+		s.targets = append(s.targets, u.String())
 	}
-	if len(a.targets) == 0 {
+	if len(s.targets) == 0 {
 		fmt.Fprintln(os.Stderr, "no targets specified")
 		os.Exit(1)
 	}
 }
 
-func (a *App) waitForTarget(ctx context.Context, target string) error {
+func (s *Bench) waitForTarget(ctx context.Context, target string) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 
@@ -544,36 +537,36 @@ func (a *App) waitForTarget(ctx context.Context, target string) error {
 	})
 }
 
-func (a *App) run(ctx context.Context, _ *zap.Logger, _ *app.Metrics) error {
-	a.cfg.Store(a.prometheusConfig())
+func (s *Bench) run(ctx context.Context) error {
+	s.cfg.Store(s.prometheusConfig())
 
 	// First, wait for target to be available.
-	for _, target := range a.targets {
-		if err := a.waitForTarget(ctx, target); err != nil {
+	for _, target := range s.targets {
+		if err := s.waitForTarget(ctx, target); err != nil {
 			return err
 		}
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
-		return a.ProgressConfig(ctx)
+		return s.ProgressConfig(ctx)
 	})
-	if a.clickhouseAddr != "" {
+	if s.clickhouseAddr != "" {
 		g.Go(func() error {
-			return a.RunClickhouseReporter(ctx)
+			return s.RunClickhouseReporter(ctx)
 		})
 	}
-	if a.queryAddr != "" {
+	if s.queryAddr != "" {
 		g.Go(func() error {
-			return a.RunQueryReporter(ctx)
+			return s.RunQueryReporter(ctx)
 		})
 	}
 	g.Go(func() error {
-		return a.RunReporter(ctx)
+		return s.RunReporter(ctx)
 	})
-	if a.useVictoria {
+	if s.useVictoria {
 		g.Go(func() error {
-			return a.RunAgent(ctx)
+			return s.RunAgent(ctx)
 		})
 	} else {
 		prometheusDir, err := os.MkdirTemp("", "prometheus")
@@ -581,22 +574,22 @@ func (a *App) run(ctx context.Context, _ *zap.Logger, _ *app.Metrics) error {
 			return err
 		}
 		g.Go(func() error {
-			return a.RunPrometheus(ctx, prometheusDir)
+			return s.RunPrometheus(ctx, prometheusDir)
 		})
 	}
 	g.Go(func() error {
-		return a.RunNodeExporter(ctx)
+		return s.RunNodeExporter(ctx)
 	})
 	g.Go(func() error {
-		a.PollNodeExporter(ctx)
+		s.PollNodeExporter(ctx)
 		return nil
 	})
 	g.Go(func() error {
 		mux := http.NewServeMux()
-		mux.HandleFunc("/node", a.HandleNodeExporter)
-		mux.HandleFunc("/config", a.HandleConfig)
+		mux.HandleFunc("/node", s.HandleNodeExporter)
+		mux.HandleFunc("/config", s.HandleConfig)
 		srv := &http.Server{
-			Addr:              a.addr,
+			Addr:              s.addr,
 			Handler:           mux,
 			ReadHeaderTimeout: time.Second * 5,
 		}
@@ -622,7 +615,7 @@ type cpuQueryStats struct {
 	Latest   time.Time
 }
 
-func (a *App) runQueryCPU(ctx context.Context, client promapi.Invoker) (*cpuQueryStats, error) {
+func (s *Bench) runQueryCPU(ctx context.Context, client promapi.Invoker) (*cpuQueryStats, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 
@@ -662,13 +655,13 @@ func (a *App) runQueryCPU(ctx context.Context, client promapi.Invoker) (*cpuQuer
 	return stats, nil
 }
 
-func (a *App) RunQueryReporter(ctx context.Context) error {
-	client, err := promapi.NewClient(a.queryAddr)
+func (s *Bench) RunQueryReporter(ctx context.Context) error {
+	client, err := promapi.NewClient(s.queryAddr)
 	if err != nil {
 		return errors.Wrap(err, "create prometheus client")
 	}
 
-	ticker := time.NewTicker(a.queryInterval)
+	ticker := time.NewTicker(s.queryInterval)
 	defer ticker.Stop()
 
 	for {
@@ -676,44 +669,51 @@ func (a *App) RunQueryReporter(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			stats, err := a.runQueryCPU(ctx, client)
-			var s strings.Builder
-			s.WriteString("query: ")
+			stats, err := s.runQueryCPU(ctx, client)
+			var b strings.Builder
+			b.WriteString("query: ")
 			if err != nil {
-				s.WriteString(err.Error())
+				b.WriteString(err.Error())
 				continue
 			}
 			if stats.Count > 0 {
-				s.WriteString(fmt.Sprintf("cpu=%s", fmtInt(stats.Count)))
+				b.WriteString(fmt.Sprintf("cpu=%s", fmtInt(stats.Count)))
 			} else {
-				s.WriteString("cpu=N/A")
+				b.WriteString("cpu=N/A")
 			}
-			s.WriteString(" ")
-			s.WriteString(fmt.Sprintf("d=%s", stats.Duration.Round(time.Millisecond)))
+			b.WriteString(" ")
+			b.WriteString(fmt.Sprintf("d=%s", stats.Duration.Round(time.Millisecond)))
 			if !stats.Latest.IsZero() {
-				s.WriteString(" ")
-				s.WriteString(fmt.Sprintf("lag=%s", time.Since(stats.Latest).Round(time.Millisecond)))
+				b.WriteString(" ")
+				b.WriteString(fmt.Sprintf("lag=%s", time.Since(stats.Latest).Round(time.Millisecond)))
 			}
-			fmt.Println(s.String())
+			fmt.Println(b.String())
 		}
 	}
 }
 
-func main() {
-	var a App
-	flag.StringVar(&a.nodeExporterAddr, "nodeExporterAddr", "127.0.0.1:9301", "address for node exporter to listen")
-	flag.StringVar(&a.addr, "addr", "127.0.0.1:8428", "address to listen")
-	flag.StringVar(&a.agentAddr, "agentAddr", "127.0.0.1:8429", "address for vmagent to listen")
-	flag.IntVar(&a.targetsCount, "targetsCount", 100, "The number of scrape targets to return from -httpListenAddr. Each target has the same address defined by -targetAddr")
-	flag.DurationVar(&a.scrapeInterval, "scrapeInterval", time.Second*5, "The scrape_interval to set at the scrape config returned from -httpListenAddr")
-	flag.DurationVar(&a.pollExporterInterval, "pollExporterInterval", time.Second, "Interval to poll the node exporter filling up cache")
-	flag.DurationVar(&a.scrapeConfigUpdateInterval, "scrapeConfigUpdateInterval", time.Minute*10, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr every -scrapeConfigUpdateInterval")
-	flag.Float64Var(&a.scrapeConfigUpdatePercent, "scrapeConfigUpdatePercent", 1, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr ever -scrapeConfigUpdateInterval")
-	flag.StringVar(&a.clickhouseAddr, "clickhouseAddr", "", "clickhouse tcp protocol addr to get actual stats from")
-	flag.StringVar(&a.queryAddr, "queryAddr", "", "addr to query PromQL from")
-	flag.DurationVar(&a.queryInterval, "queryInterval", time.Second*5, "interval to query PromQL")
-	flag.BoolVar(&a.useVictoria, "useVictoria", true, "use vmagent instead of prometheus")
-	flag.Parse()
-	a.parseTargets()
-	app.Run(a.run)
+func newBenchCommand() *cobra.Command {
+	var b Bench
+	cmd := &cobra.Command{
+		Use:   "bench",
+		Short: "Start remote write benchmark",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			b.parseTargets()
+			return b.run(cmd.Context())
+		},
+	}
+	f := cmd.Flags()
+	f.StringVar(&b.nodeExporterAddr, "nodeExporterAddr", "127.0.0.1:9301", "address for node exporter to listen")
+	f.StringVar(&b.addr, "addr", "127.0.0.1:8428", "address to listen")
+	f.StringVar(&b.agentAddr, "agentAddr", "127.0.0.1:8429", "address for vmagent to listen")
+	f.IntVar(&b.targetsCount, "targetsCount", 100, "The number of scrape targets to return from -httpListenAddr. Each target has the same address defined by -targetAddr")
+	f.DurationVar(&b.scrapeInterval, "scrapeInterval", time.Second*5, "The scrape_interval to set at the scrape config returned from -httpListenAddr")
+	f.DurationVar(&b.pollExporterInterval, "pollExporterInterval", time.Second, "Interval to poll the node exporter filling up cache")
+	f.DurationVar(&b.scrapeConfigUpdateInterval, "scrapeConfigUpdateInterval", time.Minute*10, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr every -scrapeConfigUpdateInterval")
+	f.Float64Var(&b.scrapeConfigUpdatePercent, "scrapeConfigUpdatePercent", 1, "The -scrapeConfigUpdatePercent scrape targets are updated in the scrape config returned from -httpListenAddr ever -scrapeConfigUpdateInterval")
+	f.StringVar(&b.clickhouseAddr, "clickhouseAddr", "", "clickhouse tcp protocol addr to get actual stats from")
+	f.StringVar(&b.queryAddr, "queryAddr", "", "addr to query PromQL from")
+	f.DurationVar(&b.queryInterval, "queryInterval", time.Second*5, "interval to query PromQL")
+	f.BoolVar(&b.useVictoria, "useVictoria", true, "use vmagent instead of prometheus")
+	return cmd
 }

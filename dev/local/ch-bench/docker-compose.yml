@@ -17,7 +17,7 @@ services:
   attacker:
     build:
       context: ../../../
-      dockerfile: prombench.Dockerfile
+      dockerfile: promrw.Dockerfile
     environment:
       - OTEL_LOG_LEVEL=info
       - OTEL_METRICS_EXPORTER=none
@@ -25,6 +25,7 @@ services:
       - OTEL_TRACES_EXPORTER=none
       - OTEL_RESOURCE_ATTRIBUTES=service.name=attacker
     command:
+      - bench
       - --scrapeInterval=5s
       - --targetsCount=500
       - --scrapeConfigUpdateInterval=1m

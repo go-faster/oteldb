@@ -20,7 +20,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type Recorder struct {
+type Record struct {
 	Addr     string
 	Duration time.Duration
 	Output   string
@@ -30,7 +30,7 @@ type Recorder struct {
 	bytes    atomic.Uint64
 }
 
-func (r *Recorder) read(req *http.Request) ([]byte, error) {
+func (r *Record) read(req *http.Request) ([]byte, error) {
 	if t := req.Header.Get("Content-Type"); t != "application/x-protobuf" {
 		return nil, errors.Errorf("unsupported content type %q", t)
 	}
@@ -71,7 +71,7 @@ func fmtInt(v int) string {
 	return s
 }
 
-func (r *Recorder) Run(ctx context.Context) (rerr error) {
+func (r *Record) Run(ctx context.Context) (rerr error) {
 	fmt.Println("listening on", "http://"+r.Addr)
 	fmt.Println("writing to", r.Output, "for", r.Duration)
 	f, err := os.Create(r.Output)
@@ -158,8 +158,8 @@ func (r *Recorder) Run(ctx context.Context) (rerr error) {
 	return g.Wait()
 }
 
-func newRecorderCommand() *cobra.Command {
-	var recorder Recorder
+func newRecordCommand() *cobra.Command {
+	var recorder Record
 	cmd := &cobra.Command{
 		Use:   "record",
 		Args:  cobra.NoArgs,

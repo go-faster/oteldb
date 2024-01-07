@@ -1,7 +1,7 @@
 # ch-bench
 
 This docker compose project will run a [prometheus-benchmark](https://github.com/VictoriaMetrics/prometheus-benchmark)
-composed as a single binary (see ./cmd/prombench) against single instance of oteldb.
+composed as a single binary (see ./cmd/promrw bench) against single instance of oteldb.
 
 The `probmench` runs `node_exporter` and `vmagent`, acting as a dynamic configuration source for `vmagent` scrape targets
 and a caching proxy before `node_exporter`.

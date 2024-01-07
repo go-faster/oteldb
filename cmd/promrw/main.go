@@ -13,11 +13,14 @@ import (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "promrw",
-		Short: "promrw is a tool for recording and sending prometheus remote write requests",
+		Short: "promrw is a benchmarking suite for prometheus remote write",
+
+		SilenceUsage: true,
 	}
 	rootCmd.AddCommand(
-		newRecorderCommand(),
-		newSenderCommand(),
+		newRecordCommand(),
+		newReplayCommand(),
+		newBenchCommand(),
 	)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
