@@ -8,6 +8,9 @@ ignore:
   - "internal/pyroproxy/"
   # Skip vendored-forked
   - "internal/promcompliance/"
+  # Skip benchmarks
+  - "cmd/otelbench/"
+  - "cmd/promrw/"
 coverage:
   status:
     project: false
