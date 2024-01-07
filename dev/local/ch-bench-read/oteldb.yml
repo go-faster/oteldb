@@ -1,3 +1,4 @@
+dsn: clickhouse://clickhouse:9000
 prometheus:
   bind: 0.0.0.0:9090
   max_samples: 1_000_000

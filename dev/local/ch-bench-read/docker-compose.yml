@@ -10,7 +10,7 @@ services:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:8123:8123"
     volumes:
-      - ../clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
     healthcheck:
       test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
       interval: 1s
@@ -30,7 +30,10 @@ services:
       - OTEL_LOG_LEVEL=info
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
-      - OTEL_TRACES_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_TRACES_SAMPLER=parentbased_always_off
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
     healthcheck:
       test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:13133/liveness']
@@ -40,6 +43,21 @@ services:
     ports:
       - "127.0.0.1:9090:9090"   # promql
       - "127.0.0.1:19291:19291" # prometheus remote write
+    depends_on:
+      - clickhouse
+
+  # Exports traces from clickhouse internal table to otel.
+  chotel:
+    restart: always
+    build:
+      context: ../../../
+      dockerfile: chotel.Dockerfile
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb.chotel
+      - CHOTEL_SEND_RATE=50ms
     depends_on:
       - clickhouse
 
@@ -57,6 +75,24 @@ services:
       - OTEL_LOGS_EXPORTER=none
       - OTEL_TRACES_EXPORTER=none
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.otelproxy
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yml" ]
+    ports:
+      - "127.0.0.1:3200:3200"
+    volumes:
+      - ./tempo.yml:/etc/tempo.yml
+
+  # https://opentelemetry.io/docs/collector/installation/#docker-compose
+  otelcol:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0
+    volumes:
+      - ./otelcol.yml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "127.0.0.1:4317:4317"
+    command:
+      - '--config'
+      - '/etc/otelcol-contrib/config.yaml'
 
   grafana:
     image: "grafana/grafana:10.0.0"
@@ -70,7 +106,7 @@ services:
       - GF_LOG_LEVEL=debug
       - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
       - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml

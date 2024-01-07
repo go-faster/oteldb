@@ -57,6 +57,7 @@ type App struct {
 	otlpAddr string
 
 	latest time.Time
+	rate   time.Duration
 
 	spansSaved    metric.Int64Counter
 	traceExporter *otlptrace.Exporter
@@ -83,6 +84,14 @@ func NewApp(lg *zap.Logger, metrics *app.Metrics) (*App, error) {
 		clickHousePassword: "",
 		clickHouseDB:       "default",
 		otlpAddr:           "otelcol:4317",
+		rate:               time.Millisecond * 500,
+	}
+	if v := os.Getenv("CHOTEL_SEND_RATE"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			return nil, errors.Wrap(err, "parse CHOTEL_SEND_RATE")
+		}
+		a.rate = d
 	}
 	if v := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"); v != "" {
 		a.otlpAddr = strings.TrimPrefix(v, "http://")
@@ -306,7 +315,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 }
 
 func (a *App) runSender(ctx context.Context) error {
-	ticker := time.NewTicker(time.Millisecond * 500)
+	ticker := time.NewTicker(a.rate)
 	defer ticker.Stop()
 
 	// First immediate tick.
