@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"flag"
 	"fmt"
 	"io"
 	"math/rand"
@@ -495,19 +494,18 @@ func (s *Bench) prometheusConfig() *config {
 	return cfg
 }
 
-func (s *Bench) parseTargets() {
-	for _, arg := range flag.Args() {
+func (s *Bench) parseTargets(args []string) error {
+	for _, arg := range args {
 		u, err := url.Parse(arg)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "invalid target:", err)
-			os.Exit(1)
+			return errors.Wrap(err, "parse url")
 		}
 		s.targets = append(s.targets, u.String())
 	}
 	if len(s.targets) == 0 {
-		fmt.Fprintln(os.Stderr, "no targets specified")
-		os.Exit(1)
+		return errors.New("no targets")
 	}
+	return nil
 }
 
 func (s *Bench) waitForTarget(ctx context.Context, target string) error {
@@ -697,8 +695,11 @@ func newBenchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bench",
 		Short: "Start remote write benchmark",
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b.parseTargets()
+			if err := b.parseTargets(args); err != nil {
+				return err
+			}
 			return b.run(cmd.Context())
 		},
 	}
