@@ -1,0 +1,22 @@
+---
+cff-version: 1.2.0
+version: 0.6.1
+title: "oteldb: OpenTelemetry-first signal aggregation system"
+license: Apache 2.0
+abstract: >
+   The next generation, OpenTelemetry-first aggregation system for metrics, traces and logs.
+   Compatible with PromQL, TraceQL and LogQL.
+   Based on ClickHouse, fastest open-source (Apache 2.0) column-oriented database.
+authors:
+  - family-names: Aleksandr
+    given-names: Razumov
+    affiliation: go-faster.org
+    orcid: "https://orcid.org/0009-0009-8907-3954"
+date-released: "2024-01-08"
+keywords:
+  - observability
+  - opentelemetry
+  - golang
+repository-code: "https://github.com/go-faster/oteldb"
+type: software
+message: "Available at https://github.com/go-faster/oteldb"
