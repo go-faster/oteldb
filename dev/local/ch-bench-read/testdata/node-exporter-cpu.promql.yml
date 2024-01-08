@@ -1,0 +1,17 @@
+end: "2024-01-08T21:50:00Z"
+range:
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter",
+    mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[1m0s]))
+    / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter",
+    mode="idle"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter",
+    mode="iowait"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter",
+    mode="system"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter",
+    mode="user"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter",
+    mode=~".*irq"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+start: "2024-01-08T21:18:15Z"
+step: 15

@@ -1,0 +1,447 @@
+queries:
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter", mode="system"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+    duration_nanos: 667346000
+    queries:
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3031
+        read_rows: 1490
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') = 'system'
+          	OR JSONExtractString(resource, 'mode') = 'system'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3018
+        read_rows: 1489
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+      - query: |-
+          SELECT name, timestamp, mapping, value, flags, attributes, resource FROM `metrics_points` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        read_bytes: 7945488811
+        read_rows: 69181440
+        memory_usage: 84829247
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter", mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+    duration_nanos: 2387000
+    queries:
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3096
+        read_rows: 1495
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND NOT (
+          JSONExtractString(attributes, 'mode') = 'idle'
+          	OR JSONExtractString(resource, 'mode') = 'idle'
+          )
+          AND NOT (
+          JSONExtractString(attributes, 'mode') = 'user'
+          	OR JSONExtractString(resource, 'mode') = 'user'
+          )
+          AND NOT (
+          JSONExtractString(attributes, 'mode') = 'system'
+          	OR JSONExtractString(resource, 'mode') = 'system'
+          )
+          AND NOT (
+          JSONExtractString(attributes, 'mode') = 'iowait'
+          	OR JSONExtractString(resource, 'mode') = 'iowait'
+          )
+          AND NOT (
+          JSONExtractString(attributes, 'mode') = 'irq'
+          	OR JSONExtractString(resource, 'mode') = 'irq'
+          )
+          AND NOT (
+          JSONExtractString(attributes, 'mode') = 'softirq'
+          	OR JSONExtractString(resource, 'mode') = 'softirq'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 7264
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter", mode=~".*irq"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+    duration_nanos: 1537000
+    queries:
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3031
+        read_rows: 1490
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, mapping, value, flags, attributes, resource FROM `metrics_points` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') REGEXP '.*irq'
+          	OR JSONExtractString(resource, 'mode') REGEXP '.*irq'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        read_bytes: 7919283585
+        read_rows: 69181440
+        memory_usage: 70205094
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') REGEXP '.*irq'
+          	OR JSONExtractString(resource, 'mode') REGEXP '.*irq'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3018
+        read_rows: 1489
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter", mode="idle"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+    duration_nanos: 1301000
+    queries:
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3031
+        read_rows: 1490
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') = 'idle'
+          	OR JSONExtractString(resource, 'mode') = 'idle'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3018
+        read_rows: 1489
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 106921
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 27920
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter", mode="iowait"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+    duration_nanos: 1042000
+    queries:
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3031
+        read_rows: 1490
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 29008
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 27920
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') = 'iowait'
+          	OR JSONExtractString(resource, 'mode') = 'iowait'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+      - query: |-
+          SELECT name, timestamp, mapping, value, flags, attributes, resource FROM `metrics_points` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') = 'iowait'
+          	OR JSONExtractString(resource, 'mode') = 'iowait'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        read_bytes: 7914653175
+        read_rows: 69181440
+        memory_usage: 62193200
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3018
+        read_rows: 1489
+        memory_usage: 62222
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 99056
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-181",job="node_exporter", mode="user"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-181",job="node_exporter"}[1m0s])))
+    duration_nanos: 1020000
+    queries:
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3031
+        read_rows: 1490
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 29008
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 27920
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          JSONExtractString(attributes, 'mode') = 'user'
+          	OR JSONExtractString(resource, 'mode') = 'user'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
+      - query: SELECT name, key FROM metrics_labels WHERE name IN labels
+        read_bytes: 3018
+        read_rows: 1489
+        memory_usage: 53296
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: SELECT value FROM metrics_labels WHERE name = '__name__' AND key = '__name__' AND value_normalized = 'node_cpu_seconds_total'
+        read_bytes: 61631
+        read_rows: 1486
+        memory_usage: 28464
+      - query: |-
+          SELECT name, timestamp, exp_histogram_count, exp_histogram_sum, exp_histogram_min, exp_histogram_max, exp_histogram_scale, exp_histogram_zerocount, exp_histogram_positive_offset, exp_histogram_positive_bucket_counts, exp_histogram_negative_offset, exp_histogram_negative_bucket_counts, flags, attributes, resource FROM `metrics_exp_histograms` WHERE true
+          	AND toUnixTimestamp64Nano(timestamp) >= 1704748635000000000
+          	AND toUnixTimestamp64Nano(timestamp) <= 1704750600000000000
+          AND (
+          JSONExtractString(attributes, 'instance') = 'host-181'
+          	OR JSONExtractString(resource, 'instance') = 'host-181'
+          )
+          AND (
+          JSONExtractString(attributes, 'job') = 'node_exporter'
+          	OR JSONExtractString(resource, 'job') = 'node_exporter'
+          )
+          AND (
+          name = 'node_cpu_seconds_total'
+          )
+          ORDER BY timestamp
+        memory_usage: 6624
