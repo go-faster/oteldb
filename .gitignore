@@ -31,3 +31,5 @@ coverage.txt
 
 # remore write queries
 *.rwq
+
+report.yml
