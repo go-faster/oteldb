@@ -3,26 +3,36 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 
+	"github.com/go-faster/errors"
 	"github.com/spf13/cobra"
 )
 
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "otelbench",
-		Short: "otelbench is a benchmarking suite for querying oteldb",
+		Short: "otelbench is a benchmarking suite for oteldb",
 
-		SilenceUsage: true,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 	rootCmd.AddCommand(
 		newPromQLCommand(),
+		newPrometheusRemoteWrite(),
 	)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		_, _ = os.Stderr.WriteString(err.Error() + "\n")
+		if errors.Is(err, ctx.Err()) {
+			fmt.Fprintln(os.Stderr, "interrupted")
+			os.Exit(1)
+		}
+
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
 	}
 }

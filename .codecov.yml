@@ -13,7 +13,6 @@ ignore:
   - "internal/promcompliance/"
   # Skip benchmarks
   - "cmd/otelbench/"
-  - "cmd/promrw/"
   # Skip complience tests
   - "cmd/promql-compliance-tester/"
 coverage:

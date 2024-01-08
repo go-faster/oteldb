@@ -14,17 +14,18 @@ services:
       timeout: 1s
       retries: 30
 
-  attacker:
+  generator:
     build:
       context: ../../../
-      dockerfile: promrw.Dockerfile
+      dockerfile: otelbench.Dockerfile
     environment:
       - OTEL_LOG_LEVEL=info
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
       - OTEL_TRACES_EXPORTER=none
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=attacker
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=otelbench.promrw
     command:
+      - promrw
       - bench
       - --scrapeInterval=5s
       - --targetsCount=500

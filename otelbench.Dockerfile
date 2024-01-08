@@ -6,16 +6,16 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /promrw ./cmd/promrw
+RUN CGO_ENABLED=0 GOOS=linux go build -o /otelbench ./cmd/otelbench
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
-# Some dependencies that promrw launches with os.Exec:
+# Some dependencies that otelbench promrw launches with os.Exec:
 COPY --from=victoriametrics/vmagent /vmagent-prod /bin/vmagent
 COPY --from=prom/prometheus /bin/prometheus /bin/promtool
 COPY --from=quay.io/prometheus/node-exporter /bin/node_exporter /bin/node_exporter
 
-COPY --from=builder /promrw /bin/promrw
+COPY --from=builder /otelbench /bin/otelbench
 
-ENTRYPOINT ["/bin/promrw"]
+ENTRYPOINT ["/bin/otelbench"]
