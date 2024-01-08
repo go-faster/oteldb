@@ -1,0 +1,6 @@
+start: "2024-01-06T13:10:00Z"
+end: "2024-01-06T14:02:45Z"
+step: 15
+range:
+  - query: topk(3, avg_over_time(node_memory_MemFree_bytes{job="node_exporter"}[30m]))
+    title: Top 3 free memory

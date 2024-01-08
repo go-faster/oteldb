@@ -24,6 +24,7 @@ type Record struct {
 	Addr     string
 	Duration time.Duration
 	Output   string
+	Validate bool
 
 	points   atomic.Uint64
 	requests atomic.Uint64
@@ -49,16 +50,18 @@ func (r *Record) read(req *http.Request) ([]byte, error) {
 	}
 	defer d.Close()
 
-	data, err := io.ReadAll(d)
-	if err != nil {
-		return nil, errors.Wrap(err, "read data")
-	}
-	var writeRequest prompb.WriteRequest
-	if err := writeRequest.Unmarshal(data); err != nil {
-		return nil, errors.Wrap(err, "unmarshal request")
+	if r.Validate {
+		data, err := io.ReadAll(d)
+		if err != nil {
+			return nil, errors.Wrap(err, "read data")
+		}
+		var writeRequest prompb.WriteRequest
+		if err := writeRequest.Unmarshal(data); err != nil {
+			return nil, errors.Wrap(err, "unmarshal request")
+		}
+		r.points.Add(uint64(len(writeRequest.Timeseries)))
 	}
 
-	r.points.Add(uint64(len(writeRequest.Timeseries)))
 	r.requests.Inc()
 	r.bytes.Add(uint64(len(compressedData)))
 
@@ -122,9 +125,15 @@ func (r *Record) Run(ctx context.Context) (rerr error) {
 				wr := r.requests.Load()
 				wb := r.bytes.Load()
 				wp := r.points.Load()
-				fmt.Printf("req=%d bytes=%s points=%s (%s left)\n",
-					wr, humanize.Bytes(wb), fmtInt(int(wp)), until.Sub(now).Round(time.Second),
-				)
+				if wp > 0 {
+					fmt.Printf("req=%d bytes=%s points=%s (%s left)\n",
+						wr, humanize.Bytes(wb), fmtInt(int(wp)), until.Sub(now).Round(time.Second),
+					)
+				} else {
+					fmt.Printf("req=%d bytes=%s (%s left)\n",
+						wr, humanize.Bytes(wb), until.Sub(now).Round(time.Second),
+					)
+				}
 			case <-done:
 				fmt.Println("done")
 				return nil
@@ -171,5 +180,6 @@ func newRecordCommand() *cobra.Command {
 	cmd.Flags().StringVar(&recorder.Addr, "addr", "127.0.0.1:8080", "Address to listen on")
 	cmd.Flags().DurationVarP(&recorder.Duration, "duration", "d", time.Minute*5, "Duration to record")
 	cmd.Flags().StringVarP(&recorder.Output, "output", "o", "requests.rwq", "Output file")
+	cmd.Flags().BoolVar(&recorder.Validate, "validate", true, "Validate requests")
 	return cmd
 }
