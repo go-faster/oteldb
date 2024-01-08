@@ -34,14 +34,16 @@ func (a PromQLAnalyze) Run() error {
 		fmt.Println(" sql:", len(q.Queries))
 		fmt.Println(" duration:", time.Duration(q.DurationNanos)*time.Nanosecond)
 
-		var memUsage, readBytes int64
+		var memUsage, readBytes, readRows int64
 		for _, v := range q.Queries {
 			memUsage += v.MemoryUsage
 			readBytes += v.ReadBytes
+			readRows += v.ReadRows
 		}
 
 		fmt.Println(" memory usage:", humanize.Bytes(uint64(memUsage)))
 		fmt.Println(" read bytes:", humanize.Bytes(uint64(readBytes)))
+		fmt.Println(" read rows:", fmtInt(int(readRows)))
 	}
 
 	return nil
