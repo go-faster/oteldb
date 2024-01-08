@@ -45,6 +45,9 @@ type tracedQuery struct {
 type PromQL struct {
 	Addr string
 
+	StartTime string
+	EndTime   string
+
 	TracesExporterAddr string
 	TempoAddr          string
 
@@ -56,9 +59,31 @@ type PromQL struct {
 	batchSpanProcessor sdktrace.SpanProcessor
 	tracerProvider     *sdktrace.TracerProvider
 	tempo              *tempoapi.Client
+	start              time.Time
+	end                time.Time
 
 	traces  []tracedQuery
 	reports []PromQLReportQuery
+}
+
+func parseTime(s string) (time.Time, error) {
+	if s == "" {
+		return time.Time{}, nil
+	}
+	for _, format := range []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+	} {
+		t, err := time.Parse(format, s)
+		if err == nil {
+			return t, nil
+		}
+	}
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "parse int")
+	}
+	return time.Unix(v, 0), nil
 }
 
 func (p *PromQL) setupTracing(ctx context.Context) error {
@@ -88,6 +113,13 @@ func (p *PromQL) setupTracing(ctx context.Context) error {
 }
 
 func (p *PromQL) Setup(ctx context.Context) error {
+	var err error
+	if p.start, err = parseTime(p.StartTime); err != nil {
+		return errors.Wrap(err, "parse start time")
+	}
+	if p.end, err = parseTime(p.EndTime); err != nil {
+		return errors.Wrap(err, "parse end time")
+	}
 	if err := p.setupTracing(ctx); err != nil {
 		return errors.Wrap(err, "setup tracing")
 	}
@@ -101,7 +133,6 @@ func (p *PromQL) Setup(ctx context.Context) error {
 			otelhttp.WithPropagators(propagator),
 		),
 	}
-	var err error
 	p.client, err = promapi.NewClient(p.Addr,
 		promapi.WithTracerProvider(p.tracerProvider),
 		promapi.WithClient(httpClient),
@@ -194,6 +225,12 @@ func (p *PromQL) eachFromReport(ctx context.Context, f *os.File, fn func(ctx con
 		if !q.Step.Set {
 			q.Step = report.Step
 		}
+		if !p.start.IsZero() {
+			q.Start.Value = p.start
+		}
+		if !p.end.IsZero() {
+			q.End.Value = p.end
+		}
 		if err := fn(ctx, promproxy.NewRangeQueryQuery(q)); err != nil {
 			return errors.Wrap(err, "callback")
 		}
@@ -204,6 +241,12 @@ func (p *PromQL) eachFromReport(ctx context.Context, f *os.File, fn func(ctx con
 		}
 		if !q.Start.Set {
 			q.Start = report.Start
+		}
+		if !p.start.IsZero() {
+			q.Start.Value = p.start
+		}
+		if !p.end.IsZero() {
+			q.End.Value = p.end
 		}
 		if err := fn(ctx, promproxy.NewSeriesQueryQuery(q)); err != nil {
 			return errors.Wrap(err, "callback")
@@ -519,5 +562,7 @@ func newPromQLBenchmarkCommand() *cobra.Command {
 	f.DurationVar(&p.RequestTimeout, "request-timeout", time.Second*10, "Request timeout")
 	f.StringVar(&p.TracesExporterAddr, "traces-exporter-addr", "http://127.0.0.1:4317", "Traces exporter OTLP endpoint")
 	f.StringVar(&p.TempoAddr, "tempo-addr", "http://127.0.0.1:3200", "Tempo endpoint")
+	f.StringVar(&p.StartTime, "start", "", "Start time override (RFC3339 or unix timestamp)")
+	f.StringVar(&p.EndTime, "end", "", "End time override (RFC3339 or unix timestamp)")
 	return cmd
 }
