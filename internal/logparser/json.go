@@ -272,7 +272,7 @@ func (GenericJSONParser) Parse(data []byte) (*Line, error) {
 					if err != nil {
 						return errors.Wrap(err, "int time")
 					}
-					if n, ok := deductNanos(ts); ok {
+					if n, ok := DeductNanos(ts); ok {
 						line.Timestamp = otelstorage.Timestamp(n)
 						return nil
 					}
@@ -305,7 +305,7 @@ func (GenericJSONParser) Parse(data []byte) (*Line, error) {
 				if err != nil {
 					return errors.Wrap(err, "ts")
 				}
-				if n, ok := deductNanos(ts); ok {
+				if n, ok := DeductNanos(ts); ok {
 					line.Timestamp = otelstorage.Timestamp(n)
 					return nil
 				}

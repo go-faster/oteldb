@@ -19,7 +19,7 @@ func TestDeductNanos(t *testing.T) {
 	}
 	assert := func(a, b int64, msgAndArgs ...interface{}) {
 		t.Helper()
-		v, ok := deductNanos(a)
+		v, ok := DeductNanos(a)
 		require.True(t, ok, msgAndArgs...)
 		require.Equal(t, b, v, msgAndArgs...)
 	}

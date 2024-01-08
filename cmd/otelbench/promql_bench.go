@@ -31,6 +31,7 @@ import (
 	"go.uber.org/multierr"
 	"sigs.k8s.io/yaml"
 
+	"github.com/go-faster/oteldb/internal/logparser"
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/promproxy"
 	"github.com/go-faster/oteldb/internal/tempoapi"
@@ -83,7 +84,11 @@ func parseTime(s string) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "parse int")
 	}
-	return time.Unix(v, 0), nil
+	nanos, ok := logparser.DeductNanos(v)
+	if !ok {
+		return time.Time{}, errors.Errorf("invalid unix timestamp %d", v)
+	}
+	return time.Unix(0, nanos), nil
 }
 
 func (p *PromQL) setupTracing(ctx context.Context) error {
@@ -449,7 +454,13 @@ type PromQLReport struct {
 }
 
 func (p *PromQL) Run(ctx context.Context) error {
-	fmt.Println("sending", p.Input, "to", p.Addr)
+	fmt.Println("sending promql queries from", p.Input, "to", p.Addr)
+	if !p.start.IsZero() {
+		fmt.Println("start time override:", p.start.Format(time.RFC3339))
+	}
+	if !p.end.IsZero() {
+		fmt.Println("end time override:", p.end.Format(time.RFC3339))
+	}
 	var total int64
 	if err := p.each(ctx, func(ctx context.Context, q promproxy.Query) error {
 		total++
