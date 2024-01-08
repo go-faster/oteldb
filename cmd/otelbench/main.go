@@ -21,7 +21,7 @@ func main() {
 	}
 	rootCmd.AddCommand(
 		newPromQLCommand(),
-		newPrometheusRemoteWrite(),
+		newPrometheusRemoteWriteCommand(),
 	)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
