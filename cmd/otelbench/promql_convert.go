@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -46,6 +48,7 @@ func (p PromQLConvert) Run() error {
 		}
 	}
 
+	// Simplify.
 	var step int
 	{
 		var maxValue int
@@ -56,7 +59,6 @@ func (p PromQLConvert) Run() error {
 			}
 		}
 	}
-
 	var start, end time.Time
 	for _, q := range rangeQueries {
 		if start.IsZero() {
@@ -95,8 +97,14 @@ func (p PromQLConvert) Run() error {
 		}
 		report.Series = append(report.Series, q)
 	}
-
 	report.Instant = instantQueries
+
+	slices.SortFunc(report.Range, func(a, b promproxy.RangeQuery) int {
+		return strings.Compare(a.Query, b.Query)
+	})
+	slices.SortFunc(report.Instant, func(a, b promproxy.InstantQuery) int {
+		return strings.Compare(a.Query, b.Query)
+	})
 
 	data, err := report.MarshalJSON()
 	if err != nil {

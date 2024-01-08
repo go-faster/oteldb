@@ -60,7 +60,7 @@ docker compose up -f ./dev/local/ch-bench-read/docker-compose.yml -d
 
 Replay prometheus remote write requests, sending them to specified target:
 ```bash
-otelbench promrw replay -i /tmp/remotewrite.gob.zstd -j 8 --target="http://127.0.0.1:19291"
+otelbench promrw replay -i /tmp/requests.rwq -j 8 --target="http://127.0.0.1:19291"
 ```
 
 ## PromQL

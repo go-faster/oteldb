@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -472,6 +473,16 @@ func (p *PromQL) Run(ctx context.Context) error {
 	report := PromQLReport{
 		Queries: p.reports,
 	}
+	slices.SortFunc(report.Queries, func(a, b PromQLReportQuery) int {
+		if a.DurationNanos == b.DurationNanos {
+			return strings.Compare(a.Query, b.Query)
+		}
+		if a.DurationNanos > b.DurationNanos {
+			return -1
+		} else {
+			return 1
+		}
+	})
 	buf := new(bytes.Buffer)
 	enc := yamlx.NewEncoder(buf)
 	enc.SetIndent(2)
