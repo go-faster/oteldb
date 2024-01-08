@@ -1,0 +1,301 @@
+end: "2024-01-06T14:02:45Z"
+range:
+- query: node_netstat_Tcp_CurrEstab{instance="host-0",job="node_exporter"}
+  title: "TCP connections"
+- query: irate(node_netstat_Tcp_InSegs{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_TcpExt_SyncookiesFailed{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_TcpExt_ListenOverflows{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_netstat_Tcp_MaxConn{instance="host-0",job="node_exporter"}
+- query: irate(node_netstat_TcpExt_ListenDrops{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Tcp_OutSegs{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_TcpExt_SyncookiesRecv{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_TcpExt_TCPSynRetrans{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_TcpExt_SyncookiesSent{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Tcp_RetransSegs{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Tcp_ActiveOpens{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Tcp_InErrs{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Tcp_PassiveOpens{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Tcp_OutRsts{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_scrape_collector_duration_seconds{instance="host-0",job="node_exporter"}
+- query: node_tcp_connection_states{state="established",instance="host-0",job="node_exporter"}
+- query: node_tcp_connection_states{state="fin_wait2",instance="host-0",job="node_exporter"}
+- query: node_tcp_connection_states{state="listen",instance="host-0",job="node_exporter"}
+- query: node_tcp_connection_states{state="time_wait",instance="host-0",job="node_exporter"}
+- query: node_scrape_collector_success{instance="host-0",job="node_exporter"}
+- query: node_textfile_scrape_error{instance="host-0",job="node_exporter"}
+- query: irate(node_netstat_Udp_InDatagrams{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Udp_InErrors{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Udp_OutDatagrams{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Udp_NoPorts{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_UdpLite_InErrors{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Icmp_InMsgs{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Icmp_InErrors{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Udp_RcvbufErrors{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Icmp_OutMsgs{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Udp_SndbufErrors{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_IpExt_InOctets{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_Ip_Forwarding{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_netstat_IpExt_OutOctets{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_sockstat_sockets_used{instance="host-0",job="node_exporter"}
+- query: node_sockstat_FRAG_inuse{instance="host-0",job="node_exporter"}
+- query: node_sockstat_TCP_mem_bytes{instance="host-0",job="node_exporter"}
+- query: node_sockstat_RAW_inuse{instance="host-0",job="node_exporter"}
+- query: node_sockstat_UDP_mem_bytes{instance="host-0",job="node_exporter"}
+- query: node_sockstat_TCP_alloc{instance="host-0",job="node_exporter"}
+- query: node_sockstat_UDPLITE_inuse{instance="host-0",job="node_exporter"}
+- query: node_sockstat_FRAG_memory{instance="host-0",job="node_exporter"}
+- query: node_network_up{operstate="up",instance="host-0",job="node_exporter"}
+- query: node_sockstat_TCP_inuse{instance="host-0",job="node_exporter"}
+- query: node_sockstat_UDP_inuse{instance="host-0",job="node_exporter"}
+- query: node_sockstat_TCP_orphan{instance="host-0",job="node_exporter"}
+- query: irate(node_softnet_processed_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_sockstat_UDP_mem{instance="host-0",job="node_exporter"}
+- query: node_network_carrier{instance="host-0",job="node_exporter"}
+- query: irate(node_softnet_times_squeezed_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_sockstat_TCP_tw{instance="host-0",job="node_exporter"}
+- query: node_network_speed_bytes{instance="host-0",job="node_exporter"}
+- query: irate(node_softnet_dropped_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_network_transmit_queue_length{instance="host-0",job="node_exporter"}
+- query: node_arp_entries{instance="host-0",job="node_exporter"}
+- query: node_network_mtu_bytes{instance="host-0",job="node_exporter"}
+- query: irate(node_network_transmit_colls_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_nf_conntrack_entries{instance="host-0",job="node_exporter"}
+- query: irate(node_network_receive_frame_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_transmit_carrier_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_receive_multicast_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_nf_conntrack_entries_limit{instance="host-0",job="node_exporter"}
+- query: irate(node_network_receive_fifo_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_transmit_fifo_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_receive_compressed_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_receive_drop_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_transmit_drop_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_transmit_compressed_total{instance="host-0",job="node_exporter"}[1m0s])
+- end: "2024-01-06T14:02:00Z"
+  query: node_filefd_maximum{instance="host-0",job="node_exporter"}
+  step: 60
+- query: node_filesystem_readonly{instance="host-0",job="node_exporter",device!~'rootfs'}
+- query: node_filesystem_files{instance="host-0",job="node_exporter",device!~'rootfs'}
+- query: irate(node_network_receive_packets_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_receive_errs_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_filefd_allocated{instance="host-0",job="node_exporter"}
+- query: irate(node_network_transmit_errs_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_network_transmit_packets_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_filesystem_device_error{instance="host-0",job="node_exporter",device!~'rootfs',fstype!~'tmpfs'}
+- query: node_filesystem_files_free{instance="host-0",job="node_exporter",device!~'rootfs'}
+- query: node_filesystem_avail_bytes{instance="host-0",job="node_exporter",device!~'rootfs'}
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_discards_completed_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- end: "2024-01-06T14:02:00Z"
+  query: node_disk_io_now{instance="host-0",job="node_exporter"}
+  step: 60
+- query: irate(node_disk_discards_merged_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_disk_reads_merged_total{instance="host-0",job="node_exporter"}[1m0s])
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_io_time_seconds_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_discard_time_seconds_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- query: irate(node_disk_writes_merged_total{instance="host-0",job="node_exporter"}[1m0s])
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_read_time_seconds_total{instance="host-0",job="node_exporter"}[1m15s])
+    / irate(node_disk_reads_completed_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_io_time_weighted_seconds_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_read_bytes_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_reads_completed_total{instance="host-0",job="node_exporter"}[1m15s])
+  step: 60
+- query: irate(node_disk_write_time_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+    / irate(node_disk_writes_completed_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_disk_written_bytes_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_disk_writes_completed_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_power_supply_online{instance="host-0",job="node_exporter"}
+- query: node_hwmon_temp_celsius{instance="host-0",job="node_exporter"} * on(chip)
+    group_left(chip_name) node_hwmon_chip_names
+- query: node_cooling_device_cur_state{instance="host-0",job="node_exporter"}
+- query: node_hwmon_temp_crit_celsius{instance="host-0",job="node_exporter"} * on(chip)
+    group_left(chip_name) node_hwmon_chip_names
+- query: node_cooling_device_max_state{instance="host-0",job="node_exporter"}
+- query: process_max_fds{instance="host-0",job="node_exporter"}
+- query: process_open_fds{instance="host-0",job="node_exporter"}
+- query: node_entropy_available_bits{instance="host-0",job="node_exporter"}
+- query: irate(process_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_interrupts_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_schedstat_timeslices_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_cpu_scaling_frequency_hertz{instance="host-0",job="node_exporter"}
+- query: rate(node_pressure_cpu_waiting_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: rate(node_pressure_memory_waiting_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: rate(node_pressure_memory_stalled_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: rate(node_pressure_io_waiting_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: rate(node_pressure_io_stalled_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: avg(node_cpu_scaling_frequency_max_hertz{instance="host-0",job="node_exporter"})
+- query: avg(node_cpu_scaling_frequency_min_hertz{instance="host-0",job="node_exporter"})
+- end: "2024-01-06T14:02:00Z"
+  query: node_load1{instance="host-0",job="node_exporter"}
+  step: 60
+- query: irate(node_context_switches_total{instance="host-0",job="node_exporter"}[1m0s])
+- end: "2024-01-06T14:02:00Z"
+  query: node_load5{instance="host-0",job="node_exporter"}
+  step: 60
+- query: irate(node_intr_total{instance="host-0",job="node_exporter"}[1m0s])
+- end: "2024-01-06T14:02:00Z"
+  query: node_load15{instance="host-0",job="node_exporter"}
+  step: 60
+- query: node_processes_threads{instance="host-0",job="node_exporter"}
+- query: node_processes_max_threads{instance="host-0",job="node_exporter"}
+- query: irate(node_schedstat_running_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_processes_pids{instance="host-0",job="node_exporter"}
+- query: node_processes_max_processes{instance="host-0",job="node_exporter"}
+- query: irate(process_virtual_memory_bytes{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_forks_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_schedstat_waiting_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+- query: process_resident_memory_max_bytes{instance="host-0",job="node_exporter"}
+- query: node_procs_blocked{instance="host-0",job="node_exporter"}
+- query: node_processes_state{instance="host-0",job="node_exporter"}
+- query: irate(process_virtual_memory_bytes{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_procs_running{instance="host-0",job="node_exporter"}
+- query: irate(process_virtual_memory_max_bytes{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_timex_sync_status{instance="host-0",job="node_exporter"}
+- query: node_timex_tick_seconds{instance="host-0",job="node_exporter"}
+- query: node_timex_frequency_adjustment_ratio{instance="host-0",job="node_exporter"}
+- query: node_timex_tai_offset_seconds{instance="host-0",job="node_exporter"}
+- query: node_timex_estimated_error_seconds{instance="host-0",job="node_exporter"}
+- query: node_timex_loop_time_constant{instance="host-0",job="node_exporter"}
+- query: node_timex_offset_seconds{instance="host-0",job="node_exporter"}
+- query: node_timex_maxerror_seconds{instance="host-0",job="node_exporter"}
+- query: irate(node_vmstat_oom_kill{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pgfault{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pgmajfault{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pgfault{instance="host-0",job="node_exporter"}[1m0s])  -
+    irate(node_vmstat_pgmajfault{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pgpgin{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pswpin{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pswpout{instance="host-0",job="node_exporter"}[1m0s])
+- query: irate(node_vmstat_pgpgout{instance="host-0",job="node_exporter"}[1m0s])
+- query: node_memory_NFS_Unstable_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_DirectMap1G_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Unevictable_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Mlocked_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_DirectMap2M_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_DirectMap4k_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_HugePages_Free{instance="host-0",job="node_exporter"}
+- query: node_memory_HugePages_Total{instance="host-0",job="node_exporter"}
+- query: node_memory_Hugepagesize_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_HugePages_Rsvd{instance="host-0",job="node_exporter"}
+- query: node_memory_HugePages_Surp{instance="host-0",job="node_exporter"}
+- query: node_memory_AnonHugePages_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_KernelStack_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_AnonPages_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Percpu_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Bounce_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_VmallocChunk_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_VmallocTotal_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_VmallocUsed_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_SUnreclaim_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Mapped_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_SReclaimable_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Shmem_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_ShmemHugePages_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_ShmemPmdMapped_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Writeback_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Inactive_file_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Inactive_anon_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_WritebackTmp_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Dirty_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Active_file_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Active_anon_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Committed_AS_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Inactive_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_CommitLimit_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Active_bytes{instance="host-0",job="node_exporter"}
+- query: irate(node_disk_io_time_seconds_total{instance="host-0",job="node_exporter",device=~"[a-z]+|nvme[0-9]+n[0-9]+|mmcblk[0-9]+"}
+    [1m0s])
+- query: sum by(instance) (irate(node_cpu_guest_seconds_total{instance="host-0",job="node_exporter",
+    mode="user"}[1m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m])))
+- end: "2024-01-06T14:02:00Z"
+  query: irate(node_disk_reads_completed_total{instance="host-0",job="node_exporter",device=~"[a-z]+|nvme[0-9]+n[0-9]+|mmcblk[0-9]+"}[1m15s])
+  step: 60
+- query: irate(node_disk_read_bytes_total{instance="host-0",job="node_exporter",device=~"[a-z]+|nvme[0-9]+n[0-9]+|mmcblk[0-9]+"}[1m0s])
+- query: irate(node_disk_writes_completed_total{instance="host-0",job="node_exporter",device=~"[a-z]+|nvme[0-9]+n[0-9]+|mmcblk[0-9]+"}[1m0s])
+- query: irate(node_disk_written_bytes_total{instance="host-0",job="node_exporter",device=~"[a-z]+|nvme[0-9]+n[0-9]+|mmcblk[0-9]+"}[1m0s])
+- query: node_filesystem_size_bytes{instance="host-0",job="node_exporter",device!~'rootfs'}
+    - node_filesystem_avail_bytes{instance="host-0",job="node_exporter",device!~'rootfs'}
+- query: irate(node_network_receive_bytes_total{instance="host-0",job="node_exporter"}[1m0s])*8
+- query: irate(node_network_transmit_bytes_total{instance="host-0",job="node_exporter"}[1m0s])*8
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="system"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: node_memory_MemTotal_bytes{instance="host-0",job="node_exporter"} - node_memory_MemFree_bytes{instance="host-0",job="node_exporter"}
+    - node_memory_Buffers_bytes{instance="host-0",job="node_exporter"} - node_memory_Cached_bytes{instance="host-0",job="node_exporter"}
+    - node_memory_Slab_bytes{instance="host-0",job="node_exporter"} - node_memory_PageTables_bytes{instance="host-0",job="node_exporter"}
+    - node_memory_SwapCached_bytes{instance="host-0",job="node_exporter"}
+- query: irate(node_network_receive_bytes_total{instance="host-0",job="node_exporter"}[1m0s])*8
+- query: 100 - ((node_filesystem_avail_bytes{instance="host-0",job="node_exporter",device!~'rootfs'}
+    * 100) / node_filesystem_size_bytes{instance="host-0",job="node_exporter",device!~'rootfs'})
+- query: node_memory_PageTables_bytes{instance="host-0",job="node_exporter"}
+- query: irate(node_network_transmit_bytes_total{instance="host-0",job="node_exporter"}[1m0s])*8
+- query: node_memory_SwapCached_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Slab_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Cached_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_Buffers_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_MemFree_bytes{instance="host-0",job="node_exporter"}
+- query: (node_memory_SwapTotal_bytes{instance="host-0",job="node_exporter"} - node_memory_SwapFree_bytes{instance="host-0",job="node_exporter"})
+- query: sum by(instance) (irate(node_cpu_guest_seconds_total{instance="host-0",job="node_exporter",
+    mode="nice"}[1m])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m])))
+- query: node_memory_HardwareCorrupted_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_MemTotal_bytes{instance="host-0",job="node_exporter"}
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="system"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: node_memory_MemTotal_bytes{instance="host-0",job="node_exporter"} - node_memory_MemFree_bytes{instance="host-0",job="node_exporter"}
+    - (node_memory_Cached_bytes{instance="host-0",job="node_exporter"} + node_memory_Buffers_bytes{instance="host-0",job="node_exporter"}
+    + node_memory_SReclaimable_bytes{instance="host-0",job="node_exporter"})
+- query: node_memory_Cached_bytes{instance="host-0",job="node_exporter"} + node_memory_Buffers_bytes{instance="host-0",job="node_exporter"}
+    + node_memory_SReclaimable_bytes{instance="host-0",job="node_exporter"}
+- query: node_memory_MemFree_bytes{instance="host-0",job="node_exporter"}
+- query: (node_memory_SwapTotal_bytes{instance="host-0",job="node_exporter"} - node_memory_SwapFree_bytes{instance="host-0",job="node_exporter"})
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="user"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- end: "2024-01-06T14:02:30Z"
+  query: count(count(node_cpu_seconds_total{instance="host-0",job="node_exporter"})
+    by (cpu))
+  step: 30
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="user"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="nice"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="iowait"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="iowait"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode=~".*irq"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="irq"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq'}[1m0s]))
+    / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="softirq"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="idle"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="steal"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+- query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter",
+    mode="idle"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+series:
+- end: "2024-01-06T14:02:50Z"
+  matchers:
+  - node_uname_info{job="node_exporter"}
+- end: "2024-01-06T14:02:50Z"
+  matchers:
+  - node_uname_info
+- end: "2024-01-06T14:02:50Z"
+  matchers:
+  - node_uname_info{job="node_exporter"}
+start: "2024-01-06T13:10:00Z"
+step: 15

@@ -51,12 +51,12 @@ func ts(v promapi.PrometheusTimestamp) time.Time {
 	return time.Unix(seconds, 0)
 }
 
-func step(v string) int {
+func step(v string) OptInt {
 	seconds, err := strconv.Atoi(v)
 	if err != nil {
-		return 0
+		return OptInt{}
 	}
-	return seconds
+	return NewOptInt(seconds)
 }
 
 func optTS(v promapi.OptPrometheusTimestamp) OptDateTime {
@@ -86,8 +86,8 @@ func (r *Recorder) RecordGetQuery(v promapi.GetQueryParams) error {
 func (r *Recorder) RecordGetQueryRange(v promapi.GetQueryRangeParams) error {
 	return r.encode(RangeQuery{
 		Query: v.Query,
-		Start: ts(v.Start),
-		End:   ts(v.End),
+		Start: NewOptDateTime(ts(v.Start)),
+		End:   NewOptDateTime(ts(v.End)),
 		Step:  step(v.Step),
 	})
 }

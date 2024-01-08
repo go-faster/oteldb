@@ -17,8 +17,10 @@ import (
 
 // Ref: #/definitions/instantQuery
 type InstantQuery struct {
-	Query string      `json:"query"`
-	Time  OptDateTime `json:"time"`
+	Query       string      `json:"query"`
+	Time        OptDateTime `json:"time"`
+	Title       OptString   `json:"title"`
+	Description OptString   `json:"description"`
 }
 
 // GetQuery returns the value of Query.
@@ -31,6 +33,16 @@ func (s *InstantQuery) GetTime() OptDateTime {
 	return s.Time
 }
 
+// GetTitle returns the value of Title.
+func (s *InstantQuery) GetTitle() OptString {
+	return s.Title
+}
+
+// GetDescription returns the value of Description.
+func (s *InstantQuery) GetDescription() OptString {
+	return s.Description
+}
+
 // SetQuery sets the value of Query.
 func (s *InstantQuery) SetQuery(val string) {
 	s.Query = val
@@ -39,6 +51,16 @@ func (s *InstantQuery) SetQuery(val string) {
 // SetTime sets the value of Time.
 func (s *InstantQuery) SetTime(val OptDateTime) {
 	s.Time = val
+}
+
+// SetTitle sets the value of Title.
+func (s *InstantQuery) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetDescription sets the value of Description.
+func (s *InstantQuery) SetDescription(val OptString) {
+	s.Description = val
 }
 
 // NewOptDateTime returns new OptDateTime with value set to v.
@@ -81,6 +103,98 @@ func (o OptDateTime) Get() (v time.Time, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptInt returns new OptInt with value set to v.
+func NewOptInt(v int) OptInt {
+	return OptInt{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt is optional int.
+type OptInt struct {
+	Value int
+	Set   bool
+}
+
+// IsSet returns true if OptInt was set.
+func (o OptInt) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt) Reset() {
+	var v int
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt) SetTo(v int) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt) Get() (v int, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt) Or(d int) int {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptString returns new OptString with value set to v.
+func NewOptString(v string) OptString {
+	return OptString{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptString is optional string.
+type OptString struct {
+	Value string
+	Set   bool
+}
+
+// IsSet returns true if OptString was set.
+func (o OptString) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptString) Reset() {
+	var v string
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptString) SetTo(v string) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptString) Get() (v string, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptString) Or(d string) string {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -180,11 +294,13 @@ func NewSeriesQueryQuery(v SeriesQuery) Query {
 
 // Ref: #/definitions/rangeQuery
 type RangeQuery struct {
-	Query string    `json:"query"`
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
+	Query string      `json:"query"`
+	Start OptDateTime `json:"start"`
+	End   OptDateTime `json:"end"`
 	// Step in seconds.
-	Step int `json:"step"`
+	Step        OptInt    `json:"step"`
+	Title       OptString `json:"title"`
+	Description OptString `json:"description"`
 }
 
 // GetQuery returns the value of Query.
@@ -193,18 +309,28 @@ func (s *RangeQuery) GetQuery() string {
 }
 
 // GetStart returns the value of Start.
-func (s *RangeQuery) GetStart() time.Time {
+func (s *RangeQuery) GetStart() OptDateTime {
 	return s.Start
 }
 
 // GetEnd returns the value of End.
-func (s *RangeQuery) GetEnd() time.Time {
+func (s *RangeQuery) GetEnd() OptDateTime {
 	return s.End
 }
 
 // GetStep returns the value of Step.
-func (s *RangeQuery) GetStep() int {
+func (s *RangeQuery) GetStep() OptInt {
 	return s.Step
+}
+
+// GetTitle returns the value of Title.
+func (s *RangeQuery) GetTitle() OptString {
+	return s.Title
+}
+
+// GetDescription returns the value of Description.
+func (s *RangeQuery) GetDescription() OptString {
+	return s.Description
 }
 
 // SetQuery sets the value of Query.
@@ -213,27 +339,103 @@ func (s *RangeQuery) SetQuery(val string) {
 }
 
 // SetStart sets the value of Start.
-func (s *RangeQuery) SetStart(val time.Time) {
+func (s *RangeQuery) SetStart(val OptDateTime) {
 	s.Start = val
 }
 
 // SetEnd sets the value of End.
-func (s *RangeQuery) SetEnd(val time.Time) {
+func (s *RangeQuery) SetEnd(val OptDateTime) {
 	s.End = val
 }
 
 // SetStep sets the value of Step.
-func (s *RangeQuery) SetStep(val int) {
+func (s *RangeQuery) SetStep(val OptInt) {
 	s.Step = val
 }
 
+// SetTitle sets the value of Title.
+func (s *RangeQuery) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetDescription sets the value of Description.
+func (s *RangeQuery) SetDescription(val OptString) {
+	s.Description = val
+}
+
 type Record struct {
-	Queries []Query `json:"queries"`
+	Start   OptDateTime    `json:"start"`
+	End     OptDateTime    `json:"end"`
+	Step    OptInt         `json:"step"`
+	Series  []SeriesQuery  `json:"series"`
+	Instant []InstantQuery `json:"instant"`
+	Range   []RangeQuery   `json:"range"`
+	Queries []Query        `json:"queries"`
+}
+
+// GetStart returns the value of Start.
+func (s *Record) GetStart() OptDateTime {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *Record) GetEnd() OptDateTime {
+	return s.End
+}
+
+// GetStep returns the value of Step.
+func (s *Record) GetStep() OptInt {
+	return s.Step
+}
+
+// GetSeries returns the value of Series.
+func (s *Record) GetSeries() []SeriesQuery {
+	return s.Series
+}
+
+// GetInstant returns the value of Instant.
+func (s *Record) GetInstant() []InstantQuery {
+	return s.Instant
+}
+
+// GetRange returns the value of Range.
+func (s *Record) GetRange() []RangeQuery {
+	return s.Range
 }
 
 // GetQueries returns the value of Queries.
 func (s *Record) GetQueries() []Query {
 	return s.Queries
+}
+
+// SetStart sets the value of Start.
+func (s *Record) SetStart(val OptDateTime) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *Record) SetEnd(val OptDateTime) {
+	s.End = val
+}
+
+// SetStep sets the value of Step.
+func (s *Record) SetStep(val OptInt) {
+	s.Step = val
+}
+
+// SetSeries sets the value of Series.
+func (s *Record) SetSeries(val []SeriesQuery) {
+	s.Series = val
+}
+
+// SetInstant sets the value of Instant.
+func (s *Record) SetInstant(val []InstantQuery) {
+	s.Instant = val
+}
+
+// SetRange sets the value of Range.
+func (s *Record) SetRange(val []RangeQuery) {
+	s.Range = val
 }
 
 // SetQueries sets the value of Queries.
@@ -243,9 +445,11 @@ func (s *Record) SetQueries(val []Query) {
 
 // Ref: #/definitions/seriesQuery
 type SeriesQuery struct {
-	Matchers []string    `json:"matchers"`
-	Start    OptDateTime `json:"start"`
-	End      OptDateTime `json:"end"`
+	Matchers    []string    `json:"matchers"`
+	Start       OptDateTime `json:"start"`
+	End         OptDateTime `json:"end"`
+	Title       OptString   `json:"title"`
+	Description OptString   `json:"description"`
 }
 
 // GetMatchers returns the value of Matchers.
@@ -263,6 +467,16 @@ func (s *SeriesQuery) GetEnd() OptDateTime {
 	return s.End
 }
 
+// GetTitle returns the value of Title.
+func (s *SeriesQuery) GetTitle() OptString {
+	return s.Title
+}
+
+// GetDescription returns the value of Description.
+func (s *SeriesQuery) GetDescription() OptString {
+	return s.Description
+}
+
 // SetMatchers sets the value of Matchers.
 func (s *SeriesQuery) SetMatchers(val []string) {
 	s.Matchers = val
@@ -276,6 +490,16 @@ func (s *SeriesQuery) SetStart(val OptDateTime) {
 // SetEnd sets the value of End.
 func (s *SeriesQuery) SetEnd(val OptDateTime) {
 	s.End = val
+}
+
+// SetTitle sets the value of Title.
+func (s *SeriesQuery) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetDescription sets the value of Description.
+func (s *SeriesQuery) SetDescription(val OptString) {
+	s.Description = val
 }
 
 // Encode implements json.Marshaler.
@@ -297,11 +521,25 @@ func (s *InstantQuery) encodeFields(e *jx.Encoder) {
 			s.Time.Encode(e, json.EncodeDateTime)
 		}
 	}
+	{
+		if s.Title.Set {
+			e.FieldStart("title")
+			s.Title.Encode(e)
+		}
+	}
+	{
+		if s.Description.Set {
+			e.FieldStart("description")
+			s.Description.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfInstantQuery = [2]string{
+var jsonFieldsNameOfInstantQuery = [4]string{
 	0: "query",
 	1: "time",
+	2: "title",
+	3: "description",
 }
 
 // Decode decodes InstantQuery from json.
@@ -334,6 +572,26 @@ func (s *InstantQuery) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"time\"")
+			}
+		case "title":
+			if err := func() error {
+				s.Title.Reset()
+				if err := s.Title.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"title\"")
+			}
+		case "description":
+			if err := func() error {
+				s.Description.Reset()
+				if err := s.Description.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"description\"")
 			}
 		default:
 			return d.Skip()
@@ -424,6 +682,76 @@ func (s OptDateTime) MarshalJSON() ([]byte, error) {
 func (s *OptDateTime) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d, json.DecodeDateTime)
+}
+
+// Encode encodes int as json.
+func (o OptInt) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Int(int(o.Value))
+}
+
+// Decode decodes int from json.
+func (o *OptInt) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptInt to nil")
+	}
+	o.Set = true
+	v, err := d.Int()
+	if err != nil {
+		return err
+	}
+	o.Value = int(v)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptInt) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptInt) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes string as json.
+func (o OptString) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes string from json.
+func (o *OptString) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptString to nil")
+	}
+	o.Set = true
+	v, err := d.Str()
+	if err != nil {
+		return err
+	}
+	o.Value = string(v)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptString) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptString) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
 }
 
 // Encode encodes Query as json.
@@ -542,24 +870,44 @@ func (s *RangeQuery) encodeFields(e *jx.Encoder) {
 		e.Str(s.Query)
 	}
 	{
-		e.FieldStart("start")
-		json.EncodeDateTime(e, s.Start)
+		if s.Start.Set {
+			e.FieldStart("start")
+			s.Start.Encode(e, json.EncodeDateTime)
+		}
 	}
 	{
-		e.FieldStart("end")
-		json.EncodeDateTime(e, s.End)
+		if s.End.Set {
+			e.FieldStart("end")
+			s.End.Encode(e, json.EncodeDateTime)
+		}
 	}
 	{
-		e.FieldStart("step")
-		e.Int(s.Step)
+		if s.Step.Set {
+			e.FieldStart("step")
+			s.Step.Encode(e)
+		}
+	}
+	{
+		if s.Title.Set {
+			e.FieldStart("title")
+			s.Title.Encode(e)
+		}
+	}
+	{
+		if s.Description.Set {
+			e.FieldStart("description")
+			s.Description.Encode(e)
+		}
 	}
 }
 
-var jsonFieldsNameOfRangeQuery = [4]string{
+var jsonFieldsNameOfRangeQuery = [6]string{
 	0: "query",
 	1: "start",
 	2: "end",
 	3: "step",
+	4: "title",
+	5: "description",
 }
 
 // Decode decodes RangeQuery from json.
@@ -584,11 +932,9 @@ func (s *RangeQuery) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"query\"")
 			}
 		case "start":
-			requiredBitSet[0] |= 1 << 1
 			if err := func() error {
-				v, err := json.DecodeDateTime(d)
-				s.Start = v
-				if err != nil {
+				s.Start.Reset()
+				if err := s.Start.Decode(d, json.DecodeDateTime); err != nil {
 					return err
 				}
 				return nil
@@ -596,11 +942,9 @@ func (s *RangeQuery) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"start\"")
 			}
 		case "end":
-			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				v, err := json.DecodeDateTime(d)
-				s.End = v
-				if err != nil {
+				s.End.Reset()
+				if err := s.End.Decode(d, json.DecodeDateTime); err != nil {
 					return err
 				}
 				return nil
@@ -608,16 +952,34 @@ func (s *RangeQuery) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"end\"")
 			}
 		case "step":
-			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				v, err := d.Int()
-				s.Step = int(v)
-				if err != nil {
+				s.Step.Reset()
+				if err := s.Step.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"step\"")
+			}
+		case "title":
+			if err := func() error {
+				s.Title.Reset()
+				if err := s.Title.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"title\"")
+			}
+		case "description":
+			if err := func() error {
+				s.Description.Reset()
+				if err := s.Description.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"description\"")
 			}
 		default:
 			return d.Skip()
@@ -629,7 +991,7 @@ func (s *RangeQuery) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -685,17 +1047,73 @@ func (s *Record) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *Record) encodeFields(e *jx.Encoder) {
 	{
-		e.FieldStart("queries")
-		e.ArrStart()
-		for _, elem := range s.Queries {
-			elem.Encode(e)
+		if s.Start.Set {
+			e.FieldStart("start")
+			s.Start.Encode(e, json.EncodeDateTime)
 		}
-		e.ArrEnd()
+	}
+	{
+		if s.End.Set {
+			e.FieldStart("end")
+			s.End.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		if s.Step.Set {
+			e.FieldStart("step")
+			s.Step.Encode(e)
+		}
+	}
+	{
+		if s.Series != nil {
+			e.FieldStart("series")
+			e.ArrStart()
+			for _, elem := range s.Series {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Instant != nil {
+			e.FieldStart("instant")
+			e.ArrStart()
+			for _, elem := range s.Instant {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Range != nil {
+			e.FieldStart("range")
+			e.ArrStart()
+			for _, elem := range s.Range {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Queries != nil {
+			e.FieldStart("queries")
+			e.ArrStart()
+			for _, elem := range s.Queries {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
 	}
 }
 
-var jsonFieldsNameOfRecord = [1]string{
-	0: "queries",
+var jsonFieldsNameOfRecord = [7]string{
+	0: "start",
+	1: "end",
+	2: "step",
+	3: "series",
+	4: "instant",
+	5: "range",
+	6: "queries",
 }
 
 // Decode decodes Record from json.
@@ -703,12 +1121,91 @@ func (s *Record) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Record to nil")
 	}
-	var requiredBitSet [1]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "start":
+			if err := func() error {
+				s.Start.Reset()
+				if err := s.Start.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"start\"")
+			}
+		case "end":
+			if err := func() error {
+				s.End.Reset()
+				if err := s.End.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"end\"")
+			}
+		case "step":
+			if err := func() error {
+				s.Step.Reset()
+				if err := s.Step.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"step\"")
+			}
+		case "series":
+			if err := func() error {
+				s.Series = make([]SeriesQuery, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem SeriesQuery
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Series = append(s.Series, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"series\"")
+			}
+		case "instant":
+			if err := func() error {
+				s.Instant = make([]InstantQuery, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem InstantQuery
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Instant = append(s.Instant, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"instant\"")
+			}
+		case "range":
+			if err := func() error {
+				s.Range = make([]RangeQuery, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem RangeQuery
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Range = append(s.Range, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"range\"")
+			}
 		case "queries":
-			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
 				s.Queries = make([]Query, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -731,38 +1228,6 @@ func (s *Record) Decode(d *jx.Decoder) error {
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode Record")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00000001,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfRecord) {
-					name = jsonFieldsNameOfRecord[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 
 	return nil
@@ -810,12 +1275,26 @@ func (s *SeriesQuery) encodeFields(e *jx.Encoder) {
 			s.End.Encode(e, json.EncodeDateTime)
 		}
 	}
+	{
+		if s.Title.Set {
+			e.FieldStart("title")
+			s.Title.Encode(e)
+		}
+	}
+	{
+		if s.Description.Set {
+			e.FieldStart("description")
+			s.Description.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfSeriesQuery = [3]string{
+var jsonFieldsNameOfSeriesQuery = [5]string{
 	0: "matchers",
 	1: "start",
 	2: "end",
+	3: "title",
+	4: "description",
 }
 
 // Decode decodes SeriesQuery from json.
@@ -866,6 +1345,26 @@ func (s *SeriesQuery) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"end\"")
+			}
+		case "title":
+			if err := func() error {
+				s.Title.Reset()
+				if err := s.Title.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"title\"")
+			}
+		case "description":
+			if err := func() error {
+				s.Description.Reset()
+				if err := s.Description.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"description\"")
 			}
 		default:
 			return d.Skip()
@@ -946,9 +1445,31 @@ func (s *Record) Validate() error {
 
 	var failures []validate.FieldError
 	if err := func() error {
-		if s.Queries == nil {
-			return errors.New("nil is invalid value")
+		var failures []validate.FieldError
+		for i, elem := range s.Series {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
 		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "series",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		var failures []validate.FieldError
 		for i, elem := range s.Queries {
 			if err := func() error {

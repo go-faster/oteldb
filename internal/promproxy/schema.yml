@@ -3,12 +3,30 @@ type: object
 title: Recorder queries file
 additionalProperties: false
 properties:
+  start:
+    type: string
+    format: date-time
+  end:
+    type: string
+    format: date-time
+  step:
+    type: integer
+  series:
+    type: array
+    items:
+      $ref: "#/definitions/seriesQuery"
+  instant:
+    type: array
+    items:
+      $ref: "#/definitions/instantQuery"
+  range:
+    type: array
+    items:
+      $ref: "#/definitions/rangeQuery"
   queries:
     type: array
     items:
       $ref: "#/definitions/query"
-required:
-  - queries
 definitions:
   query:
     oneOf:
@@ -31,6 +49,10 @@ definitions:
       end:
         type: string
         format: date-time
+      title:
+        type: string
+      description:
+        type: string
   instantQuery:
     type: object
     required:
@@ -41,12 +63,13 @@ definitions:
       time:
         type: string
         format: date-time
+      title:
+        type: string
+      description:
+        type: string
   rangeQuery:
     type: object
     required:
-      - start
-      - end
-      - step
       - query
     properties:
       query:
@@ -60,4 +83,7 @@ definitions:
       step:
         description: "Step in seconds"
         type: integer
-
+      title:
+        type: string
+      description:
+        type: string

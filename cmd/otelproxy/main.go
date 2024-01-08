@@ -121,7 +121,8 @@ func (s *services) Prometheus(m *app.Metrics) error {
 		cleanup func() error
 	)
 	if fName := os.Getenv(prefix + "_RECORD"); fName != "" {
-		f, err := os.Create(fName) // #nosec G304
+		// #nosec G304 G302
+		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			return errors.Wrap(err, "create record file")
 		}

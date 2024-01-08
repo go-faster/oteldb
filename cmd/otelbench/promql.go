@@ -10,6 +10,7 @@ func newPromQLCommand() *cobra.Command {
 	cmd.AddCommand(
 		newPromQLBenchmarkCommand(),
 		newPromQLAnalyzeCommand(),
+		newPromQLConvertCommand(),
 	)
 	return cmd
 }

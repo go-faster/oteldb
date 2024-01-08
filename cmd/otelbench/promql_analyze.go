@@ -7,7 +7,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/yaml"
+	yamlx "github.com/go-faster/yaml"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +21,7 @@ func (a PromQLAnalyze) Run() error {
 		return errors.Wrap(err, "read file")
 	}
 	var report PromQLReport
-	if err := yaml.Unmarshal(data, &report); err != nil {
+	if err := yamlx.Unmarshal(data, &report); err != nil {
 		return errors.Wrap(err, "unmarshal yaml")
 	}
 

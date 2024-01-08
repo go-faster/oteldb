@@ -1,19 +1,21 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/yaml"
+	yamlx "github.com/go-faster/yaml"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -26,6 +28,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/multierr"
+	"sigs.k8s.io/yaml"
 
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/promproxy"
@@ -115,9 +118,9 @@ func toPrometheusTimestamp(t time.Time) promapi.PrometheusTimestamp {
 func (p *PromQL) sendRangeQuery(ctx context.Context, q promproxy.RangeQuery) error {
 	if _, err := p.client.GetQueryRange(ctx, promapi.GetQueryRangeParams{
 		Query: q.Query,
-		Step:  strconv.Itoa(q.Step),
-		Start: toPrometheusTimestamp(q.Start),
-		End:   toPrometheusTimestamp(q.End),
+		Step:  strconv.Itoa(q.Step.Value),
+		Start: toPrometheusTimestamp(q.Start.Value),
+		End:   toPrometheusTimestamp(q.End.Value),
 	}); err != nil {
 		return errors.Wrap(err, "get query range")
 	}
@@ -167,6 +170,52 @@ func (p *PromQL) send(ctx context.Context, q promproxy.Query) error {
 	}
 }
 
+func (p *PromQL) eachFromReport(ctx context.Context, f *os.File, fn func(ctx context.Context, q promproxy.Query) error) error {
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return errors.Wrap(err, "read")
+	}
+	jsonData, err := yaml.YAMLToJSON(data)
+	if err != nil {
+		return errors.Wrap(err, "convert yaml to json")
+	}
+	var report promproxy.Record
+	if err := report.UnmarshalJSON(jsonData); err != nil {
+		return errors.Wrap(err, "decode report")
+	}
+	for _, q := range report.Range {
+		if !q.Start.Set {
+			q.Start = report.Start
+		}
+		if !q.End.Set {
+			q.End = report.End
+		}
+		if !q.Step.Set {
+			q.Step = report.Step
+		}
+		if err := fn(ctx, promproxy.NewRangeQueryQuery(q)); err != nil {
+			return errors.Wrap(err, "callback")
+		}
+	}
+	for _, q := range report.Series {
+		if !q.End.Set {
+			q.End = report.End
+		}
+		if !q.Start.Set {
+			q.Start = report.Start
+		}
+		if err := fn(ctx, promproxy.NewSeriesQueryQuery(q)); err != nil {
+			return errors.Wrap(err, "callback")
+		}
+	}
+	for _, q := range report.Instant {
+		if err := fn(ctx, promproxy.NewInstantQueryQuery(q)); err != nil {
+			return errors.Wrap(err, "callback")
+		}
+	}
+	return nil
+}
+
 func (p *PromQL) each(ctx context.Context, fn func(ctx context.Context, q promproxy.Query) error) error {
 	f, err := os.Open(p.Input)
 	if err != nil {
@@ -175,6 +224,9 @@ func (p *PromQL) each(ctx context.Context, fn func(ctx context.Context, q prompr
 	defer func() {
 		_ = f.Close()
 	}()
+	if filepath.Ext(p.Input) == ".yaml" || filepath.Ext(p.Input) == ".yml" {
+		return p.eachFromReport(ctx, f, fn)
+	}
 	d := json.NewDecoder(f)
 	for {
 		var q promproxy.Query
@@ -278,10 +330,16 @@ func (p *PromQL) waitForTrace(ctx context.Context, q tracedQuery) error {
 	switch q.Query.Type {
 	case promproxy.InstantQueryQuery:
 		reportEntry.Query = q.Query.InstantQuery.Query
+		reportEntry.Title = q.Query.InstantQuery.Title.Value
+		reportEntry.Description = q.Query.InstantQuery.Description.Value
 	case promproxy.RangeQueryQuery:
 		reportEntry.Query = q.Query.RangeQuery.Query
+		reportEntry.Title = q.Query.RangeQuery.Title.Value
+		reportEntry.Description = q.Query.RangeQuery.Description.Value
 	case promproxy.SeriesQueryQuery:
 		reportEntry.Matchers = q.Query.SeriesQuery.Matchers
+		reportEntry.Title = q.Query.SeriesQuery.Title.Value
+		reportEntry.Description = q.Query.SeriesQuery.Description.Value
 	default:
 		return errors.Errorf("unknown query type %q", q.Query.Type)
 	}
@@ -335,13 +393,15 @@ type ClickhouseQueryReport struct {
 
 type PromQLReportQuery struct {
 	Query         string                  `yaml:"query,omitempty"`
+	Title         string                  `yaml:"title,omitempty"`
+	Description   string                  `yaml:"description,omitempty"`
 	DurationNanos int64                   `yaml:"duration_nanos,omitempty"`
 	Matchers      []string                `yaml:"matchers,omitempty"`
 	Queries       []ClickhouseQueryReport `yaml:"queries,omitempty"`
 }
 
 type PromQLReport struct {
-	Queries []PromQLReportQuery `yaml:"queries"`
+	Queries []PromQLReportQuery `json:"queries"`
 }
 
 func (p *PromQL) Run(ctx context.Context) error {
@@ -412,10 +472,14 @@ func (p *PromQL) Run(ctx context.Context) error {
 	report := PromQLReport{
 		Queries: p.reports,
 	}
-	reportData, err := yaml.Marshal(report)
-	if err != nil {
-		return errors.Wrap(err, "marshal report")
+	buf := new(bytes.Buffer)
+	enc := yamlx.NewEncoder(buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(report); err != nil {
+		return errors.Wrap(err, "encode report")
 	}
+	reportData := buf.Bytes()
+
 	// #nosec G306
 	if err := os.WriteFile(p.Output, reportData, 0644); err != nil {
 		return errors.Wrap(err, "write report")
