@@ -62,3 +62,10 @@ Replay prometheus remote write requests, sending them to specified target:
 ```bash
 otelbench promrw replay -i /tmp/remotewrite.gob.zstd -j 8 --target="http://127.0.0.1:19291"
 ```
+
+## PromQL
+
+```bash
+otelbench promql bench -i ./internal/promproxy/testdata/node-exporter.jsonl -o /tmp/report.yml
+otelbench promql analyze -i /tmp/report.yml
+```
