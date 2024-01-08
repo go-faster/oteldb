@@ -479,9 +479,8 @@ func (p *PromQL) Run(ctx context.Context) error {
 		}
 		if a.DurationNanos > b.DurationNanos {
 			return -1
-		} else {
-			return 1
 		}
+		return 1
 	})
 	buf := new(bytes.Buffer)
 	enc := yamlx.NewEncoder(buf)
