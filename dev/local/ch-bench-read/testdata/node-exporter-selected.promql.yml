@@ -1,0 +1,12 @@
+start: "2024-01-06T13:10:00Z"
+end: "2024-01-06T14:02:45Z"
+step: 15
+range:
+  - query: count(count(node_cpu_seconds_total{instance="host-0",job="node_exporter"}) by (cpu))
+    title: Count CPU cores
+  - query: sum by(instance) (irate(node_cpu_seconds_total{instance="host-0",job="node_exporter", mode="user"}[1m0s])) / on(instance) group_left sum by (instance)((irate(node_cpu_seconds_total{instance="host-0",job="node_exporter"}[1m0s])))
+    title: CPU usage
+  - query: irate(node_schedstat_waiting_seconds_total{instance="host-0",job="node_exporter"}[1m0s])
+    title: CPU wait time
+  - query: topk(3, avg_over_time(node_memory_MemFree_bytes{job="node_exporter"}[5m]))
+    title: Top 3 free memory
