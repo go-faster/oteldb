@@ -173,7 +173,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res *lazyAttributes, slic
 		bucketCounts := point.BucketCounts().AsRaw()
 		explicitBounds := point.ExplicitBounds().AsRaw()
 
-		b.addName(name)
+		// Do not add metric name as-is, since we mapping it into multiple series with prefixes.
 		b.addLabels(attrs)
 
 		// Map histogram as set of series for Prometheus compatibility.
@@ -450,6 +450,7 @@ func (b *metricsBatch) addMappedSample(
 	bucketKey ...[2]string,
 ) {
 	c := b.points
+	b.addName(name)
 	c.name.Append(name)
 	c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 	c.timestamp.Append(series.Timestamp)
