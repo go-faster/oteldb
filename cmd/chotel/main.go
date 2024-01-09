@@ -168,7 +168,6 @@ func (a *App) setup(ctx context.Context) error {
 	conn, err := grpc.DialContext(ctx, a.otlpAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(otelgrpc.NewClientHandler(
-			otelgrpc.WithTracerProvider(a.metrics.TracerProvider()),
 			otelgrpc.WithMeterProvider(a.metrics.MeterProvider()),
 		)),
 		grpc.WithBlock(),
@@ -185,11 +184,12 @@ func (a *App) setup(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) send(ctx context.Context, now time.Time) error {
-	ctx, span := a.metrics.TracerProvider().Tracer("chotel").Start(ctx, "Export spans")
-	defer span.End()
+func noPropagation(ctx context.Context) context.Context {
+	return trace.ContextWithSpanContext(ctx, trace.SpanContext{})
+}
 
-	db, err := ch.Dial(ctx, ch.Options{
+func (a *App) send(ctx context.Context, now time.Time) error {
+	db, err := ch.Dial(noPropagation(ctx), ch.Options{
 		Address:     a.clickHouseAddr,
 		Compression: ch.CompressionZSTD,
 		User:        a.clickHouseUser,
@@ -231,7 +231,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		return errors.Wrap(err, "clickhouse resource")
 	}
 	var latest time.Time
-	if err := db.Do(ctx, ch.Query{
+	if err := db.Do(noPropagation(ctx), ch.Query{
 		Body:   q,
 		Result: t.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
@@ -296,7 +296,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 	}, eb); err != nil {
 		return errors.Wrap(err, "export")
 	}
-	if err := db.Do(ctx, ch.Query{
+	if err := db.Do(noPropagation(ctx), ch.Query{
 		Body: "INSERT INTO opentelemetry_span_export (trace_id, span_id, exported_at) VALUES",
 		Input: proto.Input{
 			{Name: "trace_id", Data: exported.TraceID},
