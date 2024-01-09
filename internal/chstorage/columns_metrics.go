@@ -13,8 +13,8 @@ type pointColumns struct {
 	value   proto.ColFloat64
 
 	flags      proto.ColUInt8
-	attributes proto.ColStr
-	resource   proto.ColStr
+	attributes *Attributes
+	resource   *Attributes
 }
 
 func newPointColumns() *pointColumns {
@@ -22,11 +22,14 @@ func newPointColumns() *pointColumns {
 		name:           new(proto.ColStr).LowCardinality(),
 		nameNormalized: new(proto.ColStr).LowCardinality(),
 		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+
+		attributes: NewAttributes("attributes"),
+		resource:   NewAttributes("resource"),
 	}
 }
 
 func (c *pointColumns) Columns() Columns {
-	return Columns{
+	return MergeColumns(Columns{
 		{Name: "name", Data: c.name},
 		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "timestamp", Data: c.timestamp},
@@ -35,9 +38,7 @@ func (c *pointColumns) Columns() Columns {
 		{Name: "value", Data: &c.value},
 
 		{Name: "flags", Data: &c.flags},
-		{Name: "attributes", Data: &c.attributes},
-		{Name: "resource", Data: &c.resource},
-	}
+	}, c.attributes.Columns(), c.resource.Columns())
 }
 
 func (c *pointColumns) Input() proto.Input    { return c.Columns().Input() }
@@ -60,8 +61,8 @@ type expHistogramColumns struct {
 	negativeBucketCounts *proto.ColArr[uint64]
 
 	flags      proto.ColUInt32
-	attributes proto.ColStr
-	resource   proto.ColStr
+	attributes *Attributes
+	resource   *Attributes
 }
 
 func newExpHistogramColumns() *expHistogramColumns {
@@ -75,11 +76,14 @@ func newExpHistogramColumns() *expHistogramColumns {
 		max:                  new(proto.ColFloat64).Nullable(),
 		positiveBucketCounts: new(proto.ColUInt64).Array(),
 		negativeBucketCounts: new(proto.ColUInt64).Array(),
+
+		attributes: NewAttributes("attributes"),
+		resource:   NewAttributes("resource"),
 	}
 }
 
 func (c *expHistogramColumns) Columns() Columns {
-	return Columns{
+	return MergeColumns(Columns{
 		{Name: "name", Data: c.name},
 		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "timestamp", Data: c.timestamp},
@@ -96,9 +100,7 @@ func (c *expHistogramColumns) Columns() Columns {
 		{Name: "exp_histogram_negative_bucket_counts", Data: c.negativeBucketCounts},
 
 		{Name: "flags", Data: &c.flags},
-		{Name: "attributes", Data: &c.attributes},
-		{Name: "resource", Data: &c.resource},
-	}
+	}, c.attributes.Columns(), c.resource.Columns())
 }
 
 func (c *expHistogramColumns) Input() proto.Input    { return c.Columns().Input() }
@@ -141,8 +143,8 @@ type exemplarColumns struct {
 	spanID             proto.ColFixedStr8
 	traceID            proto.ColFixedStr16
 
-	attributes proto.ColStr
-	resource   proto.ColStr
+	attributes *Attributes
+	resource   *Attributes
 }
 
 func newExemplarColumns() *exemplarColumns {
@@ -151,11 +153,13 @@ func newExemplarColumns() *exemplarColumns {
 		nameNormalized:    new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		attributes:        NewAttributes("attributes"),
+		resource:          NewAttributes("resource"),
 	}
 }
 
 func (c *exemplarColumns) Columns() Columns {
-	return Columns{
+	return MergeColumns(Columns{
 		{Name: "name", Data: c.name},
 		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "timestamp", Data: c.timestamp},
@@ -165,10 +169,7 @@ func (c *exemplarColumns) Columns() Columns {
 		{Name: "value", Data: &c.value},
 		{Name: "span_id", Data: &c.spanID},
 		{Name: "trace_id", Data: &c.traceID},
-
-		{Name: "attributes", Data: &c.attributes},
-		{Name: "resource", Data: &c.resource},
-	}
+	}, c.attributes.Columns(), c.resource.Columns())
 }
 
 func (c *exemplarColumns) Input() proto.Input    { return c.Columns().Input() }

@@ -52,6 +52,11 @@ func (m Attrs) AsMap() pcommon.Map {
 	return pcommon.Map(m)
 }
 
+// Hash computes attributes [Hash].
+func (m Attrs) Hash() Hash {
+	return AttrHash(m.AsMap())
+}
+
 // IsZero whether Attrs is zero value.
 func (m Attrs) IsZero() bool {
 	return m == (Attrs{})

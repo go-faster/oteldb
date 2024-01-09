@@ -13,6 +13,18 @@ type lazyAttributes struct {
 	encoded string
 }
 
+func (l *lazyAttributes) Attributes(additional ...[2]string) otelstorage.Attrs {
+	if len(additional) > 0 {
+		target := pcommon.NewMap()
+		l.orig.CopyTo(target)
+		for _, pair := range additional {
+			target.PutStr(pair[0], pair[1])
+		}
+		return otelstorage.Attrs(target)
+	}
+	return otelstorage.Attrs(l.orig)
+}
+
 func (l *lazyAttributes) Encode(additional ...[2]string) string {
 	switch {
 	case len(additional) > 0:

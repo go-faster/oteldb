@@ -330,9 +330,12 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 						name = mapped
 					}
 					selectors = []string{
-						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(name)),
-						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
+						fmt.Sprintf("attributes[%s]", singleQuoted(name)),
+						fmt.Sprintf("resource[%s]", singleQuoted(name)),
 					}
+					// TODO: Use indexes:
+					//  - has(mapValues(attributes), 'host-0') -- 'host-0' should be in map values, idx_res_attr_value
+					//  - mapContains(attributes, 'job') -- 'job' should be in map keys, idx_res_attr_key
 				}
 				value := m.Value
 				query.WriteString("(\n")
@@ -430,13 +433,19 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				nameNormalized := c.nameNormalized.Row(i)
 				value := c.value.Row(i)
 				timestamp := c.timestamp.Row(i)
-				attributes := c.attributes.Row(i)
-				resource := c.resource.Row(i)
+				attributes, err := c.attributes.Row(i)
+				if err != nil {
+					return errors.Wrap(err, "decode attributes")
+				}
+				resource, err := c.resource.Row(i)
+				if err != nil {
+					return errors.Wrap(err, "decode resource")
+				}
 
 				key := seriesKey{
 					name:       name,
-					attributes: attributes,
-					resource:   resource,
+					attributes: attributes.Hash().String(),
+					resource:   resource.Hash().String(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -451,12 +460,8 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
 				s.labels[labels.MetricName] = nameNormalized
-				if err := parseLabels(resource, s.labels); err != nil {
-					return errors.Wrap(err, "parse resource")
-				}
-				if err := parseLabels(attributes, s.labels); err != nil {
-					return errors.Wrap(err, "parse attributes")
-				}
+				attrsToLabels(attributes, s.labels)
+				attrsToLabels(resource, s.labels)
 			}
 			return nil
 		},
@@ -505,13 +510,19 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 				positiveBucketCounts := c.positiveBucketCounts.Row(i)
 				negativeOffset := c.negativeOffset.Row(i)
 				negativeBucketCounts := c.negativeBucketCounts.Row(i)
-				attributes := c.attributes.Row(i)
-				resource := c.resource.Row(i)
+				attributes, err := c.attributes.Row(i)
+				if err != nil {
+					return errors.Wrap(err, "decode attributes")
+				}
+				resource, err := c.resource.Row(i)
+				if err != nil {
+					return errors.Wrap(err, "decode resource")
+				}
 
 				key := seriesKey{
 					name:       name,
-					attributes: attributes,
-					resource:   resource,
+					attributes: attributes.Hash().String(),
+					resource:   resource.Hash().String(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -535,12 +546,8 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
 				s.labels[labels.MetricName] = nameNormalized
-				if err := parseLabels(resource, s.labels); err != nil {
-					return errors.Wrap(err, "parse resource")
-				}
-				if err := parseLabels(attributes, s.labels); err != nil {
-					return errors.Wrap(err, "parse attributes")
-				}
+				attrsToLabels(attributes, s.labels)
+				attrsToLabels(resource, s.labels)
 			}
 			return nil
 		},

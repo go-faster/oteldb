@@ -32,10 +32,17 @@ const (
 		value Float64 CODEC(Gorilla),
 
 		flags	    UInt8  CODEC(T64),
-		attributes	String,
-		resource	String,
 
-		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192
+		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+
+		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
+	    INDEX idx_res_attr_key mapKeys(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
+	    INDEX idx_res_attr_value mapValues(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
+	    INDEX idx_span_attr_key mapKeys(resource) TYPE bloom_filter(0.01) GRANULARITY 1,
+	    INDEX idx_span_attr_value mapValues(resource) TYPE bloom_filter(0.01) GRANULARITY 1
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
@@ -70,8 +77,10 @@ const (
 		exp_histogram_negative_bucket_counts Array(UInt64),
 
 		flags	UInt32,
-		attributes	String,
-		resource	String
+		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp`
@@ -87,8 +96,10 @@ const (
 		span_id FixedString(8),
 		trace_id FixedString(16),
 
-		attributes	String,
-		resource	String
+		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 	)
 	ENGINE = MergeTree()
 	ORDER BY (name_normalized, cityHash64(resource), cityHash64(attributes), timestamp)`

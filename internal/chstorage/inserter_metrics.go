@@ -143,8 +143,8 @@ func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
 		c.flags.Append(uint8(flags))
-		c.attributes.Append(attrs.Encode())
-		c.resource.Append(res.Encode())
+		c.attributes.Append(attrs.Attributes())
+		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
@@ -380,8 +380,8 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 		c.negativeOffset.Append(negativeOffset)
 		c.negativeBucketCounts.Append(negativeBucketCounts)
 		c.flags.Append(uint32(flags))
-		c.attributes.Append(attrs.Encode())
-		c.resource.Append(res.Encode())
+		c.attributes.Append(attrs.Attributes())
+		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
@@ -457,8 +457,8 @@ func (b *metricsBatch) addMappedSample(
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
 	c.flags.Append(uint8(series.Flags))
-	c.attributes.Append(series.Attributes.Encode(bucketKey...))
-	c.resource.Append(series.Resource.Encode(bucketKey...))
+	c.attributes.Append(series.Attributes.Attributes(bucketKey...))
+	c.resource.Append(series.Resource.Attributes(bucketKey...))
 }
 
 type exemplarSeries struct {
@@ -504,8 +504,8 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	c.spanID.Append(e.SpanID())
 	c.traceID.Append(e.TraceID())
 
-	c.attributes.Append(p.Attributes.Encode(bucketKey...))
-	c.resource.Append(p.Resource.Encode())
+	c.attributes.Append(p.Attributes.Attributes(bucketKey...))
+	c.resource.Append(p.Resource.Attributes())
 	return nil
 }
 

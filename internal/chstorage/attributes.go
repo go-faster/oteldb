@@ -111,3 +111,10 @@ func (a *Attributes) Row(idx int) (otelstorage.Attrs, error) {
 	}
 	return otelstorage.Attrs(m), nil
 }
+
+func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
+	m.AsMap().Range(func(k string, v pcommon.Value) bool {
+		to[k] = v.Str()
+		return true
+	})
+}

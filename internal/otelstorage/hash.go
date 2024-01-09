@@ -3,6 +3,7 @@ package otelstorage
 import (
 	"cmp"
 	"encoding/binary"
+	"encoding/hex"
 	"math"
 	"slices"
 
@@ -12,6 +13,10 @@ import (
 
 // Hash is an attribute hash.
 type Hash [16]byte
+
+func (h Hash) String() string {
+	return hex.EncodeToString(h[:])
+}
 
 // AttrHash computes attributes hash.
 func AttrHash(m pcommon.Map) Hash {

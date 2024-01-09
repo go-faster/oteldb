@@ -167,13 +167,19 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					value              = c.value.Row(i)
 					spanID             = c.spanID.Row(i)
 					traceID            = c.traceID.Row(i)
-					attributes         = c.attributes.Row(i)
-					resource           = c.resource.Row(i)
 				)
+				attributes, err := c.attributes.Row(i)
+				if err != nil {
+					return errors.Wrap(err, "decode attributes")
+				}
+				resource, err := c.resource.Row(i)
+				if err != nil {
+					return errors.Wrap(err, "decode resource")
+				}
 				key := seriesKey{
 					name:       name,
-					attributes: attributes,
-					resource:   resource,
+					attributes: attributes.Hash().String(),
+					resource:   resource.Hash().String(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -198,12 +204,8 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 				})
 
 				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
-				if err := parseLabels(resource, s.labels); err != nil {
-					return errors.Wrap(err, "parse resource")
-				}
-				if err := parseLabels(attributes, s.labels); err != nil {
-					return errors.Wrap(err, "parse attributes")
-				}
+				attrsToLabels(attributes, s.labels)
+				attrsToLabels(resource, s.labels)
 			}
 			return nil
 		},
