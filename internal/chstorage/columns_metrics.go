@@ -5,8 +5,9 @@ import (
 )
 
 type pointColumns struct {
-	name      *proto.ColLowCardinality[string]
-	timestamp *proto.ColDateTime64
+	name           *proto.ColLowCardinality[string]
+	nameNormalized *proto.ColLowCardinality[string]
+	timestamp      *proto.ColDateTime64
 
 	mapping proto.ColEnum8
 	value   proto.ColFloat64
@@ -18,14 +19,16 @@ type pointColumns struct {
 
 func newPointColumns() *pointColumns {
 	return &pointColumns{
-		name:      new(proto.ColStr).LowCardinality(),
-		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		name:           new(proto.ColStr).LowCardinality(),
+		nameNormalized: new(proto.ColStr).LowCardinality(),
+		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 	}
 }
 
 func (c *pointColumns) Columns() Columns {
 	return Columns{
 		{Name: "name", Data: c.name},
+		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "timestamp", Data: c.timestamp},
 
 		{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
@@ -41,8 +44,9 @@ func (c *pointColumns) Input() proto.Input    { return c.Columns().Input() }
 func (c *pointColumns) Result() proto.Results { return c.Columns().Result() }
 
 type expHistogramColumns struct {
-	name      *proto.ColLowCardinality[string]
-	timestamp *proto.ColDateTime64
+	name           *proto.ColLowCardinality[string]
+	nameNormalized *proto.ColLowCardinality[string]
+	timestamp      *proto.ColDateTime64
 
 	count                proto.ColUInt64
 	sum                  *proto.ColNullable[float64]
@@ -62,8 +66,9 @@ type expHistogramColumns struct {
 
 func newExpHistogramColumns() *expHistogramColumns {
 	return &expHistogramColumns{
-		name:      new(proto.ColStr).LowCardinality(),
-		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		name:           new(proto.ColStr).LowCardinality(),
+		nameNormalized: new(proto.ColStr).LowCardinality(),
+		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
 		sum:                  new(proto.ColFloat64).Nullable(),
 		min:                  new(proto.ColFloat64).Nullable(),
@@ -76,6 +81,7 @@ func newExpHistogramColumns() *expHistogramColumns {
 func (c *expHistogramColumns) Columns() Columns {
 	return Columns{
 		{Name: "name", Data: c.name},
+		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "timestamp", Data: c.timestamp},
 
 		{Name: "exp_histogram_count", Data: &c.count},
@@ -125,8 +131,9 @@ func (c *labelsColumns) Input() proto.Input    { return c.Columns().Input() }
 func (c *labelsColumns) Result() proto.Results { return c.Columns().Result() }
 
 type exemplarColumns struct {
-	name      *proto.ColLowCardinality[string]
-	timestamp *proto.ColDateTime64
+	name           *proto.ColLowCardinality[string]
+	nameNormalized *proto.ColLowCardinality[string]
+	timestamp      *proto.ColDateTime64
 
 	filteredAttributes proto.ColStr
 	exemplarTimestamp  *proto.ColDateTime64
@@ -141,6 +148,7 @@ type exemplarColumns struct {
 func newExemplarColumns() *exemplarColumns {
 	return &exemplarColumns{
 		name:              new(proto.ColStr).LowCardinality(),
+		nameNormalized:    new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 	}
@@ -149,6 +157,7 @@ func newExemplarColumns() *exemplarColumns {
 func (c *exemplarColumns) Columns() Columns {
 	return Columns{
 		{Name: "name", Data: c.name},
+		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "timestamp", Data: c.timestamp},
 
 		{Name: "filtered_attributes", Data: &c.filteredAttributes},

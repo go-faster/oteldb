@@ -41,7 +41,6 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		tables:          q.tables,
 		tracer:          q.tracer,
 		getLabelMapping: q.getMetricsLabelMapping,
-		getMetricName:   q.getMetricName,
 	}, nil
 }
 
@@ -52,7 +51,6 @@ type promQuerier struct {
 	ch              chClient
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
-	getMetricName   func(context.Context, string) (string, error)
 
 	tracer trace.Tracer
 }
@@ -179,47 +177,6 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 		}
 	}
 	return nil
-}
-
-func (q *Querier) getMetricName(ctx context.Context, name string) (metricMapped string, rerr error) {
-	ctx, span := q.tracer.Start(ctx, "getMetricName",
-		trace.WithAttributes(
-			attribute.String("chstorage.metric.name", name),
-		),
-	)
-	defer func() {
-		if rerr != nil {
-			span.RecordError(rerr)
-		}
-		span.End()
-	}()
-	mapped := new(proto.ColStr)
-	if err := q.ch.Do(ctx, ch.Query{
-		Result: proto.Results{
-			{Name: "value", Data: mapped},
-		},
-		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < mapped.Rows(); i++ {
-				metricMapped = mapped.Row(i)
-			}
-			return nil
-		},
-		Body: fmt.Sprintf(`SELECT value FROM %[1]s WHERE name_normalized = %[2]s AND name = %[2]s AND value_normalized = %[3]s`,
-			q.tables.Labels, singleQuoted(labels.MetricName), singleQuoted(name),
-		),
-	}); err != nil {
-		return "", errors.Wrap(err, "select")
-	}
-	if metricMapped == "" {
-		// No mapping found.
-		metricMapped = name
-	}
-	span.AddEvent("fetched_metric_name_mapping",
-		trace.WithAttributes(
-			attribute.String("chstorage.metric.mapped", metricMapped),
-		),
-	)
-	return metricMapped, nil
 }
 
 func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
@@ -367,7 +324,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			}
 			{
 				selectors := []string{
-					"name",
+					"name_normalized",
 				}
 				if name := m.Name; name != labels.MetricName {
 					if mapped, ok := mapping[name]; ok {
@@ -379,13 +336,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 					}
 				}
 				value := m.Value
-				if m.Name == labels.MetricName {
-					mappedValue, err := p.getMetricName(ctx, m.Value)
-					if err != nil {
-						return "", errors.Wrap(err, "get metric name mapping")
-					}
-					value = mappedValue
-				}
 				query.WriteString("(\n")
 				for i, sel := range selectors {
 					if i != 0 {
@@ -478,6 +428,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				name := c.name.Row(i)
+				nameNormalized := c.nameNormalized.Row(i)
 				value := c.value.Row(i)
 				timestamp := c.timestamp.Row(i)
 				attributes := c.attributes.Row(i)
@@ -500,7 +451,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				s.series.data.values = append(s.series.data.values, value)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
-				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
+				s.labels[labels.MetricName] = nameNormalized
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}
@@ -543,6 +494,7 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				name := c.name.Row(i)
+				nameNormalized := c.nameNormalized.Row(i)
 				timestamp := c.timestamp.Row(i)
 				count := c.count.Row(i)
 				sum := c.sum.Row(i)
@@ -583,7 +535,7 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 				s.series.data.negativeBucketCounts = append(s.series.data.negativeBucketCounts, negativeBucketCounts)
 				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
 
-				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
+				s.labels[labels.MetricName] = nameNormalized
 				if err := parseLabels(resource, s.labels); err != nil {
 					return errors.Wrap(err, "parse resource")
 				}

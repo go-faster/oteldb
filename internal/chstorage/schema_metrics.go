@@ -25,6 +25,7 @@ const (
 	pointsSchema = `
 	(
 		name LowCardinality(String),
+		name_normalized LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		mapping Enum8(` + metricMappingDDL + `) CODEC(T64),
@@ -54,6 +55,7 @@ const (
 	expHistogramsSchema = `
 	(
 		name LowCardinality(String),
+		name_normalized LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		exp_histogram_count UInt64,
@@ -76,6 +78,7 @@ const (
 	exemplarsSchema = `
 	(
 		name LowCardinality(String),
+		name_normalized LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
 		filtered_attributes String,

@@ -138,6 +138,7 @@ func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric
 			return errors.Wrap(err, "map exemplars")
 		}
 		c.name.Append(name)
+		c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
@@ -366,6 +367,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 			return errors.Wrap(err, "map exemplars")
 		}
 		c.name.Append(name)
+		c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
@@ -449,6 +451,7 @@ func (b *metricsBatch) addMappedSample(
 ) {
 	c := b.points
 	c.name.Append(name)
+	c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 	c.timestamp.Append(series.Timestamp)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
@@ -491,6 +494,7 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	}
 
 	c.name.Append(p.Name)
+	c.nameNormalized.Append(p.Name)
 	c.timestamp.Append(p.Timestamp)
 
 	c.filteredAttributes.Append(encodeAttributes(e.FilteredAttributes()))
