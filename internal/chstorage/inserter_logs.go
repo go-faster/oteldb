@@ -7,6 +7,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -61,6 +62,12 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 			span.RecordError(rerr)
 		} else {
 			i.insertedRecords.Add(ctx, int64(len(records)))
+			i.inserts.Add(ctx, 1,
+				metric.WithAttributes(
+					attribute.String("chstorage.table", table),
+					attribute.String("chstorage.signal", "logs"),
+				),
+			)
 		}
 		span.End()
 	}()

@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
@@ -14,6 +15,7 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/iterators"
@@ -453,6 +455,7 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	query.WriteString(" ORDER BY timestamp")
 
 	var data []logstorage.Record
+	queryStartTime := time.Now()
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
@@ -468,5 +471,12 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
+	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.signal", "logs"),
+		),
+	)
+
 	return &logStaticIterator{data: data}, nil
 }

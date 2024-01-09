@@ -18,9 +18,11 @@ type Inserter struct {
 	ch     *chpool.Pool
 	tables Tables
 
+	insertedPoints  metric.Int64Counter
 	insertedSpans   metric.Int64Counter
 	insertedTags    metric.Int64Counter
 	insertedRecords metric.Int64Counter
+	inserts         metric.Int64Counter
 
 	tracer trace.Tracer
 }
@@ -49,20 +51,41 @@ func (opts *InserterOptions) setDefaults() {
 
 // NewInserter creates new Inserter.
 func NewInserter(c *chpool.Pool, opts InserterOptions) (*Inserter, error) {
+	// HACK(ernado): for some reason, we are getting no-op here.
+	opts.TracerProvider = otel.GetTracerProvider()
+	opts.MeterProvider = otel.GetMeterProvider()
 	opts.setDefaults()
 
 	meter := opts.MeterProvider.Meter("chstorage.Inserter")
-	insertedSpans, err := meter.Int64Counter("chstorage.traces.inserted_spans")
+	insertedSpans, err := meter.Int64Counter("chstorage.traces.inserted_spans",
+		metric.WithDescription("Number of inserted spans"),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create inserted_spans")
 	}
-	insertedTags, err := meter.Int64Counter("chstorage.traces.inserted_tags")
+	insertedTags, err := meter.Int64Counter("chstorage.traces.inserted_tags",
+		metric.WithDescription("Number of inserted tags"),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create inserted_tags")
 	}
-	insertedRecords, err := meter.Int64Counter("chstorage.traces.inserted_records")
+	insertedRecords, err := meter.Int64Counter("chstorage.logs.inserted_records",
+		metric.WithDescription("Number of inserted log records"),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create inserted_records")
+	}
+	insertedPoints, err := meter.Int64Counter("chstorage.metrics.inserted_points",
+		metric.WithDescription("Number of inserted points"),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserted_points")
+	}
+	inserts, err := meter.Int64Counter("chstorage.inserts",
+		metric.WithDescription("Number of insert invocations"),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "create inserts")
 	}
 
 	return &Inserter{
@@ -71,6 +94,8 @@ func NewInserter(c *chpool.Pool, opts InserterOptions) (*Inserter, error) {
 		insertedSpans:   insertedSpans,
 		insertedTags:    insertedTags,
 		insertedRecords: insertedRecords,
+		insertedPoints:  insertedPoints,
+		inserts:         inserts,
 		tracer:          opts.TracerProvider.Tracer("chstorage.Inserter"),
 	}, nil
 }

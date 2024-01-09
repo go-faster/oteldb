@@ -16,6 +16,8 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -30,6 +32,12 @@ func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 	if err := b.Insert(ctx, i.tables, i.ch); err != nil {
 		return errors.Wrap(err, "send batch")
 	}
+	i.inserts.Add(ctx, 1,
+		metric.WithAttributes(
+			attribute.String("chstorage.signal", "metrics"),
+		),
+	)
+	i.insertedPoints.Add(ctx, int64(b.points.value.Rows()))
 	return nil
 }
 

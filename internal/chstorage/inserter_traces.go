@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -24,6 +25,12 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 			span.RecordError(rerr)
 		} else {
 			i.insertedSpans.Add(ctx, int64(len(spans)))
+			i.inserts.Add(ctx, 1,
+				metric.WithAttributes(
+					attribute.String("chstorage.table", table),
+					attribute.String("chstorage.signal", "traces"),
+				),
+			)
 		}
 		span.End()
 	}()
@@ -52,6 +59,12 @@ func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]str
 			span.RecordError(rerr)
 		} else {
 			i.insertedTags.Add(ctx, int64(len(tags)))
+			i.inserts.Add(ctx, 1,
+				metric.WithAttributes(
+					attribute.String("chstorage.table", table),
+					attribute.String("chstorage.signal", "tags"),
+				),
+			)
 		}
 		span.End()
 	}()

@@ -2,6 +2,7 @@ package chstorage
 
 import (
 	"github.com/ClickHouse/ch-go/chpool"
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -16,6 +17,8 @@ type Querier struct {
 	ch     *chpool.Pool
 	tables Tables
 	tracer trace.Tracer
+
+	clickhouseRequestHistogram metric.Float64Histogram
 }
 
 // QuerierOptions is Querier's options.
@@ -42,11 +45,24 @@ func (opts *QuerierOptions) setDefaults() {
 
 // NewQuerier creates new Querier.
 func NewQuerier(c *chpool.Pool, opts QuerierOptions) (*Querier, error) {
+	// HACK(ernado): for some reason, we are getting no-op here.
+	opts.TracerProvider = otel.GetTracerProvider()
+	opts.MeterProvider = otel.GetMeterProvider()
 	opts.setDefaults()
 
+	meter := opts.MeterProvider.Meter("chstorage.Querier")
+	clickhouseRequestHistogram, err := meter.Float64Histogram("chstorage.clickhouse.request",
+		metric.WithUnit("s"),
+		metric.WithDescription("Clickhouse request duration in seconds"),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "create clickhouse.request histogram metric")
+	}
 	return &Querier{
 		ch:     c,
 		tables: opts.Tables,
 		tracer: opts.TracerProvider.Tracer("chstorage.Querier"),
+
+		clickhouseRequestHistogram: clickhouseRequestHistogram,
 	}, nil
 }
