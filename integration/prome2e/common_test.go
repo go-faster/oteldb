@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/integration/prome2e"
 	"github.com/go-faster/oteldb/internal/promapi"
@@ -85,20 +86,14 @@ func runTest(
 
 			r, err := c.GetLabels(ctx, promapi.GetLabelsParams{})
 			a.NoError(err)
-			a.Len(r.Data, len(set.Labels))
-			for _, label := range r.Data {
-				a.Contains(set.Labels, label)
-			}
+			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
 		})
 		t.Run("PostLabels", func(t *testing.T) {
 			a := require.New(t)
 
 			r, err := c.PostLabels(ctx, &promapi.LabelsForm{})
 			a.NoError(err)
-			a.Len(r.Data, len(set.Labels))
-			for _, label := range r.Data {
-				a.Contains(set.Labels, label)
-			}
+			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
 		})
 	})
 	t.Run("LabelValues", func(t *testing.T) {
@@ -107,10 +102,7 @@ func runTest(
 		for labelName, valueSet := range set.Labels {
 			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{Label: labelName})
 			a.NoError(err)
-			a.Len(r.Data, len(valueSet))
-			for _, val := range r.Data {
-				a.Containsf(valueSet, val, "check label %q", labelName)
-			}
+			a.ElementsMatch(maps.Keys(valueSet), []string(r.Data), "check label %q", labelName)
 		}
 	})
 	t.Run("Series", func(t *testing.T) {
