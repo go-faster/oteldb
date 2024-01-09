@@ -39,8 +39,8 @@ const (
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
-	PRIMARY KEY (name, mapping, cityHash64(resource), cityHash64(attributes))
-	ORDER BY (name, mapping, cityHash64(resource), cityHash64(attributes), timestamp)`
+	PRIMARY KEY (name_normalized, mapping, cityHash64(resource), cityHash64(attributes))
+	ORDER BY (name_normalized, mapping, cityHash64(resource), cityHash64(attributes), timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -91,7 +91,7 @@ const (
 		resource	String
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name, cityHash64(resource), cityHash64(attributes), timestamp)`
+	ORDER BY (name_normalized, cityHash64(resource), cityHash64(attributes), timestamp)`
 
 	labelsSchema = `
 	(
@@ -102,7 +102,7 @@ const (
 		value_normalized String  -- normalized value, 'foo_bar' or empty, if original already normalized
 	)
 	ENGINE = ReplacingMergeTree
-	ORDER BY (name, value)`
+	ORDER BY (name_normalized, value)`
 )
 
 func parseLabels(s string, to map[string]string) error {
