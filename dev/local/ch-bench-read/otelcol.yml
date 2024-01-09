@@ -15,9 +15,7 @@ extensions:
   zpages:
 
 service:
-  extensions: [health_check, pprof, zpages]
   pipelines:
     traces:
       receivers: [otlp]
-      processors: []
       exporters: [otlp]

@@ -17,6 +17,14 @@ services:
       timeout: 1s
       retries: 30
 
+  prometheus:
+    image: prom/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - './prometheus.yml:/etc/prometheus/prometheus.yml'
+    restart: unless-stopped
+
   oteldb:
     build:
       context: ../../../
@@ -26,9 +34,12 @@ services:
     volumes:
       - ./oteldb.yml:/etc/otel/cfg.yml:ro
     environment:
+      - PPROF_ADDR=0.0.0.0:9010
       - OTELDB_STORAGE=ch
       - OTEL_LOG_LEVEL=info
-      - OTEL_METRICS_EXPORTER=none
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9464
+      - OTEL_METRICS_EXPORTER=prometheus
       - OTEL_LOGS_EXPORTER=none
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_TRACES_SAMPLER=parentbased_always_off
@@ -42,6 +53,7 @@ services:
       retries: 30
     ports:
       - "127.0.0.1:9090:9090"   # promql
+      - "127.0.0.1:9010:9010"   # pprof
       - "127.0.0.1:19291:19291" # prometheus remote write
     depends_on:
       - clickhouse

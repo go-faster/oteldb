@@ -25,3 +25,10 @@ datasources:
       port: 9000
       server: clickhouse
       tlsSkipVerify: true
+
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    uid: prometheus
