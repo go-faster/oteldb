@@ -485,6 +485,12 @@ func (p *PromQL) Run(ctx context.Context) error {
 	start := time.Now()
 	tracer := p.tracerProvider.Tracer("promql")
 	if err := p.each(ctx, func(ctx context.Context, q promproxy.Query) (rerr error) {
+		// Warmup.
+		for i := 0; i < 3; i++ {
+			if err := p.send(ctx, q); err != nil {
+				return errors.Wrap(err, "send")
+			}
+		}
 		queryStart := time.Now()
 		ctx, span := tracer.Start(ctx, "Send",
 			trace.WithSpanKind(trace.SpanKindClient),
