@@ -106,57 +106,28 @@ func runTest(
 		}
 	})
 	t.Run("Series", func(t *testing.T) {
-		t.Run("PointByName", func(t *testing.T) {
-			a := require.New(t)
+		testName := func(name string) func(t *testing.T) {
+			return func(t *testing.T) {
+				a := require.New(t)
 
-			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
-				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
-				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
-				Match: []string{
-					`prometheus_http_requests_total{}`,
-				},
-			})
-			a.NoError(err)
+				r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+					Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+					End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+					Match: []string{name + "{}"},
+				})
+				a.NoError(err)
 
-			a.NotEmpty(r.Data)
-			for _, labels := range r.Data {
-				a.Equal("prometheus_http_requests_total", labels["__name__"])
+				a.NotEmpty(r.Data)
+				for _, labels := range r.Data {
+					a.Equal(name, labels["__name__"])
+				}
 			}
-		})
-		t.Run("HistogramByName", func(t *testing.T) {
-			a := require.New(t)
+		}
+		t.Run("PointByName", testName(`prometheus_http_requests_total`))
+		t.Run("HistogramByName", testName(`prometheus_http_request_duration_seconds_count`))
+		t.Run("SummaryByName", testName(`go_gc_duration_seconds`))
+		t.Run("PointByMappedName", testName(`process_runtime_go_gc_count`))
 
-			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
-				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
-				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
-				Match: []string{
-					`prometheus_http_request_duration_seconds_count{}`,
-				},
-			})
-			a.NoError(err)
-
-			a.NotEmpty(r.Data)
-			for _, labels := range r.Data {
-				a.Equal("prometheus_http_request_duration_seconds_count", labels["__name__"])
-			}
-		})
-		t.Run("SummaryByName", func(t *testing.T) {
-			a := require.New(t)
-
-			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
-				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
-				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
-				Match: []string{
-					`go_gc_duration_seconds{}`,
-				},
-			})
-			a.NoError(err)
-
-			a.NotEmpty(r.Data)
-			for _, labels := range r.Data {
-				a.Equal("go_gc_duration_seconds", labels["__name__"])
-			}
-		})
 		t.Run("OneMatcher", func(t *testing.T) {
 			a := require.New(t)
 
