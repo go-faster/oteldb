@@ -78,8 +78,15 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 		span.End()
 	}()
 
-	var query strings.Builder
-	fmt.Fprintf(&query, "SELECT DISTINCT value FROM %#q WHERE name = %s\n", table, singleQuoted(name))
+	var (
+		query strings.Builder
+
+		valueColumn = "value"
+	)
+	if name == labels.MetricName {
+		valueColumn = "value_normalized"
+	}
+	fmt.Fprintf(&query, "SELECT DISTINCT %s FROM %#q WHERE name_normalized = %s\n", valueColumn, table, singleQuoted(name))
 	if err := addLabelMatchers(&query, matchers); err != nil {
 		return nil, nil, err
 	}
@@ -89,7 +96,7 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
 		Result: proto.Results{
-			{Name: "value", Data: &column},
+			{Name: valueColumn, Data: &column},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < column.Rows(); i++ {
@@ -100,14 +107,6 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 	}); err != nil {
 		return nil, nil, errors.Wrap(err, "do query")
 	}
-
-	if name == labels.MetricName {
-		// Map label names.
-		for i := range result {
-			result[i] = otelstorage.KeyToLabel(result[i])
-		}
-	}
-
 	return result, nil, nil
 }
 
@@ -131,7 +130,7 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 	}()
 
 	var query strings.Builder
-	fmt.Fprintf(&query, "SELECT DISTINCT name FROM %#q WHERE true\n", table)
+	fmt.Fprintf(&query, "SELECT DISTINCT name_normalized FROM %#q WHERE true\n", table)
 	if err := addLabelMatchers(&query, matchers); err != nil {
 		return nil, nil, err
 	}
@@ -141,7 +140,7 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
 		Result: proto.Results{
-			{Name: "name", Data: column},
+			{Name: "name_normalized", Data: column},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < column.Rows(); i++ {
