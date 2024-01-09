@@ -46,8 +46,9 @@ type tracedQuery struct {
 type PromQL struct {
 	Addr string
 
-	StartTime string
-	EndTime   string
+	StartTime  string
+	EndTime    string
+	AllowEmpty bool
 
 	TracesExporterAddr string
 	TempoAddr          string
@@ -153,13 +154,17 @@ func toPrometheusTimestamp(t time.Time) promapi.PrometheusTimestamp {
 }
 
 func (p *PromQL) sendRangeQuery(ctx context.Context, q promproxy.RangeQuery) error {
-	if _, err := p.client.GetQueryRange(ctx, promapi.GetQueryRangeParams{
+	res, err := p.client.GetQueryRange(ctx, promapi.GetQueryRangeParams{
 		Query: q.Query,
 		Step:  strconv.Itoa(q.Step.Value),
 		Start: toPrometheusTimestamp(q.Start.Value),
 		End:   toPrometheusTimestamp(q.End.Value),
-	}); err != nil {
+	})
+	if err != nil {
 		return errors.Wrap(err, "get query range")
+	}
+	if len(res.Data.Matrix.Result) == 0 && !p.AllowEmpty {
+		return errors.Errorf("no results for range query %q", q.Query)
 	}
 	return nil
 }
@@ -172,22 +177,30 @@ func toOptPrometheusTimestamp(t promproxy.OptDateTime) promapi.OptPrometheusTime
 }
 
 func (p *PromQL) sendInstantQuery(ctx context.Context, q promproxy.InstantQuery) error {
-	if _, err := p.client.GetQuery(ctx, promapi.GetQueryParams{
+	res, err := p.client.GetQuery(ctx, promapi.GetQueryParams{
 		Query: q.Query,
 		Time:  toOptPrometheusTimestamp(q.Time),
-	}); err != nil {
+	})
+	if err != nil {
 		return errors.Wrap(err, "get query")
+	}
+	if len(res.Data.Vector.Result) == 0 && !p.AllowEmpty {
+		return errors.Errorf("no results for query %q", q.Query)
 	}
 	return nil
 }
 
 func (p *PromQL) sendSeriesQuery(ctx context.Context, query promproxy.SeriesQuery) error {
-	if _, err := p.client.GetSeries(ctx, promapi.GetSeriesParams{
+	res, err := p.client.GetSeries(ctx, promapi.GetSeriesParams{
 		Start: toOptPrometheusTimestamp(query.Start),
 		End:   toOptPrometheusTimestamp(query.End),
 		Match: query.Matchers,
-	}); err != nil {
+	})
+	if err != nil {
 		return errors.Wrap(err, "get series")
+	}
+	if len(res.Data) == 0 && !p.AllowEmpty {
+		return errors.Errorf("no results for series query %q", query.Matchers)
 	}
 	return nil
 }
@@ -575,5 +588,6 @@ func newPromQLBenchmarkCommand() *cobra.Command {
 	f.StringVar(&p.TempoAddr, "tempo-addr", "http://127.0.0.1:3200", "Tempo endpoint")
 	f.StringVar(&p.StartTime, "start", "", "Start time override (RFC3339 or unix timestamp)")
 	f.StringVar(&p.EndTime, "end", "", "End time override (RFC3339 or unix timestamp)")
+	f.BoolVar(&p.AllowEmpty, "allow-empty", true, "Allow empty results")
 	return cmd
 }
