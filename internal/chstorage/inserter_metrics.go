@@ -53,8 +53,8 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 	labelColumns := newLabelsColumns()
 	for pair := range b.labels {
 		key := pair[0]
-		labelColumns.name.Append(otelstorage.KeyToLabel(key))
-		labelColumns.key.Append(key)
+		labelColumns.name.Append(key)
+		labelColumns.nameNormalized.Append(otelstorage.KeyToLabel(key))
 		labelColumns.value.Append(pair[1])
 		if key == labels.MetricName {
 			labelColumns.valueNormalized.Append(otelstorage.KeyToLabel(pair[1]))
@@ -138,6 +138,7 @@ func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric
 			return errors.Wrap(err, "map exemplars")
 		}
 		c.name.Append(name)
+		c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
@@ -172,7 +173,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res *lazyAttributes, slic
 		bucketCounts := point.BucketCounts().AsRaw()
 		explicitBounds := point.ExplicitBounds().AsRaw()
 
-		b.addName(name)
+		// Do not add metric name as-is, since we mapping it into multiple series with prefixes.
 		b.addLabels(attrs)
 
 		// Map histogram as set of series for Prometheus compatibility.
@@ -366,6 +367,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 			return errors.Wrap(err, "map exemplars")
 		}
 		c.name.Append(name)
+		c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
@@ -448,7 +450,9 @@ func (b *metricsBatch) addMappedSample(
 	bucketKey ...[2]string,
 ) {
 	c := b.points
+	b.addName(name)
 	c.name.Append(name)
+	c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 	c.timestamp.Append(series.Timestamp)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
@@ -491,6 +495,7 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	}
 
 	c.name.Append(p.Name)
+	c.nameNormalized.Append(p.Name)
 	c.timestamp.Append(p.Timestamp)
 
 	c.filteredAttributes.Append(encodeAttributes(e.FilteredAttributes()))

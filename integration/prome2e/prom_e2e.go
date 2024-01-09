@@ -73,9 +73,10 @@ func (s *BatchSet) addBatch(raw pmetric.Metrics) error {
 }
 
 func (s *BatchSet) addMetric(metric pmetric.Metric) error {
-	s.addLabel("__name__", metric.Name())
 	switch t := metric.Type(); t {
 	case pmetric.MetricTypeGauge:
+		s.addName(metric.Name())
+
 		points := metric.Gauge().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
@@ -84,6 +85,8 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 		}
 		return nil
 	case pmetric.MetricTypeSum:
+		s.addName(metric.Name())
+
 		points := metric.Sum().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
@@ -92,14 +95,33 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 		}
 		return nil
 	case pmetric.MetricTypeHistogram:
+		for _, suffix := range []string{
+			"_count",
+			"_bucket",
+		} {
+			s.addName(metric.Name() + suffix)
+		}
+
 		points := metric.Histogram().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
+			if point.HasSum() {
+				s.addName(metric.Name() + "_sum")
+			}
+			if point.HasMin() {
+				s.addName(metric.Name() + "_min")
+			}
+			if point.HasMax() {
+				s.addName(metric.Name() + "_max")
+			}
+
 			s.addLabels(point.Attributes())
 			s.addTimestamp(point.Timestamp())
 		}
 		return nil
 	case pmetric.MetricTypeExponentialHistogram:
+		s.addLabel(labels.MetricName, metric.Name())
+
 		points := metric.ExponentialHistogram().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
@@ -108,6 +130,14 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 		}
 		return nil
 	case pmetric.MetricTypeSummary:
+		s.addName(metric.Name())
+		for _, suffix := range []string{
+			"_count",
+			"_sum",
+		} {
+			s.addName(metric.Name() + suffix)
+		}
+
 		points := metric.Summary().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
@@ -140,6 +170,10 @@ func (s *BatchSet) addLabels(m pcommon.Map) {
 		}
 		return true
 	})
+}
+
+func (s *BatchSet) addName(val string) {
+	s.addLabel(labels.MetricName, val)
 }
 
 func (s *BatchSet) addLabel(label, val string) {

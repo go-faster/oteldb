@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/integration/prome2e"
 	"github.com/go-faster/oteldb/internal/promapi"
@@ -85,20 +86,14 @@ func runTest(
 
 			r, err := c.GetLabels(ctx, promapi.GetLabelsParams{})
 			a.NoError(err)
-			a.Len(r.Data, len(set.Labels))
-			for _, label := range r.Data {
-				a.Contains(set.Labels, label)
-			}
+			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
 		})
 		t.Run("PostLabels", func(t *testing.T) {
 			a := require.New(t)
 
 			r, err := c.PostLabels(ctx, &promapi.LabelsForm{})
 			a.NoError(err)
-			a.Len(r.Data, len(set.Labels))
-			for _, label := range r.Data {
-				a.Contains(set.Labels, label)
-			}
+			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
 		})
 	})
 	t.Run("LabelValues", func(t *testing.T) {
@@ -107,64 +102,32 @@ func runTest(
 		for labelName, valueSet := range set.Labels {
 			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{Label: labelName})
 			a.NoError(err)
-			a.Len(r.Data, len(valueSet))
-			for _, val := range r.Data {
-				a.Containsf(valueSet, val, "check label %q", labelName)
-			}
+			a.ElementsMatch(maps.Keys(valueSet), []string(r.Data), "check label %q", labelName)
 		}
 	})
 	t.Run("Series", func(t *testing.T) {
-		t.Run("PointByName", func(t *testing.T) {
-			a := require.New(t)
+		testName := func(name string) func(t *testing.T) {
+			return func(t *testing.T) {
+				a := require.New(t)
 
-			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
-				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
-				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
-				Match: []string{
-					`prometheus_http_requests_total{}`,
-				},
-			})
-			a.NoError(err)
+				r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
+					Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
+					End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
+					Match: []string{name + "{}"},
+				})
+				a.NoError(err)
 
-			a.NotEmpty(r.Data)
-			for _, labels := range r.Data {
-				a.Equal("prometheus_http_requests_total", labels["__name__"])
+				a.NotEmpty(r.Data)
+				for _, labels := range r.Data {
+					a.Equal(name, labels["__name__"])
+				}
 			}
-		})
-		t.Run("HistogramByName", func(t *testing.T) {
-			a := require.New(t)
+		}
+		t.Run("PointByName", testName(`prometheus_http_requests_total`))
+		t.Run("HistogramByName", testName(`prometheus_http_request_duration_seconds_count`))
+		t.Run("SummaryByName", testName(`go_gc_duration_seconds`))
+		t.Run("PointByMappedName", testName(`process_runtime_go_gc_count`))
 
-			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
-				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
-				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
-				Match: []string{
-					`prometheus_http_request_duration_seconds_count{}`,
-				},
-			})
-			a.NoError(err)
-
-			a.NotEmpty(r.Data)
-			for _, labels := range r.Data {
-				a.Equal("prometheus_http_request_duration_seconds_count", labels["__name__"])
-			}
-		})
-		t.Run("SummaryByName", func(t *testing.T) {
-			a := require.New(t)
-
-			r, err := c.GetSeries(ctx, promapi.GetSeriesParams{
-				Start: promapi.NewOptPrometheusTimestamp(`1600000000.0`),
-				End:   promapi.NewOptPrometheusTimestamp(`1800000000.0`),
-				Match: []string{
-					`go_gc_duration_seconds{}`,
-				},
-			})
-			a.NoError(err)
-
-			a.NotEmpty(r.Data)
-			for _, labels := range r.Data {
-				a.Equal("go_gc_duration_seconds", labels["__name__"])
-			}
-		})
 		t.Run("OneMatcher", func(t *testing.T) {
 			a := require.New(t)
 
