@@ -57,7 +57,7 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb.chotel
-      - CHOTEL_SEND_RATE=50ms
+      - CHOTEL_SEND_RATE=1s
     depends_on:
       - clickhouse
 
