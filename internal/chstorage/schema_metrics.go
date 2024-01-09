@@ -92,11 +92,11 @@ const (
 
 	labelsSchema = `
 	(
-		name         LowCardinality(String),
-		key          LowCardinality(String),
+		name            LowCardinality(String), -- original name, i.e. 'foo.bar'
+		name_normalized LowCardinality(String), -- normalized name, 'foo_bar'
 
-		value            String,  -- original value, i.e. 'foo.bar'
-		value_normalized String   -- normalized value, 'foo_bar''
+		value            String, -- original value, 'foo.bar'
+		value_normalized String  -- normalized value, 'foo_bar' or empty, if original already normalized
 	)
 	ENGINE = ReplacingMergeTree
 	ORDER BY (name, value)`

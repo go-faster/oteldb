@@ -171,9 +171,9 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 		// Note: predicate negated above.
 		switch m.Type {
 		case labels.MatchEqual, labels.MatchNotEqual:
-			fmt.Fprintf(query, "name = %s\n", singleQuoted(m.Value))
+			fmt.Fprintf(query, "name_normalized = %s\n", singleQuoted(m.Value))
 		case labels.MatchRegexp, labels.MatchNotRegexp:
-			fmt.Fprintf(query, "name REGEXP %s\n", singleQuoted(m.Value))
+			fmt.Fprintf(query, "name_normalized REGEXP %s\n", singleQuoted(m.Value))
 		default:
 			return errors.Errorf("unexpected type %q", m.Type)
 		}
@@ -193,7 +193,7 @@ func (q *Querier) getMetricName(ctx context.Context, name string) (metricMapped 
 		}
 		span.End()
 	}()
-	var mapped = new(proto.ColStr)
+	mapped := new(proto.ColStr)
 	if err := q.ch.Do(ctx, ch.Query{
 		Result: proto.Results{
 			{Name: "value", Data: mapped},
@@ -204,7 +204,7 @@ func (q *Querier) getMetricName(ctx context.Context, name string) (metricMapped 
 			}
 			return nil
 		},
-		Body: fmt.Sprintf(`SELECT value FROM %[1]s WHERE name = %[2]s AND key = %[2]s AND value_normalized = %[3]s`,
+		Body: fmt.Sprintf(`SELECT value FROM %[1]s WHERE name_normalized = %[2]s AND name = %[2]s AND value_normalized = %[3]s`,
 			q.tables.Labels, singleQuoted(labels.MetricName), singleQuoted(name),
 		),
 	}); err != nil {
@@ -235,10 +235,11 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 		span.End()
 	}()
 
-	out := make(map[string]string, len(input))
 	var (
-		name = new(proto.ColStr).LowCardinality()
-		key  = new(proto.ColStr).LowCardinality()
+		out = make(map[string]string, len(input))
+
+		name       = new(proto.ColStr).LowCardinality()
+		normalized = new(proto.ColStr).LowCardinality()
 	)
 	var inputData proto.ColStr
 	for _, label := range input {
@@ -247,11 +248,11 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	if err := q.ch.Do(ctx, ch.Query{
 		Result: proto.Results{
 			{Name: "name", Data: name},
-			{Name: "key", Data: key},
+			{Name: "name_normalized", Data: normalized},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < name.Rows(); i++ {
-				out[name.Row(i)] = key.Row(i)
+			for i := 0; i < normalized.Rows(); i++ {
+				out[normalized.Row(i)] = name.Row(i)
 			}
 			return nil
 		},
@@ -259,7 +260,7 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 		ExternalData: []proto.InputColumn{
 			{Name: "name", Data: &inputData},
 		},
-		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.Labels),
+		Body: fmt.Sprintf(`SELECT name, name_normalized FROM %[1]s WHERE name_normalized IN labels`, q.tables.Labels),
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}

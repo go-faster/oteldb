@@ -53,8 +53,8 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 	labelColumns := newLabelsColumns()
 	for pair := range b.labels {
 		key := pair[0]
-		labelColumns.name.Append(otelstorage.KeyToLabel(key))
-		labelColumns.key.Append(key)
+		labelColumns.name.Append(key)
+		labelColumns.nameNormalized.Append(otelstorage.KeyToLabel(key))
 		labelColumns.value.Append(pair[1])
 		if key == labels.MetricName {
 			labelColumns.valueNormalized.Append(otelstorage.KeyToLabel(pair[1]))
