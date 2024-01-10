@@ -18,9 +18,10 @@ import (
 )
 
 type Replay struct {
-	Target  string
-	Source  string
-	Workers int
+	Target   string
+	Source   string
+	Encoding string
+	Workers  int
 }
 
 func (r *Replay) Run(ctx context.Context) error {
@@ -55,7 +56,7 @@ func (r *Replay) Run(ctx context.Context) error {
 			return errors.Wrap(err, "create request")
 		}
 		req.Header.Set("Content-Type", "application/x-protobuf")
-		req.Header.Set("Content-Encoding", "zstd")
+		req.Header.Set("Content-Encoding", r.Encoding)
 		res, err := client.Do(req)
 		if err != nil {
 			return errors.Wrap(err, "do request")
@@ -67,7 +68,7 @@ func (r *Replay) Run(ctx context.Context) error {
 		if len(out) == 0 {
 			out = []byte("empty")
 		}
-		if res.StatusCode != http.StatusAccepted {
+		if !(res.StatusCode == http.StatusAccepted || res.StatusCode == http.StatusNoContent || res.StatusCode == http.StatusOK) {
 			return errors.Errorf("%s: %s", res.Status, out)
 		}
 		return nil
@@ -135,5 +136,6 @@ func newReplayCommand() *cobra.Command {
 	cmd.Flags().StringVar(&replay.Target, "target", "http://127.0.0.1:19291", "Target server")
 	cmd.Flags().StringVarP(&replay.Source, "input", "i", "requests.rwq", "Source file")
 	cmd.Flags().IntVarP(&replay.Workers, "workers", "j", 8, "Number of workers")
+	cmd.Flags().StringVar(&replay.Encoding, "encoding", "zstd", "Encoding")
 	return cmd
 }
