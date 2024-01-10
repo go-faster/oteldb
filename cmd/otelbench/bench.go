@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -417,22 +418,60 @@ func (s *Bench) RunNodeExporter(ctx context.Context) error {
 }
 
 func (s *Bench) RunAgent(ctx context.Context) error {
-	if len(s.targets) != 1 {
-		return errors.New("expected one target")
+	if len(s.targets) != 1 && s.agentAddr != "" {
+		return errors.New("cannot use agentAddr with multiple targets")
 	}
-	arg := []string{
-		"--httpListenAddr=" + s.agentAddr,
-		"--loggerFormat=json",
-		"--remoteWrite.showURL",
-		"--promscrape.config=http://" + s.addr + "/config",
-		"--remoteWrite.url=" + s.targets[0],
-		"--remoteWrite.forceVMProto",
+	g, ctx := errgroup.WithContext(ctx)
+	for i := range s.targets {
+		dir, err := os.MkdirTemp("", "vmagent")
+		if err != nil {
+			return errors.Wrap(err, "create temp dir")
+		}
+		arg := []string{
+			"--httpListenAddr=" + allocateAddr(s.agentAddr),
+			"--loggerFormat=json",
+			"--remoteWrite.showURL",
+			"--promscrape.config=http://" + s.addr + "/config",
+			"--remoteWrite.url=" + s.targets[i],
+			"--remoteWrite.forceVMProto",
+		}
+		// #nosec G204
+		cmd := exec.CommandContext(ctx, "vmagent", arg...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Dir = dir
+		g.Go(func() error {
+			defer func() {
+				_ = os.RemoveAll(dir)
+			}()
+			return cmd.Run()
+		})
 	}
-	// #nosec G204
-	cmd := exec.CommandContext(ctx, "vmagent", arg...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return g.Wait()
+}
+
+func allocateAddr(defaultAddr string) string {
+	if defaultAddr != "" {
+		return defaultAddr
+	}
+	var lastErr error
+	for i := 0; i < 10; i++ {
+		// Listen on random port.
+		laddr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:")
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		l, err := net.ListenTCP("tcp", laddr)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		addr := l.Addr().String()
+		_ = l.Close()
+		return addr
+	}
+	panic("failed to allocate random addr: " + lastErr.Error())
 }
 
 func (s *Bench) RunPrometheus(ctx context.Context, dir string) error {
@@ -446,7 +485,7 @@ func (s *Bench) RunPrometheus(ctx context.Context, dir string) error {
 	// #nosec G204
 	cmd := exec.CommandContext(ctx, "prometheus",
 		"--config.file="+filepath.Join(dir, "prometheus.yml"),
-		"--web.listen-address="+s.agentAddr,
+		"--web.listen-address="+allocateAddr(s.agentAddr),
 		"--enable-feature=agent",
 		"--enable-feature=new-service-discovery-manager",
 		"--log.format=json",
@@ -536,6 +575,8 @@ func (s *Bench) waitForTarget(ctx context.Context, target string) error {
 }
 
 func (s *Bench) run(ctx context.Context) error {
+	s.nodeExporterAddr = allocateAddr(s.nodeExporterAddr)
+	s.addr = allocateAddr(s.addr)
 	s.cfg.Store(s.prometheusConfig())
 
 	// First, wait for target to be available.
@@ -704,9 +745,9 @@ func newBenchCommand() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
-	f.StringVar(&b.nodeExporterAddr, "nodeExporterAddr", "127.0.0.1:9301", "address for node exporter to listen")
-	f.StringVar(&b.addr, "addr", "127.0.0.1:8428", "address to listen")
-	f.StringVar(&b.agentAddr, "agentAddr", "127.0.0.1:8429", "address for vmagent to listen")
+	f.StringVar(&b.nodeExporterAddr, "nodeExporterAddr", "", "address for node exporter to listen")
+	f.StringVar(&b.addr, "addr", "", "address to listen")
+	f.StringVar(&b.agentAddr, "agentAddr", "", "address for vmagent to listen")
 	f.IntVar(&b.targetsCount, "targetsCount", 100, "The number of scrape targets to return from -httpListenAddr. Each target has the same address defined by -targetAddr")
 	f.DurationVar(&b.scrapeInterval, "scrapeInterval", time.Second*5, "The scrape_interval to set at the scrape config returned from -httpListenAddr")
 	f.DurationVar(&b.pollExporterInterval, "pollExporterInterval", time.Second, "Interval to poll the node exporter filling up cache")
