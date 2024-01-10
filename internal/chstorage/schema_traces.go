@@ -28,13 +28,16 @@ const (
 	batch_id UUID,
 	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 	attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+	attributes_hash    FixedString(16),
 	resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 	resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+	resource_hash      FixedString(16),
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),
 	scope_attributes       Map(LowCardinality(String), String) CODEC(ZSTD(1)),  -- string[str | json]
 	scope_attributes_types Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)),  -- string[type]
+	scope_attributes_hash  FixedString(16),
 
 	events_timestamps Array(DateTime64(9)),
 	events_names Array(String),
@@ -49,8 +52,8 @@ const (
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(start)
-PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
-ORDER BY (service_namespace, service_name, cityHash64(resource), start)
+PRIMARY KEY (service_namespace, service_name, resource_hash)
+ORDER BY (service_namespace, service_name, resource_hash, start)
 `
 	kindDDL    = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
 	tagsSchema = `

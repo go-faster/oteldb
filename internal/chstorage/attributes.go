@@ -63,6 +63,7 @@ type Attributes struct {
 	Name  string
 	Data  *proto.ColMap[string, string]
 	Types *proto.ColMap[string, uint8]
+	Hash  proto.ColRawOf[otelstorage.Hash]
 }
 
 type (
@@ -84,6 +85,7 @@ func (a *Attributes) Columns() Columns {
 	return Columns{
 		{Name: a.Name, Data: a.Data},
 		{Name: a.Name + "_types", Data: a.Types},
+		{Name: a.Name + "_hash", Data: &a.Hash},
 	}
 }
 
@@ -92,6 +94,7 @@ func (a *Attributes) Append(kv otelstorage.Attrs) {
 	va, vt := encodeAttributesRow(kv.AsMap())
 	a.Data.AppendKV(va)
 	a.Types.AppendKV(vt)
+	a.Hash.Append(kv.Hash())
 }
 
 // Row returns a new map of attributes for a given row.

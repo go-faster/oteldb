@@ -34,9 +34,11 @@ const (
 		flags	    UInt8  CODEC(T64),
 
 		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_hash    FixedString(16),
 		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		resource_hash      FixedString(16),
 
 		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
 	    INDEX idx_res_attr_key mapKeys(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
@@ -46,8 +48,8 @@ const (
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
-	PRIMARY KEY (name_normalized, mapping, cityHash64(resource), cityHash64(attributes))
-	ORDER BY (name_normalized, mapping, cityHash64(resource), cityHash64(attributes), timestamp)`
+	PRIMARY KEY (name_normalized, mapping, resource_hash, attributes_hash)
+	ORDER BY (name_normalized, mapping, resource_hash, attributes_hash, timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -78,9 +80,11 @@ const (
 
 		flags	UInt32,
 		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_hash    FixedString(16),
 		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		resource_hash      FixedString(16),
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp`
@@ -97,12 +101,14 @@ const (
 		trace_id FixedString(16),
 
 		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_hash    FixedString(16),
 		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		resource_hash      FixedString(16),
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name_normalized, cityHash64(resource), cityHash64(attributes), timestamp)`
+	ORDER BY (name_normalized, resource_hash, attributes_hash, timestamp)`
 
 	labelsSchema = `
 	(
