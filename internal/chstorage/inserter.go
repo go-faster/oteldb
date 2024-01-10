@@ -1,7 +1,6 @@
 package chstorage
 
 import (
-	"github.com/ClickHouse/ch-go/chpool"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -15,7 +14,7 @@ var _ tracestorage.Inserter = (*Inserter)(nil)
 
 // Inserter implements tracestorage.Inserter using Clickhouse.
 type Inserter struct {
-	ch     *chpool.Pool
+	ch     ClickhouseClient
 	tables Tables
 
 	insertedPoints  metric.Int64Counter
@@ -50,7 +49,7 @@ func (opts *InserterOptions) setDefaults() {
 }
 
 // NewInserter creates new Inserter.
-func NewInserter(c *chpool.Pool, opts InserterOptions) (*Inserter, error) {
+func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 	// HACK(ernado): for some reason, we are getting no-op here.
 	opts.TracerProvider = otel.GetTracerProvider()
 	opts.MeterProvider = otel.GetMeterProvider()

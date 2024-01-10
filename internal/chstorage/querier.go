@@ -1,7 +1,6 @@
 package chstorage
 
 import (
-	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
@@ -14,7 +13,7 @@ var _ tracestorage.Querier = (*Querier)(nil)
 
 // Querier implements tracestorage.Querier using Clickhouse.
 type Querier struct {
-	ch     *chpool.Pool
+	ch     ClickhouseClient
 	tables Tables
 	tracer trace.Tracer
 
@@ -44,7 +43,7 @@ func (opts *QuerierOptions) setDefaults() {
 }
 
 // NewQuerier creates new Querier.
-func NewQuerier(c *chpool.Pool, opts QuerierOptions) (*Querier, error) {
+func NewQuerier(c ClickhouseClient, opts QuerierOptions) (*Querier, error) {
 	// HACK(ernado): for some reason, we are getting no-op here.
 	opts.TracerProvider = otel.GetTracerProvider()
 	opts.MeterProvider = otel.GetMeterProvider()

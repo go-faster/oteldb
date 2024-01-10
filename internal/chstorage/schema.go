@@ -90,11 +90,7 @@ func DefaultTables() Tables {
 	}
 }
 
-type chClient interface {
-	Do(ctx context.Context, q ch.Query) (err error)
-}
-
-func (t Tables) getHashes(ctx context.Context, c chClient) (map[string]string, error) {
+func (t Tables) getHashes(ctx context.Context, c ClickhouseClient) (map[string]string, error) {
 	col := newMigrationColumns()
 	if err := c.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
@@ -106,7 +102,7 @@ func (t Tables) getHashes(ctx context.Context, c chClient) (map[string]string, e
 	return col.Mapping(), nil
 }
 
-func (t Tables) saveHashes(ctx context.Context, c chClient, m map[string]string) error {
+func (t Tables) saveHashes(ctx context.Context, c ClickhouseClient, m map[string]string) error {
 	col := newMigrationColumns()
 	col.Save(m)
 	if err := c.Do(ctx, ch.Query{
@@ -146,7 +142,7 @@ func (t Tables) generateQuery(opts generateOptions) string {
 }
 
 // Create creates tables.
-func (t Tables) Create(ctx context.Context, c chClient) error {
+func (t Tables) Create(ctx context.Context, c ClickhouseClient) error {
 	if err := t.Validate(); err != nil {
 		return errors.Wrap(err, "validate")
 	}

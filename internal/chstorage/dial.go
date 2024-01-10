@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ClickHouse/ch-go"
-	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
@@ -41,8 +40,8 @@ func (opts *DialOptions) setDefaults() {
 	}
 }
 
-// Dial makes a connection pool using given DSN.
-func Dial(ctx context.Context, dsn string, opts DialOptions) (*chpool.Pool, error) {
+// Dial creates new [ClickhouseClient] using given DSN.
+func Dial(ctx context.Context, dsn string, opts DialOptions) (ClickhouseClient, error) {
 	opts.setDefaults()
 	lg := opts.Logger
 
@@ -83,10 +82,12 @@ func Dial(ctx context.Context, dsn string, opts DialOptions) (*chpool.Pool, erro
 	connectBackoff.InitialInterval = 2 * time.Second
 	connectBackoff.MaxElapsedTime = time.Minute
 	return backoff.RetryNotifyWithData(
-		func() (*chpool.Pool, error) {
-			return chpool.Dial(ctx, chpool.Options{
-				ClientOptions: chOpts,
-			})
+		func() (ClickhouseClient, error) {
+			client := NewDialingClickhouseClient(chOpts)
+			if err := client.Ping(ctx); err != nil {
+				return nil, errors.Wrap(err, "ping")
+			}
+			return client, nil
 		},
 		connectBackoff,
 		func(err error, d time.Duration) {

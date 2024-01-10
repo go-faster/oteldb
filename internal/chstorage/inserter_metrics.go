@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ClickHouse/ch-go"
-	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
@@ -59,7 +58,7 @@ func newMetricBatch() *metricsBatch {
 	}
 }
 
-func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool.Pool) error {
+func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickhouseClient) error {
 	labelColumns := newLabelsColumns()
 	for pair := range b.labels {
 		key := pair[0]
