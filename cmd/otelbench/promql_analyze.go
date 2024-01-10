@@ -31,19 +31,27 @@ func (a PromQLAnalyze) Run() error {
 		} else {
 			fmt.Println("matchers:", q.Matchers)
 		}
-		fmt.Println(" sql:", len(q.Queries))
-		fmt.Println(" duration:", time.Duration(q.DurationNanos)*time.Nanosecond)
 
-		var memUsage, readBytes, readRows int64
-		for _, v := range q.Queries {
-			memUsage += v.MemoryUsage
-			readBytes += v.ReadBytes
-			readRows += v.ReadRows
+		formatNanos := func(nanos int64) string {
+			d := time.Duration(nanos) * time.Nanosecond
+			return d.Round(time.Millisecond / 20).String()
 		}
+		fmt.Println(" duration:", formatNanos(q.DurationNanos))
 
-		fmt.Println(" memory usage:", humanize.Bytes(uint64(memUsage)))
-		fmt.Println(" read bytes:", humanize.Bytes(uint64(readBytes)))
-		fmt.Println(" read rows:", fmtInt(int(readRows)))
+		if len(q.Queries) > 0 {
+			fmt.Println(" sql queries:", len(q.Queries))
+
+			var memUsage, readBytes, readRows int64
+			for _, v := range q.Queries {
+				memUsage += v.MemoryUsage
+				readBytes += v.ReadBytes
+				readRows += v.ReadRows
+			}
+
+			fmt.Println(" memory usage:", humanize.Bytes(uint64(memUsage)))
+			fmt.Println(" read bytes:", humanize.Bytes(uint64(readBytes)))
+			fmt.Println(" read rows:", fmtInt(int(readRows)))
+		}
 	}
 
 	return nil
