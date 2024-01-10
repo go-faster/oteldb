@@ -24,6 +24,7 @@ type Tables struct {
 	ExpHistograms string
 	Exemplars     string
 	Labels        string
+	Resources     string
 
 	Logs     string
 	LogAttrs string
@@ -80,6 +81,7 @@ func DefaultTables() Tables {
 		ExpHistograms: "metrics_exp_histograms",
 		Exemplars:     "metrics_exemplars",
 		Labels:        "metrics_labels",
+		Resources:     "resources",
 
 		Logs:     "logs",
 		LogAttrs: "logs_attrs",
@@ -170,6 +172,7 @@ func (t Tables) Create(ctx context.Context, c chClient) error {
 		{Name: t.Labels, DDL: labelsSchema},
 		{Name: t.Logs, DDL: logsSchema, TTLField: "timestamp"},
 		{Name: t.LogAttrs, DDL: logAttrsSchema},
+		{Name: t.Resources, DDL: resourcesSchema},
 	} {
 		query := t.generateQuery(s)
 		name := s.Name

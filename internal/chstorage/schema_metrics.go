@@ -120,6 +120,14 @@ const (
 	)
 	ENGINE = ReplacingMergeTree
 	ORDER BY (name_normalized, value)`
+	resourcesSchema = `
+	(
+		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
+		attributes_hash    FixedString(16),
+		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+	)
+	ENGINE = ReplacingMergeTree
+	ORDER BY (attributes_hash)`
 )
 
 func parseLabels(s string, to map[string]string) error {

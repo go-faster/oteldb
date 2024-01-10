@@ -45,6 +45,7 @@ type metricsBatch struct {
 	points        *pointColumns
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
+	resources     *resourceColumns
 	labels        map[[2]string]struct{}
 }
 
@@ -53,6 +54,7 @@ func newMetricBatch() *metricsBatch {
 		points:        newPointColumns(),
 		expHistograms: newExpHistogramColumns(),
 		exemplars:     newExemplarColumns(),
+		resources:     newResourceColumns(),
 		labels:        map[[2]string]struct{}{},
 	}
 }
@@ -83,6 +85,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 		{tables.ExpHistograms, b.expHistograms},
 		{tables.Exemplars, b.exemplars},
 		{tables.Labels, labelColumns},
+		{tables.Resources, b.resources},
 	} {
 		table := table
 		grp.Go(func() error {
@@ -108,6 +111,8 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client *chpool
 
 func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric.NumberDataPointSlice) error {
 	c := b.points
+
+	b.resources.attributes.Append(res.Attributes())
 
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
@@ -153,6 +158,7 @@ func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric
 		c.flags.Append(uint8(flags))
 		c.attributes.Append(attrs.Attributes())
 		c.resource.Append(res.Attributes())
+		b.resources.attributes.Append(attrs.Attributes())
 	}
 	return nil
 }
