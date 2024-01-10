@@ -509,11 +509,11 @@ func (s *Bench) parseTargets(args []string) error {
 }
 
 func (s *Bench) waitForTarget(ctx context.Context, target string) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*15)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 
 	e := backoff.NewExponentialBackOff()
-	return backoff.RetryNotify(func() error {
+	if err := backoff.RetryNotify(func() error {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, http.NoBody)
 		if err != nil {
 			return err
@@ -525,14 +525,14 @@ func (s *Bench) waitForTarget(ctx context.Context, target string) error {
 		defer func() {
 			_ = res.Body.Close()
 		}()
-		if !(res.StatusCode >= 200 && res.StatusCode < 300) {
-			return fmt.Errorf("unexpected status %s", res.Status)
-		}
 		zctx.From(ctx).Info("Target ready", zap.String("target", target))
 		return nil
 	}, backoff.WithContext(e, ctx), func(err error, duration time.Duration) {
 		zctx.From(ctx).Warn("cannot fetch target", zap.Error(err), zap.Duration("duration", duration))
-	})
+	}); err != nil {
+		return errors.Wrapf(err, "wait for target %q", target)
+	}
+	return nil
 }
 
 func (s *Bench) run(ctx context.Context) error {
