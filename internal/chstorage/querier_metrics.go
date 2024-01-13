@@ -360,7 +360,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 				}
 				query.WriteString(")")
 			}
-			query.WriteString("\n")
 		}
 		query.WriteString("\nORDER BY timestamp")
 		return query.String(), nil
