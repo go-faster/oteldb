@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,16 +16,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/go-faster/oteldb/internal/autologs"
 )
 
 func server(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
-	ctx, err := autologs.Setup(ctx, m)
-	if err != nil {
-		return errors.Wrap(err, "setup logs")
-	}
-
 	g, ctx := errgroup.WithContext(ctx)
 	mux := http.NewServeMux()
 

@@ -9,7 +9,6 @@ import (
 	"github.com/go-faster/sdk/app"
 	"go.uber.org/zap"
 
-	"github.com/go-faster/oteldb/internal/autologs"
 	"github.com/go-faster/oteldb/internal/autopyro"
 	"github.com/go-faster/oteldb/internal/autozpages"
 )
@@ -23,10 +22,6 @@ func main() {
 		defer func() {
 			_ = shutdown(context.Background())
 		}()
-		if ctx, err = autologs.Setup(ctx, m); err != nil {
-			return errors.Wrap(err, "setup logs")
-		}
-
 		set := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 		cfgPath := set.String("config", "", "Path to config (defaults to oteldb.yml)")
 		if err := set.Parse(os.Args[1:]); err != nil {
