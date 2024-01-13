@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"github.com/golang/snappy"
+	"github.com/valyala/bytebufferpool"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/consumer"
@@ -123,20 +124,17 @@ func snappyDecoder(body io.ReadCloser) (io.ReadCloser, error) {
 	}, nil
 }
 
-func decodeRequest(r io.Reader, rw *prompb.WriteRequest) error {
-	var data []byte
+func decodeRequest(r io.Reader, bb *bytebufferpool.ByteBuffer, rw *prompb.WriteRequest) error {
 	switch r := r.(type) {
 	case *closerReader:
 		// Do not make an unnecessary copy of data.
-		data = r.data
+		bb.Set(r.data)
 	default:
-		var err error
-		data, err = io.ReadAll(r)
-		if err != nil {
+		if _, err := bb.ReadFrom(r); err != nil {
 			return err
 		}
 	}
-	return rw.Unmarshal(data)
+	return rw.Unmarshal(bb.B)
 }
 
 func getWriteRequest() *prompb.WriteRequest {
@@ -156,10 +154,14 @@ var writeRequestPool sync.Pool
 
 func (rec *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := rec.obsrecv.StartMetricsOp(r.Context())
+
+	bb := bytebufferpool.Get()
+	defer bytebufferpool.Put(bb)
+
 	wr := getWriteRequest()
 	defer putWriteRequest(wr)
 
-	if err := decodeRequest(r.Body, wr); err != nil {
+	if err := decodeRequest(r.Body, bb, wr); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

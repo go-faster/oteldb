@@ -148,3 +148,6 @@ issues:
     - path: "internal/logparser"
       linters: [goconst]
       text: "(trace|span)_?[Ii][Dd]"
+
+    - path: "internal/prompb"
+      linters: [stylecheck]

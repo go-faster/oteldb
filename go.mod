@@ -35,6 +35,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.27.0
+	github.com/valyala/bytebufferpool v1.0.0
 	github.com/zeebo/xxh3 v1.0.2
 	go.opentelemetry.io/collector/component v0.92.0
 	go.opentelemetry.io/collector/config/configauth v0.92.0

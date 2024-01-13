@@ -6,6 +6,7 @@ import (
 	"math"
 	"slices"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/ClickHouse/ch-go"
@@ -17,14 +18,31 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
+func getMetricsBatch() *metricsBatch {
+	v := metricsBatchPool.Get()
+	if v == nil {
+		return newMetricBatch()
+	}
+	return v.(*metricsBatch)
+}
+
+func putMetricsBatch(b *metricsBatch) {
+	b.Reset()
+	metricsBatchPool.Put(b)
+}
+
+var metricsBatchPool sync.Pool
+
 // ConsumeMetrics inserts given metrics.
 func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
-	b := newMetricBatch()
+	b := getMetricsBatch()
+	defer putMetricsBatch(b)
 	if err := i.mapMetrics(b, metrics); err != nil {
 		return errors.Wrap(err, "map metrics")
 	}
@@ -45,6 +63,13 @@ type metricsBatch struct {
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
 	labels        map[[2]string]struct{}
+}
+
+func (b *metricsBatch) Reset() {
+	b.points.Columns().Reset()
+	b.expHistograms.Columns().Reset()
+	b.exemplars.Columns().Reset()
+	maps.Clear(b.labels)
 }
 
 func newMetricBatch() *metricsBatch {
