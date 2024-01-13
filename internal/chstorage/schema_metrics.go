@@ -41,10 +41,9 @@ const (
 		resource_hash      FixedString(16),
 
 		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
-	    INDEX idx_res_attr_key mapKeys(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
-	    INDEX idx_res_attr_value mapValues(attributes) TYPE bloom_filter(0.01) GRANULARITY 1,
-	    INDEX idx_span_attr_key mapKeys(resource) TYPE bloom_filter(0.01) GRANULARITY 1,
-	    INDEX idx_span_attr_value mapValues(resource) TYPE bloom_filter(0.01) GRANULARITY 1
+
+	    INDEX idx_keys arrayConcat(mapKeys(attributes), mapKeys(resource))       TYPE bloom_filter(0.01) GRANULARITY 1,
+	    INDEX idx_values arrayConcat(mapValues(attributes), mapValues(resource)) TYPE bloom_filter(0.01) GRANULARITY 1,
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
