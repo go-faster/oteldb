@@ -55,16 +55,16 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 
 		query.WriteString(" AND (")
 		for i, column := range []string{
-			"attributes",
-			"scope_attributes",
-			"resource",
+			colAttrs,
+			colResource,
+			colScope,
 		} {
 			if i != 0 {
 				query.WriteString(" OR ")
 			}
 			fmt.Fprintf(&query,
-				`%s[%s] = %s`,
-				column, singleQuoted(key), singleQuoted(value),
+				`%s = %s`,
+				attrSelector(column, key), singleQuoted(value),
 			)
 			query.WriteByte('\n')
 		}
@@ -296,8 +296,8 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 					query.WriteString(" OR ")
 				}
 				fmt.Fprintf(&query,
-					`mapContains(%s, %s) = 1`,
-					column, singleQuoted(attr.Name),
+					`has(%s, %s)`,
+					attrCol(column, attrKeys), singleQuoted(attr.Name),
 				)
 				query.WriteByte('\n')
 			}
@@ -397,8 +397,8 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 					if i != 0 {
 						query.WriteString("\nOR ")
 					}
-					fmt.Fprintf(&query, "%s[%s] %s %s",
-						column, singleQuoted(attr.Name),
+					fmt.Fprintf(&query, "%s %s %s",
+						attrSelector(column, attr.Name),
 						cmp, singleQuoted(value),
 					)
 				}
@@ -427,18 +427,18 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
 	switch attr.Scope {
 	case traceql.ScopeNone:
 		return []string{
-			"attributes",
-			"scope_attributes",
-			"resource",
+			colAttrs,
+			colResource,
+			colScope,
 		}
 	case traceql.ScopeResource:
 		return []string{
-			"scope_attributes",
-			"resource",
+			colScope,
+			colResource,
 		}
 	case traceql.ScopeSpan:
 		return []string{
-			"attributes",
+			colAttrs,
 		}
 	default:
 		return nil

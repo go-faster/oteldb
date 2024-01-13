@@ -1,6 +1,8 @@
 package chstorage
 
 import (
+	"fmt"
+
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
@@ -27,88 +29,95 @@ func valueFromStrType(v pcommon.Value, s string, t uint8) error {
 	return decodeValue(d, v)
 }
 
-func encodeAttributesRow(attrs pcommon.Map) ([]attrKV, []typKV) {
-	out := make([]attrKV, 0, attrs.Len())
-	outTypes := make([]typKV, 0, attrs.Len())
+func encodeAttributesRow(attrs pcommon.Map, ck, cv proto.ColumnOf[[]string], ct proto.ColumnOf[[]uint8]) {
+	var (
+		keys   []string
+		values []string
+		types  []uint8
+	)
 	attrs.Range(func(k string, v pcommon.Value) bool {
 		s, t := valueToStrType(v)
-		out = append(out, proto.KV[string, string]{
-			Key:   k,
-			Value: s,
-		})
-		outTypes = append(outTypes, proto.KV[string, uint8]{
-			Key:   k,
-			Value: t,
-		})
+		keys = append(keys, k)
+		values = append(values, s)
+		types = append(types, t)
 		return true
 	})
-	return out, outTypes
-}
-
-func newAttributesColumn() *proto.ColMap[string, string] {
-	return proto.NewMap[string, string](
-		new(proto.ColStr).LowCardinality(),
-		new(proto.ColStr),
-	)
-}
-
-func newTypesColumn() *proto.ColMap[string, uint8] {
-	return proto.NewMap[string, uint8](
-		new(proto.ColStr).LowCardinality(),
-		new(proto.ColUInt8),
-	)
+	ck.Append(keys)
+	cv.Append(values)
+	ct.Append(types)
 }
 
 type Attributes struct {
-	Name  string
-	Data  *proto.ColMap[string, string]
-	Types *proto.ColMap[string, uint8]
-	Hash  proto.ColRawOf[otelstorage.Hash]
+	Name   string
+	Keys   *proto.ColArr[string]
+	Values *proto.ColArr[string]
+	Types  *proto.ColArr[uint8]
+	Hash   proto.ColRawOf[otelstorage.Hash]
 }
-
-type (
-	attrKV = proto.KV[string, string]
-	typKV  = proto.KV[string, uint8]
-)
 
 // NewAttributes constructs a new Attributes storage representation.
 func NewAttributes(name string) *Attributes {
 	return &Attributes{
-		Name:  name,
-		Data:  newAttributesColumn(),
-		Types: newTypesColumn(),
+		Name: name,
+
+		Keys:   new(proto.ColStr).Array(),
+		Values: new(proto.ColStr).Array(),
+		Types:  new(proto.ColUInt8).Array(),
 	}
+}
+
+const (
+	attrKeys   = "keys"
+	attrValues = "values"
+	attrHash   = "hash"
+	attrTypes  = "types"
+)
+
+func attrCol(name, col string) string {
+	return fmt.Sprintf("%s_%s", name, col)
 }
 
 // Columns returns a slice of Columns for this attribute set.
 func (a *Attributes) Columns() Columns {
 	return Columns{
-		{Name: a.Name, Data: a.Data},
-		{Name: a.Name + "_types", Data: a.Types},
-		{Name: a.Name + "_hash", Data: &a.Hash},
+		{Name: attrCol(a.Name, attrKeys), Data: a.Keys},
+		{Name: attrCol(a.Name, attrValues), Data: a.Values},
+		{Name: attrCol(a.Name, attrTypes), Data: a.Types},
+		{Name: attrCol(a.Name, attrHash), Data: &a.Hash},
 	}
+}
+
+const (
+	colAttrs    = "attribute"
+	colResource = "resource"
+	colScope    = "scope"
+)
+
+func attrSelector(name, key string) string {
+	return fmt.Sprintf("%s[indexOf(%s, %s)]",
+		attrCol(name, attrValues), attrCol(name, attrKeys), singleQuoted(key),
+	)
 }
 
 // Append adds a new map of attributes.
 func (a *Attributes) Append(kv otelstorage.Attrs) {
-	va, vt := encodeAttributesRow(kv.AsMap())
-	a.Data.AppendKV(va)
-	a.Types.AppendKV(vt)
+	encodeAttributesRow(kv.AsMap(), a.Keys, a.Values, a.Types)
 	a.Hash.Append(kv.Hash())
 }
 
 // Row returns a new map of attributes for a given row.
 func (a *Attributes) Row(idx int) (otelstorage.Attrs, error) {
-	m := pcommon.NewMap()
-	s := a.Data.RowKV(idx)
-	st := a.Types.RowKV(idx)
-	if len(s) != len(st) {
-		return otelstorage.Attrs{}, errors.New("length mismatch")
+	var (
+		m      = pcommon.NewMap()
+		keys   = a.Keys.Row(idx)
+		values = a.Values.Row(idx)
+		types  = a.Types.Row(idx)
+	)
+	if len(keys) != len(values) || len(keys) != len(types) {
+		return otelstorage.Attrs{}, errors.Errorf("attributes: keys, values and types have different lengths")
 	}
-	for i, kv := range s {
-		t := st[i].Value
-		v := m.PutEmpty(kv.Key)
-		if err := valueFromStrType(v, kv.Value, t); err != nil {
+	for i := range keys {
+		if err := valueFromStrType(m.PutEmpty(keys[i]), values[i], types[i]); err != nil {
 			return otelstorage.Attrs{}, errors.Wrap(err, "decode value")
 		}
 	}

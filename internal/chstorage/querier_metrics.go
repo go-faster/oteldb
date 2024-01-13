@@ -331,8 +331,8 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 						name = mapped
 					}
 					selectors = []string{
-						fmt.Sprintf("attributes[%s]", singleQuoted(name)),
-						fmt.Sprintf("resource[%s]", singleQuoted(name)),
+						attrSelector(colAttrs, name),
+						attrSelector(colResource, name),
 					}
 				}
 				value := m.Value
@@ -367,11 +367,19 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 				}
 				if m.Type == labels.MatchEqual || m.Type == labels.MatchRegexp {
 					// Key should be in keys array.
-					query.WriteString(fmt.Sprintf("\nAND has(arrayConcat(mapKeys(attributes), mapKeys(resource)), %s)", singleQuoted(name)))
+					query.WriteString(
+						fmt.Sprintf("\nAND has(arrayConcat(%s, %s), %s)",
+							attrCol(colAttrs, attrKeys), attrCol(colResource, attrKeys), singleQuoted(name),
+						),
+					)
 				}
 				if m.Type == labels.MatchEqual {
 					// Value should be in values array.
-					query.WriteString(fmt.Sprintf("\nAND has(arrayConcat(mapValues(attributes), mapValues(resource)), %s)", singleQuoted(value)))
+					query.WriteString(
+						fmt.Sprintf("\nAND has(arrayConcat(%s, %s), %s)",
+							attrCol(colAttrs, attrValues), attrCol(colResource, attrValues), singleQuoted(value),
+						),
+					)
 				}
 			}
 			query.WriteString("\n")

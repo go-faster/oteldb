@@ -23,18 +23,24 @@ CREATE TABLE IF NOT EXISTS `trace_spans`
 	status_message LowCardinality(String),
 
 	batch_id UUID,
-	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-	attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
-	attributes_hash    FixedString(16),
-	resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-	resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+
+	attribute_keys    Array(String),
+	attribute_values  Array(String),
+	attribute_types   Array(UInt8),
+	attribute_hash    FixedString(16),
+
+	resource_keys      Array(String),
+	resource_values    Array(String),
+	resource_types     Array(UInt8),
 	resource_hash      FixedString(16),
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),
-	scope_attributes       Map(LowCardinality(String), String) CODEC(ZSTD(1)),  -- string[str | json]
-	scope_attributes_types Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)),  -- string[type]
-	scope_attributes_hash  FixedString(16),
+
+	scope_keys    Array(String),
+	scope_values  Array(String),
+	scope_types   Array(UInt8),
+	scope_hash    FixedString(16),
 
 	events_timestamps Array(DateTime64(9)),
 	events_names Array(String),

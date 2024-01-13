@@ -24,18 +24,23 @@ const (
 
 	body               String CODEC(ZSTD(1)), -- string or json object
 
-	attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-	attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
-	attributes_hash    FixedString(16),
-	resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-	resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+	attribute_keys    Array(String),
+	attribute_values  Array(String),
+	attribute_types   Array(UInt8),
+	attribute_hash    FixedString(16),
+
+	resource_keys      Array(String),
+	resource_values    Array(String),
+	resource_types     Array(UInt8),
 	resource_hash      FixedString(16),
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),
-	scope_attributes       Map(LowCardinality(String), String) CODEC(ZSTD(1)),  -- string[str | json]
-	scope_attributes_types Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)),  -- string[type]
-	scope_attributes_hash  FixedString(16),
+
+	scope_keys    Array(String),
+	scope_values  Array(String),
+	scope_types   Array(UInt8),
+	scope_hash    FixedString(16),
 
     INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
     INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,

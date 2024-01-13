@@ -23,8 +23,8 @@ func newPointColumns() *pointColumns {
 		nameNormalized: new(proto.ColStr).LowCardinality(),
 		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
-		attributes: NewAttributes("attributes"),
-		resource:   NewAttributes("resource"),
+		attributes: NewAttributes(colAttrs),
+		resource:   NewAttributes(colResource),
 	}
 }
 
@@ -77,8 +77,8 @@ func newExpHistogramColumns() *expHistogramColumns {
 		positiveBucketCounts: new(proto.ColUInt64).Array(),
 		negativeBucketCounts: new(proto.ColUInt64).Array(),
 
-		attributes: NewAttributes("attributes"),
-		resource:   NewAttributes("resource"),
+		attributes: NewAttributes(colAttrs),
+		resource:   NewAttributes(colResource),
 	}
 }
 
@@ -153,8 +153,8 @@ func newExemplarColumns() *exemplarColumns {
 		nameNormalized:    new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		attributes:        NewAttributes("attributes"),
-		resource:          NewAttributes("resource"),
+		attributes:        NewAttributes(colAttrs),
+		resource:          NewAttributes(colResource),
 	}
 }
 

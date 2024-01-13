@@ -66,10 +66,13 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 			return nil
 		},
 		Body: fmt.Sprintf(`SELECT DISTINCT
-arrayJoin(arrayConcat(mapKeys(attributes), mapKeys(resource), mapKeys(scope_attributes))) as key
+arrayJoin(arrayConcat(%s, %s, %s)) as key
 FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)
 LIMIT 1000`,
+			attrCol(colAttrs, attrKeys),
+			attrCol(colResource, attrKeys),
+			attrCol(colScope, attrKeys),
 			table, opts.Start, opts.End,
 		),
 	}); err != nil {
@@ -225,13 +228,16 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		},
 		Body: fmt.Sprintf(`SELECT DISTINCT
 array(
-	attributes[%[1]s],
-	scope_attributes[%[1]s],
-	resource[%[1]s]
+	%s,
+	%s,
+	%s
 ) as values
 FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d) LIMIT 1000`,
-			singleQuoted(labelName), table, opts.Start, opts.End,
+			attrSelector(colAttrs, labelName),
+			attrSelector(colResource, labelName),
+			attrSelector(colScope, labelName),
+			table, opts.Start, opts.End,
 		),
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
@@ -399,19 +405,21 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		default:
 			// Search in all attributes.
 			for i, column := range []string{
-				"attributes",
-				"resource",
-				"scope_attributes",
+				colAttrs,
+				colResource,
+				colScope,
 			} {
 				if i != 0 {
 					query.WriteString(" OR ")
 				}
 				// TODO: how to match integers, booleans, floats, arrays?
+
+				selector := attrSelector(column, labelName)
 				switch m.Op {
 				case logql.OpEq, logql.OpNotEq:
-					fmt.Fprintf(&query, "%s[%s] = %s", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "%s = %s", selector, singleQuoted(m.Value))
 				case logql.OpRe, logql.OpNotRe:
-					fmt.Fprintf(&query, "match(%s[%s], %s)", column, singleQuoted(labelName), singleQuoted(m.Value))
+					fmt.Fprintf(&query, "match(%s, %s)", selector, singleQuoted(m.Value))
 				default:
 					return nil, errors.Errorf("unexpected op %q", m.Op)
 				}

@@ -51,11 +51,11 @@ func newSpanColumns() *spanColumns {
 		serviceInstanceID: new(proto.ColStr).LowCardinality(),
 		serviceName:       new(proto.ColStr).LowCardinality(),
 		serviceNamespace:  new(proto.ColStr).LowCardinality(),
-		attributes:        NewAttributes("attributes"),
-		resource:          NewAttributes("resource"),
+		attributes:        NewAttributes(colAttrs),
+		resource:          NewAttributes(colResource),
 		scopeName:         new(proto.ColStr).LowCardinality(),
 		scopeVersion:      new(proto.ColStr).LowCardinality(),
-		scopeAttributes:   NewAttributes("scope_attributes"),
+		scopeAttributes:   NewAttributes(colScope),
 	}
 }
 

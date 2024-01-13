@@ -33,22 +33,25 @@ const (
 
 		flags	    UInt8  CODEC(T64),
 
-		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-		attributes_hash    FixedString(16),
-		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
-		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		attribute_keys    Array(String),
+		attribute_values  Array(String),
+		attribute_types   Array(UInt8),
+		attribute_hash    FixedString(16),
+
+		resource_keys      Array(String),
+		resource_values    Array(String),
+		resource_types     Array(UInt8),
 		resource_hash      FixedString(16),
 
 		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
 
-	    INDEX idx_keys arrayConcat(mapKeys(attributes), mapKeys(resource))       TYPE bloom_filter GRANULARITY 3,
-	    INDEX idx_values arrayConcat(mapValues(attributes), mapValues(resource)) TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_keys   arrayConcat(attribute_keys, resource_keys)     TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_values arrayConcat(attribute_values, resource_values) TYPE bloom_filter GRANULARITY 3,
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
-	PRIMARY KEY (name_normalized, mapping, resource_hash, attributes_hash)
-	ORDER BY (name_normalized, mapping, resource_hash, attributes_hash, timestamp)`
+	PRIMARY KEY (name_normalized, mapping, resource_hash, attribute_hash)
+	ORDER BY (name_normalized, mapping, resource_hash, attribute_hash, timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -78,15 +81,18 @@ const (
 		exp_histogram_negative_bucket_counts Array(UInt64),
 
 		flags	UInt32,
-		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-		attributes_hash    FixedString(16),
-		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
-		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		attribute_keys    Array(String),
+		attribute_values  Array(String),
+		attribute_types   Array(UInt8),
+		attribute_hash    FixedString(16),
+
+		resource_keys      Array(String),
+		resource_values    Array(String),
+		resource_types     Array(UInt8),
 		resource_hash      FixedString(16),
 
-	    INDEX idx_keys arrayConcat(mapKeys(attributes), mapKeys(resource))       TYPE bloom_filter GRANULARITY 3,
-	    INDEX idx_values arrayConcat(mapValues(attributes), mapValues(resource)) TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_keys   arrayConcat(attribute_keys, resource_keys)     TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_values arrayConcat(attribute_values, resource_values) TYPE bloom_filter GRANULARITY 3,
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp`
@@ -102,18 +108,21 @@ const (
 		span_id FixedString(8),
 		trace_id FixedString(16),
 
-		attributes         Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-		attributes_hash    FixedString(16),
-		attributes_types   Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
-		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
-		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
+		attribute_keys    Array(String),
+		attribute_values  Array(String),
+		attribute_types   Array(UInt8),
+		attribute_hash    FixedString(16),
+
+		resource_keys      Array(String),
+		resource_values    Array(String),
+		resource_types     Array(UInt8),
 		resource_hash      FixedString(16),
 
-	    INDEX idx_keys arrayConcat(mapKeys(attributes), mapKeys(resource))       TYPE bloom_filter GRANULARITY 3,
-	    INDEX idx_values arrayConcat(mapValues(attributes), mapValues(resource)) TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_keys   arrayConcat(attribute_keys, resource_keys)     TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_values arrayConcat(attribute_values, resource_values) TYPE bloom_filter GRANULARITY 3,
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name_normalized, resource_hash, attributes_hash, timestamp)`
+	ORDER BY (name_normalized, resource_hash, attribute_hash, timestamp)`
 
 	labelsSchema = `
 	(
