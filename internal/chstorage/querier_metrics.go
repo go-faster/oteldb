@@ -41,6 +41,7 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		tables:          q.tables,
 		tracer:          q.tracer,
 		getLabelMapping: q.getMetricsLabelMapping,
+		getAttributes:   q.getAttributes,
 	}, nil
 }
 
@@ -51,6 +52,7 @@ type promQuerier struct {
 	ch              ClickhouseClient
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
+	getAttributes   func(context.Context, SearchAttributes) ([]AttributesRow, error)
 
 	tracer trace.Tracer
 }
@@ -253,8 +255,8 @@ func (p *promQuerier) Select(ctx context.Context, sortSeries bool, hints *storag
 
 type seriesKey struct {
 	name       string
-	attributes string
-	resource   string
+	attributes otelstorage.Hash
+	resource   otelstorage.Hash
 	bucketKey  [2]string
 }
 
@@ -275,7 +277,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	for _, m := range matchers {
 		queryLabels = append(queryLabels, m.Name)
 	}
-	ctx, span := p.tracer.Start(ctx, "SelectSeries",
+	ctx, span := p.tracer.Start(ctx, "selectSeries",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", start.UnixNano()),
 			attribute.Int64("chstorage.range.end", end.UnixNano()),
@@ -288,9 +290,26 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		}
 		span.End()
 	}()
+
 	mapping, err := p.getLabelMapping(ctx, queryLabels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
+	}
+
+	var attrMatchers []SearchAttributesMatcher
+	for _, m := range matchers {
+		if m.Name == labels.MetricName {
+			continue
+		}
+		key := m.Name
+		if mapped, ok := mapping[m.Name]; ok {
+			key = mapped
+		}
+		attrMatchers = append(attrMatchers, SearchAttributesMatcher{
+			Key:       key,
+			Value:     m.Value,
+			Operation: SearchAttributesOperation(m.Type),
+		})
 	}
 
 	// TODO(tdakkota): optimize query by func hint (e.g. func "series").
@@ -312,7 +331,25 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		if !end.IsZero() {
 			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
 		}
+		if len(attrMatchers) > 0 {
+			// Search in all attributes.
+			query.WriteString("AND (")
+			for i, column := range []string{
+				"attributes_hash",
+				"resource_hash",
+			} {
+				if i != 0 {
+					query.WriteString(" OR ")
+				}
+				query.WriteString(column)
+				query.WriteString(" IN (hashes)")
+			}
+			query.WriteString(") ")
+		}
 		for _, m := range matchers {
+			if m.Name != labels.MetricName {
+				continue
+			}
 			switch m.Type {
 			case labels.MatchEqual, labels.MatchRegexp:
 				query.WriteString("AND ")
@@ -322,38 +359,14 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 				return "", errors.Errorf("unexpected type %q", m.Type)
 			}
 			{
-				selectors := []string{
-					"name_normalized",
+				switch m.Type {
+				case labels.MatchEqual, labels.MatchNotEqual:
+					fmt.Fprintf(&query, "name_normalized = %s\n", singleQuoted(m.Value))
+				case labels.MatchRegexp, labels.MatchNotRegexp:
+					fmt.Fprintf(&query, "name_normalized REGEXP %s\n", singleQuoted(m.Value))
+				default:
+					return "", errors.Errorf("unexpected type %q", m.Type)
 				}
-				if name := m.Name; name != labels.MetricName {
-					if mapped, ok := mapping[name]; ok {
-						name = mapped
-					}
-					selectors = []string{
-						fmt.Sprintf("attributes[%s]", singleQuoted(name)),
-						fmt.Sprintf("resource[%s]", singleQuoted(name)),
-					}
-					// TODO: Use indexes:
-					//  - has(mapValues(attributes), 'host-0') -- 'host-0' should be in map values, idx_res_attr_value
-					//  - mapContains(attributes, 'job') -- 'job' should be in map keys, idx_res_attr_key
-				}
-				value := m.Value
-				query.WriteString("(\n")
-				for i, sel := range selectors {
-					if i != 0 {
-						query.WriteString("\tOR ")
-					}
-					// Note: predicate negated above.
-					switch m.Type {
-					case labels.MatchEqual, labels.MatchNotEqual:
-						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(value))
-					case labels.MatchRegexp, labels.MatchNotRegexp:
-						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(value))
-					default:
-						return "", errors.Errorf("unexpected type %q", m.Type)
-					}
-				}
-				query.WriteString(")")
 			}
 			query.WriteString("\n")
 		}
@@ -367,6 +380,23 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		expHistSeries []storage.Series
 		summarySeries []storage.Series
 	)
+
+	var pc promQuerierContext
+	if len(attrMatchers) > 0 {
+		attrs, err := p.getAttributes(ctx, SearchAttributes{
+			Start:    start,
+			End:      end,
+			Matchers: attrMatchers,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "get attributes")
+		}
+
+		pc = promQuerierContext{
+			Attributes: attrs,
+		}
+	}
+
 	grp, grpCtx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		ctx := grpCtx
@@ -376,7 +406,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			return err
 		}
 
-		result, err := p.queryPoints(ctx, query)
+		result, err := p.queryPoints(ctx, query, pc)
 		if err != nil {
 			return errors.Wrap(err, "query points")
 		}
@@ -391,7 +421,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			return err
 		}
 
-		result, err := p.queryExpHistograms(ctx, query)
+		result, err := p.queryExpHistograms(ctx, query, pc)
 		if err != nil {
 			return errors.Wrap(err, "query exponential histograms")
 		}
@@ -413,7 +443,28 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	return newSeriesSet(points), nil
 }
 
-func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.Series, error) {
+type promQuerierContext struct {
+	Attributes AttributesRows
+}
+
+func (promQuerierContext) ExternalTableName() string {
+	return "hashes"
+}
+
+func (pc promQuerierContext) Attribute(h otelstorage.Hash) otelstorage.Attrs {
+	return pc.Attributes.Attribute(h)
+}
+
+func (pc promQuerierContext) ExternalData() []proto.InputColumn {
+	return []proto.InputColumn{
+		{Name: "hashes", Data: proto.ColRawOf[otelstorage.Hash](Hashes(pc.Attributes))},
+	}
+}
+
+func (p *promQuerier) queryPoints(ctx context.Context, query string, pc promQuerierContext) ([]storage.Series, error) {
+	ctx, span := p.tracer.Start(ctx, "queryPoints")
+	defer span.End()
+
 	type seriesWithLabels struct {
 		series *series[pointData]
 		labels map[string]string
@@ -424,9 +475,11 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 		c   = newPointColumns()
 	)
 	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query,
-		Result: c.Result(),
+		Logger:        zctx.From(ctx).Named("ch"),
+		Body:          query,
+		Result:        c.Result(),
+		ExternalTable: pc.ExternalTableName(),
+		ExternalData:  pc.ExternalData(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				name := c.name.Row(i)
@@ -441,11 +494,10 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				if err != nil {
 					return errors.Wrap(err, "decode resource")
 				}
-
 				key := seriesKey{
 					name:       name,
-					attributes: attributes.Hash().String(),
-					resource:   resource.Hash().String(),
+					attributes: attributes.Hash(),
+					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -481,7 +533,10 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 	return result, nil
 }
 
-func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]storage.Series, error) {
+func (p *promQuerier) queryExpHistograms(ctx context.Context, query string, pc promQuerierContext) ([]storage.Series, error) {
+	ctx, span := p.tracer.Start(ctx, "queryExpHistograms")
+	defer span.End()
+
 	type seriesWithLabels struct {
 		series *series[expHistData]
 		labels map[string]string
@@ -492,24 +547,28 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 		c   = newExpHistogramColumns()
 	)
 	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query,
-		Result: c.Result(),
+		Logger:        zctx.From(ctx).Named("ch"),
+		Body:          query,
+		Result:        c.Result(),
+		ExternalTable: pc.ExternalTableName(),
+		ExternalData:  pc.ExternalData(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
-				name := c.name.Row(i)
-				nameNormalized := c.nameNormalized.Row(i)
-				timestamp := c.timestamp.Row(i)
-				count := c.count.Row(i)
-				sum := c.sum.Row(i)
-				min := c.min.Row(i)
-				max := c.max.Row(i)
-				scale := c.scale.Row(i)
-				zerocount := c.zerocount.Row(i)
-				positiveOffset := c.positiveOffset.Row(i)
-				positiveBucketCounts := c.positiveBucketCounts.Row(i)
-				negativeOffset := c.negativeOffset.Row(i)
-				negativeBucketCounts := c.negativeBucketCounts.Row(i)
+				var (
+					name                 = c.name.Row(i)
+					nameNormalized       = c.nameNormalized.Row(i)
+					timestamp            = c.timestamp.Row(i)
+					count                = c.count.Row(i)
+					sum                  = c.sum.Row(i)
+					rmin                 = c.min.Row(i)
+					rmax                 = c.max.Row(i)
+					scale                = c.scale.Row(i)
+					zerocount            = c.zerocount.Row(i)
+					positiveOffset       = c.positiveOffset.Row(i)
+					positiveBucketCounts = c.positiveBucketCounts.Row(i)
+					negativeOffset       = c.negativeOffset.Row(i)
+					negativeBucketCounts = c.negativeBucketCounts.Row(i)
+				)
 				attributes, err := c.attributes.Row(i)
 				if err != nil {
 					return errors.Wrap(err, "decode attributes")
@@ -518,11 +577,10 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 				if err != nil {
 					return errors.Wrap(err, "decode resource")
 				}
-
 				key := seriesKey{
 					name:       name,
-					attributes: attributes.Hash().String(),
-					resource:   resource.Hash().String(),
+					attributes: attributes.Hash(),
+					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -535,8 +593,8 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 
 				s.series.data.count = append(s.series.data.count, count)
 				s.series.data.sum = append(s.series.data.sum, sum)
-				s.series.data.min = append(s.series.data.min, min)
-				s.series.data.max = append(s.series.data.max, max)
+				s.series.data.min = append(s.series.data.min, rmin)
+				s.series.data.max = append(s.series.data.max, rmax)
 				s.series.data.scale = append(s.series.data.scale, scale)
 				s.series.data.zerocount = append(s.series.data.zerocount, zerocount)
 				s.series.data.positiveOffset = append(s.series.data.positiveOffset, positiveOffset)

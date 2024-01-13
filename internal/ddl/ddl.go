@@ -29,7 +29,8 @@ func Backtick(s string) string {
 	return "`" + s + "`"
 }
 
-func backticks(ss []string) []string {
+// Backticks adds backticks to the slice of strings.
+func Backticks(ss []string) []string {
 	out := make([]string, len(ss))
 	for i, s := range ss {
 		out[i] = Backtick(s)
@@ -72,12 +73,12 @@ func Generate(table Table) (string, error) {
 	}
 	if len(table.OrderBy) > 0 {
 		b.WriteString("ORDER BY (")
-		b.WriteString(strings.Join(backticks(table.OrderBy), ", "))
+		b.WriteString(strings.Join(Backticks(table.OrderBy), ", "))
 		b.WriteString(")\n")
 	}
 	if len(table.PrimaryKey) > 0 {
 		b.WriteString("PRIMARY KEY (")
-		b.WriteString(strings.Join(backticks(table.PrimaryKey), ", "))
+		b.WriteString(strings.Join(Backticks(table.PrimaryKey), ", "))
 		b.WriteString(")\n")
 	}
 	return b.String(), nil

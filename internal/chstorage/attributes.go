@@ -97,6 +97,22 @@ func (a *Attributes) Append(kv otelstorage.Attrs) {
 	a.Hash.Append(kv.Hash())
 }
 
+type AttributesRow struct {
+	Value otelstorage.Attrs
+	Hash  otelstorage.Hash
+}
+
+type AttributesRows []AttributesRow
+
+func (rows AttributesRows) Attribute(h otelstorage.Hash) otelstorage.Attrs {
+	for i := range rows {
+		if rows[i].Hash == h {
+			return rows[i].Value
+		}
+	}
+	return otelstorage.Attrs(pcommon.NewMap())
+}
+
 // Row returns a new map of attributes for a given row.
 func (a *Attributes) Row(idx int) (otelstorage.Attrs, error) {
 	m := pcommon.NewMap()

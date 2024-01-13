@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/ClickHouse/ch-go/proto"
+
+	"github.com/go-faster/oteldb/internal/ddl"
 )
 
 // Column is a column with name and data that can be used in INSERT or SELECT query.
@@ -36,7 +38,7 @@ func (c Columns) Names() []string {
 // All returns comma-separated column names for using in SELECT query
 // instead of `SELECT *`.
 func (c Columns) All() string {
-	return strings.Join(c.Names(), ", ")
+	return strings.Join(ddl.Backticks(c.Names()), ", ")
 }
 
 // Input returns columns for using in INSERT query.
