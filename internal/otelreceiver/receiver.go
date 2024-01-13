@@ -3,6 +3,9 @@ package otelreceiver
 
 import (
 	"github.com/go-faster/errors"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/otelcol"
@@ -25,6 +28,9 @@ func receiverFactoryMap() (map[component.Type]receiver.Factory, error) {
 func processorFactoryMap() (map[component.Type]processor.Factory, error) {
 	return processor.MakeFactoryMap(
 		batchprocessor.NewFactory(),
+		attributesprocessor.NewFactory(),
+		resourceprocessor.NewFactory(),
+		metricstransformprocessor.NewFactory(),
 	)
 }
 
