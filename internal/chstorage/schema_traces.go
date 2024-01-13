@@ -27,9 +27,9 @@ const (
 
 	batch_id UUID,
 
-	attribute String,
-	resource  String,
-	scope     String,
+	attribute LowCardinality(String),
+	resource  LowCardinality(String),
+	scope     LowCardinality(String),
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),

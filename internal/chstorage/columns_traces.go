@@ -134,14 +134,8 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 
 func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span, error) {
 	for i := 0; i < c.traceID.Rows(); i++ {
-		attrs, err := c.attributes.Row(i)
-		if err != nil {
-			return nil, errors.Wrap(err, "decode attributes")
-		}
-		resource, err := c.resource.Row(i)
-		if err != nil {
-			return nil, errors.Wrap(err, "decode resource")
-		}
+		attrs := c.attributes.Row(i)
+		resource := c.resource.Row(i)
 		{
 			v := resource.AsMap()
 			if s := c.serviceInstanceID.Row(i); s != "" {
@@ -154,10 +148,7 @@ func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span
 				v.PutStr(string(semconv.ServiceNamespaceKey), s)
 			}
 		}
-		scopeAttrs, err := c.scopeAttributes.Row(i)
-		if err != nil {
-			return nil, errors.Wrap(err, "decode scope attributes")
-		}
+		scopeAttrs := c.scopeAttributes.Row(i)
 		events, err := c.events.Row(i)
 		if err != nil {
 			return nil, errors.Wrap(err, "decode events")

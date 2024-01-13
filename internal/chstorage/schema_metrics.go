@@ -33,9 +33,9 @@ const (
 
 		flags	    UInt8  CODEC(T64, ZSTD(1)),
 
-		attribute String CODEC(ZSTD(1)),
-		resource  String CODEC(ZSTD(1)),
-		scope     String CODEC(ZSTD(1)),
+		attribute LowCardinality(String) CODEC(ZSTD(1)),
+		resource  LowCardinality(String) CODEC(ZSTD(1)),
+		scope     LowCardinality(String) CODEC(ZSTD(1)),
 
 		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
 	)
@@ -73,9 +73,9 @@ const (
 
 		flags	    UInt8  CODEC(T64, ZSTD(1)),
 
-		attribute String CODEC(ZSTD(1)),
-		resource  String CODEC(ZSTD(1)),
-		scope     String CODEC(ZSTD(1)),
+		attribute LowCardinality(String) CODEC(ZSTD(1)),
+		resource  LowCardinality(String) CODEC(ZSTD(1)),
+		scope     LowCardinality(String) CODEC(ZSTD(1)),
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp`
@@ -91,9 +91,9 @@ const (
 		span_id FixedString(8),
 		trace_id FixedString(16),
 
-		attribute String CODEC(ZSTD(1)),
-		resource  String CODEC(ZSTD(1)),
-		scope     String CODEC(ZSTD(1)),
+		attribute LowCardinality(String) CODEC(ZSTD(1)),
+		resource  LowCardinality(String) CODEC(ZSTD(1)),
+		scope     LowCardinality(String) CODEC(ZSTD(1)),
 	)
 	ENGINE = MergeTree()
 	ORDER BY (name_normalized, cityHash64(resource), cityHash64(attribute), timestamp)`

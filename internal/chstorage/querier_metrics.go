@@ -438,15 +438,9 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 					nameNormalized = c.nameNormalized.Row(i)
 					value          = c.value.Row(i)
 					timestamp      = c.timestamp.Row(i)
+					attributes     = c.attributes.Row(i)
+					resource       = c.resource.Row(i)
 				)
-				attributes, err := c.attributes.Row(i)
-				if err != nil {
-					return errors.Wrap(err, "decode attributes")
-				}
-				resource, err := c.resource.Row(i)
-				if err != nil {
-					return errors.Wrap(err, "decode resource")
-				}
 				key := seriesKey{
 					name:       name,
 					attributes: attributes.Hash(),
@@ -516,16 +510,9 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 					positiveBucketCounts = c.positiveBucketCounts.Row(i)
 					negativeOffset       = c.negativeOffset.Row(i)
 					negativeBucketCounts = c.negativeBucketCounts.Row(i)
+					attributes           = c.attributes.Row(i)
+					resource             = c.resource.Row(i)
 				)
-				attributes, err := c.attributes.Row(i)
-				if err != nil {
-					return errors.Wrap(err, "decode attributes")
-				}
-				resource, err := c.resource.Row(i)
-				if err != nil {
-					return errors.Wrap(err, "decode resource")
-				}
-
 				key := seriesKey{
 					name:       name,
 					attributes: attributes.Hash(),

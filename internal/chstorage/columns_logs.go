@@ -2,7 +2,6 @@ package chstorage
 
 import (
 	"github.com/ClickHouse/ch-go/proto"
-	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
@@ -81,10 +80,7 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			ScopeName:    c.scopeName.Row(i),
 		}
 		{
-			a, err := c.resource.Row(i)
-			if err != nil {
-				return errors.Wrap(err, "decode resource")
-			}
+			a := c.resource.Row(i)
 			v := a.AsMap()
 			if s := c.serviceInstanceID.Row(i); s != "" {
 				v.PutStr(string(semconv.ServiceInstanceIDKey), s)
@@ -98,18 +94,10 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			r.ResourceAttrs = a
 		}
 		{
-			m, err := c.attributes.Row(i)
-			if err != nil {
-				return errors.Wrap(err, "decode attributes")
-			}
-			r.Attrs = m
+			r.Attrs = c.attributes.Row(i)
 		}
 		{
-			a, err := c.attributes.Row(i)
-			if err != nil {
-				return errors.Wrap(err, "decode scope attributes")
-			}
-			r.ScopeAttrs = a
+			r.ScopeAttrs = c.scopeAttributes.Row(i)
 		}
 		{
 			// Default just to timestamp.

@@ -167,12 +167,12 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					value              = c.value.Row(i)
 					spanID             = c.spanID.Row(i)
 					traceID            = c.traceID.Row(i)
+					attributes         = c.attributes.Row(i)
+					resource           = c.resource.Row(i)
 				)
-				attributes, err := c.attributes.Row(i)
 				if err != nil {
 					return errors.Wrap(err, "decode attributes")
 				}
-				resource, err := c.resource.Row(i)
 				if err != nil {
 					return errors.Wrap(err, "decode resource")
 				}

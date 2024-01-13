@@ -90,6 +90,9 @@ func encodeMap(e *jx.Encoder, m pcommon.Map, additional ...[2]string) {
 
 func decodeAttributes(s []byte) (otelstorage.Attrs, error) {
 	result := pcommon.NewMap()
+	if len(s) == 0 {
+		return otelstorage.Attrs(result), nil
+	}
 	err := decodeMap(jx.DecodeBytes(s), result)
 	return otelstorage.Attrs(result), err
 }

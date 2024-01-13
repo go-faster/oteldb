@@ -24,9 +24,9 @@ const (
 
 	body               String CODEC(ZSTD(1)), -- string or json object
 
-	attribute String CODEC(ZSTD(1)),
-	resource  String CODEC(ZSTD(1)),
-	scope     String CODEC(ZSTD(1)),
+	attribute LowCardinality(String) CODEC(ZSTD(1)),
+	resource  LowCardinality(String) CODEC(ZSTD(1)),
+	scope     LowCardinality(String) CODEC(ZSTD(1)),
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),
