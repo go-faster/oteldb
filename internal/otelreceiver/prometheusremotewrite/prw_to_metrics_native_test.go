@@ -1,4 +1,4 @@
-//go:build !prometheusremotewrite_prometheus_prompb
+//go:build prometheusremotewrite_prometheus_prompb
 
 package prometheusremotewrite
 

@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !prometheusremotewrite_prometheus_prompb
+//go:build prometheusremotewrite_prometheus_prompb
 
 package prometheusremotewrite
 
 import (
+	"encoding/hex"
 	"errors"
 	"time"
 
+	"github.com/prometheus/prometheus/prompb"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
-
-	"github.com/go-faster/oteldb/internal/prompb"
 )
 
 // FromTimeSeries converts TimeSeries to OTLP metrics.
@@ -85,11 +85,13 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 
 				attrs := ppoint.Attributes()
 				for _, l := range ts.Labels {
-					if string(l.Name) == nameStr {
+					labelName := l.Name
+					if l.Name == nameStr {
 						continue
 					}
-					attrs.PutStr(string(l.Name), string(l.Value))
+					attrs.PutStr(labelName, l.Value)
 				}
+				mapExemplars(ts.Exemplars, ppoint.Exemplars())
 			}
 		}
 	}
@@ -107,6 +109,39 @@ func countSamples(ts prompb.TimeSeries, timeThreshold time.Time) (samples int) {
 	return samples
 }
 
+func mapExemplars(exemplars []prompb.Exemplar, slice pmetric.ExemplarSlice) {
+	for _, from := range exemplars {
+		to := slice.AppendEmpty()
+		to.SetDoubleValue(from.Value)
+		to.SetTimestamp(mapTimestamp(from.Timestamp))
+
+		attrs := to.FilteredAttributes()
+		for _, l := range from.Labels {
+			switch l.Name {
+			case "span_id":
+				var spanID pcommon.SpanID
+				if hex.DecodedLen(len(l.Value)) != len(spanID) {
+					break
+				}
+				if _, err := hex.Decode(spanID[:], []byte(l.Value)); err != nil {
+					break
+				}
+				to.SetSpanID(spanID)
+			case "trace_id":
+				var traceID pcommon.TraceID
+				if hex.DecodedLen(len(l.Value)) != len(traceID) {
+					break
+				}
+				if _, err := hex.Decode(traceID[:], []byte(l.Value)); err != nil {
+					break
+				}
+				to.SetTraceID(traceID)
+			}
+			attrs.PutStr(l.Name, l.Value)
+		}
+	}
+}
+
 func mapTimestamp(val int64) pcommon.Timestamp {
 	t := time.Unix(0, val*int64(time.Millisecond))
 	return pcommon.NewTimestampFromTime(t)
@@ -114,8 +149,8 @@ func mapTimestamp(val int64) pcommon.Timestamp {
 
 func finalName(labels []prompb.Label) (ret string, err error) {
 	for _, label := range labels {
-		if string(label.Name) == nameStr {
-			return string(label.Value), nil
+		if label.Name == nameStr {
+			return label.Value, nil
 		}
 	}
 	return "", errors.New("label name not found")

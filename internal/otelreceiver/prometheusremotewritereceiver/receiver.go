@@ -24,9 +24,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
-	"github.com/prometheus/prometheus/prompb"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/consumer"
@@ -35,6 +33,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/otelreceiver/prometheusremotewrite"
+	"github.com/go-faster/oteldb/internal/prompb"
 )
 
 const receiverFormat = "protobuf"
@@ -124,7 +123,7 @@ func snappyDecoder(body io.ReadCloser) (io.ReadCloser, error) {
 	}, nil
 }
 
-func decodeRequest(r io.Reader) (*prompb.WriteRequest, error) {
+func decodeRequest(r io.Reader, rw *prompb.WriteRequest) error {
 	var data []byte
 	switch r := r.(type) {
 	case *closerReader:
@@ -134,26 +133,38 @@ func decodeRequest(r io.Reader) (*prompb.WriteRequest, error) {
 		var err error
 		data, err = io.ReadAll(r)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-
-	var req prompb.WriteRequest
-	if err := proto.Unmarshal(data, &req); err != nil {
-		return nil, err
-	}
-	return &req, nil
+	return rw.Unmarshal(data)
 }
+
+func getWriteRequest() *prompb.WriteRequest {
+	v := writeRequestPool.Get()
+	if v == nil {
+		return &prompb.WriteRequest{}
+	}
+	return v.(*prompb.WriteRequest)
+}
+
+func putWriteRequest(wr *prompb.WriteRequest) {
+	wr.Reset()
+	writeRequestPool.Put(wr)
+}
+
+var writeRequestPool sync.Pool
 
 func (rec *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := rec.obsrecv.StartMetricsOp(r.Context())
-	req, err := decodeRequest(r.Body)
-	if err != nil {
+	wr := getWriteRequest()
+	defer putWriteRequest(wr)
+
+	if err := decodeRequest(r.Body, wr); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	pms, err := prometheusremotewrite.FromTimeSeries(req.Timeseries, prometheusremotewrite.Settings{
+	pms, err := prometheusremotewrite.FromTimeSeries(wr.Timeseries, prometheusremotewrite.Settings{
 		TimeThreshold: *rec.timeThreshold,
 		Logger:        *rec.logger,
 	})
