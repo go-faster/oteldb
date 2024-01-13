@@ -195,14 +195,14 @@ func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span
 type eventsColumns struct {
 	names      *proto.ColArr[string]
 	timestamps *proto.ColArr[time.Time]
-	attributes *proto.ColArr[string]
+	attributes *proto.ColArr[[]byte]
 }
 
 func newEventsColumns() eventsColumns {
 	return eventsColumns{
 		names:      new(proto.ColStr).Array(),
 		timestamps: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano).Array(),
-		attributes: new(proto.ColStr).Array(),
+		attributes: new(proto.ColBytes).Array(),
 	}
 }
 
@@ -210,7 +210,7 @@ func (c *eventsColumns) AddRow(events []tracestorage.Event) {
 	var (
 		names      []string
 		timestamps []time.Time
-		attrs      []string
+		attrs      [][]byte
 	)
 	for _, e := range events {
 		names = append(names, e.Name)
@@ -254,7 +254,7 @@ type linksColumns struct {
 	traceIDs    *proto.ColArr[otelstorage.TraceID]
 	spanIDs     *proto.ColArr[otelstorage.SpanID]
 	tracestates *proto.ColArr[string]
-	attributes  *proto.ColArr[string]
+	attributes  *proto.ColArr[[]byte]
 }
 
 func newLinksColumns() linksColumns {
@@ -262,7 +262,7 @@ func newLinksColumns() linksColumns {
 		traceIDs:    proto.NewArray[otelstorage.TraceID](&proto.ColRawOf[otelstorage.TraceID]{}),
 		spanIDs:     proto.NewArray[otelstorage.SpanID](&proto.ColRawOf[otelstorage.SpanID]{}),
 		tracestates: new(proto.ColStr).Array(),
-		attributes:  new(proto.ColStr).Array(),
+		attributes:  new(proto.ColBytes).Array(),
 	}
 }
 
@@ -271,7 +271,7 @@ func (c *linksColumns) AddRow(links []tracestorage.Link) {
 		traceIDs    []otelstorage.TraceID
 		spanIDs     []otelstorage.SpanID
 		tracestates []string
-		attributes  []string
+		attributes  [][]byte
 	)
 	for _, l := range links {
 		traceIDs = append(traceIDs, l.TraceID)

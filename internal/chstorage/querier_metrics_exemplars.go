@@ -178,8 +178,8 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 				}
 				key := seriesKey{
 					name:       name,
-					attributes: attributes.Hash().String(),
-					resource:   resource.Hash().String(),
+					attributes: attributes.Hash(),
+					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
 				if !ok {

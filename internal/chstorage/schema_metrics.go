@@ -24,34 +24,25 @@ const (
 const (
 	pointsSchema = `
 	(
-		name LowCardinality(String),
+		name LowCardinality(String) CODEC(ZSTD(1)),
 		name_normalized LowCardinality(String),
 		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
 
-		mapping Enum8(` + metricMappingDDL + `) CODEC(T64),
-		value Float64 CODEC(Gorilla),
+		mapping Enum8(` + metricMappingDDL + `) CODEC(T64, ZSTD(1)),
+		value Float64 CODEC(Gorilla, ZSTD(1)),
 
-		flags	    UInt8  CODEC(T64),
+		flags	    UInt8  CODEC(T64, ZSTD(1)),
 
-		attribute_keys    Array(String),
-		attribute_values  Array(String),
-		attribute_types   Array(UInt8),
-		attribute_hash    FixedString(16),
-
-		resource_keys      Array(String),
-		resource_values    Array(String),
-		resource_types     Array(UInt8),
-		resource_hash      FixedString(16),
+		attribute String CODEC(ZSTD(1)),
+		resource  String CODEC(ZSTD(1)),
+		scope     String CODEC(ZSTD(1)),
 
 		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
-
-	    INDEX idx_keys   arrayConcat(attribute_keys, resource_keys)     TYPE bloom_filter GRANULARITY 3,
-	    INDEX idx_values arrayConcat(attribute_values, resource_values) TYPE bloom_filter GRANULARITY 3,
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
-	PRIMARY KEY (name_normalized, mapping, resource_hash, attribute_hash)
-	ORDER BY (name_normalized, mapping, resource_hash, attribute_hash, timestamp)`
+	PRIMARY KEY (name_normalized, mapping, cityHash64(resource), cityHash64(attribute))
+	ORDER BY (name_normalized, mapping, cityHash64(resource), cityHash64(attribute), timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -80,19 +71,11 @@ const (
 		exp_histogram_negative_offset Int32,
 		exp_histogram_negative_bucket_counts Array(UInt64),
 
-		flags	UInt32,
-		attribute_keys    Array(String),
-		attribute_values  Array(String),
-		attribute_types   Array(UInt8),
-		attribute_hash    FixedString(16),
+		flags	    UInt8  CODEC(T64, ZSTD(1)),
 
-		resource_keys      Array(String),
-		resource_values    Array(String),
-		resource_types     Array(UInt8),
-		resource_hash      FixedString(16),
-
-	    INDEX idx_keys   arrayConcat(attribute_keys, resource_keys)     TYPE bloom_filter GRANULARITY 3,
-	    INDEX idx_values arrayConcat(attribute_values, resource_values) TYPE bloom_filter GRANULARITY 3,
+		attribute String CODEC(ZSTD(1)),
+		resource  String CODEC(ZSTD(1)),
+		scope     String CODEC(ZSTD(1)),
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp`
@@ -108,21 +91,12 @@ const (
 		span_id FixedString(8),
 		trace_id FixedString(16),
 
-		attribute_keys    Array(String),
-		attribute_values  Array(String),
-		attribute_types   Array(UInt8),
-		attribute_hash    FixedString(16),
-
-		resource_keys      Array(String),
-		resource_values    Array(String),
-		resource_types     Array(UInt8),
-		resource_hash      FixedString(16),
-
-	    INDEX idx_keys   arrayConcat(attribute_keys, resource_keys)     TYPE bloom_filter GRANULARITY 3,
-	    INDEX idx_values arrayConcat(attribute_values, resource_values) TYPE bloom_filter GRANULARITY 3,
+		attribute String CODEC(ZSTD(1)),
+		resource  String CODEC(ZSTD(1)),
+		scope     String CODEC(ZSTD(1)),
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name_normalized, resource_hash, attribute_hash, timestamp)`
+	ORDER BY (name_normalized, cityHash64(resource), cityHash64(attribute), timestamp)`
 
 	labelsSchema = `
 	(
@@ -136,8 +110,8 @@ const (
 	ORDER BY (name_normalized, value)`
 )
 
-func parseLabels(s string, to map[string]string) error {
-	d := jx.DecodeStr(s)
+func parseLabels(s []byte, to map[string]string) error {
+	d := jx.DecodeBytes(s)
 	return d.ObjBytes(func(d *jx.Decoder, key []byte) error {
 		switch d.Next() {
 		case jx.String:

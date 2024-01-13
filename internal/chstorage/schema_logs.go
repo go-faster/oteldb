@@ -24,23 +24,12 @@ const (
 
 	body               String CODEC(ZSTD(1)), -- string or json object
 
-	attribute_keys    Array(String),
-	attribute_values  Array(String),
-	attribute_types   Array(UInt8),
-	attribute_hash    FixedString(16),
-
-	resource_keys      Array(String),
-	resource_values    Array(String),
-	resource_types     Array(UInt8),
-	resource_hash      FixedString(16),
+	attribute String CODEC(ZSTD(1)),
+	resource  String CODEC(ZSTD(1)),
+	scope     String CODEC(ZSTD(1)),
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),
-
-	scope_keys    Array(String),
-	scope_values  Array(String),
-	scope_types   Array(UInt8),
-	scope_hash    FixedString(16),
 
     INDEX idx_trace_id trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
     INDEX idx_body body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,
@@ -48,8 +37,8 @@ const (
 )
   ENGINE = MergeTree
   PARTITION BY toYYYYMMDD(timestamp)
-  PRIMARY KEY (severity_number, service_namespace, service_name, resource_hash)
-  ORDER BY (severity_number, service_namespace, service_name, resource_hash, timestamp)
+  PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource))
+  ORDER BY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
 `
 
 	logAttrsSchema = `

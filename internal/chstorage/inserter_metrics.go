@@ -335,27 +335,18 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 		}
 	)
 	for i := 0; i < slice.Len(); i++ {
-		point := slice.At(i)
-		ts := point.Timestamp().AsTime()
-		flags := point.Flags()
-		attrs := &lazyAttributes{
-			orig: point.Attributes(),
-		}
-		count := point.Count()
-		sum := proto.Nullable[float64]{
-			Set:   point.HasSum(),
-			Value: point.Sum(),
-		}
-		min := proto.Nullable[float64]{
-			Set:   point.HasMin(),
-			Value: point.Min(),
-		}
-		max := proto.Nullable[float64]{
-			Set:   point.HasMax(),
-			Value: point.Max(),
-		}
-		scale := point.Scale()
-		zerocount := point.ZeroCount()
+		var (
+			point     = slice.At(i)
+			ts        = point.Timestamp().AsTime()
+			flags     = point.Flags()
+			attrs     = &lazyAttributes{orig: point.Attributes()}
+			count     = point.Count()
+			sum       = proto.Nullable[float64]{Set: point.HasSum(), Value: point.Sum()}
+			vmin      = proto.Nullable[float64]{Set: point.HasMin(), Value: point.Min()}
+			vmax      = proto.Nullable[float64]{Set: point.HasMax(), Value: point.Max()}
+			scale     = point.Scale()
+			zerocount = point.ZeroCount()
+		)
 
 		positiveOffset, positiveBucketCounts := mapBuckets(point.Positive())
 		negativeOffset, negativeBucketCounts := mapBuckets(point.Negative())
@@ -378,15 +369,15 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
-		c.min.Append(min)
-		c.max.Append(max)
+		c.min.Append(vmin)
+		c.max.Append(vmax)
 		c.scale.Append(scale)
 		c.zerocount.Append(zerocount)
 		c.positiveOffset.Append(positiveOffset)
 		c.positiveBucketCounts.Append(positiveBucketCounts)
 		c.negativeOffset.Append(negativeOffset)
 		c.negativeBucketCounts.Append(negativeBucketCounts)
-		c.flags.Append(uint32(flags))
+		c.flags.Append(uint8(flags))
 		c.attributes.Append(attrs.Attributes())
 		c.resource.Append(res.Attributes())
 	}
@@ -395,17 +386,16 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 
 func (b *metricsBatch) addSummaryPoints(name string, res *lazyAttributes, slice pmetric.SummaryDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
-		point := slice.At(i)
-		ts := point.Timestamp().AsTime()
-		flags := point.Flags()
-		attrs := &lazyAttributes{
-			orig: point.Attributes(),
-		}
-		count := point.Count()
-		sum := point.Sum()
 		var (
-			qv = point.QuantileValues()
-
+			point = slice.At(i)
+			ts    = point.Timestamp().AsTime()
+			flags = point.Flags()
+			attrs = &lazyAttributes{orig: point.Attributes()}
+			count = point.Count()
+			sum   = point.Sum()
+			qv    = point.QuantileValues()
+		)
+		var (
 			quantiles = make([]float64, qv.Len())
 			values    = make([]float64, qv.Len())
 		)
@@ -419,21 +409,21 @@ func (b *metricsBatch) addSummaryPoints(name string, res *lazyAttributes, slice 
 		b.addName(name)
 		b.addLabels(attrs)
 
-		series := mappedSeries{
+		ms := mappedSeries{
 			Timestamp:  ts,
 			Flags:      flags,
 			Attributes: attrs,
 			Resource:   res,
 		}
-		b.addMappedSample(series, name+"_count", summaryCount, float64(count))
-		b.addMappedSample(series, name+"_sum", summarySum, sum)
+		b.addMappedSample(ms, name+"_count", summaryCount, float64(count))
+		b.addMappedSample(ms, name+"_sum", summarySum, sum)
 
 		for i := 0; i < min(len(quantiles), len(values)); i++ {
 			quantile := quantiles[i]
 			value := values[i]
 
 			// Generate series with "quantile" label.
-			b.addMappedSample(series, name, summaryQuantile, value, [2]string{
+			b.addMappedSample(ms, name, summaryQuantile, value, [2]string{
 				"quantile",
 				strconv.FormatFloat(quantile, 'f', -1, 64),
 			})

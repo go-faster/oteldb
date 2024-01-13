@@ -10,7 +10,7 @@ import (
 type lazyAttributes struct {
 	orig pcommon.Map
 
-	encoded string
+	encoded []byte
 }
 
 func (l *lazyAttributes) Attributes(additional ...[2]string) otelstorage.Attrs {
@@ -25,11 +25,11 @@ func (l *lazyAttributes) Attributes(additional ...[2]string) otelstorage.Attrs {
 	return otelstorage.Attrs(l.orig)
 }
 
-func (l *lazyAttributes) Encode(additional ...[2]string) string {
+func (l *lazyAttributes) Encode(additional ...[2]string) []byte {
 	switch {
 	case len(additional) > 0:
 		return encodeAttributes(l.orig, additional...)
-	case l.encoded != "":
+	case len(l.encoded) > 0:
 		return l.encoded
 	default:
 		l.encoded = encodeAttributes(l.orig)
@@ -37,12 +37,10 @@ func (l *lazyAttributes) Encode(additional ...[2]string) string {
 	}
 }
 
-func encodeAttributes(attrs pcommon.Map, additional ...[2]string) string {
-	e := jx.GetEncoder()
-	defer jx.PutEncoder(e)
-
+func encodeAttributes(attrs pcommon.Map, additional ...[2]string) []byte {
+	e := &jx.Encoder{}
 	encodeMap(e, attrs, additional...)
-	return e.String()
+	return e.Bytes()
 }
 
 func encodeValue(e *jx.Encoder, v pcommon.Value) {
@@ -90,9 +88,9 @@ func encodeMap(e *jx.Encoder, m pcommon.Map, additional ...[2]string) {
 	e.ObjEnd()
 }
 
-func decodeAttributes(s string) (otelstorage.Attrs, error) {
+func decodeAttributes(s []byte) (otelstorage.Attrs, error) {
 	result := pcommon.NewMap()
-	err := decodeMap(jx.DecodeStr(s), result)
+	err := decodeMap(jx.DecodeBytes(s), result)
 	return otelstorage.Attrs(result), err
 }
 

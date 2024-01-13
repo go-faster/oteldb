@@ -60,7 +60,7 @@ type expHistogramColumns struct {
 	negativeOffset       proto.ColInt32
 	negativeBucketCounts *proto.ColArr[uint64]
 
-	flags      proto.ColUInt32
+	flags      proto.ColUInt8
 	attributes *Attributes
 	resource   *Attributes
 }
@@ -137,7 +137,7 @@ type exemplarColumns struct {
 	nameNormalized *proto.ColLowCardinality[string]
 	timestamp      *proto.ColDateTime64
 
-	filteredAttributes proto.ColStr
+	filteredAttributes proto.ColBytes
 	exemplarTimestamp  *proto.ColDateTime64
 	value              proto.ColFloat64
 	spanID             proto.ColFixedStr8

@@ -297,7 +297,7 @@ func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.Selec
 				}
 				fmt.Fprintf(&query,
 					`has(%s, %s)`,
-					attrCol(column, attrKeys), singleQuoted(attr.Name),
+					attrKeys(column), singleQuoted(attr.Name),
 				)
 				query.WriteByte('\n')
 			}

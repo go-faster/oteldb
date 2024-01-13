@@ -24,23 +24,12 @@ CREATE TABLE IF NOT EXISTS `trace_spans`
 
 	batch_id UUID,
 
-	attribute_keys    Array(String),
-	attribute_values  Array(String),
-	attribute_types   Array(UInt8),
-	attribute_hash    FixedString(16),
-
-	resource_keys      Array(String),
-	resource_values    Array(String),
-	resource_types     Array(UInt8),
-	resource_hash      FixedString(16),
+	attribute String,
+	resource  String,
+	scope     String,
 
 	scope_name             LowCardinality(String),
 	scope_version          LowCardinality(String),
-
-	scope_keys    Array(String),
-	scope_values  Array(String),
-	scope_types   Array(UInt8),
-	scope_hash    FixedString(16),
 
 	events_timestamps Array(DateTime64(9)),
 	events_names Array(String),
@@ -55,6 +44,6 @@ CREATE TABLE IF NOT EXISTS `trace_spans`
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(start)
-PRIMARY KEY (service_namespace, service_name, resource_hash)
-ORDER BY (service_namespace, service_name, resource_hash, start)
+PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
+ORDER BY (service_namespace, service_name, cityHash64(resource), start)
 TTL toDateTime(`start`) + toIntervalSecond(259200)

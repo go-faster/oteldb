@@ -253,8 +253,8 @@ func (p *promQuerier) Select(ctx context.Context, sortSeries bool, hints *storag
 
 type seriesKey struct {
 	name       string
-	attributes string
-	resource   string
+	attributes otelstorage.Hash
+	resource   otelstorage.Hash
 	bucketKey  [2]string
 }
 
@@ -347,7 +347,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 					case labels.MatchEqual, labels.MatchNotEqual:
 						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(value))
 					case labels.MatchRegexp, labels.MatchNotRegexp:
-						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(value))
+						fmt.Fprintf(&query, "match(%s, %s)\n", sel, singleQuoted(value))
 					default:
 						return "", errors.Errorf("unexpected type %q", m.Type)
 					}
@@ -359,28 +359,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 					}
 				}
 				query.WriteString(")")
-
-				// Apply possible index hints for attributes.
-				if m.Name == labels.MetricName {
-					// Unable to apply, not attributes map.
-					continue
-				}
-				if m.Type == labels.MatchEqual || m.Type == labels.MatchRegexp {
-					// Key should be in keys array.
-					query.WriteString(
-						fmt.Sprintf("\nAND has(arrayConcat(%s, %s), %s)",
-							attrCol(colAttrs, attrKeys), attrCol(colResource, attrKeys), singleQuoted(name),
-						),
-					)
-				}
-				if m.Type == labels.MatchEqual {
-					// Value should be in values array.
-					query.WriteString(
-						fmt.Sprintf("\nAND has(arrayConcat(%s, %s), %s)",
-							attrCol(colAttrs, attrValues), attrCol(colResource, attrValues), singleQuoted(value),
-						),
-					)
-				}
 			}
 			query.WriteString("\n")
 		}
@@ -456,10 +434,12 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
-				name := c.name.Row(i)
-				nameNormalized := c.nameNormalized.Row(i)
-				value := c.value.Row(i)
-				timestamp := c.timestamp.Row(i)
+				var (
+					name           = c.name.Row(i)
+					nameNormalized = c.nameNormalized.Row(i)
+					value          = c.value.Row(i)
+					timestamp      = c.timestamp.Row(i)
+				)
 				attributes, err := c.attributes.Row(i)
 				if err != nil {
 					return errors.Wrap(err, "decode attributes")
@@ -468,11 +448,10 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 				if err != nil {
 					return errors.Wrap(err, "decode resource")
 				}
-
 				key := seriesKey{
 					name:       name,
-					attributes: attributes.Hash().String(),
-					resource:   resource.Hash().String(),
+					attributes: attributes.Hash(),
+					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -524,19 +503,21 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 		Result: c.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
-				name := c.name.Row(i)
-				nameNormalized := c.nameNormalized.Row(i)
-				timestamp := c.timestamp.Row(i)
-				count := c.count.Row(i)
-				sum := c.sum.Row(i)
-				min := c.min.Row(i)
-				max := c.max.Row(i)
-				scale := c.scale.Row(i)
-				zerocount := c.zerocount.Row(i)
-				positiveOffset := c.positiveOffset.Row(i)
-				positiveBucketCounts := c.positiveBucketCounts.Row(i)
-				negativeOffset := c.negativeOffset.Row(i)
-				negativeBucketCounts := c.negativeBucketCounts.Row(i)
+				var (
+					name                 = c.name.Row(i)
+					nameNormalized       = c.nameNormalized.Row(i)
+					timestamp            = c.timestamp.Row(i)
+					count                = c.count.Row(i)
+					sum                  = c.sum.Row(i)
+					vmin                 = c.min.Row(i)
+					vmax                 = c.max.Row(i)
+					scale                = c.scale.Row(i)
+					zerocount            = c.zerocount.Row(i)
+					positiveOffset       = c.positiveOffset.Row(i)
+					positiveBucketCounts = c.positiveBucketCounts.Row(i)
+					negativeOffset       = c.negativeOffset.Row(i)
+					negativeBucketCounts = c.negativeBucketCounts.Row(i)
+				)
 				attributes, err := c.attributes.Row(i)
 				if err != nil {
 					return errors.Wrap(err, "decode attributes")
@@ -548,8 +529,8 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 
 				key := seriesKey{
 					name:       name,
-					attributes: attributes.Hash().String(),
-					resource:   resource.Hash().String(),
+					attributes: attributes.Hash(),
+					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
 				if !ok {
@@ -562,8 +543,8 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 
 				s.series.data.count = append(s.series.data.count, count)
 				s.series.data.sum = append(s.series.data.sum, sum)
-				s.series.data.min = append(s.series.data.min, min)
-				s.series.data.max = append(s.series.data.max, max)
+				s.series.data.min = append(s.series.data.min, vmin)
+				s.series.data.max = append(s.series.data.max, vmax)
 				s.series.data.scale = append(s.series.data.scale, scale)
 				s.series.data.zerocount = append(s.series.data.zerocount, zerocount)
 				s.series.data.positiveOffset = append(s.series.data.positiveOffset, positiveOffset)

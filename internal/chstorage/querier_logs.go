@@ -70,9 +70,9 @@ arrayJoin(arrayConcat(%s, %s, %s)) as key
 FROM %s
 WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)
 LIMIT 1000`,
-			attrCol(colAttrs, attrKeys),
-			attrCol(colResource, attrKeys),
-			attrCol(colScope, attrKeys),
+			attrKeys(colAttrs),
+			attrKeys(colResource),
+			attrKeys(colScope),
 			table, opts.Start, opts.End,
 		),
 	}); err != nil {
