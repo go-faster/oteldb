@@ -44,3 +44,6 @@ func (c *dialingClickhouseClient) Do(ctx context.Context, q ch.Query) error {
 	}()
 	return db.Do(ctx, q)
 }
+
+// TODO: rewrite or disable
+var _ = NewDialingClickhouseClient

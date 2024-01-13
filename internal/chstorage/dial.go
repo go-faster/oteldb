@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ClickHouse/ch-go"
+	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
@@ -83,7 +84,15 @@ func Dial(ctx context.Context, dsn string, opts DialOptions) (ClickhouseClient, 
 	connectBackoff.MaxElapsedTime = time.Minute
 	return backoff.RetryNotifyWithData(
 		func() (ClickhouseClient, error) {
-			client := NewDialingClickhouseClient(chOpts)
+			client, err := chpool.Dial(ctx, chpool.Options{
+				ClientOptions:     chOpts,
+				HealthCheckPeriod: time.Second,
+				MaxConnIdleTime:   time.Second * 10,
+				MaxConnLifetime:   time.Minute,
+			})
+			if err != nil {
+				return nil, errors.Wrap(err, "dial")
+			}
 			if err := client.Ping(ctx); err != nil {
 				return nil, errors.Wrap(err, "ping")
 			}
