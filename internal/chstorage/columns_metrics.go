@@ -174,17 +174,3 @@ func (c *exemplarColumns) Columns() Columns {
 
 func (c *exemplarColumns) Input() proto.Input    { return c.Columns().Input() }
 func (c *exemplarColumns) Result() proto.Results { return c.Columns().Result() }
-
-type resourceColumns struct {
-	attributes *Attributes
-}
-
-func newResourceColumns() *resourceColumns {
-	return &resourceColumns{
-		attributes: NewAttributes("attributes"),
-	}
-}
-
-func (c *resourceColumns) Columns() Columns      { return c.attributes.Columns() }
-func (c *resourceColumns) Input() proto.Input    { return c.Columns().Input() }
-func (c *resourceColumns) Result() proto.Results { return c.Columns().Result() }
