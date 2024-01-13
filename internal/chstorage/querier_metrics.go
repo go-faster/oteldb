@@ -305,12 +305,12 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		default:
 			return "", errors.Errorf("unexpected table %q", table)
 		}
-		fmt.Fprintf(&query, "SELECT %[1]s\tFROM %#[2]q WHERE true\n", columns, table)
+		fmt.Fprintf(&query, "SELECT %[1]s\n\tFROM %#[2]q WHERE true\n", columns, table)
 		if !start.IsZero() {
-			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
+			fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
 		}
 		if !end.IsZero() {
-			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
+			fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
 		}
 		for _, m := range matchers {
 			switch m.Type {
@@ -367,13 +367,11 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 				}
 				if m.Type == labels.MatchEqual || m.Type == labels.MatchRegexp {
 					// Key should be in keys array.
-					query.WriteString(fmt.Sprintf("\nAND\t"))
-					query.WriteString(fmt.Sprintf("has(arrayConcat(mapKeys(attributes), mapKeys(resource)), %s)", singleQuoted(name)))
+					query.WriteString(fmt.Sprintf("\nAND has(arrayConcat(mapKeys(attributes), mapKeys(resource)), %s)", singleQuoted(name)))
 				}
 				if m.Type == labels.MatchEqual {
 					// Value should be in values array.
-					query.WriteString(fmt.Sprintf("\nAND\t"))
-					query.WriteString(fmt.Sprintf("has(arrayConcat(mapValues(attributes), mapValues(resource)), %s)", singleQuoted(value)))
+					query.WriteString(fmt.Sprintf("\nAND has(arrayConcat(mapValues(attributes), mapValues(resource)), %s)", singleQuoted(value)))
 				}
 			}
 			query.WriteString("\n")
