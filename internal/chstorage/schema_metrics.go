@@ -84,6 +84,9 @@ const (
 		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 		resource_hash      FixedString(16),
+
+	    INDEX idx_keys arrayConcat(mapKeys(attributes), mapKeys(resource))       TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_values arrayConcat(mapValues(attributes), mapValues(resource)) TYPE bloom_filter GRANULARITY 3,
 	)
 	ENGINE = MergeTree()
 	ORDER BY timestamp`
@@ -105,6 +108,9 @@ const (
 		resource           Map(LowCardinality(String), String) CODEC(ZSTD(1)), -- string[str | json]
 		resource_types     Map(LowCardinality(String), UInt8)  CODEC(ZSTD(5)), -- string[type]
 		resource_hash      FixedString(16),
+
+	    INDEX idx_keys arrayConcat(mapKeys(attributes), mapKeys(resource))       TYPE bloom_filter GRANULARITY 3,
+	    INDEX idx_values arrayConcat(mapValues(attributes), mapValues(resource)) TYPE bloom_filter GRANULARITY 3,
 	)
 	ENGINE = MergeTree()
 	ORDER BY (name_normalized, resource_hash, attributes_hash, timestamp)`
