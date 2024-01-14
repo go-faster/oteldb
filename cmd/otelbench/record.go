@@ -14,13 +14,13 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/klauspost/compress/snappy"
 	"github.com/klauspost/compress/zstd"
-	"github.com/prometheus/prometheus/prompb"
 	"github.com/spf13/cobra"
 	"go.uber.org/atomic"
 	"go.uber.org/multierr"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/otelbench"
+	"github.com/go-faster/oteldb/internal/prompb"
 )
 
 type Record struct {
@@ -81,7 +81,7 @@ func (r *Record) read(req *http.Request) ([]byte, error) {
 }
 
 func fmtInt(v int) string {
-	s := humanize.SIWithDigits(float64(v), 0, "")
+	s := humanize.SIWithDigits(float64(v), 2, "")
 	s = strings.ReplaceAll(s, " ", "")
 	return s
 }
