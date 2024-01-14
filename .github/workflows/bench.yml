@@ -68,4 +68,8 @@ jobs:
 
       - name: Test
         working-directory: ${{ env.WORKDIR }}
-        run: go run github.com/go-faster/oteldb/cmd/otelbench promql bench -i testdata/node-exporter-selected.promql.yml --trace
+        run: go run github.com/go-faster/oteldb/cmd/otelbench promql bench -i testdata/node-exporter-selected.promql.yml --trace --allow-empty=false
+
+      - name: Analyze
+        working-directory: ${{ env.WORKDIR }}
+        run: go run github.com/go-faster/oteldb/cmd/otelbench promql analyze
