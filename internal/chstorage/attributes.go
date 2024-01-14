@@ -2,11 +2,11 @@ package chstorage
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -19,7 +19,7 @@ type Attributes struct {
 type attributeCol struct {
 	index  *proto.ColBytes
 	col    *proto.ColLowCardinalityRaw
-	hashes []otelstorage.Hash
+	hashes map[otelstorage.Hash]int
 
 	// values are filled up only when decoding.
 	values []otelstorage.Attrs
@@ -43,7 +43,7 @@ func (a *attributeCol) DecodeColumn(r *proto.Reader, rows int) error {
 		if err != nil {
 			return errors.Wrapf(err, "index value %d", i)
 		}
-		a.hashes = append(a.hashes, m.Hash())
+		a.hashes[m.Hash()] = i
 		a.values = append(a.values, m)
 	}
 	return nil
@@ -53,7 +53,7 @@ func (a *attributeCol) Reset() {
 	a.col.Reset()
 	a.index.Reset()
 	a.values = a.values[:0]
-	a.hashes = a.hashes[:0]
+	maps.Clear(a.hashes)
 	a.col.Key = proto.KeyUInt64
 }
 
@@ -64,10 +64,10 @@ func (a *attributeCol) EncodeColumn(b *proto.Buffer) {
 func (a *attributeCol) Append(v otelstorage.Attrs) {
 	a.col.Key = proto.KeyUInt64
 	h := v.Hash()
-	idx := slices.Index(a.hashes, h)
-	if idx == -1 {
+	idx, ok := a.hashes[h]
+	if !ok {
 		idx = len(a.hashes)
-		a.hashes = append(a.hashes, h)
+		a.hashes[h] = idx
 		a.index.Append(encodeAttributes(v.AsMap()))
 	}
 	a.col.AppendKey(idx)
@@ -108,7 +108,8 @@ func (a attributeCol) Row(i int) otelstorage.Attrs {
 
 func newAttributesColumn() proto.ColumnOf[otelstorage.Attrs] {
 	ac := &attributeCol{
-		index: new(proto.ColBytes),
+		index:  new(proto.ColBytes),
+		hashes: map[otelstorage.Hash]int{},
 	}
 	ac.col = &proto.ColLowCardinalityRaw{
 		Index: ac.index,

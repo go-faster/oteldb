@@ -1,6 +1,9 @@
 package chstorage
 
 import (
+	"context"
+
+	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -16,6 +19,8 @@ var _ tracestorage.Inserter = (*Inserter)(nil)
 type Inserter struct {
 	ch     ClickhouseClient
 	tables Tables
+
+	metricBatches chan pmetric.Metrics
 
 	insertedPoints  metric.Int64Counter
 	insertedSpans   metric.Int64Counter
@@ -34,6 +39,9 @@ type InserterOptions struct {
 	MeterProvider metric.MeterProvider
 	// TracerProvider provides OpenTelemetry tracer for this querier.
 	TracerProvider trace.TracerProvider
+
+	// Sync disables batching.
+	Sync bool
 }
 
 func (opts *InserterOptions) setDefaults() {
@@ -87,7 +95,7 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 		return nil, errors.Wrap(err, "create inserts")
 	}
 
-	return &Inserter{
+	inserter := &Inserter{
 		ch:              c,
 		tables:          opts.Tables,
 		insertedSpans:   insertedSpans,
@@ -96,5 +104,18 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 		insertedPoints:  insertedPoints,
 		inserts:         inserts,
 		tracer:          opts.TracerProvider.Tracer("chstorage.Inserter"),
-	}, nil
+	}
+
+	if !opts.Sync {
+		inserter.metricBatches = make(chan pmetric.Metrics, 8)
+		ctx := context.Background()
+		for i := 0; i < 8; i++ {
+			go func() {
+				if err := inserter.saveMetricBatches(ctx); err != nil {
+					panic(err)
+				}
+			}()
+		}
+	}
+	return inserter, nil
 }

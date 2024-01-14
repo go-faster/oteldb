@@ -6,11 +6,11 @@ import (
 	"math"
 	"slices"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/model/labels"
@@ -24,30 +24,14 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-func getMetricsBatch() *metricsBatch {
-	v := metricsBatchPool.Get()
-	if v == nil {
-		return newMetricBatch()
+func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) error {
+	eb := backoff.NewExponentialBackOff()
+	bo := backoff.WithContext(eb, ctx)
+	fn := func() error {
+		return b.Insert(ctx, i.tables, i.ch)
 	}
-	return v.(*metricsBatch)
-}
-
-func putMetricsBatch(b *metricsBatch) {
-	b.Reset()
-	metricsBatchPool.Put(b)
-}
-
-var metricsBatchPool sync.Pool
-
-// ConsumeMetrics inserts given metrics.
-func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
-	b := getMetricsBatch()
-	defer putMetricsBatch(b)
-	if err := i.mapMetrics(b, metrics); err != nil {
-		return errors.Wrap(err, "map metrics")
-	}
-	if err := b.Insert(ctx, i.tables, i.ch); err != nil {
-		return errors.Wrap(err, "send batch")
+	if err := backoff.Retry(fn, bo); err != nil {
+		return errors.Wrap(err, "insert batch")
 	}
 	i.inserts.Add(ctx, 1,
 		metric.WithAttributes(
@@ -55,7 +39,65 @@ func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 		),
 	)
 	i.insertedPoints.Add(ctx, int64(b.points.value.Rows()))
+	b.Reset()
 	return nil
+}
+
+func (i *Inserter) saveMetricBatches(ctx context.Context) error {
+	b := newMetricBatch()
+	for {
+		select {
+		case batch, ok := <-i.metricBatches:
+			if !ok {
+				return nil
+			}
+			if err := b.mapMetrics(batch); err != nil {
+				return errors.Wrap(err, "map metrics")
+			}
+			if b.points.value.Rows() <= 100_000 {
+				continue
+			}
+			if err := i.insertBatch(ctx, b); err != nil {
+				return err
+			}
+		case <-time.After(time.Second):
+			if err := i.insertBatch(ctx, b); err != nil {
+				return err
+			}
+		case <-ctx.Done():
+			func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = i.insertBatch(ctx, b)
+			}()
+			return ctx.Err()
+		}
+	}
+}
+
+// ConsumeMetrics inserts given metrics.
+func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
+	if i.metricBatches == nil {
+		b := newMetricBatch()
+		if err := b.mapMetrics(metrics); err != nil {
+			return errors.Wrap(err, "map metrics")
+		}
+		if err := i.insertBatch(ctx, b); err != nil {
+			return errors.Wrap(err, "insert batch")
+		}
+		return nil
+	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case i.metricBatches <- metrics:
+		// Enqueue.
+		return nil
+	}
+}
+
+func (b metricsBatch) Len() int {
+	return b.points.value.Rows()
 }
 
 type metricsBatch struct {
@@ -547,7 +589,7 @@ func (b *metricsBatch) addLabels(attrs *lazyAttributes) {
 	})
 }
 
-func (i *Inserter) mapMetrics(b *metricsBatch, metrics pmetric.Metrics) error {
+func (b *metricsBatch) mapMetrics(metrics pmetric.Metrics) error {
 	resMetrics := metrics.ResourceMetrics()
 	for i := 0; i < resMetrics.Len(); i++ {
 		resMetric := resMetrics.At(i)
