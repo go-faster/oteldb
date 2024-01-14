@@ -44,8 +44,10 @@ type tracedQuery struct {
 }
 
 type PromQL struct {
-	Addr  string
-	Trace bool
+	Addr   string
+	Trace  bool
+	Count  int
+	Warmup int
 
 	StartTime  string
 	EndTime    string
@@ -67,6 +69,7 @@ type PromQL struct {
 
 	queries []tracedQuery
 	reports []PromQLReportQuery
+	tracer  trace.Tracer
 }
 
 func parseTime(s string) (time.Time, error) {
@@ -110,6 +113,7 @@ func (p *PromQL) setupTracing(ctx context.Context) error {
 		sdktrace.WithSpanProcessor(p.batchSpanProcessor),
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 	)
+	p.tracer = p.tracerProvider.Tracer("promql")
 	httpClient := &http.Client{
 		Transport: newTempoTransport(http.DefaultTransport),
 	}
@@ -207,6 +211,35 @@ func (p *PromQL) sendSeriesQuery(ctx context.Context, query promproxy.SeriesQuer
 	if len(res.Data) == 0 && !p.AllowEmpty {
 		return errors.Errorf("no results for series query %q", query.Matchers)
 	}
+	return nil
+}
+
+func (p *PromQL) sendAndRecord(ctx context.Context, q promproxy.Query) (rerr error) {
+	start := time.Now()
+	tq := tracedQuery{
+		Query: q,
+	}
+	if p.Trace {
+		traceCtx, span := p.tracer.Start(ctx, "Send",
+			trace.WithSpanKind(trace.SpanKindClient),
+		)
+		tq.TraceID = span.SpanContext().TraceID().String()
+		ctx = traceCtx
+		defer func() {
+			if rerr != nil {
+				span.RecordError(rerr)
+				span.SetStatus(codes.Error, rerr.Error())
+			} else {
+				span.SetStatus(codes.Ok, "")
+			}
+			span.End()
+		}()
+	}
+	if err := p.send(ctx, q); err != nil {
+		return errors.Wrap(err, "send")
+	}
+	tq.Duration = time.Since(start)
+	p.queries = append(p.queries, tq)
 	return nil
 }
 
@@ -488,46 +521,35 @@ func (p *PromQL) Run(ctx context.Context) error {
 	if !p.end.IsZero() {
 		fmt.Println("end time override:", p.end.Format(time.RFC3339))
 	}
-	var total int64
+	var total int
 	if err := p.each(ctx, func(ctx context.Context, q promproxy.Query) error {
-		total++
+		total += p.Count
+		total += p.Warmup
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "count total")
 	}
-	pb := progressbar.Default(total)
+
+	pb := progressbar.Default(int64(total))
 	start := time.Now()
-	tracer := p.tracerProvider.Tracer("promql")
 	if err := p.each(ctx, func(ctx context.Context, q promproxy.Query) (rerr error) {
 		// Warmup.
-		for i := 0; i < 3; i++ {
+		for i := 0; i < p.Warmup; i++ {
 			if err := p.send(ctx, q); err != nil {
 				return errors.Wrap(err, "send")
 			}
-		}
-		queryStart := time.Now()
-		ctx, span := tracer.Start(ctx, "Send",
-			trace.WithSpanKind(trace.SpanKindClient),
-		)
-		defer func() {
-			if rerr != nil {
-				span.RecordError(rerr)
-				span.SetStatus(codes.Error, rerr.Error())
-			} else {
-				span.SetStatus(codes.Ok, "")
+			if err := pb.Add(1); err != nil {
+				return errors.Wrap(err, "update progress bar")
 			}
-			span.End()
-			p.queries = append(p.queries, tracedQuery{
-				Query:    q,
-				TraceID:  span.SpanContext().TraceID().String(),
-				Duration: time.Since(queryStart),
-			})
-		}()
-		if err := p.send(ctx, q); err != nil {
-			return errors.Wrap(err, "send")
 		}
-		if err := pb.Add(1); err != nil {
-			return errors.Wrap(err, "update progress bar")
+		// Run.
+		for i := 0; i < p.Count; i++ {
+			if err := p.sendAndRecord(ctx, q); err != nil {
+				return errors.Wrap(err, "send")
+			}
+			if err := pb.Add(1); err != nil {
+				return errors.Wrap(err, "update progress bar")
+			}
 		}
 		return nil
 	}); err != nil {
@@ -611,5 +633,8 @@ func newPromQLBenchmarkCommand() *cobra.Command {
 	f.StringVar(&p.EndTime, "end", "", "End time override (RFC3339 or unix timestamp)")
 	f.BoolVar(&p.AllowEmpty, "allow-empty", true, "Allow empty results")
 	f.BoolVar(&p.Trace, "trace", false, "Trace queries")
+	f.IntVar(&p.Count, "count", 1, "Number of times to run each query")
+	f.IntVar(&p.Warmup, "warmup", 0, "Number of warmup runs")
+
 	return cmd
 }
