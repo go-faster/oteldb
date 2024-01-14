@@ -10,6 +10,7 @@ env:
   REGISTRY: ghcr.io
   WORKDIR: dev/local/ch-bench-read
   COMPOSE_FILE: docker-compose.ci.yml
+  OTEL_EXPORTER_OTLP_INSECURE: "true"
 
 jobs:
   PromQL:
@@ -60,8 +61,11 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         run: docker compose up -d
 
+      - name: Load data
+        run: |
+          wget https://storage.yandexcloud.net/faster-public/oteldb/req.rwq
+          go run github.com/go-faster/oteldb/cmd/otelbench promrw replay -i req.rwq
+
       - name: Test
         working-directory: ${{ env.WORKDIR }}
-        env:
-          OTEL_EXPORTER_OTLP_INSECURE: "true"
         run: go run github.com/go-faster/oteldb/cmd/otelbench promql bench -i testdata/node-exporter-selected.promql.yml --trace
