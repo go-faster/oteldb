@@ -44,6 +44,6 @@ CREATE TABLE IF NOT EXISTS `trace_spans`
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(start)
-PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
-ORDER BY (service_namespace, service_name, cityHash64(resource), start)
+PRIMARY KEY (service_namespace, service_name, resource)
+ORDER BY (service_namespace, service_name, resource, start)
 TTL toDateTime(`start`) + toIntervalSecond(259200)

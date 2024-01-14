@@ -41,8 +41,8 @@ const (
 	)
 	ENGINE = MergeTree()
 	PARTITION BY toYYYYMMDD(timestamp)
-	PRIMARY KEY (name_normalized, mapping, cityHash64(resource), cityHash64(attribute))
-	ORDER BY (name_normalized, mapping, cityHash64(resource), cityHash64(attribute), timestamp)`
+	PRIMARY KEY (name_normalized, mapping, resource, attribute)
+	ORDER BY (name_normalized, mapping, resource, attribute, timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -96,7 +96,7 @@ const (
 		scope     LowCardinality(String) CODEC(ZSTD(1)),
 	)
 	ENGINE = MergeTree()
-	ORDER BY (name_normalized, cityHash64(resource), cityHash64(attribute), timestamp)`
+	ORDER BY (name_normalized, resource, attribute, timestamp)`
 
 	labelsSchema = `
 	(

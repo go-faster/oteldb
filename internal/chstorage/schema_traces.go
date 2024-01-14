@@ -47,8 +47,8 @@ const (
 )
 ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(start)
-PRIMARY KEY (service_namespace, service_name, cityHash64(resource))
-ORDER BY (service_namespace, service_name, cityHash64(resource), start)
+PRIMARY KEY (service_namespace, service_name, resource)
+ORDER BY (service_namespace, service_name, resource, start)
 `
 	kindDDL    = `'KIND_UNSPECIFIED' = 0,'KIND_INTERNAL' = 1,'KIND_SERVER' = 2,'KIND_CLIENT' = 3,'KIND_PRODUCER' = 4,'KIND_CONSUMER' = 5`
 	tagsSchema = `

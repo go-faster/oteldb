@@ -37,8 +37,8 @@ const (
 )
   ENGINE = MergeTree
   PARTITION BY toYYYYMMDD(timestamp)
-  PRIMARY KEY (severity_number, service_namespace, service_name, cityHash64(resource))
-  ORDER BY (severity_number, service_namespace, service_name, cityHash64(resource), timestamp)
+  PRIMARY KEY (severity_number, service_namespace, service_name, resource)
+  ORDER BY (severity_number, service_namespace, service_name, resource, timestamp)
 `
 
 	logAttrsSchema = `
