@@ -62,4 +62,6 @@ jobs:
 
       - name: Test
         working-directory: ${{ env.WORKDIR }}
+        env:
+          OTEL_EXPORTER_OTLP_INSECURE: "true"
         run: go run github.com/go-faster/oteldb/cmd/otelbench promql bench -i testdata/node-exporter-selected.promql.yml --trace
