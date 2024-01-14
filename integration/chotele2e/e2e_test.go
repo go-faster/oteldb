@@ -31,7 +31,7 @@ func ConnectOpt(t *testing.T, connOpt ch.Options) *ch.Client {
 
 	req := testcontainers.ContainerRequest{
 		Name:         "oteldb-chotel-clickhouse",
-		Image:        "clickhouse/clickhouse-server:23.10",
+		Image:        "clickhouse/clickhouse-server:23.12",
 		ExposedPorts: []string{"8123/tcp", "9000/tcp"},
 	}
 	chContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{

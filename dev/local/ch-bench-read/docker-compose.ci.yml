@@ -5,7 +5,7 @@ volumes:
 
 services:
   clickhouse:
-    image: "ghcr.io/go-faster/clickhouse-server:23.10"
+    image: "ghcr.io/go-faster/clickhouse-server:23.12"
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:8123:8123"
