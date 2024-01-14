@@ -6,4 +6,4 @@ const schemaMigration = `
 	ddl    String,
 	ts 	   DateTime DEFAULT now(),
 ) ENGINE = ReplacingMergeTree(ts)
-ORDER BY (table, ddl)`
+ORDER BY (table)`
