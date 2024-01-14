@@ -5,7 +5,7 @@ volumes:
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.10
+    image: "ghcr.io/go-faster/clickhouse-server:23.10"
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:8123:8123"
@@ -18,7 +18,7 @@ services:
       retries: 30
 
   prometheus:
-    image: prom/prometheus
+    image: "ghcr.io/go-faster/prom/prometheus"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     volumes:
@@ -74,7 +74,7 @@ services:
       - clickhouse
 
   tempo:
-    image: grafana/tempo:latest
+    image: "ghcr.io/go-faster/tempo"
     command: [ "-config.file=/etc/tempo.yml" ]
     ports:
       - "127.0.0.1:3200:3200"
@@ -83,7 +83,7 @@ services:
 
   # https://opentelemetry.io/docs/collector/installation/#docker-compose
   otelcol:
-    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0
+    image: "ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0"
     volumes:
       - ./otelcol.yml:/etc/otelcol-contrib/config.yaml
     ports:

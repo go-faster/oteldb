@@ -5,7 +5,7 @@ volumes:
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.10
+    image: "ghcr.io/go-faster/clickhouse-server:23.10"
     ports:
       - "9000:9000"
       - "8123:8123"
@@ -118,7 +118,7 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
   grafana:
-    image: "grafana/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:10.0.0"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

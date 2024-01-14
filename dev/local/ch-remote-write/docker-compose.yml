@@ -5,7 +5,7 @@ volumes:
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.10
+    image: "ghcr.io/go-faster/clickhouse-server:23.10"
     ports:
       - "9000:9000"
       - "8123:8123"
@@ -53,7 +53,7 @@ services:
   # to scrape node-exporter
   # also can remote-write to otelcol
   prometheus:
-    image: prom/prometheus
+    image: "ghcr.io/go-faster/prom/prometheus"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--web.enable-remote-write-receiver'
@@ -66,11 +66,11 @@ services:
 
   # For compliance testing.
   demo-1:
-    image: julius/prometheus-demo-service:latest
+    image: "ghcr.io/go-faster/prometheus-demo-service"
   demo-2:
-    image: julius/prometheus-demo-service:latest
+    image: "ghcr.io/go-faster/prometheus-demo-service"
   demo-3:
-    image: julius/prometheus-demo-service:latest
+    image: "ghcr.io/go-faster/prometheus-demo-service"
 
   # https://opentelemetry.io/docs/collector/installation/#docker-compose
   otelcol:
@@ -109,7 +109,7 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
   grafana:
-    image: "grafana/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:10.0.0"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

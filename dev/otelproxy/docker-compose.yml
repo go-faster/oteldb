@@ -1,6 +1,6 @@
 services:
   loki:
-    image: grafana/loki:2.8.2
+    image: "grafana/loki:2.8.2"
     command:
       - "-config.file=/etc/loki/config.yml"
       - "-log.level=debug"
@@ -13,7 +13,7 @@ services:
     ports:
       - "3101:3100"
   promtail:
-    image: grafana/promtail:2.8.2
+    image: "grafana/promtail:2.8.2"
     command:
       - "-config.file=/etc/promtail/config.yml"
       - "-log.level=debug"
@@ -33,7 +33,7 @@ services:
       - "4041:4040"
 
   tempo:
-    image: grafana/tempo:latest
+    image: "ghcr.io/go-faster/tempo"
     command: [ "-config.file=/etc/tempo.yml" ]
     environment:
       # Send traces to itself.
@@ -51,7 +51,7 @@ services:
       - "4318:4318"     # otlp http
       - "9411:9411"     # zipkin
   k6-tracing:
-    image: ghcr.io/grafana/xk6-client-tracing:v0.0.2
+    image: "ghcr.io/grafana/xk6-client-tracing:v0.0.2"
     environment:
       - ENDPOINT=tempo:4317
     restart: always
@@ -59,7 +59,7 @@ services:
       - tempo
 
   prometheus:
-    image: prom/prometheus:latest
+    image: "ghcr.io/go-faster/prom/prometheus"
     command:
       - --config.file=/etc/prometheus.yml
       - --web.enable-remote-write-receiver
@@ -70,7 +70,6 @@ services:
       - "9091:9090"
 
   otelproxy:
-    image: go-faster/otelproxy
     build:
       context: ../../
       dockerfile: otelproxy.Dockerfile
@@ -90,7 +89,7 @@ services:
       - "9090:9090"
 
   grafana:
-    image: "grafana/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:10.0.0"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

@@ -2,7 +2,7 @@ version: "3"
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.10
+    image: "ghcr.io/go-faster/clickhouse-server:23.10"
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:8123:8123"
@@ -57,7 +57,7 @@ services:
       - clickhouse
 
   grafana:
-    image: "grafana/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:10.0.0"
     profiles:
       - grafana
     environment:

@@ -23,9 +23,9 @@
 # The demo service instances expose a predictable set of synthetic metrics and are hosted on a best-effort
 # basis by PromLabs. If you want to run your own demo service instances instead, you can do so via:
 #
-#   docker run -p 10000:10000 julius/prometheus-demo-service:latest -listen-address=:10000
-#   docker run -p 10001:10001 julius/prometheus-demo-service:latest -listen-address=:10001
-#   docker run -p 10002:10002 julius/prometheus-demo-service:latest -listen-address=:10002
+#   docker run -p 10000:10000 "ghcr.io/go-faster/prometheus-demo-service" -listen-address=:10000
+#   docker run -p 10001:10001 "ghcr.io/go-faster/prometheus-demo-service" -listen-address=:10001
+#   docker run -p 10002:10002 "ghcr.io/go-faster/prometheus-demo-service" -listen-address=:10002
 #
 # You will then also need to replace the host "demo.promlabs.com" in the test queries below with whatever
 # host you are running the instances on.

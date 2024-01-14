@@ -2,7 +2,7 @@ version: "3"
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:23.10
+    image: "ghcr.io/go-faster/clickhouse-server:23.10"
     ports:
       - "9000:9000"
       - "8123:8123"
@@ -33,7 +33,7 @@ services:
       - clickhouse
 
   prometheus:
-    image: prom/prometheus
+    image: "ghcr.io/go-faster/prom/prometheus"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     volumes:
@@ -43,9 +43,9 @@ services:
     restart: unless-stopped
 
   demo-1:
-    image: julius/prometheus-demo-service:latest
+    image: "ghcr.io/go-faster/prometheus-demo-service"
   demo-2:
-    image: julius/prometheus-demo-service:latest
+    image: "ghcr.io/go-faster/prometheus-demo-service"
   demo-3:
-    image: julius/prometheus-demo-service:latest
+    image: "ghcr.io/go-faster/prometheus-demo-service"
 
