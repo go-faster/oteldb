@@ -45,7 +45,7 @@ otelbench promrw record -o /tmp/requests.rwq --d 10m --addr="127.0.0.1:8080"
 
 Start load generator:
 ```bash
-otelbench promrw bench --targetsCount=10 --scrapeInterval=1s http://
+otelbench promrw bench --targetsCount=10 --scrapeInterval=1s "127.0.0.1:8080"
 ```
 
 Prometheus remote write requests will be recorded to `/tmp/requests.rwq` file.
