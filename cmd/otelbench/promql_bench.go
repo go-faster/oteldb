@@ -371,6 +371,17 @@ func (t *tempoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
+func (p *PromQL) flushTraces(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	if err := p.batchSpanProcessor.ForceFlush(ctx); err != nil {
+		return errors.Wrap(err, "flush")
+	}
+
+	return nil
+}
+
 func (p *PromQL) report(ctx context.Context, q tracedQuery) error {
 	// Produce query report.
 	reportEntry := PromQLReportQuery{
@@ -398,11 +409,9 @@ func (p *PromQL) report(ctx context.Context, q tracedQuery) error {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
-	if err := p.batchSpanProcessor.ForceFlush(ctx); err != nil {
-		return errors.Wrap(err, "flush")
-	}
+
 	bo := backoff.NewConstantBackOff(time.Millisecond * 100)
 	res, err := backoff.RetryWithData(func() (v ptrace.Traces, err error) {
 		res, err := p.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: q.TraceID})
@@ -563,6 +572,9 @@ func (p *PromQL) Run(ctx context.Context) error {
 
 	if p.Trace {
 		fmt.Println("waiting for traces")
+		if err := p.flushTraces(ctx); err != nil {
+			return errors.Wrap(err, "flush traces")
+		}
 	} else {
 		fmt.Println("saving")
 	}
