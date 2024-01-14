@@ -2,6 +2,7 @@ package chstorage
 
 import (
 	"context"
+	"runtime"
 
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/otel"
@@ -107,9 +108,10 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 	}
 
 	if !opts.Sync {
-		inserter.metricBatches = make(chan pmetric.Metrics, 8)
+		jobs := runtime.GOMAXPROCS(0)
+		inserter.metricBatches = make(chan pmetric.Metrics, jobs)
 		ctx := context.Background()
-		for i := 0; i < 8; i++ {
+		for i := 0; i < jobs; i++ {
 			go func() {
 				if err := inserter.saveMetricBatches(ctx); err != nil {
 					panic(err)
