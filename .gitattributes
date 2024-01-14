@@ -1,4 +1,5 @@
 *.raw linguist-generated
 *.go.tpl linguist-language=Go
 *.raw binary
+*.rwq binary
 *.hex text

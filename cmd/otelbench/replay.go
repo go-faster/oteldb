@@ -15,6 +15,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/otelbench"
 )
 
 type Replay struct {
@@ -44,7 +46,7 @@ func (r *Replay) Run(ctx context.Context) error {
 		"sending",
 	)
 	pbr := progressbar.NewReader(f, pb)
-	d := NewReader(&pbr)
+	d := otelbench.NewReader(&pbr)
 	client := &http.Client{
 		Timeout: time.Minute,
 	}

@@ -29,7 +29,5 @@ dist
 coverage.txt
 .task
 
-# remore write queries
-*.rwq
-
-report.yml
+/requests.rwq
+/report.yml

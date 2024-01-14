@@ -19,6 +19,8 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/multierr"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/otelbench"
 )
 
 type Record struct {
@@ -99,7 +101,7 @@ func (r *Record) Run(ctx context.Context) (rerr error) {
 		}
 	}()
 
-	e := NewWriter(f)
+	e := otelbench.NewWriter(f)
 	srv := &http.Server{
 		Addr:              r.Addr,
 		ReadHeaderTimeout: time.Second,

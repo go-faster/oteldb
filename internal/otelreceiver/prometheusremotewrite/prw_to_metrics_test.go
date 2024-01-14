@@ -3,15 +3,24 @@
 package prometheusremotewrite
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/go-faster/sdk/gold"
+	"github.com/klauspost/compress/zstd"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
+	"gopkg.in/square/go-jose.v2/json"
 
+	"github.com/go-faster/oteldb/internal/otelbench"
 	"github.com/go-faster/oteldb/internal/prompb"
 )
 
@@ -19,6 +28,31 @@ var (
 	now       = time.Now()
 	nowMillis = now.UnixNano() / int64(time.Millisecond)
 )
+
+func TestFromTimeSeries(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "reqs-1k-zstd.rwq"))
+	require.NoError(t, err)
+	reader := otelbench.NewReader(bytes.NewReader(data))
+	require.True(t, reader.Decode())
+	compressed := reader.Data()
+	z, err := zstd.NewReader(bytes.NewReader(compressed))
+	require.NoError(t, err)
+	raw, err := io.ReadAll(z)
+	require.NoError(t, err)
+
+	rw := &prompb.WriteRequest{}
+	require.NoError(t, rw.Unmarshal(raw))
+
+	series, err := FromTimeSeries(rw.Timeseries, Settings{TimeThreshold: 1_000_000})
+	require.NoError(t, err)
+
+	var jm pmetric.JSONMarshaler
+	jsonData, err := jm.MarshalMetrics(series)
+	require.NoError(t, err)
+	dst := new(bytes.Buffer)
+	require.NoError(t, json.Indent(dst, jsonData, "", " "))
+	gold.Str(t, dst.String(), "series.json")
+}
 
 func TestPrwConfig_FromTimeSeries(t *testing.T) {
 	type args struct {
