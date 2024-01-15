@@ -68,7 +68,7 @@ require (
 	golang.org/x/sync v0.6.0
 	golang.org/x/tools v0.17.0
 	google.golang.org/grpc v1.60.1
-	gopkg.in/square/go-jose.v2 v2.5.1
+	gopkg.in/square/go-jose.v2 v2.6.0
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.4.0
 )
