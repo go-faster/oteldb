@@ -29,7 +29,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.92.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/common v0.45.0
+	github.com/prometheus/common v0.46.0
 	github.com/prometheus/prometheus v0.48.1
 	github.com/schollz/progressbar/v3 v3.14.1
 	github.com/spf13/cobra v1.8.0
@@ -138,7 +138,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
-	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.1-0.20220423185008-bf980b35cac4 // indirect
@@ -214,7 +213,7 @@ require (
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/oauth2 v0.13.0 // indirect
+	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
