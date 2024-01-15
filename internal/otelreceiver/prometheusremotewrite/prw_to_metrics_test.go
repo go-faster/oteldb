@@ -4,6 +4,7 @@ package prometheusremotewrite
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -18,7 +19,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
-	"gopkg.in/square/go-jose.v2/json"
 
 	"github.com/go-faster/oteldb/internal/otelbench"
 	"github.com/go-faster/oteldb/internal/prompb"
