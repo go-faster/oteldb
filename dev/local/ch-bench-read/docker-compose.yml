@@ -46,6 +46,8 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+      - GOMAXPROCS=6
+      - GOMEMLIMIT=1500MiB
     healthcheck:
       test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:13133/liveness']
       interval: 1s
