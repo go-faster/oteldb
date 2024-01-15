@@ -24,6 +24,8 @@ services:
       - OTEL_LOGS_EXPORTER=none
       - OTEL_TRACES_EXPORTER=none
       - OTEL_RESOURCE_ATTRIBUTES=service.name=otelbench.promrw
+      - GOMAXPROCS=3
+      - GOMEMLIMIT=2GiB
     command:
       - promrw
       - bench
@@ -51,6 +53,8 @@ services:
       - OTEL_TRACES_EXPORTER=none
       - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
       - PPROF_ADDR=:9010
+      - GOMAXPROCS=6
+      - GOMEMLIMIT=3GiB
     ports:
       - "127.0.0.1:9010:9010"   # pprof http://localhost:9010/debug/pprof/
     depends_on:
