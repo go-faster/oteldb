@@ -17,3 +17,6 @@ scc:
 tidy:
 	go mod tidy
 .PHONY: tidy
+
+generate:
+	go generate ./...
