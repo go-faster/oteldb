@@ -54,8 +54,8 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go build -v ./cmd/oteldb
-          go build -v ./cmd/chotel
+          go build -trimpath -buildvcs=false -v ./cmd/oteldb
+          go build -trimpath -buildvcs=false -v ./cmd/chotel
 
       - name: Start
         working-directory: ${{ env.WORKDIR }}

@@ -51,7 +51,7 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go build -v ./cmd/oteldb
+          go build -trimpath -buildvcs=false -v ./cmd/oteldb
 
       - name: Start
         working-directory: dev/local/ch-compliance
@@ -63,7 +63,7 @@ jobs:
 
       - name: Run
         working-directory: dev/local/ch-compliance
-        run: | 
+        run: |
           go run github.com/go-faster/oteldb/cmd/promql-compliance-tester \
           -config-file promql-test-queries.yml -config-file test-oteldb.yml \
           -output-format json \
