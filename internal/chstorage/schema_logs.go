@@ -5,7 +5,6 @@ const (
 -- https://opentelemetry.io/docs/specs/otel/logs/data-model/#log-and-event-record-definition
 (
 	-- materialized fields from semantic conventions
-	-- NB: They MUST NOT be present in the 'resource' field.
 	service_instance_id LowCardinality(String) COMMENT 'service.instance.id',
 	service_name        LowCardinality(String) COMMENT 'service.name',
 	service_namespace   LowCardinality(String) COMMENT 'service.namespace',
