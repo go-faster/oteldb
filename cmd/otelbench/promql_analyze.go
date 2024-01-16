@@ -26,10 +26,13 @@ func (a PromQLAnalyze) Run() error {
 	}
 
 	for _, q := range report.Queries {
+		if q.ID != 0 {
+			fmt.Printf("[Q%d] ", q.ID)
+		}
 		if q.Query != "" {
-			fmt.Println("query:", q.Query)
+			fmt.Println(q.Query)
 		} else {
-			fmt.Println("matchers:", q.Matchers)
+			fmt.Println(q.Matchers)
 		}
 
 		formatNanos := func(nanos int64) string {
