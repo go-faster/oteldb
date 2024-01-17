@@ -1,11 +1,11 @@
 package otelstorage
 
 import (
-	"cmp"
 	"encoding/binary"
 	"encoding/hex"
 	"math"
 	"slices"
+	"strings"
 
 	"github.com/zeebo/xxh3"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -22,13 +22,6 @@ func (h Hash) String() string {
 func AttrHash(m pcommon.Map) Hash {
 	h := xxh3.New()
 	hashMap(h, m)
-	return h.Sum128().Bytes()
-}
-
-// StrHash computes string hash.
-func StrHash(s string) Hash {
-	h := xxh3.New()
-	_, _ = h.WriteString(s)
 	return h.Sum128().Bytes()
 }
 
@@ -76,7 +69,12 @@ func hashMap(h *xxh3.Hasher, m pcommon.Map) {
 		key   string
 		value pcommon.Value
 	}
-	pairs := make([]pair, 0, m.Len())
+	var pairs []pair
+	if l := m.Len(); l < 16 {
+		pairs = make([]pair, 0, 16)
+	} else {
+		pairs = make([]pair, 0, m.Len())
+	}
 	m.Range(func(k string, v pcommon.Value) bool {
 		pairs = append(pairs, pair{
 			key:   k,
@@ -85,7 +83,15 @@ func hashMap(h *xxh3.Hasher, m pcommon.Map) {
 		return true
 	})
 	slices.SortFunc(pairs, func(a, b pair) int {
-		return cmp.Compare(a.key, b.key)
+		// [cmp.Compare] has significantly worse performance
+		// than [strings.Compare] due to NaN checks.
+		//
+		// Note that [strings.Compare] is not intrinsified, although
+		// SIMD-based implementation would not give any performance
+		// gains, since attribute names tend to be relatively small (<64 bytes).
+		//
+		// See https://go.dev/issue/61725.
+		return strings.Compare(a.key, b.key)
 	})
 
 	for _, pair := range pairs {
