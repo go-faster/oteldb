@@ -5,6 +5,7 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/maps"
 
@@ -68,7 +69,13 @@ func (a *attributeCol) Append(v otelstorage.Attrs) {
 	if !ok {
 		idx = len(a.hashes)
 		a.hashes[h] = idx
-		a.index.Append(encodeAttributes(v.AsMap()))
+
+		e := jx.GetEncoder()
+		defer jx.PutEncoder(e)
+		encodeMap(e, v.AsMap())
+
+		// Append will copy passed bytes.
+		a.index.Append(e.Bytes())
 	}
 	a.col.AppendKey(idx)
 }
