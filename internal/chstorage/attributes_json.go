@@ -9,8 +9,6 @@ import (
 
 type lazyAttributes struct {
 	orig pcommon.Map
-
-	encoded []byte
 }
 
 func (l *lazyAttributes) Attributes(additional ...[2]string) otelstorage.Attrs {
@@ -23,18 +21,6 @@ func (l *lazyAttributes) Attributes(additional ...[2]string) otelstorage.Attrs {
 		return otelstorage.Attrs(target)
 	}
 	return otelstorage.Attrs(l.orig)
-}
-
-func (l *lazyAttributes) Encode(additional ...[2]string) []byte {
-	switch {
-	case len(additional) > 0:
-		return encodeAttributes(l.orig, additional...)
-	case len(l.encoded) > 0:
-		return l.encoded
-	default:
-		l.encoded = encodeAttributes(l.orig)
-		return l.encoded
-	}
 }
 
 func encodeAttributes(attrs pcommon.Map, additional ...[2]string) []byte {
