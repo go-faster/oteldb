@@ -106,8 +106,8 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 }
 
 func snappyDecoder(body io.ReadCloser) (io.ReadCloser, error) {
-	compressed := getBuf()
-	defer putBuf(compressed)
+	compressed := bytebufferpool.Get()
+	defer bytebufferpool.Put(compressed)
 
 	if _, err := io.Copy(compressed, body); err != nil {
 		return nil, err
@@ -136,21 +136,6 @@ func decodeRequest(r io.Reader, bb *bytebufferpool.ByteBuffer, rw *prompb.WriteR
 	}
 	return rw.Unmarshal(bb.B)
 }
-
-func getWriteRequest() *prompb.WriteRequest {
-	v := writeRequestPool.Get()
-	if v == nil {
-		return &prompb.WriteRequest{}
-	}
-	return v.(*prompb.WriteRequest)
-}
-
-func putWriteRequest(wr *prompb.WriteRequest) {
-	wr.Reset()
-	writeRequestPool.Put(wr)
-}
-
-var writeRequestPool sync.Pool
 
 func (rec *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := rec.obsrecv.StartMetricsOp(r.Context())
