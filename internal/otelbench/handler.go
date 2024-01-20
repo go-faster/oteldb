@@ -62,7 +62,7 @@ func (h Handler) Ping(ctx context.Context) error {
 }
 
 func (h Handler) GetStatus(ctx context.Context) (*otelbotapi.GetStatusOK, error) {
-	// Check github client propagation.
+	// Check GitHub client propagation.
 	client, ok := ctx.Value(githubClient{}).(*github.Client)
 	if !ok {
 		return nil, fmt.Errorf("no github client")
