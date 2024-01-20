@@ -59,6 +59,8 @@ jobs:
 
       - name: Status
         run: ./otelbench api status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   PromQL:
     runs-on: ubuntu-latest
