@@ -6,25 +6,38 @@ import (
 	"net/http"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
+	"github.com/google/go-github/v58/github"
 	"github.com/ogen-go/ogen/ogenerrors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 
 	"github.com/go-faster/oteldb/internal/otelbench/ent"
 	"github.com/go-faster/oteldb/internal/otelbotapi"
 )
 
 // NewHandler initializes and returns a new Handler.
-func NewHandler(db *ent.Client) *Handler {
+func NewHandler(db *ent.Client, m *app.Metrics) *Handler {
+	httpClient := &http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport,
+			otelhttp.WithTracerProvider(m.TracerProvider()),
+			otelhttp.WithMeterProvider(m.MeterProvider()),
+			otelhttp.WithPropagators(m.TextMapPropagator()),
+		),
+	}
 	return &Handler{
-		db: db,
+		http: httpClient,
+		db:   db,
 	}
 }
 
 // Handler handles otelbench api.
 type Handler struct {
-	db *ent.Client
+	db   *ent.Client
+	http *http.Client
 }
 
 var (
@@ -32,7 +45,16 @@ var (
 	_ otelbotapi.SecurityHandler = (*Handler)(nil)
 )
 
-type tokCtx struct{}
+type githubClient struct{}
+
+func (h *Handler) clientWithToken(ctx context.Context, token string) *github.Client {
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, h.http)
+	tc := oauth2.NewClient(ctx, ts)
+	return github.NewClient(tc)
+}
 
 func (h Handler) Ping(ctx context.Context) error {
 	zctx.From(ctx).Debug("Ping")
@@ -40,16 +62,20 @@ func (h Handler) Ping(ctx context.Context) error {
 }
 
 func (h Handler) GetStatus(ctx context.Context) (*otelbotapi.GetStatusOK, error) {
-	tok, ok := ctx.Value(tokCtx{}).(string)
-	if !ok || tok == "" {
-		return nil, fmt.Errorf("no github token")
+	// Check github client propagation.
+	client, ok := ctx.Value(githubClient{}).(*github.Client)
+	if !ok {
+		return nil, fmt.Errorf("no github client")
 	}
-	count, err := h.db.Organization.Query().Count(ctx)
-	if err != nil {
-		return nil, err
+	if _, _, err := client.Repositories.Get(ctx, "go-faster", "oteldb"); err != nil {
+		return nil, errors.Wrap(err, "github check")
+	}
+	// Check database.
+	if _, err := h.db.Organization.Query().Count(ctx); err != nil {
+		return nil, errors.Wrap(err, "database check")
 	}
 	return &otelbotapi.GetStatusOK{
-		Status: fmt.Sprintf("org: %d", count),
+		Status: fmt.Sprintf("gh=ok db=ok"),
 	}, nil
 }
 
@@ -89,7 +115,7 @@ func (h Handler) NewError(ctx context.Context, err error) *otelbotapi.ErrorStatu
 }
 
 func (h Handler) HandleTokenAuth(ctx context.Context, _ string, t otelbotapi.TokenAuth) (context.Context, error) {
-	ctx = context.WithValue(ctx, tokCtx{}, t.APIKey)
+	ctx = context.WithValue(ctx, githubClient{}, h.clientWithToken(ctx, t.APIKey))
 	return ctx, nil
 }
 
