@@ -18,7 +18,7 @@ func (a *App) setupAPI() error {
 	if err != nil {
 		return errors.Wrap(err, "open database")
 	}
-	h := otelbench.NewHandler(db)
+	h := otelbench.NewHandler(db, a.metrics)
 	apiServer, err := otelbotapi.NewServer(h, h,
 		otelbotapi.WithTracerProvider(a.metrics.TracerProvider()),
 		otelbotapi.WithMeterProvider(a.metrics.MeterProvider()),
