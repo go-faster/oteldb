@@ -23,6 +23,15 @@ env:
         name: otelbot
         key: DATABASE_URL
 
+ingress:
+  enabled: true
+  className: "cilium"
+  hosts:
+    - host: bot.oteldb.tech
+      paths:
+        - path: /
+          pathType: Prefix
+
 resources:
   requests:
     cpu: "1"
