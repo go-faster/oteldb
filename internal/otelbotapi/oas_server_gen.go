@@ -14,6 +14,10 @@ type Handler interface {
 	//
 	// GET /status
 	GetStatus(ctx context.Context) (*GetStatusOK, error)
+	// Ping implements ping operation.
+	//
+	// GET /ping
+	Ping(ctx context.Context) error
 	// NewError creates *ErrorStatusCode from error returned by handler.
 	//
 	// Used for common default response.

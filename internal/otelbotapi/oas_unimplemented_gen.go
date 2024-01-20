@@ -22,6 +22,13 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r *GetStatusOK, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// Ping implements ping operation.
+//
+// GET /ping
+func (UnimplementedHandler) Ping(ctx context.Context) error {
+	return ht.ErrNotImplemented
+}
+
 // NewError creates *ErrorStatusCode from error returned by handler.
 //
 // Used for common default response.

@@ -34,6 +34,11 @@ var (
 
 type tokCtx struct{}
 
+func (h Handler) Ping(ctx context.Context) error {
+	zctx.From(ctx).Debug("Ping")
+	return nil
+}
+
 func (h Handler) GetStatus(ctx context.Context) (*otelbotapi.GetStatusOK, error) {
 	tok, ok := ctx.Value(tokCtx{}).(string)
 	if !ok || tok == "" {

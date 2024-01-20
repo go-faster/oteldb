@@ -48,24 +48,60 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/status"
+		case '/': // Prefix: "/"
 			origElem := elem
-			if l := len("/status"); len(elem) >= l && elem[0:l] == "/status" {
+			if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				// Leaf node.
-				switch r.Method {
-				case "GET":
-					s.handleGetStatusRequest([0]string{}, elemIsEscaped, w, r)
-				default:
-					s.notAllowed(w, r, "GET")
+				break
+			}
+			switch elem[0] {
+			case 'p': // Prefix: "ping"
+				origElem := elem
+				if l := len("ping"); len(elem) >= l && elem[0:l] == "ping" {
+					elem = elem[l:]
+				} else {
+					break
 				}
 
-				return
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handlePingRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+				elem = origElem
+			case 's': // Prefix: "status"
+				origElem := elem
+				if l := len("status"); len(elem) >= l && elem[0:l] == "status" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "GET":
+						s.handleGetStatusRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "GET")
+					}
+
+					return
+				}
+
+				elem = origElem
 			}
 
 			elem = origElem
@@ -149,28 +185,68 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 			break
 		}
 		switch elem[0] {
-		case '/': // Prefix: "/status"
+		case '/': // Prefix: "/"
 			origElem := elem
-			if l := len("/status"); len(elem) >= l && elem[0:l] == "/status" {
+			if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 				elem = elem[l:]
 			} else {
 				break
 			}
 
 			if len(elem) == 0 {
-				switch method {
-				case "GET":
-					// Leaf: GetStatus
-					r.name = "GetStatus"
-					r.summary = ""
-					r.operationID = "getStatus"
-					r.pathPattern = "/status"
-					r.args = args
-					r.count = 0
-					return r, true
-				default:
-					return
+				break
+			}
+			switch elem[0] {
+			case 'p': // Prefix: "ping"
+				origElem := elem
+				if l := len("ping"); len(elem) >= l && elem[0:l] == "ping" {
+					elem = elem[l:]
+				} else {
+					break
 				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: Ping
+						r.name = "Ping"
+						r.summary = ""
+						r.operationID = "ping"
+						r.pathPattern = "/ping"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
+			case 's': // Prefix: "status"
+				origElem := elem
+				if l := len("status"); len(elem) >= l && elem[0:l] == "status" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "GET":
+						// Leaf: GetStatus
+						r.name = "GetStatus"
+						r.summary = ""
+						r.operationID = "getStatus"
+						r.pathPattern = "/status"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
 			}
 
 			elem = origElem

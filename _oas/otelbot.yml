@@ -7,6 +7,15 @@ servers:
 security:
   - tokenAuth: []
 paths:
+  /ping:
+    get:
+      security: []
+      operationId: "ping"
+      responses:
+        204:
+          description: Ok
+        default:
+          $ref:  "#/components/responses/ErrorResponse"
   /status:
     get:
       operationId: "getStatus"

@@ -182,6 +182,9 @@ func (o OptTraceID) Or(d TraceID) TraceID {
 	return d
 }
 
+// PingNoContent is response for Ping operation.
+type PingNoContent struct{}
+
 type SpanID string
 
 type TokenAuth struct {
