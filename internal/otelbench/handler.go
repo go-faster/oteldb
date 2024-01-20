@@ -75,7 +75,7 @@ func (h Handler) GetStatus(ctx context.Context) (*otelbotapi.GetStatusOK, error)
 		return nil, errors.Wrap(err, "database check")
 	}
 	return &otelbotapi.GetStatusOK{
-		Status: fmt.Sprintf("gh=ok db=ok"),
+		Status: "gh=ok db=ok",
 	}, nil
 }
 
