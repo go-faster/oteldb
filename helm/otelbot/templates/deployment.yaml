@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otelbot.fullname" . }}
+  labels:
+    {{- include "otelbot.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "otelbot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "otelbot.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "otelbot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "otelbot.fullname" . }}-cfg
+      volumes:
+        - name: atlas
+          secret:
+            secretName: "{{ .Values.atlasSecret }}"
+      initContainers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}-migrate:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          volumeMounts:
+            - mountPath: "/root/.config/"
+              name: atlas
+              readOnly: true
+          args:
+            - --config
+            - file://root/.config/atlas.hcl
+            - --env
+            - prod
+            - migrate
+            - apply
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64M
+            limits:
+              cpu: 500m
+              memory: 128M
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: health-check
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: health-check
+          startupProbe:
+            httpGet:
+              path: /startup
+              port: health-check
+          env:
+            {{- if .Values.env }}
+            {{- toYaml .Values.env | nindent 12 }}
+            {{- end }}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: http
+            - containerPort: 13133
+              protocol: TCP
+              name: health-check
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

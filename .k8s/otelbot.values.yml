@@ -1,0 +1,32 @@
+env:
+  - name: GOMEMLIMIT
+    value: "256MiB"
+  - name: GOMAXPROCS
+    value: "2"
+  - name: OTEL_RESOURCE_ATTRIBUTES
+    value: "service.name=go-faster.otelbot"
+  - name: OTEL_EXPORTER_OTLP_PROTOCOL
+    value: "grpc"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+  - name: OTEL_METRICS_EXPORTER
+    value: "otlp"
+  - name: OTEL_TRACES_EXPORTER
+    value: "otlp"
+  - name: OTEL_LOGS_EXPORTER
+    value: "otlp"
+  - name: OTEL_LOG_LEVEL
+    value: "DEBUG"
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: otelbot
+        key: DATABASE_URL
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 128Mi
+  limits:
+    cpu: "2"
+    memory: 256Mi

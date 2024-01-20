@@ -22,6 +22,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.5.0
 	github.com/grafana/pyroscope-go v1.0.4
+	github.com/jackc/pgx/v5 v5.5.2
 	github.com/klauspost/compress v1.17.4
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/ogen-go/ogen v0.81.2
@@ -131,6 +132,8 @@ require (
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect

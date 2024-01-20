@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: Bot for oteldb project
+  version: 0.1.0
+servers:
+  - url: "http://localhost:8080"
+security:
+  - tokenAuth: []
+paths:
+  /status:
+    get:
+      operationId: "getStatus"
+      description: "get status"
+      responses:
+        200:
+          description: Status
+          content:
+            "application/json":
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                    status:
+                      type: string
+                      description: "Status"
+                      example: "ok"
+        default:
+          $ref:  "#/components/responses/ErrorResponse"
+components:
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: token
+      description: >
+        Contains GITHUB_TOKEN, like `${{ secrets.GITHUB_TOKEN }}`.
+  schemas:
+    # Error-related schemas.
+    TraceID:
+      type: string
+      description: W3C trace-id
+      pattern: "[[:xdigit:]]{32}"
+      example: 0af7651916cd43dd8448eb211c80319c
+      externalDocs:
+        url: "https://www.w3.org/TR/trace-context/#trace-id"
+        description: "W3C Trace Context specification"
+    SpanID:
+      type: string
+      description: W3C parent-id (span)
+      pattern: "[[:xdigit:]]{16}"
+      example: b7ad6b7169203331
+      externalDocs:
+        url: "https://www.w3.org/TR/trace-context/#parent-id"
+        description: "W3C Trace Context specification"
+    Error:
+      title: Structured error
+      description: Error occurred while processing request
+      type: object
+      required:
+        - error_message
+      properties:
+        error_message:
+          type: string
+          description: "Human-readable error message"
+          example: "Something went wrong"
+        trace_id:
+          $ref: "#/components/schemas/TraceID"
+        span_id:
+          $ref: "#/components/schemas/SpanID"
+  responses:
+    ErrorResponse:
+      description: Structured error response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
