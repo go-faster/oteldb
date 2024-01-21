@@ -216,7 +216,7 @@ changelog:
       order: 150
     - title: 'Performance updates'
       regexp: '^.*?perf(\(\S+\))??!?:.+$'
-      order: 110
+      order: 250
     - title: 'Bug fixes'
       regexp: '^.*?fix(\(\S+\))??!?:.+$'
       order: 200
@@ -228,6 +228,9 @@ changelog:
       order: 500
     - title: 'CI/CD updates'
       regexp: '^.*?ci(\(\S+\))??!?:.+$'
+      order: 600
+    - title: 'Updates to tests'
+      regexp: '^.*?test(\(\S+\))??!?:.+$'
       order: 600
 
     - title: Other work
