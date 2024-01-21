@@ -172,14 +172,14 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 	return nil
 }
 
-func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric.NumberDataPointSlice) error {
+func (b *metricsBatch) addPoints(name string, res lazyAttributes, slice pmetric.NumberDataPointSlice) error {
 	c := b.points
 
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
 		flags := point.Flags()
-		attrs := &lazyAttributes{
+		attrs := lazyAttributes{
 			orig: point.Attributes(),
 		}
 
@@ -223,12 +223,12 @@ func (b *metricsBatch) addPoints(name string, res *lazyAttributes, slice pmetric
 	return nil
 }
 
-func (b *metricsBatch) addHistogramPoints(name string, res *lazyAttributes, slice pmetric.HistogramDataPointSlice) error {
+func (b *metricsBatch) addHistogramPoints(name string, res lazyAttributes, slice pmetric.HistogramDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
 		flags := point.Flags()
-		attrs := &lazyAttributes{
+		attrs := lazyAttributes{
 			orig: point.Attributes(),
 		}
 		count := point.Count()
@@ -392,7 +392,7 @@ type histogramBucketBounds struct {
 	bucketKey [2]string
 }
 
-func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, slice pmetric.ExponentialHistogramDataPointSlice) error {
+func (b *metricsBatch) addExpHistogramPoints(name string, res lazyAttributes, slice pmetric.ExponentialHistogramDataPointSlice) error {
 	var (
 		c          = b.expHistograms
 		mapBuckets = func(b pmetric.ExponentialHistogramDataPointBuckets) (offset int32, counts []uint64) {
@@ -406,7 +406,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 			point     = slice.At(i)
 			ts        = point.Timestamp().AsTime()
 			flags     = point.Flags()
-			attrs     = &lazyAttributes{orig: point.Attributes()}
+			attrs     = lazyAttributes{orig: point.Attributes()}
 			count     = point.Count()
 			sum       = proto.Nullable[float64]{Set: point.HasSum(), Value: point.Sum()}
 			vmin      = proto.Nullable[float64]{Set: point.HasMin(), Value: point.Min()}
@@ -451,13 +451,13 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res *lazyAttributes, s
 	return nil
 }
 
-func (b *metricsBatch) addSummaryPoints(name string, res *lazyAttributes, slice pmetric.SummaryDataPointSlice) error {
+func (b *metricsBatch) addSummaryPoints(name string, res lazyAttributes, slice pmetric.SummaryDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
 		var (
 			point = slice.At(i)
 			ts    = point.Timestamp().AsTime()
 			flags = point.Flags()
-			attrs = &lazyAttributes{orig: point.Attributes()}
+			attrs = lazyAttributes{orig: point.Attributes()}
 			count = point.Count()
 			sum   = point.Sum()
 			qv    = point.QuantileValues()
@@ -502,8 +502,8 @@ func (b *metricsBatch) addSummaryPoints(name string, res *lazyAttributes, slice 
 type mappedSeries struct {
 	Timestamp  time.Time
 	Flags      pmetric.DataPointFlags
-	Attributes *lazyAttributes
-	Resource   *lazyAttributes
+	Attributes lazyAttributes
+	Resource   lazyAttributes
 }
 
 func (b *metricsBatch) addMappedSample(
@@ -528,8 +528,8 @@ func (b *metricsBatch) addMappedSample(
 type exemplarSeries struct {
 	Name       string
 	Timestamp  time.Time
-	Attributes *lazyAttributes
-	Resource   *lazyAttributes
+	Attributes lazyAttributes
+	Resource   lazyAttributes
 }
 
 func (b *metricsBatch) addExemplars(p exemplarSeries, exemplars pmetric.ExemplarSlice) error {
@@ -577,7 +577,7 @@ func (b *metricsBatch) addName(name string) {
 	b.labels[[2]string{labels.MetricName, name}] = struct{}{}
 }
 
-func (b *metricsBatch) addLabels(attrs *lazyAttributes) {
+func (b *metricsBatch) addLabels(attrs lazyAttributes) {
 	attrs.orig.Range(func(key string, value pcommon.Value) bool {
 		pair := [2]string{
 			key,
@@ -593,7 +593,7 @@ func (b *metricsBatch) mapMetrics(metrics pmetric.Metrics) error {
 	resMetrics := metrics.ResourceMetrics()
 	for i := 0; i < resMetrics.Len(); i++ {
 		resMetric := resMetrics.At(i)
-		resAttrs := &lazyAttributes{
+		resAttrs := lazyAttributes{
 			orig: resMetric.Resource().Attributes(),
 		}
 		b.addLabels(resAttrs)
