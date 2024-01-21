@@ -206,8 +206,6 @@ changelog:
     - title: 'Dependency updates'
       regexp: '^.*?(feat|fix|chore)\(deps\)!?:.+$'
       order: 300
-    - title: 'Benchmarks'
-      regexp: '^.*?(\(\S*bench\S*\))!?:.+$'
     - title: 'New Features'
       regexp: '^.*?feat(\(\S+\))??!?:.+$'
       order: 100
@@ -223,6 +221,9 @@ changelog:
     - title: 'Documentation updates'
       regexp: '^.*?docs(\(\S+\))??!?:.+$'
       order: 400
+    - title: 'Benchmarking tooling changes'
+      regexp: '^.*?(\(\S*bench\S*\))!?:.+$'
+      order: 450
     - title: 'Build process updates'
       regexp: '^.*?build(\(\S+\))??!?:.+$'
       order: 500
