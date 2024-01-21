@@ -206,6 +206,8 @@ changelog:
     - title: 'Dependency updates'
       regexp: '^.*?(feat|fix|chore)\(deps\)!?:.+$'
       order: 300
+    - title: 'Benchmarks'
+      regexp: '^.*?(\(\S*bench\S*\))!?:.+$'
     - title: 'New Features'
       regexp: '^.*?feat(\(\S+\))??!?:.+$'
       order: 100
@@ -213,7 +215,7 @@ changelog:
       regexp: '^.*?sec(\(\S+\))??!?:.+$'
       order: 150
     - title: 'Performance updates'
-      regexp: '^.*?perf\(\S+\)!?:.+$'
+      regexp: '^.*?perf(\(\S+\))??!?:.+$'
       order: 110
     - title: 'Bug fixes'
       regexp: '^.*?fix(\(\S+\))??!?:.+$'
