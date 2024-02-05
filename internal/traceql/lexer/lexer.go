@@ -23,7 +23,7 @@ type TokenizeOptions struct {
 	Filename string
 }
 
-// Tokenize scans given string to LogQL tokens.
+// Tokenize scans given string to TraceQL tokens.
 func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 	l := lexer{}
 	l.scanner.Init(strings.NewReader(s))

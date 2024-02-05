@@ -2,14 +2,14 @@ package lexer
 
 import "text/scanner"
 
-// Token is a LogQL token.
+// Token is a TraceQL token.
 type Token struct {
 	Type TokenType
 	Text string
 	Pos  scanner.Position
 }
 
-// TokenType defines LogQL token type.
+// TokenType defines TraceQL token type.
 type TokenType int
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=TokenType
