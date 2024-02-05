@@ -22,7 +22,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v58 v58.0.0
 	github.com/google/uuid v1.6.0
-	github.com/grafana/pyroscope-go v1.1.0
+	github.com/grafana/pyroscope-go v1.1.1
 	github.com/jackc/pgx/v5 v5.5.2
 	github.com/klauspost/compress v1.17.5
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
