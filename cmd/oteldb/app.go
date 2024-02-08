@@ -268,7 +268,7 @@ func (app *App) setupCollector() error {
 				"oteldb": otelreceiver.NewMapProvider("oteldb", app.cfg.Collector),
 			},
 			Converters: []confmap.Converter{
-				expandconverter.New(),
+				expandconverter.New(confmap.ConverterSettings{}),
 			},
 		},
 	})
