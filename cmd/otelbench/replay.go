@@ -188,7 +188,7 @@ func (r *Replay) Run(ctx context.Context) error {
 			return errors.Wrap(err, "marshal report")
 		}
 		// #nosec G306
-		if err := os.WriteFile(r.ReportPath, data, 0644); err != nil {
+		if err := os.WriteFile(r.ReportPath, data, 0o644); err != nil {
 			return errors.Wrap(err, "write report")
 		}
 	}
@@ -202,7 +202,7 @@ func newReplayCommand() *cobra.Command {
 		Aliases: []string{"send"},
 		Short:   "Send recorded requests to remote write server",
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return replay.Run(cmd.Context())
 		},
 	}

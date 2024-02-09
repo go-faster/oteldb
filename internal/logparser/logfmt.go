@@ -126,7 +126,7 @@ func (LogFmtParser) Detect(line string) bool {
 	if line[0] == '{' {
 		return false
 	}
-	noop := logfmt.HandlerFunc(func(key, val []byte) error {
+	noop := logfmt.HandlerFunc(func(_, _ []byte) error {
 		return nil
 	})
 	return logfmt.Unmarshal([]byte(line), noop) == nil

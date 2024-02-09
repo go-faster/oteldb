@@ -14,7 +14,7 @@ func newPingCommand(cfg *apiSettings) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ping",
 		Short: "Send ping request to otelbench api",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			client, err := cfg.Client()
 			if err != nil {
 				return errors.Wrap(err, "failed to create otelbotapi client")
@@ -33,7 +33,7 @@ func newStatusCommand(cfg *apiSettings) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Get status of otelbench api",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			client, err := cfg.Client()
 			if err != nil {
 				return errors.Wrap(err, "failed to create otelbotapi client")

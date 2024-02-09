@@ -186,7 +186,7 @@ func newRecordCommand() *cobra.Command {
 		Use:   "record",
 		Args:  cobra.NoArgs,
 		Short: "Listen for remote write requests and record them to file",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return recorder.Run(cmd.Context())
 		},
 	}

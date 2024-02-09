@@ -30,7 +30,7 @@ func main() {
 			_ = res.Body.Close()
 		}
 		return nil
-	}, bo, func(err error, d time.Duration) {
+	}, bo, func(err error, _ time.Duration) {
 		fmt.Println(err)
 	})
 	fmt.Println(">> prometheus api ready")

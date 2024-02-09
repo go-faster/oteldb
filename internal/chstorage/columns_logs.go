@@ -190,7 +190,7 @@ func (c *logAttrMapColumns) ForEach(f func(name, key string)) {
 }
 
 func (c *logAttrMapColumns) AddAttrs(attrs otelstorage.Attrs) {
-	attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+	attrs.AsMap().Range(func(k string, _ pcommon.Value) bool {
 		c.AddRow(otelstorage.KeyToLabel(k), k)
 		return true
 	})

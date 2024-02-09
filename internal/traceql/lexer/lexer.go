@@ -29,7 +29,7 @@ func Tokenize(s string, opts TokenizeOptions) ([]Token, error) {
 	l.scanner.Init(strings.NewReader(s))
 	l.scanner.Filename = opts.Filename
 	l.scanner.Error = func(s *scanner.Scanner, msg string) {
-		l.setError(msg, l.scanner.Position)
+		l.setError(msg, s.Position)
 	}
 
 	for {

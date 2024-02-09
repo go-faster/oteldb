@@ -698,7 +698,7 @@ func (p *PromQL) Run(ctx context.Context) error {
 	reportData := buf.Bytes()
 
 	// #nosec G306
-	if err := os.WriteFile(p.Output, reportData, 0644); err != nil {
+	if err := os.WriteFile(p.Output, reportData, 0o644); err != nil {
 		return errors.Wrap(err, "write report")
 	}
 	fmt.Println("done")
@@ -711,7 +711,7 @@ func newPromQLBenchmarkCommand() *cobra.Command {
 		Use:     "bench",
 		Aliases: []string{"benchmark"},
 		Short:   "Run promql queries",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			if err := p.Setup(cmd); err != nil {
 				return errors.Wrap(err, "setup")

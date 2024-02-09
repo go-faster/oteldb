@@ -126,7 +126,7 @@ func newPromQLConvertCommand() *cobra.Command {
 		Use:   "convert",
 		Short: "Convert json line query export (stdin) to yaml (stdout) structured record document",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(*cobra.Command, []string) error {
 			return p.Run()
 		},
 	}

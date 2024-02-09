@@ -58,7 +58,7 @@ func HTML(tplFile string) (Outputter, error) {
 		return nil, err
 	}
 
-	return func(results []*comparer.Result, includePassing bool, tweaks []*config.QueryTweak) {
+	return func(results []*comparer.Result, includePassing bool, _ []*config.QueryTweak) {
 		err := t.Execute(os.Stdout, struct {
 			Results        []*comparer.Result
 			IncludePassing bool
