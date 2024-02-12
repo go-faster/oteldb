@@ -81,6 +81,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
+			case 'r': // Prefix: "report/submit"
+				origElem := elem
+				if l := len("report/submit"); len(elem) >= l && elem[0:l] == "report/submit" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					// Leaf node.
+					switch r.Method {
+					case "POST":
+						s.handleSubmitReportRequest([0]string{}, elemIsEscaped, w, r)
+					default:
+						s.notAllowed(w, r, "POST")
+					}
+
+					return
+				}
+
+				elem = origElem
 			case 's': // Prefix: "status"
 				origElem := elem
 				if l := len("status"); len(elem) >= l && elem[0:l] == "status" {
@@ -213,6 +234,31 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.summary = ""
 						r.operationID = "ping"
 						r.pathPattern = "/ping"
+						r.args = args
+						r.count = 0
+						return r, true
+					default:
+						return
+					}
+				}
+
+				elem = origElem
+			case 'r': // Prefix: "report/submit"
+				origElem := elem
+				if l := len("report/submit"); len(elem) >= l && elem[0:l] == "report/submit" {
+					elem = elem[l:]
+				} else {
+					break
+				}
+
+				if len(elem) == 0 {
+					switch method {
+					case "POST":
+						// Leaf: SubmitReport
+						r.name = "SubmitReport"
+						r.summary = ""
+						r.operationID = "submitReport"
+						r.pathPattern = "/report/submit"
 						r.args = args
 						r.count = 0
 						return r, true

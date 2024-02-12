@@ -36,6 +36,33 @@ paths:
                       example: "ok"
         default:
           $ref:  "#/components/responses/ErrorResponse"
+  /report/submit:
+    post:
+      operationId: "submitReport"
+      description: "Submit benchmark report"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              required:
+                - measurement
+                - report
+              properties:
+                report:
+                  type: string
+                  description: "Benchmark report type"
+                  example: "promrw"
+                measurement:
+                  type: number
+                  description: "Measurement value"
+                  example: 0.1
+      responses:
+        201:
+          description: "Report accepted"
+        default:
+          $ref:  "#/components/responses/ErrorResponse"
 components:
   securitySchemes:
     tokenAuth:

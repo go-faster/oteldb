@@ -58,6 +58,20 @@ func (s *SpanID) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *SubmitReportReq) SetFake() {
+	{
+		{
+			s.Report = "string"
+		}
+	}
+	{
+		{
+			s.Measurement = float64(0)
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *TraceID) SetFake() {
 	var unwrapped string
 	{

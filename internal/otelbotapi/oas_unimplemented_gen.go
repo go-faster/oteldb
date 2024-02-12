@@ -29,6 +29,15 @@ func (UnimplementedHandler) Ping(ctx context.Context) error {
 	return ht.ErrNotImplemented
 }
 
+// SubmitReport implements submitReport operation.
+//
+// Submit benchmark report.
+//
+// POST /report/submit
+func (UnimplementedHandler) SubmitReport(ctx context.Context, req *SubmitReportReq) error {
+	return ht.ErrNotImplemented
+}
+
 // NewError creates *ErrorStatusCode from error returned by handler.
 //
 // Used for common default response.

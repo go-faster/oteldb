@@ -18,6 +18,12 @@ type Handler interface {
 	//
 	// GET /ping
 	Ping(ctx context.Context) error
+	// SubmitReport implements submitReport operation.
+	//
+	// Submit benchmark report.
+	//
+	// POST /report/submit
+	SubmitReport(ctx context.Context, req *SubmitReportReq) error
 	// NewError creates *ErrorStatusCode from error returned by handler.
 	//
 	// Used for common default response.

@@ -187,6 +187,36 @@ type PingNoContent struct{}
 
 type SpanID string
 
+// SubmitReportCreated is response for SubmitReport operation.
+type SubmitReportCreated struct{}
+
+type SubmitReportReq struct {
+	// Benchmark report type.
+	Report string `json:"report"`
+	// Measurement value.
+	Measurement float64 `json:"measurement"`
+}
+
+// GetReport returns the value of Report.
+func (s *SubmitReportReq) GetReport() string {
+	return s.Report
+}
+
+// GetMeasurement returns the value of Measurement.
+func (s *SubmitReportReq) GetMeasurement() float64 {
+	return s.Measurement
+}
+
+// SetReport sets the value of Report.
+func (s *SubmitReportReq) SetReport(val string) {
+	s.Report = val
+}
+
+// SetMeasurement sets the value of Measurement.
+func (s *SubmitReportReq) SetMeasurement(val float64) {
+	s.Measurement = val
+}
+
 type TokenAuth struct {
 	APIKey string
 }

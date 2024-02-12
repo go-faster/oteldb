@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/go-faster/errors"
 	"github.com/spf13/cobra"
@@ -57,6 +58,47 @@ func (a *apiSettings) Client() (*otelbotapi.Client, error) {
 	return otelbotapi.NewClient(a.httpAddr, otelbench.EnvSecuritySource())
 }
 
+type submitCommand struct {
+	cfg *apiSettings
+}
+
+func (c *submitCommand) parse(data []byte) (*otelbotapi.SubmitReportReq, error) {
+	var report otelbotapi.SubmitReportReq
+	_ = data
+	return &report, nil
+}
+
+func (c submitCommand) Run(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+	client, err := c.cfg.Client()
+	if err != nil {
+		return errors.Wrap(err, "failed to create otelbotapi client")
+	}
+	data, err := os.ReadFile(args[0])
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+	req, err := c.parse(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse report")
+	}
+	if err := client.SubmitReport(ctx, req); err != nil {
+		return errors.Wrap(err, "failed to submit report")
+	}
+	return nil
+}
+
+func newSubmitCommand(cfg *apiSettings) *cobra.Command {
+	v := &submitCommand{cfg: cfg}
+	cmd := &cobra.Command{
+		Use:   "submit",
+		Short: "Submit benchmark to otelbench api",
+		RunE:  v.Run,
+		Args:  cobra.ExactArgs(1),
+	}
+	return cmd
+}
+
 func newAPICommand() *cobra.Command {
 	cfg := &apiSettings{}
 	cmd := &cobra.Command{
@@ -67,6 +109,7 @@ func newAPICommand() *cobra.Command {
 	cmd.AddCommand(
 		newPingCommand(cfg),
 		newStatusCommand(cfg),
+		newSubmitCommand(cfg),
 	)
 	return cmd
 }

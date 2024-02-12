@@ -33,6 +33,12 @@ type Invoker interface {
 	//
 	// GET /ping
 	Ping(ctx context.Context) error
+	// SubmitReport invokes submitReport operation.
+	//
+	// Submit benchmark report.
+	//
+	// POST /report/submit
+	SubmitReport(ctx context.Context, request *SubmitReportReq) error
 }
 
 // Client implements OAS client.
@@ -257,6 +263,114 @@ func (c *Client) sendPing(ctx context.Context) (res *PingNoContent, err error) {
 
 	stage = "DecodeResponse"
 	result, err := decodePingResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SubmitReport invokes submitReport operation.
+//
+// Submit benchmark report.
+//
+// POST /report/submit
+func (c *Client) SubmitReport(ctx context.Context, request *SubmitReportReq) error {
+	_, err := c.sendSubmitReport(ctx, request)
+	return err
+}
+
+func (c *Client) sendSubmitReport(ctx context.Context, request *SubmitReportReq) (res *SubmitReportCreated, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("submitReport"),
+		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRouteKey.String("/report/submit"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "SubmitReport",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/report/submit"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSubmitReportRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:TokenAuth"
+			switch err := c.securityTokenAuth(ctx, "SubmitReport", r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"TokenAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeSubmitReportResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

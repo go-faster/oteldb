@@ -34,6 +34,13 @@ func encodePingResponse(response *PingNoContent, w http.ResponseWriter, span tra
 	return nil
 }
 
+func encodeSubmitReportResponse(response *SubmitReportCreated, w http.ResponseWriter, span trace.Span) error {
+	w.WriteHeader(201)
+	span.SetStatus(codes.Ok, http.StatusText(201))
+
+	return nil
+}
+
 func encodeErrorResponse(response *ErrorStatusCode, w http.ResponseWriter, span trace.Span) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	code := response.StatusCode
