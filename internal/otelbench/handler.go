@@ -40,6 +40,11 @@ type Handler struct {
 	http *http.Client
 }
 
+func (h *Handler) SubmitReport(ctx context.Context, req *otelbotapi.SubmitReportReq) error {
+	// TODO(ernado): implement
+	return nil
+}
+
 var (
 	_ otelbotapi.Handler         = (*Handler)(nil)
 	_ otelbotapi.SecurityHandler = (*Handler)(nil)
