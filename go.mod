@@ -71,7 +71,7 @@ require (
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
 	golang.org/x/oauth2 v0.17.0
 	golang.org/x/sync v0.6.0
-	golang.org/x/tools v0.17.0
+	golang.org/x/tools v0.18.0
 	google.golang.org/grpc v1.61.0
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.4.0
@@ -224,7 +224,7 @@ require (
 	go.uber.org/automaxprocs v1.5.3 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/mod v0.14.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
