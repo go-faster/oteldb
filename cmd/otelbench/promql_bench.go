@@ -697,7 +697,6 @@ func (p *PromQL) Run(ctx context.Context) error {
 	}
 	reportData := buf.Bytes()
 
-	// #nosec G306
 	if err := os.WriteFile(p.Output, reportData, 0o644); err != nil {
 		return errors.Wrap(err, "write report")
 	}

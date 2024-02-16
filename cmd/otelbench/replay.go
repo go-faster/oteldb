@@ -187,7 +187,6 @@ func (r *Replay) Run(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "marshal report")
 		}
-		// #nosec G306
 		if err := os.WriteFile(r.ReportPath, data, 0o644); err != nil {
 			return errors.Wrap(err, "write report")
 		}
