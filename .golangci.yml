@@ -122,10 +122,6 @@ issues:
     - path: main\.go
       linters: [goconst, funlen, gocognit, gocyclo]
 
-    - path: main\.go
-      linters: [gosec]
-      text: "G307"
-
     - source: 'func Fuzz.+\(f \*testing\.F\)'
       linters: [stylecheck]
       text: "ST1003" # underscores lol
@@ -147,10 +143,10 @@ issues:
     - linters: [revive]
       text: "exported const .+ should have comment"
 
-    # It's okay for ytlocal to write files and exec binaries.
-    - path: (cmd|internal)/ytlocal
+    # It's okay for commands to write files and exec binaries.
+    - path: cmd
       linters: [gosec]
-      text: "G(306|301|204)"
+      text: "G(307|306|301|204)"
 
     # False positive.
     - linters: [govet]
