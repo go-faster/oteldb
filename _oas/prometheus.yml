@@ -39,7 +39,7 @@ paths:
         200:
           $ref: "#/components/responses/QueryResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
     post:
       operationId: postQuery
       description: Query Prometheus
@@ -53,7 +53,7 @@ paths:
         200:
           $ref: "#/components/responses/QueryResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/query_range:
     description: Evaluates an expression query over a range of time.
     get:
@@ -99,7 +99,7 @@ paths:
         200:
           $ref: "#/components/responses/QueryResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
     post:
       operationId: postQueryRange
       description: Query Prometheus
@@ -113,7 +113,7 @@ paths:
         200:
           $ref: "#/components/responses/QueryResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/query_exemplars:
     description: Returns a list of exemplars for a valid PromQL query for a specific time range
     get:
@@ -142,7 +142,7 @@ paths:
         200:
           $ref: "#/components/responses/QueryExemplarsResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
     post:
       operationId: postQueryExemplars
       description: Query Prometheus
@@ -156,7 +156,7 @@ paths:
         200:
           $ref: "#/components/responses/QueryExemplarsResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/series:
     description: Returns the list of time series that match a certain label set.
     get:
@@ -186,7 +186,7 @@ paths:
         200:
           $ref: "#/components/responses/SeriesResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
     post:
       operationId: postSeries
       description: Query Prometheus
@@ -200,7 +200,7 @@ paths:
         200:
           $ref: "#/components/responses/SeriesResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/labels:
     description: Returns a list of label names.
     get:
@@ -227,7 +227,7 @@ paths:
         200:
           $ref: "#/components/responses/LabelsResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
     post:
       operationId: postLabels
       requestBody:
@@ -240,7 +240,7 @@ paths:
         200:
           $ref: "#/components/responses/LabelsResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/label/{label}/values:
     description: Returns a list of label values for a provided label name.
     get:
@@ -273,7 +273,7 @@ paths:
         200:
           $ref: "#/components/responses/LabelValuesResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/rules:
     description: Returns a list of alerting and recording rules that are currently loaded.
     get:
@@ -323,7 +323,7 @@ paths:
         200:
           $ref: "#/components/responses/RulesResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
   /api/v1/metadata:
     description: Returns metadata about metrics currently scraped from targets.
     get:
@@ -351,7 +351,7 @@ paths:
         200:
           $ref: "#/components/responses/MetadataResponse"
         default:
-          $ref: "#/components/responses/Error"
+          $ref: "#/components/responses/Fail"
 components:
   responses:
     QueryResponse:
@@ -501,7 +501,7 @@ components:
                   type: string
               data:
                 $ref: "#/components/schemas/Metadata"
-    Error:
+    Fail:
       description: Error while processing request
       content:
         "application/json":
