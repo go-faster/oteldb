@@ -15,7 +15,7 @@ paths:
         204:
           description: Ok
         default:
-          $ref:  "#/components/responses/ErrorResponse"
+          $ref: "#/components/responses/Error"
   /status:
     get:
       operationId: "getStatus"
@@ -30,12 +30,12 @@ paths:
                 required:
                   - status
                 properties:
-                    status:
-                      type: string
-                      description: "Status"
-                      example: "ok"
+                  status:
+                    type: string
+                    description: "Status"
+                    example: "ok"
         default:
-          $ref:  "#/components/responses/ErrorResponse"
+          $ref: "#/components/responses/Error"
   /report/submit:
     post:
       operationId: "submitReport"
@@ -62,7 +62,7 @@ paths:
         201:
           description: "Report accepted"
         default:
-          $ref:  "#/components/responses/ErrorResponse"
+          $ref: "#/components/responses/Error"
 components:
   securitySchemes:
     tokenAuth:
@@ -105,7 +105,7 @@ components:
         span_id:
           $ref: "#/components/schemas/SpanID"
   responses:
-    ErrorResponse:
+    Error:
       description: Structured error response.
       content:
         application/json:
