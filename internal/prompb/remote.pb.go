@@ -12,7 +12,10 @@ type WriteRequest struct {
 
 // Unmarshal unmarshals WriteRequest from src.
 func (req *WriteRequest) Unmarshal(src []byte) (err error) {
-	var fc easyproto.FieldContext
+	var (
+		fc  easyproto.FieldContext
+		tss = req.Timeseries
+	)
 	for len(src) > 0 {
 		src, err = fc.NextField(src)
 		if err != nil {
@@ -24,12 +27,17 @@ func (req *WriteRequest) Unmarshal(src []byte) (err error) {
 			if !ok {
 				return errors.New("read timeseries data")
 			}
-			req.Timeseries = append(req.Timeseries, TimeSeries{})
-			ts := &req.Timeseries[len(req.Timeseries)-1]
+			if len(tss)+1 < cap(tss) {
+				tss = tss[:len(tss)+1]
+			} else {
+				tss = append(tss, TimeSeries{})
+			}
+			ts := &tss[len(tss)-1]
 			if err := ts.Unmarshal(data); err != nil {
 				return errors.Wrapf(err, "read timeseries (field %d)", fc.FieldNum)
 			}
 		}
 	}
+	req.Timeseries = tss
 	return nil
 }
