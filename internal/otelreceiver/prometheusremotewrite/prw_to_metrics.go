@@ -60,7 +60,7 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 			}
 		}
 
-		if countSamples(ts, timeThreshold) != 0 {
+		if countPoints(ts.Samples, timeThreshold) != 0 {
 			var slice pmetric.NumberDataPointSlice
 			if IsValidCumulativeSuffix(metricsType) {
 				pm.SetEmptySum()
@@ -73,16 +73,66 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 			}
 
 			for _, s := range ts.Samples {
-				ppoint := slice.AppendEmpty()
-				ppoint.SetDoubleValue(s.Value)
-				ppoint.SetTimestamp(mapTimestamp(s.Timestamp))
-				if ppoint.Timestamp().AsTime().Before(timeThreshold) {
+				timestamp := mapTimestamp(s.Timestamp)
+				if ts := timestamp.AsTime(); ts.Before(timeThreshold) {
 					settings.Logger.Debug("Metric older than the threshold",
 						zap.String("metric name", pm.Name()),
-						zap.Time("metric_timestamp", ppoint.Timestamp().AsTime()),
+						zap.Time("metric_timestamp", ts),
 					)
 					continue
 				}
+
+				ppoint := slice.AppendEmpty()
+				ppoint.SetDoubleValue(s.Value)
+				ppoint.SetTimestamp(timestamp)
+
+				attrs := ppoint.Attributes()
+				for _, l := range ts.Labels {
+					if string(l.Name) == nameStr {
+						continue
+					}
+					attrs.PutStr(string(l.Name), string(l.Value))
+				}
+				mapExemplars(ts.Exemplars, ppoint.Exemplars())
+			}
+		} else if countPoints(ts.Histograms, timeThreshold) > 0 {
+			eh := pm.SetEmptyExponentialHistogram()
+
+			for _, h := range ts.Histograms {
+				timestamp := mapTimestamp(h.Timestamp)
+				if ts := timestamp.AsTime(); ts.Before(timeThreshold) {
+					settings.Logger.Debug("Metric older than the threshold",
+						zap.String("metric name", pm.Name()),
+						zap.Time("metric_timestamp", ts),
+					)
+					continue
+				}
+
+				ppoint := eh.DataPoints().AppendEmpty()
+				ppoint.SetTimestamp(timestamp)
+				if c, ok := h.Count.AsUint64(); ok {
+					ppoint.SetCount(c)
+				} else if c, ok := h.Count.AsFloat64(); ok {
+					ppoint.SetCount(uint64(c))
+				}
+				ppoint.SetScale(h.Schema)
+				if c, ok := h.ZeroCount.AsUint64(); ok {
+					ppoint.SetZeroCount(c)
+				} else if c, ok := h.ZeroCount.AsFloat64(); ok {
+					ppoint.SetZeroCount(uint64(c))
+				}
+				mapExpBuckets(promHistorgram{
+					deltas: h.NegativeDeltas,
+					counts: h.NegativeCounts,
+					spans:  h.NegativeSpans,
+				}, ppoint.Negative())
+				mapExpBuckets(promHistorgram{
+					deltas: h.PositiveDeltas,
+					counts: h.PositiveCounts,
+					spans:  h.PositiveSpans,
+				}, ppoint.Positive())
+				ppoint.SetSum(h.Sum)
+				ppoint.SetZeroThreshold(h.ZeroThreshold)
 
 				attrs := ppoint.Attributes()
 				for _, l := range ts.Labels {
@@ -131,15 +181,49 @@ func mapExemplars(exemplars []prompb.Exemplar, slice pmetric.ExemplarSlice) {
 	}
 }
 
-func countSamples(ts prompb.TimeSeries, timeThreshold time.Time) (samples int) {
-	for _, s := range ts.Samples {
-		ts := time.Unix(0, s.Timestamp*int64(time.Millisecond))
-		if ts.Before(timeThreshold) {
+func countPoints[
+	T any,
+	P interface {
+		*T
+		GetTimestamp() int64
+	},
+](
+	points []T,
+	timeThreshold time.Time,
+) (samples int) {
+	for i := range points {
+		unixNano := P(&points[i]).GetTimestamp() * int64(time.Millisecond)
+		if time.Unix(0, unixNano).Before(timeThreshold) {
 			continue
 		}
 		samples++
 	}
 	return samples
+}
+
+type promHistorgram struct {
+	deltas []int64
+	counts []float64
+	spans  []prompb.BucketSpan
+}
+
+func mapExpBuckets(hist promHistorgram, buckets pmetric.ExponentialHistogramDataPointBuckets) {
+	if len(hist.spans) == 0 {
+		return
+	}
+	buckets.SetOffset(hist.spans[0].Offset)
+
+	if counts := buckets.BucketCounts(); len(hist.counts) > 0 {
+		for _, c := range hist.counts {
+			counts.Append(uint64(c))
+		}
+	} else {
+		var cur float64
+		for _, c := range hist.counts {
+			cur += c
+			counts.Append(uint64(cur))
+		}
+	}
 }
 
 func mapTimestamp(val int64) pcommon.Timestamp {
