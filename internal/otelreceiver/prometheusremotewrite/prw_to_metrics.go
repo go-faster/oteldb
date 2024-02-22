@@ -17,6 +17,7 @@
 package prometheusremotewrite
 
 import (
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -90,10 +91,44 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 					}
 					attrs.PutStr(string(l.Name), string(l.Value))
 				}
+				mapExemplars(ts.Exemplars, ppoint.Exemplars())
 			}
 		}
 	}
 	return pms, nil
+}
+
+func mapExemplars(exemplars []prompb.Exemplar, slice pmetric.ExemplarSlice) {
+	for _, from := range exemplars {
+		to := slice.AppendEmpty()
+		to.SetDoubleValue(from.Value)
+		to.SetTimestamp(mapTimestamp(from.Timestamp))
+
+		attrs := to.FilteredAttributes()
+		for _, l := range from.Labels {
+			switch string(l.Name) {
+			case "span_id":
+				var spanID pcommon.SpanID
+				if hex.DecodedLen(len(l.Value)) != len(spanID) {
+					break
+				}
+				if _, err := hex.Decode(spanID[:], l.Value); err != nil {
+					break
+				}
+				to.SetSpanID(spanID)
+			case "trace_id":
+				var traceID pcommon.TraceID
+				if hex.DecodedLen(len(l.Value)) != len(traceID) {
+					break
+				}
+				if _, err := hex.Decode(traceID[:], l.Value); err != nil {
+					break
+				}
+				to.SetTraceID(traceID)
+			}
+			attrs.PutStr(string(l.Name), string(l.Value))
+		}
+	}
 }
 
 func countSamples(ts prompb.TimeSeries, timeThreshold time.Time) (samples int) {

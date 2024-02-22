@@ -1,24 +1,72 @@
-// Code generated manually from types.proto
-
 package prompb
 
 import (
-	"encoding/binary"
-	"fmt"
-	"io"
 	"math"
-)
 
-// Sample is a timeseries sample.
-type Sample struct {
-	Value     float64
-	Timestamp int64
-}
+	"github.com/VictoriaMetrics/easyproto"
+	"github.com/go-faster/errors"
+)
 
 // TimeSeries is a timeseries.
 type TimeSeries struct {
-	Labels  []Label
-	Samples []Sample
+	Labels     []Label
+	Samples    []Sample
+	Exemplars  []Exemplar
+	Histograms []Histogram
+}
+
+// Unmarshal unmarshals TimeSeries from src.
+func (ts *TimeSeries) Unmarshal(src []byte) (err error) {
+	var fc easyproto.FieldContext
+	for len(src) > 0 {
+		src, err = fc.NextField(src)
+		if err != nil {
+			return err
+		}
+		switch fc.FieldNum {
+		case 1:
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read labels data")
+			}
+			var label Label
+			if err := label.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read labels (field %d)", fc.FieldNum)
+			}
+			ts.Labels = append(ts.Labels, label)
+		case 2:
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read samples data")
+			}
+			var sample Sample
+			if err := sample.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read samples (field %d)", fc.FieldNum)
+			}
+			ts.Samples = append(ts.Samples, sample)
+		case 3:
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read exemplars data")
+			}
+			var exemplar Exemplar
+			if err := exemplar.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read exemplars (field %d)", fc.FieldNum)
+			}
+			ts.Exemplars = append(ts.Exemplars, exemplar)
+		case 4:
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read histograms data")
+			}
+			var histogram Histogram
+			if err := histogram.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read histograms (field %d)", fc.FieldNum)
+			}
+			ts.Histograms = append(ts.Histograms, histogram)
+		}
+	}
+	return nil
 }
 
 // Label is a timeseries label
@@ -27,429 +75,301 @@ type Label struct {
 	Value []byte
 }
 
-// Unmarshal unmarshals sample from dAtA.
-func (m *Sample) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return errIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
+// Unmarshal unmarshals Label from src.
+func (m *Label) Unmarshal(src []byte) (err error) {
+	var fc easyproto.FieldContext
+	for len(src) > 0 {
+		src, err = fc.NextField(src)
+		if err != nil {
+			return err
 		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Sample: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Sample: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
+		switch fc.FieldNum {
 		case 1:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			name, ok := fc.Bytes()
+			if !ok {
+				return errors.Errorf("read name (field %d)", fc.FieldNum)
 			}
-			var v uint64
-			if (iNdEx + 8) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.Value = float64(math.Float64frombits(v))
+			m.Name = name
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			value, ok := fc.Bytes()
+			if !ok {
+				return errors.Errorf("read value (field %d)", fc.FieldNum)
 			}
-			m.Timestamp = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Timestamp |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return errInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
+			m.Value = value
 		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
 	}
 	return nil
 }
 
-// Unmarshal unmarshals timeseries from dAtA.
-func (m *TimeSeries) Unmarshal(dAtA []byte, dstLabels []Label, dstSamples []Sample) ([]Label, []Sample, error) {
-	labelsStart := len(dstLabels)
-	samplesStart := len(dstSamples)
-
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return dstLabels, dstSamples, errIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return dstLabels, dstSamples, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return dstLabels, dstSamples, fmt.Errorf("proto: TimeSeries: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return dstLabels, dstSamples, fmt.Errorf("proto: TimeSeries: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return dstLabels, dstSamples, fmt.Errorf("proto: wrong wireType = %d for field Labels", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return dstLabels, dstSamples, errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return dstLabels, dstSamples, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return dstLabels, dstSamples, errInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return dstLabels, dstSamples, io.ErrUnexpectedEOF
-			}
-			if cap(dstLabels) > len(dstLabels) {
-				dstLabels = dstLabels[:len(dstLabels)+1]
-			} else {
-				dstLabels = append(dstLabels, Label{})
-			}
-			lb := &dstLabels[len(dstLabels)-1]
-			if err := lb.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return dstLabels, dstSamples, err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return dstLabels, dstSamples, fmt.Errorf("proto: wrong wireType = %d for field Samples", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return dstLabels, dstSamples, errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return dstLabels, dstSamples, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return dstLabels, dstSamples, errInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return dstLabels, dstSamples, io.ErrUnexpectedEOF
-			}
-			if cap(dstSamples) > len(dstSamples) {
-				dstSamples = dstSamples[:len(dstSamples)+1]
-			} else {
-				dstSamples = append(dstSamples, Sample{})
-			}
-			s := &dstSamples[len(dstSamples)-1]
-			if err := s.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return dstLabels, dstSamples, err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return dstLabels, dstSamples, err
-			}
-			if skippy < 0 {
-				return dstLabels, dstSamples, errInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return dstLabels, dstSamples, io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return dstLabels, dstSamples, io.ErrUnexpectedEOF
-	}
-
-	m.Labels = dstLabels[labelsStart:]
-	m.Samples = dstSamples[samplesStart:]
-	return dstLabels, dstSamples, nil
+// Sample is a timeseries sample.
+type Sample struct {
+	Value     float64
+	Timestamp int64
 }
 
-// Unmarshal unmarshals Label from dAtA.
-func (m *Label) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return errIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
+// Unmarshal unmarshals Sample from src.
+func (s *Sample) Unmarshal(src []byte) (err error) {
+	var fc easyproto.FieldContext
+	for len(src) > 0 {
+		src, err = fc.NextField(src)
+		if err != nil {
+			return err
 		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Label: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Label: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
+		switch fc.FieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			value, ok := fc.Double()
+			if !ok {
+				return errors.Errorf("read value (field %d)", fc.FieldNum)
 			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return errInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = dAtA[iNdEx:postIndex]
-			iNdEx = postIndex
+			s.Value = value
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			timestamp, ok := fc.Int64()
+			if !ok {
+				return errors.Errorf("read timestamp (field %d)", fc.FieldNum)
 			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return errInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Value = dAtA[iNdEx:postIndex]
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return errInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
+			s.Timestamp = timestamp
 		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
 	}
 	return nil
 }
 
-func skipTypes(dAtA []byte) (n int, err error) {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return 0, errIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return 0, io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
+type Exemplar struct {
+	Labels    []Label
+	Value     float64
+	Timestamp int64
+}
+
+// Unmarshal unmarshals Exemplar from src.
+func (e *Exemplar) Unmarshal(src []byte) (err error) {
+	var fc easyproto.FieldContext
+	for len(src) > 0 {
+		src, err = fc.NextField(src)
+		if err != nil {
+			return err
 		}
-		wireType := int(wire & 0x7)
-		switch wireType {
-		case 0:
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				iNdEx++
-				if dAtA[iNdEx-1] < 0x80 {
-					break
-				}
-			}
-			return iNdEx, nil
+		switch fc.FieldNum {
 		case 1:
-			iNdEx += 8
-			return iNdEx, nil
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read labels data")
+			}
+			var label Label
+			if err := label.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read labels (field %d)", fc.FieldNum)
+			}
+			e.Labels = append(e.Labels, label)
 		case 2:
-			var length int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return 0, errIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return 0, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				length |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			value, ok := fc.Double()
+			if !ok {
+				return errors.Errorf("read value (field %d)", fc.FieldNum)
 			}
-			iNdEx += length
-			if length < 0 {
-				return 0, errInvalidLengthTypes
-			}
-			return iNdEx, nil
+			e.Value = value
 		case 3:
-			for {
-				var innerWire uint64
-				start := iNdEx
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return 0, errIntOverflowTypes
-					}
-					if iNdEx >= l {
-						return 0, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					innerWire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				innerWireType := int(innerWire & 0x7)
-				if innerWireType == 4 {
-					break
-				}
-				next, err := skipTypes(dAtA[start:])
-				if err != nil {
-					return 0, err
-				}
-				iNdEx = start + next
+			timestamp, ok := fc.Int64()
+			if !ok {
+				return errors.Errorf("read timestamp (field %d)", fc.FieldNum)
 			}
-			return iNdEx, nil
-		case 4:
-			return iNdEx, nil
-		case 5:
-			iNdEx += 4
-			return iNdEx, nil
-		default:
-			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+			e.Timestamp = timestamp
 		}
 	}
-	panic("unreachable")
+	return nil
 }
 
-var (
-	errInvalidLengthTypes = fmt.Errorf("proto: negative length found during unmarshaling")
-	errIntOverflowTypes   = fmt.Errorf("proto: integer overflow")
+type Histogram struct {
+	Count         HistogramCount
+	Sum           float64
+	Schema        int32
+	ZeroThreshold float64
+	ZeroCount     HistogramZeroCount
+
+	NegativeSpans  []BucketSpan
+	NegativeDeltas []int64
+	NegativeCounts []float64
+
+	PositiveSpans  []BucketSpan
+	PositiveDeltas []int64
+	PositiveCounts []float64
+
+	ResetHint HistogramResentHint
+	Timestamp int64
+}
+
+// Unmarshal unmarshals BucketSpan from src.
+func (h *Histogram) Unmarshal(src []byte) (err error) {
+	var fc easyproto.FieldContext
+	for len(src) > 0 {
+		src, err = fc.NextField(src)
+		if err != nil {
+			return err
+		}
+		switch fc.FieldNum {
+		case 1:
+			count, ok := fc.Uint64()
+			if !ok {
+				return errors.Errorf("read count_int (field %d)", fc.FieldNum)
+			}
+			h.Count.SetInt(count)
+		case 2:
+			count, ok := fc.Double()
+			if !ok {
+				return errors.Errorf("read count_float (field %d)", fc.FieldNum)
+			}
+			h.Count.SetFloat(count)
+		case 3:
+			sum, ok := fc.Double()
+			if !ok {
+				return errors.Errorf("read sum (field %d)", fc.FieldNum)
+			}
+			h.Sum = sum
+		case 4:
+			schema, ok := fc.Sint32()
+			if !ok {
+				return errors.Errorf("read schema (field %d)", fc.FieldNum)
+			}
+			h.Schema = schema
+		case 5:
+			zeroThreshold, ok := fc.Double()
+			if !ok {
+				return errors.Errorf("read zero_threshold (field %d)", fc.FieldNum)
+			}
+			h.ZeroThreshold = zeroThreshold
+		case 6:
+			zeroCount, ok := fc.Uint64()
+			if !ok {
+				return errors.Errorf("read zero_count_int (field %d)", fc.FieldNum)
+			}
+			h.ZeroCount.SetInt(zeroCount)
+		case 7:
+			zeroCount, ok := fc.Double()
+			if !ok {
+				return errors.Errorf("read zero_count_float (field %d)", fc.FieldNum)
+			}
+			h.ZeroCount.SetFloat(zeroCount)
+		case 8:
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read negative_spans data")
+			}
+			var span BucketSpan
+			if err := span.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read negative_spans (field %d)", fc.FieldNum)
+			}
+			h.NegativeSpans = append(h.NegativeSpans, span)
+		case 9:
+			deltas, ok := fc.UnpackSint64s(h.NegativeDeltas)
+			if !ok {
+				return errors.Errorf("read negative_deltas (field %d)", fc.FieldNum)
+			}
+			h.NegativeDeltas = deltas
+		case 10:
+			counts, ok := fc.UnpackDoubles(h.NegativeCounts)
+			if !ok {
+				return errors.Errorf("read negative_counts (field %d)", fc.FieldNum)
+			}
+			h.NegativeCounts = counts
+		case 11:
+			data, ok := fc.MessageData()
+			if !ok {
+				return errors.New("read positive_spans data")
+			}
+			var span BucketSpan
+			if err := span.Unmarshal(data); err != nil {
+				return errors.Wrapf(err, "read positive_spans (field %d)", fc.FieldNum)
+			}
+			h.PositiveSpans = append(h.PositiveSpans, span)
+		case 12:
+			deltas, ok := fc.UnpackSint64s(h.PositiveDeltas)
+			if !ok {
+				return errors.Errorf("read positive_deltas (field %d)", fc.FieldNum)
+			}
+			h.PositiveDeltas = deltas
+		case 13:
+			counts, ok := fc.UnpackDoubles(h.PositiveCounts)
+			if !ok {
+				return errors.Errorf("read positive_counts (field %d)", fc.FieldNum)
+			}
+			h.PositiveCounts = counts
+		case 14:
+			hint, ok := fc.Int32()
+			if !ok {
+				return errors.Errorf("read hint (field %d)", fc.FieldNum)
+			}
+			h.ResetHint = HistogramResentHint(hint)
+		case 15:
+			timestamp, ok := fc.Int64()
+			if !ok {
+				return errors.Errorf("read timestamp (field %d)", fc.FieldNum)
+			}
+			h.Timestamp = timestamp
+		}
+	}
+	return nil
+}
+
+type (
+	HistogramCount     = intOrFloat
+	HistogramZeroCount = intOrFloat
+)
+
+type intOrFloat struct {
+	data  uint64
+	isInt bool
+}
+
+func (h *intOrFloat) SetInt(data uint64) {
+	h.data = data
+	h.isInt = true
+}
+
+func (h *intOrFloat) SetFloat(data float64) {
+	h.data = math.Float64bits(data)
+	h.isInt = false
+}
+
+func (h intOrFloat) AsUint64() (uint64, bool) {
+	return h.data, h.isInt
+}
+
+func (h intOrFloat) AsFloat64() (float64, bool) {
+	return math.Float64frombits(h.data), !h.isInt
+}
+
+type BucketSpan struct {
+	Offset int32
+	Length uint32
+}
+
+// Unmarshal unmarshals BucketSpan from src.
+func (s *BucketSpan) Unmarshal(src []byte) (err error) {
+	var fc easyproto.FieldContext
+	for len(src) > 0 {
+		src, err = fc.NextField(src)
+		if err != nil {
+			return err
+		}
+		switch fc.FieldNum {
+		case 1:
+			offset, ok := fc.Sint32()
+			if !ok {
+				return errors.Errorf("read offset (field %d)", fc.FieldNum)
+			}
+			s.Offset = offset
+		case 2:
+			length, ok := fc.Uint32()
+			if !ok {
+				return errors.Errorf("read length (field %d)", fc.FieldNum)
+			}
+			s.Length = length
+		}
+	}
+	return nil
+}
+
+type HistogramResentHint int32
+
+const (
+	HistogramResentHintUNKNOWN HistogramResentHint = 0
+	HistogramResentHintYES     HistogramResentHint = 1
+	HistogramResentHintNO      HistogramResentHint = 2
+	HistogramResentHintGAUGE   HistogramResentHint = 3
 )
