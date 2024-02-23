@@ -83,7 +83,7 @@ func (p *pointIterator) At() (t int64, v float64) {
 // AtHistogram returns the current timestamp/value pair if the value is
 // a histogram with integer counts. Before the iterator has advanced,
 // the behavior is unspecified.
-func (p *pointIterator) AtHistogram() (int64, *histogram.Histogram) {
+func (p *pointIterator) AtHistogram(*histogram.Histogram) (int64, *histogram.Histogram) {
 	return 0, nil
 }
 
@@ -92,7 +92,7 @@ func (p *pointIterator) AtHistogram() (int64, *histogram.Histogram) {
 // value is a histogram with integer counts, in which case a
 // FloatHistogram copy of the histogram is returned. Before the iterator
 // has advanced, the behavior is unspecified.
-func (p *pointIterator) AtFloatHistogram() (int64, *histogram.FloatHistogram) {
+func (p *pointIterator) AtFloatHistogram(*histogram.FloatHistogram) (int64, *histogram.FloatHistogram) {
 	return 0, nil
 }
 
