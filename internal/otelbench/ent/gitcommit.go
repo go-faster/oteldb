@@ -46,12 +46,10 @@ type GitCommitEdges struct {
 // RepositoryOrErr returns the Repository value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e GitCommitEdges) RepositoryOrErr() (*Repository, error) {
-	if e.loadedTypes[0] {
-		if e.Repository == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: repository.Label}
-		}
+	if e.Repository != nil {
 		return e.Repository, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: repository.Label}
 	}
 	return nil, &NotLoadedError{edge: "repository"}
 }
