@@ -33,8 +33,8 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.95.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.95.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/common v0.47.0
+	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/common v0.48.0
 	github.com/prometheus/prometheus v0.50.1
 	github.com/schollz/progressbar/v3 v3.14.2
 	github.com/spf13/cobra v1.8.0
