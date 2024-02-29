@@ -129,7 +129,7 @@ jobs:
           KUBE: ${{ secrets.KUBE }}
         run: .k8s/kubeconfig.sh
 
-      - uses: azure/setup-helm@v3
+      - uses: azure/setup-helm@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         id: install
@@ -245,7 +245,7 @@ jobs:
           KUBE: ${{ secrets.KUBE }}
         run: .k8s/kubeconfig.sh
 
-      - uses: azure/setup-helm@v3
+      - uses: azure/setup-helm@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         id: install
