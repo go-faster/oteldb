@@ -88,11 +88,11 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) error {
 	rec.startOnce.Do(func() {
 		err = nil
 		rec.host = host
-		rec.server, err = rec.config.HTTPServerSettings.ToServer(host, rec.params.TelemetrySettings, rec,
+		rec.server, err = rec.config.ServerConfig.ToServer(host, rec.params.TelemetrySettings, rec,
 			confighttp.WithDecoder("snappy", snappyDecoder),
 		)
 		var listener net.Listener
-		listener, err = rec.config.HTTPServerSettings.ToListener()
+		listener, err = rec.config.ServerConfig.ToListener()
 		if err != nil {
 			return
 		}

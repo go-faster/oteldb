@@ -20,6 +20,6 @@ import (
 
 // Config defines config for [Receiver].
 type Config struct {
-	confighttp.HTTPServerSettings `mapstructure:",squash"`
-	TimeThreshold                 int64 `mapstructure:"time_threshold"`
+	confighttp.ServerConfig `mapstructure:",squash"`
+	TimeThreshold           int64 `mapstructure:"time_threshold"`
 }
