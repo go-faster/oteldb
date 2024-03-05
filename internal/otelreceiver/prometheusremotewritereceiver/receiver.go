@@ -78,21 +78,21 @@ func NewReceiver(params receiver.CreateSettings, config *Config, mconsumer consu
 var _ component.Component = (*Receiver)(nil)
 
 // Start implements [component.Component].
-func (rec *Receiver) Start(_ context.Context, host component.Host) error {
+func (rec *Receiver) Start(_ context.Context, host component.Host) (err error) {
 	if host == nil {
 		return errors.New("nil host")
 	}
+
 	rec.mu.Lock()
 	defer rec.mu.Unlock()
-	err := component.ErrNilNextConsumer
+
 	rec.startOnce.Do(func() {
-		err = nil
 		rec.host = host
-		rec.server, err = rec.config.HTTPServerSettings.ToServer(host, rec.params.TelemetrySettings, rec,
+		rec.server, err = rec.config.ServerConfig.ToServer(host, rec.params.TelemetrySettings, rec,
 			confighttp.WithDecoder("snappy", snappyDecoder),
 		)
 		var listener net.Listener
-		listener, err = rec.config.HTTPServerSettings.ToListener()
+		listener, err = rec.config.ServerConfig.ToListener()
 		if err != nil {
 			return
 		}
@@ -172,8 +172,7 @@ func (rec *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Shutdown implements [component.Component].
-func (rec *Receiver) Shutdown(context.Context) error {
-	err := component.ErrNilNextConsumer
+func (rec *Receiver) Shutdown(context.Context) (err error) {
 	rec.stopOnce.Do(func() {
 		err = rec.server.Close()
 		rec.shutdownWG.Wait()

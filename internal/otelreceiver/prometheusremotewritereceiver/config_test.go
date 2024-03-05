@@ -42,10 +42,10 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, ""),
 			expected: &Config{
-				HTTPServerSettings: confighttp.HTTPServerSettings{
+				ServerConfig: confighttp.ServerConfig{
 					Endpoint:           "0.0.0.0:19291",
 					TLSSetting:         (*configtls.TLSServerSetting)(nil),
-					CORS:               (*confighttp.CORSSettings)(nil),
+					CORS:               (*confighttp.CORSConfig)(nil),
 					Auth:               (*configauth.Authentication)(nil),
 					MaxRequestBodySize: 0,
 					IncludeMetadata:    false,
