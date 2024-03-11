@@ -29,6 +29,42 @@ type Pools struct {
 	HistogramPositiveCounts *slicepool[float64]
 }
 
+func (p *Pools) init() {
+	if p.Labels == nil {
+		p.Labels = new(slicepool[Label])
+	}
+	if p.Samples == nil {
+		p.Samples = new(slicepool[Sample])
+	}
+	if p.Exemplars == nil {
+		p.Exemplars = new(slicepool[Exemplar])
+	}
+	if p.ExemplarLabels == nil {
+		p.ExemplarLabels = new(slicepool[Label])
+	}
+	if p.Histograms == nil {
+		p.Histograms = new(slicepool[Histogram])
+	}
+	if p.HistogramNegativeSpans == nil {
+		p.HistogramNegativeSpans = new(slicepool[BucketSpan])
+	}
+	if p.HistogramNegativeDeltas == nil {
+		p.HistogramNegativeDeltas = new(slicepool[int64])
+	}
+	if p.HistogramNegativeCounts == nil {
+		p.HistogramNegativeCounts = new(slicepool[float64])
+	}
+	if p.HistogramPositiveSpans == nil {
+		p.HistogramPositiveSpans = new(slicepool[BucketSpan])
+	}
+	if p.HistogramPositiveDeltas == nil {
+		p.HistogramPositiveDeltas = new(slicepool[int64])
+	}
+	if p.HistogramPositiveCounts == nil {
+		p.HistogramPositiveCounts = new(slicepool[float64])
+	}
+}
+
 func (p *Pools) Reset() {
 	if p == nil {
 		return

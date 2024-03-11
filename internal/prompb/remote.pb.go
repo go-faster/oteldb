@@ -14,19 +14,8 @@ type WriteRequest struct {
 // Unmarshal unmarshals WriteRequest from src.
 func (req *WriteRequest) Unmarshal(src []byte) (err error) {
 	if req.Pools == nil {
-		req.Pools = &Pools{
-			Labels:                  new(slicepool[Label]),
-			Samples:                 new(slicepool[Sample]),
-			Exemplars:               new(slicepool[Exemplar]),
-			ExemplarLabels:          new(slicepool[Label]),
-			Histograms:              new(slicepool[Histogram]),
-			HistogramNegativeSpans:  new(slicepool[BucketSpan]),
-			HistogramNegativeDeltas: new(slicepool[int64]),
-			HistogramNegativeCounts: new(slicepool[float64]),
-			HistogramPositiveSpans:  new(slicepool[BucketSpan]),
-			HistogramPositiveDeltas: new(slicepool[int64]),
-			HistogramPositiveCounts: new(slicepool[float64]),
-		}
+		req.Pools = &Pools{}
+		req.Pools.init()
 	}
 
 	var fc easyproto.FieldContext
