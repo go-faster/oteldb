@@ -8,14 +8,28 @@ import (
 // WriteRequest represents Prometheus remote write API request
 type WriteRequest struct {
 	Timeseries []TimeSeries
+	Pools      *Pools
 }
 
 // Unmarshal unmarshals WriteRequest from src.
 func (req *WriteRequest) Unmarshal(src []byte) (err error) {
-	var (
-		fc  easyproto.FieldContext
-		tss = req.Timeseries
-	)
+	if req.Pools == nil {
+		req.Pools = &Pools{
+			Labels:                  new(slicepool[Label]),
+			Samples:                 new(slicepool[Sample]),
+			Exemplars:               new(slicepool[Exemplar]),
+			ExemplarLabels:          new(slicepool[Label]),
+			Histograms:              new(slicepool[Histogram]),
+			HistogramNegativeSpans:  new(slicepool[BucketSpan]),
+			HistogramNegativeDeltas: new(slicepool[int64]),
+			HistogramNegativeCounts: new(slicepool[float64]),
+			HistogramPositiveSpans:  new(slicepool[BucketSpan]),
+			HistogramPositiveDeltas: new(slicepool[int64]),
+			HistogramPositiveCounts: new(slicepool[float64]),
+		}
+	}
+
+	var fc easyproto.FieldContext
 	for len(src) > 0 {
 		src, err = fc.NextField(src)
 		if err != nil {
@@ -27,17 +41,12 @@ func (req *WriteRequest) Unmarshal(src []byte) (err error) {
 			if !ok {
 				return errors.New("read timeseries data")
 			}
-			if len(tss)+1 < cap(tss) {
-				tss = tss[:len(tss)+1]
-			} else {
-				tss = append(tss, TimeSeries{})
-			}
-			ts := &tss[len(tss)-1]
-			if err := ts.Unmarshal(data); err != nil {
+			var ts TimeSeries
+			if err := ts.Unmarshal(req.Pools, data); err != nil {
 				return errors.Wrapf(err, "read timeseries (field %d)", fc.FieldNum)
 			}
+			req.Timeseries = append(req.Timeseries, ts)
 		}
 	}
-	req.Timeseries = tss
 	return nil
 }
