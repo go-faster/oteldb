@@ -1,6 +1,6 @@
 module github.com/go-faster/oteldb
 
-go 1.21
+go 1.21.0
 
 require (
 	entgo.io/ent v0.13.1
@@ -27,7 +27,7 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/klauspost/compress v1.17.7
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-	github.com/ogen-go/ogen v0.82.0
+	github.com/ogen-go/ogen v0.83.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.96.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.96.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.96.0
@@ -105,7 +105,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
-	github.com/dlclark/regexp2 v1.10.0 // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/docker/docker v25.0.3+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
