@@ -6,10 +6,10 @@ func (wr *WriteRequest) Reset() {
 		wr.Timeseries[i] = TimeSeries{}
 	}
 	wr.Timeseries = wr.Timeseries[:0]
-	wr.Pools.Reset()
+	wr.pools.Reset()
 }
 
-type Pools struct {
+type pools struct {
 	Labels  *slicepool[Label]
 	Samples *slicepool[Sample]
 
@@ -29,7 +29,7 @@ type Pools struct {
 	HistogramPositiveCounts *slicepool[float64]
 }
 
-func (p *Pools) init() {
+func (p *pools) init() {
 	if p.Labels == nil {
 		p.Labels = new(slicepool[Label])
 	}
@@ -65,7 +65,7 @@ func (p *Pools) init() {
 	}
 }
 
-func (p *Pools) Reset() {
+func (p *pools) Reset() {
 	if p == nil {
 		return
 	}

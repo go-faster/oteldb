@@ -48,7 +48,7 @@ func TestEnsurePoolReuse(t *testing.T) {
 	// Fill target pool.
 	target := WriteRequest{
 		Timeseries: make([]TimeSeries, 0, 2),
-		Pools: &Pools{
+		pools: &pools{
 			Labels: &slicepool[Label]{
 				pool: make([]Label, 0, 4),
 			},
@@ -57,7 +57,7 @@ func TestEnsurePoolReuse(t *testing.T) {
 			},
 		},
 	}
-	target.Pools.init()
+	target.pools.init()
 
 	// Ensure that slicepool is properly re-used.
 	allocs := testing.AllocsPerRun(10, func() {

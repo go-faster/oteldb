@@ -16,7 +16,7 @@ type TimeSeries struct {
 }
 
 // Unmarshal unmarshals TimeSeries from src.
-func (ts *TimeSeries) Unmarshal(p *Pools, src []byte) (err error) {
+func (ts *TimeSeries) Unmarshal(p *pools, src []byte) (err error) {
 	var (
 		labelPool     = p.Labels
 		samplePool    = p.Samples
@@ -149,7 +149,7 @@ type Exemplar struct {
 }
 
 // Unmarshal unmarshals Exemplar from src.
-func (e *Exemplar) Unmarshal(p *Pools, src []byte) (err error) {
+func (e *Exemplar) Unmarshal(p *pools, src []byte) (err error) {
 	labelPool := p.ExemplarLabels
 
 	var fc easyproto.FieldContext
@@ -207,7 +207,7 @@ type Histogram struct {
 }
 
 // Unmarshal unmarshals BucketSpan from src.
-func (h *Histogram) Unmarshal(p *Pools, src []byte) (err error) {
+func (h *Histogram) Unmarshal(p *pools, src []byte) (err error) {
 	var (
 		negativeSpansPool  = p.HistogramNegativeSpans
 		negativeDeltasPool = p.HistogramNegativeDeltas

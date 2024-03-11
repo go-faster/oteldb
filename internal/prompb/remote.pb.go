@@ -8,14 +8,14 @@ import (
 // WriteRequest represents Prometheus remote write API request
 type WriteRequest struct {
 	Timeseries []TimeSeries
-	Pools      *Pools
+	pools      *pools
 }
 
 // Unmarshal unmarshals WriteRequest from src.
 func (req *WriteRequest) Unmarshal(src []byte) (err error) {
-	if req.Pools == nil {
-		req.Pools = &Pools{}
-		req.Pools.init()
+	if req.pools == nil {
+		req.pools = &pools{}
+		req.pools.init()
 	}
 
 	var fc easyproto.FieldContext
@@ -31,7 +31,7 @@ func (req *WriteRequest) Unmarshal(src []byte) (err error) {
 				return errors.New("read timeseries data")
 			}
 			var ts TimeSeries
-			if err := ts.Unmarshal(req.Pools, data); err != nil {
+			if err := ts.Unmarshal(req.pools, data); err != nil {
 				return errors.Wrapf(err, "read timeseries (field %d)", fc.FieldNum)
 			}
 			req.Timeseries = append(req.Timeseries, ts)
