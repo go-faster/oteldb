@@ -16,7 +16,14 @@ type TimeSeries struct {
 }
 
 // Unmarshal unmarshals TimeSeries from src.
-func (ts *TimeSeries) Unmarshal(src []byte) (err error) {
+func (ts *TimeSeries) Unmarshal(p *pools, src []byte) (err error) {
+	var (
+		labelPool     = p.Labels
+		samplePool    = p.Samples
+		exemplarPool  = p.Exemplars
+		histogramPool = p.Histograms
+	)
+
 	var fc easyproto.FieldContext
 	for len(src) > 0 {
 		src, err = fc.NextField(src)
@@ -33,7 +40,7 @@ func (ts *TimeSeries) Unmarshal(src []byte) (err error) {
 			if err := label.Unmarshal(data); err != nil {
 				return errors.Wrapf(err, "read labels (field %d)", fc.FieldNum)
 			}
-			ts.Labels = append(ts.Labels, label)
+			labelPool.Push(label)
 		case 2:
 			data, ok := fc.MessageData()
 			if !ok {
@@ -43,29 +50,31 @@ func (ts *TimeSeries) Unmarshal(src []byte) (err error) {
 			if err := sample.Unmarshal(data); err != nil {
 				return errors.Wrapf(err, "read samples (field %d)", fc.FieldNum)
 			}
-			ts.Samples = append(ts.Samples, sample)
+			samplePool.Push(sample)
 		case 3:
 			data, ok := fc.MessageData()
 			if !ok {
 				return errors.New("read exemplars data")
 			}
-			var exemplar Exemplar
-			if err := exemplar.Unmarshal(data); err != nil {
+			exemplar := exemplarPool.GetNext()
+			if err := exemplar.Unmarshal(p, data); err != nil {
 				return errors.Wrapf(err, "read exemplars (field %d)", fc.FieldNum)
 			}
-			ts.Exemplars = append(ts.Exemplars, exemplar)
 		case 4:
 			data, ok := fc.MessageData()
 			if !ok {
 				return errors.New("read histograms data")
 			}
-			var histogram Histogram
-			if err := histogram.Unmarshal(data); err != nil {
+			histogram := histogramPool.GetNext()
+			if err := histogram.Unmarshal(p, data); err != nil {
 				return errors.Wrapf(err, "read histograms (field %d)", fc.FieldNum)
 			}
-			ts.Histograms = append(ts.Histograms, histogram)
 		}
 	}
+	ts.Labels = labelPool.Cut()
+	ts.Samples = samplePool.Cut()
+	ts.Exemplars = exemplarPool.Cut()
+	ts.Histograms = histogramPool.Cut()
 	return nil
 }
 
@@ -140,7 +149,9 @@ type Exemplar struct {
 }
 
 // Unmarshal unmarshals Exemplar from src.
-func (e *Exemplar) Unmarshal(src []byte) (err error) {
+func (e *Exemplar) Unmarshal(p *pools, src []byte) (err error) {
+	labelPool := p.ExemplarLabels
+
 	var fc easyproto.FieldContext
 	for len(src) > 0 {
 		src, err = fc.NextField(src)
@@ -157,7 +168,7 @@ func (e *Exemplar) Unmarshal(src []byte) (err error) {
 			if err := label.Unmarshal(data); err != nil {
 				return errors.Wrapf(err, "read labels (field %d)", fc.FieldNum)
 			}
-			e.Labels = append(e.Labels, label)
+			labelPool.Push(label)
 		case 2:
 			value, ok := fc.Double()
 			if !ok {
@@ -172,6 +183,7 @@ func (e *Exemplar) Unmarshal(src []byte) (err error) {
 			e.Timestamp = timestamp
 		}
 	}
+	e.Labels = labelPool.Cut()
 	return nil
 }
 
@@ -195,8 +207,21 @@ type Histogram struct {
 }
 
 // Unmarshal unmarshals BucketSpan from src.
-func (h *Histogram) Unmarshal(src []byte) (err error) {
-	var fc easyproto.FieldContext
+func (h *Histogram) Unmarshal(p *pools, src []byte) (err error) {
+	var (
+		negativeSpansPool  = p.HistogramNegativeSpans
+		negativeDeltasPool = p.HistogramNegativeDeltas
+		negativeCountsPool = p.HistogramNegativeCounts
+		positiveSpansPool  = p.HistogramPositiveSpans
+		positiveDeltasPool = p.HistogramPositiveDeltas
+		positiveCountsPool = p.HistogramPositiveCounts
+	)
+
+	var (
+		fc   easyproto.FieldContext
+		data []byte
+		ok   bool
+	)
 	for len(src) > 0 {
 		src, err = fc.NextField(src)
 		if err != nil {
@@ -204,49 +229,50 @@ func (h *Histogram) Unmarshal(src []byte) (err error) {
 		}
 		switch fc.FieldNum {
 		case 1:
-			count, ok := fc.Uint64()
+			var count uint64
+			count, ok = fc.Uint64()
 			if !ok {
 				return errors.Errorf("read count_int (field %d)", fc.FieldNum)
 			}
 			h.Count.SetInt(count)
 		case 2:
-			count, ok := fc.Double()
+			var count float64
+			count, ok = fc.Double()
 			if !ok {
 				return errors.Errorf("read count_float (field %d)", fc.FieldNum)
 			}
 			h.Count.SetFloat(count)
 		case 3:
-			sum, ok := fc.Double()
+			h.Sum, ok = fc.Double()
 			if !ok {
 				return errors.Errorf("read sum (field %d)", fc.FieldNum)
 			}
-			h.Sum = sum
 		case 4:
-			schema, ok := fc.Sint32()
+			h.Schema, ok = fc.Sint32()
 			if !ok {
 				return errors.Errorf("read schema (field %d)", fc.FieldNum)
 			}
-			h.Schema = schema
 		case 5:
-			zeroThreshold, ok := fc.Double()
+			h.ZeroThreshold, ok = fc.Double()
 			if !ok {
 				return errors.Errorf("read zero_threshold (field %d)", fc.FieldNum)
 			}
-			h.ZeroThreshold = zeroThreshold
 		case 6:
-			zeroCount, ok := fc.Uint64()
+			var zeroCount uint64
+			zeroCount, ok = fc.Uint64()
 			if !ok {
 				return errors.Errorf("read zero_count_int (field %d)", fc.FieldNum)
 			}
 			h.ZeroCount.SetInt(zeroCount)
 		case 7:
-			zeroCount, ok := fc.Double()
+			var zeroCount float64
+			zeroCount, ok = fc.Double()
 			if !ok {
 				return errors.Errorf("read zero_count_float (field %d)", fc.FieldNum)
 			}
 			h.ZeroCount.SetFloat(zeroCount)
 		case 8:
-			data, ok := fc.MessageData()
+			data, ok = fc.MessageData()
 			if !ok {
 				return errors.New("read negative_spans data")
 			}
@@ -254,21 +280,19 @@ func (h *Histogram) Unmarshal(src []byte) (err error) {
 			if err := span.Unmarshal(data); err != nil {
 				return errors.Wrapf(err, "read negative_spans (field %d)", fc.FieldNum)
 			}
-			h.NegativeSpans = append(h.NegativeSpans, span)
+			negativeSpansPool.Push(span)
 		case 9:
-			deltas, ok := fc.UnpackSint64s(h.NegativeDeltas)
+			negativeDeltasPool.pool, ok = fc.UnpackSint64s(negativeDeltasPool.pool)
 			if !ok {
 				return errors.Errorf("read negative_deltas (field %d)", fc.FieldNum)
 			}
-			h.NegativeDeltas = deltas
 		case 10:
-			counts, ok := fc.UnpackDoubles(h.NegativeCounts)
+			negativeCountsPool.pool, ok = fc.UnpackDoubles(negativeCountsPool.pool)
 			if !ok {
 				return errors.Errorf("read negative_counts (field %d)", fc.FieldNum)
 			}
-			h.NegativeCounts = counts
 		case 11:
-			data, ok := fc.MessageData()
+			data, ok = fc.MessageData()
 			if !ok {
 				return errors.New("read positive_spans data")
 			}
@@ -276,33 +300,37 @@ func (h *Histogram) Unmarshal(src []byte) (err error) {
 			if err := span.Unmarshal(data); err != nil {
 				return errors.Wrapf(err, "read positive_spans (field %d)", fc.FieldNum)
 			}
-			h.PositiveSpans = append(h.PositiveSpans, span)
+			positiveSpansPool.Push(span)
 		case 12:
-			deltas, ok := fc.UnpackSint64s(h.PositiveDeltas)
+			positiveDeltasPool.pool, ok = fc.UnpackSint64s(positiveDeltasPool.pool)
 			if !ok {
 				return errors.Errorf("read positive_deltas (field %d)", fc.FieldNum)
 			}
-			h.PositiveDeltas = deltas
 		case 13:
-			counts, ok := fc.UnpackDoubles(h.PositiveCounts)
+			positiveCountsPool.pool, ok = fc.UnpackDoubles(positiveCountsPool.pool)
 			if !ok {
 				return errors.Errorf("read positive_counts (field %d)", fc.FieldNum)
 			}
-			h.PositiveCounts = counts
 		case 14:
-			hint, ok := fc.Int32()
+			var hint int32
+			hint, ok = fc.Int32()
 			if !ok {
 				return errors.Errorf("read hint (field %d)", fc.FieldNum)
 			}
 			h.ResetHint = HistogramResentHint(hint)
 		case 15:
-			timestamp, ok := fc.Int64()
+			h.Timestamp, ok = fc.Int64()
 			if !ok {
 				return errors.Errorf("read timestamp (field %d)", fc.FieldNum)
 			}
-			h.Timestamp = timestamp
 		}
 	}
+	h.NegativeSpans = negativeSpansPool.Cut()
+	h.NegativeDeltas = negativeDeltasPool.Cut()
+	h.NegativeCounts = negativeCountsPool.Cut()
+	h.PositiveSpans = positiveSpansPool.Cut()
+	h.PositiveDeltas = positiveDeltasPool.Cut()
+	h.PositiveCounts = positiveCountsPool.Cut()
 	return nil
 }
 
