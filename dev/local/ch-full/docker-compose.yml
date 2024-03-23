@@ -18,29 +18,6 @@ services:
       timeout: 1s
       retries: 30
 
-  # Add https://github.com/metrico/qryn for compatibility testing.
-  qryn:
-    image: qxip/qryn:latest
-    ports:
-      - "3101:3100"
-    restart: on-failure
-    environment:
-      - CLICKHOUSE_SERVER=clickhouse
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
-      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-      - OTEL_EXPORTER_OTLP_INSECURE=true
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=qryn
-    depends_on:
-      - clickhouse
-
-  qryn-collector:
-    image: ghcr.io/metrico/qryn-otel-collector:latest
-    volumes:
-      - ./qryncol.yml:/etc/otel/config.yaml
-    restart: on-failure
-    depends_on:
-      - clickhouse
-
   # Exports traces from clickhouse internal table to otel.
   chotel:
     restart: always
