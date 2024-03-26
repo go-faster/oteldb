@@ -31,16 +31,17 @@ func TestLoadConfig(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
 	require.NoError(t, err)
 
+	typ := component.MustNewType(typeStr)
 	tests := []struct {
 		id       component.ID
 		expected component.Config
 	}{
 		{
-			id:       component.NewIDWithName(typeStr, "defaults"),
+			id:       component.NewIDWithName(typ, "defaults"),
 			expected: createDefaultConfig(),
 		},
 		{
-			id: component.NewIDWithName(typeStr, ""),
+			id: component.NewIDWithName(typ, ""),
 			expected: &Config{
 				ServerConfig: confighttp.ServerConfig{
 					Endpoint:           "0.0.0.0:19291",

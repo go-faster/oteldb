@@ -33,7 +33,7 @@ const (
 // NewFactory creates new factory of [Receiver].
 func NewFactory() receiver.Factory {
 	return receiver.NewFactory(
-		typeStr,
+		component.MustNewType(typeStr),
 		createDefaultConfig,
 		receiver.WithMetrics(createMetricsReceiver, stability))
 }
