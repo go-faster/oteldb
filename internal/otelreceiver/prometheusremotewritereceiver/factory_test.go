@@ -27,7 +27,7 @@ import (
 
 func TestCreateDefaultConfig(t *testing.T) {
 	factory := NewFactory()
-	assert.Equal(t, "prometheusremotewrite", string(factory.Type()))
+	assert.Equal(t, "prometheusremotewrite", factory.Type().String())
 
 	config := factory.CreateDefaultConfig()
 	assert.NotNil(t, config, "failed to create default config")

@@ -20,7 +20,7 @@ const (
 // NewFactory creates new factory of [Exporter].
 func NewFactory() exporter.Factory {
 	return exporter.NewFactory(
-		typeStr,
+		component.MustNewType(typeStr),
 		createDefaultConfig,
 		exporter.WithTraces(createTracesExporter, stability),
 		exporter.WithMetrics(createMetricsExporter, stability),
