@@ -165,7 +165,7 @@ func (a *App) setup(ctx context.Context) error {
 		return errors.Wrap(err, "ensure db")
 	}
 
-	conn, err := grpc.DialContext(ctx, a.otlpAddr,
+	conn, err := grpc.NewClient(a.otlpAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(otelgrpc.NewClientHandler(
 			otelgrpc.WithMeterProvider(a.metrics.MeterProvider()),
@@ -175,6 +175,7 @@ func (a *App) setup(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "dial otlp")
 	}
+
 	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {
 		return errors.Wrap(err, "setup trace exporter")
