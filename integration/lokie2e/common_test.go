@@ -236,15 +236,7 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 			{`{http_method="GET"} | http_method != "GET"`, 0},
 			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
 		}
-		labelSetHasAttrs := func(t assert.TestingT, set lokiapi.LabelSet, attrs pcommon.Map) {
-			// Do not check length, since label set may contain some parsed labels.
-			attrs.Range(func(k string, v pcommon.Value) bool {
-				k = otelstorage.KeyToLabel(k)
-				assert.Contains(t, set, k)
-				assert.Equal(t, v.AsString(), set[k])
-				return true
-			})
-		}
+
 		for i, tt := range tests {
 			tt := tt
 			t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
@@ -256,35 +248,17 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 					}
 				}()
 
-				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
-					Query: tt.query,
-					// Always sending time range because default is current time.
-					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
-					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
-					Limit: lokiapi.NewOptInt(1000),
-				})
-				require.NoError(t, err)
-
-				streams, ok := resp.Data.GetStreamsResult()
-				require.True(t, ok)
-
-				entries := 0
-				for _, stream := range streams.Result {
-					for _, entry := range stream.Values {
-						entries++
-
-						record, ok := set.Records[pcommon.Timestamp(entry.T)]
-						require.Truef(t, ok, "can't find log record %d", entry.T)
-
-						line := logqlengine.LineFromRecord(
-							logstorage.NewRecordFromOTEL(pcommon.NewResource(), pcommon.NewInstrumentationScope(), record),
-						)
-						assert.Equal(t, line, entry.V)
-
-						labelSetHasAttrs(t, stream.Stream.Value, record.Attributes())
-					}
+				for _, direction := range []lokiapi.Direction{
+					lokiapi.DirectionForward,
+					lokiapi.DirectionBackward,
+				} {
+					t.Run(string(direction), testLogQuery(c, LogQueryTest{
+						Query:           tt.query,
+						Set:             set,
+						Direction:       direction,
+						ExpectedEntries: tt.entries,
+					}))
 				}
-				require.Equal(t, tt.entries, entries)
 			})
 		}
 	})
@@ -332,4 +306,77 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 func asLokiTime(ts otelstorage.Timestamp) lokiapi.LokiTime {
 	format := ts.AsTime().Format(time.RFC3339Nano)
 	return lokiapi.LokiTime(format)
+}
+
+func labelSetHasAttrs(t assert.TestingT, set lokiapi.LabelSet, attrs pcommon.Map) {
+	// Do not check length, since label set may contain some parsed labels.
+	attrs.Range(func(k string, v pcommon.Value) bool {
+		k = otelstorage.KeyToLabel(k)
+		assert.Contains(t, set, k)
+		assert.Equal(t, v.AsString(), set[k])
+		return true
+	})
+}
+
+type LogQueryTest struct {
+	Query           string
+	Set             *lokie2e.BatchSet
+	Direction       lokiapi.Direction
+	ExpectedEntries int
+}
+
+func testLogQuery(c *lokiapi.Client, params LogQueryTest) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := context.Background()
+
+		if d, ok := t.Deadline(); ok {
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithDeadline(ctx, d)
+			defer cancel()
+		}
+
+		resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
+			Query: params.Query,
+			// Always sending time range because default is current time.
+			Start:     lokiapi.NewOptLokiTime(asLokiTime(params.Set.Start)),
+			End:       lokiapi.NewOptLokiTime(asLokiTime(params.Set.End)),
+			Direction: lokiapi.NewOptDirection(params.Direction),
+			Limit:     lokiapi.NewOptInt(1000),
+		})
+		require.NoError(t, err)
+
+		streams, ok := resp.Data.GetStreamsResult()
+		require.True(t, ok)
+
+		entries := 0
+		for _, stream := range streams.Result {
+			values := stream.Values
+			for i, entry := range values {
+				entries++
+
+				if i > 0 {
+					prevEntry := values[i-1]
+					switch d := params.Direction; d {
+					case lokiapi.DirectionForward:
+						assert.LessOrEqual(t, prevEntry.T, entry.T)
+					case lokiapi.DirectionBackward:
+						assert.GreaterOrEqual(t, prevEntry.T, entry.T)
+					default:
+						t.Fatalf("unexpected direction %q", d)
+					}
+				}
+
+				record, ok := params.Set.Records[pcommon.Timestamp(entry.T)]
+				require.Truef(t, ok, "can't find log record %d", entry.T)
+
+				line := logqlengine.LineFromRecord(
+					logstorage.NewRecordFromOTEL(pcommon.NewResource(), pcommon.NewInstrumentationScope(), record),
+				)
+				assert.Equal(t, line, entry.V)
+
+				labelSetHasAttrs(t, stream.Stream.Value, record.Attributes())
+			}
+		}
+		require.Equal(t, params.ExpectedEntries, entries)
+	}
 }
