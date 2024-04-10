@@ -147,11 +147,21 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 		return nil, errors.Wrap(err, "parse time")
 	}
 
+	var direction logqlengine.Direction
+	switch d := params.Direction.Or(lokiapi.DirectionBackward); d {
+	case lokiapi.DirectionBackward:
+		direction = logqlengine.DirectionBackward
+	case lokiapi.DirectionForward:
+		direction = logqlengine.DirectionForward
+	default:
+		return nil, errors.Errorf("invalid direction %q", d)
+	}
+
 	data, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
 		Start:     otelstorage.NewTimestampFromTime(ts),
 		End:       otelstorage.NewTimestampFromTime(ts),
 		Step:      0,
-		Direction: string(params.Direction.Or(lokiapi.DirectionBackward)),
+		Direction: direction,
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
@@ -188,11 +198,21 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 		return nil, errors.Wrap(err, "parse step")
 	}
 
+	var direction logqlengine.Direction
+	switch d := params.Direction.Or(lokiapi.DirectionBackward); d {
+	case lokiapi.DirectionBackward:
+		direction = logqlengine.DirectionBackward
+	case lokiapi.DirectionForward:
+		direction = logqlengine.DirectionForward
+	default:
+		return nil, errors.Errorf("invalid direction %q", d)
+	}
+
 	data, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
 		Start:     otelstorage.NewTimestampFromTime(start),
 		End:       otelstorage.NewTimestampFromTime(end),
 		Step:      step,
-		Direction: string(params.Direction.Or(lokiapi.DirectionBackward)),
+		Direction: direction,
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
@@ -228,7 +248,7 @@ func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lok
 		data, err := h.engine.Eval(ctx, q, logqlengine.EvalParams{
 			Start:     otelstorage.NewTimestampFromTime(start),
 			End:       otelstorage.NewTimestampFromTime(end),
-			Direction: string(lokiapi.DirectionBackward),
+			Direction: logqlengine.DirectionBackward,
 			Limit:     1_000,
 		})
 		if err != nil {

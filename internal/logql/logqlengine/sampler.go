@@ -19,9 +19,10 @@ func (e *Engine) sampleSelector(ctx context.Context, params EvalParams) logqlmet
 		qrange := expr.Range
 
 		iter, err := e.selectLogs(ctx, qrange.Sel, qrange.Pipeline, selectLogsParams{
-			Start:   otelstorage.NewTimestampFromTime(start),
-			End:     otelstorage.NewTimestampFromTime(end),
-			Instant: params.IsInstant(),
+			Start:     otelstorage.NewTimestampFromTime(start),
+			End:       otelstorage.NewTimestampFromTime(end),
+			Instant:   params.IsInstant(),
+			Direction: params.Direction,
 			// Do not limit sample queries.
 			Limit: -1,
 		})

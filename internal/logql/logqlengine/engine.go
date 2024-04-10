@@ -71,7 +71,7 @@ type EvalParams struct {
 	Start     otelstorage.Timestamp
 	End       otelstorage.Timestamp
 	Step      time.Duration
-	Direction string // forward, backward
+	Direction Direction // forward, backward
 	Limit     int
 }
 
@@ -79,6 +79,16 @@ type EvalParams struct {
 func (p EvalParams) IsInstant() bool {
 	return p.Start == p.End && p.Step == 0
 }
+
+// Direction describe log ordering.
+type Direction string
+
+const (
+	// DirectionBackward sorts records in descending order.
+	DirectionBackward Direction = "backward"
+	// DirectionForward sorts records in ascending order.
+	DirectionForward Direction = "forward"
+)
 
 // Eval parses and evaluates query.
 func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
@@ -88,7 +98,7 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (dat
 			attribute.Int64("logql.start", int64(params.Start)),
 			attribute.Int64("logql.end", int64(params.End)),
 			attribute.Int64("logql.step", int64(params.Step)),
-			attribute.String("logql.direction", params.Direction),
+			attribute.String("logql.direction", string(params.Direction)),
 			attribute.Int("logql.limit", params.Limit),
 		),
 	)

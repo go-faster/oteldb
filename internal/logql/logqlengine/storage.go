@@ -39,7 +39,7 @@ type Querier interface {
 	// 	Capabilities should not change over time.
 	Capabilities() QuerierCapabilities
 	// SelectLogs selects log records from storage.
-	SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params SelectLogsParams) (iterators.Iterator[logstorage.Record], error)
+	SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, direction Direction, params SelectLogsParams) (iterators.Iterator[logstorage.Record], error)
 }
 
 // SelectLogsParams is a storage query params.

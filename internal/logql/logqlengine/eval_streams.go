@@ -70,11 +70,17 @@ func (i *entryIterator) Close() error {
 
 type selectLogsParams struct {
 	Start, End otelstorage.Timestamp
+	Direction  Direction
 	Instant    bool
 	Limit      int
 }
 
 func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []logql.PipelineStage, params selectLogsParams) (*entryIterator, error) {
+	direction := params.Direction
+	if direction == "" {
+		params.Direction = DirectionForward
+	}
+
 	// Instant query, sub lookback duration from Start.
 	if params.Instant {
 		params.Start = addDuration(params.Start, e.lookbackDuration)
@@ -93,6 +99,7 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 	iter, err := e.querier.SelectLogs(ctx,
 		params.Start,
 		params.End,
+		params.Direction,
 		cond.params,
 	)
 	if err != nil {
@@ -110,10 +117,11 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 
 func (e *Engine) evalLogExpr(ctx context.Context, expr *logql.LogExpr, params EvalParams) (s lokiapi.Streams, _ error) {
 	iter, err := e.selectLogs(ctx, expr.Sel, expr.Pipeline, selectLogsParams{
-		Start:   params.Start,
-		End:     params.End,
-		Instant: params.IsInstant(),
-		Limit:   params.Limit,
+		Start:     params.Start,
+		End:       params.End,
+		Direction: params.Direction,
+		Instant:   params.IsInstant(),
+		Limit:     params.Limit,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "select logs")

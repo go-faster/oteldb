@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,12 +41,16 @@ func (m *mockQuerier) Capabilities() (caps QuerierCapabilities) {
 	return caps
 }
 
-func (m *mockQuerier) SelectLogs(_ context.Context, start, _ otelstorage.Timestamp, _ SelectLogsParams) (iterators.Iterator[logstorage.Record], error) {
+func (m *mockQuerier) SelectLogs(_ context.Context, start, _ otelstorage.Timestamp, direction Direction, _ SelectLogsParams) (iterators.Iterator[logstorage.Record], error) {
 	step := m.step
 	if step == 0 {
 		step = time.Millisecond
 	}
 	ts := start.AsTime()
+
+	if direction != DirectionForward {
+		return nil, errors.Errorf("test: direction %q is unsupported", direction)
+	}
 
 	var (
 		records    []logstorage.Record

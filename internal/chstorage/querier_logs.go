@@ -272,7 +272,7 @@ func (l *logStaticIterator) Err() error   { return nil }
 func (l *logStaticIterator) Close() error { return nil }
 
 // SelectLogs implements logqlengine.Querier.
-func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, params logqlengine.SelectLogsParams) (_ iterators.Iterator[logstorage.Record], rerr error) {
+func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, direction logqlengine.Direction, params logqlengine.SelectLogsParams) (_ iterators.Iterator[logstorage.Record], rerr error) {
 	table := q.tables.Logs
 
 	ctx, span := q.tracer.Start(ctx, "SelectLogs",
@@ -460,7 +460,15 @@ func (q *Querier) SelectLogs(ctx context.Context, start, end otelstorage.Timesta
 		query.WriteByte(')')
 	}
 
-	query.WriteString(" ORDER BY timestamp")
+	query.WriteString(" ORDER BY timestamp ")
+	switch direction {
+	case logqlengine.DirectionBackward:
+		query.WriteString("DESC")
+	case logqlengine.DirectionForward:
+		query.WriteString("ASC")
+	default:
+		return nil, errors.Errorf("unexpected direction %q", direction)
+	}
 
 	var data []logstorage.Record
 	queryStartTime := time.Now()
