@@ -81,8 +81,8 @@ func getLokiDuration(t time.Duration) lokiapi.PrometheusDuration {
 }
 
 // Compare runs a test case query against the reference API and the test API and compares the results.
-func (c *Comparer) Compare(tc *TestCase) (*Result, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	params := lokiapi.QueryRangeParams{

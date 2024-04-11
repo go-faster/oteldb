@@ -6,18 +6,17 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
-	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokicompliance"
@@ -71,11 +70,11 @@ func outp(output io.Writer, results []*lokicompliance.Result, includePassing boo
 		IncludePassing bool                     `json:"includePassing"`
 	}
 
-	buf, err := json.Marshal(JSONResult{
+	buf, err := json.MarshalIndent(JSONResult{
 		TotalResults:   len(results),
 		Results:        results,
 		IncludePassing: includePassing,
-	})
+	}, "", "\t")
 	if err != nil {
 		return err
 	}
@@ -101,6 +100,9 @@ func verifyTargetCompliance(results []*lokicompliance.Result, target float64) er
 	fmt.Printf("Total: %d / %d (%.2f%%) passed, %d unsupported\n",
 		successes, len(results), successPercentage, unsupported,
 	)
+	if math.IsNaN(target) {
+		return nil
+	}
 	fmt.Printf("Target: %.2f%%\n", target)
 
 	if successPercentage < target {
@@ -138,7 +140,7 @@ func run(ctx context.Context) error {
 		outputFile        = flag.String("output-file", "", "Path to output file")
 		outputFormat      = flag.String("output-format", "text", "The comparison output format. Valid values: [json]")
 		outputPassing     = flag.Bool("output-passing", false, "Whether to also include passing test cases in the output.")
-		minimumPercentage = flag.Float64("target", 0, "Minimum compliance percentage")
+		minimumPercentage = flag.Float64("target", math.NaN(), "Minimum compliance percentage")
 	)
 	flag.Parse()
 
@@ -171,35 +173,35 @@ func run(ctx context.Context) error {
 	step := getNonZeroDuration(cfg.QueryParameters.StepInSeconds, *stepDuration)
 
 	var (
-		testCases = expandTestCase(cfg, start, end, step)
-		results   = make([]*lokicompliance.Result, len(testCases))
-
-		wg          sync.WaitGroup
+		testCases   = expandTestCase(cfg, start, end, step)
+		results     = make([]*lokicompliance.Result, len(testCases))
 		progressBar = pb.StartNew(len(results))
-		workCh      = make(chan struct{}, *queryParallelism)
 	)
-	wg.Add(len(results))
 
-	for i, tc := range testCases {
-		workCh <- struct{}{}
-
-		go func(i int, tc *lokicompliance.TestCase) {
-			defer func() {
-				<-workCh
-				wg.Done()
-			}()
-
-			res, err := comp.Compare(tc)
-			if err != nil {
-				zctx.From(ctx).Error("Compare failed", zap.Error(err))
-				return
-			}
-			results[i] = res
-			progressBar.Increment()
-		}(i, tc)
+	grp, grpCtx := errgroup.WithContext(ctx)
+	if n := *queryParallelism; n > 0 {
+		grp.SetLimit(n)
 	}
 
-	wg.Wait()
+	for i, tc := range testCases {
+		i, tc := i, tc
+		grp.Go(func() error {
+			ctx := grpCtx
+
+			res, err := comp.Compare(ctx, tc)
+			if err != nil {
+				return errors.Wrap(err, "compare")
+			}
+			results[i] = res
+
+			progressBar.Increment()
+			return nil
+		})
+	}
+
+	if err := grp.Wait(); err != nil {
+		return errors.Wrap(err, "run queries")
+	}
 	progressBar.Finish()
 
 	if p := *outputFile; p != "" {
@@ -218,13 +220,7 @@ func run(ctx context.Context) error {
 		}
 	}
 
-	if target := *minimumPercentage; target != 0 {
-		if err := verifyTargetCompliance(results, target); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return verifyTargetCompliance(results, *minimumPercentage)
 }
 
 func main() {
