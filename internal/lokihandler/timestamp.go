@@ -35,7 +35,7 @@ func parseTimeRange(
 	}
 
 	endValue := endParam.Or("")
-	end, err = parseTimestamp(endValue, now)
+	end, err = ParseTimestamp(endValue, now)
 	if err != nil {
 		return start, end, errors.Wrapf(err, "parse end %q", endValue)
 	}
@@ -46,14 +46,17 @@ func parseTimeRange(
 	}
 
 	startValue := startParam.Or("")
-	start, err = parseTimestamp(startValue, endOrNow.Add(-since))
+	start, err = ParseTimestamp(startValue, endOrNow.Add(-since))
 	if err != nil {
 		return start, end, errors.Wrapf(err, "parse start %q", startValue)
 	}
 	return start, end, nil
 }
 
-func parseTimestamp(lt lokiapi.LokiTime, def time.Time) (time.Time, error) {
+// ParseTimestamp parses Loki API timestamp from given string.
+//
+// If string is empty, def is returned.
+func ParseTimestamp[S ~string](lt S, def time.Time) (time.Time, error) {
 	value := string(lt)
 	if value == "" {
 		return def, nil
@@ -81,7 +84,7 @@ func parseStep(param lokiapi.OptPrometheusDuration, start, end time.Time) (time.
 	if !ok {
 		return defaultStep(start, end), nil
 	}
-	return parseDuration(v)
+	return ParseDuration(v)
 }
 
 func defaultStep(start, end time.Time) time.Duration {
@@ -92,7 +95,8 @@ func defaultStep(start, end time.Time) time.Duration {
 	return time.Duration(seconds) * time.Second
 }
 
-func parseDuration(param lokiapi.PrometheusDuration) (time.Duration, error) {
+// ParseDuration parses Loki API duration from given string.
+func ParseDuration[S ~string](param S) (time.Duration, error) {
 	value := string(param)
 	if !strings.ContainsAny(value, "smhdwy") {
 		f, err := strconv.ParseFloat(value, 64)

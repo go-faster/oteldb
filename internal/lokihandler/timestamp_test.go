@@ -103,7 +103,7 @@ func Test_parseTimestamp(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			got, err := parseTimestamp(lokiapi.LokiTime(tt.input), tt.defaultTime)
+			got, err := ParseTimestamp(lokiapi.LokiTime(tt.input), tt.defaultTime)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -130,7 +130,7 @@ func Test_parseDuration(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			got, err := parseDuration(lokiapi.PrometheusDuration(tt.input))
+			got, err := ParseDuration(lokiapi.PrometheusDuration(tt.input))
 			if tt.wantErr {
 				require.Error(t, err)
 				return
