@@ -1,0 +1,19 @@
+receivers:
+  filelog:
+    include: [/var/flogs/*.json]
+processors:
+  batch:
+    timeout: 500ms
+    send_batch_max_size: 512
+    send_batch_size: 256
+exporters:
+  otlp/oteldb:
+    endpoint: oteldb:4317
+    tls:
+      insecure: true
+service:
+  pipelines:
+    logs:
+      receivers: [filelog]
+      processors: [batch]
+      exporters: [otlp/oteldb]

@@ -1,0 +1,19 @@
+test_cases:
+  # Scalar literals.
+  - query: "42"
+  - query: "1.234"
+  - query: ".123"
+  - query: "1.23e-3"
+  - query: "0x3d"
+  - query: "Inf"
+  - query: "+Inf"
+  - query: "-Inf"
+  - query: "NaN"
+
+  # Vector selectors.
+  - query: '{http_method=".+"}'
+
+  # Aggregation operators.
+
+  # Binary operators.
+  - query: "1 * 2 + 4 / 6 - 10 % 2 ^ 2"

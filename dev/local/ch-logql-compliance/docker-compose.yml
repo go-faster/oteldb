@@ -1,0 +1,105 @@
+version: "3"
+
+services:
+  clickhouse:
+    image: "ghcr.io/go-faster/clickhouse-server:23.12"
+    ports:
+      - "9000:9000"
+      - "8123:8123"
+    volumes:
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  oteldb:
+    image: ghcr.io/go-fater/oteldb
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    environment:
+      - OTELDB_STORAGE=ch
+      - CH_DSN=clickhouse://clickhouse:9000
+      - OTEL_LOG_LEVEL=info
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=stdout
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+    ports:
+      - "3100:3100"
+    depends_on:
+      - clickhouse
+  otelcol:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest
+    command:
+      - "--config=/conf/otel-collector-config.yaml"
+    volumes:
+      - ./otelcol.yml:/conf/otel-collector-config.yaml
+      - ./logs:/var/flogs
+
+  loki:
+    image: "grafana/loki:2.8.2"
+    command:
+      - "-config.file=/etc/loki/config.yml"
+    volumes:
+      - ./loki.yml:/etc/loki/config.yml
+    ports:
+      - "3101:3100"
+  promtail:
+    image: "grafana/promtail:2.8.2"
+    command:
+      - "-config.file=/etc/promtail/config.yml"
+    volumes:
+      - ./promtail.yml:/etc/promtail/config.yml
+      - ./logs:/var/flogs
+
+  demo-1:
+    image: "mingrammer/flog:latest"
+    command:
+      - "--format=json"
+      - "--type=log"
+      - "--output=/var/flogs/flog1.json"
+      - "-l"
+    volumes:
+      - ./logs:/var/flogs
+  demo-2:
+    image: "mingrammer/flog:latest"
+    command:
+      - "--format=json"
+      - "--type=log"
+      - "--output=/var/flogs/flog2.json"
+      - "-l"
+    volumes:
+      - ./logs:/var/flogs
+  demo-3:
+    image: "mingrammer/flog:latest"
+    command:
+      - "--format=json"
+      - "--type=log"
+      - "--output=/var/flogs/flog3.json"
+      - "-l"
+    volumes:
+      - ./logs:/var/flogs
+
+  grafana:
+    image: "ghcr.io/go-faster/grafana:10.0.0"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_ALERTING_ENABLED=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_LOG_LEVEL=warn
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ../grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ../grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
+      - ../grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - oteldb
+      - loki
