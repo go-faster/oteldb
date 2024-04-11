@@ -27,7 +27,6 @@ paths:
           in: query
           schema:
             type: integer
-            maximum: 5000
             minimum: 0
         - name: time
           description: |
@@ -98,7 +97,6 @@ paths:
           in: query
           schema:
             type: integer
-            maximum: 5000
             minimum: 0
         - name: direction
           description: |
