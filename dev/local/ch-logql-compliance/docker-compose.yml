@@ -37,7 +37,7 @@ services:
       - "--config=/conf/otel-collector-config.yaml"
     volumes:
       - ./otelcol.yml:/conf/otel-collector-config.yaml
-      - ./logs:/var/flogs
+      - flogs:/var/flogs
 
   loki:
     image: "grafana/loki:2.8.2"
@@ -53,7 +53,7 @@ services:
       - "-config.file=/etc/promtail/config.yml"
     volumes:
       - ./promtail.yml:/etc/promtail/config.yml
-      - ./logs:/var/flogs
+      - flogs:/var/flogs
 
   demo-1:
     image: "mingrammer/flog:latest"
@@ -65,7 +65,7 @@ services:
       - "--delay=1s"
       - "-l"
     volumes:
-      - ./logs:/var/flogs
+      - flogs:/var/flogs
   demo-2:
     image: "mingrammer/flog:latest"
     command:
@@ -76,7 +76,7 @@ services:
       - "--delay=1s"
       - "-l"
     volumes:
-      - ./logs:/var/flogs
+      - flogs:/var/flogs
   demo-3:
     image: "mingrammer/flog:latest"
     command:
@@ -87,7 +87,7 @@ services:
       - "--delay=1s"
       - "-l"
     volumes:
-      - ./logs:/var/flogs
+      - flogs:/var/flogs
 
   grafana:
     image: "ghcr.io/go-faster/grafana:10.0.0"
@@ -109,3 +109,6 @@ services:
     depends_on:
       - oteldb
       - loki
+
+volumes:
+  flogs:
