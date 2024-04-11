@@ -115,7 +115,15 @@ func (c *logColumns) AddRow(r logstorage.Record) {
 		setStrOrEmpty(c.serviceName, m, string(semconv.ServiceNameKey))
 		setStrOrEmpty(c.serviceNamespace, m, string(semconv.ServiceNamespaceKey))
 	}
-	c.timestamp.Append(r.Timestamp.AsTime())
+	// NOTE(tdakkota): otelcol filelog receiver sends entries
+	// 	with zero value timestamp
+	//	Probably, this is the wrong way to handle it.
+	//	Probably, we should not accept records if both timestamps are zero.
+	ts := r.Timestamp
+	if ts == 0 {
+		ts = r.ObservedTimestamp
+	}
+	c.timestamp.Append(ts.AsTime())
 
 	c.severityNumber.Append(uint8(r.SeverityNumber))
 	c.severityText.Append(r.SeverityText)
