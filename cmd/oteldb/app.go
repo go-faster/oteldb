@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 	sdkapp "github.com/go-faster/sdk/app"
 	"github.com/go-faster/sdk/zctx"
+	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/prometheus/prometheus/promql"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
@@ -185,6 +187,22 @@ func (app *App) trySetupLoki() error {
 	s, err := lokiapi.NewServer(loki,
 		lokiapi.WithTracerProvider(app.metrics.TracerProvider()),
 		lokiapi.WithMeterProvider(app.metrics.MeterProvider()),
+		lokiapi.WithErrorHandler(func(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
+			code := ogenerrors.ErrorCode(err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(code)
+
+			e := jx.GetEncoder()
+			defer jx.PutEncoder(e)
+
+			if err != nil {
+				e.Str(err.Error())
+			} else {
+				e.Str("<nil>")
+			}
+
+			_, _ = w.Write(e.Bytes())
+		}),
 	)
 	if err != nil {
 		return err
