@@ -194,6 +194,7 @@ func run(ctx context.Context) error {
 			res, err := comp.Compare(tc)
 			if err != nil {
 				zctx.From(ctx).Error("Compare failed", zap.Error(err))
+				return
 			}
 			results[i] = res
 			if !res.Success() {
