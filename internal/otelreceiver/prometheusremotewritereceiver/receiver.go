@@ -78,7 +78,7 @@ func NewReceiver(params receiver.CreateSettings, config *Config, mconsumer consu
 var _ component.Component = (*Receiver)(nil)
 
 // Start implements [component.Component].
-func (rec *Receiver) Start(_ context.Context, host component.Host) (err error) {
+func (rec *Receiver) Start(ctx context.Context, host component.Host) (err error) {
 	if host == nil {
 		return errors.New("nil host")
 	}
@@ -88,18 +88,21 @@ func (rec *Receiver) Start(_ context.Context, host component.Host) (err error) {
 
 	rec.startOnce.Do(func() {
 		rec.host = host
-		rec.server, err = rec.config.ServerConfig.ToServer(host, rec.params.TelemetrySettings, rec,
+		rec.server, err = rec.config.ServerConfig.ToServerContext(ctx,
+			host,
+			rec.params.TelemetrySettings,
+			rec,
 			confighttp.WithDecoder("snappy", snappyDecoder),
 		)
 		var listener net.Listener
-		listener, err = rec.config.ServerConfig.ToListener()
+		listener, err = rec.config.ServerConfig.ToListenerContext(ctx)
 		if err != nil {
 			return
 		}
 		rec.shutdownWG.Add(1)
 		go func() {
 			defer rec.shutdownWG.Done()
-			if errHTTP := rec.server.Serve(listener); errors.Is(errHTTP, http.ErrServerClosed) {
+			if errHTTP := rec.server.Serve(listener); !errors.Is(errHTTP, http.ErrServerClosed) {
 				rec.params.TelemetrySettings.ReportStatus(component.NewFatalErrorEvent(errHTTP))
 			}
 		}()
