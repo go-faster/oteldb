@@ -845,8 +845,8 @@ func decodeQueryParams(args [0]string, argsEscaped bool, r *http.Request) (param
 						if err := (validate.Int{
 							MinSet:        true,
 							Min:           0,
-							MaxSet:        true,
-							Max:           5000,
+							MaxSet:        false,
+							Max:           0,
 							MinExclusive:  false,
 							MaxExclusive:  false,
 							MultipleOfSet: false,
@@ -1368,8 +1368,8 @@ func decodeQueryRangeParams(args [0]string, argsEscaped bool, r *http.Request) (
 						if err := (validate.Int{
 							MinSet:        true,
 							Min:           0,
-							MaxSet:        true,
-							Max:           5000,
+							MaxSet:        false,
+							Max:           0,
 							MinExclusive:  false,
 							MaxExclusive:  false,
 							MultipleOfSet: false,
