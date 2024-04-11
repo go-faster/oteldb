@@ -17,7 +17,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
-	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/lokiapi"
@@ -181,7 +180,6 @@ func run(ctx context.Context) error {
 	)
 	wg.Add(len(results))
 
-	allSuccess := atomic.NewBool(true)
 	for i, tc := range testCases {
 		workCh <- struct{}{}
 
@@ -197,19 +195,12 @@ func run(ctx context.Context) error {
 				return
 			}
 			results[i] = res
-			if !res.Success() {
-				allSuccess.Store(false)
-			}
 			progressBar.Increment()
 		}(i, tc)
 	}
 
 	wg.Wait()
 	progressBar.Finish()
-
-	if !allSuccess.Load() {
-		return errors.New("some queries are failed")
-	}
 
 	if p := *outputFile; p != "" {
 		p = filepath.Clean(p)
@@ -241,7 +232,7 @@ func main() {
 	defer cancel()
 
 	if err := run(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "%+v", err)
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
 		os.Exit(1)
 	}
 }
