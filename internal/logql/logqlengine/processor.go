@@ -6,6 +6,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -78,7 +79,7 @@ func buildStage(stage logql.PipelineStage) (Processor, error) {
 	case *logql.DistinctFilter:
 		return buildDistinctFilter(stage)
 	default:
-		return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported stage %T", stage)}
+		return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("unsupported stage %T", stage)}
 	}
 }
 

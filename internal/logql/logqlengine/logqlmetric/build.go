@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 )
 
 // SampleSelector creates new sampled entry iterator.
@@ -99,5 +100,5 @@ func build(expr logql.Expr, sel SampleSelector, params EvalParams) (_ StepIterat
 	default:
 		return nil, errors.Errorf("unexpected expression %T", expr)
 	}
-	return nil, &UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}
+	return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("expression %T is not supported yet", expr)}
 }

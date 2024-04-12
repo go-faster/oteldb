@@ -5,6 +5,7 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 )
 
 // BinOp returns new step iterator performing binary operation between two iterators.
@@ -13,7 +14,7 @@ func BinOp(
 	expr *logql.BinOpExpr,
 ) (StepIterator, error) {
 	if m := expr.Modifier; m.Op != "" || len(m.OpLabels) > 0 || m.Group != "" || len(m.Include) > 0 {
-		return nil, &UnsupportedError{Msg: "binary operation modifiers are unsupported yet"}
+		return nil, &logqlerrors.UnsupportedError{Msg: "binary operation modifiers are unsupported yet"}
 	}
 
 	switch expr.Op {

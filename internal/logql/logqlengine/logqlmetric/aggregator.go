@@ -6,6 +6,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 )
 
 // BatchAggregator is stateless batch aggregator.
@@ -57,7 +58,7 @@ func buildBatchAggregator(expr *logql.RangeAggregationExpr) (BatchAggregator, er
 	default:
 		return nil, errors.Errorf("unexpected range operation %q", expr.Op)
 	}
-	return nil, &UnsupportedError{Msg: fmt.Sprintf("unsupported range operation %q", expr.Op)}
+	return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("unsupported range operation %q", expr.Op)}
 }
 
 // CountOverTime implements `count_over_time` aggregation.
