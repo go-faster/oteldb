@@ -23,6 +23,13 @@ query_range:
         enabled: true
         max_size_mb: 100
 
+querier:
+  max_concurrent: 4096
+
+frontend:
+  max_outstanding_per_tenant: 4096
+  compress_responses: true
+
 schema_config:
   configs:
     - from: 2020-10-24
