@@ -133,6 +133,10 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 		}, nil
 	}
 
+	// Sort responses before comparing.
+	sortResponse(&refResult.Data)
+	sortResponse(&testResult.Data)
+
 	return &Result{
 		TestCase: tc,
 		Diff:     cmp.Diff(refResult, testResult, c.compareOptions),

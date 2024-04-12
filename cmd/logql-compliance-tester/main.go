@@ -196,7 +196,7 @@ func run(ctx context.Context) error {
 
 			res, err := comp.Compare(ctx, tc)
 			if err != nil {
-				return errors.Wrap(err, "compare")
+				return errors.Wrapf(err, "compare %q", tc.Query)
 			}
 			results[i] = res
 
