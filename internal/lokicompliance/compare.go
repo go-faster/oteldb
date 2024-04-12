@@ -131,6 +131,11 @@ func addFloatCompareOptions(options *cmp.Options) {
 	*options = append(
 		*options,
 		cmpopts.EquateApprox(fraction, margin),
+		// Translate sample values into float64 so that cmpopts.EquateApprox() works.
+		cmp.Transformer("TranslateFloat64", func(in lokiapi.FPoint) float64 {
+			v, _ := strconv.ParseFloat(in.V, 64)
+			return v
+		}),
 		// A NaN is usually not treated as equal to another NaN, but we want to treat it as such here.
 		cmpopts.EquateNaNs(),
 	)
