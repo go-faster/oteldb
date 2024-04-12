@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -273,8 +274,12 @@ func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lok
 //
 // Used for common default response.
 func (h *LokiAPI) NewError(_ context.Context, err error) *lokiapi.ErrorStatusCode {
+	code := http.StatusBadRequest
+	if _, ok := errors.Into[*logqlerrors.UnsupportedError](err); ok {
+		code = http.StatusNotImplemented
+	}
 	return &lokiapi.ErrorStatusCode{
-		StatusCode: http.StatusBadRequest,
+		StatusCode: code,
 		Response:   lokiapi.Error(err.Error()),
 	}
 }
