@@ -14,7 +14,7 @@ func newStepper(
 ) stepper {
 	return stepper{
 		current: start.Add(-step),
-		end:     end,
+		end:     end.Add(step),
 		step:    step,
 	}
 }

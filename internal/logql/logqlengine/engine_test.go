@@ -540,6 +540,8 @@ func TestEngineEvalLiteral(t *testing.T) {
 								{T: 1700000001, V: result},
 								{T: 1700000002, V: result},
 								{T: 1700000003, V: result},
+								// Loki includes one step after end, so we do.
+								{T: 1700000004, V: result},
 							},
 						},
 					},
@@ -585,6 +587,7 @@ func TestEngineEvalLiteral(t *testing.T) {
 								{T: 1700000001, V: "3.14"},
 								{T: 1700000002, V: "3.14"},
 								{T: 1700000003, V: "3.14"},
+								{T: 1700000004, V: "3.14"},
 							},
 						},
 					},

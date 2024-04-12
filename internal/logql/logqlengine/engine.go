@@ -197,13 +197,17 @@ func generateLiteralMatrix(value float64, params EvalParams) lokiapi.Matrix {
 		}
 	)
 
-	strValue := strconv.FormatFloat(value, 'f', -1, 64)
-	for ts := start; ts.Equal(end) || ts.Before(end); ts = ts.Add(params.Step) {
+	var (
+		until    = end.Add(params.Step)
+		strValue = strconv.FormatFloat(value, 'f', -1, 64)
+	)
+	for ts := start; !ts.After(until); ts = ts.Add(params.Step) {
 		series.Values = append(series.Values, lokiapi.FPoint{
 			T: getPrometheusTimestamp(ts),
 			V: strValue,
 		})
 	}
+
 	return lokiapi.Matrix{series}
 }
 
