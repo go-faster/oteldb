@@ -129,16 +129,32 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 	}, nil
 }
 
+type fpoint struct {
+	T float64
+	V float64
+}
+
 func addFloatCompareOptions(options *cmp.Options) {
 	fraction := defaultFraction
 	margin := defaultMargin
 	*options = append(
 		*options,
 		cmpopts.EquateApprox(fraction, margin),
-		// Translate sample values into float64 so that cmpopts.EquateApprox() works.
-		cmp.Transformer("TranslateFloat64", func(in lokiapi.FPoint) float64 {
+		// Ignore stats at all.
+		cmp.Transformer("TranslateStats", func(stats *lokiapi.Stats) *lokiapi.Stats {
+			return &lokiapi.Stats{}
+		}),
+		// Normalize label set value.
+		cmp.Transformer("TranslateLabelSet", func(in lokiapi.OptLabelSet) lokiapi.OptLabelSet {
+			if !in.Set || len(in.Value) == 0 {
+				return lokiapi.OptLabelSet{Set: false}
+			}
+			return in
+		}),
+		// Translate fpoint strings into float64 so that cmpopts.EquateApprox() works.
+		cmp.Transformer("TranslateFPoint", func(in lokiapi.FPoint) fpoint {
 			v, _ := strconv.ParseFloat(in.V, 64)
-			return v
+			return fpoint{T: in.T, V: v}
 		}),
 		// A NaN is usually not treated as equal to another NaN, but we want to treat it as such here.
 		cmpopts.EquateNaNs(),
