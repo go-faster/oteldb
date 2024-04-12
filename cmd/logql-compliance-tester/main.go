@@ -18,39 +18,9 @@ import (
 	"github.com/go-faster/errors"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokicompliance"
 	"github.com/go-faster/oteldb/internal/lokihandler"
 )
-
-func expandTestCase(cfg *lokicompliance.Config, start, end time.Time, step time.Duration) []*lokicompliance.TestCase {
-	var (
-		params    = cfg.QueryParameters
-		limit     = 10000
-		direction = lokiapi.DirectionForward
-	)
-	if l := params.Limit; l != nil {
-		limit = *l
-	}
-	if d := params.Direction; d != "" {
-		direction = d
-	}
-
-	r := make([]*lokicompliance.TestCase, 0, len(cfg.TestCases))
-	for _, tc := range cfg.TestCases {
-		r = append(r, &lokicompliance.TestCase{
-			Query:          tc.Query,
-			SkipComparison: tc.SkipComparison,
-			ShouldFail:     tc.ShouldFail,
-			Start:          start,
-			End:            end,
-			Step:           step,
-			Limit:          limit,
-			Direction:      direction,
-		})
-	}
-	return r
-}
 
 func getNonZeroDuration(
 	seconds float64,
@@ -178,8 +148,12 @@ func run(ctx context.Context) error {
 	))
 	step := getNonZeroDuration(cfg.QueryParameters.StepInSeconds, *stepDuration)
 
+	testCases, err := lokicompliance.ExpandQuery(cfg, start, end, step)
+	if err != nil {
+		return errors.Wrap(err, "expand test cases")
+	}
+
 	var (
-		testCases   = expandTestCase(cfg, start, end, step)
 		results     = make([]*lokicompliance.Result, len(testCases))
 		progressBar = pb.StartNew(len(results))
 	)
