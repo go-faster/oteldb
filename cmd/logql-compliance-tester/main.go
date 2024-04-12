@@ -16,6 +16,8 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/lokicompliance"
@@ -113,16 +115,27 @@ func run(ctx context.Context) error {
 		rangeDuration    = flag.Duration("range", 10*time.Minute, "The duration of the query range.")
 		stepDuration     = flag.Duration("step", 10*time.Second, "The step of the query.")
 
+		wait = flag.Duration("wait", time.Minute, "The amonunt of time to wait until storages are filled up.")
+
 		outputFile        = flag.String("output-file", "", "Path to output file")
 		outputFormat      = flag.String("output-format", "text", "The comparison output format. Valid values: [json]")
 		outputPassing     = flag.Bool("output-passing", false, "Whether to also include passing test cases in the output.")
 		minimumPercentage = flag.Float64("target", math.NaN(), "Minimum compliance percentage")
 	)
-	flag.Parse()
 
+	flag.Parse()
 	if format := *outputFormat; format != "json" {
 		return errors.Errorf("unknown output format %q", format)
 	}
+
+	log, err := zap.NewDevelopment()
+	if err != nil {
+		return errors.Wrap(err, "create logger")
+	}
+	defer func() {
+		_ = log.Sync()
+	}()
+	ctx = zctx.Base(ctx, log)
 
 	cfg, err := lokicompliance.LoadFromFiles(configFile)
 	if err != nil {
@@ -151,6 +164,19 @@ func run(ctx context.Context) error {
 	testCases, err := lokicompliance.ExpandQuery(cfg, start, end, step)
 	if err != nil {
 		return errors.Wrap(err, "expand test cases")
+	}
+
+	{
+		log.Info("Waiting for data", zap.Duration("wait", *wait))
+
+		waitTimer := time.NewTimer(*wait)
+		defer waitTimer.Stop()
+
+		select {
+		case <-waitTimer.C:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
 
 	var (

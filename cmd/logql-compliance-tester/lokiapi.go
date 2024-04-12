@@ -27,17 +27,44 @@ func newLokiAPI(ctx context.Context, cfg lokicompliance.TargetConfig) (lokicompl
 }
 
 func waitForLoki(ctx context.Context, c *lokiapi.Client, cfg lokicompliance.TargetConfig) error {
+	check := func(ctx context.Context) error {
+		q := cfg.ReadyQuery
+		if q == "" {
+			q = `{job="varlogs"}`
+		}
+
+		resp, err := c.Query(ctx, lokiapi.QueryParams{
+			Query: q,
+		})
+		if err != nil {
+			if cerr := ctx.Err(); cerr != nil {
+				return backoff.Permanent(cerr)
+			}
+			return err
+		}
+
+		streams, ok := resp.Data.GetStreamsResult()
+		if !ok {
+			// Ready query should be exactly a log query.
+			err := errors.Errorf("unexpected result type %q", resp.Data.Type)
+			return backoff.Permanent(err)
+		}
+
+		for _, s := range streams.Result {
+			if len(s.Values) > 0 {
+				return nil
+			}
+		}
+		return errors.New("empty result")
+	}
+
 	var (
 		b   = backoff.NewConstantBackOff(5 * time.Second)
 		log = zctx.From(ctx)
 	)
 	if err := backoff.RetryNotify(
 		func() error {
-			_, err := c.Labels(ctx, lokiapi.LabelsParams{})
-			if cerr := ctx.Err(); cerr != nil {
-				return backoff.Permanent(cerr)
-			}
-			return err
+			return check(ctx)
 		},
 		b,
 		func(err error, d time.Duration) {
@@ -46,6 +73,6 @@ func waitForLoki(ctx context.Context, c *lokiapi.Client, cfg lokicompliance.Targ
 	); err != nil {
 		return err
 	}
-	log.Info("Loki is ready", zap.String("target", cfg.QueryURL))
+	log.Info("Target is ready", zap.String("target", cfg.QueryURL))
 	return nil
 }

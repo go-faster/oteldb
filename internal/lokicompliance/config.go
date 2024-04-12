@@ -36,7 +36,9 @@ type QueryParameters struct {
 
 // TargetConfig represents the configuration of a single Prometheus API endpoint.
 type TargetConfig struct {
-	QueryURL string `yaml:"query_url"`
+	// ReadyQuery is a log query to check instance readiness.
+	ReadyQuery string `yaml:"ready_query"`
+	QueryURL   string `yaml:"query_url"`
 }
 
 // LoadFromFiles parses the given YAML files into a Config.
