@@ -63,6 +63,12 @@ func getNonZeroDuration(
 }
 
 func outp(output io.Writer, results []*lokicompliance.Result, includePassing bool) error {
+	for _, r := range results {
+		if d := r.Diff; d != "" && !r.Unsupported {
+			fmt.Printf("%q:\n%s\n", r.TestCase.Query, d)
+		}
+	}
+
 	// JSONResult is the JSON output format.
 	type JSONResult struct {
 		TotalResults   int                      `json:"totalResults"`
