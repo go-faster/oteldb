@@ -37,7 +37,6 @@ services:
       - "--config=/conf/otel-collector-config.yaml"
     volumes:
       - ./otelcol.yml:/conf/otel-collector-config.yaml
-      - flogs:/var/flogs
 
   loki:
     image: "grafana/loki:2.8.2"

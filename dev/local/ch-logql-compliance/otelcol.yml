@@ -1,6 +1,11 @@
 receivers:
-  filelog:
-    include: [/var/flogs/*.json]
+  loki:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:3500
+      grpc:
+        endpoint: 0.0.0.0:3600
+    use_incoming_timestamp: true
 exporters:
   otlp/oteldb:
     endpoint: oteldb:4317
@@ -9,5 +14,5 @@ exporters:
 service:
   pipelines:
     logs:
-      receivers: [filelog]
+      receivers: [loki]
       exporters: [otlp/oteldb]
