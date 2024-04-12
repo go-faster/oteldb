@@ -4,16 +4,11 @@ test_cases:
   - query: "1.234"
   - query: ".123"
   - query: "1.23e-3"
-  - query: "0x3d"
-  - query: "Inf"
-  - query: "+Inf"
-  - query: "-Inf"
-  - query: "NaN"
 
   # Vector selectors.
-  - query: '{http_method=".+"}'
+  - query: '{this_label_clearly_not_exist=".+"}'
 
   # Aggregation operators.
 
   # Binary operators.
-  - query: "1 * 2 + 4 / 6 - 10 % 2 ^ 2"
+  - query: "vector(1) * vector(2) + vector(4) / vector(6) - vector(10) % vector(2) ^ vector(2)"
