@@ -3,8 +3,8 @@ package lokicompliance
 
 import (
 	"context"
+	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -106,10 +106,14 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 
 	if (testErr != nil) != tc.ShouldFail {
 		if testErr != nil {
+			var unsupported bool
+			if esc, ok := errors.Into[*lokiapi.ErrorStatusCode](testErr); ok {
+				unsupported = esc.StatusCode == http.StatusNotImplemented
+			}
 			return &Result{
 				TestCase:          tc,
 				UnexpectedFailure: testErr.Error(),
-				Unsupported:       strings.Contains(testErr.Error(), "501"),
+				Unsupported:       unsupported,
 			}, nil
 		}
 		return &Result{TestCase: tc, UnexpectedSuccess: true}, nil
