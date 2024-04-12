@@ -24,6 +24,7 @@ type TestCasePattern struct {
 	VariantArgs    []string `yaml:"variant_args,omitempty"`
 	SkipComparison bool     `yaml:"skip_comparison,omitempty"`
 	ShouldFail     bool     `yaml:"should_fail,omitempty"`
+	ShouldBeEmpty  bool     `yaml:"should_be_empty,omitempty"`
 }
 
 type QueryParameters struct {

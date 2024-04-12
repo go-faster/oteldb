@@ -32,6 +32,7 @@ type TestCase struct {
 	Query          string            `json:"query"`
 	SkipComparison bool              `json:"skipComparison"`
 	ShouldFail     bool              `json:"shouldFail"`
+	ShouldBeEmpty  bool              `json:"shouldBeEmpty"`
 	Start          time.Time         `json:"start"`
 	End            time.Time         `json:"end"`
 	Step           time.Duration     `json:"step"`
@@ -103,7 +104,6 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 		}
 		return nil, errors.Errorf("expected reference API query %q to fail, but succeeded", tc.Query)
 	}
-
 	if (testErr != nil) != tc.ShouldFail {
 		if testErr != nil {
 			var unsupported bool
@@ -123,10 +123,60 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 		return &Result{TestCase: tc}, nil
 	}
 
+	if err := checkEmpty(refResult.Data, tc.ShouldBeEmpty); err != nil {
+		return nil, err
+	}
+	if err := checkEmpty(testResult.Data, tc.ShouldBeEmpty); err != nil {
+		return &Result{
+			TestCase:          tc,
+			UnexpectedFailure: err.Error(),
+		}, nil
+	}
+
 	return &Result{
 		TestCase: tc,
 		Diff:     cmp.Diff(refResult, testResult, c.compareOptions),
 	}, nil
+}
+
+func checkEmpty(data lokiapi.QueryResponseData, shouldBeEmpty bool) error {
+	dataIsEmpty := isEmpty(data)
+	if dataIsEmpty != shouldBeEmpty {
+		msg := "non-empty"
+		if dataIsEmpty {
+			msg = "empty"
+		}
+		return errors.Errorf("unexpected %s result", msg)
+	}
+	return nil
+}
+
+func isEmpty(data lokiapi.QueryResponseData) bool {
+	switch data.Type {
+	case lokiapi.StreamsResultQueryResponseData:
+		r, _ := data.GetStreamsResult()
+		for _, s := range r.Result {
+			if len(s.Values) > 0 {
+				return false
+			}
+		}
+		return true
+	case lokiapi.ScalarResultQueryResponseData:
+		return false
+	case lokiapi.VectorResultQueryResponseData:
+		r, _ := data.GetVectorResult()
+		return len(r.Result) < 1
+	case lokiapi.MatrixResultQueryResponseData:
+		r, _ := data.GetMatrixResult()
+		for _, s := range r.Result {
+			if len(s.Values) > 0 {
+				return false
+			}
+		}
+		return true
+	default:
+		return true
+	}
 }
 
 type fpoint struct {

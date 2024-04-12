@@ -105,6 +105,7 @@ func ExpandQuery(cfg *Config, start, end time.Time, step time.Duration) (r []*Te
 					Query:          query,
 					SkipComparison: tc.SkipComparison,
 					ShouldFail:     tc.ShouldFail,
+					ShouldBeEmpty:  tc.ShouldBeEmpty,
 					Start:          start,
 					End:            end,
 					Step:           step,
