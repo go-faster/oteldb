@@ -61,7 +61,7 @@ services:
       - "--type=log"
       - "--output=/var/flogs/flog1.json"
       - "--number=1"
-      - "--delay=1s"
+      - "--delay=100ms"
       - "-l"
     volumes:
       - flogs:/var/flogs
@@ -72,7 +72,7 @@ services:
       - "--type=log"
       - "--output=/var/flogs/flog2.json"
       - "--number=1"
-      - "--delay=1s"
+      - "--delay=100ms"
       - "-l"
     volumes:
       - flogs:/var/flogs
@@ -83,7 +83,7 @@ services:
       - "--type=log"
       - "--output=/var/flogs/flog3.json"
       - "--number=1"
-      - "--delay=1s"
+      - "--delay=100ms"
       - "-l"
     volumes:
       - flogs:/var/flogs
