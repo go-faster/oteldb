@@ -5,10 +5,20 @@ test_cases:
   - query: ".123"
   - query: "1.23e-3"
 
-  # Vector selectors.
+  # Log selectors.
   - query: '{this_label_clearly_not_exist=".+"}'
+    should_be_empty: true
+  - query: '{job="varlogs"}'
 
   # Aggregation operators.
+  - query: |-
+      {{ .simpleVecAggOp }} by (method) (
+        count_over_time(
+          {job="varlogs"} | json
+          [{{ .range }}]
+        )
+      )
+    variant_args: ["simpleVecAggOp", "range"]
 
   # Binary operators.
   - query: "vector(1) * vector(2) + vector(4) / vector(6) - vector(10) % vector(2) ^ vector(2)"
