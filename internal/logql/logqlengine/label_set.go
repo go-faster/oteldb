@@ -88,9 +88,6 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	if severity := record.SeverityNumber; severity != plog.SeverityNumberUnspecified {
 		l.Set(logstorage.LabelSeverity, pcommon.NewValueStr(severity.String()))
 	}
-	if body := record.Body; body != "" {
-		l.Set(logstorage.LabelBody, pcommon.NewValueStr(body))
-	}
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
 
