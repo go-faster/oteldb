@@ -127,3 +127,9 @@ func TestAggregatedLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestEmptyAggregatedLabels(t *testing.T) {
+	al := newAggregatedLabels(LabelSet{}, nil, nil)
+	el := logqlmetric.EmptyAggregatedLabels()
+	require.Equal(t, el.Key(), al.Key())
+}

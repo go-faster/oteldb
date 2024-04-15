@@ -3,6 +3,7 @@ package logqlmetric
 import (
 	"regexp"
 
+	"github.com/cespare/xxhash/v2"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
@@ -25,10 +26,19 @@ type AggregatedLabels interface {
 	AsLokiAPI() lokiapi.LabelSet
 }
 
+// EmptyAggregatedLabels returns empty set of aggregated labels.
+func EmptyAggregatedLabels() AggregatedLabels {
+	return emptyAggregatedLabels
+}
+
+var emptyAggregatedLabels = new(emptyLabels)
+
 type emptyLabels struct{}
 
-func (l *emptyLabels) By(_ ...logql.Label) AggregatedLabels                      { return l }
-func (l *emptyLabels) Without(_ ...logql.Label) AggregatedLabels                 { return l }
-func (l *emptyLabels) Key() GroupingKey                                          { return 0 }
+var zeroHash = xxhash.New().Sum64()
+
+func (l *emptyLabels) By(...logql.Label) AggregatedLabels                        { return l }
+func (l *emptyLabels) Without(...logql.Label) AggregatedLabels                   { return l }
+func (l *emptyLabels) Key() GroupingKey                                          { return zeroHash }
 func (l *emptyLabels) Replace(_, _, _ string, _ *regexp.Regexp) AggregatedLabels { return l }
 func (l *emptyLabels) AsLokiAPI() lokiapi.LabelSet                               { return lokiapi.LabelSet{} }

@@ -1,8 +1,10 @@
 package logqlengine
 
 import (
+	"cmp"
 	"maps"
 	"regexp"
+	"slices"
 
 	"github.com/cespare/xxhash/v2"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -30,6 +32,12 @@ func newAggregatedLabels(set LabelSet, by, without map[string]struct{}) *aggrega
 			name:  string(l),
 			value: v.AsString(),
 		})
+	})
+	slices.SortFunc(labels, func(a, b labelEntry) int {
+		if c := cmp.Compare(a.name, b.name); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.value, b.value)
 	})
 
 	return &aggregatedLabels{
