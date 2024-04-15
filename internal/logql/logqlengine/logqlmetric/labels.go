@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/cespare/xxhash/v2"
+
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
