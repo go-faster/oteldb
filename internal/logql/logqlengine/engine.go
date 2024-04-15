@@ -25,6 +25,7 @@ type Engine struct {
 	querierCaps QuerierCapabilities
 
 	lookbackDuration time.Duration
+	otelAdapter      bool
 	parseOpts        logql.ParseOptions
 
 	tracer trace.Tracer
@@ -39,6 +40,9 @@ type Options struct {
 
 	// ParseOptions is a LogQL parser options.
 	ParseOptions logql.ParseOptions
+
+	// OTELAdapter enables 'otel adapter' whatever it is.
+	OTELAdapter bool
 
 	// TracerProvider provides OpenTelemetry tracer for this engine.
 	TracerProvider trace.TracerProvider
@@ -61,6 +65,7 @@ func NewEngine(querier Querier, opts Options) *Engine {
 		querier:          querier,
 		querierCaps:      querier.Capabilities(),
 		lookbackDuration: opts.LookbackDuration,
+		otelAdapter:      opts.OTELAdapter,
 		parseOpts:        opts.ParseOptions,
 		tracer:           opts.TracerProvider.Tracer("logql.Engine"),
 	}

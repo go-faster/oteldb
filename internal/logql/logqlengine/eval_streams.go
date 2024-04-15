@@ -29,6 +29,8 @@ type entryIterator struct {
 
 	entries int
 	limit   int
+	// TODO(tdakkota): what?
+	otelAdapter bool
 }
 
 func (i *entryIterator) Next(e *entry) bool {
@@ -40,9 +42,13 @@ func (i *entryIterator) Next(e *entry) bool {
 		}
 
 		ts := record.Timestamp
+		line := record.Body
+		if i.otelAdapter {
+			line = LineFromRecord(record)
+		}
 		e.set.SetFromRecord(record)
 
-		line, keep := i.prefilter.Process(ts, LineFromRecord(record), e.set)
+		line, keep := i.prefilter.Process(ts, line, e.set)
 		if !keep {
 			continue
 		}
@@ -107,11 +113,12 @@ func (e *Engine) selectLogs(ctx context.Context, sel logql.Selector, stages []lo
 	}
 
 	return &entryIterator{
-		iter:      iter,
-		prefilter: cond.prefilter,
-		pipeline:  pipeline,
-		entries:   0,
-		limit:     params.Limit,
+		iter:        iter,
+		prefilter:   cond.prefilter,
+		pipeline:    pipeline,
+		entries:     0,
+		limit:       params.Limit,
+		otelAdapter: e.otelAdapter,
 	}, nil
 }
 

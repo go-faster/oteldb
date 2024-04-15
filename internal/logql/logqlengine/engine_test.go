@@ -443,6 +443,7 @@ func TestEngineEvalStream(t *testing.T) {
 
 			opts := Options{
 				ParseOptions: logql.ParseOptions{AllowDots: true},
+				OTELAdapter:  true,
 			}
 			e := NewEngine(&mockQuerier{lines: tt.input}, opts)
 

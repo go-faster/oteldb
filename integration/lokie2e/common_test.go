@@ -54,8 +54,9 @@ func setupDB(ctx context.Context, t *testing.T, provider *integration.Provider, 
 	gold.Str(t, out.String(), "logs.yml")
 
 	engine := logqlengine.NewEngine(engineQuerier, logqlengine.Options{
-		TracerProvider: provider,
 		ParseOptions:   logql.ParseOptions{AllowDots: true},
+		OTELAdapter:    true,
+		TracerProvider: provider,
 	})
 
 	api := lokihandler.NewLokiAPI(querier, engine)
