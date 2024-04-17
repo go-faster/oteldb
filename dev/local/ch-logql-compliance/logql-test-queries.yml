@@ -26,15 +26,25 @@ test_cases:
   - query: '{job="varlogs"} != "HEAD"'
   - query: '{job="varlogs"} |~ "(HEAD|GET)"'
   - query: '{job="varlogs"} !~ "(HEAD|GET)"'
-  # JSON and labels.
+  # JSON and label filters.
   - query: '{job="varlogs"} | json'
   - query: '{job="varlogs"} | json | method = "HEAD"'
+  - query: '{job="varlogs"} | json | method != "HEAD"'
   - query: '{job="varlogs"} | json | method =~ "(HEAD|GET)"'
+  - query: '{job="varlogs"} | json | method !~ "(HEAD|GET)"'
   - query: '{job="varlogs"} | json | status >= 400'
+  - query: '{job="varlogs"} | json | took >= 1ms'
+  - query: '{job="varlogs"} | json | size >= 1KB'
+  - query: '{job="varlogs"} | json | status >= 400 or took >= 1ms'
+  # Decolorize.
+  - query: '{job="varlogs"} | decolorize'
   # Line format.
   # NOTE(tdakkota): since logqlcompliance, as promcompliance uses text/template
   #   to expand and generate queries, we need to escape `line_format` template too.
   - query: '{job="varlogs"} | line_format {{ "{{ __timestamp__ }}" | quote }}'
+  - query: '{job="varlogs"} | json | line_format {{ "{{ .method }}" | quote }}'
+  # Label format.
+  - query: '{job="varlogs"} | json | label_format status_code=status | status_code >= 400'
 
   # Metric queries.
   #
@@ -44,6 +54,13 @@ test_cases:
         {job="varlogs"} [{{ .range }}]
       )
     variant_args: ["simpleRangeAggOp", "range"]
+  - query: |-
+      {{ .unwrapRangeAggOp }}(
+        {job="varlogs"} | json | unwrap status
+        [{{ .range }}]
+      )
+    variant_args: ["unwrapRangeAggOp", "range"]
+    skip_comparison: true # It seems, there is some issues with unwrap.
   # Vector aggregation.
   - query: |-
       {{ .simpleVecAggOp }} by (method) (
