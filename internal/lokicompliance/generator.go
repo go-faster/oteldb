@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 	"github.com/golang/snappy"
@@ -198,9 +199,13 @@ func getLine(ts time.Time) string {
 		})
 		e.Int(status)
 	})
-	e.Field("bytes", func(e *jx.Encoder) {
-		size := rand.Intn(1024*1024*1024) + 100 // #nosec: G404
-		e.Int(size)
+	e.Field("took", func(e *jx.Encoder) {
+		took := rand.Int63n(int64(30*time.Minute)) + int64(time.Millisecond) // #nosec: G404
+		e.Str(time.Duration(took).String())
+	})
+	e.Field("size", func(e *jx.Encoder) {
+		size := uint64(rand.Intn(1024*1024)) + 1025 // #nosec: G404
+		e.Str(humanize.Bytes(size))
 	})
 	e.ObjEnd()
 
