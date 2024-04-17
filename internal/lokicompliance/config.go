@@ -40,6 +40,7 @@ type TargetConfig struct {
 	// ReadyQuery is a log query to check instance readiness.
 	ReadyQuery string `yaml:"ready_query"`
 	QueryURL   string `yaml:"query_url"`
+	PushURL    string `yaml:"push_url,omitempty"`
 }
 
 // LoadFromFiles parses the given YAML files into a Config.

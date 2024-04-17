@@ -23,6 +23,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v58 v58.0.0
 	github.com/google/uuid v1.6.0
+	github.com/grafana/loki/pkg/push v0.0.0-20240415130356-945a0f516ad2
 	github.com/grafana/pyroscope-go v1.1.1
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/klauspost/compress v1.17.8
@@ -70,7 +71,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
+	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
 	golang.org/x/oauth2 v0.19.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/tools v0.20.0
