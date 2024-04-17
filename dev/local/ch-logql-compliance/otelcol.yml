@@ -2,9 +2,9 @@ receivers:
   loki:
     protocols:
       http:
-        endpoint: 0.0.0.0:3500
+        endpoint: 0.0.0.0:3100
       grpc:
-        endpoint: 0.0.0.0:3600
+        endpoint: 0.0.0.0:3101
     use_incoming_timestamp: true
 exporters:
   otlp/oteldb:

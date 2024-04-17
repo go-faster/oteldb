@@ -10,6 +10,7 @@ test_cases:
   - query: '{this_label_clearly_not_exist=".+"}'
     should_be_empty: true
   - query: '{job="varlogs"}'
+  - query: '{job="varlogs"} # anything that comes after will not be interpreted in your query'
   # Line filter
   - query: '{job="varlogs"} |= "no way line would contain this message"'
     should_be_empty: true
@@ -22,8 +23,14 @@ test_cases:
   - query: '{job="varlogs"} | json | method = "HEAD"'
 
   # TODO(tdakkota): do log queries first
-  # Vector aggregation.
+  # Metric queries.
   #
+  # Range aggregation.
+  - query: count_over_time( {job="varlogs"} [10s] )
+  - query: count_over_time( {job="varlogs"} [1m] )
+  - query: count_over_time( {job="varlogs"} [5m] )
+    # variant_args: ["range"]
+  # Vector aggregation.
   # - query: |-
   #     {{ .simpleVecAggOp }} by (method) (
   #       count_over_time(

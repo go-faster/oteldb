@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -12,6 +13,61 @@ import (
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/lokicompliance"
 )
+
+func setup(ctx context.Context, cfg Config) (*lokicompliance.Comparer, error) {
+	log := zctx.From(ctx)
+
+	var targets []string
+	for _, cfg := range []lokicompliance.TargetConfig{
+		cfg.ReferenceTarget,
+		cfg.TestTarget,
+	} {
+		raw := cfg.PushURL
+		if raw == "" {
+			raw = cfg.QueryURL
+		}
+
+		u, err := url.Parse(raw)
+		if err != nil {
+			return nil, errors.Wrapf(err, "parse target %q", raw)
+		}
+		if u.Path == "" {
+			u = u.JoinPath("loki", "api", "v1", "push")
+		}
+		raw = u.String()
+
+		targets = append(targets, raw)
+	}
+
+	log.Info("Generating logs",
+		zap.Strings("targets", targets),
+		zap.Time("start", cfg.Start),
+		zap.Time("end", cfg.End),
+	)
+	if err := lokicompliance.GenerateLogs(ctx, targets, lokicompliance.GenerateOptions{
+		Start: cfg.Start.Truncate(time.Second),
+		End:   cfg.End.Add(time.Second).Truncate(time.Second),
+		Step:  time.Second,
+		Lines: 5,
+		Streams: []string{
+			"log1.json",
+			"log2.json",
+			"log3.json",
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "generate logs")
+	}
+
+	refAPI, err := newLokiAPI(ctx, cfg.ReferenceTarget)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating reference API")
+	}
+	testAPI, err := newLokiAPI(ctx, cfg.TestTarget)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating test API")
+	}
+	return lokicompliance.New(refAPI, testAPI), nil
+}
 
 func newLokiAPI(ctx context.Context, cfg lokicompliance.TargetConfig) (lokicompliance.LokiAPI, error) {
 	c, err := lokiapi.NewClient(cfg.QueryURL)
@@ -68,7 +124,10 @@ func waitForLoki(ctx context.Context, c *lokiapi.Client, cfg lokicompliance.Targ
 		},
 		b,
 		func(err error, d time.Duration) {
-			log.Debug("Retry ping request", zap.String("target", cfg.QueryURL))
+			log.Debug("Retry ping request",
+				zap.String("target", cfg.QueryURL),
+				zap.Error(err),
+			)
 		},
 	); err != nil {
 		return err

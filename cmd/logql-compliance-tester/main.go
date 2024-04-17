@@ -2,132 +2,20 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"flag"
 	"fmt"
-	"io"
-	"math"
 	"os"
 	"os/signal"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/cheggaaa/pb/v3"
-	"github.com/fatih/color"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/lokicompliance"
-	"github.com/go-faster/oteldb/internal/lokihandler"
 )
 
-func getNonZeroDuration(
-	seconds float64,
-	defaultDuration time.Duration,
-) time.Duration {
-	if seconds == 0.0 {
-		return defaultDuration
-	}
-	return time.Duration(seconds * float64(time.Second))
-}
-
-func outp(output io.Writer, results []*lokicompliance.Result, includePassing bool) error {
-	for _, r := range results {
-		if d := r.Diff; d != "" && !r.Unsupported {
-			fmt.Printf("%q:\n%s\n", r.TestCase.Query, d)
-		}
-	}
-
-	// JSONResult is the JSON output format.
-	type JSONResult struct {
-		TotalResults   int                      `json:"totalResults"`
-		Results        []*lokicompliance.Result `json:"results,omitempty"`
-		IncludePassing bool                     `json:"includePassing"`
-	}
-
-	buf, err := json.MarshalIndent(JSONResult{
-		TotalResults:   len(results),
-		Results:        results,
-		IncludePassing: includePassing,
-	}, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	_, err = output.Write(buf)
-	return err
-}
-
-func verifyTargetCompliance(results []*lokicompliance.Result, target float64) error {
-	var successes, unsupported int
-	for _, res := range results {
-		if res.Success() {
-			successes++
-		}
-		if res.Unsupported {
-			unsupported++
-		}
-	}
-
-	fmt.Println(strings.Repeat("=", 80))
-	successPercentage := 100 * float64(successes) / float64(len(results))
-
-	fmt.Printf("Total: %d / %d (%.2f%%) passed, %d unsupported\n",
-		successes, len(results), successPercentage, unsupported,
-	)
-	if math.IsNaN(target) {
-		return nil
-	}
-	fmt.Printf("Target: %.2f%%\n", target)
-
-	if successPercentage < target {
-		fmt.Println(color.RedString("FAILED"))
-		return errors.Errorf("target is %v, passed is %.2f", target, successPercentage)
-	}
-
-	fmt.Println(color.GreenString("PASSED"))
-	return nil
-}
-
-type arrayFlags []string
-
-func (i *arrayFlags) String() string {
-	if i == nil {
-		return ""
-	}
-	return strings.Join(*i, ",")
-}
-
-func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
-
 func run(ctx context.Context) error {
-	var configFile arrayFlags
-	flag.Var(&configFile, "config-file", "The path to the configuration file. If repeated, the specified files will be concatenated before YAML parsing.")
-	var (
-		queryParallelism = flag.Int("query-parallelism", 20, "Maximum number of comparison queries to run in parallel.")
-		endDelta         = flag.Duration("end", 12*time.Minute, "The delta between the end time and current time, negated")
-		rangeDuration    = flag.Duration("range", 10*time.Minute, "The duration of the query range.")
-		stepDuration     = flag.Duration("step", 10*time.Second, "The step of the query.")
-
-		wait = flag.Duration("wait", time.Minute, "The amonunt of time to wait until storages are filled up.")
-
-		outputFile        = flag.String("output-file", "", "Path to output file")
-		outputFormat      = flag.String("output-format", "text", "The comparison output format. Valid values: [json]")
-		outputPassing     = flag.Bool("output-passing", false, "Whether to also include passing test cases in the output.")
-		minimumPercentage = flag.Float64("target", math.NaN(), "Minimum compliance percentage")
-	)
-
-	flag.Parse()
-	if format := *outputFormat; format != "json" {
-		return errors.Errorf("unknown output format %q", format)
-	}
-
 	log, err := zap.NewDevelopment()
 	if err != nil {
 		return errors.Wrap(err, "create logger")
@@ -137,59 +25,27 @@ func run(ctx context.Context) error {
 	}()
 	ctx = zctx.Base(ctx, log)
 
-	cfg, err := lokicompliance.LoadFromFiles(configFile)
+	cfg, err := parseConfig()
 	if err != nil {
-		return errors.Wrap(err, "loading configuration file")
-	}
-	refAPI, err := newLokiAPI(ctx, cfg.ReferenceTargetConfig)
-	if err != nil {
-		return errors.Wrap(err, "creating reference API")
-	}
-	testAPI, err := newLokiAPI(ctx, cfg.TestTargetConfig)
-	if err != nil {
-		return errors.Wrap(err, "creating test API")
-	}
-	comp := lokicompliance.New(refAPI, testAPI)
-
-	end, err := lokihandler.ParseTimestamp(cfg.QueryParameters.EndTime, time.Now().Add(-*endDelta))
-	if err != nil {
-		return errors.Wrap(err, "parse end")
-	}
-	start := end.Add(-getNonZeroDuration(
-		cfg.QueryParameters.RangeInSeconds,
-		*rangeDuration,
-	))
-	step := getNonZeroDuration(cfg.QueryParameters.StepInSeconds, *stepDuration)
-
-	testCases, err := lokicompliance.ExpandQuery(cfg, start, end, step)
-	if err != nil {
-		return errors.Wrap(err, "expand test cases")
+		return err
 	}
 
-	{
-		log.Info("Waiting for data", zap.Duration("wait", *wait))
-
-		waitTimer := time.NewTimer(*wait)
-		defer waitTimer.Stop()
-
-		select {
-		case <-waitTimer.C:
-		case <-ctx.Done():
-			return ctx.Err()
-		}
+	comp, err := setup(ctx, cfg)
+	if err != nil {
+		return errors.Wrap(err, "setup")
 	}
 
 	var (
-		results     = make([]*lokicompliance.Result, len(testCases))
+		results     = make([]*lokicompliance.Result, len(cfg.TestCases))
 		progressBar = pb.StartNew(len(results))
 	)
 
 	grp, grpCtx := errgroup.WithContext(ctx)
-	if n := *queryParallelism; n > 0 {
+	if n := cfg.Parallelism; n > 0 {
 		grp.SetLimit(n)
 	}
 
-	for i, tc := range testCases {
+	for i, tc := range cfg.TestCases {
 		i, tc := i, tc
 		grp.Go(func() error {
 			ctx := grpCtx
@@ -210,23 +66,7 @@ func run(ctx context.Context) error {
 	}
 	progressBar.Finish()
 
-	if p := *outputFile; p != "" {
-		p = filepath.Clean(p)
-
-		f, err := os.Create(p)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			_ = f.Close()
-		}()
-
-		if err := outp(f, results, *outputPassing); err != nil {
-			return err
-		}
-	}
-
-	return verifyTargetCompliance(results, *minimumPercentage)
+	return printOutput(results, cfg.Output)
 }
 
 func main() {

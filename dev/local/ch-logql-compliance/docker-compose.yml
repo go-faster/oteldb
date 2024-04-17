@@ -37,6 +37,8 @@ services:
       - "--config=/conf/otel-collector-config.yaml"
     volumes:
       - ./otelcol.yml:/conf/otel-collector-config.yaml
+    ports:
+      - "3102:3100"
 
   loki:
     image: "grafana/loki:2.8.2"
@@ -46,47 +48,6 @@ services:
       - ./loki.yml:/etc/loki/config.yml
     ports:
       - "3101:3100"
-  promtail:
-    image: "grafana/promtail:2.8.2"
-    command:
-      - "-config.file=/etc/promtail/config.yml"
-    volumes:
-      - ./promtail.yml:/etc/promtail/config.yml
-      - flogs:/var/flogs
-
-  demo-1:
-    image: "mingrammer/flog:latest"
-    command:
-      - "--format=json"
-      - "--type=log"
-      - "--output=/var/flogs/flog1.json"
-      - "--number=1"
-      - "--delay=100ms"
-      - "-l"
-    volumes:
-      - flogs:/var/flogs
-  demo-2:
-    image: "mingrammer/flog:latest"
-    command:
-      - "--format=json"
-      - "--type=log"
-      - "--output=/var/flogs/flog2.json"
-      - "--number=1"
-      - "--delay=100ms"
-      - "-l"
-    volumes:
-      - flogs:/var/flogs
-  demo-3:
-    image: "mingrammer/flog:latest"
-    command:
-      - "--format=json"
-      - "--type=log"
-      - "--output=/var/flogs/flog3.json"
-      - "--number=1"
-      - "--delay=100ms"
-      - "-l"
-    volumes:
-      - flogs:/var/flogs
 
   grafana:
     image: "ghcr.io/go-faster/grafana:10.0.0"
@@ -108,6 +69,3 @@ services:
     depends_on:
       - oteldb
       - loki
-
-volumes:
-  flogs:
