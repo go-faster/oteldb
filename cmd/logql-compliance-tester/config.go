@@ -90,6 +90,7 @@ func parseConfig() (c Config, _ error) {
 		return c, err
 	}
 
+	c.Parallelism = flags.QueryParallelism
 	c.Output = OutputConfig{
 		OutputFile:        flags.OutputFile,
 		OutputFormat:      flags.OutputFormat,
