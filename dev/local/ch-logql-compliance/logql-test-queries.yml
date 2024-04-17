@@ -4,41 +4,52 @@ test_cases:
   - query: "1.234"
   - query: ".123"
   - query: "1.23e-3"
+  # Binary operators.
+  - query: "vector(1) * vector(2) + vector(4) / vector(6) - vector(10) % vector(2) ^ vector(2)"
 
   # Log queries.
   #
+  # Log selector.
   - query: '{this_label_clearly_not_exist=".+"}'
     should_be_empty: true
+  - query: '{job="varlogs", this_label_clearly_not_exist="varlogs"}'
+    should_be_empty: true
   - query: '{job="varlogs"}'
+  - query: '{job=~".*varlogs.*"}'
+  - query: '{job="varlogs", this_label_clearly_not_exist!="varlogs"}'
+  # Comment.
   - query: '{job="varlogs"} # anything that comes after will not be interpreted in your query'
-  # Line filter
+  # Line filter.
   - query: '{job="varlogs"} |= "no way line would contain this message"'
     should_be_empty: true
   - query: '{job="varlogs"} |= "HEAD"'
   - query: '{job="varlogs"} != "HEAD"'
   - query: '{job="varlogs"} |~ "(HEAD|GET)"'
   - query: '{job="varlogs"} !~ "(HEAD|GET)"'
-  # JSON and labels
+  # JSON and labels.
   - query: '{job="varlogs"} | json'
   - query: '{job="varlogs"} | json | method = "HEAD"'
+  - query: '{job="varlogs"} | json | method =~ "(HEAD|GET)"'
+  - query: '{job="varlogs"} | json | status >= 400'
+  # Line format.
+  # NOTE(tdakkota): since logqlcompliance, as promcompliance uses text/template
+  #   to expand and generate queries, we need to escape `line_format` template too.
+  - query: '{job="varlogs"} | line_format {{ "{{ __timestamp__ }}" | quote }}'
 
-  # TODO(tdakkota): do log queries first
   # Metric queries.
   #
   # Range aggregation.
-  - query: count_over_time( {job="varlogs"} [10s] )
-  - query: count_over_time( {job="varlogs"} [1m] )
-  - query: count_over_time( {job="varlogs"} [5m] )
-    # variant_args: ["range"]
+  - query: |-
+      {{ .simpleRangeAggOp }}(
+        {job="varlogs"} [{{ .range }}]
+      )
+    variant_args: ["simpleRangeAggOp", "range"]
   # Vector aggregation.
-  # - query: |-
-  #     {{ .simpleVecAggOp }} by (method) (
-  #       count_over_time(
-  #         {job="varlogs"} | json
-  #         [{{ .range }}]
-  #       )
-  #     )
-  #   variant_args: ["simpleVecAggOp", "range"]
-
-  # Binary operators.
-  - query: "vector(1) * vector(2) + vector(4) / vector(6) - vector(10) % vector(2) ^ vector(2)"
+  - query: |-
+      {{ .simpleVecAggOp }} by (method) (
+        {{ .simpleRangeAggOp }}(
+          {job="varlogs"} | json
+          [{{ .range }}]
+        )
+      )
+    variant_args: ["simpleVecAggOp", "simpleRangeAggOp", "range"]

@@ -2,6 +2,7 @@ package lokicompliance
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -15,7 +16,26 @@ var testVariantArgs = map[string][]string{
 	"range":          {"1s", "15s", "1m", "5m", "15m", "1h"},
 	"offset":         {"1m", "5m", "10m"},
 	"simpleVecAggOp": {"sum", "avg", "max", "min", "count", "stddev", "stdvar"},
-	"topBottomOp":    {"topk", "bottomk"},
+	"simpleRangeAggOp": {
+		"count_over_time",
+		"rate",
+		"absent_over_time",
+		"bytes_over_time",
+		"bytes_rate",
+	},
+	"unwrapRangeAggOp": {
+		"rate_counter",
+		"avg_over_time",
+		"sum_over_time",
+		"min_over_time",
+		"max_over_time",
+		"stdvar_over_time",
+		"stddev_over_time",
+		"first_over_time",
+		"last_over_time",
+	},
+
+	"topBottomOp": {"topk", "bottomk"},
 	"quantile": {
 		"-0.5",
 		"0.1",
@@ -71,6 +91,10 @@ func getQueries(
 	return nil
 }
 
+var templateFuncMap = template.FuncMap{
+	"quote": strconv.Quote,
+}
+
 // ExpandQuery expands given test case.
 func ExpandQuery(cfg *Config, start, end time.Time, step time.Duration) (r []*TestCase, _ error) {
 	var (
@@ -86,7 +110,9 @@ func ExpandQuery(cfg *Config, start, end time.Time, step time.Duration) (r []*Te
 	}
 
 	for _, tc := range cfg.TestCases {
-		templ, err := template.New("query").Parse(tc.Query)
+		templ, err := template.New("query").
+			Funcs(templateFuncMap).
+			Parse(tc.Query)
 		if err != nil {
 			return nil, errors.Wrapf(err, "parse query template %q", tc.Query)
 		}
