@@ -48,6 +48,15 @@ func outp(output io.Writer, results []*lokicompliance.Result, includePassing boo
 		Results        []*lokicompliance.Result `json:"results,omitempty"`
 		IncludePassing bool                     `json:"includePassing"`
 	}
+	if !includePassing {
+		var failed []*lokicompliance.Result
+		for _, r := range results {
+			if !r.Success() {
+				failed = append(failed, r)
+			}
+		}
+		results = failed
+	}
 
 	buf, err := json.MarshalIndent(JSONResult{
 		TotalResults:   len(results),

@@ -61,6 +61,8 @@ func GenerateLogs(ctx context.Context, targets []string, opts GenerateOptions) e
 	for ts := opts.Start; ts.Before(opts.End); ts = ts.Add(opts.Step) {
 		rt := ts
 		for i := 0; i < opts.Lines; i++ {
+			// NOTE: timestamp sorting is implementation-defined, so
+			// 	we add a slight difference to each timestamp within step.
 			rt = rt.Add(100 * time.Microsecond)
 
 			stream := randomElement(opts.Streams)
