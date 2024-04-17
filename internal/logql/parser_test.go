@@ -298,7 +298,7 @@ var tests = []TestCase{
 	},
 	{
 		`{name="kafka"}
-				| label_format foo=foo
+				| label_format foo=bar
 				| label_format bar="bar"
 				| label_format foo=foo,bar="bar"
 			`,
@@ -311,7 +311,7 @@ var tests = []TestCase{
 			Pipeline: []PipelineStage{
 				&LabelFormatExpr{
 					Labels: []RenameLabel{
-						{"foo", "foo"},
+						{To: "foo", From: "bar"},
 					},
 				},
 				&LabelFormatExpr{

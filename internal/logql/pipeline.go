@@ -156,8 +156,8 @@ type LabelTemplate struct {
 
 // RenameLabel renames label.
 type RenameLabel struct {
-	Label Label
-	To    Label
+	To   Label
+	From Label
 }
 
 // DropLabelsExpr drops given labels in a pipeline (i.e. deny list).

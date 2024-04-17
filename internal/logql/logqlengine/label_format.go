@@ -48,9 +48,9 @@ type RenameLabel struct {
 // Process implements Processor.
 func (rl *RenameLabel) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
 	for _, p := range rl.pairs {
-		if v, ok := set.Get(p.Label); ok {
+		if v, ok := set.Get(p.From); ok {
 			set.Set(p.To, v)
-			set.Delete(p.Label)
+			set.Delete(p.From)
 		}
 	}
 	return line, true

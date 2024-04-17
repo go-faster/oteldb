@@ -21,7 +21,7 @@ func TestLabelFormat(t *testing.T) {
 		// No label.
 		{
 			map[logql.Label]pcommon.Value{},
-			[]logql.RenameLabel{{Label: "foo", To: "bar"}},
+			[]logql.RenameLabel{{From: "foo", To: "bar"}},
 			nil,
 			map[logql.Label]pcommon.Value{},
 			false,
@@ -32,7 +32,7 @@ func TestLabelFormat(t *testing.T) {
 			map[logql.Label]pcommon.Value{
 				"foo": pcommon.NewValueStr("foo"),
 			},
-			[]logql.RenameLabel{{Label: "foo", To: "bar"}},
+			[]logql.RenameLabel{{From: "foo", To: "bar"}},
 			nil,
 			map[logql.Label]pcommon.Value{
 				"bar": pcommon.NewValueStr("foo"),
@@ -46,7 +46,7 @@ func TestLabelFormat(t *testing.T) {
 				"foo": pcommon.NewValueStr("foo"),
 			},
 			[]logql.RenameLabel{
-				{Label: "foo", To: "bar"},
+				{From: "foo", To: "bar"},
 			},
 			[]logql.LabelTemplate{
 				{Label: "tmpl", Template: `{{ __timestamp__.Unix }}`},

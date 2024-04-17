@@ -423,7 +423,7 @@ func (p *parser) parseLabelFormatExpr() (lf *LabelFormatExpr, err error) {
 			if err != nil {
 				return nil, err
 			}
-			lf.Labels = append(lf.Labels, RenameLabel{Label: label, To: value})
+			lf.Labels = append(lf.Labels, RenameLabel{To: label, From: value})
 		case lexer.String:
 			value, err := p.parseString()
 			if err != nil {
