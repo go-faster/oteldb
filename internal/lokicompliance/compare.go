@@ -3,6 +3,7 @@ package lokicompliance
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -60,11 +61,13 @@ func New(refAPI, testAPI LokiAPI) *Comparer {
 
 // Result tracks a single test case's query comparison result.
 type Result struct {
-	TestCase          *TestCase `json:"testCase"`
-	Diff              string    `json:"diff"`
-	UnexpectedFailure string    `json:"unexpectedFailure"`
-	UnexpectedSuccess bool      `json:"unexpectedSuccess"`
-	Unsupported       bool      `json:"unsupported"`
+	TestCase          *TestCase       `json:"testCase"`
+	Diff              string          `json:"diff"`
+	Expected          json.RawMessage `json:"expected"`
+	Got               json.RawMessage `json:"got"`
+	UnexpectedFailure string          `json:"unexpectedFailure"`
+	UnexpectedSuccess bool            `json:"unexpectedSuccess"`
+	Unsupported       bool            `json:"unsupported"`
 }
 
 // Success returns true if the comparison result was successful.
@@ -137,9 +140,21 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 	sortResponse(&refResult.Data)
 	sortResponse(&testResult.Data)
 
+	expected, err := json.Marshal(refResult.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	got, err := json.Marshal(testResult.Data)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Result{
 		TestCase: tc,
 		Diff:     cmp.Diff(refResult, testResult, c.compareOptions),
+		Expected: expected,
+		Got:      got,
 	}, nil
 }
 
