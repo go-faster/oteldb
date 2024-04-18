@@ -153,8 +153,10 @@ func (e *Engine) evalExpr(ctx context.Context, expr logql.Expr, params EvalParam
 		return e.evalLiteral(expr, params), nil
 	case logql.MetricExpr:
 		iter, err := logqlmetric.Build(expr, e.sampleSelector(ctx, params), logqlmetric.EvalParams{
-			Start: params.Start.AsTime(),
-			End:   params.End.AsTime(),
+			// NOTE(tdakkota): for some reason, timestamps in Loki appear truncated by step.
+			// 	Do the same thing.
+			Start: params.Start.AsTime().Truncate(params.Step),
+			End:   params.End.AsTime().Truncate(params.Step).Add(params.Step),
 			Step:  params.Step,
 		})
 		if err != nil {
