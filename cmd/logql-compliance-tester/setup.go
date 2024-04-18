@@ -45,8 +45,8 @@ func setup(ctx context.Context, cfg Config) (*lokicompliance.Comparer, error) {
 		zap.Time("end", cfg.End),
 	)
 	if err := lokicompliance.GenerateLogs(ctx, targets, lokicompliance.GenerateOptions{
-		Start: cfg.Start.Truncate(time.Second),
-		End:   cfg.End.Add(time.Second).Truncate(time.Second),
+		Start: cfg.Start.Truncate(time.Second).Add(-30 * time.Second),
+		End:   cfg.End.Truncate(time.Second).Add(30 * time.Second),
 		Step:  time.Second,
 		Lines: 5,
 		Streams: []string{
