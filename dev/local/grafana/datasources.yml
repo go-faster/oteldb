@@ -38,6 +38,13 @@ datasources:
     url: http://prometheus:9090
     uid: prometheus
 
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    uid: loki
+
   - name: ClickHouse
     type: grafana-clickhouse-datasource
     uid: clickhouse

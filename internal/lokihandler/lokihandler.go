@@ -143,7 +143,7 @@ func (h *LokiAPI) Push(context.Context, lokiapi.PushReq) error {
 func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokiapi.QueryResponse, error) {
 	lg := zctx.From(ctx)
 
-	ts, err := parseTimestamp(params.Time.Value, time.Now())
+	ts, err := ParseTimestamp(params.Time.Value, time.Now())
 	if err != nil {
 		return nil, errors.Wrap(err, "parse time")
 	}

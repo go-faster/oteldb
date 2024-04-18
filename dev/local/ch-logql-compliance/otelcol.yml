@@ -1,0 +1,18 @@
+receivers:
+  loki:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:3100
+      grpc:
+        endpoint: 0.0.0.0:3101
+    use_incoming_timestamp: true
+exporters:
+  otlp/oteldb:
+    endpoint: oteldb:4317
+    tls:
+      insecure: true
+service:
+  pipelines:
+    logs:
+      receivers: [loki]
+      exporters: [otlp/oteldb]

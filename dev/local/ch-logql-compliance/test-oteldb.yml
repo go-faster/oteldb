@@ -1,0 +1,8 @@
+# logql-compliance-tester -config-file logql-test-queries.yml -config-file test-oteldb.yml
+
+reference_target_config:
+  query_url: http://localhost:3101
+
+test_target_config:
+  query_url: http://localhost:3100
+  push_url: http://localhost:3102
