@@ -100,6 +100,11 @@ func (s *AlertingRule) SetFake() {
 			s.LastEvaluation = time.Now()
 		}
 	}
+	{
+		{
+			s.Type = "string"
+		}
+	}
 }
 
 // SetFake set fake values.
@@ -665,6 +670,11 @@ func (s *RecordingRule) SetFake() {
 	{
 		{
 			s.LastEvaluation = float64(0)
+		}
+	}
+	{
+		{
+			s.Type = "string"
 		}
 	}
 }

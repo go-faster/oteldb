@@ -85,6 +85,7 @@ type AlertingRule struct {
 	LastError      string               `json:"lastError"`
 	EvaluationTime float64              `json:"evaluationTime"`
 	LastEvaluation time.Time            `json:"lastEvaluation"`
+	Type           string               `json:"type"`
 }
 
 // GetState returns the value of State.
@@ -142,6 +143,11 @@ func (s *AlertingRule) GetLastEvaluation() time.Time {
 	return s.LastEvaluation
 }
 
+// GetType returns the value of Type.
+func (s *AlertingRule) GetType() string {
+	return s.Type
+}
+
 // SetState sets the value of State.
 func (s *AlertingRule) SetState(val OptAlertingRuleState) {
 	s.State = val
@@ -195,6 +201,11 @@ func (s *AlertingRule) SetEvaluationTime(val float64) {
 // SetLastEvaluation sets the value of LastEvaluation.
 func (s *AlertingRule) SetLastEvaluation(val time.Time) {
 	s.LastEvaluation = val
+}
+
+// SetType sets the value of Type.
+func (s *AlertingRule) SetType(val string) {
+	s.Type = val
 }
 
 type AlertingRuleState string
@@ -1890,6 +1901,7 @@ type RecordingRule struct {
 	LastError      string     `json:"lastError"`
 	EvaluationTime time.Time  `json:"evaluationTime"`
 	LastEvaluation float64    `json:"lastEvaluation"`
+	Type           string     `json:"type"`
 }
 
 // GetName returns the value of Name.
@@ -1927,6 +1939,11 @@ func (s *RecordingRule) GetLastEvaluation() float64 {
 	return s.LastEvaluation
 }
 
+// GetType returns the value of Type.
+func (s *RecordingRule) GetType() string {
+	return s.Type
+}
+
 // SetName sets the value of Name.
 func (s *RecordingRule) SetName(val string) {
 	s.Name = val
@@ -1960,6 +1977,11 @@ func (s *RecordingRule) SetEvaluationTime(val time.Time) {
 // SetLastEvaluation sets the value of LastEvaluation.
 func (s *RecordingRule) SetLastEvaluation(val float64) {
 	s.LastEvaluation = val
+}
+
+// SetType sets the value of Type.
+func (s *RecordingRule) SetType(val string) {
+	s.Type = val
 }
 
 // Ref: #/components/schemas/Rule
