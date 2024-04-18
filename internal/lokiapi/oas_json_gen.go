@@ -805,8 +805,6 @@ func (s *MatrixResult) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -1363,8 +1361,6 @@ func (s *ScalarResult) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -1786,8 +1782,6 @@ func (s *StreamsResult) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -2077,8 +2071,6 @@ func (s *VectorResult) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}

@@ -233,9 +233,13 @@ func (s *AlertingRule) encodeFields(e *jx.Encoder) {
 		e.FieldStart("lastEvaluation")
 		json.EncodeDateTime(e, s.LastEvaluation)
 	}
+	{
+		e.FieldStart("type")
+		e.Str(s.Type)
+	}
 }
 
-var jsonFieldsNameOfAlertingRule = [11]string{
+var jsonFieldsNameOfAlertingRule = [12]string{
 	0:  "state",
 	1:  "name",
 	2:  "query",
@@ -247,6 +251,7 @@ var jsonFieldsNameOfAlertingRule = [11]string{
 	8:  "lastError",
 	9:  "evaluationTime",
 	10: "lastEvaluation",
+	11: "type",
 }
 
 // Decode decodes AlertingRule from json.
@@ -389,7 +394,17 @@ func (s *AlertingRule) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"lastEvaluation\"")
 			}
 		case "type":
-			return d.Skip()
+			requiredBitSet[1] |= 1 << 3
+			if err := func() error {
+				v, err := d.Str()
+				s.Type = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"type\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -401,7 +416,7 @@ func (s *AlertingRule) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b11111110,
-		0b00000111,
+		0b00001111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -1975,8 +1990,6 @@ func (s *Matrix) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -3190,9 +3203,13 @@ func (s *RecordingRule) encodeFields(e *jx.Encoder) {
 		e.FieldStart("lastEvaluation")
 		e.Float64(s.LastEvaluation)
 	}
+	{
+		e.FieldStart("type")
+		e.Str(s.Type)
+	}
 }
 
-var jsonFieldsNameOfRecordingRule = [7]string{
+var jsonFieldsNameOfRecordingRule = [8]string{
 	0: "name",
 	1: "query",
 	2: "labels",
@@ -3200,6 +3217,7 @@ var jsonFieldsNameOfRecordingRule = [7]string{
 	4: "lastError",
 	5: "evaluationTime",
 	6: "lastEvaluation",
+	7: "type",
 }
 
 // Decode decodes RecordingRule from json.
@@ -3292,7 +3310,17 @@ func (s *RecordingRule) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"lastEvaluation\"")
 			}
 		case "type":
-			return d.Skip()
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := d.Str()
+				s.Type = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"type\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -3303,7 +3331,7 @@ func (s *RecordingRule) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01111111,
+		0b11111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -4009,8 +4037,6 @@ func (s *Scalar) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -4297,8 +4323,6 @@ func (s *String) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
@@ -4473,8 +4497,6 @@ func (s *Vector) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"result\"")
 			}
-		case "resultType":
-			return d.Skip()
 		default:
 			return d.Skip()
 		}
