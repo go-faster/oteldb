@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -58,39 +59,41 @@ func setup(ctx context.Context, cfg Config) (*lokicompliance.Comparer, error) {
 		return nil, errors.Wrap(err, "generate logs")
 	}
 
-	refAPI, err := newLokiAPI(ctx, cfg.ReferenceTarget)
+	refAPI, err := newLokiAPI(ctx, cfg.Start, cfg.End, cfg.ReferenceTarget)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating reference API")
 	}
-	testAPI, err := newLokiAPI(ctx, cfg.TestTarget)
+	testAPI, err := newLokiAPI(ctx, cfg.Start, cfg.End, cfg.TestTarget)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating test API")
 	}
 	return lokicompliance.New(refAPI, testAPI), nil
 }
 
-func newLokiAPI(ctx context.Context, cfg lokicompliance.TargetConfig) (lokicompliance.LokiAPI, error) {
+func newLokiAPI(ctx context.Context, start, end time.Time, cfg lokicompliance.TargetConfig) (lokicompliance.LokiAPI, error) {
 	c, err := lokiapi.NewClient(cfg.QueryURL)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := waitForLoki(ctx, c, cfg); err != nil {
+	if err := waitForLoki(ctx, c, start, end, cfg); err != nil {
 		return nil, errors.Wrap(err, "wait for loki")
 	}
 
 	return c, nil
 }
 
-func waitForLoki(ctx context.Context, c *lokiapi.Client, cfg lokicompliance.TargetConfig) error {
+func waitForLoki(ctx context.Context, c *lokiapi.Client, start, end time.Time, targetCfg lokicompliance.TargetConfig) error {
 	check := func(ctx context.Context) error {
-		q := cfg.ReadyQuery
+		q := targetCfg.ReadyQuery
 		if q == "" {
 			q = `{job="varlogs"}`
 		}
 
-		resp, err := c.Query(ctx, lokiapi.QueryParams{
+		resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
 			Query: q,
+			Start: lokiapi.NewOptLokiTime(getLokiTime(start)),
+			End:   lokiapi.NewOptLokiTime(getLokiTime(end)),
 		})
 		if err != nil {
 			if cerr := ctx.Err(); cerr != nil {
@@ -128,13 +131,19 @@ func waitForLoki(ctx context.Context, c *lokiapi.Client, cfg lokicompliance.Targ
 		b,
 		func(err error, d time.Duration) {
 			log.Debug("Retry ping request",
-				zap.String("target", cfg.QueryURL),
+				zap.String("target", targetCfg.QueryURL),
 				zap.Error(err),
 			)
 		},
 	); err != nil {
 		return err
 	}
-	log.Info("Target is ready", zap.String("target", cfg.QueryURL))
+
+	log.Info("Target is ready", zap.String("target", targetCfg.QueryURL))
 	return nil
+}
+
+func getLokiTime(t time.Time) lokiapi.LokiTime {
+	ts := strconv.FormatInt(t.UnixNano(), 10)
+	return lokiapi.LokiTime(ts)
 }
