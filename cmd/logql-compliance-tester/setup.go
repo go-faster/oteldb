@@ -115,7 +115,10 @@ func waitForLoki(ctx context.Context, c *lokiapi.Client, cfg lokicompliance.Targ
 	}
 
 	var (
-		b   = backoff.NewConstantBackOff(5 * time.Second)
+		b = backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(5*time.Second),
+			backoff.WithMaxElapsedTime(time.Minute),
+		)
 		log = zctx.From(ctx)
 	)
 	if err := backoff.RetryNotify(
