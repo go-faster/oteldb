@@ -142,7 +142,7 @@ func (i *rangeAggIterator) fillWindow(windowStart, windowEnd time.Time) {
 			// Entry is after the end of current window: buffer for the next window.
 			i.buffered = true
 			return
-		case ts.Before(windowStart):
+		case ts.Before(windowStart) || ts.Equal(windowStart):
 			// Entry is before the start of current window: just skip it.
 			continue
 		}
