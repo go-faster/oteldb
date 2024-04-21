@@ -1,7 +1,6 @@
 ---
 name: Feature request
 about: "Use this template for proposing features, like `server: support backpressure`"
-title: "[SUBJECT]: [DESCRIPTION]"
 labels: enhancement
 ---
 
