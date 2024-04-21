@@ -58,6 +58,10 @@ jobs:
           go build -trimpath -buildvcs=false -v ./cmd/oteldb
           go build -trimpath -buildvcs=false -v ./cmd/chotel
 
+      - name: Cleanup
+        working-directory: ${{ env.WORKDIR }}
+        run: docker compose down --remove-orphans --volumes --timeout 10
+
       - name: Start
         working-directory: ${{ env.WORKDIR }}
         run: docker compose up -d
