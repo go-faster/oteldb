@@ -43,57 +43,16 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) error {
 	return nil
 }
 
-func (i *Inserter) saveMetricBatches(ctx context.Context) error {
-	b := newMetricBatch()
-	for {
-		select {
-		case batch, ok := <-i.metricBatches:
-			if !ok {
-				return nil
-			}
-			if err := b.mapMetrics(batch); err != nil {
-				return errors.Wrap(err, "map metrics")
-			}
-			if b.points.value.Rows() <= 100_000 {
-				continue
-			}
-			if err := i.insertBatch(ctx, b); err != nil {
-				return err
-			}
-		case <-time.After(time.Second):
-			if err := i.insertBatch(ctx, b); err != nil {
-				return err
-			}
-		case <-ctx.Done():
-			func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				_ = i.insertBatch(ctx, b)
-			}()
-			return ctx.Err()
-		}
-	}
-}
-
 // ConsumeMetrics inserts given metrics.
 func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
-	if i.metricBatches == nil {
-		b := newMetricBatch()
-		if err := b.mapMetrics(metrics); err != nil {
-			return errors.Wrap(err, "map metrics")
-		}
-		if err := i.insertBatch(ctx, b); err != nil {
-			return errors.Wrap(err, "insert batch")
-		}
-		return nil
+	b := newMetricBatch()
+	if err := b.mapMetrics(metrics); err != nil {
+		return errors.Wrap(err, "map metrics")
 	}
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case i.metricBatches <- metrics:
-		// Enqueue.
-		return nil
+	if err := i.insertBatch(ctx, b); err != nil {
+		return errors.Wrap(err, "insert batch")
 	}
+	return nil
 }
 
 func (b metricsBatch) Len() int {

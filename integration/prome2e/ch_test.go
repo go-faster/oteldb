@@ -70,7 +70,7 @@ func TestCH(t *testing.T) {
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
 
-	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{Tables: tables, Sync: true})
+	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{Tables: tables})
 	require.NoError(t, err)
 
 	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
