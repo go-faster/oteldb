@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -116,46 +117,6 @@ func (l *labelStaticIterator) Next(t *logstorage.Label) bool {
 func (l *labelStaticIterator) Err() error   { return nil }
 func (l *labelStaticIterator) Close() error { return nil }
 
-func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[string]string, rerr error) {
-	ctx, span := q.tracer.Start(ctx, "getLabelMapping",
-		trace.WithAttributes(
-			attribute.Int("chstorage.labels_count", len(labels)),
-		),
-	)
-	defer func() {
-		if rerr != nil {
-			span.RecordError(rerr)
-		}
-		span.End()
-	}()
-
-	out := make(map[string]string, len(labels))
-	attrs := newLogAttrMapColumns()
-	var inputData proto.ColStr
-	for _, label := range labels {
-		inputData.Append(label)
-	}
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Result: attrs.Result(),
-		OnResult: func(ctx context.Context, block proto.Block) error {
-			attrs.ForEach(func(name, key string) {
-				out[name] = key
-			})
-			return nil
-		},
-		ExternalTable: "labels",
-		ExternalData: []proto.InputColumn{
-			{Name: "name", Data: &inputData},
-		},
-		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.LogAttrs),
-	}); err != nil {
-		return nil, errors.Wrap(err, "select")
-	}
-
-	return out, nil
-}
-
 // LabelValues implements logstorage.Querier.
 func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logstorage.LabelsOptions) (_ iterators.Iterator[logstorage.Label], rerr error) {
 	table := q.tables.Logs
@@ -240,4 +201,61 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 		name:   labelName,
 		values: out,
 	}, nil
+}
+
+func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[string]string, rerr error) {
+	ctx, span := q.tracer.Start(ctx, "getLabelMapping",
+		trace.WithAttributes(
+			attribute.Int("chstorage.labels_count", len(labels)),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	out := make(map[string]string, len(labels))
+	attrs := newLogAttrMapColumns()
+	var inputData proto.ColStr
+	for _, label := range labels {
+		inputData.Append(label)
+	}
+	if err := q.ch.Do(ctx, ch.Query{
+		Logger: zctx.From(ctx).Named("ch"),
+		Result: attrs.Result(),
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			attrs.ForEach(func(name, key string) {
+				out[name] = key
+			})
+			return nil
+		},
+		ExternalTable: "labels",
+		ExternalData: []proto.InputColumn{
+			{Name: "name", Data: &inputData},
+		},
+		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.LogAttrs),
+	}); err != nil {
+		return nil, errors.Wrap(err, "select")
+	}
+
+	return out, nil
+}
+
+func (q *Querier) getMaterializedLabelColumn(labelName logql.Label) (column string, isColumn bool) {
+	switch labelName {
+	case logstorage.LabelTraceID:
+		return "hex(trace_id)", true
+	case logstorage.LabelSpanID:
+		return "hex(span_id)", true
+	case logstorage.LabelSeverity:
+		return "severity_number", true
+	case logstorage.LabelBody:
+		return "body", true
+	case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
+		return string(labelName), true
+	default:
+		return "", false
+	}
 }

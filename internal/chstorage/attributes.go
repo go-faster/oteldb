@@ -2,6 +2,7 @@ package chstorage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
@@ -154,6 +155,25 @@ func attrSelector(name, key string) string {
 	return fmt.Sprintf("JSONExtractString(%s, %s)",
 		name, singleQuoted(key),
 	)
+}
+
+func firstAttrSelector(label string) string {
+	quoted := singleQuoted(label)
+	var sb strings.Builder
+	sb.WriteString("coalesce(")
+	for i, column := range []string{
+		colAttrs,
+		colScope,
+		colResource,
+	} {
+		if i != 0 {
+			sb.WriteString(",")
+		}
+		fmt.Fprintf(&sb, "JSONExtract(%s, %s, 'Nullable(String)')", column, quoted)
+	}
+	sb.WriteString(",''")
+	sb.WriteString(")")
+	return sb.String()
 }
 
 // Append adds a new map of attributes.
