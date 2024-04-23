@@ -87,7 +87,7 @@ func TestDropLabels(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := newLabelSet()
+			set := NewLabelSet()
 			set.labels = tt.input
 			newLine, ok := e.Process(0, ``, set)
 			// Ensure that processor does not change the line.

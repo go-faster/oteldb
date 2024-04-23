@@ -109,7 +109,7 @@ func TestDurationLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 			set.labels = tt.input
 
 			f, err := buildDurationLabelFilter(&logql.DurationFilter{
@@ -234,7 +234,7 @@ func TestBytesLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 			set.labels = tt.input
 
 			f, err := buildBytesLabelFilter(&logql.BytesFilter{
@@ -379,7 +379,7 @@ func TestNumberLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 			set.labels = tt.input
 
 			f, err := buildNumberLabelFilter(&logql.NumberFilter{
@@ -509,7 +509,7 @@ func TestIPLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 			_, hasLabel := tt.input[tt.label]
 			set.labels = tt.input
 

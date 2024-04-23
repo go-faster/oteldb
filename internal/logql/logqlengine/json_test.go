@@ -90,7 +90,7 @@ func TestJSONExtractor(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := newLabelSet()
+			set := NewLabelSet()
 			newLine, ok := e.Process(0, tt.input, set)
 			// Ensure that extractor does not change the line.
 			require.Equal(t, tt.input, newLine)
@@ -172,7 +172,7 @@ func BenchmarkJSONExtractor(b *testing.B) {
 			p, err := buildJSONExtractor(bb.expr)
 			require.NoError(b, err)
 
-			set := newLabelSet()
+			set := NewLabelSet()
 			var (
 				line string
 				ok   bool

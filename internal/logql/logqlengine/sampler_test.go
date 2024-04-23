@@ -254,7 +254,7 @@ func TestSampleExtractor(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := newLabelSet()
+			set := NewLabelSet()
 			set.labels = tt.input.labels
 
 			got, gotOk := e.Extract(Entry{

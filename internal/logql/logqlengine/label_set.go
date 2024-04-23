@@ -21,7 +21,8 @@ type LabelSet struct {
 	labels map[logql.Label]pcommon.Value
 }
 
-func newLabelSet() LabelSet {
+// NewLabelSet creates new [LabelSet].
+func NewLabelSet() LabelSet {
 	return LabelSet{
 		labels: map[logql.Label]pcommon.Value{},
 	}

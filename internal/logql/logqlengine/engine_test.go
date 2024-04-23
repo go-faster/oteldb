@@ -161,7 +161,7 @@ func (n *mockPipelineNode) EvalPipeline(ctx context.Context, params EvalParams) 
 			}
 		}
 
-		set := newLabelSet()
+		set := NewLabelSet()
 		set.SetAttrs(
 			otelstorage.Attrs(attrs),
 			otelstorage.Attrs(scopeAttrs),

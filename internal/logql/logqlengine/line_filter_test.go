@@ -105,7 +105,7 @@ func TestIPLineFilter(t *testing.T) {
 	for i, tt := range ipLineFilterTests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 
 			f, err := buildLineFilter(&logql.LineFilter{
 				Op:    logql.OpEq,
