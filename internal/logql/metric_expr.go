@@ -145,10 +145,10 @@ type VectorExpr struct {
 
 // BinOpExpr defines a binary operation between two Expr.
 type BinOpExpr struct {
-	Left     Expr
+	Left     MetricExpr
 	Op       BinOp
 	Modifier BinOpModifier
-	Right    Expr
+	Right    MetricExpr
 }
 
 // ReduceBinOp recursively precomputes literal expression.
