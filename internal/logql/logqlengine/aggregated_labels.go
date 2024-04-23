@@ -25,8 +25,9 @@ type labelEntry struct {
 	value string
 }
 
-func newAggregatedLabels(set LabelSet, by, without map[string]struct{}) *aggregatedLabels {
-	labels := make([]labelEntry, 0, len(set.labels))
+// AggregatedLabelsFromSet creates new [logqlmetric.AggregatedLabels] from [LabelSet].
+func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) logqlmetric.AggregatedLabels {
+	labels := make([]labelEntry, 0, set.Len())
 	set.Range(func(l logql.Label, v pcommon.Value) {
 		labels = append(labels, labelEntry{
 			name:  string(l),
@@ -34,16 +35,30 @@ func newAggregatedLabels(set LabelSet, by, without map[string]struct{}) *aggrega
 		})
 	})
 	slices.SortFunc(labels, func(a, b labelEntry) int {
-		if c := cmp.Compare(a.name, b.name); c != 0 {
-			return c
-		}
-		return cmp.Compare(a.value, b.value)
+		return cmp.Compare(a.name, b.name)
 	})
 
 	return &aggregatedLabels{
 		entries: labels,
 		without: without,
 		by:      by,
+	}
+}
+
+// AggregatedLabelsFromMap creates new [logqlmetric.AggregatedLabels] from label map.
+func AggregatedLabelsFromMap(m map[string]string) logqlmetric.AggregatedLabels {
+	labels := make([]labelEntry, 0, len(m))
+	for key, value := range m {
+		labels = append(labels, labelEntry{name: key, value: value})
+	}
+	slices.SortFunc(labels, func(a, b labelEntry) int {
+		return cmp.Compare(a.name, b.name)
+	})
+
+	return &aggregatedLabels{
+		entries: labels,
+		without: nil,
+		by:      nil,
 	}
 }
 

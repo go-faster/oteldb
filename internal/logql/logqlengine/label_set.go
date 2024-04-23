@@ -91,6 +91,11 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
 }
 
+// Len returns set length
+func (l *LabelSet) Len() int {
+	return len(l.labels)
+}
+
 // SetAttrs sets labels from attrs.
 func (l *LabelSet) SetAttrs(attrMaps ...otelstorage.Attrs) {
 	for _, attrs := range attrMaps {

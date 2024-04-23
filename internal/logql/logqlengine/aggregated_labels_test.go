@@ -72,7 +72,7 @@ func TestAggregatedLabels(t *testing.T) {
 				{
 					"ByThenWithout",
 					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						var labels logqlmetric.AggregatedLabels = newAggregatedLabels(
+						var labels logqlmetric.AggregatedLabels = AggregatedLabelsFromSet(
 							set,
 							nil,
 							nil,
@@ -89,7 +89,7 @@ func TestAggregatedLabels(t *testing.T) {
 				{
 					"WithoutThenBy",
 					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						var labels logqlmetric.AggregatedLabels = newAggregatedLabels(
+						var labels logqlmetric.AggregatedLabels = AggregatedLabelsFromSet(
 							set,
 							nil,
 							nil,
@@ -106,7 +106,7 @@ func TestAggregatedLabels(t *testing.T) {
 				{
 					"Constructor",
 					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						return newAggregatedLabels(
+						return AggregatedLabelsFromSet(
 							set,
 							buildSet(nil, by...),
 							buildSet(nil, without...),
@@ -129,7 +129,7 @@ func TestAggregatedLabels(t *testing.T) {
 }
 
 func TestEmptyAggregatedLabels(t *testing.T) {
-	al := newAggregatedLabels(LabelSet{}, nil, nil)
+	al := AggregatedLabelsFromSet(LabelSet{}, nil, nil)
 	el := logqlmetric.EmptyAggregatedLabels()
 	require.Equal(t, el.Key(), al.Key())
 }

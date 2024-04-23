@@ -3,10 +3,7 @@ package logqlengine
 import (
 	"context"
 
-	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
-	"github.com/go-faster/oteldb/internal/logstorage"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // SupportedOps is a bitset defining ops supported by Querier.
@@ -38,12 +35,6 @@ type Querier interface {
 	// NOTE: engine would call once and then save value.
 	// 	Capabilities should not change over time.
 	Capabilities() QuerierCapabilities
-	// SelectLogs selects log records from storage.
-	SelectLogs(ctx context.Context, start, end otelstorage.Timestamp, direction Direction, params SelectLogsParams) (iterators.Iterator[logstorage.Record], error)
-}
-
-// SelectLogsParams is a storage query params.
-type SelectLogsParams struct {
-	Labels []logql.LabelMatcher
-	Line   []logql.LineFilter
+	// Query creates new [PipelineNode].
+	Query(ctx context.Context, selector []logql.LabelMatcher) (PipelineNode, error)
 }
