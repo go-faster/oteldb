@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/integration/lokie2e"
+	"github.com/go-faster/oteldb/internal/chstorage"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -53,9 +54,13 @@ func setupDB(ctx context.Context, t *testing.T, provider *integration.Provider, 
 
 	gold.Str(t, out.String(), "logs.yml")
 
+	var optimizers []logqlengine.Optimizer
+	optimizers = append(optimizers, logqlengine.DefaultOptimizers()...)
+	optimizers = append(optimizers, &chstorage.ClickhouseOptimizer{})
 	engine := logqlengine.NewEngine(engineQuerier, logqlengine.Options{
 		ParseOptions:   logql.ParseOptions{AllowDots: true},
 		OTELAdapter:    true,
+		Optimizers:     optimizers,
 		TracerProvider: provider,
 	})
 
