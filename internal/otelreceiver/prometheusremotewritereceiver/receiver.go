@@ -88,14 +88,14 @@ func (rec *Receiver) Start(ctx context.Context, host component.Host) (err error)
 
 	rec.startOnce.Do(func() {
 		rec.host = host
-		rec.server, err = rec.config.ServerConfig.ToServerContext(ctx,
+		rec.server, err = rec.config.ServerConfig.ToServer(ctx,
 			host,
 			rec.params.TelemetrySettings,
 			rec,
 			confighttp.WithDecoder("snappy", snappyDecoder),
 		)
 		var listener net.Listener
-		listener, err = rec.config.ServerConfig.ToListenerContext(ctx)
+		listener, err = rec.config.ServerConfig.ToListener(ctx)
 		if err != nil {
 			return
 		}
