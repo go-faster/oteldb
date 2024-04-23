@@ -65,7 +65,7 @@ func setStrOrEmpty(col proto.ColumnOf[string], m pcommon.Map, k string) {
 	col.Append(v.AsString())
 }
 
-func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
+func (c *logColumns) ForEach(f func(r logstorage.Record) error) error {
 	for i := 0; i < c.timestamp.Rows(); i++ {
 		r := logstorage.Record{
 			Timestamp:      otelstorage.NewTimestampFromTime(c.timestamp.Row(i)),
@@ -103,7 +103,9 @@ func (c *logColumns) ForEach(f func(r logstorage.Record)) error {
 			// Default just to timestamp.
 			r.ObservedTimestamp = r.Timestamp
 		}
-		f(r)
+		if err := f(r); err != nil {
+			return err
+		}
 	}
 	return nil
 }
