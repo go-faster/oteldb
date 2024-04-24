@@ -118,11 +118,12 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 			return rerr
 		},
 	}); err != nil {
-		return nil, errors.Wrap(err, "select")
+		return nil, err
 	}
 
 	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
 		metric.WithAttributes(
+			attribute.String("chstorage.query_type", fmt.Sprintf("%T", v)),
 			attribute.String("chstorage.table", table),
 			attribute.String("chstorage.signal", "logs"),
 		),
@@ -160,11 +161,11 @@ func (c *sampleQueryColumns) Result() proto.Results {
 func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.SampleIterator, rerr error) {
 	table := q.tables.Logs
 
-	ctx, span := q.tracer.Start(ctx, "LogsQuery",
+	ctx, span := q.tracer.Start(ctx, "SampleQuery",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
 			attribute.Int64("chstorage.range.end", v.End.UnixNano()),
-			attribute.String("chstorage.direction", v.Sampling.String()),
+			attribute.String("chstorage.sampling", v.Sampling.String()),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -223,11 +224,11 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 	if err := pred.write(&query, mapping); err != nil {
 		return nil, err
 	}
-
 	query.WriteString(`ORDER BY timestamp ASC;`)
 
 	var (
-		result []logqlmetric.SampledEntry
+		queryStartTime = time.Now()
+		result         []logqlmetric.SampledEntry
 
 		columns = sampleQueryColumns{
 			Timestamp: proto.ColDateTime64{},
@@ -257,9 +258,16 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 			return nil
 		},
 	}); err != nil {
-		return nil, errors.Wrap(err, "clickhouse")
+		return nil, err
 	}
 
+	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.query_type", fmt.Sprintf("%T", v)),
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.signal", "logs"),
+		),
+	)
 	return iterators.Slice(result), nil
 }
 
