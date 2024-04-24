@@ -15,7 +15,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/go-faster/sdk v0.13.0
+	github.com/go-faster/sdk v0.14.0
 	github.com/go-faster/yaml v0.4.6
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/gogo/protobuf v1.3.2
@@ -215,12 +215,12 @@ require (
 	go.opentelemetry.io/collector/semconv v0.99.0 // indirect
 	go.opentelemetry.io/collector/service v0.99.0 // indirect
 	go.opentelemetry.io/contrib/config v0.5.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.46.1 // indirect
-	go.opentelemetry.io/contrib/propagators/autoprop v0.46.1 // indirect
-	go.opentelemetry.io/contrib/propagators/aws v1.21.1 // indirect
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.50.0 // indirect
+	go.opentelemetry.io/contrib/propagators/autoprop v0.50.0 // indirect
+	go.opentelemetry.io/contrib/propagators/aws v1.25.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.25.0 // indirect
-	go.opentelemetry.io/contrib/propagators/jaeger v1.21.1 // indirect
-	go.opentelemetry.io/contrib/propagators/ot v1.21.1 // indirect
+	go.opentelemetry.io/contrib/propagators/jaeger v1.25.0 // indirect
+	go.opentelemetry.io/contrib/propagators/ot v1.25.0 // indirect
 	go.opentelemetry.io/otel/bridge/opencensus v1.25.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.25.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.25.0 // indirect
