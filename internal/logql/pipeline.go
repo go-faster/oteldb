@@ -26,7 +26,7 @@ func (*DistinctFilter) pipelineStage()         {}
 
 // LineFilter is a line filter (`|=`, `!=`, `=~`, `!~`).
 type LineFilter struct {
-	Op BinOp // OpEq, OpNotEq, OpRe, OpNotRe
+	Op BinOp // OpEq, OpNotEq, OpRe, OpNotRe, OpPattern, OpNotPattern
 	By LineFilterValue
 	Or []LineFilterValue
 }

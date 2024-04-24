@@ -22,6 +22,8 @@ const (
 	OpNotEq
 	OpRe
 	OpNotRe
+	OpPattern
+	OpNotPattern
 	OpGt
 	OpGte
 	OpLt
@@ -91,6 +93,10 @@ func (op BinOp) String() string {
 		return "=~"
 	case OpNotRe:
 		return "!~"
+	case OpPattern:
+		return "|>"
+	case OpNotPattern:
+		return "!>"
 	case OpGt:
 		return "<"
 	case OpGte:

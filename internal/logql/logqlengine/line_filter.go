@@ -1,6 +1,7 @@
 package logqlengine
 
 import (
+	"fmt"
 	"net/netip"
 
 	"github.com/go-faster/oteldb/internal/logql"
@@ -9,6 +10,10 @@ import (
 )
 
 func buildLineFilter(stage *logql.LineFilter) (Processor, error) {
+	switch op := stage.Op; op {
+	case logql.OpPattern, logql.OpNotPattern:
+		return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("%s line filter is unsupported", op)}
+	}
 	if len(stage.Or) > 0 {
 		return nil, &logqlerrors.UnsupportedError{Msg: "or in line filters is unsupported"}
 	}

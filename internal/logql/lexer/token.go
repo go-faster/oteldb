@@ -75,6 +75,8 @@ const (
 	NotRe
 	PipeExact
 	PipeMatch
+	PipePattern
+	NotPipePattern
 	Pipe
 	Unwrap
 	OpenParen
@@ -169,6 +171,8 @@ var tokens = map[string]TokenType{
 	"!~":          NotRe,
 	"|=":          PipeExact,
 	"|~":          PipeMatch,
+	"|>":          PipePattern,
+	"!>":          NotPipePattern,
 	"|":           Pipe,
 	"unwrap":      Unwrap,
 	"(":           OpenParen,

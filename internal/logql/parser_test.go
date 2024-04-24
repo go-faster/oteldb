@@ -134,6 +134,16 @@ var tests = []TestCase{
 		false,
 	},
 	{
+		`{} |> "<_>foo" !> "<_>bar"`,
+		&LogExpr{
+			Pipeline: []PipelineStage{
+				&LineFilter{Op: OpPattern, By: LineFilterValue{Value: "<_>foo"}},
+				&LineFilter{Op: OpNotPattern, By: LineFilterValue{Value: "<_>bar"}},
+			},
+		},
+		false,
+	},
+	{
 		`{} |= "foo" or "bar" or ip("baz")`,
 		&LogExpr{
 			Pipeline: []PipelineStage{

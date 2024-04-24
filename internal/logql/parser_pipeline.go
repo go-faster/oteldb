@@ -11,7 +11,7 @@ import (
 func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err error) {
 	for {
 		switch t := p.peek(); t.Type {
-		case lexer.PipeExact, lexer.PipeMatch, lexer.NotEq, lexer.NotRe: // ( "|=" | "|~" | "!=" | "!~" )
+		case lexer.PipeExact, lexer.PipeMatch, lexer.NotEq, lexer.NotRe, lexer.PipePattern, lexer.NotPipePattern: // ( "|=" | "|~" | "!=" | "!~" | "|>" | "!>")
 			lf, err := p.parseLineFilters()
 			if err != nil {
 				return stages, err
@@ -130,6 +130,10 @@ func (p *parser) parseLineFilters() (f *LineFilter, err error) {
 		f.Op = OpNotEq
 	case lexer.NotRe: // "!~"
 		f.Op = OpNotRe
+	case lexer.PipePattern: // "|>"
+		f.Op = OpPattern
+	case lexer.NotPipePattern: // "!>"
+		f.Op = OpNotPattern
 	default:
 		return f, p.unexpectedToken(t)
 	}
@@ -161,6 +165,8 @@ func (p *parser) parseLineFilterValue(op BinOp) (f LineFilterValue, err error) {
 			return f, err
 		}
 
+		// TODO(tdakkota): validate pattern too?
+		// 	pattern parser is a part of engine for now
 		switch op {
 		case OpRe, OpNotRe:
 			f.Re, err = regexp.Compile(f.Value)
