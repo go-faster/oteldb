@@ -63,6 +63,14 @@ test_cases:
     skip_comparison: true # It seems, there is some issues with unwrap.
   # Vector aggregation.
   - query: |-
+      {{ .simpleVecAggOp }} by (filename) (
+        {{ .simpleRangeAggOp }}(
+          {job="varlogs"}
+          [{{ .range }}]
+        )
+      )
+    variant_args: ["simpleVecAggOp", "simpleRangeAggOp", "range"]
+  - query: |-
       {{ .simpleVecAggOp }} by (method) (
         {{ .simpleRangeAggOp }}(
           {job="varlogs"} | json
