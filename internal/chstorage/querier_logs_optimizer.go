@@ -165,7 +165,7 @@ stageLoop:
 	sn.Line = line
 	// Replace original node with [InputNode], since we can execute filtering entirely in
 	// Clickhouse.
-	if skippedStages == 0 {
+	if skippedStages == 0 && !pn.EnableOTELAdapter {
 		return sn
 	}
 	return n

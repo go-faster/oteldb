@@ -103,10 +103,11 @@ func groupEntries(iter EntryIterator) (s lokiapi.Streams, _ error) {
 
 // ProcessorNode implements [PipelineNode].
 type ProcessorNode struct {
-	Input     PipelineNode
-	Prefilter Processor
-	Selector  logql.Selector
-	Pipeline  []logql.PipelineStage
+	Input             PipelineNode
+	Prefilter         Processor
+	Selector          logql.Selector
+	Pipeline          []logql.PipelineStage
+	EnableOTELAdapter bool
 }
 
 var _ PipelineNode = (*ProcessorNode)(nil)
@@ -122,16 +123,17 @@ func (e *Engine) buildPipelineNode(ctx context.Context, sel logql.Selector, stag
 		return nil, errors.Wrap(err, "create input node")
 	}
 
-	if p := cond.prefilter; p == nil || p == NopProcessor && len(stages) == 0 {
+	if p := cond.prefilter; (p == nil || p == NopProcessor) && len(stages) == 0 && !e.otelAdapter {
 		// Empty processing pipeline, get data directly from storage.
 		return input, nil
 	}
 
 	return &ProcessorNode{
-		Input:     input,
-		Prefilter: cond.prefilter,
-		Selector:  sel,
-		Pipeline:  stages,
+		Input:             input,
+		Prefilter:         cond.prefilter,
+		Selector:          sel,
+		Pipeline:          stages,
+		EnableOTELAdapter: e.otelAdapter,
 	}, nil
 }
 
@@ -157,11 +159,12 @@ func (n *ProcessorNode) EvalPipeline(ctx context.Context, params EvalParams) (_ 
 	defer closeOnError(iter, &rerr)
 
 	return &entryIterator{
-		iter:      iter,
-		prefilter: n.Prefilter,
-		pipeline:  pipeline,
-		entries:   0,
-		limit:     params.Limit,
+		iter:        iter,
+		prefilter:   n.Prefilter,
+		pipeline:    pipeline,
+		entries:     0,
+		limit:       params.Limit,
+		otelAdapter: n.EnableOTELAdapter,
 	}, nil
 }
 
@@ -173,6 +176,8 @@ type entryIterator struct {
 
 	entries int
 	limit   int
+	// TODO(tdakkota): what?
+	otelAdapter bool
 }
 
 func (i *entryIterator) Next(e *Entry) bool {
@@ -185,6 +190,9 @@ func (i *entryIterator) Next(e *Entry) bool {
 			ts   = e.Timestamp
 			keep bool
 		)
+		if i.otelAdapter {
+			e.Line = LineFromEntry(*e)
+		}
 
 		e.Line, keep = i.prefilter.Process(ts, e.Line, e.Set)
 		if !keep {
