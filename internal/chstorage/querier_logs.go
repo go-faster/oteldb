@@ -14,7 +14,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/iterators"
-	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -243,7 +242,7 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 	return out, nil
 }
 
-func (q *Querier) getMaterializedLabelColumn(labelName logql.Label) (column string, isColumn bool) {
+func (q *Querier) getMaterializedLabelColumn(labelName string) (column string, isColumn bool) {
 	switch labelName {
 	case logstorage.LabelTraceID:
 		return "hex(trace_id)", true
@@ -254,7 +253,7 @@ func (q *Querier) getMaterializedLabelColumn(labelName logql.Label) (column stri
 	case logstorage.LabelBody:
 		return "body", true
 	case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
-		return string(labelName), true
+		return labelName, true
 	default:
 		return "", false
 	}

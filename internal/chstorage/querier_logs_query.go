@@ -180,6 +180,9 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 	for _, m := range v.Labels {
 		labels = append(labels, string(m.Label))
 	}
+	for _, l := range v.GroupingLabels {
+		labels = append(labels, string(l))
+	}
 	mapping, err := q.getLabelMapping(ctx, labels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
@@ -191,17 +194,21 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 		return nil, err
 	}
 	fmt.Fprintf(&query, "SELECT timestamp, toFloat64(%s) AS sample, map(\n", sampleExpr)
-	for i, label := range v.GroupingLabels {
-		quotedLabel := singleQuoted(string(label))
+	for i, key := range v.GroupingLabels {
+		label := string(key)
+		if key, ok := mapping[label]; ok {
+			label = key
+		}
 
 		labelExpr, ok := q.getMaterializedLabelColumn(label)
 		if !ok {
-			labelExpr = firstAttrSelector(string(label))
+			labelExpr = firstAttrSelector(label)
 		}
 
 		if i != 0 {
 			query.WriteString(",\n")
 		}
+		quotedLabel := singleQuoted(key)
 		fmt.Fprintf(&query, "%s, toString(%s)", quotedLabel, labelExpr)
 	}
 	query.WriteString("\n) AS labels\n")
