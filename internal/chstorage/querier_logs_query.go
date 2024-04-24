@@ -97,8 +97,8 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 	}
 
 	var (
-		data           []E
 		queryStartTime = time.Now()
+		data           []E
 	)
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
@@ -240,6 +240,7 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 		}
 	)
 	if err := q.ch.Do(ctx, ch.Query{
+		Logger: zctx.From(ctx).Named("ch"),
 		Body:   query.String(),
 		Result: columns.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
@@ -298,7 +299,7 @@ func getSampleExpr(op SamplingOp) (string, error) {
 	case CountSampling:
 		return "1", nil
 	case BytesSampling:
-		return "length(message)", nil
+		return "length(body)", nil
 	default:
 		return "", errors.Errorf("unexpected sampling op: %v", op)
 	}
