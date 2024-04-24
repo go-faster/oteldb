@@ -137,7 +137,7 @@ stageLoop:
 	for _, stage := range pn.Pipeline {
 		switch stage := stage.(type) {
 		case *logql.LineFilter:
-			if stage.IP {
+			if stage.By.IP {
 				skippedStages++
 				continue
 			}
