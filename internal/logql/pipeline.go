@@ -26,7 +26,13 @@ func (*DistinctFilter) pipelineStage()         {}
 
 // LineFilter is a line filter (`|=`, `!=`, `=~`, `!~`).
 type LineFilter struct {
-	Op    BinOp          // OpEq, OpNotEq, OpRe, OpNotRe
+	Op BinOp // OpEq, OpNotEq, OpRe, OpNotRe
+	By LineFilterValue
+	Or []LineFilterValue
+}
+
+// LineFilterValue is a line filter literal to search by.
+type LineFilterValue struct {
 	Value string         // Equals to value or to unparsed regexp
 	Re    *regexp.Regexp // Equals to nil, if Op is not OpRe or OpNotRe
 	IP    bool           // true, if this line filter is IP filter.

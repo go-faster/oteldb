@@ -128,7 +128,23 @@ var tests = []TestCase{
 		"{} |= `foo`",
 		&LogExpr{
 			Pipeline: []PipelineStage{
-				&LineFilter{Op: OpEq, Value: "foo"},
+				&LineFilter{Op: OpEq, By: LineFilterValue{Value: "foo"}},
+			},
+		},
+		false,
+	},
+	{
+		`{} |= "foo" or "bar" or ip("baz")`,
+		&LogExpr{
+			Pipeline: []PipelineStage{
+				&LineFilter{
+					Op: OpEq,
+					By: LineFilterValue{Value: "foo"},
+					Or: []LineFilterValue{
+						{Value: "bar"},
+						{Value: "baz", IP: true},
+					},
+				},
 			},
 		},
 		false,
@@ -148,11 +164,11 @@ var tests = []TestCase{
 				},
 			},
 			Pipeline: []PipelineStage{
-				&LineFilter{Op: OpEq, Value: "bad"},
-				&LineFilter{Op: OpRe, Value: "error", Re: regexp.MustCompile(`error`)},
-				&LineFilter{Op: OpNotEq, Value: "good"},
-				&LineFilter{Op: OpNotRe, Value: "exception", Re: regexp.MustCompile(`exception`)},
-				&LineFilter{Op: OpEq, Value: "127.0.0.1", IP: true},
+				&LineFilter{Op: OpEq, By: LineFilterValue{Value: "bad"}},
+				&LineFilter{Op: OpRe, By: LineFilterValue{Value: "error", Re: regexp.MustCompile(`error`)}},
+				&LineFilter{Op: OpNotEq, By: LineFilterValue{Value: "good"}},
+				&LineFilter{Op: OpNotRe, By: LineFilterValue{Value: "exception", Re: regexp.MustCompile(`exception`)}},
+				&LineFilter{Op: OpEq, By: LineFilterValue{Value: "127.0.0.1", IP: true}},
 			},
 		},
 		false,
@@ -168,7 +184,7 @@ var tests = []TestCase{
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: OpEq, Value: "bad"},
+					&LineFilter{Op: OpEq, By: LineFilterValue{Value: "bad"}},
 				},
 			},
 		},
@@ -191,7 +207,7 @@ var tests = []TestCase{
 				},
 			},
 			Pipeline: []PipelineStage{
-				&LineFilter{Op: OpEq, Value: "bad"},
+				&LineFilter{Op: OpEq, By: LineFilterValue{Value: "bad"}},
 				&LogfmtExpressionParser{},
 				&JSONExpressionParser{},
 				&RegexpLabelParser{
@@ -223,7 +239,7 @@ var tests = []TestCase{
 				},
 			},
 			Pipeline: []PipelineStage{
-				&LineFilter{Op: OpEq, Value: "bad"},
+				&LineFilter{Op: OpEq, By: LineFilterValue{Value: "bad"}},
 				&JSONExpressionParser{},
 				&JSONExpressionParser{
 					Labels: []Label{
@@ -548,7 +564,7 @@ var tests = []TestCase{
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: OpEq, Value: "error"},
+					&LineFilter{Op: OpEq, By: LineFilterValue{Value: "error"}},
 					&LogfmtExpressionParser{},
 				},
 				Unwrap: &UnwrapExpr{
@@ -600,7 +616,7 @@ var tests = []TestCase{
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: OpEq, Value: "error"},
+					&LineFilter{Op: OpEq, By: LineFilterValue{Value: "error"}},
 				},
 				Unwrap: &UnwrapExpr{
 					Label: "duration",
@@ -621,7 +637,7 @@ var tests = []TestCase{
 					},
 				},
 				Pipeline: []PipelineStage{
-					&LineFilter{Op: OpEq, Value: "error"},
+					&LineFilter{Op: OpEq, By: LineFilterValue{Value: "error"}},
 				},
 				Unwrap: &UnwrapExpr{
 					Op:    "duration",
@@ -671,8 +687,8 @@ var tests = []TestCase{
 						},
 					},
 					Pipeline: []PipelineStage{
-						&LineFilter{Op: OpEq, Value: "error"},
-						&LineFilter{Op: OpNotEq, Value: "timeout"},
+						&LineFilter{Op: OpEq, By: LineFilterValue{Value: "error"}},
+						&LineFilter{Op: OpNotEq, By: LineFilterValue{Value: "timeout"}},
 						&JSONExpressionParser{},
 						&LabelFilter{
 							Pred: &DurationFilter{"duration", OpGt, 10 * time.Second},
@@ -1073,6 +1089,8 @@ var tests = []TestCase{
 	{`{foo = "bar"} | unwrap label`, nil, true},
 	{`{foo = "bar"} |= foo`, nil, true},
 	{`{foo = "bar"} |= ip("foo"`, nil, true},
+	{`{foo = "bar"} |= ip("foo") or ip(`, nil, true},
+	{`{foo = "bar"} |= ip("foo") or ip("foo"`, nil, true},
 	// Tail expression
 	{`{foo = "bar"} |= "foo" {}`, nil, true},
 	// Missing identifier.
@@ -1086,6 +1104,9 @@ var tests = []TestCase{
 	{`{foo = "bar"} | drop`, nil, true},
 	{`{foo = "bar"} | drop foo,`, nil, true},
 	{`{foo = "bar"} | drop foo=`, nil, true},
+	// Missing expression.
+	{`{foo = "bar"} |= "foo" or`, nil, true},
+	{`{foo = "bar"} | label="foo",`, nil, true},
 	// Missing string value.
 	{`{foo = "bar"} | json bar=`, nil, true},
 	{`{foo = "bar"} | regexp`, nil, true},
@@ -1093,6 +1114,7 @@ var tests = []TestCase{
 	{`{foo = "bar"} | line_format`, nil, true},
 	{`{foo = "bar"} | addr == ip()`, nil, true},
 	{`{foo = "bar"} |= ip()`, nil, true},
+	{`{foo = "bar"} |= ip("foo") or ip()`, nil, true},
 	// Invalid comparison operation.
 	{`{foo = "bar"} | addr >= ip("127.0.0.1")`, nil, true},
 	{`{foo = "bar"} |~ ip("127.0.0.1")`, nil, true},
@@ -1143,6 +1165,7 @@ var tests = []TestCase{
 	// Invalid regexp.
 	{`{foo=~"\\"}`, nil, true},
 	{`{} |~ "\\"`, nil, true},
+	{`{} |~ ".+" or "\\"`, nil, true},
 	{`{} | regexp "\\"`, nil, true},
 	{`{} | foo=~"\\"`, nil, true},
 	{`label_replace(rate({job="mysql"}[1m]), "dst", "replacement", "src", "\\")`, nil, true},

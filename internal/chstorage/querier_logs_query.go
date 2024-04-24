@@ -448,12 +448,12 @@ func (q logQueryPredicates) write(
 
 		switch m.Op {
 		case logql.OpEq, logql.OpNotEq:
-			fmt.Fprintf(query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
+			fmt.Fprintf(query, "positionUTF8(body, %s) > 0", singleQuoted(m.By.Value))
 			{
 				// HACK: check for special case of hex-encoded trace_id and span_id.
 				// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
 				// TODO(ernado): also handle regex?
-				encoded := strings.ToLower(m.Value)
+				encoded := strings.ToLower(m.By.Value)
 				v, _ := hex.DecodeString(encoded)
 				switch len(v) {
 				case len(otelstorage.TraceID{}):
@@ -463,7 +463,7 @@ func (q logQueryPredicates) write(
 				}
 			}
 		case logql.OpRe, logql.OpNotRe:
-			fmt.Fprintf(query, "match(body, %s)", singleQuoted(m.Value))
+			fmt.Fprintf(query, "match(body, %s)", singleQuoted(m.By.Value))
 		}
 		query.WriteByte(')')
 	}

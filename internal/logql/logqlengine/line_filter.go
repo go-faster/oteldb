@@ -4,12 +4,17 @@ import (
 	"net/netip"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 func buildLineFilter(stage *logql.LineFilter) (Processor, error) {
-	if stage.IP {
-		matcher, err := buildIPMatcher(stage.Op, stage.Value)
+	if len(stage.Or) > 0 {
+		return nil, &logqlerrors.UnsupportedError{Msg: "or in line filters is unsupported"}
+	}
+
+	if stage.By.IP {
+		matcher, err := buildIPMatcher(stage.Op, stage.By.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -17,7 +22,7 @@ func buildLineFilter(stage *logql.LineFilter) (Processor, error) {
 		return &IPLineFilter{matcher: matcher}, nil
 	}
 
-	matcher, err := buildStringMatcher(stage.Op, stage.Value, stage.Re, false)
+	matcher, err := buildStringMatcher(stage.Op, stage.By.Value, stage.By.Re, false)
 	if err != nil {
 		return nil, err
 	}

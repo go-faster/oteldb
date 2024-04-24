@@ -12,7 +12,7 @@ func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err er
 	for {
 		switch t := p.peek(); t.Type {
 		case lexer.PipeExact, lexer.PipeMatch, lexer.NotEq, lexer.NotRe: // ( "|=" | "|~" | "!=" | "!~" )
-			lf, err := p.parseLineFilter()
+			lf, err := p.parseLineFilters()
 			if err != nil {
 				return stages, err
 			}
@@ -117,7 +117,7 @@ func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err er
 	}
 }
 
-func (p *parser) parseLineFilter() (f *LineFilter, err error) {
+func (p *parser) parseLineFilters() (f *LineFilter, err error) {
 	t := p.next()
 
 	f = new(LineFilter)
@@ -131,47 +131,67 @@ func (p *parser) parseLineFilter() (f *LineFilter, err error) {
 	case lexer.NotRe: // "!~"
 		f.Op = OpNotRe
 	default:
-		return nil, p.unexpectedToken(t)
+		return f, p.unexpectedToken(t)
 	}
 
+	f.By, err = p.parseLineFilterValue(f.Op)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if t := p.peek(); t.Type != lexer.Or {
+			return f, nil
+		}
+		p.next()
+
+		sub, err := p.parseLineFilterValue(f.Op)
+		if err != nil {
+			return nil, err
+		}
+		f.Or = append(f.Or, sub)
+	}
+}
+
+func (p *parser) parseLineFilterValue(op BinOp) (f LineFilterValue, err error) {
 	switch t := p.peek(); t.Type {
 	case lexer.String:
 		f.Value, err = p.parseString()
 		if err != nil {
-			return nil, err
+			return f, err
 		}
 
-		switch f.Op {
+		switch op {
 		case OpRe, OpNotRe:
 			f.Re, err = regexp.Compile(f.Value)
 			if err != nil {
-				return nil, errors.Wrapf(err, "invalid regex in line filter %q", f.Value)
+				return f, errors.Wrapf(err, "invalid regex in line filter %q", f.Value)
 			}
 		}
 	case lexer.IP:
 		p.next()
 
-		switch f.Op {
+		switch op {
 		case OpEq, OpNotEq:
 		default:
-			return nil, errors.Errorf("invalid IP line filter operation %q", f.Op)
+			return f, errors.Errorf("invalid IP line filter operation %q", op)
 		}
 
 		if err := p.consume(lexer.OpenParen); err != nil {
-			return nil, err
+			return f, err
 		}
 
 		f.Value, err = p.parseString()
 		if err != nil {
-			return nil, err
+			return f, err
 		}
 		f.IP = true
 
 		if err := p.consume(lexer.CloseParen); err != nil {
-			return nil, err
+			return f, err
 		}
 	default:
-		return nil, p.unexpectedToken(t)
+		return f, p.unexpectedToken(t)
 	}
 	return f, nil
 }

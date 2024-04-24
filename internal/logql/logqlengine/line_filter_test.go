@@ -108,9 +108,11 @@ func TestIPLineFilter(t *testing.T) {
 			set := NewLabelSet()
 
 			f, err := buildLineFilter(&logql.LineFilter{
-				Op:    logql.OpEq,
-				Value: tt.pattern,
-				IP:    true,
+				Op: logql.OpEq,
+				By: logql.LineFilterValue{
+					Value: tt.pattern,
+					IP:    true,
+				},
 			})
 			require.NoError(t, err)
 
@@ -129,9 +131,11 @@ func FuzzIPLineFilter(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, line, pattern string) {
 		f, err := buildLineFilter(&logql.LineFilter{
-			Op:    logql.OpEq,
-			Value: pattern,
-			IP:    true,
+			Op: logql.OpEq,
+			By: logql.LineFilterValue{
+				Value: pattern,
+				IP:    true,
+			},
 		})
 		if err != nil {
 			t.Skipf("Invalid pattern: %q", pattern)
