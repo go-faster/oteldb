@@ -137,7 +137,7 @@ jobs:
           -output-format json -output-file result.oteldb.json \
           -output-passing -output-unsupported \
           -query-parallelism 2 \
-          -target 81.99 || true
+          -target 81.98
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
