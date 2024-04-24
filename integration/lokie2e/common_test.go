@@ -59,7 +59,6 @@ func setupDB(ctx context.Context, t *testing.T, provider *integration.Provider, 
 	optimizers = append(optimizers, &chstorage.ClickhouseOptimizer{})
 	engine := logqlengine.NewEngine(engineQuerier, logqlengine.Options{
 		ParseOptions:   logql.ParseOptions{AllowDots: true},
-		OTELAdapter:    true,
 		Optimizers:     optimizers,
 		TracerProvider: provider,
 	})
@@ -208,8 +207,6 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 			// Negative line matcher.
 			{`{http_method=~".+"} != "HEAD"`, len(set.Records) - 22},
 			{`{http_method=~".+"} !~ "HEAD"`, len(set.Records) - 22},
-			// IP line filter.
-			{`{http_method="HEAD"} |= ip("236.7.233.166")`, 1},
 			// Trace to logs.
 			{`{http_method=~".+"} |= "af36000000000000c517000000000003"`, 1},
 
@@ -333,6 +330,12 @@ type LogQueryTest struct {
 
 func testLogQuery(c *lokiapi.Client, params LogQueryTest) func(*testing.T) {
 	return func(t *testing.T) {
+		defer func() {
+			if t.Failed() {
+				t.Logf("Query: %s", params.Query)
+			}
+		}()
+
 		ctx := context.Background()
 
 		if d, ok := t.Deadline(); ok {
@@ -375,9 +378,7 @@ func testLogQuery(c *lokiapi.Client, params LogQueryTest) func(*testing.T) {
 				record, ok := params.Set.Records[pcommon.Timestamp(entry.T)]
 				require.Truef(t, ok, "can't find log record %d", entry.T)
 
-				line := logqlengine.LineFromRecord(
-					logstorage.NewRecordFromOTEL(pcommon.NewResource(), pcommon.NewInstrumentationScope(), record),
-				)
+				line := record.Body().AsString()
 				assert.Equal(t, line, entry.V)
 
 				labelSetHasAttrs(t, stream.Stream.Value, record.Attributes())
