@@ -21,6 +21,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/go-faster/oteldb/internal/chstorage"
 	"github.com/go-faster/oteldb/internal/httpmiddleware"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
@@ -175,11 +176,15 @@ func (app *App) trySetupLoki() error {
 	cfg := app.cfg.LokiConfig
 	cfg.setDefaults()
 
+	var optimizers []logqlengine.Optimizer
+	optimizers = append(optimizers, logqlengine.DefaultOptimizers()...)
+	optimizers = append(optimizers, &chstorage.ClickhouseOptimizer{})
 	engine := logqlengine.NewEngine(q, logqlengine.Options{
 		ParseOptions: logql.ParseOptions{
 			AllowDots: true,
 		},
 		LookbackDuration: cfg.LookbackDelta,
+		Optimizers:       optimizers,
 		TracerProvider:   app.metrics.TracerProvider(),
 	})
 	loki := lokihandler.NewLokiAPI(q, engine)

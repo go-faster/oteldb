@@ -41,6 +41,7 @@ linters-settings:
       - octalLiteral
       - typeDefFirst
       - unnamedResult
+      - ptrToRefParam
 
 linters:
   disable-all: true

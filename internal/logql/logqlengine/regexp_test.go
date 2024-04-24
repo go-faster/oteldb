@@ -52,7 +52,7 @@ func TestRegexpExtractor(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := newLabelSet()
+			set := NewLabelSet()
 			newLine, ok := e.Process(0, tt.input, set)
 			// Ensure that extractor does not change the line.
 			require.Equal(t, tt.input, newLine)

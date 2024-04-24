@@ -158,16 +158,17 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 		return nil, errors.Errorf("invalid direction %q", d)
 	}
 
-	data, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
-		Start:     otelstorage.NewTimestampFromTime(ts),
-		End:       otelstorage.NewTimestampFromTime(ts),
+	data, err := h.eval(ctx, params.Query, logqlengine.EvalParams{
+		Start:     ts,
+		End:       ts,
 		Step:      0,
 		Direction: direction,
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "eval")
+		return nil, err
 	}
+
 	lg.Debug("Query", zap.String("type", string(data.Type)))
 
 	return &lokiapi.QueryResponse{
@@ -209,15 +210,15 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 		return nil, errors.Errorf("invalid direction %q", d)
 	}
 
-	data, err := h.engine.Eval(ctx, params.Query, logqlengine.EvalParams{
-		Start:     otelstorage.NewTimestampFromTime(start),
-		End:       otelstorage.NewTimestampFromTime(end),
+	data, err := h.eval(ctx, params.Query, logqlengine.EvalParams{
+		Start:     start,
+		End:       end,
 		Step:      step,
 		Direction: direction,
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "eval")
+		return nil, err
 	}
 	lg.Debug("Query range", zap.String("type", string(data.Type)))
 
@@ -246,9 +247,9 @@ func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lok
 	zctx.From(ctx).Info("Series", zap.Int("match", len(params.Match)))
 	for _, q := range params.Match {
 		// TODO(ernado): offload
-		data, err := h.engine.Eval(ctx, q, logqlengine.EvalParams{
-			Start:     otelstorage.NewTimestampFromTime(start),
-			End:       otelstorage.NewTimestampFromTime(end),
+		data, err := h.eval(ctx, q, logqlengine.EvalParams{
+			Start:     start,
+			End:       end,
 			Direction: logqlengine.DirectionBackward,
 			Limit:     1_000,
 		})
@@ -268,6 +269,18 @@ func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lok
 		Status: "success",
 		Data:   out,
 	}, nil
+}
+
+func (h *LokiAPI) eval(ctx context.Context, query string, params logqlengine.EvalParams) (r lokiapi.QueryResponseData, _ error) {
+	q, err := h.engine.NewQuery(ctx, query)
+	if err != nil {
+		return r, errors.Wrap(err, "compile query")
+	}
+	r, err = q.Eval(ctx, params)
+	if err != nil {
+		return r, errors.Wrap(err, "eval")
+	}
+	return r, nil
 }
 
 // NewError creates *ErrorStatusCode from error returned by handler.

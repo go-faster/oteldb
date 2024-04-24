@@ -8,39 +8,49 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
 
-	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-func (e *Engine) sampleSelector(ctx context.Context, params EvalParams) logqlmetric.SampleSelector {
-	return func(expr *logql.RangeAggregationExpr, start, end time.Time) (_ iterators.Iterator[logqlmetric.SampledEntry], rerr error) {
-		qrange := expr.Range
+// SamplingNode implements entry sampling.
+type SamplingNode struct {
+	Input PipelineNode
+	Expr  *logql.RangeAggregationExpr
+}
 
-		iter, err := e.selectLogs(ctx, qrange.Sel, qrange.Pipeline, selectLogsParams{
-			Start:     otelstorage.NewTimestampFromTime(start),
-			End:       otelstorage.NewTimestampFromTime(end),
-			Instant:   params.IsInstant(),
-			Direction: params.Direction,
-			// Do not limit sample queries.
-			Limit: -1,
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "select logs")
-		}
-		defer func() {
-			if rerr != nil {
-				_ = iter.Close()
-			}
-		}()
+var _ SampleNode = (*SamplingNode)(nil)
 
-		return newSampleIterator(iter, expr)
+func (e *Engine) buildSampleNode(ctx context.Context, expr *logql.RangeAggregationExpr) (SampleNode, error) {
+	root, err := e.buildPipelineNode(ctx, expr.Range.Sel, expr.Range.Pipeline)
+	if err != nil {
+		return nil, err
 	}
+
+	return &SamplingNode{
+		Input: root,
+		Expr:  expr,
+	}, nil
+}
+
+// Traverse implements [Node].
+func (n *SamplingNode) Traverse(cb NodeVisitor) error {
+	if err := cb(n); err != nil {
+		return err
+	}
+	return n.Input.Traverse(cb)
+}
+
+// EvalSample implements [SampleNode].
+func (n *SamplingNode) EvalSample(ctx context.Context, params EvalParams) (SampleIterator, error) {
+	iter, err := n.Input.EvalPipeline(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return newSampleIterator(iter, n.Expr)
 }
 
 type sampleIterator struct {
-	iter    iterators.Iterator[entry]
+	iter    EntryIterator
 	sampler sampleExtractor
 
 	// grouping parameters.
@@ -48,7 +58,7 @@ type sampleIterator struct {
 	without map[string]struct{}
 }
 
-func newSampleIterator(iter iterators.Iterator[entry], expr *logql.RangeAggregationExpr) (*sampleIterator, error) {
+func newSampleIterator(iter EntryIterator, expr *logql.RangeAggregationExpr) (*sampleIterator, error) {
 	sampler, err := buildSampleExtractor(expr)
 	if err != nil {
 		return nil, errors.Wrap(err, "build sample extractor")
@@ -75,7 +85,7 @@ func newSampleIterator(iter iterators.Iterator[entry], expr *logql.RangeAggregat
 }
 
 func (i *sampleIterator) Next(s *logqlmetric.SampledEntry) bool {
-	var e entry
+	var e Entry
 	for {
 		if !i.iter.Next(&e) {
 			return false
@@ -86,9 +96,9 @@ func (i *sampleIterator) Next(s *logqlmetric.SampledEntry) bool {
 			continue
 		}
 
-		s.Timestamp = e.ts
+		s.Timestamp = e.Timestamp
 		s.Sample = v
-		s.Set = newAggregatedLabels(e.set, i.by, i.without)
+		s.Set = AggregatedLabelsFromSet(e.Set, i.by, i.without)
 		return true
 	}
 }
@@ -103,7 +113,7 @@ func (i *sampleIterator) Close() error {
 
 // sampleExtractor extracts samples from log records.
 type sampleExtractor interface {
-	Extract(e entry) (float64, bool)
+	Extract(e Entry) (float64, bool)
 }
 
 func buildSampleExtractor(expr *logql.RangeAggregationExpr) (sampleExtractor, error) {
@@ -190,14 +200,14 @@ func convertDuration(s string) (float64, error) {
 
 type lineCounterExtractor struct{}
 
-func (*lineCounterExtractor) Extract(entry) (float64, bool) {
+func (*lineCounterExtractor) Extract(Entry) (float64, bool) {
 	return 1., true
 }
 
 type bytesCounterExtractor struct{}
 
-func (*bytesCounterExtractor) Extract(e entry) (float64, bool) {
-	return float64(len(e.line)), true
+func (*bytesCounterExtractor) Extract(e Entry) (float64, bool) {
+	return float64(len(e.Line)), true
 }
 
 type labelsExtractor struct {
@@ -206,8 +216,8 @@ type labelsExtractor struct {
 	postfilter Processor
 }
 
-func (l *labelsExtractor) Extract(e entry) (p float64, _ bool) {
-	v, ok := e.set.GetString(l.label)
+func (l *labelsExtractor) Extract(e Entry) (p float64, _ bool) {
+	v, ok := e.Set.GetString(l.label)
 	if !ok {
 		return p, false
 	}
@@ -215,6 +225,6 @@ func (l *labelsExtractor) Extract(e entry) (p float64, _ bool) {
 	p, _ = l.converter(v)
 	// TODO(tdakkota): save error
 
-	_, ok = l.postfilter.Process(e.ts, e.line, e.set)
+	_, ok = l.postfilter.Process(e.Timestamp, e.Line, e.Set)
 	return p, ok
 }

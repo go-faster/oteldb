@@ -56,7 +56,7 @@ func TestLineFormat(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 			set.labels = tt.labels
 
 			f, err := buildLineFormat(&logql.LineFormat{

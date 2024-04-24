@@ -60,7 +60,7 @@ func TestAggregatedLabels(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := newLabelSet()
+			set := NewLabelSet()
 			for k, v := range tt.set {
 				set.Set(logql.Label(k), pcommon.NewValueStr(v))
 			}
@@ -72,7 +72,7 @@ func TestAggregatedLabels(t *testing.T) {
 				{
 					"ByThenWithout",
 					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						var labels logqlmetric.AggregatedLabels = newAggregatedLabels(
+						var labels logqlmetric.AggregatedLabels = AggregatedLabelsFromSet(
 							set,
 							nil,
 							nil,
@@ -89,7 +89,7 @@ func TestAggregatedLabels(t *testing.T) {
 				{
 					"WithoutThenBy",
 					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						var labels logqlmetric.AggregatedLabels = newAggregatedLabels(
+						var labels logqlmetric.AggregatedLabels = AggregatedLabelsFromSet(
 							set,
 							nil,
 							nil,
@@ -106,7 +106,7 @@ func TestAggregatedLabels(t *testing.T) {
 				{
 					"Constructor",
 					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						return newAggregatedLabels(
+						return AggregatedLabelsFromSet(
 							set,
 							buildSet(nil, by...),
 							buildSet(nil, without...),
@@ -129,7 +129,7 @@ func TestAggregatedLabels(t *testing.T) {
 }
 
 func TestEmptyAggregatedLabels(t *testing.T) {
-	al := newAggregatedLabels(LabelSet{}, nil, nil)
+	al := AggregatedLabelsFromSet(LabelSet{}, nil, nil)
 	el := logqlmetric.EmptyAggregatedLabels()
 	require.Equal(t, el.Key(), al.Key())
 }

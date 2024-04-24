@@ -15,7 +15,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 		sel           logql.Selector
 		labelCaps     []logql.BinOp
 		wantPrefilter bool
-		conds         SelectLogsParams
+		conds         queryConditions
 		wantErr       bool
 	}{
 		{
@@ -27,7 +27,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 			},
 			[]logql.BinOp{logql.OpEq, logql.OpNotEq},
 			false,
-			SelectLogsParams{
+			queryConditions{
 				Labels: []logql.LabelMatcher{
 					{Label: "foo", Op: logql.OpEq, Value: "bar"},
 					{Label: "bar", Op: logql.OpNotEq, Value: "foo"},
@@ -44,7 +44,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 			},
 			[]logql.BinOp{logql.OpEq, logql.OpNotEq},
 			true,
-			SelectLogsParams{
+			queryConditions{
 				Labels: []logql.LabelMatcher{
 					{Label: "bar", Op: logql.OpNotEq, Value: "foo"},
 				},
@@ -60,7 +60,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 			},
 			[]logql.BinOp{logql.OpEq, logql.OpNotEq},
 			true,
-			SelectLogsParams{},
+			queryConditions{},
 			false,
 		},
 	}
@@ -70,7 +70,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 			var caps QuerierCapabilities
 			caps.Label.Add(tt.labelCaps...)
 
-			conds, err := extractQueryConditions(caps, tt.sel, nil)
+			conds, err := extractQueryConditions(caps, tt.sel)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
@@ -82,78 +82,7 @@ func TestExtractLabelQueryConditions(t *testing.T) {
 			} else {
 				require.Equal(t, NopProcessor, conds.prefilter)
 			}
-			require.Equal(t, tt.conds, conds.params)
-		})
-	}
-}
-
-func TestExtractLineQueryConditions(t *testing.T) {
-	tests := []struct {
-		stages   []logql.PipelineStage
-		lineCaps []logql.BinOp
-		conds    SelectLogsParams
-		wantErr  bool
-	}{
-		{
-			[]logql.PipelineStage{
-				&logql.DropLabelsExpr{},
-				&logql.LineFilter{Op: logql.OpEq, Value: "first"},
-				&logql.LineFilter{Op: logql.OpRe, Value: "regular.+", Re: regexp.MustCompile(`regular.+`)},
-				&logql.DecolorizeExpr{},
-				// These would not be offloaded.
-				&logql.LineFilter{Op: logql.OpEq, Value: "second"},
-				&logql.LineFilter{Op: logql.OpRe, Value: "no+", Re: regexp.MustCompile(`no.+`)},
-			},
-			[]logql.BinOp{
-				logql.OpEq,
-				logql.OpRe,
-			},
-			SelectLogsParams{
-				Line: []logql.LineFilter{
-					{Op: logql.OpEq, Value: "first"},
-					{Op: logql.OpRe, Value: "regular.+", Re: regexp.MustCompile(`regular.+`)},
-				},
-			},
-			false,
-		},
-		{
-			[]logql.PipelineStage{
-				&logql.LineFilter{Op: logql.OpRe, Value: "a.+", Re: regexp.MustCompile(`a.+`)},
-				&logql.DecolorizeExpr{},
-				&logql.LineFilter{Op: logql.OpRe, Value: "b+", Re: regexp.MustCompile(`b.+`)},
-			},
-			[]logql.BinOp{
-				logql.OpEq,
-			},
-			SelectLogsParams{},
-			false,
-		},
-		{
-			[]logql.PipelineStage{
-				&logql.LineFilter{Op: logql.OpEq, Value: "127.0.0.1", IP: true},
-			},
-			[]logql.BinOp{
-				logql.OpEq,
-			},
-			SelectLogsParams{},
-			false,
-		},
-	}
-	for i, tt := range tests {
-		tt := tt
-		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			var caps QuerierCapabilities
-			caps.Line.Add(tt.lineCaps...)
-
-			conds, err := extractQueryConditions(caps, logql.Selector{}, tt.stages)
-			if tt.wantErr {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
-
-			require.Equal(t, NopProcessor, conds.prefilter)
-			require.Equal(t, tt.conds, conds.params)
+			require.Equal(t, tt.conds.Labels, conds.Labels)
 		})
 	}
 }

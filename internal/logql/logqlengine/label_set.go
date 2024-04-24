@@ -21,7 +21,8 @@ type LabelSet struct {
 	labels map[logql.Label]pcommon.Value
 }
 
-func newLabelSet() LabelSet {
+// NewLabelSet creates new [LabelSet].
+func NewLabelSet() LabelSet {
 	return LabelSet{
 		labels: map[logql.Label]pcommon.Value{},
 	}
@@ -89,6 +90,11 @@ func (l *LabelSet) SetFromRecord(record logstorage.Record) {
 		l.Set(logstorage.LabelSeverity, pcommon.NewValueStr(severity.String()))
 	}
 	l.SetAttrs(record.Attrs, record.ScopeAttrs, record.ResourceAttrs)
+}
+
+// Len returns set length
+func (l *LabelSet) Len() int {
+	return len(l.labels)
 }
 
 // SetAttrs sets labels from attrs.
