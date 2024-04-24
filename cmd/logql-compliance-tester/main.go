@@ -39,6 +39,10 @@ func run(ctx context.Context) error {
 		results     = make([]*lokicompliance.Result, len(cfg.TestCases))
 		progressBar = pb.StartNew(len(results))
 	)
+	// Progress bar messes up Github Actions logs, so keep it static.
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		progressBar.Set(pb.Static, true)
+	}
 
 	grp, grpCtx := errgroup.WithContext(ctx)
 	if n := cfg.Parallelism; n > 0 {
@@ -64,7 +68,7 @@ func run(ctx context.Context) error {
 	if err := grp.Wait(); err != nil {
 		return errors.Wrap(err, "run queries")
 	}
-	progressBar.Finish()
+	progressBar.Finish().Write()
 
 	return printOutput(results, cfg.Output)
 }
