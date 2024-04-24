@@ -249,6 +249,35 @@ var tests = []TestCase{
 	},
 	{
 		`{name="kafka"}
+				| logfmt --keep-empty
+				| logfmt --strict
+				| logfmt --strict --keep-empty foo="10"
+			`,
+		&LogExpr{
+			Sel: Selector{
+				Matchers: []LabelMatcher{
+					{"name", OpEq, "kafka", nil},
+				},
+			},
+			Pipeline: []PipelineStage{
+				&LogfmtExpressionParser{
+					Flags: LogfmtFlagKeepEmpty,
+				},
+				&LogfmtExpressionParser{
+					Flags: LogfmtFlagStrict,
+				},
+				&LogfmtExpressionParser{
+					Exprs: []LabelExtractionExpr{
+						{"foo", "10"},
+					},
+					Flags: LogfmtFlagStrict | LogfmtFlagKeepEmpty,
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{name="kafka"}
 				| drop foo
 				| drop foo, foo2
 				| keep foo=~"bar"
@@ -1071,6 +1100,8 @@ var tests = []TestCase{
 	{`{foo = "bar"} | status = 10`, nil, true},
 	{`{foo = "bar"} | status = 10s`, nil, true},
 	{`{foo = "bar"} | status = 10b`, nil, true},
+	// Unknown flag.
+	{`{foo = "bar"} | logfmt --unknown-flag`, nil, true},
 	// Invalid logical operation.
 	{`1 and vector(1)`, nil, true},
 	{`1 or vector(1)`, nil, true},

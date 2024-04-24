@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -18,6 +19,10 @@ type LogfmtExtractor struct {
 }
 
 func buildLogfmtExtractor(stage *logql.LogfmtExpressionParser) (Processor, error) {
+	if f := stage.Flags; f != 0 {
+		return nil, &logqlerrors.UnsupportedError{Msg: "logfmt parser flags are unsupported"}
+	}
+
 	e := &LogfmtExtractor{
 		labels: make(map[string]logql.Label, len(stage.Exprs)+len(stage.Labels)),
 	}

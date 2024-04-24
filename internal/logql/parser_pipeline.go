@@ -28,11 +28,20 @@ func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err er
 				}
 				stages = append(stages, &JSONExpressionParser{Labels: labels, Exprs: exprs})
 			case lexer.Logfmt:
+				flags, err := p.parseLogfmtFlags()
+				if err != nil {
+					return stages, err
+				}
+
 				labels, exprs, err := p.parseLabelExtraction()
 				if err != nil {
 					return stages, err
 				}
-				stages = append(stages, &LogfmtExpressionParser{Labels: labels, Exprs: exprs})
+				stages = append(stages, &LogfmtExpressionParser{
+					Labels: labels,
+					Exprs:  exprs,
+					Flags:  flags,
+				})
 			case lexer.Regexp:
 				p, err := p.parseRegexpLabelParser()
 				if err != nil {
@@ -165,6 +174,24 @@ func (p *parser) parseLineFilter() (f *LineFilter, err error) {
 		return nil, p.unexpectedToken(t)
 	}
 	return f, nil
+}
+
+func (p *parser) parseLogfmtFlags() (flags LogfmtFlags, _ error) {
+	for {
+		t := p.peek()
+		if t.Type != lexer.ParserFlag {
+			return flags, nil
+		}
+		switch t.Text {
+		case "--strict":
+			flags.Set(LogfmtFlagStrict)
+		case "--keep-empty":
+			flags.Set(LogfmtFlagKeepEmpty)
+		default:
+			return flags, errors.Errorf("invalid parser flag %q", t.Text)
+		}
+		p.next()
+	}
 }
 
 func (p *parser) parseLabelExtraction() (labels []Label, exprs []LabelExtractionExpr, err error) {

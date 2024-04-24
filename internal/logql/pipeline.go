@@ -46,7 +46,31 @@ type LogfmtExpressionParser struct {
 	Labels []Label
 	// Exprs is a set of extraction expressions.
 	Exprs []LabelExtractionExpr
+	// Flags defines parser flags.
+	Flags LogfmtFlags
 }
+
+// LogfmtFlags defines logfmt parser flags.
+type LogfmtFlags uint8
+
+// Has whether if flag is enabled.
+func (f LogfmtFlags) Has(flag LogfmtFlags) bool {
+	return f&flag != 0
+}
+
+// Set sets flag.
+func (f *LogfmtFlags) Set(flag LogfmtFlags) {
+	*f |= flag
+}
+
+const (
+	// LogfmtFlagStrict whether if parser should stop parsing line
+	// if it contains invalid logfmt pairs.
+	LogfmtFlagStrict LogfmtFlags = 1 << iota
+	// LogfmtFlagKeepEmpty whether if parser should add labels with empty values
+	// to the label set.
+	LogfmtFlagKeepEmpty
+)
 
 // LabelExtractionExpr defines label value to extract.
 type LabelExtractionExpr struct {
