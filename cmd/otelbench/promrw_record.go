@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -78,12 +77,6 @@ func (r *Record) read(req *http.Request) ([]byte, error) {
 	r.bytes.Add(uint64(len(compressedData)))
 
 	return compressedData, nil
-}
-
-func fmtInt(v int) string {
-	s := humanize.SIWithDigits(float64(v), 2, "")
-	s = strings.ReplaceAll(s, " ", "")
-	return s
 }
 
 func (r *Record) Run(ctx context.Context) (rerr error) {
