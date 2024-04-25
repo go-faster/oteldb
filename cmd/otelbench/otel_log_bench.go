@@ -190,7 +190,7 @@ func newOtelLogsBenchCommand() *cobra.Command {
 			if err := b.prepareTargets(args); err != nil {
 				return err
 			}
-			return b.run(ctx)
+			return b.Run(ctx)
 		},
 	}
 	f := cmd.Flags()
