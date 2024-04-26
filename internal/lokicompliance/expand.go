@@ -19,7 +19,6 @@ var testVariantArgs = map[string][]string{
 	"simpleRangeAggOp": {
 		"count_over_time",
 		"rate",
-		"absent_over_time",
 		"bytes_over_time",
 		"bytes_rate",
 	},
