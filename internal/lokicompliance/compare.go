@@ -126,16 +126,6 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 		return &Result{TestCase: tc}, nil
 	}
 
-	if err := checkEmpty(refResult.Data, tc.ShouldBeEmpty); err != nil {
-		return nil, err
-	}
-	if err := checkEmpty(testResult.Data, tc.ShouldBeEmpty); err != nil {
-		return &Result{
-			TestCase:          tc,
-			UnexpectedFailure: err.Error(),
-		}, nil
-	}
-
 	// Sort responses before comparing.
 	sortResponse(&refResult.Data)
 	sortResponse(&testResult.Data)
@@ -144,10 +134,21 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	got, err := json.Marshal(testResult.Data)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := checkEmpty(refResult.Data, tc.ShouldBeEmpty); err != nil {
+		return nil, err
+	}
+	if err := checkEmpty(testResult.Data, tc.ShouldBeEmpty); err != nil {
+		return &Result{
+			TestCase:          tc,
+			UnexpectedFailure: err.Error(),
+			Expected:          expected,
+			Got:               got,
+		}, nil
 	}
 
 	return &Result{
