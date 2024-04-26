@@ -63,7 +63,7 @@ func entryMapper(r logstorage.Record) (logqlengine.Entry, error) {
 	return e, nil
 }
 
-// SamplingNode is a [MetricNode], which offloads sampling to Clickhouse
+// SamplingNode is a [logqlengine.SampleNode], which offloads sampling to Clickhouse
 type SamplingNode struct {
 	Sampling       SamplingOp
 	GroupingLabels []logql.Label

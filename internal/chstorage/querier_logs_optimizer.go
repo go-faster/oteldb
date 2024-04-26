@@ -137,7 +137,7 @@ stageLoop:
 	for _, stage := range pn.Pipeline {
 		switch stage := stage.(type) {
 		case *logql.LineFilter:
-			if stage.By.IP {
+			if !o.canOffloadLineFilter(stage) {
 				skippedStages++
 				continue
 			}
@@ -169,4 +169,15 @@ stageLoop:
 		return sn
 	}
 	return n
+}
+
+func (o *ClickhouseOptimizer) canOffloadLineFilter(lf *logql.LineFilter) bool {
+	switch lf.Op {
+	case logql.OpPattern, logql.OpNotPattern:
+		return false
+	}
+	if lf.By.IP || len(lf.Or) > 0 {
+		return false
+	}
+	return true
 }
