@@ -32,16 +32,19 @@ frontend:
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
+    - from: 2024-04-01
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 24h
 
 limits_config:
   max_entries_limit_per_query: 50000000000
+  # Attribute discovery is implementation-defined, so disable it.
+  discover_service_name: []
+  discover_log_levels: false
 
 analytics:
   reporting_enabled: false
