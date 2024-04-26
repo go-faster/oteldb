@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,6 +29,8 @@ type LogsBench struct {
 	targets         []logsBenchTarget
 
 	clickhouseAddr string
+	writtenLines   atomic.Int64
+	writtenBytes   atomic.Int64
 	storageInfo    atomic.Pointer[ClickhouseStats]
 }
 
@@ -74,14 +77,36 @@ func (b *LogsBench) RunReporter(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second * 2)
 	defer ticker.Stop()
 
+	var (
+		old                = time.Now()
+		oldLines, oldBytes int64
+	)
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-ticker.C:
+		case now := <-ticker.C:
+			var (
+				lines = b.writtenLines.Load()
+				bytes = b.writtenBytes.Load()
+
+				deltaSeconds = now.Sub(old).Seconds()
+				deltaLines   = float64(lines - oldLines)
+				deltaBytes   = float64(bytes - oldBytes)
+
+				sb strings.Builder
+			)
+
+			fmt.Fprintf(&sb, "lines=%v/s, bytes=%v/s",
+				compactBytes(int(deltaLines/deltaSeconds)),
+				fmtInt(int(deltaBytes/deltaSeconds)),
+			)
 			if v := b.storageInfo.Load(); v != nil && b.clickhouseAddr != "" {
-				fmt.Println(v.String())
+				v.WriteInfo(&sb, now)
 			}
+			fmt.Println(sb.String())
+
+			old, oldLines, oldBytes = now, lines, bytes
 		}
 	}
 }
@@ -97,8 +122,10 @@ func (b *LogsBench) run(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case now := <-ticker.C:
-			batch := b.generateBatch(r, now)
+			batch, lines, bytes := b.generateBatch(r, now)
 			b.send(ctx, batch)
+			b.writtenLines.Add(lines)
+			b.writtenBytes.Add(bytes)
 		}
 	}
 }
@@ -121,8 +148,8 @@ func (b *LogsBench) send(ctx context.Context, logs plog.Logs) {
 	wg.Wait()
 }
 
-func (b *LogsBench) generateBatch(r *rand.Rand, now time.Time) plog.Logs {
-	logs := plog.NewLogs()
+func (b *LogsBench) generateBatch(r *rand.Rand, now time.Time) (logs plog.Logs, lines, bytes int64) {
+	logs = plog.NewLogs()
 	resLogs := logs.ResourceLogs()
 	for i := 0; i < b.resourceCount; i++ {
 		resLog := resLogs.AppendEmpty()
@@ -137,9 +164,13 @@ func (b *LogsBench) generateBatch(r *rand.Rand, now time.Time) plog.Logs {
 
 		resource := resLogs.At(r.Intn(resLogs.Len()))
 		scope := resource.ScopeLogs().At(0)
-		entry.OTEL(scope.LogRecords().AppendEmpty())
+		record := scope.LogRecords().AppendEmpty()
+		entry.OTEL(record)
+
+		lines++
+		bytes += int64(len(record.Body().AsString()))
 	}
-	return logs
+	return logs, lines, bytes
 }
 
 func (b *LogsBench) prepareTargets(args []string) error {

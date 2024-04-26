@@ -25,32 +25,28 @@ type ClickhouseStats struct {
 	PointsPerSecond  int
 }
 
-func (v ClickhouseStats) String() string {
-	var b strings.Builder
-	now := time.Now()
+func (v ClickhouseStats) WriteInfo(b *strings.Builder, now time.Time) {
 	b.WriteString(" ")
-	b.WriteString(fmt.Sprintf("uptime=%s", now.Sub(v.Start).Round(time.Second)))
+	fmt.Fprintf(b, "uptime=%s", now.Sub(v.Start).Round(time.Second))
 	b.WriteString(" ")
 	if v.Delta != -1 {
-		b.WriteString(fmt.Sprintf("lag=%s", v.Delta.Round(time.Second)))
+		fmt.Fprintf(b, "lag=%s", v.Delta.Round(time.Second))
 	} else {
 		b.WriteString("lag=N/A")
 	}
 	b.WriteString(" ")
-	b.WriteString(fmt.Sprintf("pps=%s", fmtInt(v.PointsPerSecond)))
+	fmt.Fprintf(b, "pps=%s", fmtInt(v.PointsPerSecond))
 	b.WriteString(" ")
-	b.WriteString(fmt.Sprintf("rows=%s", fmtInt(v.Rows)))
+	fmt.Fprintf(b, "rows=%s", fmtInt(v.Rows))
 	b.WriteString(" ")
-	b.WriteString(
-		fmt.Sprintf("%s -> %s (%.0fx)",
-			compactBytes(v.CompressedSize),
-			compactBytes(v.UncompressedSize),
-			v.CompressRatio,
-		),
+	fmt.Fprintf(b, "%s -> %s (%.0fx)",
+		compactBytes(v.CompressedSize),
+		compactBytes(v.UncompressedSize),
+		v.CompressRatio,
 	)
 	bytesPerPoint := float64(v.CompressedSize) / float64(v.Rows)
 	b.WriteString(" ")
-	b.WriteString(fmt.Sprintf("%.1f b/point", bytesPerPoint))
+	fmt.Fprintf(b, "%.1f b/point", bytesPerPoint)
 
 	type metric struct {
 		Name    string
@@ -64,9 +60,8 @@ func (v ClickhouseStats) String() string {
 		rowsPerDay := v.PointsPerSecond * m.Seconds
 		dataPerDay := float64(rowsPerDay) / float64(v.Rows) * float64(v.CompressedSize)
 		b.WriteString(" ")
-		b.WriteString(fmt.Sprintf("%s/%s", compactBytes(int(dataPerDay)), m.Name))
+		fmt.Fprintf(b, "%s/%s", compactBytes(int(dataPerDay)), m.Name)
 	}
-	return b.String()
 }
 
 func fetchClickhouseStats(ctx context.Context, addr, tableName string) (info ClickhouseStats, _ error) {

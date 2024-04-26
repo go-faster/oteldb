@@ -184,7 +184,7 @@ func (s *Bench) RunReporter(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-ticker.C:
+		case now := <-ticker.C:
 			info := s.metricsInfo.Load()
 			if info == nil {
 				zctx.From(ctx).Info("no metrics info")
@@ -199,7 +199,7 @@ func (s *Bench) RunReporter(ctx context.Context) error {
 			var b strings.Builder
 			b.WriteString(fmt.Sprintf("m=%s", fmtInt(info.Count*s.targetsCount)))
 			if v := s.storageInfo.Load(); v != nil && s.clickhouseAddr != "" {
-				b.WriteString(v.String())
+				v.WriteInfo(&b, now)
 			}
 			fmt.Println(b.String())
 		}
