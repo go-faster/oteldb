@@ -214,15 +214,19 @@ func NewLogEntry(r *rand.Rand, ts time.Time) LogEntry {
 		}),
 		Took:    time.Duration(r.Int63n(int64(30*time.Minute)) + int64(time.Millisecond)),
 		Size:    uint64(r.Intn(1024*1024)) + 1025,
-		SpanID:  fillRandom[pcommon.SpanID](r),
-		TraceID: fillRandom[pcommon.TraceID](r),
+		SpanID:  randomSpanID(r),
+		TraceID: randomTraceID(r),
 	}
 }
 
-func fillRandom[S ~[8]byte | ~[16]byte](r *rand.Rand) (s S) {
-	buf := make([]byte, len(s))
-	r.Read(buf)
-	return (S)(buf)
+func randomSpanID(r *rand.Rand) (s pcommon.SpanID) {
+	_, _ = r.Read(s[:])
+	return s
+}
+
+func randomTraceID(r *rand.Rand) (s pcommon.TraceID) {
+	_, _ = r.Read(s[:])
+	return s
 }
 
 func randomElement[S ~[]T, T any](r *rand.Rand, s S) (zero T) {

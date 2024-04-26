@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/oteldb/internal/lokicompliance"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/collector/pdata/plog"
@@ -18,6 +17,8 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/go-faster/oteldb/internal/lokicompliance"
 )
 
 type LogsBench struct {
