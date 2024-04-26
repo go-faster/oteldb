@@ -55,6 +55,7 @@ func buildBatchAggregator(expr *logql.RangeAggregationExpr) (BatchAggregator, er
 	case logql.RangeOpLast:
 		return &LastOverTime{}, nil
 	case logql.RangeOpAbsent:
+		return &absentOverTime{}, nil
 	default:
 		return nil, errors.Errorf("unexpected range operation %q", expr.Op)
 	}
@@ -131,4 +132,12 @@ func (LastOverTime) Aggregate(points []FPoint) (last float64) {
 		return 0
 	}
 	return points[len(points)-1].Value
+}
+
+// absentOverTime implements `absent_over_time` aggregation.
+type absentOverTime struct{}
+
+// Aggregate implements BatchAggregator.
+func (absentOverTime) Aggregate([]FPoint) float64 {
+	return 1.
 }

@@ -20,7 +20,8 @@ var nopGrouper = func(al logqlabels.AggregatedLabels, _ ...logql.Label) logqlabe
 type rangeAggIterator struct {
 	iter iterators.Iterator[SampledEntry]
 
-	agg BatchAggregator
+	agg          BatchAggregator
+	absentLabels logqlabels.AggregatedLabels
 	// step state
 	stepper stepper
 
@@ -49,6 +50,21 @@ func RangeAggregation(
 	if err != nil {
 		return nil, errors.Wrap(err, "build aggregator")
 	}
+	var absentLabels logqlabels.AggregatedLabels
+	if expr.Op == logql.RangeOpAbsent {
+		matchers := expr.Range.Sel.Matchers
+		if len(matchers) == 0 {
+			absentLabels = logqlabels.EmptyAggregatedLabels()
+		} else {
+			labels := map[string]string{}
+			for _, m := range matchers {
+				if _, ok := labels[string(m.Label)]; !ok && m.Op == logql.OpEq {
+					labels[string(m.Label)] = m.Value
+				}
+			}
+			absentLabels = logqlabels.AggregatedLabelsFromMap(labels)
+		}
+	}
 
 	var (
 		grouper     = nopGrouper
@@ -66,8 +82,9 @@ func RangeAggregation(
 	return &rangeAggIterator{
 		iter: iter,
 
-		agg:     agg,
-		stepper: newStepper(start, end, step),
+		agg:          agg,
+		absentLabels: absentLabels,
+		stepper:      newStepper(start, end, step),
 
 		grouper:     grouper,
 		groupLabels: groupLabels,
@@ -91,11 +108,20 @@ func (i *rangeAggIterator) Next(r *Step) bool {
 	// Aggregate the window.
 	r.Timestamp = otelstorage.NewTimestampFromTime(current)
 	r.Samples = r.Samples[:0]
-	for _, s := range i.window {
-		r.Samples = append(r.Samples, Sample{
-			Data: i.agg.Aggregate(s.Data),
-			Set:  s.Set,
-		})
+	if set := i.absentLabels; set != nil {
+		if len(i.window) == 0 {
+			r.Samples = append(r.Samples, Sample{
+				Data: i.agg.Aggregate(nil),
+				Set:  set,
+			})
+		}
+	} else {
+		for _, s := range i.window {
+			r.Samples = append(r.Samples, Sample{
+				Data: i.agg.Aggregate(s.Data),
+				Set:  s.Set,
+			})
+		}
 	}
 
 	return true
