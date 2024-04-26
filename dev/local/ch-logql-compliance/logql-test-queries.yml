@@ -26,6 +26,11 @@ test_cases:
   - query: '{job="varlogs"} != "HEAD"'
   - query: '{job="varlogs"} |~ "(HEAD|GET)"'
   - query: '{job="varlogs"} !~ "(HEAD|GET)"'
+  - query: '{job="varlogs"} |= "HEAD" or "GET"'
+  # Pattern line filter.
+  - query: '{job="varlogs"} |> "no way line would contain <_> pattern"'
+    should_be_empty: true
+  - query: '{job="varlogs"} !> "no way line would contain <_> pattern"'
   # JSON and label filters.
   - query: '{job="varlogs"} | json'
   - query: '{job="varlogs"} | json | method = "HEAD"'
