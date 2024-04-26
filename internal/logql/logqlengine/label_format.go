@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -46,7 +47,7 @@ type RenameLabel struct {
 }
 
 // Process implements Processor.
-func (rl *RenameLabel) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (rl *RenameLabel) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	for _, p := range rl.pairs {
 		if v, ok := set.Get(p.From); ok {
 			set.Set(p.To, v)
@@ -82,7 +83,7 @@ func (lf *LabelFormat) currentTimestamp() time.Time {
 }
 
 // Process implements Processor.
-func (lf *LabelFormat) Process(ts otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *LabelFormat) Process(ts otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	line, _ = lf.rename.Process(ts, line, set)
 
 	lf.ts = ts

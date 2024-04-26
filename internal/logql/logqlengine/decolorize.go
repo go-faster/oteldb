@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -20,6 +21,6 @@ const ansiPattern = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\
 var ansiRegex = regexp.MustCompile(ansiPattern)
 
 // Process implements Processor.
-func (d *Decolorize) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (string, bool) {
+func (d *Decolorize) Process(_ otelstorage.Timestamp, line string, _ logqlabels.LabelSet) (string, bool) {
 	return ansiRegex.ReplaceAllString(line, ""), true
 }

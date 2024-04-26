@@ -5,6 +5,7 @@ import (
 	"net/netip"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -41,7 +42,7 @@ type LineFilter struct {
 }
 
 // Process implements Processor.
-func (lf *LineFilter) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (_ string, keep bool) {
+func (lf *LineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabels.LabelSet) (_ string, keep bool) {
 	keep = lf.matcher.Match(line)
 	return line, keep
 }
@@ -52,7 +53,7 @@ type IPLineFilter struct {
 }
 
 // Process implements Processor.
-func (lf *IPLineFilter) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (_ string, keep bool) {
+func (lf *IPLineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabels.LabelSet) (_ string, keep bool) {
 	for i := 0; i < len(line); {
 		c := line[i]
 		if !isHexDigit(c) && c != ':' {

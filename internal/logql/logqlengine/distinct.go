@@ -2,6 +2,7 @@ package logqlengine
 
 import (
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -24,7 +25,7 @@ func buildDistinctFilter(stage *logql.DistinctFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (d *DistinctFilter) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (d *DistinctFilter) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	for _, label := range d.labels {
 		val, ok := set.GetString(label)
 		if !ok {

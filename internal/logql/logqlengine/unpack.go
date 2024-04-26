@@ -6,6 +6,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -17,7 +18,7 @@ func buildUnpackExtractor(*logql.UnpackLabelParser) (Processor, error) {
 }
 
 // Process implements Processor.
-func (e *UnpackExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
+func (e *UnpackExtractor) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	newLine, err := parsePackEntry(line, set)
 	if err != nil {
 		set.SetError("unpack JSON parsing error", err)
@@ -26,7 +27,7 @@ func (e *UnpackExtractor) Process(_ otelstorage.Timestamp, line string, set Labe
 	return newLine, true
 }
 
-func parsePackEntry(oldLine string, set LabelSet) (string, error) {
+func parsePackEntry(oldLine string, set logqlabels.LabelSet) (string, error) {
 	var (
 		d    = jx.DecodeStr(oldLine)
 		line = oldLine
@@ -47,7 +48,7 @@ func parsePackEntry(oldLine string, set LabelSet) (string, error) {
 			return nil
 		}
 
-		if err := logql.IsValidLabel(key, set.allowDots()); err != nil {
+		if err := logql.IsValidLabel(key, set.AllowDots()); err != nil {
 			return errors.Wrapf(err, "invalid label %q", key)
 		}
 		set.Set(logql.Label(key), pcommon.NewValueStr(parsed))

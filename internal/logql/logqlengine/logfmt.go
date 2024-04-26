@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -47,7 +48,7 @@ func buildLogfmtExtractor(stage *logql.LogfmtExpressionParser) (Processor, error
 }
 
 // Process implements Processor.
-func (e *LogfmtExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
+func (e *LogfmtExtractor) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	var err error
 	if len(e.labels) == 0 {
 		err = e.extractAll(line, set)
@@ -60,7 +61,7 @@ func (e *LogfmtExtractor) Process(_ otelstorage.Timestamp, line string, set Labe
 	return line, true
 }
 
-func (e *LogfmtExtractor) extractSome(line string, set LabelSet) error {
+func (e *LogfmtExtractor) extractSome(line string, set logqlabels.LabelSet) error {
 	// TODO(tdakkota): re-use decoder somehow.
 	d := logfmt.NewDecoder(strings.NewReader(line))
 
@@ -76,7 +77,7 @@ func (e *LogfmtExtractor) extractSome(line string, set LabelSet) error {
 	return d.Err()
 }
 
-func (e *LogfmtExtractor) extractAll(line string, set LabelSet) error {
+func (e *LogfmtExtractor) extractAll(line string, set logqlabels.LabelSet) error {
 	// TODO(tdakkota): re-use decoder somehow.
 	d := logfmt.NewDecoder(strings.NewReader(line))
 

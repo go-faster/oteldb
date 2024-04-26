@@ -9,6 +9,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 )
 
@@ -84,6 +85,20 @@ func newSampleIterator(iter EntryIterator, expr *logql.RangeAggregationExpr) (*s
 	}, nil
 }
 
+func buildSet[K ~string](r map[string]struct{}, input ...K) map[string]struct{} {
+	if len(input) == 0 {
+		return r
+	}
+
+	if r == nil {
+		r = make(map[string]struct{}, len(input))
+	}
+	for _, k := range input {
+		r[string(k)] = struct{}{}
+	}
+	return r
+}
+
 func (i *sampleIterator) Next(s *logqlmetric.SampledEntry) bool {
 	var e Entry
 	for {
@@ -98,7 +113,7 @@ func (i *sampleIterator) Next(s *logqlmetric.SampledEntry) bool {
 
 		s.Timestamp = e.Timestamp
 		s.Sample = v
-		s.Set = AggregatedLabelsFromSet(e.Set, i.by, i.without)
+		s.Set = logqlabels.AggregatedLabelsFromSet(e.Set, i.by, i.without)
 		return true
 	}
 }

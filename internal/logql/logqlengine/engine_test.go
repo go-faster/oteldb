@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -161,7 +162,7 @@ func (n *mockPipelineNode) EvalPipeline(ctx context.Context, params EvalParams) 
 			}
 		}
 
-		set := NewLabelSet()
+		set := logqlabels.NewLabelSet()
 		set.SetAttrs(
 			otelstorage.Attrs(attrs),
 			otelstorage.Attrs(scopeAttrs),

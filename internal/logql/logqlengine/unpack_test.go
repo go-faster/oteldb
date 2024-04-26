@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 )
 
 func TestUnpackExtractor(t *testing.T) {
@@ -58,7 +59,7 @@ func TestUnpackExtractor(t *testing.T) {
 			e, err := buildUnpackExtractor(&logql.UnpackLabelParser{})
 			require.NoError(t, err)
 
-			set := NewLabelSet()
+			set := logqlabels.NewLabelSet()
 			newLine, ok := e.Process(0, tt.input, set)
 			// Ensure that extractor does not change the line.
 			require.Equal(t, newLine, tt.expectLine)

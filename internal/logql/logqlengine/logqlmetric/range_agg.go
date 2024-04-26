@@ -7,12 +7,13 @@ import (
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-type grouperFunc = func(AggregatedLabels, ...logql.Label) AggregatedLabels
+type grouperFunc = func(logqlabels.AggregatedLabels, ...logql.Label) logqlabels.AggregatedLabels
 
-var nopGrouper = func(al AggregatedLabels, _ ...logql.Label) AggregatedLabels {
+var nopGrouper = func(al logqlabels.AggregatedLabels, _ ...logql.Label) logqlabels.AggregatedLabels {
 	return al
 }
 
@@ -26,7 +27,7 @@ type rangeAggIterator struct {
 	grouper     grouperFunc
 	groupLabels []logql.Label
 	// window state
-	window   map[GroupingKey]Series
+	window   map[logqlabels.GroupingKey]Series
 	interval time.Duration
 	entry    SampledEntry
 	// buffered whether last entry is buffered
@@ -56,9 +57,9 @@ func RangeAggregation(
 	if g := expr.Grouping; g != nil {
 		groupLabels = g.Labels
 		if g.Without {
-			grouper = AggregatedLabels.Without
+			grouper = logqlabels.AggregatedLabels.Without
 		} else {
-			grouper = AggregatedLabels.By
+			grouper = logqlabels.AggregatedLabels.By
 		}
 	}
 
@@ -71,7 +72,7 @@ func RangeAggregation(
 		grouper:     grouper,
 		groupLabels: groupLabels,
 
-		window:   map[GroupingKey]Series{},
+		window:   map[logqlabels.GroupingKey]Series{},
 		interval: expr.Range.Range,
 	}, nil
 }

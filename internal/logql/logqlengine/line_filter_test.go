@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 )
 
 var ipLineFilterTests = []struct {
@@ -105,7 +106,7 @@ func TestIPLineFilter(t *testing.T) {
 	for i, tt := range ipLineFilterTests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := NewLabelSet()
+			set := logqlabels.NewLabelSet()
 
 			f, err := buildLineFilter(&logql.LineFilter{
 				Op: logql.OpEq,
@@ -142,7 +143,7 @@ func FuzzIPLineFilter(f *testing.F) {
 		}
 
 		// Ensure there is no crash.
-		f.Process(1, line, LabelSet{})
+		f.Process(1, line, logqlabels.LabelSet{})
 	})
 }
 

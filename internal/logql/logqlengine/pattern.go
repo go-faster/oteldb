@@ -5,6 +5,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlpattern"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -26,7 +27,7 @@ func buildPatternExtractor(stage *logql.PatternLabelParser) (Processor, error) {
 }
 
 // Process implements Processor.
-func (e *PatternExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
+func (e *PatternExtractor) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	logqlpattern.Match(e.pattern, line, func(l logql.Label, s string) {
 		set.Set(l, pcommon.NewValueStr(s))
 	})

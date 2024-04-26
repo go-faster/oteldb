@@ -3,16 +3,12 @@ package logqlmetric
 import (
 	"cmp"
 	"fmt"
-	"hash/fnv"
-	"io"
-	"regexp"
 	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
-	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
@@ -67,16 +63,16 @@ func TestInstantAggregation(t *testing.T) {
 		}
 		testSamples = []SampledEntry{
 			// Would not be used.
-			{Sample: 10000, Timestamp: 1700000002_000000000, Set: &emptyLabels{}},
+			{Sample: 10000, Timestamp: 1700000002_000000000, Set: emptyLabels()},
 
 			// Step 1.
 			// 2s Window.
-			{Sample: 2, Timestamp: 1700000003_000000000, Set: &emptyLabels{}},
-			{Sample: 3, Timestamp: 1700000004_000000000, Set: &emptyLabels{}},
+			{Sample: 2, Timestamp: 1700000003_000000000, Set: emptyLabels()},
+			{Sample: 3, Timestamp: 1700000004_000000000, Set: emptyLabels()},
 			// Window ends.
 
 			// Would not be used.
-			{Sample: 10000, Timestamp: 1700000005_000000000, Set: &emptyLabels{}},
+			{Sample: 10000, Timestamp: 1700000005_000000000, Set: emptyLabels()},
 		}
 	)
 
@@ -191,17 +187,17 @@ func TestRangeAggregationStep(t *testing.T) {
 			return pcommon.NewTimestampFromTime(time.Unix(1700000000+s, ns))
 		}
 		testSamples = []SampledEntry{
-			{Timestamp: ts(2, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(5, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(6, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(10, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(10, 1), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(11, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(35, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(35, 1), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(40, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(100, 0), Set: &emptyLabels{}, Sample: 1.},
-			{Timestamp: ts(100, 1), Set: &emptyLabels{}, Sample: 1.},
+			{Timestamp: ts(2, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(5, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(6, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(10, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(10, 1), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(11, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(35, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(35, 1), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(40, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(100, 0), Set: emptyLabels(), Sample: 1.},
+			{Timestamp: ts(100, 1), Set: emptyLabels(), Sample: 1.},
 		}
 	)
 
@@ -304,25 +300,25 @@ func TestRangeAggregation(t *testing.T) {
 			// No samples.
 
 			// Step 2.
-			{Sample: 1, Timestamp: 1700000001_000000000, Set: &emptyLabels{}},
+			{Sample: 1, Timestamp: 1700000001_000000000, Set: emptyLabels()},
 			// 2s window.
-			{Sample: 2, Timestamp: 1700000002_000000000, Set: &emptyLabels{}},
-			{Sample: 3, Timestamp: 1700000003_000000000, Set: &emptyLabels{}},
+			{Sample: 2, Timestamp: 1700000002_000000000, Set: emptyLabels()},
+			{Sample: 3, Timestamp: 1700000003_000000000, Set: emptyLabels()},
 			// Window ends.
 
 			// Step 3.
-			{Sample: 4, Timestamp: 1700000004_000000000, Set: &emptyLabels{}},
+			{Sample: 4, Timestamp: 1700000004_000000000, Set: emptyLabels()},
 			// 2s window.
-			{Sample: 5, Timestamp: 1700000005_000000000, Set: &emptyLabels{}},
-			{Sample: 6, Timestamp: 1700000006_000000000, Set: &emptyLabels{}},
+			{Sample: 5, Timestamp: 1700000005_000000000, Set: emptyLabels()},
+			{Sample: 6, Timestamp: 1700000006_000000000, Set: emptyLabels()},
 			// Window ends.
 
 			// Step 4.
-			{Sample: 1, Timestamp: 1700000007_000000000, Set: &emptyLabels{}},
+			{Sample: 1, Timestamp: 1700000007_000000000, Set: emptyLabels()},
 			// 2s window.
-			{Sample: 2, Timestamp: 1700000008_000000000, Set: &emptyLabels{}},
-			{Sample: 3, Timestamp: 1700000008_100000000, Set: &emptyLabels{}},
-			{Sample: 4, Timestamp: 1700000009_000000000, Set: &emptyLabels{}},
+			{Sample: 2, Timestamp: 1700000008_000000000, Set: emptyLabels()},
+			{Sample: 3, Timestamp: 1700000008_100000000, Set: emptyLabels()},
+			{Sample: 4, Timestamp: 1700000009_000000000, Set: emptyLabels()},
 			// Window ends.
 		}
 	)
@@ -363,78 +359,6 @@ func TestRangeAggregation(t *testing.T) {
 	}
 }
 
-type testLabels map[string]string
-
-// By returns new set of labels containing only given list of labels.
-func (l testLabels) By(labels ...logql.Label) AggregatedLabels {
-	return l.sub(labels, false)
-}
-
-// Without returns new set of labels without given list of labels.
-func (l testLabels) Without(labels ...logql.Label) AggregatedLabels {
-	return l.sub(labels, true)
-}
-
-func (l testLabels) sub(labels []logql.Label, without bool) AggregatedLabels {
-	oldLabels := l
-
-	if without {
-		newLabels := maps.Clone(oldLabels)
-
-		for _, label := range labels {
-			delete(newLabels, string(label))
-		}
-
-		return newLabels
-	}
-
-	newLabels := testLabels{}
-	for _, label := range labels {
-		k := string(label)
-		if v, ok := oldLabels[k]; ok {
-			newLabels[k] = v
-		}
-	}
-	return newLabels
-}
-
-// Key computes grouping key from set of labels.
-func (l testLabels) Key() GroupingKey {
-	h := fnv.New64()
-
-	keys := maps.Keys(l)
-	slices.Sort(keys)
-	for _, k := range keys {
-		v := l[k]
-		io.WriteString(h, k)
-		io.WriteString(h, v)
-	}
-
-	return h.Sum64()
-}
-
-// Replace replaces labels using given regexp.
-func (l testLabels) Replace(dstLabel, replacement, srcLabel string, re *regexp.Regexp) AggregatedLabels {
-	src := l[srcLabel]
-
-	idxs := re.FindStringSubmatchIndex(src)
-	if idxs == nil {
-		return l
-	}
-
-	newLabels := maps.Clone(l)
-	delete(newLabels, dstLabel)
-	if dst := re.ExpandString([]byte{}, replacement, src, idxs); len(dst) > 0 {
-		newLabels[dstLabel] = string(dst)
-	}
-	return newLabels
-}
-
-// AsLokiAPI returns API structure for label set.
-func (l testLabels) AsLokiAPI() lokiapi.LabelSet {
-	return lokiapi.LabelSet(maps.Clone(l))
-}
-
 func TestGroupedAggregation(t *testing.T) {
 	var (
 		testParams = EvalParams{
@@ -445,33 +369,33 @@ func TestGroupedAggregation(t *testing.T) {
 		testSamples = []SampledEntry{
 			// Step 1.
 			// foo=a
-			{Sample: 1, Timestamp: 1700000001_000000000, Set: testLabels{"foo": "a", "method": "POST"}},
-			{Sample: 2, Timestamp: 1700000002_000000000, Set: testLabels{"foo": "a", "method": "GET"}},
-			{Sample: 3, Timestamp: 1700000003_000000000, Set: testLabels{"foo": "a", "method": "GET"}},
+			{Sample: 1, Timestamp: 1700000001_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "POST"})},
+			{Sample: 2, Timestamp: 1700000002_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "GET"})},
+			{Sample: 3, Timestamp: 1700000003_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "GET"})},
 			// foo=b
-			{Sample: 10, Timestamp: 1700000001_000000000, Set: testLabels{"foo": "b", "method": "GET"}},
-			{Sample: 20, Timestamp: 1700000002_000000000, Set: testLabels{"foo": "b", "method": "POST"}},
-			{Sample: 30, Timestamp: 1700000003_000000000, Set: testLabels{"foo": "b", "method": "GET"}},
+			{Sample: 10, Timestamp: 1700000001_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "GET"})},
+			{Sample: 20, Timestamp: 1700000002_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "POST"})},
+			{Sample: 30, Timestamp: 1700000003_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "GET"})},
 
 			// Step 2.
 			// foo=a
-			{Sample: 5, Timestamp: 1700000005_000000000, Set: testLabels{"foo": "a", "method": "POST"}},
-			{Sample: 6, Timestamp: 1700000006_000000000, Set: testLabels{"foo": "a", "method": "POST"}},
-			{Sample: 7, Timestamp: 1700000007_000000000, Set: testLabels{"foo": "a", "method": "GET"}},
+			{Sample: 5, Timestamp: 1700000005_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "POST"})},
+			{Sample: 6, Timestamp: 1700000006_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "POST"})},
+			{Sample: 7, Timestamp: 1700000007_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "GET"})},
 			// foo=b
-			{Sample: 50, Timestamp: 1700000005_000000000, Set: testLabels{"foo": "b", "method": "GET"}},
-			{Sample: 60, Timestamp: 1700000006_000000000, Set: testLabels{"foo": "b", "method": "GET"}},
-			{Sample: 70, Timestamp: 1700000007_000000000, Set: testLabels{"foo": "b", "method": "POST"}},
+			{Sample: 50, Timestamp: 1700000005_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "GET"})},
+			{Sample: 60, Timestamp: 1700000006_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "GET"})},
+			{Sample: 70, Timestamp: 1700000007_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "POST"})},
 
 			// Step 3.
 			// foo=a
-			{Sample: 10, Timestamp: 1700000009_000000000, Set: testLabels{"foo": "a", "method": "POST"}},
-			{Sample: 20, Timestamp: 1700000010_000000000, Set: testLabels{"foo": "a", "method": "GET"}},
-			{Sample: 30, Timestamp: 1700000011_000000000, Set: testLabels{"foo": "a", "method": "GET"}},
+			{Sample: 10, Timestamp: 1700000009_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "POST"})},
+			{Sample: 20, Timestamp: 1700000010_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "GET"})},
+			{Sample: 30, Timestamp: 1700000011_000000000, Set: mapLabels(map[string]string{"foo": "a", "method": "GET"})},
 			// foo=b
-			{Sample: 100, Timestamp: 1700000009_000000000, Set: testLabels{"foo": "b", "method": "GET"}},
-			{Sample: 200, Timestamp: 1700000010_000000000, Set: testLabels{"foo": "b", "method": "POST"}},
-			{Sample: 300, Timestamp: 1700000011_000000000, Set: testLabels{"foo": "b", "method": "GET"}},
+			{Sample: 100, Timestamp: 1700000009_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "GET"})},
+			{Sample: 200, Timestamp: 1700000010_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "POST"})},
+			{Sample: 300, Timestamp: 1700000011_000000000, Set: mapLabels(map[string]string{"foo": "b", "method": "GET"})},
 		}
 	)
 
@@ -664,12 +588,12 @@ func TestKHeapAggregation(t *testing.T) {
 			Step:  6 * time.Second,
 		}
 		testSamples = []SampledEntry{
-			{Sample: 4, Timestamp: 1700000001_000000000, Set: testLabels{"key": "a", "sample": "1"}},
-			{Sample: 5, Timestamp: 1700000002_000000000, Set: testLabels{"key": "a", "sample": "2"}},
-			{Sample: 6, Timestamp: 1700000003_000000000, Set: testLabels{"key": "a", "sample": "3"}},
-			{Sample: 3, Timestamp: 1700000004_000000000, Set: testLabels{"key": "a", "sample": "4"}},
-			{Sample: 2, Timestamp: 1700000005_000000000, Set: testLabels{"key": "a", "sample": "5"}},
-			{Sample: 1, Timestamp: 1700000006_000000000, Set: testLabels{"key": "a", "sample": "6"}},
+			{Sample: 4, Timestamp: 1700000001_000000000, Set: mapLabels(map[string]string{"key": "a", "sample": "1"})},
+			{Sample: 5, Timestamp: 1700000002_000000000, Set: mapLabels(map[string]string{"key": "a", "sample": "2"})},
+			{Sample: 6, Timestamp: 1700000003_000000000, Set: mapLabels(map[string]string{"key": "a", "sample": "3"})},
+			{Sample: 3, Timestamp: 1700000004_000000000, Set: mapLabels(map[string]string{"key": "a", "sample": "4"})},
+			{Sample: 2, Timestamp: 1700000005_000000000, Set: mapLabels(map[string]string{"key": "a", "sample": "5"})},
+			{Sample: 1, Timestamp: 1700000006_000000000, Set: mapLabels(map[string]string{"key": "a", "sample": "6"})},
 		}
 	)
 
