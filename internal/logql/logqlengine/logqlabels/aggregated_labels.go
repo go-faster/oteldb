@@ -24,6 +24,12 @@ type labelEntry struct {
 	value string
 }
 
+func sortEntries(entries []labelEntry) {
+	slices.SortFunc(entries, func(a, b labelEntry) int {
+		return cmp.Compare(a.name, b.name)
+	})
+}
+
 // AggregatedLabelsFromSet creates new [AggregatedLabels] from [LabelSet].
 func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) AggregatedLabels {
 	labels := make([]labelEntry, 0, set.Len())
@@ -33,9 +39,7 @@ func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) Aggr
 			value: v.AsString(),
 		})
 	})
-	slices.SortFunc(labels, func(a, b labelEntry) int {
-		return cmp.Compare(a.name, b.name)
-	})
+	sortEntries(labels)
 
 	return &aggregatedLabels{
 		entries: labels,
@@ -158,6 +162,8 @@ func (a *aggregatedLabels) setEntry(key, value string) {
 	} else {
 		*entry = replacement
 	}
+	// TODO(tdakkota): suboptimal, probably should use heap/tree instead.
+	sortEntries(a.entries)
 }
 
 // AsLokiAPI returns API structure for label set.
