@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -34,7 +35,7 @@ func (i *vectorIterator) Next(r *Step) bool {
 	r.Timestamp = otelstorage.NewTimestampFromTime(current)
 	r.Samples = append(r.Samples[:0], Sample{
 		Data: i.value,
-		Set:  &emptyLabels{},
+		Set:  logqlabels.EmptyAggregatedLabels(),
 	})
 	return true
 }

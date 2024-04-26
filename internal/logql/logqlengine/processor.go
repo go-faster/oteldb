@@ -6,13 +6,14 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // Processor is a log record processor.
 type Processor interface {
-	Process(ts otelstorage.Timestamp, line string, labels LabelSet) (newLine string, keep bool)
+	Process(ts otelstorage.Timestamp, line string, labels logqlabels.LabelSet) (newLine string, keep bool)
 }
 
 // NopProcessor is a processor that does nothing.
@@ -21,7 +22,7 @@ var NopProcessor = &nopProcessor{}
 type nopProcessor struct{}
 
 // Process implements Processor.
-func (*nopProcessor) Process(_ otelstorage.Timestamp, line string, _ LabelSet) (string, bool) {
+func (*nopProcessor) Process(_ otelstorage.Timestamp, line string, _ logqlabels.LabelSet) (string, bool) {
 	return line, true
 }
 
@@ -84,7 +85,7 @@ func buildStage(stage logql.PipelineStage) (Processor, error) {
 }
 
 // Process implements Processor.
-func (p *Pipeline) Process(ts otelstorage.Timestamp, line string, attrs LabelSet) (_ string, keep bool) {
+func (p *Pipeline) Process(ts otelstorage.Timestamp, line string, attrs logqlabels.LabelSet) (_ string, keep bool) {
 	for _, s := range p.Stages {
 		line, keep = s.Process(ts, line, attrs)
 		if !keep {

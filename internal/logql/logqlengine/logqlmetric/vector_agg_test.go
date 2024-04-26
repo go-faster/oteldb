@@ -19,10 +19,10 @@ func TestSortVectorAggregation(t *testing.T) {
 		{
 			Timestamp: 1,
 			Samples: []Sample{
-				{Data: 3, Set: &emptyLabels{}},
-				{Data: 1, Set: &emptyLabels{}},
-				{Data: 4, Set: &emptyLabels{}},
-				{Data: 2, Set: &emptyLabels{}},
+				{Data: 3, Set: emptyLabels()},
+				{Data: 1, Set: emptyLabels()},
+				{Data: 4, Set: emptyLabels()},
+				{Data: 2, Set: emptyLabels()},
 			},
 		},
 	}
@@ -34,49 +34,49 @@ func TestSortVectorAggregation(t *testing.T) {
 		{
 			&logql.VectorAggregationExpr{Op: logql.VectorOpBottomk, Parameter: ptrTo(2)},
 			[]Sample{
-				{Data: 1, Set: &emptyLabels{}},
-				{Data: 2, Set: &emptyLabels{}},
+				{Data: 1, Set: emptyLabels()},
+				{Data: 2, Set: emptyLabels()},
 			},
 		},
 		{
 			&logql.VectorAggregationExpr{Op: logql.VectorOpBottomk, Parameter: ptrTo(3)},
 			[]Sample{
-				{Data: 1, Set: &emptyLabels{}},
-				{Data: 2, Set: &emptyLabels{}},
-				{Data: 3, Set: &emptyLabels{}},
+				{Data: 1, Set: emptyLabels()},
+				{Data: 2, Set: emptyLabels()},
+				{Data: 3, Set: emptyLabels()},
 			},
 		},
 		{
 			&logql.VectorAggregationExpr{Op: logql.VectorOpTopk, Parameter: ptrTo(2)},
 			[]Sample{
-				{Data: 4, Set: &emptyLabels{}},
-				{Data: 3, Set: &emptyLabels{}},
+				{Data: 4, Set: emptyLabels()},
+				{Data: 3, Set: emptyLabels()},
 			},
 		},
 		{
 			&logql.VectorAggregationExpr{Op: logql.VectorOpTopk, Parameter: ptrTo(3)},
 			[]Sample{
-				{Data: 4, Set: &emptyLabels{}},
-				{Data: 3, Set: &emptyLabels{}},
-				{Data: 2, Set: &emptyLabels{}},
+				{Data: 4, Set: emptyLabels()},
+				{Data: 3, Set: emptyLabels()},
+				{Data: 2, Set: emptyLabels()},
 			},
 		},
 		{
 			&logql.VectorAggregationExpr{Op: logql.VectorOpSort},
 			[]Sample{
-				{Data: 1, Set: &emptyLabels{}},
-				{Data: 2, Set: &emptyLabels{}},
-				{Data: 3, Set: &emptyLabels{}},
-				{Data: 4, Set: &emptyLabels{}},
+				{Data: 1, Set: emptyLabels()},
+				{Data: 2, Set: emptyLabels()},
+				{Data: 3, Set: emptyLabels()},
+				{Data: 4, Set: emptyLabels()},
 			},
 		},
 		{
 			&logql.VectorAggregationExpr{Op: logql.VectorOpSortDesc},
 			[]Sample{
-				{Data: 4, Set: &emptyLabels{}},
-				{Data: 3, Set: &emptyLabels{}},
-				{Data: 2, Set: &emptyLabels{}},
-				{Data: 1, Set: &emptyLabels{}},
+				{Data: 4, Set: emptyLabels()},
+				{Data: 3, Set: emptyLabels()},
+				{Data: 2, Set: emptyLabels()},
+				{Data: 1, Set: emptyLabels()},
 			},
 		},
 

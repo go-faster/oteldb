@@ -59,6 +59,21 @@ test_cases:
         {job="varlogs"} [{{ .range }}]
       )
     variant_args: ["simpleRangeAggOp", "range"]
+  # Absent over time range aggregation.
+  # NOTE(tdakkota): We do a separate test because `absent_over_time` returns non-empty result
+  #   only if there is NO samples in step and vice versa.
+  - query: |-
+      absent_over_time(
+        {job="varlogs"} [{{ .range }}]
+      )
+    variant_args: ["range"]
+    should_be_empty: true
+  - query: |-
+      absent_over_time(
+        {job="varlogs"} |= "no way line would contain this message" [{{ .range }}]
+      )
+    variant_args: ["range"]
+  # Unwrap sampler.
   - query: |-
       {{ .unwrapRangeAggOp }}(
         {job="varlogs"} | json | unwrap status
@@ -66,6 +81,7 @@ test_cases:
       )
     variant_args: ["unwrapRangeAggOp", "range"]
     skip_comparison: true # It seems, there is some issues with unwrap.
+
   # Vector aggregation.
   - query: |-
       {{ .simpleVecAggOp }} by (filename) (

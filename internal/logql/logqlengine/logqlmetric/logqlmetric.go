@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -25,7 +26,7 @@ type StepIterator = iterators.Iterator[Step]
 func ReadStepResponse(iter iterators.Iterator[Step], instant bool) (s lokiapi.QueryResponseData, _ error) {
 	var (
 		agg          Step
-		matrixSeries map[GroupingKey]lokiapi.Series
+		matrixSeries map[logqlabels.GroupingKey]lokiapi.Series
 	)
 	for {
 		if !iter.Next(&agg) {
@@ -55,7 +56,7 @@ func ReadStepResponse(iter iterators.Iterator[Step], instant bool) (s lokiapi.Qu
 		}
 
 		if matrixSeries == nil {
-			matrixSeries = map[GroupingKey]lokiapi.Series{}
+			matrixSeries = map[logqlabels.GroupingKey]lokiapi.Series{}
 		}
 		for _, s := range agg.Samples {
 			key := s.Set.Key()

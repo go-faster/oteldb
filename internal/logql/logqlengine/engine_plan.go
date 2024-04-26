@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -38,7 +39,7 @@ const (
 type Entry struct {
 	Timestamp otelstorage.Timestamp
 	Line      string
-	Set       LabelSet
+	Set       logqlabels.LabelSet
 }
 
 type (

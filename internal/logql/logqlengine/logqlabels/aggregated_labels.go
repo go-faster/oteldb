@@ -1,4 +1,4 @@
-package logqlengine
+package logqlabels
 
 import (
 	"cmp"
@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
-	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
@@ -25,8 +24,14 @@ type labelEntry struct {
 	value string
 }
 
-// AggregatedLabelsFromSet creates new [logqlmetric.AggregatedLabels] from [LabelSet].
-func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) logqlmetric.AggregatedLabels {
+func sortEntries(entries []labelEntry) {
+	slices.SortFunc(entries, func(a, b labelEntry) int {
+		return cmp.Compare(a.name, b.name)
+	})
+}
+
+// AggregatedLabelsFromSet creates new [AggregatedLabels] from [LabelSet].
+func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) AggregatedLabels {
 	labels := make([]labelEntry, 0, set.Len())
 	set.Range(func(l logql.Label, v pcommon.Value) {
 		labels = append(labels, labelEntry{
@@ -34,9 +39,7 @@ func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) logq
 			value: v.AsString(),
 		})
 	})
-	slices.SortFunc(labels, func(a, b labelEntry) int {
-		return cmp.Compare(a.name, b.name)
-	})
+	sortEntries(labels)
 
 	return &aggregatedLabels{
 		entries: labels,
@@ -45,8 +48,8 @@ func AggregatedLabelsFromSet(set LabelSet, by, without map[string]struct{}) logq
 	}
 }
 
-// AggregatedLabelsFromMap creates new [logqlmetric.AggregatedLabels] from label map.
-func AggregatedLabelsFromMap(m map[string]string) logqlmetric.AggregatedLabels {
+// AggregatedLabelsFromMap creates new [AggregatedLabels] from label map.
+func AggregatedLabelsFromMap(m map[string]string) AggregatedLabels {
 	labels := make([]labelEntry, 0, len(m))
 	for key, value := range m {
 		labels = append(labels, labelEntry{name: key, value: value})
@@ -63,7 +66,7 @@ func AggregatedLabelsFromMap(m map[string]string) logqlmetric.AggregatedLabels {
 }
 
 // By returns new set of labels containing only given list of labels.
-func (a *aggregatedLabels) By(labels ...logql.Label) logqlmetric.AggregatedLabels {
+func (a *aggregatedLabels) By(labels ...logql.Label) AggregatedLabels {
 	if len(labels) == 0 {
 		return a
 	}
@@ -77,7 +80,7 @@ func (a *aggregatedLabels) By(labels ...logql.Label) logqlmetric.AggregatedLabel
 }
 
 // Without returns new set of labels without given list of labels.
-func (a *aggregatedLabels) Without(labels ...logql.Label) logqlmetric.AggregatedLabels {
+func (a *aggregatedLabels) Without(labels ...logql.Label) AggregatedLabels {
 	if len(labels) == 0 {
 		return a
 	}
@@ -91,7 +94,7 @@ func (a *aggregatedLabels) Without(labels ...logql.Label) logqlmetric.Aggregated
 }
 
 // Key computes grouping key from set of labels.
-func (a *aggregatedLabels) Key() logqlmetric.GroupingKey {
+func (a *aggregatedLabels) Key() GroupingKey {
 	h := xxhash.New()
 	a.forEach(func(k, v string) {
 		_, _ = h.WriteString(k)
@@ -101,7 +104,7 @@ func (a *aggregatedLabels) Key() logqlmetric.GroupingKey {
 }
 
 // Replace replaces labels using given regexp.
-func (a *aggregatedLabels) Replace(dstLabel, replacement, srcLabel string, re *regexp.Regexp) logqlmetric.AggregatedLabels {
+func (a *aggregatedLabels) Replace(dstLabel, replacement, srcLabel string, re *regexp.Regexp) AggregatedLabels {
 	src := a.findEntry(srcLabel)
 
 	idxs := re.FindStringSubmatchIndex(src)
@@ -159,6 +162,8 @@ func (a *aggregatedLabels) setEntry(key, value string) {
 	} else {
 		*entry = replacement
 	}
+	// TODO(tdakkota): suboptimal, probably should use heap/tree instead.
+	sortEntries(a.entries)
 }
 
 // AsLokiAPI returns API structure for label set.

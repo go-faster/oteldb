@@ -109,8 +109,7 @@ func TestDurationLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := NewLabelSet()
-			set.labels = tt.input
+			set := newLabelSet(tt.input)
 
 			f, err := buildDurationLabelFilter(&logql.DurationFilter{
 				Label: logql.Label(tt.label),
@@ -234,8 +233,7 @@ func TestBytesLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := NewLabelSet()
-			set.labels = tt.input
+			set := newLabelSet(tt.input)
 
 			f, err := buildBytesLabelFilter(&logql.BytesFilter{
 				Label: logql.Label(tt.label),
@@ -379,8 +377,7 @@ func TestNumberLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := NewLabelSet()
-			set.labels = tt.input
+			set := newLabelSet(tt.input)
 
 			f, err := buildNumberLabelFilter(&logql.NumberFilter{
 				Label: logql.Label(tt.label),
@@ -509,9 +506,8 @@ func TestIPLabelFilter(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := NewLabelSet()
 			_, hasLabel := tt.input[tt.label]
-			set.labels = tt.input
+			set := newLabelSet(tt.input)
 
 			for _, cse := range []struct {
 				op     logql.BinOp

@@ -22,9 +22,9 @@ func TestLabelReplace(t *testing.T) {
 				{
 					Timestamp: 1,
 					Samples: []Sample{
-						{Data: 1, Set: testLabels{"sample": "1"}},
-						{Data: 2, Set: testLabels{"sample": "2"}},
-						{Data: 3, Set: testLabels{"sample": "3"}},
+						{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+						{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
+						{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
 					},
 				},
 			},
@@ -35,9 +35,9 @@ func TestLabelReplace(t *testing.T) {
 				Re:          regexp.MustCompile(`(?P<digit>\d+)`),
 			},
 			[]Sample{
-				{Data: 1, Set: testLabels{"sample": "1", "dst_label": "1 th"}},
-				{Data: 2, Set: testLabels{"sample": "2", "dst_label": "2 th"}},
-				{Data: 3, Set: testLabels{"sample": "3", "dst_label": "3 th"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1", "dst_label": "1 th"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2", "dst_label": "2 th"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3", "dst_label": "3 th"})},
 			},
 		},
 	}

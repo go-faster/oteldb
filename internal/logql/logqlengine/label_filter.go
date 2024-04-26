@@ -9,6 +9,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -67,7 +68,7 @@ type AndLabelMatcher struct {
 }
 
 // Process implements Processor.
-func (m *AndLabelMatcher) Process(ts otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (m *AndLabelMatcher) Process(ts otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	line, keep = m.Left.Process(ts, line, set)
 	if !keep {
 		return line, keep
@@ -82,7 +83,7 @@ type OrLabelMatcher struct {
 }
 
 // Process implements Processor.
-func (m *OrLabelMatcher) Process(ts otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (m *OrLabelMatcher) Process(ts otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	line, keep = m.Left.Process(ts, line, set)
 	if keep {
 		return line, keep
@@ -109,7 +110,7 @@ func buildLabelMatcher(pred logql.LabelMatcher) (Processor, error) {
 }
 
 // Process implements Processor.
-func (lf *LabelMatcher) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *LabelMatcher) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	labelValue, _ := set.GetString(lf.name)
 	keep = lf.matcher.Match(labelValue)
 	return line, keep
@@ -160,7 +161,7 @@ func buildDurationLabelFilter(pred *logql.DurationFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (lf *DurationLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *DurationLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
@@ -222,7 +223,7 @@ func buildBytesLabelFilter(pred *logql.BytesFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (lf *BytesLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *BytesLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false
@@ -284,7 +285,7 @@ func buildNumberLabelFilter(pred *logql.NumberFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (lf *NumberLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *NumberLabelFilter[C]) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	switch val, ok, err := set.GetFloat(lf.name); {
 	case err != nil:
 		// Keep the line, but set error label.
@@ -314,7 +315,7 @@ func buildIPLabelFilter(pred *logql.IPFilter) (Processor, error) {
 }
 
 // Process implements Processor.
-func (lf *IPLabelFilter) Process(_ otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *IPLabelFilter) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	v, ok := set.GetString(lf.name)
 	if !ok {
 		return "", false

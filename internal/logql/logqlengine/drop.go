@@ -4,6 +4,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -36,7 +37,7 @@ func buildDropLabels(stage *logql.DropLabelsExpr) (Processor, error) {
 }
 
 // Process implements Processor.
-func (k *DropLabels) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
+func (k *DropLabels) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	set.Range(func(label logql.Label, val pcommon.Value) {
 		if k.dropPair(label, val) {
 			set.Delete(label)

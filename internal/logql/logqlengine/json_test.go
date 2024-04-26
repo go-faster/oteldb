@@ -8,6 +8,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 )
 
 func TestJSONExtractor(t *testing.T) {
@@ -90,7 +91,7 @@ func TestJSONExtractor(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := NewLabelSet()
+			set := logqlabels.NewLabelSet()
 			newLine, ok := e.Process(0, tt.input, set)
 			// Ensure that extractor does not change the line.
 			require.Equal(t, tt.input, newLine)
@@ -104,7 +105,7 @@ func TestJSONExtractor(t *testing.T) {
 			errMsg, ok := set.GetError()
 			require.False(t, ok, "got error: %s", errMsg)
 
-			require.Len(t, set.labels, len(tt.expectLabels))
+			require.Equal(t, len(tt.expectLabels), set.Len())
 			for k, expect := range tt.expectLabels {
 				got, ok := set.Get(k)
 				require.Truef(t, ok, "key %q", k)
@@ -172,7 +173,7 @@ func BenchmarkJSONExtractor(b *testing.B) {
 			p, err := buildJSONExtractor(bb.expr)
 			require.NoError(b, err)
 
-			set := NewLabelSet()
+			set := logqlabels.NewLabelSet()
 			var (
 				line string
 				ok   bool
@@ -182,7 +183,7 @@ func BenchmarkJSONExtractor(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				set.reset()
+				set.Reset()
 				line, ok = p.Process(10, benchdata, set)
 			}
 

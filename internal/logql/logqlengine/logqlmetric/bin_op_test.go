@@ -15,9 +15,9 @@ func TestMergeBinOp(t *testing.T) {
 		{
 			Timestamp: 1,
 			Samples: []Sample{
-				{Data: 1, Set: &testLabels{"sample": "1"}},
-				{Data: 2, Set: &testLabels{"sample": "2"}},
-				{Data: 3, Set: &testLabels{"sample": "3"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
 			},
 		},
 	}
@@ -25,9 +25,9 @@ func TestMergeBinOp(t *testing.T) {
 		{
 			Timestamp: 1,
 			Samples: []Sample{
-				{Data: 10, Set: &testLabels{"sample": "1"}},
-				{Data: 30, Set: &testLabels{"sample": "3"}},
-				{Data: 40, Set: &testLabels{"sample": "4"}},
+				{Data: 10, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 30, Set: mapLabels(map[string]string{"sample": "3"})},
+				{Data: 40, Set: mapLabels(map[string]string{"sample": "4"})},
 			},
 		},
 	}
@@ -44,25 +44,25 @@ func TestMergeBinOp(t *testing.T) {
 			leftSteps, rightSteps,
 			&logql.BinOpExpr{Op: logql.OpAnd},
 			[]Sample{
-				{Data: 1, Set: &testLabels{"sample": "1"}},
-				{Data: 3, Set: &testLabels{"sample": "3"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
 			},
 		},
 		{
 			leftSteps, rightSteps,
 			&logql.BinOpExpr{Op: logql.OpOr},
 			[]Sample{
-				{Data: 1, Set: &testLabels{"sample": "1"}},
-				{Data: 2, Set: &testLabels{"sample": "2"}},
-				{Data: 3, Set: &testLabels{"sample": "3"}},
-				{Data: 40, Set: &testLabels{"sample": "4"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
+				{Data: 40, Set: mapLabels(map[string]string{"sample": "4"})},
 			},
 		},
 		{
 			leftSteps, rightSteps,
 			&logql.BinOpExpr{Op: logql.OpUnless},
 			[]Sample{
-				{Data: 2, Set: &testLabels{"sample": "2"}},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
 			},
 		},
 
@@ -71,25 +71,25 @@ func TestMergeBinOp(t *testing.T) {
 			rightSteps, leftSteps, // notice the swap
 			&logql.BinOpExpr{Op: logql.OpAnd},
 			[]Sample{
-				{Data: 10, Set: &testLabels{"sample": "1"}},
-				{Data: 30, Set: &testLabels{"sample": "3"}},
+				{Data: 10, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 30, Set: mapLabels(map[string]string{"sample": "3"})},
 			},
 		},
 		{
 			rightSteps, leftSteps,
 			&logql.BinOpExpr{Op: logql.OpOr},
 			[]Sample{
-				{Data: 10, Set: &testLabels{"sample": "1"}},
-				{Data: 30, Set: &testLabels{"sample": "3"}},
-				{Data: 40, Set: &testLabels{"sample": "4"}},
-				{Data: 2, Set: &testLabels{"sample": "2"}},
+				{Data: 10, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 30, Set: mapLabels(map[string]string{"sample": "3"})},
+				{Data: 40, Set: mapLabels(map[string]string{"sample": "4"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
 			},
 		},
 		{
 			rightSteps, leftSteps,
 			&logql.BinOpExpr{Op: logql.OpUnless},
 			[]Sample{
-				{Data: 40, Set: &testLabels{"sample": "4"}},
+				{Data: 40, Set: mapLabels(map[string]string{"sample": "4"})},
 			},
 		},
 
@@ -103,27 +103,27 @@ func TestMergeBinOp(t *testing.T) {
 			leftSteps, emptyStep,
 			&logql.BinOpExpr{Op: logql.OpOr},
 			[]Sample{
-				{Data: 1, Set: &testLabels{"sample": "1"}},
-				{Data: 2, Set: &testLabels{"sample": "2"}},
-				{Data: 3, Set: &testLabels{"sample": "3"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
 			},
 		},
 		{
 			emptyStep, leftSteps,
 			&logql.BinOpExpr{Op: logql.OpOr},
 			[]Sample{
-				{Data: 1, Set: &testLabels{"sample": "1"}},
-				{Data: 2, Set: &testLabels{"sample": "2"}},
-				{Data: 3, Set: &testLabels{"sample": "3"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
 			},
 		},
 		{
 			leftSteps, emptyStep,
 			&logql.BinOpExpr{Op: logql.OpUnless},
 			[]Sample{
-				{Data: 1, Set: &testLabels{"sample": "1"}},
-				{Data: 2, Set: &testLabels{"sample": "2"}},
-				{Data: 3, Set: &testLabels{"sample": "3"}},
+				{Data: 1, Set: mapLabels(map[string]string{"sample": "1"})},
+				{Data: 2, Set: mapLabels(map[string]string{"sample": "2"})},
+				{Data: 3, Set: mapLabels(map[string]string{"sample": "3"})},
 			},
 		},
 		{

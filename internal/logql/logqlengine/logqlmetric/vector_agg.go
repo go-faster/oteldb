@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 )
 
 // VectorAggregation creates new Vector aggregation step iterator.
@@ -22,9 +23,9 @@ func VectorAggregation(
 	if g := expr.Grouping; g != nil {
 		groupLabels = g.Labels
 		if g.Without {
-			grouper = AggregatedLabels.Without
+			grouper = logqlabels.AggregatedLabels.Without
 		} else {
-			grouper = AggregatedLabels.By
+			grouper = logqlabels.AggregatedLabels.By
 		}
 	}
 
@@ -80,10 +81,10 @@ func (i *vectorAggIterator) Next(r *Step) bool {
 	}
 
 	type group struct {
-		metric AggregatedLabels
+		metric logqlabels.AggregatedLabels
 		agg    Aggregator
 	}
-	result := map[GroupingKey]*group{}
+	result := map[logqlabels.GroupingKey]*group{}
 
 	for _, s := range step.Samples {
 		metric := i.grouper(s.Set, i.groupLabels...)
@@ -142,10 +143,10 @@ func (i *vectorAggHeapIterator) Next(r *Step) bool {
 	}
 
 	type group struct {
-		metric AggregatedLabels
+		metric logqlabels.AggregatedLabels
 		heap   *sampleHeap
 	}
-	result := map[GroupingKey]*group{}
+	result := map[logqlabels.GroupingKey]*group{}
 
 	for _, s := range step.Samples {
 		metric := i.grouper(s.Set, i.groupLabels...)

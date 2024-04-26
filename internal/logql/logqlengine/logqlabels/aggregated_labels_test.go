@@ -1,4 +1,4 @@
-package logqlengine
+package logqlabels
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
-	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 )
 
 func TestAggregatedLabels(t *testing.T) {
@@ -67,12 +66,12 @@ func TestAggregatedLabels(t *testing.T) {
 
 			buildWays := []struct {
 				name  string
-				build func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels
+				build func(set LabelSet, by, without []logql.Label) AggregatedLabels
 			}{
 				{
 					"ByThenWithout",
-					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						var labels logqlmetric.AggregatedLabels = AggregatedLabelsFromSet(
+					func(set LabelSet, by, without []logql.Label) AggregatedLabels {
+						labels := AggregatedLabelsFromSet(
 							set,
 							nil,
 							nil,
@@ -88,8 +87,8 @@ func TestAggregatedLabels(t *testing.T) {
 				},
 				{
 					"WithoutThenBy",
-					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
-						var labels logqlmetric.AggregatedLabels = AggregatedLabelsFromSet(
+					func(set LabelSet, by, without []logql.Label) AggregatedLabels {
+						labels := AggregatedLabelsFromSet(
 							set,
 							nil,
 							nil,
@@ -105,7 +104,7 @@ func TestAggregatedLabels(t *testing.T) {
 				},
 				{
 					"Constructor",
-					func(set LabelSet, by, without []logql.Label) logqlmetric.AggregatedLabels {
+					func(set LabelSet, by, without []logql.Label) AggregatedLabels {
 						return AggregatedLabelsFromSet(
 							set,
 							buildSet(nil, by...),
@@ -126,10 +125,4 @@ func TestAggregatedLabels(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestEmptyAggregatedLabels(t *testing.T) {
-	al := AggregatedLabelsFromSet(LabelSet{}, nil, nil)
-	el := logqlmetric.EmptyAggregatedLabels()
-	require.Equal(t, el.Key(), al.Key())
 }

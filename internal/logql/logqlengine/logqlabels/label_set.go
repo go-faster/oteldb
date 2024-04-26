@@ -1,4 +1,4 @@
-package logqlengine
+package logqlabels
 
 import (
 	"slices"
@@ -28,11 +28,13 @@ func NewLabelSet() LabelSet {
 	}
 }
 
-func (l *LabelSet) allowDots() bool {
+// AllowDots whether if dots in labels are allowed.
+func (l *LabelSet) AllowDots() bool {
 	return true
 }
 
-func (l *LabelSet) reset() {
+// Reset resets internal state of [LabelSet].
+func (l *LabelSet) Reset() {
 	if l.labels == nil {
 		l.labels = map[logql.Label]pcommon.Value{}
 	}
@@ -78,7 +80,7 @@ func (l *LabelSet) String() string {
 
 // SetFromRecord sets labels from given log record.
 func (l *LabelSet) SetFromRecord(record logstorage.Record) {
-	l.reset()
+	l.Reset()
 
 	if traceID := record.TraceID; !traceID.IsEmpty() {
 		l.Set(logstorage.LabelTraceID, pcommon.NewValueStr(traceID.Hex()))

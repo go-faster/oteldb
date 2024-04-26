@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 )
 
 func TestDecolorize(t *testing.T) {
@@ -26,7 +27,7 @@ func TestDecolorize(t *testing.T) {
 	for i, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			set := NewLabelSet()
+			set := logqlabels.NewLabelSet()
 
 			f, err := buildDecolorize(&logql.DecolorizeExpr{})
 			require.NoError(t, err)

@@ -8,6 +8,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -49,7 +50,7 @@ func (lf *LineFormat) currentTimestamp() time.Time {
 }
 
 // Process implements Processor.
-func (lf *LineFormat) Process(ts otelstorage.Timestamp, line string, set LabelSet) (_ string, keep bool) {
+func (lf *LineFormat) Process(ts otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
 	lf.ts = ts
 	lf.line = line
 	lf.buf.Reset()

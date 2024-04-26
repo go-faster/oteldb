@@ -80,8 +80,7 @@ func TestLabelFormat(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := NewLabelSet()
-			set.labels = tt.input
+			set := newLabelSet(tt.input)
 			newLine, ok := e.Process(1700000001_000000000, "original line", set)
 			// Ensure that processor does not change the line.
 			require.Equal(t, "original line", newLine)

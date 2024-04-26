@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/jsonexpr"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -52,7 +53,7 @@ func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
 }
 
 // Process implements Processor.
-func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
+func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	var err error
 	switch {
 	case len(e.paths) != 0:
@@ -68,7 +69,7 @@ func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set LabelS
 	return line, true
 }
 
-func extractExprs(paths map[logql.Label]jsonexpr.Path, line string, set LabelSet) error {
+func extractExprs(paths map[logql.Label]jsonexpr.Path, line string, set logqlabels.LabelSet) error {
 	// TODO(tdakkota): allocates buffer for each line.
 	d := decodeStr(line)
 	return jsonexpr.Extract(
@@ -80,7 +81,7 @@ func extractExprs(paths map[logql.Label]jsonexpr.Path, line string, set LabelSet
 	)
 }
 
-func extractSome(labels map[logql.Label]struct{}, line string, set LabelSet) error {
+func extractSome(labels map[logql.Label]struct{}, line string, set logqlabels.LabelSet) error {
 	d := decodeStr(line)
 	return d.ObjBytes(func(d *jx.Decoder, key []byte) error {
 		if _, ok := labels[logql.Label(key)]; !ok {
@@ -101,7 +102,7 @@ func extractSome(labels map[logql.Label]struct{}, line string, set LabelSet) err
 	})
 }
 
-func extractAll(line string, set LabelSet) error {
+func extractAll(line string, set logqlabels.LabelSet) error {
 	d := decodeStr(line)
 	return d.Obj(func(d *jx.Decoder, key string) error {
 		value, ok, err := parseValue(d)

@@ -84,8 +84,7 @@ func TestKeepLabels(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			set := NewLabelSet()
-			set.labels = tt.input
+			set := newLabelSet(tt.input)
 			newLine, ok := e.Process(0, ``, set)
 			// Ensure that processor does not change the line.
 			require.Equal(t, ``, newLine)

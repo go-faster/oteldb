@@ -6,6 +6,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -23,7 +24,7 @@ func buildRegexpExtractor(stage *logql.RegexpLabelParser) (Processor, error) {
 }
 
 // Process implements Processor.
-func (e *RegexpExtractor) Process(_ otelstorage.Timestamp, line string, set LabelSet) (string, bool) {
+func (e *RegexpExtractor) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	for i, match := range e.re.FindStringSubmatch(line) {
 		label, ok := e.mapping[i]
 		if !ok {

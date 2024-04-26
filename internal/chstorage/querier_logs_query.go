@@ -21,6 +21,7 @@ import (
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -253,7 +254,7 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 				result = append(result, logqlmetric.SampledEntry{
 					Timestamp: pcommon.NewTimestampFromTime(timestamp),
 					Sample:    sample,
-					Set:       logqlengine.AggregatedLabelsFromMap(labels),
+					Set:       logqlabels.AggregatedLabelsFromMap(labels),
 				})
 			}
 			return nil

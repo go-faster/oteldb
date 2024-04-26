@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logstorage"
 )
 
@@ -53,7 +54,7 @@ func (n *InputNode) EvalPipeline(ctx context.Context, params logqlengine.EvalPar
 }
 
 func entryMapper(r logstorage.Record) (logqlengine.Entry, error) {
-	set := logqlengine.NewLabelSet()
+	set := logqlabels.NewLabelSet()
 	e := logqlengine.Entry{
 		Timestamp: r.Timestamp,
 		Line:      r.Body,
