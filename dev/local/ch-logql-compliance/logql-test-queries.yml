@@ -19,7 +19,8 @@ test_cases:
   - query: '{job="varlogs", this_label_clearly_not_exist!="varlogs"}'
   # Comment.
   - query: '{job="varlogs"} # anything that comes after will not be interpreted in your query'
-  # Line filter.
+  # Line filters.
+  #
   - query: '{job="varlogs"} |= "no way line would contain this message"'
     should_be_empty: true
   - query: '{job="varlogs"} |= "HEAD"'
@@ -27,22 +28,50 @@ test_cases:
   - query: '{job="varlogs"} |~ "(HEAD|GET)"'
   - query: '{job="varlogs"} !~ "(HEAD|GET)"'
   - query: '{job="varlogs"} |= "HEAD" or "GET"'
+  # IP line filter.
+  - query: '{job="varlogs"} |= ip("127.0.0.1")'
+  - query: '{job="varlogs"} |= ip("127.0.0.0/24")'
+  - query: '{job="varlogs"} |= ip("127.0.0.1-127.0.0.6")'
   # Pattern line filter.
   - query: '{job="varlogs"} |> "no way line would contain <_> pattern"'
     should_be_empty: true
   - query: '{job="varlogs"} !> "no way line would contain <_> pattern"'
-  # JSON and label filters.
+  # Extractors.
+  #
+  # JSON extractor.
   - query: '{job="varlogs"} | json'
+  - query: '{job="varlogs"} | json method'
+  - query: '{job="varlogs"} | json method_name="method"'
+  # Regexp extractor.
+  - query: '{job="varlogs"} | regexp `\{.*"method":"(?P<method>\w+)".*\}` | method = "HEAD"'
+  # Pattern extractor.
+  - query: '{job="varlogs"} | pattern `<_>"method":"<method>"<_>` | method = "HEAD"'
+  # Label filters.
+  #
+  # String label filter.
   - query: '{job="varlogs"} | json | method = "HEAD"'
   - query: '{job="varlogs"} | json | method != "HEAD"'
   - query: '{job="varlogs"} | json | method =~ "(HEAD|GET)"'
   - query: '{job="varlogs"} | json | method !~ "(HEAD|GET)"'
+  # Number label filter.
   - query: '{job="varlogs"} | json | status >= 400'
+  # Duration/bytes label filter.
   - query: '{job="varlogs"} | json | took >= 1ms'
   - query: '{job="varlogs"} | json | size >= 1KB'
+  # IP label filter.
+  - query: '{job="varlogs"} | json | remote_ip = ip("127.0.0.1")'
+  - query: '{job="varlogs"} | json | remote_ip = ip("127.0.0.0/24")'
+  - query: '{job="varlogs"} | json | remote_ip = ip("127.0.0.1-127.0.0.6")'
+  # OR/AND label filter.
   - query: '{job="varlogs"} | json | status >= 400 or took >= 1ms'
+  - query: '{job="varlogs"} | json | took >= 1ms and size >= 1KB'
+  - query: '{job="varlogs"} | json | took >= 1ms, size >= 1KB'
+  - query: '{job="varlogs"} | json | took >= 1ms size >= 1KB'
   # Decolorize.
+  #
   - query: '{job="varlogs"} | decolorize'
+  # Templates.
+  #
   # Line format.
   # NOTE(tdakkota): since logqlcompliance, as promcompliance uses text/template
   #   to expand and generate queries, we need to escape `line_format` template too.
@@ -50,6 +79,7 @@ test_cases:
   - query: '{job="varlogs"} | json | line_format {{ "{{ .method }}" | quote }}'
   # Label format.
   - query: '{job="varlogs"} | json | label_format status_code=status | status_code >= 400'
+  - query: '{job="varlogs"} | json | label_format method_lower={{ "{{ .method | ToLower }}" | quote }}'
 
   # Metric queries.
   #
