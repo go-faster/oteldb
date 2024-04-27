@@ -97,9 +97,9 @@ func (b *LogsBench) RunReporter(ctx context.Context) error {
 				sb strings.Builder
 			)
 
-			fmt.Fprintf(&sb, "lines=%v/s, bytes=%v/s",
-				compactBytes(int(deltaLines/deltaSeconds)),
-				fmtInt(int(deltaBytes/deltaSeconds)),
+			fmt.Fprintf(&sb, "lines=%v/s bytes=%v/s",
+				fmtInt(int(deltaLines/deltaSeconds)),
+				compactBytes(int(deltaBytes/deltaSeconds)),
 			)
 			if v := b.storageInfo.Load(); v != nil && b.clickhouseAddr != "" {
 				v.WriteInfo(&sb, now)
