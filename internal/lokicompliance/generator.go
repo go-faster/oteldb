@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"net/http"
+	"net/netip"
 	"slices"
 	"strings"
 	"time"
@@ -168,12 +170,17 @@ func sendLogs(ctx context.Context, client ht.Client, target string, body push.Pu
 type LogEntry struct {
 	Timestamp time.Time
 	Level     plog.SeverityNumber
-	Method    string
-	Status    int
-	Took      time.Duration
-	Size      uint64
-	SpanID    pcommon.SpanID
-	TraceID   pcommon.TraceID
+
+	// HTTP attributes.
+	Protocol   string
+	Method     string
+	ClientAddr netip.AddrPort
+	Status     int
+	Took       time.Duration
+	Size       uint64
+
+	SpanID  pcommon.SpanID
+	TraceID pcommon.TraceID
 }
 
 // NewLogEntry generates new [LogEntry].
@@ -188,6 +195,11 @@ func NewLogEntry(r *rand.Rand, ts time.Time) LogEntry {
 			plog.SeverityNumberError,
 			plog.SeverityNumberFatal,
 		}),
+		Protocol: randomElement(r, []string{
+			semconv.HTTPFlavorHTTP10.Value.Emit(),
+			semconv.HTTPFlavorHTTP11.Value.Emit(),
+			semconv.HTTPFlavorHTTP20.Value.Emit(),
+		}),
 		Method: randomElement(r, []string{
 			http.MethodGet,
 			http.MethodHead,
@@ -196,6 +208,7 @@ func NewLogEntry(r *rand.Rand, ts time.Time) LogEntry {
 			http.MethodPatch,
 			http.MethodDelete,
 		}),
+		ClientAddr: randomAddr(r),
 		Status: randomElement(r, []int{
 			http.StatusOK,
 			http.StatusCreated,
@@ -229,6 +242,12 @@ func randomTraceID(r *rand.Rand) (s pcommon.TraceID) {
 	return s
 }
 
+func randomAddr(r *rand.Rand) netip.AddrPort {
+	var buf [4]byte
+	_, _ = r.Read(buf[:])
+	return netip.AddrPortFrom(netip.AddrFrom4(buf), uint16(r.Intn(math.MaxUint16)))
+}
+
 func randomElement[S ~[]T, T any](r *rand.Rand, s S) (zero T) {
 	if len(s) == 0 {
 		return zero
@@ -254,8 +273,14 @@ func (e LogEntry) EncodeJSON(enc *jx.Encoder) {
 	enc.Field("level", func(enc *jx.Encoder) {
 		enc.Str(e.Level.String())
 	})
+	enc.Field("protocol", func(enc *jx.Encoder) {
+		enc.Str(e.Protocol)
+	})
 	enc.Field("method", func(enc *jx.Encoder) {
 		enc.Str(e.Method)
+	})
+	enc.Field("client_ip", func(enc *jx.Encoder) {
+		enc.Str(e.ClientAddr.String())
 	})
 	enc.Field("status", func(enc *jx.Encoder) {
 		enc.Int(e.Status)
