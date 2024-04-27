@@ -88,7 +88,6 @@ test_cases:
       {{ .simpleRangeAggOp }}(
         {job="varlogs"} [{{ .range }}]
       )
-    variant_args: ["simpleRangeAggOp", "range"]
   # Absent over time range aggregation.
   # NOTE(tdakkota): We do a separate test because `absent_over_time` returns non-empty result
   #   only if there is NO samples in step and vice versa.
@@ -96,20 +95,17 @@ test_cases:
       absent_over_time(
         {job="varlogs"} [{{ .range }}]
       )
-    variant_args: ["range"]
     should_be_empty: true
   - query: |-
       absent_over_time(
         {job="varlogs"} |= "no way line would contain this message" [{{ .range }}]
       )
-    variant_args: ["range"]
   # Unwrap sampler.
   - query: |-
       {{ .unwrapRangeAggOp }}(
         {job="varlogs"} | json | {{ .unwrapExpr }}
         [{{ .range }}]
       )
-    variant_args: ["unwrapRangeAggOp", "range", "unwrapExpr"]
   # Quantile over time range aggregation.
   - query: |-
       quantile_over_time(
@@ -117,7 +113,6 @@ test_cases:
         {job="varlogs"} | json | {{ .unwrapExpr }}
         [{{ .range }}]
       )
-    variant_args: ["quantile", "range", "unwrapExpr"]
 
   # Vector aggregation.
   - query: |-
@@ -127,7 +122,6 @@ test_cases:
           [{{ .range }}]
         )
       )
-    variant_args: ["simpleVecAggOp", "simpleRangeAggOp", "range"]
   - query: |-
       {{ .simpleVecAggOp }} by (method) (
         {{ .simpleRangeAggOp }}(
@@ -135,4 +129,3 @@ test_cases:
           [{{ .range }}]
         )
       )
-    variant_args: ["simpleVecAggOp", "simpleRangeAggOp", "range"]
