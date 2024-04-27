@@ -31,7 +31,7 @@ services:
       - logs
       - bench
       - --resources=5
-      - --entries=1
+      - --entries=100
       - --rate=10ms
       - --clickhouseAddr=clickhouse:9000
       - oteldb:4317
