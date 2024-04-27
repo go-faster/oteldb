@@ -20,11 +20,10 @@ type Config struct {
 
 // TestCase represents a given query (pattern) to be tested.
 type TestCasePattern struct {
-	Query          string   `yaml:"query"`
-	VariantArgs    []string `yaml:"variant_args,omitempty"`
-	SkipComparison bool     `yaml:"skip_comparison,omitempty"`
-	ShouldFail     bool     `yaml:"should_fail,omitempty"`
-	ShouldBeEmpty  bool     `yaml:"should_be_empty,omitempty"`
+	Query          string `yaml:"query"`
+	SkipComparison bool   `yaml:"skip_comparison,omitempty"`
+	ShouldFail     bool   `yaml:"should_fail,omitempty"`
+	ShouldBeEmpty  bool   `yaml:"should_be_empty,omitempty"`
 }
 
 type QueryParameters struct {
@@ -65,8 +64,11 @@ func LoadFromFiles(filenames []string) (*Config, error) {
 // Load parses the YAML input into a Config.
 func Load(content []byte) (*Config, error) {
 	cfg := &Config{}
-	err := yaml.Unmarshal(content, cfg)
-	if err != nil {
+
+	dec := yaml.NewDecoder(bytes.NewReader(content))
+	dec.KnownFields(true)
+
+	if err := dec.Decode(cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
