@@ -110,7 +110,18 @@ test_cases:
         [{{ .range }}]
       )
     variant_args: ["unwrapRangeAggOp", "range"]
-    skip_comparison: true # It seems, there is some issues with unwrap.
+  - query: |-
+      {{ .unwrapRangeAggOp }}(
+        {job="varlogs"} | json | unwrap duration(took)
+        [{{ .range }}]
+      )
+    variant_args: ["unwrapRangeAggOp", "range"]
+  - query: |-
+      {{ .unwrapRangeAggOp }}(
+        {job="varlogs"} | json | unwrap bytes(size)
+        [{{ .range }}]
+      )
+    variant_args: ["unwrapRangeAggOp", "range"]
 
   # Vector aggregation.
   - query: |-
