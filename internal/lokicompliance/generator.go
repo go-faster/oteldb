@@ -174,7 +174,9 @@ type LogEntry struct {
 	// HTTP attributes.
 	Protocol   string
 	Method     string
-	ClientAddr netip.AddrPort
+	ClientIP   netip.Addr
+	RemoteIP   netip.Addr
+	RemotePort uint16
 	Status     int
 	Took       time.Duration
 	Size       uint64
@@ -208,7 +210,9 @@ func NewLogEntry(r *rand.Rand, ts time.Time) LogEntry {
 			http.MethodPatch,
 			http.MethodDelete,
 		}),
-		ClientAddr: randomAddr(r),
+		ClientIP:   randomAddr(r),
+		RemoteIP:   netip.AddrFrom4([4]byte{127, 0, 0, 1}),
+		RemotePort: uint16(r.Intn(math.MaxUint16)),
 		Status: randomElement(r, []int{
 			http.StatusOK,
 			http.StatusCreated,
@@ -242,10 +246,10 @@ func randomTraceID(r *rand.Rand) (s pcommon.TraceID) {
 	return s
 }
 
-func randomAddr(r *rand.Rand) netip.AddrPort {
+func randomAddr(r *rand.Rand) netip.Addr {
 	var buf [4]byte
 	_, _ = r.Read(buf[:])
-	return netip.AddrPortFrom(netip.AddrFrom4(buf), uint16(r.Intn(math.MaxUint16)))
+	return netip.AddrFrom4(buf)
 }
 
 func randomElement[S ~[]T, T any](r *rand.Rand, s S) (zero T) {
@@ -280,7 +284,13 @@ func (e LogEntry) EncodeJSON(enc *jx.Encoder) {
 		enc.Str(e.Method)
 	})
 	enc.Field("client_ip", func(enc *jx.Encoder) {
-		enc.Str(e.ClientAddr.String())
+		enc.Str(e.ClientIP.String())
+	})
+	enc.Field("remote_ip", func(enc *jx.Encoder) {
+		enc.Str(e.RemoteIP.String())
+	})
+	enc.Field("remote_port", func(enc *jx.Encoder) {
+		enc.UInt16(e.RemotePort)
 	})
 	enc.Field("status", func(enc *jx.Encoder) {
 		enc.Int(e.Status)
