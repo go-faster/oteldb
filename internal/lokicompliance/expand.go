@@ -5,62 +5,114 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"text/template/parse"
 	"time"
 
 	"github.com/go-faster/errors"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
-var testVariantArgs = map[string][]string{
-	"range":          {"1s", "15s", "1m", "5m", "15m", "1h"},
-	"offset":         {"1m", "5m", "10m"},
-	"simpleVecAggOp": {"sum", "avg", "max", "min", "count", "stddev", "stdvar"},
-	"simpleRangeAggOp": {
-		"count_over_time",
-		"rate",
-		"bytes_over_time",
-		"bytes_rate",
-	},
-	"unwrapRangeAggOp": {
-		"rate_counter",
-		"avg_over_time",
-		"sum_over_time",
-		"min_over_time",
-		"max_over_time",
-		"stdvar_over_time",
-		"stddev_over_time",
-		"first_over_time",
-		"last_over_time",
-	},
-	"topBottomVectorOp": {"topk", "bottomk"},
-	"unwrapExpr": {
-		"unwrap status",
-		"unwrap duration(took)",
-		"unwrap bytes(size)",
-	},
+var (
+	testVariantArgs = map[string][]string{
+		"range":          {"1s", "15s", "1m", "5m", "15m", "1h"},
+		"offset":         {"1m", "5m", "10m"},
+		"simpleVecAggOp": {"sum", "avg", "max", "min", "count", "stddev", "stdvar"},
+		"simpleRangeAggOp": {
+			"count_over_time",
+			"rate",
+			"bytes_over_time",
+			"bytes_rate",
+		},
+		"unwrapRangeAggOp": {
+			"rate_counter",
+			"avg_over_time",
+			"sum_over_time",
+			"min_over_time",
+			"max_over_time",
+			"stdvar_over_time",
+			"stddev_over_time",
+			"first_over_time",
+			"last_over_time",
+		},
+		"topBottomVectorOp": {"topk", "bottomk"},
+		"unwrapExpr": {
+			"unwrap status",
+			"unwrap duration(took)",
+			"unwrap bytes(size)",
+		},
 
-	"quantile": {
-		"0.1",
-		"0.5",
-		"0.75",
-		"0.95",
-		"0.90",
-		"0.99",
-		"1",
-		"1.5",
-	},
-	"lineFilterOp": {"|=", "!=", "~=", "!~"},
-	"arithBinOp":   {"+", "-", "*", "/", "%", "^"},
-	"logicBinOp":   {"and", "or", "unless"},
-}
-
-func execTemplateToString(t *template.Template, data any) (string, error) {
-	var sb strings.Builder
-	if err := t.Execute(&sb, data); err != nil {
-		return "", err
+		"quantile": {
+			"0.1",
+			"0.5",
+			"0.75",
+			"0.95",
+			"0.90",
+			"0.99",
+			"1",
+			"1.5",
+		},
+		"lineFilterOp": {"|=", "!=", "~=", "!~"},
+		"arithBinOp":   {"+", "-", "*", "/", "%", "^"},
+		"logicBinOp":   {"and", "or", "unless"},
 	}
-	return sb.String(), nil
+
+	templateFuncMap = template.FuncMap{
+		"quote": strconv.Quote,
+	}
+)
+
+// ExpandQuery expands given test case.
+func ExpandQuery(cfg *Config, start, end time.Time, step time.Duration) (r []*TestCase, _ error) {
+	var (
+		params    = cfg.QueryParameters
+		limit     = 10000
+		direction = lokiapi.DirectionForward
+	)
+	if l := params.Limit; l != nil {
+		limit = *l
+	}
+	if d := params.Direction; d != "" {
+		direction = d
+	}
+
+	for _, tc := range cfg.TestCases {
+		templ, err := template.New("query").
+			Funcs(templateFuncMap).
+			Parse(tc.Query)
+		if err != nil {
+			return nil, errors.Wrapf(err, "parse query template %q", tc.Query)
+		}
+
+		// Sort and deduplicate args.
+		args := collectVariantArgs(templ)
+		slices.Sort(args)
+		args = slices.Compact(args)
+
+		if err := getQueries(
+			templ,
+			args,
+			make(map[string]string, len(args)),
+			func(query string) {
+				r = append(r, &TestCase{
+					Query:          query,
+					SkipComparison: tc.SkipComparison,
+					ShouldFail:     tc.ShouldFail,
+					ShouldBeEmpty:  tc.ShouldBeEmpty,
+					Start:          start,
+					End:            end,
+					Step:           step,
+					Limit:          limit,
+					Direction:      direction,
+				})
+			},
+		); err != nil {
+			return nil, errors.Wrapf(err, "expand query %q", tc.Query)
+		}
+	}
+
+	return r, nil
 }
 
 func getQueries(
@@ -94,58 +146,85 @@ func getQueries(
 	return nil
 }
 
-var templateFuncMap = template.FuncMap{
-	"quote": strconv.Quote,
+func execTemplateToString(t *template.Template, data any) (string, error) {
+	var sb strings.Builder
+	if err := t.Execute(&sb, data); err != nil {
+		return "", err
+	}
+	return sb.String(), nil
 }
 
-// ExpandQuery expands given test case.
-func ExpandQuery(cfg *Config, start, end time.Time, step time.Duration) (r []*TestCase, _ error) {
-	var (
-		params    = cfg.QueryParameters
-		limit     = 10000
-		direction = lokiapi.DirectionForward
-	)
-	if l := params.Limit; l != nil {
-		limit = *l
-	}
-	if d := params.Direction; d != "" {
-		direction = d
+func collectVariantArgs(t *template.Template) []string {
+	n := t.Root
+	if n == nil {
+		return nil
 	}
 
-	for _, tc := range cfg.TestCases {
-		templ, err := template.New("query").
-			Funcs(templateFuncMap).
-			Parse(tc.Query)
-		if err != nil {
-			return nil, errors.Wrapf(err, "parse query template %q", tc.Query)
+	args := map[string]struct{}{}
+	walkTemplate(t.Root, func(n parse.Node) {
+		field, ok := n.(*parse.FieldNode)
+		if !ok || len(field.Ident) != 1 {
+			return
 		}
+		arg := field.Ident[0]
 
-		// Sort and deduplicate args.
-		args := tc.VariantArgs
-		slices.Sort(args)
-		args = slices.Compact(args)
+		if _, ok := testVariantArgs[arg]; !ok {
+			return
+		}
+		args[arg] = struct{}{}
+	})
 
-		if err := getQueries(
-			templ,
-			args,
-			make(map[string]string, len(args)),
-			func(query string) {
-				r = append(r, &TestCase{
-					Query:          query,
-					SkipComparison: tc.SkipComparison,
-					ShouldFail:     tc.ShouldFail,
-					ShouldBeEmpty:  tc.ShouldBeEmpty,
-					Start:          start,
-					End:            end,
-					Step:           step,
-					Limit:          limit,
-					Direction:      direction,
-				})
-			},
-		); err != nil {
-			return nil, errors.Wrapf(err, "expand query %q", tc.Query)
+	if len(args) == 0 {
+		return nil
+	}
+	return maps.Keys(args)
+}
+
+func walkTemplate(n parse.Node, cb func(parse.Node)) {
+	cb(n)
+	switch n := n.(type) {
+	case *parse.ListNode:
+		for _, sub := range n.Nodes {
+			walkTemplate(sub, cb)
+		}
+	case *parse.PipeNode:
+		for _, sub := range n.Decl {
+			walkTemplate(sub, cb)
+		}
+		for _, sub := range n.Cmds {
+			walkTemplate(sub, cb)
+		}
+	case *parse.ActionNode:
+		if sub := n.Pipe; sub != nil {
+			walkTemplate(sub, cb)
+		}
+	case *parse.CommandNode:
+		for _, sub := range n.Args {
+			walkTemplate(sub, cb)
+		}
+	case *parse.ChainNode:
+		if sub := n.Node; sub != nil {
+			walkTemplate(sub, cb)
+		}
+	case *parse.BranchNode:
+		if sub := n.Pipe; sub != nil {
+			walkTemplate(sub, cb)
+		}
+		if sub := n.List; sub != nil {
+			walkTemplate(sub, cb)
+		}
+		if sub := n.ElseList; sub != nil {
+			walkTemplate(sub, cb)
+		}
+	case *parse.IfNode:
+		walkTemplate(&n.BranchNode, cb)
+	case *parse.RangeNode:
+		walkTemplate(&n.BranchNode, cb)
+	case *parse.WithNode:
+		walkTemplate(&n.BranchNode, cb)
+	case *parse.TemplateNode:
+		if sub := n.Pipe; sub != nil {
+			walkTemplate(sub, cb)
 		}
 	}
-
-	return r, nil
 }

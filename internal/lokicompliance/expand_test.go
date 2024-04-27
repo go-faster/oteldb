@@ -1,19 +1,20 @@
 package lokicompliance
 
 import (
+	"fmt"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestExpandQuery(t *testing.T) {
-	arg := "offset"
+	arg := "quantile"
 	cfg := &Config{
 		TestCases: []*TestCasePattern{
 			{
-				Query:       "{{ ." + arg + " }}",
-				VariantArgs: []string{arg},
+				Query: "{{ ." + arg + " }}",
 			},
 		},
 	}
@@ -26,5 +27,38 @@ func TestExpandQuery(t *testing.T) {
 	for _, tc := range tcs {
 		queries = append(queries, tc.Query)
 	}
+	require.NotEmpty(t, queries)
 	require.ElementsMatch(t, queries, testVariantArgs[arg])
+}
+
+func TestCollectVariantArgs(t *testing.T) {
+	tests := []struct {
+		input string
+		want  []string
+	}{
+		{
+			``,
+			nil,
+		},
+		{
+			`{{ .quantile }}`,
+			[]string{"quantile"},
+		},
+		{
+			`{{ .quantile }}+{{ .quantile }}`,
+			[]string{"quantile"},
+		},
+		{
+			`{{ .unwrapRangeAggOp }}( {} [{{ .range }}] )`,
+			[]string{"unwrapRangeAggOp", "range"},
+		},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			templ, err := template.New("templ").Parse(tt.input)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, collectVariantArgs(templ))
+		})
+	}
 }
