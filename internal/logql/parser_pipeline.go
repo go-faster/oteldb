@@ -398,7 +398,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			pred = &BytesFilter{Label: Label(t.Text), Op: op, Value: b}
 		case lexer.IP:
 			switch opTok.Type {
-			case lexer.CmpEq, lexer.NotEq:
+			case lexer.Eq, lexer.NotEq:
 			default:
 				return nil, errors.Errorf("invalid operation %q", opTok.Type)
 			}

@@ -468,7 +468,8 @@ var tests = []TestCase{
 	{
 		`{instance=~"kafka-1",name="kafka"}
 				| duration >= 20ms or size == 20kb and method!~"2.."
-				| ip == ip("127.0.0.1")`,
+				| ip = ip("127.0.0.1")
+				| ip != ip("127.0.0.255")`,
 		&LogExpr{
 			Sel: Selector{
 				Matchers: []LabelMatcher{
@@ -490,6 +491,9 @@ var tests = []TestCase{
 				},
 				&LabelFilter{
 					Pred: &IPFilter{"ip", OpEq, "127.0.0.1"},
+				},
+				&LabelFilter{
+					Pred: &IPFilter{"ip", OpNotEq, "127.0.0.255"},
 				},
 			},
 		},

@@ -142,7 +142,7 @@ func (*BytesFilter) labelPredicate()         {}
 func (*NumberFilter) labelPredicate()        {}
 func (*IPFilter) labelPredicate()            {}
 
-// IPFilter is a IP filtering predicate (`addr == ip("127.0.0.1")`).
+// IPFilter is a IP filtering predicate (`addr = ip("127.0.0.1")`).
 type IPFilter struct {
 	Label Label
 	Op    BinOp // OpEq, OpNotEq
