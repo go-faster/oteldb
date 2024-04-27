@@ -106,22 +106,18 @@ test_cases:
   # Unwrap sampler.
   - query: |-
       {{ .unwrapRangeAggOp }}(
-        {job="varlogs"} | json | unwrap status
+        {job="varlogs"} | json | {{ .unwrapExpr }}
         [{{ .range }}]
       )
-    variant_args: ["unwrapRangeAggOp", "range"]
+    variant_args: ["unwrapRangeAggOp", "range", "unwrapExpr"]
+  # Quantile over time range aggregation.
   - query: |-
-      {{ .unwrapRangeAggOp }}(
-        {job="varlogs"} | json | unwrap duration(took)
+      quantile_over_time(
+        {{ .quantile }},
+        {job="varlogs"} | json | {{ .unwrapExpr }}
         [{{ .range }}]
       )
-    variant_args: ["unwrapRangeAggOp", "range"]
-  - query: |-
-      {{ .unwrapRangeAggOp }}(
-        {job="varlogs"} | json | unwrap bytes(size)
-        [{{ .range }}]
-      )
-    variant_args: ["unwrapRangeAggOp", "range"]
+    variant_args: ["quantile", "range", "unwrapExpr"]
 
   # Vector aggregation.
   - query: |-
