@@ -41,7 +41,7 @@ func run(ctx context.Context) error {
 	)
 	// Progress bar messes up Github Actions logs, so keep it static.
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
-		progressBar.Set(pb.Static, true)
+		progressBar.SetTemplate(pb.Default + `{{ "\n" }}`)
 	}
 
 	grp, grpCtx := errgroup.WithContext(ctx)
@@ -68,7 +68,7 @@ func run(ctx context.Context) error {
 	if err := grp.Wait(); err != nil {
 		return errors.Wrap(err, "run queries")
 	}
-	progressBar.Finish().Write()
+	progressBar.Finish()
 
 	return printOutput(results, cfg.Output)
 }

@@ -81,22 +81,34 @@ func outp(output io.Writer, results []*lokicompliance.Result, cfg OutputConfig) 
 }
 
 func verifyTargetCompliance(results []*lokicompliance.Result, target float64) error {
-	var successes, unsupported int
+	var successes, differ, unsupported int
 	for _, res := range results {
-		if res.Success() {
+		switch {
+		case res.Success() && !res.Unsupported:
 			successes++
-		}
-		if res.Unsupported {
+		case res.Unsupported:
 			unsupported++
+		default:
+			differ++
 		}
 	}
 
 	fmt.Println(strings.Repeat("=", 80))
 	successPercentage := 100 * float64(successes) / float64(len(results))
 
-	fmt.Printf("Total: %d / %d (%.2f%%) passed, %d unsupported\n",
-		successes, len(results), successPercentage, unsupported,
+	fmt.Printf("Total: %d / %d (%.2f%%) passed",
+		successes, len(results), successPercentage,
 	)
+	if differ > 0 {
+		fmt.Print(", ")
+		fmt.Print(color.RedString("%d differ", differ))
+	}
+	if unsupported > 0 {
+		fmt.Print(", ")
+		fmt.Print(color.YellowString("%d unsupported", unsupported))
+	}
+	fmt.Println()
+
 	if math.IsNaN(target) {
 		return nil
 	}
