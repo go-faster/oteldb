@@ -33,10 +33,14 @@ var testVariantArgs = map[string][]string{
 		"first_over_time",
 		"last_over_time",
 	},
+	"topBottomVectorOp": {"topk", "bottomk"},
+	"unwrapExpr": {
+		"unwrap status",
+		"unwrap duration(took)",
+		"unwrap bytes(size)",
+	},
 
-	"topBottomOp": {"topk", "bottomk"},
 	"quantile": {
-		"-0.5",
 		"0.1",
 		"0.5",
 		"0.75",
