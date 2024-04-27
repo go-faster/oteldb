@@ -227,9 +227,9 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 			{`{http_method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 10},
 			// IP label filter.
 			{`{http_method="HEAD"} | client_address = "236.7.233.166"`, 1},
-			{`{http_method="HEAD"} | client_address == ip("236.7.233.166")`, 1},
-			{`{http_method="HEAD"} | client_address == ip("236.7.233.0/24")`, 1},
-			{`{http_method="HEAD"} | client_address == ip("236.7.233.0-236.7.233.255")`, 1},
+			{`{http_method="HEAD"} | client_address = ip("236.7.233.166")`, 1},
+			{`{http_method="HEAD"} | client_address = ip("236.7.233.0/24")`, 1},
+			{`{http_method="HEAD"} | client_address = ip("236.7.233.0-236.7.233.255")`, 1},
 
 			// Distinct filter.
 			{`{http_method=~".+"} | distinct http_method`, 6},
