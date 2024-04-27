@@ -22,6 +22,7 @@ func main() {
 	rootCmd.AddCommand(
 		newPromQLCommand(),
 		newPrometheusRemoteWriteCommand(),
+		newOtelCommand(),
 		newAPICommand(),
 	)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
