@@ -106,6 +106,21 @@ test_cases:
         {job="varlogs"} | json | {{ .unwrapExpr }}
         [{{ .range }}]
       )
+  # Range aggregation grouping.
+  #
+  # Grouping by.
+  - query: |-
+      {{ .groupRangeAggOp }} (
+        {job="varlogs"} | json | {{ .unwrapExpr }} [{{ .range }}]
+      ) by (filename)
+  - query: |-
+      {{ .groupRangeAggOp }} (
+        {job="varlogs"} | json | {{ .unwrapExpr }} [{{ .range }}]
+      ) by (method)
+  - query: |-
+      {{ .groupRangeAggOp }} (
+        {job="varlogs"} | json | {{ .unwrapExpr }} [{{ .range }}]
+      ) by (method, status)
   # Quantile over time range aggregation.
   - query: |-
       quantile_over_time(
@@ -113,6 +128,12 @@ test_cases:
         {job="varlogs"} | json | {{ .unwrapExpr }}
         [{{ .range }}]
       )
+  - query: |-
+      quantile_over_time(
+        {{ .quantile }},
+        {job="varlogs"} | json | {{ .unwrapExpr }}
+        [{{ .range }}]
+      ) by (filename)
 
   # Vector aggregation.
   - query: |-

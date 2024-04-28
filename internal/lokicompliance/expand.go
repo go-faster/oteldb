@@ -16,9 +16,9 @@ import (
 
 var (
 	testVariantArgs = map[string][]string{
-		"range":          {"1s", "15s", "1m", "5m", "15m", "1h"},
-		"offset":         {"1m", "5m", "10m"},
-		"simpleVecAggOp": {"sum", "avg", "max", "min", "count", "stddev", "stdvar"},
+		"range":  {"1s", "15s", "1m", "5m", "15m", "1h"},
+		"offset": {"1m", "5m", "10m"},
+
 		"simpleRangeAggOp": {
 			"count_over_time",
 			"rate",
@@ -36,12 +36,23 @@ var (
 			"first_over_time",
 			"last_over_time",
 		},
-		"topBottomVectorOp": {"topk", "bottomk"},
+		"groupRangeAggOp": {
+			"avg_over_time",
+			"stddev_over_time",
+			"stdvar_over_time",
+			"max_over_time",
+			"min_over_time",
+			"first_over_time",
+			"last_over_time",
+		},
 		"unwrapExpr": {
 			"unwrap status",
 			"unwrap duration(took)",
 			"unwrap bytes(size)",
 		},
+		"simpleVecAggOp":    {"sum", "avg", "max", "min", "count", "stddev", "stdvar"},
+		"sortVecAggOp":      {"sort", "sort_desc"},
+		"topBottomVecAggOp": {"topk", "bottomk"},
 
 		"quantile": {
 			"0.1",
