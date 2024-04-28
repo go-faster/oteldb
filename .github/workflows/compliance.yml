@@ -135,9 +135,9 @@ jobs:
           -end 1m -range 1m \
           -config-file logql-test-queries.yml -config-file test-oteldb.yml \
           -output-format json -output-file result.oteldb.json \
-          -output-passing -output-unsupported \
+          -output-unsupported \
           -query-parallelism 2 \
-          -target 81.52
+          -target 90.00
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
