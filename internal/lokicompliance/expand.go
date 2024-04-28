@@ -70,7 +70,8 @@ var (
 
 		"lineFilterOp": {"|=", "!=", "~=", "!~"},
 		"arithBinOp":   {"+", "-", "*", "/", "%", "^"},
-		"logicBinOp":   {"and", "or", "unless"},
+		"cmpBinOp":     {"==", "!=", ">", ">=", "<", "<="},
+		"setBinOp":     {"and", "or", "unless"},
 	}
 
 	templateFuncMap = template.FuncMap{

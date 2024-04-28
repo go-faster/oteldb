@@ -4,8 +4,13 @@ test_cases:
   - query: "1.234"
   - query: ".123"
   - query: "1.23e-3"
+  - query: "1 + 2 / 3"
+  - query: "2 * 3 % 2"
   # Binary operators.
+  - query: "vector(1) + vector(2) / vector(3)"
+  - query: "vector(2) * vector(3) % vector(2)"
   - query: "vector(1) * vector(2) + vector(4) / vector(6) - vector(10) % vector(2) ^ vector(2)"
+  - query: "(vector(1) + vector(2)) / vector(3)"
 
   # Log queries.
   #
@@ -222,4 +227,73 @@ test_cases:
         "$0",
         "method",
         ".+"
+      )
+
+  # Binary operations.
+  #
+  # Arithmetic.
+  - query: |-
+      count_over_time( {job="varlogs"} [{{ .range }}] ) * 2
+  - query: |-
+      bytes_over_time( {job="varlogs"} [{{ .range }}] )
+      /
+      count_over_time( {job="varlogs"} [{{ .range }}] )
+  # Logic.
+  #
+  - query: |-
+      count_over_time( {job="varlogs"} [{{ .range }}] ) > 0
+  - query: |-
+      count_over_time( {job="varlogs"} [{{ .range }}] ) > 1000000000
+    should_be_empty: true
+  - query: |-
+      count_over_time( {job="varlogs"} [{{ .range }}] ) {{ .cmpBinOp }} bool 0
+  - query: |-
+      count_over_time( {job="varlogs"} [{{ .range }}] ) {{ .cmpBinOp }} bool 1000000000
+  # Set.
+  - query: |-
+      count_over_time(
+        {job="varlogs"} != "POST" | json method, status
+        [30s]
+      )
+      or
+      count_over_time(
+        {job="varlogs"} |= "(POST|PUT|GET)" | json method, status
+        [30s]
+      )
+  - query: |-
+      count_over_time(
+        {job="varlogs"}
+        [30s]
+      )
+      and
+      count_over_time(
+        {job="varlogs"}
+        [30s]
+      )
+  - query: |-
+      count_over_time(
+        {job="varlogs"} | json method, status
+        [30s]
+      )
+      unless
+      count_over_time(
+        {job="varlogs"} |= "(POST|PUT)" | json method, status
+        [30s]
+      )
+  # Joins and grouping.
+  - query: |-
+      sum by (filename, status) (
+        rate(
+          {job="varlogs"}
+            | json status
+            [{{ .range }}]
+        )
+      )
+      / on (filename) group_left
+      sum by (filename) (
+        rate(
+          {job="varlogs"}
+            | json status
+            [{{ .range }}]
+        )
       )
