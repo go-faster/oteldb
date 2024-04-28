@@ -68,17 +68,20 @@ func newSampleIterator(iter EntryIterator, expr *logql.RangeAggregationExpr) (*s
 	var (
 		by      []logql.Label
 		without []logql.Label
+
+		g = expr.Grouping
 	)
-	if g := expr.Grouping; g != nil {
+	if g != nil {
 		if g.Without {
 			without = g.Labels
 		} else {
 			by = g.Labels
 		}
-	} else if unwrap := expr.Range.Unwrap; unwrap != nil {
+	}
+	if unwrap := expr.Range.Unwrap; unwrap != nil && (g == nil || g.Without) {
 		// NOTE(tdakkota): Loki removes label that used to sample entry (convert to metric)
-		// 	unless grouping is explicitly specified.
-		without = []logql.Label{unwrap.Label}
+		// 	unless grouping by is explicitly specified.
+		without = append(without, unwrap.Label)
 	}
 
 	return &sampleIterator{
