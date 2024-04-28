@@ -36,9 +36,11 @@ func printOutput(results []*lokicompliance.Result, cfg OutputConfig) error {
 }
 
 func outp(output io.Writer, results []*lokicompliance.Result, cfg OutputConfig) error {
-	for _, r := range results {
-		if d := r.Diff; d != "" && !r.Unsupported {
-			fmt.Printf("%q:\n%s\n", r.TestCase.Query, d)
+	if cfg.PrintFailed {
+		for _, r := range results {
+			if d := r.Diff; d != "" && !r.Unsupported {
+				fmt.Printf("%q:\n%s\n", r.TestCase.Query, d)
+			}
 		}
 	}
 

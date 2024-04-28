@@ -18,4 +18,5 @@ END="5s"
 go run github.com/go-faster/oteldb/cmd/logql-compliance-tester \
   -end "${END}" -range "${RANGE}" \
   -config-file logql-test-queries.yml -config-file test-oteldb.yml \
-  -output-format json -output-file result.oteldb.json || true
+  -output-format json -output-file result.oteldb.json \
+  -print-failed || true

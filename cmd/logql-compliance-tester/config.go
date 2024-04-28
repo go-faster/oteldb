@@ -29,6 +29,7 @@ type OutputConfig struct {
 	OutputFormat      string
 	OutputPassing     bool
 	OutputUnsupported bool
+	PrintFailed       bool
 	MinimumPercentage float64
 }
 
@@ -43,6 +44,7 @@ type Flags struct {
 	OutputFormat      string
 	OutputPassing     bool
 	OutputUnsupported bool
+	PrintFailed       bool
 	MinimumPercentage float64
 }
 
@@ -67,6 +69,7 @@ func (f *Flags) Register(set *flag.FlagSet) {
 	set.StringVar(&f.OutputFormat, "output-format", "json", "The comparison output format. Valid values: [json]")
 	set.BoolVar(&f.OutputPassing, "output-passing", false, "Whether to also include passing test cases in the output.")
 	set.BoolVar(&f.OutputUnsupported, "output-unsupported", false, "Whether to also include unsupported test cases in the output.")
+	set.BoolVar(&f.PrintFailed, "print-failed", false, "Whether to print diff to stdout.")
 	set.Float64Var(&f.MinimumPercentage, "target", math.NaN(), "Minimum compliance percentage")
 }
 
@@ -99,6 +102,7 @@ func parseConfig() (c Config, _ error) {
 		OutputFormat:      flags.OutputFormat,
 		OutputPassing:     flags.OutputPassing,
 		OutputUnsupported: flags.OutputUnsupported,
+		PrintFailed:       flags.PrintFailed,
 		MinimumPercentage: flags.MinimumPercentage,
 	}
 
