@@ -88,6 +88,12 @@ test_cases:
       {{ .simpleRangeAggOp }}(
         {job="varlogs"} [{{ .range }}]
       )
+  # Offset.
+  - query: |-
+      {{ .simpleRangeAggOp }}(
+        {job="varlogs"} [{{ .range }}]
+        offset {{ .offset }}
+      )
   # Absent over time range aggregation.
   # NOTE(tdakkota): We do a separate test because `absent_over_time` returns non-empty result
   #   only if there is NO samples in step and vice versa.
@@ -159,6 +165,7 @@ test_cases:
       ) without (job)
 
   # Vector aggregation.
+  #
   - query: |-
       {{ .simpleVecAggOp }} by (filename) (
         {{ .simpleRangeAggOp }}(
@@ -170,6 +177,23 @@ test_cases:
       {{ .simpleVecAggOp }} by (method) (
         {{ .simpleRangeAggOp }}(
           {job="varlogs"} | json
+          [{{ .range }}]
+        )
+      )
+  # Top K/Bottom K vector aggregation.
+  - query: |-
+      {{ .topBottomVecAggOp }} by (method) (
+        {{ .topN }},
+        {{ .simpleRangeAggOp }}(
+          {job="varlogs"} | json method
+          [{{ .range }}]
+        )
+      )
+  # Sorting.
+  - query: |-
+      {{ .sortVecAggOp }} (
+        {{ .simpleRangeAggOp }}(
+          {job="varlogs"} | json method
           [{{ .range }}]
         )
       )

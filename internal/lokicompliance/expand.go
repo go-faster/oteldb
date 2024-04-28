@@ -17,7 +17,18 @@ import (
 var (
 	testVariantArgs = map[string][]string{
 		"range":  {"1s", "15s", "1m", "5m", "15m", "1h"},
-		"offset": {"1m", "5m", "10m"},
+		"offset": {"1s", "5s", "15s"},
+		"topN":   {"1", "2", "5", "10"},
+		"quantile": {
+			"0.1",
+			"0.5",
+			"0.75",
+			"0.95",
+			"0.90",
+			"0.99",
+			"1",
+			"1.5",
+		},
 
 		"simpleRangeAggOp": {
 			"count_over_time",
@@ -57,16 +68,6 @@ var (
 		"sortVecAggOp":      {"sort", "sort_desc"},
 		"topBottomVecAggOp": {"topk", "bottomk"},
 
-		"quantile": {
-			"0.1",
-			"0.5",
-			"0.75",
-			"0.95",
-			"0.90",
-			"0.99",
-			"1",
-			"1.5",
-		},
 		"lineFilterOp": {"|=", "!=", "~=", "!~"},
 		"arithBinOp":   {"+", "-", "*", "/", "%", "^"},
 		"logicBinOp":   {"and", "or", "unless"},
