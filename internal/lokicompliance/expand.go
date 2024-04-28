@@ -100,11 +100,8 @@ func ExpandQuery(cfg *Config, start, end time.Time, step time.Duration) (r []*Te
 			return nil, errors.Wrapf(err, "parse query template %q", tc.Query)
 		}
 
-		// Sort and deduplicate args.
+		// Collect variant args from template.
 		args := collectVariantArgs(templ)
-		slices.Sort(args)
-		args = slices.Compact(args)
-
 		if err := getQueries(
 			templ,
 			args,
@@ -175,7 +172,7 @@ func collectVariantArgs(t *template.Template) []string {
 		return nil
 	}
 
-	args := map[string]struct{}{}
+	unique := map[string]struct{}{}
 	walkTemplate(t.Root, func(n parse.Node) {
 		field, ok := n.(*parse.FieldNode)
 		if !ok || len(field.Ident) != 1 {
@@ -186,13 +183,16 @@ func collectVariantArgs(t *template.Template) []string {
 		if _, ok := testVariantArgs[arg]; !ok {
 			return
 		}
-		args[arg] = struct{}{}
+		unique[arg] = struct{}{}
 	})
 
-	if len(args) == 0 {
+	if len(unique) == 0 {
 		return nil
 	}
-	return maps.Keys(args)
+
+	args := maps.Keys(unique)
+	slices.Sort(args)
+	return args
 }
 
 func walkTemplate(n parse.Node, cb func(parse.Node)) {
