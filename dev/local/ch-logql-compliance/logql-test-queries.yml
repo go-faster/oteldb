@@ -112,28 +112,51 @@ test_cases:
   - query: |-
       {{ .groupRangeAggOp }} (
         {job="varlogs"} | json | {{ .unwrapExpr }} [{{ .range }}]
-      ) by (filename)
-  - query: |-
-      {{ .groupRangeAggOp }} (
-        {job="varlogs"} | json | {{ .unwrapExpr }} [{{ .range }}]
       ) by (method)
   - query: |-
       {{ .groupRangeAggOp }} (
-        {job="varlogs"} | json | {{ .unwrapExpr }} [{{ .range }}]
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }} [{{ .range }}]
+      ) by (filename)
+  - query: |-
+      {{ .groupRangeAggOp }} (
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }} [{{ .range }}]
+      ) by (method)
+  - query: |-
+      {{ .groupRangeAggOp }} (
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }} [{{ .range }}]
       ) by (method, status)
+  # Grouping without.
+  - query: |-
+      min_over_time (
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }} [{{ .range }}]
+      ) without (filename)
+  - query: |-
+      min_over_time (
+        {job="varlogs"} | json method, {{ .unwrapLabels }} | {{ .unwrapExpr }} [{{ .range }}]
+      ) without (method)
   # Quantile over time range aggregation.
   - query: |-
       quantile_over_time(
         {{ .quantile }},
-        {job="varlogs"} | json | {{ .unwrapExpr }}
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }}
         [{{ .range }}]
       )
+  # Quantile over time grouping.
+  #
+  # Grouping by.
   - query: |-
       quantile_over_time(
         {{ .quantile }},
-        {job="varlogs"} | json | {{ .unwrapExpr }}
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }}
         [{{ .range }}]
       ) by (filename)
+  # Grouping without.
+  - query: |-
+      quantile_over_time(
+        {{ .quantile }},
+        {job="varlogs"} | json {{ .unwrapLabels }} | {{ .unwrapExpr }}
+        [{{ .range }}]
+      ) without (job)
 
   # Vector aggregation.
   - query: |-

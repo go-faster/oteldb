@@ -50,6 +50,9 @@ var (
 			"unwrap duration(took)",
 			"unwrap bytes(size)",
 		},
+		"unwrapLabels": {
+			strings.Join([]string{"status", "took", "size"}, ","),
+		},
 		"simpleVecAggOp":    {"sum", "avg", "max", "min", "count", "stddev", "stdvar"},
 		"sortVecAggOp":      {"sort", "sort_desc"},
 		"topBottomVecAggOp": {"topk", "bottomk"},
