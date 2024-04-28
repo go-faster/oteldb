@@ -50,7 +50,7 @@ func TestCollectVariantArgs(t *testing.T) {
 		},
 		{
 			`{{ .unwrapRangeAggOp }}( {} [{{ .range }}] )`,
-			[]string{"unwrapRangeAggOp", "range"},
+			[]string{"range", "unwrapRangeAggOp"},
 		},
 	}
 	for i, tt := range tests {
