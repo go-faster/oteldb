@@ -197,3 +197,29 @@ test_cases:
           [{{ .range }}]
         )
       )
+
+  # Label replace.
+  - query: |-
+      label_replace(
+        bytes_over_time( {job="varlogs"} [5s] ),
+        "replace_label",
+        "$0",
+        "filename",
+        ".+"
+      )
+  - query: |-
+      label_replace(
+        bytes_over_time( {job="varlogs"} [5s] ),
+        "job",
+        "$0",
+        "filename",
+        ".+"
+      )
+  - query: |-
+      label_replace(
+        bytes_over_time( {job="varlogs"} | json method [5s] ),
+        "http_method",
+        "$0",
+        "method",
+        ".+"
+      )
