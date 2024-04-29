@@ -938,17 +938,17 @@ var tests = []TestCase{
 	{
 		`vector(2)+vector(3)*vector(4)+vector(5)`,
 		&BinOpExpr{
-			Left: &VectorExpr{Value: 2},
-			Op:   OpAdd,
-			Right: &BinOpExpr{
-				Left: &BinOpExpr{
+			Left: &BinOpExpr{
+				Left: &VectorExpr{Value: 2},
+				Op:   OpAdd,
+				Right: &BinOpExpr{
 					Left:  &VectorExpr{Value: 3},
 					Op:    OpMul,
 					Right: &VectorExpr{Value: 4},
 				},
-				Op:    OpAdd,
-				Right: &VectorExpr{Value: 5},
 			},
+			Op:    OpAdd,
+			Right: &VectorExpr{Value: 5},
 		},
 		false,
 	},
