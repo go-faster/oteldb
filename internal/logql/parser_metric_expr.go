@@ -100,7 +100,11 @@ func (p *parser) parseBinOp(left MetricExpr, minPrecedence int) (MetricExpr, err
 
 		for {
 			rightOp, ok := p.peekBinOp()
-			if !ok || rightOp.Precedence() < op.Precedence() {
+			if !ok {
+				break
+			}
+			if !(rightOp.Precedence() > op.Precedence() ||
+				(rightOp.IsRightAssoc() && rightOp.Precedence() == op.Precedence())) {
 				break
 			}
 

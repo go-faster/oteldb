@@ -47,6 +47,9 @@ func TestReduceBinOp(t *testing.T) {
 		{`2 <= 2`, 1., true},
 		{`2 <= 1`, 0., true},
 
+		{`4 % 3 * 2`, 2, true},
+		{`2 * 3 % 2`, 0, true},
+
 		{`2 + 3*4`, 14., true},
 		{`2*3 + 4`, 10., true},
 		{`2 + 3*4 + 5`, 19., true},
@@ -54,6 +57,8 @@ func TestReduceBinOp(t *testing.T) {
 		{`2 * 3^2`, 18., true},
 		{`2^3 * 2`, 16., true},
 		{`2 ^ 3^2`, 512., true},
+
+		{`0-1+2*3/4%5^6`, 0.5, true},
 
 		{`2*(3+4)`, 14., true},
 		{`(2+3)*4`, 20., true},

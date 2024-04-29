@@ -923,35 +923,6 @@ var tests = []TestCase{
 		false,
 	},
 	{
-		`0-1+2*3/4%5^6`,
-		&BinOpExpr{
-			Left: &LiteralExpr{Value: 0},
-			Op:   OpSub,
-			Right: &BinOpExpr{
-				Left: &LiteralExpr{Value: 1},
-				Op:   OpAdd,
-				Right: &BinOpExpr{
-					Left: &LiteralExpr{Value: 2},
-					Op:   OpMul,
-					Right: &BinOpExpr{
-						Left: &LiteralExpr{Value: 3},
-						Op:   OpDiv,
-						Right: &BinOpExpr{
-							Left: &LiteralExpr{Value: 4},
-							Op:   OpMod,
-							Right: &BinOpExpr{
-								Left:  &LiteralExpr{Value: 5},
-								Op:    OpPow,
-								Right: &LiteralExpr{Value: 6},
-							},
-						},
-					},
-				},
-			},
-		},
-		false,
-	},
-	{
 		`vector(2)*vector(3)+vector(4)`,
 		&BinOpExpr{
 			Left: &BinOpExpr{

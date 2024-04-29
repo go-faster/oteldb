@@ -64,6 +64,11 @@ func (op BinOp) Precedence() int {
 	}
 }
 
+// IsRightAssoc whether if operator is right-associative.
+func (op BinOp) IsRightAssoc() bool {
+	return op == OpPow
+}
+
 // String implements fmt.Stringer.
 func (op BinOp) String() string {
 	switch op {
