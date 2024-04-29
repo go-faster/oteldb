@@ -13,14 +13,6 @@ type SampleOp = func(left, right Sample) (Sample, bool)
 
 func buildSampleBinOp(expr *logql.BinOpExpr) (SampleOp, error) {
 	filter := expr.Modifier.ReturnBool
-	boolOp := func(v, filter bool) (float64, bool) {
-		if v {
-			return 1., true
-		}
-		// Do not keep the sample, if filter mode is enabled
-		return 0., !filter
-	}
-
 	switch expr.Op {
 	case logql.OpAdd:
 		return func(left, right Sample) (Sample, bool) {
@@ -69,40 +61,60 @@ func buildSampleBinOp(expr *logql.BinOpExpr) (SampleOp, error) {
 	case logql.OpEq:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
-			result.Data, keep = boolOp(left.Data == right.Data, filter)
+			result.Data, keep = boolOp(left.Data, left.Data == right.Data, filter)
 			return
 		}, nil
 	case logql.OpNotEq:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
-			result.Data, keep = boolOp(left.Data != right.Data, filter)
+			result.Data, keep = boolOp(left.Data, left.Data != right.Data, filter)
 			return
 		}, nil
 	case logql.OpGt:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
-			result.Data, keep = boolOp(left.Data > right.Data, filter)
+			result.Data, keep = boolOp(left.Data, left.Data > right.Data, filter)
 			return
 		}, nil
 	case logql.OpGte:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
-			result.Data, keep = boolOp(left.Data >= right.Data, filter)
+			result.Data, keep = boolOp(left.Data, left.Data >= right.Data, filter)
 			return
 		}, nil
 	case logql.OpLt:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
-			result.Data, keep = boolOp(left.Data < right.Data, filter)
+			result.Data, keep = boolOp(left.Data, left.Data < right.Data, filter)
 			return
 		}, nil
 	case logql.OpLte:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
-			result.Data, keep = boolOp(left.Data <= right.Data, filter)
+			result.Data, keep = boolOp(left.Data, left.Data <= right.Data, filter)
 			return
 		}, nil
 	default:
 		return nil, errors.Errorf("unexpected operation %q", expr.Op)
 	}
+}
+
+func boolOp(val float64, cmp, returnBool bool) (float64, bool) {
+	// TODO(tdakkota): implement via generic comparators?
+	//
+	// In case if `bool` modifier is present, boolean expression should
+	// return 1 as true and 0 as false.
+	if returnBool {
+		if cmp {
+			return 1., true
+		}
+		return 0., true
+	}
+
+	// If `bool` modifier is NOT present, boolean expression should
+	// return value as true and no value as false.
+	if cmp {
+		return val, true
+	}
+	return 0., false
 }
