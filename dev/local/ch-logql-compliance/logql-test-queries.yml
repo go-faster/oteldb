@@ -72,7 +72,7 @@ test_cases:
   - query: '{job="varlogs"} | json | remote_ip = ip("127.0.0.0/24")'
   - query: '{job="varlogs"} | json | remote_ip = ip("127.0.0.1-127.0.0.6")'
   # OR/AND label filter.
-  - query: '{job="varlogs"} | json | status >= 400 or took >= 1ms'
+  - query: '{job="varlogs"} | json | status > 400 or took >= 1ms'
   - query: '{job="varlogs"} | json | took >= 1ms and size >= 1KB'
   - query: '{job="varlogs"} | json | took >= 1ms, size >= 1KB'
   - query: '{job="varlogs"} | json | took >= 1ms size >= 1KB'
@@ -174,7 +174,9 @@ test_cases:
       ) without (job)
 
   # Vector aggregation.
+  # Vector aggregation grouping.
   #
+  # Grouping by.
   - query: |-
       {{ .simpleVecAggOp }} by (filename) (
         {{ .simpleRangeAggOp }}(
@@ -186,6 +188,21 @@ test_cases:
       {{ .simpleVecAggOp }} by (method) (
         {{ .simpleRangeAggOp }}(
           {job="varlogs"} | json
+          [{{ .range }}]
+        )
+      )
+  - query: |-
+      {{ .simpleVecAggOp }} by (method, status) (
+        {{ .simpleRangeAggOp }}(
+          {job="varlogs"} | json method, status
+          [{{ .range }}]
+        )
+      )
+  # Grouping without.
+  - query: |-
+      {{ .simpleVecAggOp }} without (job, filename) (
+        {{ .simpleRangeAggOp }}(
+          {job="varlogs"} | json method, status
           [{{ .range }}]
         )
       )
