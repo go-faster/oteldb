@@ -26,12 +26,11 @@ func testSampler(samples []SampledEntry) SampleSelector {
 
 func evaluateQuery(t *testing.T, samples []SampledEntry, query string, params EvalParams, instant bool) lokiapi.QueryResponseData {
 	t.Helper()
-
-	defer func() {
-		if r := recover(); r != nil || t.Failed() {
+	t.Cleanup(func() {
+		if t.Failed() {
 			t.Logf("Query: \n%s", query)
 		}
-	}()
+	})
 
 	expr, err := logql.Parse(query, logql.ParseOptions{})
 	require.NoError(t, err)
