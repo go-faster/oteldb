@@ -9,8 +9,12 @@ test_cases:
   # Binary operators.
   - query: "vector(1) + vector(2) / vector(3)"
   - query: "vector(2) * vector(3) % vector(2)"
+  - query: "vector(4) % vector(3) * vector(2)"
   - query: "vector(1) * vector(2) + vector(4) / vector(6) - vector(10) % vector(2) ^ vector(2)"
-  - query: "(vector(1) + vector(2)) / vector(3)"
+  # Parens.
+  - query: "( vector(1) + vector(2) ) / vector(3)"
+  - query: "( vector(2) * vector(3) ) % vector(2)"
+  - query: "vector(2) * ( vector(3) % vector(2) )"
 
   # Log queries.
   #
