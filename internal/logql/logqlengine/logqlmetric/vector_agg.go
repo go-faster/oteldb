@@ -17,7 +17,9 @@ func VectorAggregation(
 	expr *logql.VectorAggregationExpr,
 ) (StepIterator, error) {
 	var (
-		grouper     = nopGrouper
+		grouper = func(al logqlabels.AggregatedLabels, _ ...logql.Label) logqlabels.AggregatedLabels {
+			return logqlabels.EmptyAggregatedLabels()
+		}
 		groupLabels []logql.Label
 	)
 	if g := expr.Grouping; g != nil {
