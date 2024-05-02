@@ -55,17 +55,6 @@ func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode, groupin
 			return n
 		}
 
-		labels, ok := getGroupByLabels(n.Expr.Grouping)
-		switch {
-		case ok:
-			// Use grouping labels from range expression.
-			grouping = labels
-		case len(grouping) > 0:
-			// Use grouping labels from parent vector expression.
-		default:
-			return n
-		}
-
 		n.Input = &SamplingNode{
 			Sampling:       samplingOp,
 			GroupingLabels: grouping,
