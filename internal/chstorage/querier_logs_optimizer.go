@@ -30,58 +30,77 @@ func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query)
 		}); err != nil {
 			return nil, err
 		}
-		q.Root = o.optimizeSampling(q.Root, nil)
+		q.Root = o.optimizeSampling(q.Root)
 	}
 	return q, nil
 }
 
-func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode, grouping []logql.Label) logqlengine.MetricNode {
+func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode) logqlengine.MetricNode {
 	switch n := n.(type) {
-	case *logqlengine.RangeAggregation:
-		sampleNode, ok := n.Input.(*logqlengine.SamplingNode)
-		if !ok {
-			return n
-		}
-
-		// If it is possible to offload the pipeline to Clickhouse entirely
-		// preceding optimizer should replace node with [InputNode].
-		pipelineNode, ok := sampleNode.Input.(*InputNode)
-		if !ok {
-			return n
-		}
-
-		samplingOp, ok := getSamplingOp(n.Expr)
-		if !ok {
-			return n
-		}
-
-		n.Input = &SamplingNode{
-			Sampling:       samplingOp,
-			GroupingLabels: grouping,
-			Labels:         pipelineNode.Labels,
-			Line:           pipelineNode.Line,
-			q:              pipelineNode.q,
-		}
-		return n
 	case *logqlengine.VectorAggregation:
-		if labels, ok := getGroupByLabels(n.Expr.Grouping); ok {
-			grouping = labels
-			n.Input = o.optimizeSampling(n.Input, grouping)
+		switch n.Expr.Op {
+		case logql.VectorOpBottomk, logql.VectorOpTopk,
+			logql.VectorOpSort, logql.VectorOpSortDesc:
+			return n
 		}
+
+		labels, ok := getGroupByLabels(n.Expr.Grouping)
+		if !ok {
+			return n
+		}
+
+		rn, ok := n.Input.(*logqlengine.RangeAggregation)
+		if !ok {
+			return n
+		}
+		n.Input = o.buildRangeAggregationSampling(rn, labels)
+
 		return n
 	case *logqlengine.LabelReplace:
-		n.Input = o.optimizeSampling(n.Input, grouping)
+		n.Input = o.optimizeSampling(n.Input)
 		return n
 	case *logqlengine.LiteralBinOp:
-		n.Input = o.optimizeSampling(n.Input, grouping)
+		n.Input = o.optimizeSampling(n.Input)
 		return n
 	case *logqlengine.BinOp:
-		n.Left = o.optimizeSampling(n.Left, grouping)
-		n.Right = o.optimizeSampling(n.Right, grouping)
+		n.Left = o.optimizeSampling(n.Left)
+		n.Right = o.optimizeSampling(n.Right)
 		return n
 	default:
 		return n
 	}
+}
+
+func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.RangeAggregation, grouping []logql.Label) logqlengine.MetricNode {
+	if g := n.Expr.Grouping; g != nil {
+		return n
+	}
+
+	sampleNode, ok := n.Input.(*logqlengine.SamplingNode)
+	if !ok {
+		return n
+	}
+
+	// If it is possible to offload the pipeline to Clickhouse entirely
+	// preceding optimizer should replace node with [InputNode].
+	pipelineNode, ok := sampleNode.Input.(*InputNode)
+	if !ok {
+		return n
+	}
+
+	samplingOp, ok := getSamplingOp(n.Expr)
+	if !ok {
+		return n
+	}
+
+	n.Input = &SamplingNode{
+		Sampling:       samplingOp,
+		GroupingLabels: grouping,
+		Labels:         pipelineNode.Labels,
+		Line:           pipelineNode.Line,
+		q:              pipelineNode.q,
+	}
+	return n
 }
 
 func getGroupByLabels(g *logql.Grouping) ([]logql.Label, bool) {
