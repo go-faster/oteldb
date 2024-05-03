@@ -76,6 +76,8 @@ test_cases:
   - query: '{job="varlogs"} | json | took >= 1ms and size >= 1KB'
   - query: '{job="varlogs"} | json | took >= 1ms, size >= 1KB'
   - query: '{job="varlogs"} | json | took >= 1ms size >= 1KB'
+  - query: '{job="varlogs"} | json status | status > 0 and status < 0'
+    should_be_empty: true
   # Decolorize.
   #
   - query: '{job="varlogs"} | decolorize'
