@@ -1,12 +1,11 @@
 package logqlmetric
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql"
-	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 )
 
 // BatchAggregator is stateless batch aggregator.
@@ -25,9 +24,7 @@ func buildBatchAggregator(expr *logql.RangeAggregationExpr) (BatchAggregator, er
 		}
 		return &Rate[SumOverTime]{selRange: qrange.Range.Seconds()}, nil
 	case logql.RangeOpRateCounter:
-		// FIXME(tdakkota): implementation of rate_counter in Loki
-		// 	is buggy, so keep it unimplemented.
-		// return &rateCounter{selRange: qrange.Range}, nil
+		return &RateCounter{selRange: qrange.Range}, nil
 	case logql.RangeOpBytes:
 		return &SumOverTime{}, nil
 	case logql.RangeOpBytesRate:
@@ -59,7 +56,6 @@ func buildBatchAggregator(expr *logql.RangeAggregationExpr) (BatchAggregator, er
 	default:
 		return nil, errors.Errorf("unexpected range operation %q", expr.Op)
 	}
-	return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("unsupported range operation %q", expr.Op)}
 }
 
 // CountOverTime implements `count_over_time` aggregation.
@@ -79,6 +75,16 @@ type Rate[A BatchAggregator] struct {
 // Aggregate implements BatchAggregator.
 func (a Rate[A]) Aggregate(points []FPoint) float64 {
 	return a.preAgg.Aggregate(points) / a.selRange
+}
+
+// RateCounter implements `rate_counter` aggregation.
+type RateCounter struct {
+	selRange time.Duration
+}
+
+// Aggregate implements BatchAggregator.
+func (a RateCounter) Aggregate(points []FPoint) float64 {
+	return extrapolatedRate(points, a.selRange, true, true)
 }
 
 // BytesRate implements `bytes_rate` aggregation.
