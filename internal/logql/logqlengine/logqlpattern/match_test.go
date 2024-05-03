@@ -14,7 +14,24 @@ var matchTests = []struct {
 	input   string
 	match   map[string]string
 	full    bool
+	flags   ParseFlags
 }{
+	// Empty pattern matches empty input.
+	{
+		"",
+		``,
+		map[string]string{},
+		true,
+		LineFilterFlags,
+	},
+	{
+		"",
+		`f`,
+		map[string]string{},
+		false,
+		LineFilterFlags,
+	},
+
 	{
 		"status:<status>",
 		`status:200`,
@@ -22,14 +39,14 @@ var matchTests = []struct {
 			"status": "200",
 		},
 		true,
+		ExtractorFlags,
 	},
 	{
-		"<line>",
-		`line`,
-		map[string]string{
-			"line": "line",
-		},
-		true,
+		"status:<status>",
+		``,
+		map[string]string{},
+		false,
+		ExtractorFlags,
 	},
 	{
 		"<prefix>:<_>",
@@ -38,6 +55,7 @@ var matchTests = []struct {
 			"prefix": "abc",
 		},
 		false,
+		ExtractorFlags,
 	},
 	{
 		"<method> <path>",
@@ -47,7 +65,54 @@ var matchTests = []struct {
 			"path":   "/foo",
 		},
 		true,
+		ExtractorFlags,
 	},
+	{
+		"<_> bar",
+		`foo bar baz`,
+		map[string]string{},
+		false,
+		ExtractorFlags,
+	},
+	{
+		"foo <_>",
+		`foo bar baz`,
+		map[string]string{},
+		true,
+		ExtractorFlags,
+	},
+	{
+		"<_> baz",
+		`foo bar baz`,
+		map[string]string{},
+		true,
+		ExtractorFlags,
+	},
+	{
+		"<foo>",
+		` bar `,
+		map[string]string{
+			"foo": ` bar `,
+		},
+		true,
+		ExtractorFlags,
+	},
+	{
+		"<_> bar <_>",
+		` bar `,
+		map[string]string{},
+		false,
+		ExtractorFlags,
+	},
+	{
+		"<_>bar<_>",
+		` bar `,
+		map[string]string{},
+		true,
+		ExtractorFlags,
+	},
+
+	// Realistic patterns.
 	{
 		`<ip> - <user> [<_>] "<method> <path> <_>" <status> <size> <user_agent> <_>`,
 		`127.0.0.1 - - [01/Jan/2000:00:00:00 +0000] "GET /foo HTTP/1.1" 200 1337 "UserAgent" "13.76.247.102, 34.120.177.193" "TLSv1.2" "US" ""`,
@@ -61,14 +126,7 @@ var matchTests = []struct {
 			"user_agent": `"UserAgent"`,
 		},
 		true,
-	},
-
-	// No match.
-	{
-		"status:<status>",
-		``,
-		map[string]string{},
-		false,
+		ExtractorFlags,
 	},
 }
 
@@ -76,7 +134,14 @@ func TestMatch(t *testing.T) {
 	for i, tt := range matchTests {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
-			compiled, err := Parse(tt.pattern)
+			defer func() {
+				if r := recover(); r != nil || t.Failed() {
+					t.Logf("Pattern: %q", tt.pattern)
+					t.Logf("Input: %#q", tt.input)
+				}
+			}()
+
+			compiled, err := Parse(tt.pattern, tt.flags)
 			require.NoError(t, err)
 
 			matches := map[string]string{}
@@ -94,7 +159,7 @@ func FuzzMatch(f *testing.F) {
 		f.Add(tt.pattern, tt.input)
 	}
 	f.Fuzz(func(t *testing.T, pattern, input string) {
-		compiled, err := Parse(pattern)
+		compiled, err := Parse(pattern, ExtractorFlags)
 		if err != nil {
 			t.Skipf("Invalid pattern %q: %+v", pattern, err)
 			return

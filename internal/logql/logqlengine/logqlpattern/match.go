@@ -9,8 +9,8 @@ import (
 // Match matches given pattern against input string.
 func Match(p Pattern, input string, match func(label logql.Label, value string)) bool {
 	parts := p.Parts
-	if len(parts) == 0 {
-		return false
+	if len(parts) == 0 && input == "" {
+		return true
 	}
 
 	var ok bool
@@ -43,11 +43,11 @@ func Match(p Pattern, input string, match func(label logql.Label, value string))
 				match(label, value)
 			}
 			// If match failed, capture value anyway.
-			if !ok {
+			if !ok || value == "" {
 				return false
 			}
 		}
 	}
 
-	return true
+	return input == ""
 }

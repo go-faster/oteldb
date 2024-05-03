@@ -16,7 +16,7 @@ type PatternExtractor struct {
 }
 
 func buildPatternExtractor(stage *logql.PatternLabelParser) (Processor, error) {
-	compiled, err := logqlpattern.Parse(stage.Pattern)
+	compiled, err := logqlpattern.Parse(stage.Pattern, logqlpattern.ExtractorFlags)
 	if err != nil {
 		return nil, errors.Wrapf(err, "parse pattern %q", stage.Pattern)
 	}

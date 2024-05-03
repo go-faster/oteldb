@@ -11,21 +11,25 @@ var parseTests = []struct {
 	input   string
 	wantP   []Part
 	wantErr string
+	flags   ParseFlags
 }{
 	{
 		"<foo>",
 		[]Part{capture("foo")},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"<_>",
 		[]Part{capture("_")},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"<_1foo>",
 		[]Part{capture("_1foo")},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"<1> <foo>",
@@ -34,6 +38,7 @@ var parseTests = []struct {
 			capture("foo"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"<foo ><foo>",
@@ -42,6 +47,7 @@ var parseTests = []struct {
 			capture("foo"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"<foo>|<bar>",
@@ -51,6 +57,7 @@ var parseTests = []struct {
 			capture("bar"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"> <method> <",
@@ -60,6 +67,7 @@ var parseTests = []struct {
 			literal(" <"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"_> <method> <_",
@@ -70,6 +78,7 @@ var parseTests = []struct {
 			literal("<_"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"status:<status>",
@@ -78,6 +87,7 @@ var parseTests = []struct {
 			capture("status"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		"<method> - status:<status>",
@@ -87,6 +97,7 @@ var parseTests = []struct {
 			capture("status"),
 		},
 		"",
+		ExtractorFlags,
 	},
 	{
 		`<ip> - <user> [<_>] "<method> <path> <_>" <status> <size> <url> <user_agent>`,
@@ -112,32 +123,45 @@ var parseTests = []struct {
 			capture("user_agent"),
 		},
 		"",
+		ExtractorFlags,
 	},
 
 	{
 		"",
 		nil,
-		"pattern is empty",
+		"",
+		LineFilterFlags,
 	},
+
 	{
 		" ",
 		nil,
 		"at least one capture is expected",
+		RequireCapture,
 	},
 	{
 		"status:",
 		nil,
 		"at least one capture is expected",
+		RequireCapture,
 	},
 	{
 		"<foo>|<foo>",
 		nil,
 		`duplicate capture "foo"`,
+		ExtractorFlags,
 	},
 	{
 		"<foo><bar>",
 		nil,
 		"consecutive capture: literal expected between <foo> and <bar>",
+		0,
+	},
+	{
+		"<foo>|<bar>",
+		nil,
+		`unexpected named pattern "foo"`,
+		DisallowNamed,
 	},
 }
 
@@ -165,7 +189,7 @@ func TestParse(t *testing.T) {
 				}
 			}()
 
-			gotP, err := Parse(tt.input)
+			gotP, err := Parse(tt.input, tt.flags)
 			if tt.wantErr != "" {
 				require.EqualError(t, err, tt.wantErr)
 				return
@@ -187,6 +211,6 @@ func FuzzParse(f *testing.F) {
 			}
 		}()
 
-		Parse(input)
+		Parse(input, ExtractorFlags)
 	})
 }

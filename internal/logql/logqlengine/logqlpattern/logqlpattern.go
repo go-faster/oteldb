@@ -31,8 +31,24 @@ type Pattern struct {
 	Parts []Part
 }
 
+// ParseFlags defines options for [Parse].
+type ParseFlags uint8
+
+// Has whether if flag is set.
+func (f ParseFlags) Has(flag ParseFlags) bool {
+	return f&flag != 0
+}
+
+const (
+	RequireCapture ParseFlags = 1 << iota
+	DisallowNamed
+
+	ExtractorFlags  = RequireCapture
+	LineFilterFlags = DisallowNamed
+)
+
 // Parse parses pattern.
-func Parse(input string) (p Pattern, _ error) {
+func Parse(input string, flags ParseFlags) (p Pattern, _ error) {
 	r := &reader{
 		input: input,
 	}
@@ -53,22 +69,29 @@ scanLoop:
 			return p, err
 		}
 	}
-	if len(p.Parts) == 0 {
-		return p, errors.New("pattern is empty")
-	}
-	if captures < 1 {
-		return p, errors.New("at least one capture is expected")
+	if flags.Has(RequireCapture) {
+		if captures < 1 {
+			return p, errors.New("at least one capture is expected")
+		}
 	}
 
-	dedup := make(map[string]struct{}, captures)
-	for _, part := range p.Parts {
-		if part.Type != Capture || part.Value == "_" {
-			continue
+	if flags.Has(DisallowNamed) {
+		for _, part := range p.Parts {
+			if part.Type == Capture && part.Value != "_" {
+				return p, errors.Errorf("unexpected named pattern %q", part.Value)
+			}
 		}
-		if _, ok := dedup[part.Value]; ok {
-			return p, errors.Errorf("duplicate capture %q", part.Value)
+	} else {
+		dedup := make(map[string]struct{}, captures)
+		for _, part := range p.Parts {
+			if part.Type != Capture || part.Value == "_" {
+				continue
+			}
+			if _, ok := dedup[part.Value]; ok {
+				return p, errors.Errorf("duplicate capture %q", part.Value)
+			}
+			dedup[part.Value] = struct{}{}
 		}
-		dedup[part.Value] = struct{}{}
 	}
 
 	for i, part := range p.Parts {
