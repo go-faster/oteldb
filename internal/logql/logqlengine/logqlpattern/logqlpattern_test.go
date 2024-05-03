@@ -134,6 +134,12 @@ var parseTests = []struct {
 	},
 
 	{
+		"\xff",
+		nil,
+		"pattern is invalid UTF-8",
+		RequireCapture,
+	},
+	{
 		" ",
 		nil,
 		"at least one capture is expected",

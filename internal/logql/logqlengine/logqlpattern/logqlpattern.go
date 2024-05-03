@@ -2,7 +2,6 @@
 package logqlpattern
 
 import (
-	"io"
 	"strings"
 	"text/scanner"
 	"unicode/utf8"
@@ -49,26 +48,26 @@ const (
 
 // Parse parses pattern.
 func Parse(input string, flags ParseFlags) (p Pattern, _ error) {
+	if !utf8.ValidString(input) {
+		return p, errors.New("pattern is invalid UTF-8")
+	}
 	r := &reader{
 		input: input,
 	}
 
 	var captures int
-scanLoop:
 	for {
-		part, err := r.Scan()
-		switch {
-		case err == nil:
-			if part.Type == Capture {
-				captures++
-			}
-			p.Parts = append(p.Parts, part)
-		case err == io.EOF:
-			break scanLoop
-		default:
-			return p, err
+		part, ok := r.Scan()
+		if !ok {
+			break
 		}
+
+		if part.Type == Capture {
+			captures++
+		}
+		p.Parts = append(p.Parts, part)
 	}
+
 	if flags.Has(RequireCapture) {
 		if captures < 1 {
 			return p, errors.New("at least one capture is expected")
@@ -116,11 +115,11 @@ type reader struct {
 	pos   int
 }
 
-func (r *reader) Scan() (Part, error) {
+func (r *reader) Scan() (Part, bool) {
 	ch := r.Peek()
 	switch ch {
 	case scanner.EOF:
-		return Part{}, io.EOF
+		return Part{}, false
 	case '<':
 		// Consume '<'.
 		r.Read()
@@ -133,7 +132,7 @@ func (r *reader) Scan() (Part, error) {
 // scanCapture scans Capture.
 //
 // precondition: caller must read '<'.
-func (r *reader) scanCapture() (Part, error) {
+func (r *reader) scanCapture() (Part, bool) {
 	// Label should start with `[_A-Za-z]`.
 	// If it do not, consider part as literal.
 	if ch := r.Peek(); !lexerql.IsIdentStartRune(ch) {
@@ -149,7 +148,7 @@ func (r *reader) scanCapture() (Part, error) {
 			return Part{
 				Type:  Literal,
 				Value: label.String(),
-			}, nil
+			}, true
 		case '>':
 			// Consume '>'.
 			r.Read()
@@ -157,7 +156,7 @@ func (r *reader) scanCapture() (Part, error) {
 				Type: Capture,
 				// Trim leading '<'.
 				Value: strings.TrimPrefix(label.String(), "<"),
-			}, nil
+			}, true
 		default:
 			if lexerql.IsIdentRune(ch) {
 				label.WriteRune(r.Read())
@@ -168,7 +167,7 @@ func (r *reader) scanCapture() (Part, error) {
 	}
 }
 
-func (r *reader) scanLiteral(prefix string) (Part, error) {
+func (r *reader) scanLiteral(prefix string) (Part, bool) {
 	var literal strings.Builder
 	literal.WriteString(prefix)
 	for {
@@ -177,7 +176,7 @@ func (r *reader) scanLiteral(prefix string) (Part, error) {
 			return Part{
 				Type:  Literal,
 				Value: literal.String(),
-			}, nil
+			}, true
 		case '<':
 			// Consume '<'.
 			r.Read()
@@ -190,7 +189,7 @@ func (r *reader) scanLiteral(prefix string) (Part, error) {
 			return Part{
 				Type:  Literal,
 				Value: literal.String(),
-			}, nil
+			}, true
 		default:
 			literal.WriteRune(r.Read())
 		}
