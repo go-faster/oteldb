@@ -215,18 +215,37 @@ test_cases:
         )
       )
   # Top K/Bottom K vector aggregation.
+  #
+  - query: |-
+      {{ .topBottomVecAggOp }} (
+        {{ .topN }},
+        bytes_over_time(
+          {job="varlogs"}
+          [{{ .range }}]
+        )
+      )
+  # Grouping by.
   - query: |-
       {{ .topBottomVecAggOp }} by (method) (
         {{ .topN }},
-        {{ .simpleRangeAggOp }}(
+        bytes_over_time(
           {job="varlogs"} | json method
+          [{{ .range }}]
+        )
+      )
+  # Grouping without.
+  - query: |-
+      {{ .topBottomVecAggOp }} without (filename) (
+        {{ .topN }},
+        bytes_over_time(
+          {job="varlogs"}
           [{{ .range }}]
         )
       )
   # Sorting.
   - query: |-
       {{ .sortVecAggOp }} (
-        {{ .simpleRangeAggOp }}(
+        bytes_over_time(
           {job="varlogs"} | json method
           [{{ .range }}]
         )
