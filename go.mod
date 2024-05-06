@@ -72,7 +72,7 @@ require (
 	go.uber.org/zap v1.27.0
 	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.20.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/tools v0.20.0
 	google.golang.org/grpc v1.63.2
