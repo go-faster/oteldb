@@ -103,7 +103,19 @@ func TestParseLabelMatchers(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+
+			// LabelMatcher cannot be compared with DeepEqual.
+			//
+			// See https://github.com/prometheus/prometheus/blob/3b8b57700c469c7cde84e1d8f9d383cb8fe11ab0/promql/parser/parse_test.go#L3719.
+			require.Len(t, got, len(tt.want))
+			for i, set := range tt.want {
+				gotSet := got[i]
+				require.Len(t, gotSet, len(set))
+				for i, m := range set {
+					gotMatcher := gotSet[i]
+					require.Equal(t, m.String(), gotMatcher.String())
+				}
+			}
 		})
 	}
 }
