@@ -170,7 +170,6 @@ func (a *App) setup(ctx context.Context) error {
 		grpc.WithStatsHandler(otelgrpc.NewClientHandler(
 			otelgrpc.WithMeterProvider(a.metrics.MeterProvider()),
 		)),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return errors.Wrap(err, "dial otlp")
