@@ -65,8 +65,17 @@ func (s *Server) SearchTagValuesV2(ctx context.Context, params tempoapi.SearchTa
 // This endpoint retrieves all discovered tag names that can be used in search.
 //
 // GET /api/search/tags
-func (s *Server) SearchTags(ctx context.Context) (*tempoapi.TagNames, error) {
-	return s.api.SearchTags(ctx)
+func (s *Server) SearchTags(ctx context.Context, params tempoapi.SearchTagsParams) (*tempoapi.TagNames, error) {
+	return s.api.SearchTags(ctx, params)
+}
+
+// SearchTagsV2 implements searchTagsV2 operation.
+//
+// This endpoint retrieves all discovered tag names that can be used in search.
+//
+// GET /api/v2/search/tags
+func (s *Server) SearchTagsV2(ctx context.Context, params tempoapi.SearchTagsV2Params) (*tempoapi.TagNamesV2, error) {
+	return s.api.SearchTagsV2(ctx, params)
 }
 
 // TraceByID implements traceByID operation.
