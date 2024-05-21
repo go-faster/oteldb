@@ -215,30 +215,68 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 
 				elem = origElem
-			case 'v': // Prefix: "v2/search/tag/"
+			case 'v': // Prefix: "v2/search/tag"
 				origElem := elem
-				if l := len("v2/search/tag/"); len(elem) >= l && elem[0:l] == "v2/search/tag/" {
+				if l := len("v2/search/tag"); len(elem) >= l && elem[0:l] == "v2/search/tag" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "tag_name"
-				// Match until "/"
-				idx := strings.IndexByte(elem, '/')
-				if idx < 0 {
-					idx = len(elem)
-				}
-				args[0] = elem[:idx]
-				elem = elem[idx:]
-
 				if len(elem) == 0 {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/values"
+				case '/': // Prefix: "/"
 					origElem := elem
-					if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "attribute_selector"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/values"
+						origElem := elem
+						if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleSearchTagValuesV2Request([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
+				case 's': // Prefix: "s"
+					origElem := elem
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -248,9 +286,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						// Leaf node.
 						switch r.Method {
 						case "GET":
-							s.handleSearchTagValuesV2Request([1]string{
-								args[0],
-							}, elemIsEscaped, w, r)
+							s.handleSearchTagsV2Request([0]string{}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET")
 						}
@@ -527,30 +563,70 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				elem = origElem
-			case 'v': // Prefix: "v2/search/tag/"
+			case 'v': // Prefix: "v2/search/tag"
 				origElem := elem
-				if l := len("v2/search/tag/"); len(elem) >= l && elem[0:l] == "v2/search/tag/" {
+				if l := len("v2/search/tag"); len(elem) >= l && elem[0:l] == "v2/search/tag" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
-				// Param: "tag_name"
-				// Match until "/"
-				idx := strings.IndexByte(elem, '/')
-				if idx < 0 {
-					idx = len(elem)
-				}
-				args[0] = elem[:idx]
-				elem = elem[idx:]
-
 				if len(elem) == 0 {
 					break
 				}
 				switch elem[0] {
-				case '/': // Prefix: "/values"
+				case '/': // Prefix: "/"
 					origElem := elem
-					if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+					if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "attribute_selector"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/values"
+						origElem := elem
+						if l := len("/values"); len(elem) >= l && elem[0:l] == "/values" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								// Leaf: SearchTagValuesV2
+								r.name = "SearchTagValuesV2"
+								r.summary = ""
+								r.operationID = "searchTagValuesV2"
+								r.pathPattern = "/api/v2/search/tag/{attribute_selector}/values"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
+				case 's': // Prefix: "s"
+					origElem := elem
+					if l := len("s"); len(elem) >= l && elem[0:l] == "s" {
 						elem = elem[l:]
 					} else {
 						break
@@ -559,13 +635,13 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							// Leaf: SearchTagValuesV2
-							r.name = "SearchTagValuesV2"
+							// Leaf: SearchTagsV2
+							r.name = "SearchTagsV2"
 							r.summary = ""
-							r.operationID = "searchTagValuesV2"
-							r.pathPattern = "/api/v2/search/tag/{tag_name}/values"
+							r.operationID = "searchTagsV2"
+							r.pathPattern = "/api/v2/search/tags"
 							r.args = args
-							r.count = 1
+							r.count = 0
 							return r, true
 						default:
 							return

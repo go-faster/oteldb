@@ -41,6 +41,8 @@ type SearchParams struct {
 	// ingesters.
 	// If the parameters are provided, it will search the backend as well.
 	End OptUnixSeconds
+	// Limit the number of spans per span-set. Default value is 3.
+	Spss OptInt
 }
 
 func unpackSearchParams(packed middleware.Parameters) (params SearchParams) {
@@ -105,6 +107,15 @@ func unpackSearchParams(packed middleware.Parameters) (params SearchParams) {
 		}
 		if v, ok := packed[key]; ok {
 			params.End = v.(OptUnixSeconds)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "spss",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Spss = v.(OptInt)
 		}
 	}
 	return params
@@ -399,6 +410,47 @@ func decodeSearchParams(args [0]string, argsEscaped bool, r *http.Request) (para
 			Err:  err,
 		}
 	}
+	// Decode query: spss.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "spss",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSpssVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotSpssVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Spss.SetTo(paramsDotSpssVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "spss",
+			In:   "query",
+			Err:  err,
+		}
+	}
 	return params, nil
 }
 
@@ -406,6 +458,11 @@ func decodeSearchParams(args [0]string, argsEscaped bool, r *http.Request) (para
 type SearchTagValuesParams struct {
 	// Tag name.
 	TagName string
+	// Along with `end` define a time range from which tags should be returned.
+	Start OptUnixSeconds
+	// Along with `start` define a time range from which tags should be returned.
+	// Providing both `start` and `end` includes blocks for the specified time range only.
+	End OptUnixSeconds
 }
 
 func unpackSearchTagValuesParams(packed middleware.Parameters) (params SearchTagValuesParams) {
@@ -416,10 +473,29 @@ func unpackSearchTagValuesParams(packed middleware.Parameters) (params SearchTag
 		}
 		params.TagName = packed[key].(string)
 	}
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptUnixSeconds)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptUnixSeconds)
+		}
+	}
 	return params
 }
 
 func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Request) (params SearchTagValuesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode path: tag_name.
 	if err := func() error {
 		param := args[0]
@@ -465,28 +541,152 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 			Err:  err,
 		}
 	}
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStartVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start.SetTo(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEndVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
 	return params, nil
 }
 
 // SearchTagValuesV2Params is parameters of searchTagValuesV2 operation.
 type SearchTagValuesV2Params struct {
-	// Tag name.
-	TagName string
+	// TraceQL attribute selector (`.service.name`, `resource.service.name`, etc.).
+	AttributeSelector string
+	// If provided, the tag values returned by the API are filtered to only return values seen on spans
+	// matching your filter parameters.
+	// Queries can be incomplete: for example, `{ .cluster = }`. Tempo extracts only the valid matchers
+	// and build a valid query.
+	// Only queries with a single selector `{}`` and AND `&&` operators are supported.
+	// - Example supported: `{ .cluster = "us-east-1" && .service = "frontend" }`
+	// - Example unsupported: `{ .cluster = "us-east-1" || .service = "frontend" } && { .cluster =
+	// "us-east-2" }`.
+	Q OptString
+	// Along with `end` define a time range from which tags should be returned.
+	Start OptUnixSeconds
+	// Along with `start` define a time range from which tags should be returned.
+	// Providing both `start` and `end` includes blocks for the specified time range only.
+	End OptUnixSeconds
 }
 
 func unpackSearchTagValuesV2Params(packed middleware.Parameters) (params SearchTagValuesV2Params) {
 	{
 		key := middleware.ParameterKey{
-			Name: "tag_name",
+			Name: "attribute_selector",
 			In:   "path",
 		}
-		params.TagName = packed[key].(string)
+		params.AttributeSelector = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "q",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Q = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptUnixSeconds)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptUnixSeconds)
+		}
 	}
 	return params
 }
 
 func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Request) (params SearchTagValuesV2Params, _ error) {
-	// Decode path: tag_name.
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: attribute_selector.
 	if err := func() error {
 		param := args[0]
 		if argsEscaped {
@@ -498,7 +698,7 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "tag_name",
+				Param:   "attribute_selector",
 				Value:   param,
 				Style:   uri.PathStyleSimple,
 				Explode: false,
@@ -515,7 +715,7 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 					return err
 				}
 
-				params.TagName = c
+				params.AttributeSelector = c
 				return nil
 			}(); err != nil {
 				return err
@@ -526,8 +726,503 @@ func decodeSearchTagValuesV2Params(args [1]string, argsEscaped bool, r *http.Req
 		return nil
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
-			Name: "tag_name",
+			Name: "attribute_selector",
 			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: q.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "q",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotQVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotQVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Q.SetTo(paramsDotQVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "q",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStartVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start.SetTo(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEndVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SearchTagsParams is parameters of searchTags operation.
+type SearchTagsParams struct {
+	// Specifies the scope of the tags, this is an optional parameter, if not specified it means all
+	// scopes.
+	Scope OptTagScope
+	// Along with `end` define a time range from which tags should be returned.
+	Start OptUnixSeconds
+	// Along with `start` define a time range from which tags should be returned.
+	// Providing both `start` and `end` includes blocks for the specified time range only.
+	End OptUnixSeconds
+}
+
+func unpackSearchTagsParams(packed middleware.Parameters) (params SearchTagsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "scope",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Scope = v.(OptTagScope)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptUnixSeconds)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptUnixSeconds)
+		}
+	}
+	return params
+}
+
+func decodeSearchTagsParams(args [0]string, argsEscaped bool, r *http.Request) (params SearchTagsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: scope.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "scope",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotScopeVal TagScope
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotScopeVal = TagScope(c)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Scope.SetTo(paramsDotScopeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Scope.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "scope",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStartVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start.SetTo(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEndVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SearchTagsV2Params is parameters of searchTagsV2 operation.
+type SearchTagsV2Params struct {
+	// Specifies the scope of the tags, this is an optional parameter, if not specified it means all
+	// scopes.
+	Scope OptTagScope
+	// Along with `end` define a time range from which tags should be returned.
+	Start OptUnixSeconds
+	// Along with `start` define a time range from which tags should be returned.
+	// Providing both `start` and `end` includes blocks for the specified time range only.
+	End OptUnixSeconds
+}
+
+func unpackSearchTagsV2Params(packed middleware.Parameters) (params SearchTagsV2Params) {
+	{
+		key := middleware.ParameterKey{
+			Name: "scope",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Scope = v.(OptTagScope)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "start",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Start = v.(OptUnixSeconds)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "end",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.End = v.(OptUnixSeconds)
+		}
+	}
+	return params
+}
+
+func decodeSearchTagsV2Params(args [0]string, argsEscaped bool, r *http.Request) (params SearchTagsV2Params, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: scope.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "scope",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotScopeVal TagScope
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotScopeVal = TagScope(c)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Scope.SetTo(paramsDotScopeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Scope.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "scope",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: start.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "start",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotStartVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotStartVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Start.SetTo(paramsDotStartVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "start",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: end.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "end",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEndVal time.Time
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUnixSeconds(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEndVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.End.SetTo(paramsDotEndVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "end",
+			In:   "query",
 			Err:  err,
 		}
 	}
