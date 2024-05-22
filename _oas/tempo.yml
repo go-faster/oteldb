@@ -177,6 +177,19 @@ paths:
             type: string
           description: Tag name.
 
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: |
+            If provided, the tag values returned by the API are filtered to only return values seen on spans matching your filter parameters.
+            Queries can be incomplete: for example, `{ .cluster = }`. Tempo extracts only the valid matchers and build a valid query.
+
+            Only queries with a single selector `{}`` and AND `&&` operators are supported.
+
+            - Example supported: `{ .cluster = "us-east-1" && .service = "frontend" }`
+            - Example unsupported: `{ .cluster = "us-east-1" || .service = "frontend" } && { .cluster = "us-east-2" }`
+
         - name: start
           in: query
           schema:
