@@ -31,6 +31,7 @@ import (
 type LogsQuery[E any] struct {
 	Start, End time.Time
 	Direction  logqlengine.Direction
+	Limit      int
 
 	Labels []logql.LabelMatcher
 	Line   []logql.LineFilter
@@ -47,6 +48,7 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
 			attribute.Int64("chstorage.range.end", v.End.UnixNano()),
 			attribute.String("chstorage.direction", string(v.Direction)),
+			attribute.Int("chstorage.limit", v.Limit),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -95,6 +97,9 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 		query.WriteString("ASC")
 	default:
 		return nil, errors.Errorf("unexpected direction %q", d)
+	}
+	if l := v.Limit; l >= 0 {
+		fmt.Fprintf(&query, " LIMIT %d", v.Limit)
 	}
 
 	var (

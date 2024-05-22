@@ -17,7 +17,7 @@ type EvalParams struct {
 	End       time.Time
 	Step      time.Duration
 	Direction Direction // forward, backward
-	Limit     int
+	Limit     int       // -1 if query should be unlimited.
 }
 
 // IsInstant whether query is instant.
