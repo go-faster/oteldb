@@ -66,11 +66,8 @@ func (p *parser) parseFieldExpr1() (FieldExpr, error) {
 			return s, nil
 		}
 
-		switch a, ok, err := p.tryAttribute(); {
-		case err != nil:
-			return nil, err
-		case ok:
-			return a, nil
+		if a, ok := p.tryAttribute(); ok {
+			return &a, nil
 		}
 		return nil, p.unexpectedToken(t)
 	}
@@ -241,8 +238,7 @@ func (p *parser) tryStatic() (s *Static, ok bool, _ error) {
 	return s, true, nil
 }
 
-func (p *parser) tryAttribute() (a *Attribute, ok bool, _ error) {
-	a = new(Attribute)
+func (p *parser) tryAttribute() (a Attribute, _ bool) {
 	switch t := p.peek(); t.Type {
 	case lexer.SpanDuration:
 		a.Prop = SpanDuration
@@ -263,19 +259,13 @@ func (p *parser) tryAttribute() (a *Attribute, ok bool, _ error) {
 	case lexer.TraceDuration:
 		a.Prop = TraceDuration
 	case lexer.Ident:
-		parseAttributeSelector(t.Text, a)
+		parseAttributeSelector(t.Text, &a)
 	default:
-		return a, false, nil
+		return a, false
 	}
 	p.next()
 
-	return a, true, nil
-}
-
-// ParseAttributeSelector parses attribute from given string.
-func ParseAttributeSelector(attr string) (a Attribute) {
-	parseAttributeSelector(attr, &a)
-	return a
+	return a, true
 }
 
 func parseAttributeSelector(attr string, a *Attribute) {

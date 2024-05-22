@@ -80,12 +80,8 @@ func parseSimpleFieldExpr(p *parser) (FieldExpr, bool, error) {
 		return s, true, nil
 	}
 
-	switch a, ok, err := p.tryAttribute(); {
-	case err != nil:
-		return nil, false, err
-	case ok:
-		return a, true, nil
+	if a, ok := p.tryAttribute(); ok {
+		return &a, true, nil
 	}
-
 	return nil, false, nil
 }
