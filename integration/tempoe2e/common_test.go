@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -80,11 +81,16 @@ func runTest(
 	require.NotEmpty(t, set.Traces)
 
 	c := setupDB(ctx, t, set, inserter, querier, engineQuerier)
+	start := tempoapi.NewOptUnixSeconds(set.Start.AsTime().Add(-time.Second))
+	end := tempoapi.NewOptUnixSeconds(set.End.AsTime())
 
 	t.Run("SearchTags", func(t *testing.T) {
 		a := require.New(t)
 
-		r, err := c.SearchTags(ctx)
+		r, err := c.SearchTags(ctx, tempoapi.SearchTagsParams{
+			Start: start,
+			End:   end,
+		})
 		a.NoError(err)
 		a.Len(r.TagNames, len(set.Tags))
 		for _, tagName := range r.TagNames {
@@ -100,7 +106,11 @@ func runTest(
 				tagValues[t.Value] = struct{}{}
 			}
 
-			r, err := c.SearchTagValues(ctx, tempoapi.SearchTagValuesParams{TagName: tagName})
+			r, err := c.SearchTagValues(ctx, tempoapi.SearchTagValuesParams{
+				TagName: tagName,
+				Start:   start,
+				End:     end,
+			})
 			a.NoError(err)
 			a.Len(r.TagValues, len(tagValues))
 			for _, val := range r.TagValues {
@@ -117,7 +127,11 @@ func runTest(
 				tagValues[t.Value] = struct{}{}
 			}
 
-			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{TagName: tagName})
+			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
+				AttributeSelector: "." + tagName,
+				Start:             start,
+				End:               end,
+			})
 			a.NoError(err)
 			a.Len(r.TagValues, len(tagValues))
 			for _, val := range r.TagValues {

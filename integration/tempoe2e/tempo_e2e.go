@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -19,8 +20,12 @@ type BatchSet struct {
 	Batches []ptrace.Traces
 	Tags    map[string][]tracestorage.Tag
 	Traces  map[pcommon.TraceID]Trace
-	Engine  *traceqlengine.Engine
-	mq      traceqlengine.MemoryQuerier
+
+	Start otelstorage.Timestamp
+	End   otelstorage.Timestamp
+
+	Engine *traceqlengine.Engine
+	mq     traceqlengine.MemoryQuerier
 }
 
 // ParseBatchSet parses JSON batches from given reader.
@@ -78,6 +83,13 @@ func (s *BatchSet) addBatch(raw ptrace.Traces) {
 func (s *BatchSet) addSpan(span ptrace.Span) {
 	if s.Traces == nil {
 		s.Traces = map[pcommon.TraceID]Trace{}
+	}
+
+	if start := span.StartTimestamp(); s.Start == 0 || start < s.Start {
+		s.Start = start
+	}
+	if end := span.EndTimestamp(); s.End == 0 || end > s.End {
+		s.End = end
 	}
 
 	traceID := span.TraceID()
