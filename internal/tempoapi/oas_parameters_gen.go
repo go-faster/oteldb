@@ -458,6 +458,15 @@ func decodeSearchParams(args [0]string, argsEscaped bool, r *http.Request) (para
 type SearchTagValuesParams struct {
 	// Tag name.
 	TagName string
+	// If provided, the tag values returned by the API are filtered to only return values seen on spans
+	// matching your filter parameters.
+	// Queries can be incomplete: for example, `{ .cluster = }`. Tempo extracts only the valid matchers
+	// and build a valid query.
+	// Only queries with a single selector `{}`` and AND `&&` operators are supported.
+	// - Example supported: `{ .cluster = "us-east-1" && .service = "frontend" }`
+	// - Example unsupported: `{ .cluster = "us-east-1" || .service = "frontend" } && { .cluster =
+	// "us-east-2" }`.
+	Q OptString
 	// Along with `end` define a time range from which tags should be returned.
 	Start OptUnixSeconds
 	// Along with `start` define a time range from which tags should be returned.
@@ -472,6 +481,15 @@ func unpackSearchTagValuesParams(packed middleware.Parameters) (params SearchTag
 			In:   "path",
 		}
 		params.TagName = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "q",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Q = v.(OptString)
+		}
 	}
 	{
 		key := middleware.ParameterKey{
@@ -538,6 +556,47 @@ func decodeSearchTagValuesParams(args [1]string, argsEscaped bool, r *http.Reque
 		return params, &ogenerrors.DecodeParamError{
 			Name: "tag_name",
 			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: q.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "q",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotQVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotQVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Q.SetTo(paramsDotQVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "q",
+			In:   "query",
 			Err:  err,
 		}
 	}

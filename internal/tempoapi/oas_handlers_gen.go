@@ -348,6 +348,10 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 					In:   "path",
 				}: params.TagName,
 				{
+					Name: "q",
+					In:   "query",
+				}: params.Q,
+				{
 					Name: "start",
 					In:   "query",
 				}: params.Start,
