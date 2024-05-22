@@ -1093,19 +1093,67 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 	case MatrixResultQueryResponseData:
 		e.FieldStart("resultType")
 		e.Str("matrix")
-		s.MatrixResult.encodeFields(e)
+		{
+			s := s.MatrixResult
+			{
+				e.FieldStart("result")
+				s.Result.Encode(e)
+			}
+			{
+				if s.Stats != nil {
+					e.FieldStart("stats")
+					s.Stats.Encode(e)
+				}
+			}
+		}
 	case ScalarResultQueryResponseData:
 		e.FieldStart("resultType")
 		e.Str("scalar")
-		s.ScalarResult.encodeFields(e)
+		{
+			s := s.ScalarResult
+			{
+				e.FieldStart("result")
+				s.Result.Encode(e)
+			}
+			{
+				if s.Stats != nil {
+					e.FieldStart("stats")
+					s.Stats.Encode(e)
+				}
+			}
+		}
 	case StreamsResultQueryResponseData:
 		e.FieldStart("resultType")
 		e.Str("streams")
-		s.StreamsResult.encodeFields(e)
+		{
+			s := s.StreamsResult
+			{
+				e.FieldStart("result")
+				s.Result.Encode(e)
+			}
+			{
+				if s.Stats != nil {
+					e.FieldStart("stats")
+					s.Stats.Encode(e)
+				}
+			}
+		}
 	case VectorResultQueryResponseData:
 		e.FieldStart("resultType")
 		e.Str("vector")
-		s.VectorResult.encodeFields(e)
+		{
+			s := s.VectorResult
+			{
+				e.FieldStart("result")
+				s.Result.Encode(e)
+			}
+			{
+				if s.Stats != nil {
+					e.FieldStart("stats")
+					s.Stats.Encode(e)
+				}
+			}
+		}
 	}
 }
 

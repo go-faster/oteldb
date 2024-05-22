@@ -176,8 +176,8 @@ github.com/go-faster/errors v0.7.1 h1:MkJTnDoEdi9pDabt1dpWf7AA8/BaSYZqibYyhZ20AY
 github.com/go-faster/errors v0.7.1/go.mod h1:5ySTjWFiphBs07IKuiL69nxdfd5+fzh1u7FPGZP2quo=
 github.com/go-faster/jx v1.1.0 h1:ZsW3wD+snOdmTDy9eIVgQdjUpXRRV4rqW8NS3t+20bg=
 github.com/go-faster/jx v1.1.0/go.mod h1:vKDNikrKoyUmpzaJ0OkIkRQClNHFX/nF3dnTJZb3skg=
-github.com/go-faster/sdk v0.15.0 h1:q5vd0Yl9/fanr6xUSG7vCG+p3ac5L7HaA+W0vk3KvEk=
-github.com/go-faster/sdk v0.15.0/go.mod h1:JL4cIqJNYH6xg2xknqY5DpcVVIdhGgQ1BETFbvUYH9o=
+github.com/go-faster/sdk v0.15.1 h1:zMIxy4eU5WRF5H3UM8FLSMU8XVRETV4gxpwVfW/v9p4=
+github.com/go-faster/sdk v0.15.1/go.mod h1:F9wNhIXkmuMXsGetkc2VIMBKVBoC1J3PNnRLj4PDiFk=
 github.com/go-faster/yaml v0.4.6 h1:lOK/EhI04gCpPgPhgt0bChS6bvw7G3WwI8xxVe0sw9I=
 github.com/go-faster/yaml v0.4.6/go.mod h1:390dRIvV4zbnO7qC9FGo6YYutc+wyyUSHBgbXL52eXk=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
@@ -508,8 +508,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f h1:KUppIJq7/+SVif2QVs3tOP0zanoHgBEVAwHxUSIzRqU=
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/npillmayer/nestext v0.1.3/go.mod h1:h2lrijH8jpicr25dFY+oAJLyzlya6jhnuG+zWp9L0Uk=
-github.com/ogen-go/ogen v1.1.0 h1:hM4osoOPGWvx8pcdqE8jb5VvzHA+wi3u+DwCvZoW4dg=
-github.com/ogen-go/ogen v1.1.0/go.mod h1:d5Ph7PWpJz453ZdGbVe+DBVPS150idePr5dZ+S0JG00=
+github.com/ogen-go/ogen v1.1.1 h1:ccHc/vgS+WbOLLgM4JYW7EDiBv7DPfbvKCnbo5fctSY=
+github.com/ogen-go/ogen v1.1.1/go.mod h1:ZmPa2LwJrwXKPo3s3p/XFMg5znV60IX5950UftdNmb4=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1 h1:EGfNDEx6MqHz8B3uNV6QAib1UR2Lm97sHi3ocA6ESJ4=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
@@ -735,8 +735,8 @@ go.opentelemetry.io/collector/featuregate v1.7.0 h1:8tNgX2VaiR9jrpZevRSvStuJrvvL
 go.opentelemetry.io/collector/featuregate v1.7.0/go.mod h1:w7nUODKxEi3FLf1HslCiE6YWtMtOOrMnSwsDam8Mg9w=
 go.opentelemetry.io/collector/otelcol v0.100.0 h1:5NWoo9T5tHP0oWt3OHetYpTRaQCJuef8KDDe5tLi+BA=
 go.opentelemetry.io/collector/otelcol v0.100.0/go.mod h1:pdPObjfQqP2pdE70jqQiJlZdEyZ0jA1euoRdHtgZjiA=
-go.opentelemetry.io/collector/pdata v1.7.0 h1:/WNsBbE6KM3TTPUb9v/5B7IDqnDkgf8GyFhVJJqu7II=
-go.opentelemetry.io/collector/pdata v1.7.0/go.mod h1:ehCBBA5GoFrMZkwyZAKGY/lAVSgZf6rzUt3p9mddmPU=
+go.opentelemetry.io/collector/pdata v1.8.0 h1:d/QQgZxB4Y+d3mqLVh2ozvzujUhloD3P/fk7X+In764=
+go.opentelemetry.io/collector/pdata v1.8.0/go.mod h1:/W7clu0wFC4WSRp94Ucn6Vm36Wkrt+tmtlDb1aiNZCY=
 go.opentelemetry.io/collector/pdata/testdata v0.100.0 h1:pliojioiAv+CuLNTK+8tnCD2UgiJbKX9q8bDnpHkV1U=
 go.opentelemetry.io/collector/pdata/testdata v0.100.0/go.mod h1:01BHOXvXaQaLLt5J34S093u3e+j//RhbfmEujpFJ/ME=
 go.opentelemetry.io/collector/processor v0.100.0 h1:8Zcd3v77SCSM5mAJbGes5aR/Yof3aY1csiwFhKFpLEQ=

@@ -15,7 +15,7 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/go-faster/sdk v0.15.0
+	github.com/go-faster/sdk v0.15.1
 	github.com/go-faster/yaml v0.4.6
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/gogo/protobuf v1.3.2
@@ -28,7 +28,7 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/klauspost/compress v1.17.8
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-	github.com/ogen-go/ogen v1.1.0
+	github.com/ogen-go/ogen v1.1.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.100.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.100.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.100.0
@@ -52,7 +52,7 @@ require (
 	go.opentelemetry.io/collector/consumer v0.100.0
 	go.opentelemetry.io/collector/exporter v0.100.0
 	go.opentelemetry.io/collector/otelcol v0.100.0
-	go.opentelemetry.io/collector/pdata v1.7.0
+	go.opentelemetry.io/collector/pdata v1.8.0
 	go.opentelemetry.io/collector/processor v0.100.0
 	go.opentelemetry.io/collector/processor/batchprocessor v0.100.0
 	go.opentelemetry.io/collector/receiver v0.100.0

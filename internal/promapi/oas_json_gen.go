@@ -608,19 +608,51 @@ func (s Data) encodeFields(e *jx.Encoder) {
 	case MatrixData:
 		e.FieldStart("resultType")
 		e.Str("matrix")
-		s.Matrix.encodeFields(e)
+		{
+			s := s.Matrix
+			{
+				e.FieldStart("result")
+				e.ArrStart()
+				for _, elem := range s.Result {
+					elem.Encode(e)
+				}
+				e.ArrEnd()
+			}
+		}
 	case ScalarData:
 		e.FieldStart("resultType")
 		e.Str("scalar")
-		s.Scalar.encodeFields(e)
+		{
+			s := s.Scalar
+			{
+				e.FieldStart("result")
+				s.Result.Encode(e)
+			}
+		}
 	case StringData:
 		e.FieldStart("resultType")
 		e.Str("string")
-		s.String.encodeFields(e)
+		{
+			s := s.String
+			{
+				e.FieldStart("result")
+				s.Result.Encode(e)
+			}
+		}
 	case VectorData:
 		e.FieldStart("resultType")
 		e.Str("vector")
-		s.Vector.encodeFields(e)
+		{
+			s := s.Vector
+			{
+				e.FieldStart("result")
+				e.ArrStart()
+				for _, elem := range s.Result {
+					elem.Encode(e)
+				}
+				e.ArrEnd()
+			}
+		}
 	}
 }
 
@@ -3389,11 +3421,93 @@ func (s Rule) encodeFields(e *jx.Encoder) {
 	case AlertingRuleRule:
 		e.FieldStart("type")
 		e.Str("alerting")
-		s.AlertingRule.encodeFields(e)
+		{
+			s := s.AlertingRule
+			{
+				if s.State.Set {
+					e.FieldStart("state")
+					s.State.Encode(e)
+				}
+			}
+			{
+				e.FieldStart("name")
+				e.Str(s.Name)
+			}
+			{
+				e.FieldStart("query")
+				e.Str(s.Query)
+			}
+			{
+				e.FieldStart("duration")
+				e.Str(s.Duration)
+			}
+			{
+				e.FieldStart("labels")
+				s.Labels.Encode(e)
+			}
+			{
+				e.FieldStart("annotations")
+				s.Annotations.Encode(e)
+			}
+			{
+				e.FieldStart("alerts")
+				e.ArrStart()
+				for _, elem := range s.Alerts {
+					elem.Encode(e)
+				}
+				e.ArrEnd()
+			}
+			{
+				e.FieldStart("health")
+				s.Health.Encode(e)
+			}
+			{
+				e.FieldStart("lastError")
+				e.Str(s.LastError)
+			}
+			{
+				e.FieldStart("evaluationTime")
+				e.Float64(s.EvaluationTime)
+			}
+			{
+				e.FieldStart("lastEvaluation")
+				json.EncodeDateTime(e, s.LastEvaluation)
+			}
+		}
 	case RecordingRuleRule:
 		e.FieldStart("type")
 		e.Str("recording")
-		s.RecordingRule.encodeFields(e)
+		{
+			s := s.RecordingRule
+			{
+				e.FieldStart("name")
+				e.Str(s.Name)
+			}
+			{
+				e.FieldStart("query")
+				e.Str(s.Query)
+			}
+			{
+				e.FieldStart("labels")
+				s.Labels.Encode(e)
+			}
+			{
+				e.FieldStart("health")
+				s.Health.Encode(e)
+			}
+			{
+				e.FieldStart("lastError")
+				e.Str(s.LastError)
+			}
+			{
+				e.FieldStart("evaluationTime")
+				json.EncodeDateTime(e, s.EvaluationTime)
+			}
+			{
+				e.FieldStart("lastEvaluation")
+				e.Float64(s.LastEvaluation)
+			}
+		}
 	}
 }
 
