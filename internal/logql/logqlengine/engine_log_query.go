@@ -152,7 +152,10 @@ func (n *ProcessorNode) EvalPipeline(ctx context.Context, params EvalParams) (_ 
 		return nil, errors.Wrap(err, "build pipeline")
 	}
 
-	iter, err := n.Input.EvalPipeline(ctx, params)
+	// Do not limit storage query.
+	qparams := params
+	qparams.Limit = -1
+	iter, err := n.Input.EvalPipeline(ctx, qparams)
 	if err != nil {
 		return nil, err
 	}

@@ -84,7 +84,6 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 	now := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 	set, err := generateLogs(now)
 	require.NoError(t, err)
-	require.NoError(t, err)
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
 	require.NotEmpty(t, set.Records)
@@ -262,6 +261,43 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 						ExpectedEntries: tt.entries,
 					}))
 				}
+			})
+		}
+	})
+	t.Run("QueryLimit", func(t *testing.T) {
+		for i, tt := range []struct {
+			query string
+		}{
+			{`{http_method="HEAD"}`},
+			{`{http_method="HEAD"} | json | line_format "{{ . }}"`},
+		} {
+			tt := tt
+			t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+				t.Parallel()
+
+				defer func() {
+					if t.Failed() {
+						t.Logf("query: \n%s", tt.query)
+					}
+				}()
+
+				limit := 1
+				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+					Query: tt.query,
+					Limit: lokiapi.NewOptInt(limit),
+				})
+				require.NoError(t, err)
+
+				streams, ok := resp.Data.GetStreamsResult()
+				require.True(t, ok)
+
+				var entries int
+				for _, stream := range streams.Result {
+					entries += len(stream.Values)
+				}
+				require.Equal(t, limit, entries)
 			})
 		}
 	})

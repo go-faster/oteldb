@@ -46,6 +46,7 @@ func (n *InputNode) EvalPipeline(ctx context.Context, params logqlengine.EvalPar
 		Start:     params.Start,
 		End:       params.End,
 		Direction: params.Direction,
+		Limit:     params.Limit,
 		Labels:    n.Labels,
 		Line:      n.Line,
 		Mapper:    entryMapper,
