@@ -21,6 +21,7 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/tempohandler"
+	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -97,6 +98,42 @@ func runTest(
 			a.Contains(set.Tags, tagName)
 		}
 	})
+	t.Run("SearchTagsV2", func(t *testing.T) {
+		a := require.New(t)
+
+		r, err := c.SearchTagsV2(ctx, tempoapi.SearchTagsV2Params{
+			Start: start,
+			End:   end,
+		})
+		a.NoError(err)
+
+		var spanLen, resourceLen int
+		for _, scope := range r.Scopes {
+			switch scope.Name {
+			case tempoapi.TagScopeSpan:
+				spanLen = len(scope.Tags)
+			case tempoapi.TagScopeResource:
+				resourceLen = len(scope.Tags)
+			}
+
+			switch scope.Name {
+			case tempoapi.TagScopeSpan, tempoapi.TagScopeResource:
+				names := set.Tags
+				for _, tagName := range scope.Tags {
+					a.Contains(names, tagName)
+				}
+			case tempoapi.TagScopeIntrinsic:
+				names := traceql.IntrinsicNames()
+				a.Len(scope.Tags, len(names))
+				for _, tagName := range scope.Tags {
+					a.Contains(names, tagName)
+				}
+			default:
+				t.Fatalf("unexpected scope %q", scope.Name)
+			}
+		}
+		a.Equal(len(set.Tags), spanLen+resourceLen)
+	})
 	t.Run("SearchTagValues", func(t *testing.T) {
 		a := require.New(t)
 
@@ -119,25 +156,61 @@ func runTest(
 		}
 	})
 	t.Run("SearchTagValuesV2", func(t *testing.T) {
-		a := require.New(t)
+		t.Run("Attribute", func(t *testing.T) {
+			a := require.New(t)
 
-		for tagName, tags := range set.Tags {
-			tagValues := map[string]struct{}{}
-			for _, t := range tags {
-				tagValues[t.Value] = struct{}{}
+			for tagName, tags := range set.Tags {
+				tagValues := map[string]struct{}{}
+				for _, t := range tags {
+					tagValues[t.Value] = struct{}{}
+				}
+
+				r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: "." + tagName,
+					Start:             start,
+					End:               end,
+				})
+				a.NoError(err)
+				a.Len(r.TagValues, len(tagValues))
+				for _, val := range r.TagValues {
+					a.Containsf(tagValues, val.Value, "check tag %q", tagName)
+				}
 			}
+		})
+		t.Run("SpanName", func(t *testing.T) {
+			a := require.New(t)
 
 			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
-				AttributeSelector: "." + tagName,
+				AttributeSelector: `name`,
 				Start:             start,
 				End:               end,
 			})
 			a.NoError(err)
-			a.Len(r.TagValues, len(tagValues))
-			for _, val := range r.TagValues {
-				a.Containsf(tagValues, val.Value, "check tag %q", tagName)
+			a.Len(r.TagValues, len(set.SpanNames))
+			for _, tag := range r.TagValues {
+				a.Contains(set.SpanNames, tag.Value)
 			}
-		}
+		})
+		t.Run("SpanStatus", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
+				AttributeSelector: `status`,
+				Start:             start,
+				End:               end,
+			})
+			a.NoError(err)
+
+			statuses := []string{
+				"unset",
+				"ok",
+				"error",
+			}
+			a.Len(r.TagValues, len(statuses))
+			for _, tag := range r.TagValues {
+				a.Contains(statuses, tag.Value)
+			}
+		})
 	})
 	t.Run("TraceByID", func(t *testing.T) {
 		t.Run("Query", func(t *testing.T) {
