@@ -14,7 +14,6 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
-	"go.uber.org/zap/zaptest"
 
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chstorage"
@@ -91,6 +90,6 @@ func TestCH(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ctx = zctx.Base(ctx, zaptest.NewLogger(t))
+	ctx = zctx.Base(ctx, integration.Logger(t))
 	runTest(ctx, t, provider, inserter, querier, querier)
 }
