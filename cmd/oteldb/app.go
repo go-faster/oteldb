@@ -287,11 +287,13 @@ func (app *App) setupCollector() error {
 	conf, err := otelcol.NewConfigProvider(otelcol.ConfigProviderSettings{
 		ResolverSettings: confmap.ResolverSettings{
 			URIs: []string{"oteldb:/"},
-			Providers: map[string]confmap.Provider{
-				"oteldb": otelreceiver.NewMapProvider("oteldb", app.cfg.Collector),
+			ProviderFactories: []confmap.ProviderFactory{
+				confmap.NewProviderFactory(func(s confmap.ProviderSettings) confmap.Provider {
+					return otelreceiver.NewMapProvider("oteldb", app.cfg.Collector)
+				}),
 			},
-			Converters: []confmap.Converter{
-				expandconverter.NewFactory().Create(confmap.ConverterSettings{}),
+			ConverterFactories: []confmap.ConverterFactory{
+				expandconverter.NewFactory(),
 			},
 		},
 	})
