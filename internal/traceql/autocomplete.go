@@ -37,7 +37,7 @@ func ParseAutocomplete(input string) (c Autocomplete) {
 			return c
 		case !ok:
 			// Handle cases like `{ .foo = <missing field> && .bar = 10 }`.
-			op, ok := p.peekBinaryOp()
+			op, ok = p.peekBinaryOp()
 			if !ok {
 				return c
 			}

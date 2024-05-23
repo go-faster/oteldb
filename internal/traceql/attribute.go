@@ -1,6 +1,7 @@
 package traceql
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-faster/errors"
@@ -139,4 +140,21 @@ const (
 	ScopeNone AttributeScope = iota
 	ScopeResource
 	ScopeSpan
+	ScopeInstrumentation
 )
+
+// String implements [fmt.Stringer].
+func (s AttributeScope) String() string {
+	switch s {
+	case ScopeNone:
+		return "none"
+	case ScopeResource:
+		return "resource"
+	case ScopeSpan:
+		return "span"
+	case ScopeInstrumentation:
+		return "<instrumentation>"
+	default:
+		return fmt.Sprintf("unknown scope %d", uint8(s))
+	}
+}
