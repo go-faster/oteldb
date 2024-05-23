@@ -12,7 +12,6 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/go-logfmt/logfmt"
-	ht "github.com/ogen-go/ogen/http"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
@@ -315,7 +314,71 @@ func (h *TempoAPI) SearchTags(ctx context.Context, params tempoapi.SearchTagsPar
 //
 // GET /api/v2/search/tags
 func (h *TempoAPI) SearchTagsV2(ctx context.Context, params tempoapi.SearchTagsV2Params) (*tempoapi.TagNamesV2, error) {
-	return nil, ht.ErrNotImplemented
+	lg := zctx.From(ctx)
+
+	var (
+		searchScope traceql.AttributeScope
+		intrinsic   = tempoapi.ScopeTags{
+			Name: tempoapi.TagScopeIntrinsic,
+			Tags: traceql.IntrinsicNames(),
+		}
+	)
+	switch params.Scope.Or(tempoapi.TagScopeNone) {
+	case tempoapi.TagScopeSpan:
+		searchScope = traceql.ScopeSpan
+	case tempoapi.TagScopeResource:
+		searchScope = traceql.ScopeResource
+	case tempoapi.TagScopeIntrinsic:
+		lg.Debug("Return intrinsic names")
+		return &tempoapi.TagNamesV2{
+			Scopes: []tempoapi.ScopeTags{intrinsic},
+		}, nil
+	case tempoapi.TagScopeNone:
+		searchScope = traceql.ScopeNone
+	}
+
+	tags, err := h.q.TagNames(ctx, tracestorage.TagNamesOptions{
+		Scope: searchScope,
+		Start: timeToTimestamp(params.Start),
+		End:   timeToTimestamp(params.End),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "get tag names")
+	}
+
+	scopes := make(map[tempoapi.TagScope]tempoapi.ScopeTags, 4)
+	if searchScope == traceql.ScopeNone {
+		// Add intrinsics to the result, if all scopes are requested.
+		scopes[intrinsic.Name] = intrinsic
+	}
+	for _, tag := range tags {
+		var tagScope tempoapi.TagScope
+		switch tag.Scope {
+		case traceql.ScopeNone:
+			tagScope = tempoapi.TagScopeNone
+		case traceql.ScopeResource, traceql.ScopeInstrumentation:
+			tagScope = tempoapi.TagScopeResource
+		case traceql.ScopeSpan:
+			tagScope = tempoapi.TagScopeSpan
+		default:
+			lg.Warn("Unexpected tag scope",
+				zap.Stringer("scope", tag.Scope),
+				zap.String("tag", tag.Name),
+			)
+			continue
+		}
+
+		scopeTags, ok := scopes[tagScope]
+		if !ok {
+			scopeTags.Name = tagScope
+		}
+		scopeTags.Tags = append(scopeTags.Tags, tag.Name)
+		scopes[tagScope] = scopeTags
+	}
+
+	return &tempoapi.TagNamesV2{
+		Scopes: maps.Values(scopes),
+	}, nil
 }
 
 // TraceByID implements traceByID operation.
