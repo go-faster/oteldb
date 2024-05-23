@@ -10,6 +10,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
@@ -88,11 +89,14 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 }
 
 // TagNames returns all available tag names.
-func (q *Querier) TagNames(ctx context.Context) (r []string, rerr error) {
+func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOptions) (r []tracestorage.TagName, rerr error) {
 	table := q.tables.Tags
 
 	ctx, span := q.tracer.Start(ctx, "TagNames",
 		trace.WithAttributes(
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			attribute.Stringer("chstorage.scope", opts.Scope),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -103,16 +107,37 @@ func (q *Querier) TagNames(ctx context.Context) (r []string, rerr error) {
 		span.End()
 	}()
 
-	data := new(proto.ColStr).LowCardinality()
+	var query strings.Builder
+	fmt.Fprintf(&query, "SELECT DISTINCT name, scope FROM %#q", table)
+	switch scope := opts.Scope; scope {
+	case traceql.ScopeNone:
+	case traceql.ScopeResource:
+		// Tempo merges scope attributes and resource attributes.
+		fmt.Fprintf(&query, " WHERE scope IN (%d, %d)", scope, traceql.ScopeInstrumentation)
+	case traceql.ScopeSpan:
+		fmt.Fprintf(&query, " WHERE scope = %d", scope)
+	default:
+		return r, errors.Errorf("unexpected scope %v", scope)
+	}
+
+	var (
+		name  = new(proto.ColStr).LowCardinality()
+		scope proto.ColEnum8
+	)
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
-		Body:   fmt.Sprintf("SELECT DISTINCT name FROM %#q", table),
-		Result: proto.ResultColumn{
-			Name: "name",
-			Data: data,
+		Body:   query.String(),
+		Result: proto.Results{
+			{Name: "name", Data: name},
+			{Name: "scope", Data: proto.Wrap(&scope, scopeTypeDDL)},
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			r = append(r, data.Values...)
+			for i := 0; i < name.Rows(); i++ {
+				r = append(r, tracestorage.TagName{
+					Name:  name.Row(i),
+					Scope: traceql.AttributeScope(scope.Row(i)),
+				})
+			}
 			return nil
 		},
 	}); err != nil {
@@ -122,12 +147,67 @@ func (q *Querier) TagNames(ctx context.Context) (r []string, rerr error) {
 }
 
 // TagValues returns all available tag values for given tag.
-func (q *Querier) TagValues(ctx context.Context, tagName string) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
-	table := q.tables.Tags
-
+func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	ctx, span := q.tracer.Start(ctx, "TagValues",
 		trace.WithAttributes(
-			attribute.String("chstorage.tag_to_query", tagName),
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			attribute.Stringer("chstorage.tag", tag),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	switch tag.Prop {
+	case traceql.SpanAttribute:
+		return q.attributeValues(ctx, tag, opts)
+	case traceql.SpanStatus:
+		// TODO(tdakkota): probably we should do a proper query.
+		name := tag.String()
+		statuses := []tracestorage.Tag{
+			{Name: name, Value: "unset", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "ok", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "error", Type: int32(pcommon.ValueTypeStr)},
+		}
+		return iterators.Slice(statuses), nil
+	case traceql.SpanKind:
+		// TODO(tdakkota): probably we should do a proper query.
+		name := tag.String()
+		kinds := []tracestorage.Tag{
+			{Name: name, Value: "unspecified", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "internal", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "server", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "client", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "producer", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "consumer", Type: int32(pcommon.ValueTypeStr)},
+		}
+		return iterators.Slice(kinds), nil
+	case traceql.SpanDuration, traceql.SpanChildCount, traceql.SpanParent, traceql.TraceDuration:
+		// Too high cardinality to query.
+		return iterators.Empty[tracestorage.Tag](), nil
+	case traceql.SpanName, traceql.RootSpanName:
+		// FIXME(tdakkota): we don't check if span name is actually coming from a root span.
+		return q.spanNames(ctx, opts)
+	case traceql.RootServiceName:
+		// FIXME(tdakkota): we don't check if service.name actually coming from a root span.
+		//
+		// Equals to `resource.service.name`.
+		tag = traceql.Attribute{Name: "service.name", Scope: traceql.ScopeResource}
+		return q.attributeValues(ctx, tag, opts)
+	default:
+		return nil, errors.Errorf("unexpected span property %v (attribute: %q)", tag.Prop, tag)
+	}
+}
+
+func (q *Querier) spanNames(ctx context.Context, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
+	table := q.tables.Spans
+
+	ctx, span := q.tracer.Start(ctx, "spanNames",
+		trace.WithAttributes(
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -138,16 +218,81 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (_ iterators.It
 		span.End()
 	}()
 
+	var query strings.Builder
+	fmt.Fprintf(&query, `SELECT DISTINCT name FROM %#q WHERE true`, table)
+	if s := opts.Start; s != 0 {
+		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
+	}
+	if e := opts.End; e != 0 {
+		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
+	}
+
+	var (
+		name = new(proto.ColStr).LowCardinality()
+		r    []tracestorage.Tag
+	)
+	if err := q.ch.Do(ctx, ch.Query{
+		Logger: zctx.From(ctx).Named("ch"),
+		Body:   query.String(),
+		Result: proto.Results{
+			{Name: "name", Data: name},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < name.Rows(); i++ {
+				r = append(r, tracestorage.Tag{
+					Name:  "name",
+					Value: name.Row(i),
+					Type:  int32(pcommon.ValueTypeStr),
+					Scope: traceql.ScopeNone,
+				})
+			}
+			return nil
+		},
+	}); err != nil {
+		return nil, errors.Wrap(err, "query")
+	}
+
+	return iterators.Slice(r), nil
+}
+
+func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, _ tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
+	table := q.tables.Tags
+
+	ctx, span := q.tracer.Start(ctx, "attributeValues",
+		trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	// FIXME(tdakkota): respect time range parameters.
+	var query strings.Builder
+	fmt.Fprintf(&query, `SELECT DISTINCT value, value_type FROM %#q WHERE name = %s`, table, singleQuoted(tag.Name))
+	switch scope := tag.Scope; scope {
+	case traceql.ScopeNone:
+	case traceql.ScopeResource:
+		// Tempo merges scope attributes and resource attributes.
+		fmt.Fprintf(&query, " AND scope IN (%d, %d)", scope, traceql.ScopeInstrumentation)
+	case traceql.ScopeSpan:
+		fmt.Fprintf(&query, " AND scope = %d", scope)
+	default:
+		return nil, errors.Errorf("unexpected scope %v", scope)
+	}
+
 	var (
 		value     proto.ColStr
 		valueType proto.ColEnum8
 
 		r []tracestorage.Tag
 	)
-
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
-		Body:   fmt.Sprintf("SELECT DISTINCT value, value_type FROM %#q WHERE name = %s", table, singleQuoted(tagName)),
+		Body:   query.String(),
 		Result: proto.Results{
 			{Name: "value", Data: &value},
 			{Name: "value_type", Data: proto.Wrap(&valueType, valueTypeDDL)},
@@ -156,7 +301,7 @@ func (q *Querier) TagValues(ctx context.Context, tagName string) (_ iterators.It
 			return value.ForEach(func(i int, value string) error {
 				typ := valueType.Row(i)
 				r = append(r, tracestorage.Tag{
-					Name:  tagName,
+					Name:  tag.Name,
 					Value: value,
 					Type:  int32(typ),
 				})

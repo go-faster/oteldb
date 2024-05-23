@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+
+	"github.com/go-faster/oteldb/internal/traceql"
 )
 
 // Consumer consumes given traces and inserts them using given Inserter.
@@ -24,15 +26,12 @@ func NewConsumer(i Inserter) *Consumer {
 // ConsumeTraces implements otelreceiver.Consumer.
 func (c *Consumer) ConsumeTraces(ctx context.Context, traces ptrace.Traces) error {
 	tags := map[Tag]struct{}{}
-	addName := func(s string) {
-		tags[Tag{"name", s, int32(pcommon.ValueTypeStr)}] = struct{}{}
-	}
-	addTags := func(attrs pcommon.Map) {
+	addTags := func(attrs pcommon.Map, scope traceql.AttributeScope) {
 		attrs.Range(func(k string, v pcommon.Value) bool {
 			switch t := v.Type(); t {
 			case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
 			default:
-				tags[Tag{k, v.AsString(), int32(t)}] = struct{}{}
+				tags[Tag{k, v.AsString(), int32(t), scope}] = struct{}{}
 			}
 			return true
 		})
@@ -46,21 +45,19 @@ func (c *Consumer) ConsumeTraces(ctx context.Context, traces ptrace.Traces) erro
 		batchID := uuid.New()
 		resSpan := resSpans.At(i)
 		res := resSpan.Resource()
-		addTags(res.Attributes())
+		addTags(res.Attributes(), traceql.ScopeResource)
 
 		scopeSpans := resSpan.ScopeSpans()
 		for i := 0; i < scopeSpans.Len(); i++ {
 			scopeSpan := scopeSpans.At(i)
 			scope := scopeSpan.Scope()
-			addTags(scope.Attributes())
+			addTags(scope.Attributes(), traceql.ScopeInstrumentation)
 
 			spans := scopeSpan.Spans()
 			for i := 0; i < spans.Len(); i++ {
 				span := spans.At(i)
-				// Add span name as well. For some reason, Grafana is looking for it too.
-				addName(span.Name())
 				insertBatch = append(insertBatch, NewSpanFromOTEL(batchID, res, scope, span))
-				addTags(span.Attributes())
+				addTags(span.Attributes(), traceql.ScopeSpan)
 			}
 		}
 	}

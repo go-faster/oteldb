@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/traceql"
 )
 
 // Span is a data structure for span.
@@ -61,7 +62,8 @@ type Link struct {
 
 // Tag is a data structure for tag.
 type Tag struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-	Type  int32  `json:"type"`
+	Name  string                 `json:"name"`
+	Value string                 `json:"value"`
+	Type  int32                  `json:"type"`
+	Scope traceql.AttributeScope `json:"scope"`
 }

@@ -9,34 +9,44 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/go-logfmt/logfmt"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
-
-	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
+	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
-
-var _ tempoapi.Handler = (*TempoAPI)(nil)
 
 // TempoAPI implements tempoapi.Handler.
 type TempoAPI struct {
 	q      tracestorage.Querier
 	engine *traceqlengine.Engine
+
+	enableAutocomplete bool
 }
 
+var _ tempoapi.Handler = (*TempoAPI)(nil)
+
 // NewTempoAPI creates new TempoAPI.
-func NewTempoAPI(q tracestorage.Querier, engine *traceqlengine.Engine) *TempoAPI {
+func NewTempoAPI(
+	q tracestorage.Querier,
+	engine *traceqlengine.Engine,
+	opts TempoAPIOptions,
+) *TempoAPI {
+	opts.setDefaults()
+
 	return &TempoAPI{
-		q:      q,
-		engine: engine,
+		q:                  q,
+		engine:             engine,
+		enableAutocomplete: opts.EnableAutocompleteQuery,
 	}
 }
 
@@ -147,9 +157,21 @@ func parseLogfmt(q string) (tags map[string]string, _ error) {
 func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTagValuesParams) (resp *tempoapi.TagValues, _ error) {
 	lg := zctx.From(ctx)
 
-	iter, err := h.q.TagValues(ctx, params.TagName)
+	var (
+		attr  = traceql.Attribute{Name: params.TagName}
+		query traceql.Autocomplete
+	)
+	if q, ok := params.Q.Get(); ok && h.enableAutocomplete {
+		query = traceql.ParseAutocomplete(q)
+	}
+
+	iter, err := h.q.TagValues(ctx, attr, tracestorage.TagValuesOptions{
+		Query: query,
+		Start: timeToTimestamp(params.Start),
+		End:   timeToTimestamp(params.End),
+	})
 	if err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, errors.Wrap(err, "get tag values")
 	}
 	defer func() {
 		_ = iter.Close()
@@ -164,6 +186,7 @@ func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTa
 	}
 	lg.Debug("Got tag values",
 		zap.String("tag_name", params.TagName),
+		zap.String("q", params.Q.Or("")),
 		zap.Int("count", len(values)),
 	)
 
@@ -177,13 +200,26 @@ func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTa
 // This endpoint retrieves all discovered values and their data types for the given TraceQL
 // identifier.
 //
-// GET /api/v2/search/tag/{tag_name}/values
+// GET /api/v2/search/tag/{attribute_selector}/values
 func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.SearchTagValuesV2Params) (resp *tempoapi.TagValuesV2, _ error) {
 	lg := zctx.From(ctx)
 
-	iter, err := h.q.TagValues(ctx, params.TagName)
+	attr, err := traceql.ParseAttribute(params.AttributeSelector)
 	if err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, err
+	}
+	var query traceql.Autocomplete
+	if q, ok := params.Q.Get(); ok && h.enableAutocomplete {
+		query = traceql.ParseAutocomplete(q)
+	}
+
+	iter, err := h.q.TagValues(ctx, attr, tracestorage.TagValuesOptions{
+		Query: query,
+		Start: timeToTimestamp(params.Start),
+		End:   timeToTimestamp(params.End),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "get tag values")
 	}
 	defer func() {
 		_ = iter.Close()
@@ -218,8 +254,9 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 	}); err != nil {
 		return nil, errors.Wrap(err, "map tags")
 	}
-	lg.Debug("Got tag types and values",
-		zap.String("tag_name", params.TagName),
+	lg.Debug("Got tag values",
+		zap.String("attribute_selector", params.AttributeSelector),
+		zap.String("q", params.Q.Or("")),
 		zap.Int("count", len(values)),
 	)
 
@@ -233,17 +270,114 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 // This endpoint retrieves all discovered tag names that can be used in search.
 //
 // GET /api/search/tags
-func (h *TempoAPI) SearchTags(ctx context.Context) (resp *tempoapi.TagNames, _ error) {
+func (h *TempoAPI) SearchTags(ctx context.Context, params tempoapi.SearchTagsParams) (resp *tempoapi.TagNames, _ error) {
 	lg := zctx.From(ctx)
 
-	names, err := h.q.TagNames(ctx)
+	var scope traceql.AttributeScope
+	switch params.Scope.Or(tempoapi.TagScopeNone) {
+	case tempoapi.TagScopeSpan:
+		scope = traceql.ScopeSpan
+	case tempoapi.TagScopeResource:
+		scope = traceql.ScopeResource
+	case tempoapi.TagScopeIntrinsic:
+		lg.Debug("Return intrinsic names")
+		return &tempoapi.TagNames{
+			TagNames: traceql.IntrinsicNames(),
+		}, nil
+	case tempoapi.TagScopeNone:
+		scope = traceql.ScopeNone
+	}
+
+	tags, err := h.q.TagNames(ctx, tracestorage.TagNamesOptions{
+		Scope: scope,
+		Start: timeToTimestamp(params.Start),
+		End:   timeToTimestamp(params.End),
+	})
 	if err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, errors.Wrap(err, "get tag names")
+	}
+
+	names := make(map[string]struct{}, len(tags))
+	for _, tag := range tags {
+		names[tag.Name] = struct{}{}
 	}
 	lg.Debug("Got tag names", zap.Int("count", len(names)))
 
 	return &tempoapi.TagNames{
-		TagNames: names,
+		TagNames: maps.Keys(names),
+	}, nil
+}
+
+// SearchTagsV2 implements searchTagsV2 operation.
+//
+// This endpoint retrieves all discovered tag names that can be used in search.
+//
+// GET /api/v2/search/tags
+func (h *TempoAPI) SearchTagsV2(ctx context.Context, params tempoapi.SearchTagsV2Params) (*tempoapi.TagNamesV2, error) {
+	lg := zctx.From(ctx)
+
+	var (
+		searchScope traceql.AttributeScope
+		intrinsic   = tempoapi.ScopeTags{
+			Name: tempoapi.TagScopeIntrinsic,
+			Tags: traceql.IntrinsicNames(),
+		}
+	)
+	switch params.Scope.Or(tempoapi.TagScopeNone) {
+	case tempoapi.TagScopeSpan:
+		searchScope = traceql.ScopeSpan
+	case tempoapi.TagScopeResource:
+		searchScope = traceql.ScopeResource
+	case tempoapi.TagScopeIntrinsic:
+		lg.Debug("Return intrinsic names")
+		return &tempoapi.TagNamesV2{
+			Scopes: []tempoapi.ScopeTags{intrinsic},
+		}, nil
+	case tempoapi.TagScopeNone:
+		searchScope = traceql.ScopeNone
+	}
+
+	tags, err := h.q.TagNames(ctx, tracestorage.TagNamesOptions{
+		Scope: searchScope,
+		Start: timeToTimestamp(params.Start),
+		End:   timeToTimestamp(params.End),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "get tag names")
+	}
+
+	scopes := make(map[tempoapi.TagScope]tempoapi.ScopeTags, 4)
+	if searchScope == traceql.ScopeNone {
+		// Add intrinsics to the result, if all scopes are requested.
+		scopes[intrinsic.Name] = intrinsic
+	}
+	for _, tag := range tags {
+		var tagScope tempoapi.TagScope
+		switch tag.Scope {
+		case traceql.ScopeNone:
+			tagScope = tempoapi.TagScopeNone
+		case traceql.ScopeResource, traceql.ScopeInstrumentation:
+			tagScope = tempoapi.TagScopeResource
+		case traceql.ScopeSpan:
+			tagScope = tempoapi.TagScopeSpan
+		default:
+			lg.Warn("Unexpected tag scope",
+				zap.Stringer("scope", tag.Scope),
+				zap.String("tag", tag.Name),
+			)
+			continue
+		}
+
+		scopeTags, ok := scopes[tagScope]
+		if !ok {
+			scopeTags.Name = tagScope
+		}
+		scopeTags.Tags = append(scopeTags.Tags, tag.Name)
+		scopes[tagScope] = scopeTags
+	}
+
+	return &tempoapi.TagNamesV2{
+		Scopes: maps.Values(scopes),
 	}, nil
 }
 

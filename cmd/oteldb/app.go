@@ -154,7 +154,7 @@ func (app *App) trySetupTempo() error {
 	engine := traceqlengine.NewEngine(app.traceQuerier, traceqlengine.Options{
 		TracerProvider: app.metrics.TracerProvider(),
 	})
-	tempo := tempohandler.NewTempoAPI(q, engine)
+	tempo := tempohandler.NewTempoAPI(q, engine, tempohandler.TempoAPIOptions{})
 
 	s, err := tempoapi.NewServer(tempo,
 		tempoapi.WithTracerProvider(app.metrics.TracerProvider()),

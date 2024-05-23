@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/go-faster/errors"
 )
 
 func (s *ErrorStatusCode) Error() string {
@@ -505,6 +507,52 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// NewOptTagScope returns new OptTagScope with value set to v.
+func NewOptTagScope(v TagScope) OptTagScope {
+	return OptTagScope{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTagScope is optional TagScope.
+type OptTagScope struct {
+	Value TagScope
+	Set   bool
+}
+
+// IsSet returns true if OptTagScope was set.
+func (o OptTagScope) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTagScope) Reset() {
+	var v TagScope
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTagScope) SetTo(v TagScope) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTagScope) Get() (v TagScope, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTagScope) Or(d TagScope) TagScope {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptTempoSpanSet returns new OptTempoSpanSet with value set to v.
 func NewOptTempoSpanSet(v TempoSpanSet) OptTempoSpanSet {
 	return OptTempoSpanSet{
@@ -597,6 +645,32 @@ func (o OptUnixSeconds) Or(d time.Time) time.Time {
 	return d
 }
 
+// Ref: #/components/schemas/ScopeTags
+type ScopeTags struct {
+	Name TagScope `json:"name"`
+	Tags []string `json:"tags"`
+}
+
+// GetName returns the value of Name.
+func (s *ScopeTags) GetName() TagScope {
+	return s.Name
+}
+
+// GetTags returns the value of Tags.
+func (s *ScopeTags) GetTags() []string {
+	return s.Tags
+}
+
+// SetName sets the value of Name.
+func (s *ScopeTags) SetName(val TagScope) {
+	s.Name = val
+}
+
+// SetTags sets the value of Tags.
+func (s *ScopeTags) SetTags(val []string) {
+	s.Tags = val
+}
+
 // Ref: #/components/schemas/StringValue
 type StringValue struct {
 	StringValue string `json:"stringValue"`
@@ -625,6 +699,77 @@ func (s *TagNames) GetTagNames() []string {
 // SetTagNames sets the value of TagNames.
 func (s *TagNames) SetTagNames(val []string) {
 	s.TagNames = val
+}
+
+// Ref: #/components/schemas/TagNamesV2
+type TagNamesV2 struct {
+	Scopes []ScopeTags `json:"scopes"`
+}
+
+// GetScopes returns the value of Scopes.
+func (s *TagNamesV2) GetScopes() []ScopeTags {
+	return s.Scopes
+}
+
+// SetScopes sets the value of Scopes.
+func (s *TagNamesV2) SetScopes(val []ScopeTags) {
+	s.Scopes = val
+}
+
+// Ref: #/components/schemas/TagScope
+type TagScope string
+
+const (
+	TagScopeSpan      TagScope = "span"
+	TagScopeResource  TagScope = "resource"
+	TagScopeIntrinsic TagScope = "intrinsic"
+	TagScopeNone      TagScope = "none"
+)
+
+// AllValues returns all TagScope values.
+func (TagScope) AllValues() []TagScope {
+	return []TagScope{
+		TagScopeSpan,
+		TagScopeResource,
+		TagScopeIntrinsic,
+		TagScopeNone,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TagScope) MarshalText() ([]byte, error) {
+	switch s {
+	case TagScopeSpan:
+		return []byte(s), nil
+	case TagScopeResource:
+		return []byte(s), nil
+	case TagScopeIntrinsic:
+		return []byte(s), nil
+	case TagScopeNone:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TagScope) UnmarshalText(data []byte) error {
+	switch TagScope(data) {
+	case TagScopeSpan:
+		*s = TagScopeSpan
+		return nil
+	case TagScopeResource:
+		*s = TagScopeResource
+		return nil
+	case TagScopeIntrinsic:
+		*s = TagScopeIntrinsic
+		return nil
+	case TagScopeNone:
+		*s = TagScopeNone
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/TagValue

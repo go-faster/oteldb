@@ -58,35 +58,17 @@ func (p *parser) parseFieldExpr1() (FieldExpr, error) {
 			Expr: expr,
 			Op:   op,
 		}, nil
-	case lexer.String,
-		lexer.Integer,
-		lexer.Number,
-		lexer.True,
-		lexer.False,
-		lexer.Nil,
-		lexer.Duration,
-		lexer.StatusOk,
-		lexer.StatusError,
-		lexer.StatusUnset,
-		lexer.KindUnspecified,
-		lexer.KindInternal,
-		lexer.KindServer,
-		lexer.KindClient,
-		lexer.KindProducer,
-		lexer.KindConsumer:
-		return p.parseStatic()
-	case lexer.SpanDuration,
-		lexer.ChildCount,
-		lexer.Name,
-		lexer.Status,
-		lexer.Kind,
-		lexer.Parent,
-		lexer.RootName,
-		lexer.RootServiceName,
-		lexer.TraceDuration,
-		lexer.Ident:
-		return p.parseAttribute()
 	default:
+		switch s, ok, err := p.tryStatic(); {
+		case err != nil:
+			return nil, err
+		case ok:
+			return s, nil
+		}
+
+		if a, ok := p.tryAttribute(); ok {
+			return &a, nil
+		}
 		return nil, p.unexpectedToken(t)
 	}
 }
@@ -179,65 +161,85 @@ func (p *parser) peekBinaryOp() (op BinaryOp, _ bool) {
 	}
 }
 
-func (p *parser) parseStatic() (s *Static, _ error) {
+func (p *parser) parseStatic() (*Static, error) {
+	switch s, ok, err := p.tryStatic(); {
+	case err != nil:
+		return nil, err
+	case ok:
+		return s, nil
+	default:
+		return nil, p.unexpectedToken(p.peek())
+	}
+}
+
+func (p *parser) tryStatic() (s *Static, ok bool, _ error) {
 	s = new(Static)
-	switch t := p.next(); t.Type {
+	switch t := p.peek(); t.Type {
 	case lexer.String:
+		p.next()
 		s.SetString(t.Text)
 	case lexer.Integer:
-		p.unread()
 		v, err := p.parseInteger()
 		if err != nil {
-			return s, err
+			return s, false, err
 		}
 		s.SetInt(v)
 	case lexer.Number:
-		p.unread()
 		v, err := p.parseNumber()
 		if err != nil {
-			return s, err
+			return s, false, err
 		}
 		s.SetNumber(v)
 	case lexer.True:
+		p.next()
 		s.SetBool(true)
 	case lexer.False:
+		p.next()
 		s.SetBool(false)
 	case lexer.Nil:
+		p.next()
 		s.SetNil()
 	case lexer.Duration:
-		p.unread()
 		v, err := p.parseDuration()
 		if err != nil {
-			return s, err
+			return s, false, err
 		}
 		s.SetDuration(v)
 	case lexer.StatusOk:
+		p.next()
 		s.SetSpanStatus(ptrace.StatusCodeOk)
 	case lexer.StatusError:
+		p.next()
 		s.SetSpanStatus(ptrace.StatusCodeError)
 	case lexer.StatusUnset:
+		p.next()
 		s.SetSpanStatus(ptrace.StatusCodeUnset)
 	case lexer.KindUnspecified:
+		p.next()
 		s.SetSpanKind(ptrace.SpanKindUnspecified)
 	case lexer.KindInternal:
+		p.next()
 		s.SetSpanKind(ptrace.SpanKindInternal)
 	case lexer.KindServer:
+		p.next()
 		s.SetSpanKind(ptrace.SpanKindServer)
 	case lexer.KindClient:
+		p.next()
 		s.SetSpanKind(ptrace.SpanKindClient)
 	case lexer.KindProducer:
+		p.next()
 		s.SetSpanKind(ptrace.SpanKindProducer)
 	case lexer.KindConsumer:
+		p.next()
 		s.SetSpanKind(ptrace.SpanKindConsumer)
 	default:
-		return s, p.unexpectedToken(t)
+		return s, false, nil
 	}
-	return s, nil
+	return s, true, nil
 }
 
-func (p *parser) parseAttribute() (a *Attribute, _ error) {
-	a = new(Attribute)
-	switch t := p.next(); t.Type {
+func (p *parser) tryAttribute() (a Attribute, _ bool) {
+	switch t := p.peek(); t.Type {
 	case lexer.SpanDuration:
 		a.Prop = SpanDuration
 	case lexer.ChildCount:
@@ -256,34 +258,38 @@ func (p *parser) parseAttribute() (a *Attribute, _ error) {
 		a.Prop = RootServiceName
 	case lexer.TraceDuration:
 		a.Prop = TraceDuration
-
 	case lexer.Ident:
-		attr := t.Text
-		attr, a.Parent = strings.CutPrefix(attr, "parent.")
-
-		uncut := attr
-		scope, attr, ok := strings.Cut(attr, ".")
-		if !ok {
-			a.Name = uncut
-		} else {
-			switch scope {
-			case "resource":
-				a.Name = attr
-				a.Scope = ScopeResource
-			case "span":
-				a.Name = attr
-				a.Scope = ScopeSpan
-			case "":
-				a.Name = attr
-				a.Scope = ScopeNone
-			default:
-				a.Name = uncut
-				a.Scope = ScopeNone
-			}
-		}
+		parseAttributeSelector(t.Text, &a)
 	default:
-		return a, p.unexpectedToken(t)
+		return a, false
+	}
+	p.next()
+
+	return a, true
+}
+
+func parseAttributeSelector(attr string, a *Attribute) {
+	attr, a.Parent = strings.CutPrefix(attr, "parent.")
+
+	uncut := attr
+	scope, attr, ok := strings.Cut(attr, ".")
+	if !ok {
+		a.Name = uncut
+		return
 	}
 
-	return a, nil
+	switch scope {
+	case "resource":
+		a.Name = attr
+		a.Scope = ScopeResource
+	case "span":
+		a.Name = attr
+		a.Scope = ScopeSpan
+	case "":
+		a.Name = attr
+		a.Scope = ScopeNone
+	default:
+		a.Name = uncut
+		a.Scope = ScopeNone
+	}
 }

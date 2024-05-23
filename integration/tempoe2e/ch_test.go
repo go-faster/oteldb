@@ -10,6 +10,7 @@ import (
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -76,5 +77,6 @@ func TestCH(t *testing.T) {
 	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
 	require.NoError(t, err)
 
+	ctx = zctx.Base(ctx, integration.Logger(t))
 	runTest(ctx, t, inserter, querier, querier)
 }

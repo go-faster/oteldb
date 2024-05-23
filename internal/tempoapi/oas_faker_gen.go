@@ -151,6 +151,27 @@ func (s *OptTempoSpanSet) SetFake() {
 }
 
 // SetFake set fake values.
+func (s *ScopeTags) SetFake() {
+	{
+		{
+			s.Name.SetFake()
+		}
+	}
+	{
+		{
+			s.Tags = nil
+			for i := 0; i < 0; i++ {
+				var elem string
+				{
+					elem = "string"
+				}
+				s.Tags = append(s.Tags, elem)
+			}
+		}
+	}
+}
+
+// SetFake set fake values.
 func (s *StringValue) SetFake() {
 	{
 		{
@@ -173,6 +194,27 @@ func (s *TagNames) SetFake() {
 			}
 		}
 	}
+}
+
+// SetFake set fake values.
+func (s *TagNamesV2) SetFake() {
+	{
+		{
+			s.Scopes = nil
+			for i := 0; i < 0; i++ {
+				var elem ScopeTags
+				{
+					elem.SetFake()
+				}
+				s.Scopes = append(s.Scopes, elem)
+			}
+		}
+	}
+}
+
+// SetFake set fake values.
+func (s *TagScope) SetFake() {
+	*s = TagScopeSpan
 }
 
 // SetFake set fake values.

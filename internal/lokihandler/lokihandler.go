@@ -20,12 +20,20 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-var _ lokiapi.Handler = (*LokiAPI)(nil)
-
 // LokiAPI implements lokiapi.Handler.
 type LokiAPI struct {
 	q      logstorage.Querier
 	engine *logqlengine.Engine
+}
+
+var _ lokiapi.Handler = (*LokiAPI)(nil)
+
+// NewLokiAPI creates new LokiAPI.
+func NewLokiAPI(q logstorage.Querier, engine *logqlengine.Engine) *LokiAPI {
+	return &LokiAPI{
+		q:      q,
+		engine: engine,
+	}
 }
 
 // IndexStats implements indexStats operation.
@@ -36,14 +44,6 @@ type LokiAPI struct {
 func (h *LokiAPI) IndexStats(context.Context, lokiapi.IndexStatsParams) (*lokiapi.IndexStats, error) {
 	// No stats for now.
 	return &lokiapi.IndexStats{}, nil
-}
-
-// NewLokiAPI creates new LokiAPI.
-func NewLokiAPI(q logstorage.Querier, engine *logqlengine.Engine) *LokiAPI {
-	return &LokiAPI{
-		q:      q,
-		engine: engine,
-	}
 }
 
 // LabelValues implements labelValues operation.

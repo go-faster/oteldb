@@ -1,6 +1,26 @@
 package traceql
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/go-faster/errors"
+)
+
+// ParseAttribute parses attribute from given string.
+func ParseAttribute(attr string) (a Attribute, _ error) {
+	p, err := newParser(attr)
+	if err != nil {
+		return a, err
+	}
+
+	a, ok := p.tryAttribute()
+	if !ok {
+		return a, errors.Errorf("invalid attribute %q", attr)
+	}
+
+	return a, nil
+}
 
 // Attribute is a span attribute.
 type Attribute struct {
@@ -100,6 +120,19 @@ const (
 	TraceDuration
 )
 
+var intrinsicNames = func() (r []string) {
+	r = make([]string, 0, TraceDuration)
+	for i := SpanDuration; i <= TraceDuration; i++ {
+		r = append(r, Attribute{Prop: i}.String())
+	}
+	return r
+}()
+
+// IntrinsicNames returns a slice of intrinsics.
+func IntrinsicNames() (r []string) {
+	return intrinsicNames
+}
+
 // AttributeScope is an attribute scope.
 type AttributeScope uint8
 
@@ -107,4 +140,21 @@ const (
 	ScopeNone AttributeScope = iota
 	ScopeResource
 	ScopeSpan
+	ScopeInstrumentation
 )
+
+// String implements [fmt.Stringer].
+func (s AttributeScope) String() string {
+	switch s {
+	case ScopeNone:
+		return "none"
+	case ScopeResource:
+		return "resource"
+	case ScopeSpan:
+		return "span"
+	case ScopeInstrumentation:
+		return "<instrumentation>"
+	default:
+		return fmt.Sprintf("unknown scope %d", uint8(s))
+	}
+}

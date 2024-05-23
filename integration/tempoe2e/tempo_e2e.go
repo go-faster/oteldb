@@ -10,17 +10,24 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
+	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
 // BatchSet is a set of batches.
 type BatchSet struct {
-	Batches []ptrace.Traces
-	Tags    map[string][]tracestorage.Tag
-	Traces  map[pcommon.TraceID]Trace
-	Engine  *traceqlengine.Engine
-	mq      traceqlengine.MemoryQuerier
+	Batches   []ptrace.Traces
+	Tags      map[string][]tracestorage.Tag
+	Traces    map[pcommon.TraceID]Trace
+	SpanNames map[string]struct{}
+
+	Start otelstorage.Timestamp
+	End   otelstorage.Timestamp
+
+	Engine *traceqlengine.Engine
+	mq     traceqlengine.MemoryQuerier
 }
 
 // ParseBatchSet parses JSON batches from given reader.
@@ -54,20 +61,19 @@ func (s *BatchSet) addBatch(raw ptrace.Traces) {
 	for i := 0; i < resSpans.Len(); i++ {
 		resSpan := resSpans.At(i)
 		res := resSpan.Resource()
-		s.addTags(res.Attributes())
+		s.addTags(res.Attributes(), traceql.ScopeResource)
 
 		scopeSpans := resSpan.ScopeSpans()
 		for i := 0; i < scopeSpans.Len(); i++ {
 			scopeSpan := scopeSpans.At(i)
 			scope := scopeSpan.Scope()
-			s.addTags(scope.Attributes())
+			s.addTags(scope.Attributes(), traceql.ScopeResource)
 
 			spans := scopeSpan.Spans()
 			for i := 0; i < spans.Len(); i++ {
 				span := spans.At(i)
 				// Add span name as well. For some reason, Grafana is looking for it too.
-				s.addName(span.Name())
-				s.addTags(span.Attributes())
+				s.addTags(span.Attributes(), traceql.ScopeSpan)
 				s.addSpan(span)
 				s.mq.Add(tracestorage.NewSpanFromOTEL(batchID, res, scope, span))
 			}
@@ -76,11 +82,17 @@ func (s *BatchSet) addBatch(raw ptrace.Traces) {
 }
 
 func (s *BatchSet) addSpan(span ptrace.Span) {
-	if s.Traces == nil {
-		s.Traces = map[pcommon.TraceID]Trace{}
+	if start := span.StartTimestamp(); s.Start == 0 || start < s.Start {
+		s.Start = start
+	}
+	if end := span.EndTimestamp(); s.End == 0 || end > s.End {
+		s.End = end
 	}
 
 	traceID := span.TraceID()
+	if s.Traces == nil {
+		s.Traces = map[pcommon.TraceID]Trace{}
+	}
 	t, ok := s.Traces[traceID]
 	if !ok {
 		t = Trace{
@@ -90,6 +102,11 @@ func (s *BatchSet) addSpan(span ptrace.Span) {
 	}
 	t.Spanset[span.SpanID()] = span
 	s.Traces[traceID] = t
+
+	if s.SpanNames == nil {
+		s.SpanNames = map[string]struct{}{}
+	}
+	s.SpanNames[span.Name()] = struct{}{}
 }
 
 // Trace contains spanset fields to check storage behavior.
@@ -97,15 +114,7 @@ type Trace struct {
 	Spanset map[pcommon.SpanID]ptrace.Span
 }
 
-func (s *BatchSet) addName(name string) {
-	s.addTag(tracestorage.Tag{
-		Name:  "name",
-		Value: name,
-		Type:  int32(pcommon.ValueTypeStr),
-	})
-}
-
-func (s *BatchSet) addTags(m pcommon.Map) {
+func (s *BatchSet) addTags(m pcommon.Map, scope traceql.AttributeScope) {
 	m.Range(func(k string, v pcommon.Value) bool {
 		switch t := v.Type(); t {
 		case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
@@ -114,6 +123,7 @@ func (s *BatchSet) addTags(m pcommon.Map) {
 				Name:  k,
 				Value: v.AsString(),
 				Type:  int32(t),
+				Scope: scope,
 			})
 		}
 		return true

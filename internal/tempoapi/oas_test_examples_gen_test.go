@@ -131,6 +131,18 @@ func TestKvlistValue_EncodeDecode(t *testing.T) {
 	var typ2 KvlistValue
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
+func TestScopeTags_EncodeDecode(t *testing.T) {
+	var typ ScopeTags
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 ScopeTags
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
 func TestStringValue_EncodeDecode(t *testing.T) {
 	var typ StringValue
 	typ.SetFake()
@@ -153,6 +165,30 @@ func TestTagNames_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 TagNames
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestTagNamesV2_EncodeDecode(t *testing.T) {
+	var typ TagNamesV2
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 TagNamesV2
+	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
+}
+func TestTagScope_EncodeDecode(t *testing.T) {
+	var typ TagScope
+	typ.SetFake()
+
+	e := jx.Encoder{}
+	typ.Encode(&e)
+	data := e.Bytes()
+	require.True(t, std.Valid(data), "Encoded: %s", data)
+
+	var typ2 TagScope
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestTagValue_EncodeDecode(t *testing.T) {
