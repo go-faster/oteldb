@@ -11,7 +11,6 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
-	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
@@ -170,21 +169,21 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 		// TODO(tdakkota): probably we should do a proper query.
 		name := tag.String()
 		statuses := []tracestorage.Tag{
-			{Name: name, Value: ptrace.StatusCodeUnset.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.StatusCodeOk.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.StatusCodeError.String(), Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "unset", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "ok", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "error", Type: int32(pcommon.ValueTypeStr)},
 		}
 		return iterators.Slice(statuses), nil
 	case traceql.SpanKind:
 		// TODO(tdakkota): probably we should do a proper query.
 		name := tag.String()
 		kinds := []tracestorage.Tag{
-			{Name: name, Value: ptrace.SpanKindUnspecified.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.SpanKindInternal.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.SpanKindServer.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.SpanKindClient.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.SpanKindProducer.String(), Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: ptrace.SpanKindConsumer.String(), Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "unspecified", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "internal", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "server", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "client", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "producer", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "consumer", Type: int32(pcommon.ValueTypeStr)},
 		}
 		return iterators.Slice(kinds), nil
 	case traceql.SpanDuration, traceql.SpanChildCount, traceql.SpanParent, traceql.TraceDuration:
