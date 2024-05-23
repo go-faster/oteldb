@@ -55,7 +55,7 @@ func setupDB(
 	if engineQuerier != nil {
 		engine = traceqlengine.NewEngine(engineQuerier, traceqlengine.Options{})
 	}
-	api := tempohandler.NewTempoAPI(querier, engine)
+	api := tempohandler.NewTempoAPI(querier, engine, tempohandler.TempoAPIOptions{})
 	tempoh, err := tempoapi.NewServer(api)
 	require.NoError(t, err)
 

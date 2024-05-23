@@ -30,15 +30,24 @@ import (
 type TempoAPI struct {
 	q      tracestorage.Querier
 	engine *traceqlengine.Engine
+
+	enableAutocomplete bool
 }
 
 var _ tempoapi.Handler = (*TempoAPI)(nil)
 
 // NewTempoAPI creates new TempoAPI.
-func NewTempoAPI(q tracestorage.Querier, engine *traceqlengine.Engine) *TempoAPI {
+func NewTempoAPI(
+	q tracestorage.Querier,
+	engine *traceqlengine.Engine,
+	opts TempoAPIOptions,
+) *TempoAPI {
+	opts.setDefaults()
+
 	return &TempoAPI{
-		q:      q,
-		engine: engine,
+		q:                  q,
+		engine:             engine,
+		enableAutocomplete: opts.EnableAutocompleteQuery,
 	}
 }
 
@@ -149,8 +158,13 @@ func parseLogfmt(q string) (tags map[string]string, _ error) {
 func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTagValuesParams) (resp *tempoapi.TagValues, _ error) {
 	lg := zctx.From(ctx)
 
-	attr := traceql.Attribute{Name: params.TagName}
-	query := traceql.ParseAutocomplete(params.Q.Or(`{}`))
+	var (
+		attr  = traceql.Attribute{Name: params.TagName}
+		query traceql.Autocomplete
+	)
+	if q, ok := params.Q.Get(); ok && h.enableAutocomplete {
+		query = traceql.ParseAutocomplete(q)
+	}
 
 	iter, err := h.q.TagValues(ctx, attr, tracestorage.TagValuesOptions{
 		Query: query,
@@ -195,7 +209,10 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 	if err != nil {
 		return nil, err
 	}
-	query := traceql.ParseAutocomplete(params.Q.Or(`{}`))
+	var query traceql.Autocomplete
+	if q, ok := params.Q.Get(); ok && h.enableAutocomplete {
+		query = traceql.ParseAutocomplete(q)
+	}
 
 	iter, err := h.q.TagValues(ctx, attr, tracestorage.TagValuesOptions{
 		Query: query,
