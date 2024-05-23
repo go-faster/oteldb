@@ -121,7 +121,7 @@ const (
 )
 
 var intrinsicNames = func() (r []string) {
-	r = make([]string, TraceDuration)
+	r = make([]string, 0, TraceDuration)
 	for i := SpanDuration; i <= TraceDuration; i++ {
 		r = append(r, Attribute{Prop: i}.String())
 	}
