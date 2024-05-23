@@ -26,13 +26,13 @@ import (
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
-var _ tempoapi.Handler = (*TempoAPI)(nil)
-
 // TempoAPI implements tempoapi.Handler.
 type TempoAPI struct {
 	q      tracestorage.Querier
 	engine *traceqlengine.Engine
 }
+
+var _ tempoapi.Handler = (*TempoAPI)(nil)
 
 // NewTempoAPI creates new TempoAPI.
 func NewTempoAPI(q tracestorage.Querier, engine *traceqlengine.Engine) *TempoAPI {

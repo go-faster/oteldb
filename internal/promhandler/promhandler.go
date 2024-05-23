@@ -18,8 +18,6 @@ import (
 	"github.com/go-faster/oteldb/internal/promapi"
 )
 
-var _ promapi.Handler = (*PromAPI)(nil)
-
 // Engine is a Prometheus engine interface.
 type Engine interface {
 	NewInstantQuery(ctx context.Context, q storage.Queryable, opts promql.QueryOpts, qs string, ts time.Time) (promql.Query, error)
@@ -34,6 +32,8 @@ type PromAPI struct {
 
 	lookbackDelta time.Duration
 }
+
+var _ promapi.Handler = (*PromAPI)(nil)
 
 // NewPromAPI creates new PromAPI.
 func NewPromAPI(
