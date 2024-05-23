@@ -16,6 +16,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -280,14 +281,14 @@ func (h *TempoAPI) SearchTags(ctx context.Context, params tempoapi.SearchTagsPar
 		return nil, errors.Wrap(err, "get tag names")
 	}
 
-	names := make([]string, len(tags))
-	for i := range tags {
-		names = append(names, tags[i].Name)
+	names := make(map[string]struct{}, len(tags))
+	for _, tag := range tags {
+		names[tag.Name] = struct{}{}
 	}
-	lg.Debug("Got tag names", zap.Int("count", len(tags)))
+	lg.Debug("Got tag names", zap.Int("count", len(names)))
 
 	return &tempoapi.TagNames{
-		TagNames: names,
+		TagNames: maps.Keys(names),
 	}, nil
 }
 
