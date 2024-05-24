@@ -177,6 +177,27 @@ func runTest(
 				}
 			}
 		})
+		t.Run("ResourceAttribute", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
+				AttributeSelector: `resource.service.name`,
+				Start:             start,
+				End:               end,
+			})
+			a.NoError(err)
+
+			tagValues := map[string]struct{}{}
+			for _, t := range set.Tags["service.name"] {
+				tagValues[t.Value] = struct{}{}
+			}
+
+			a.Len(r.TagValues, len(tagValues))
+			for _, tag := range r.TagValues {
+				a.Equal("string", tag.Type)
+				a.Contains(tagValues, tag.Value)
+			}
+		})
 		t.Run("SpanName", func(t *testing.T) {
 			a := require.New(t)
 
