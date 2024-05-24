@@ -191,7 +191,7 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 		return iterators.Empty[tracestorage.Tag](), nil
 	case traceql.SpanName, traceql.RootSpanName:
 		// FIXME(tdakkota): we don't check if span name is actually coming from a root span.
-		return q.spanNames(ctx, opts)
+		return q.spanNames(ctx, tag, opts)
 	case traceql.RootServiceName:
 		// FIXME(tdakkota): we don't check if service.name actually coming from a root span.
 		//
@@ -203,7 +203,7 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 	}
 }
 
-func (q *Querier) spanNames(ctx context.Context, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
+func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	table := q.tables.Spans
 
 	ctx, span := q.tracer.Start(ctx, "spanNames",
@@ -228,6 +228,8 @@ func (q *Querier) spanNames(ctx context.Context, opts tracestorage.TagValuesOpti
 	}
 
 	var (
+		tagName = tag.String()
+
 		name = new(proto.ColStr).LowCardinality()
 		r    []tracestorage.Tag
 	)
@@ -240,7 +242,7 @@ func (q *Querier) spanNames(ctx context.Context, opts tracestorage.TagValuesOpti
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < name.Rows(); i++ {
 				r = append(r, tracestorage.Tag{
-					Name:  "name",
+					Name:  tagName,
 					Value: name.Row(i),
 					Type:  traceql.TypeString,
 					Scope: traceql.ScopeNone,
