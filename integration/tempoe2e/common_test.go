@@ -188,6 +188,7 @@ func runTest(
 			a.NoError(err)
 			a.Len(r.TagValues, len(set.SpanNames))
 			for _, tag := range r.TagValues {
+				a.Equal("string", tag.Type)
 				a.Contains(set.SpanNames, tag.Value)
 			}
 		})
@@ -208,6 +209,7 @@ func runTest(
 			}
 			a.Len(r.TagValues, len(statuses))
 			for _, tag := range r.TagValues {
+				a.Equal("keyword", tag.Type)
 				a.Contains(statuses, tag.Value)
 			}
 		})
