@@ -208,6 +208,9 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 
 	ctx, span := q.tracer.Start(ctx, "spanNames",
 		trace.WithAttributes(
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			attribute.Stringer("chstorage.tag", tag),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -257,11 +260,14 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 	return iterators.Slice(r), nil
 }
 
-func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, _ tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
+func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	table := q.tables.Tags
 
 	ctx, span := q.tracer.Start(ctx, "attributeValues",
 		trace.WithAttributes(
+			attribute.Int64("chstorage.range.start", int64(opts.Start)),
+			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			attribute.Stringer("chstorage.tag", tag),
 			attribute.String("chstorage.table", table),
 		),
 	)
