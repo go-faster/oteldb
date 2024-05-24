@@ -12,7 +12,6 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/go-logfmt/logfmt"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
@@ -225,24 +224,36 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 		_ = iter.Close()
 	}()
 
-	var values []tempoapi.TagValue
+	var (
+		values   []tempoapi.TagValue
+		typeWarn bool
+	)
 	if err := iterators.ForEach(iter, func(tag tracestorage.Tag) error {
 		// TODO(tdakkota): handle duration/status and things
 		// https://github.com/grafana/tempo/blob/991d72281e5168080f426b3f1c9d5c4b88f7c460/modules/ingester/instance_search.go#L379
 		var typ string
-		switch pcommon.ValueType(tag.Type) {
-		case pcommon.ValueTypeStr:
+		switch tag.Type {
+		case traceql.TypeString:
 			typ = "string"
-		case pcommon.ValueTypeInt:
+		case traceql.TypeInt:
 			typ = "int"
-		case pcommon.ValueTypeDouble:
+		case traceql.TypeNumber:
 			typ = "float"
-		case pcommon.ValueTypeBool:
+		case traceql.TypeBool:
 			typ = "bool"
-		case pcommon.ValueTypeBytes:
-			typ = "string"
-		case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
-			// what?
+		case traceql.TypeSpanKind, traceql.TypeSpanStatus:
+			typ = "keyword"
+		case traceql.TypeDuration:
+			typ = "duration"
+		default:
+			if !typeWarn {
+				// Warn only once.
+				typeWarn = true
+				lg.Warn("Unexpected tag type",
+					zap.Stringer("type", tag.Type),
+					zap.String("tag", tag.Name),
+				)
+			}
 			return nil
 		}
 

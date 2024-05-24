@@ -64,6 +64,6 @@ type Link struct {
 type Tag struct {
 	Name  string                 `json:"name"`
 	Value string                 `json:"value"`
-	Type  int32                  `json:"type"`
+	Type  traceql.StaticType     `json:"type"`
 	Scope traceql.AttributeScope `json:"scope"`
 }

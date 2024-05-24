@@ -13,6 +13,26 @@ import (
 // StaticType defines static type.
 type StaticType int
 
+// StaticTypeFromValueType converts [pcommon.ValueType] to [StaticType].
+func StaticTypeFromValueType(typ pcommon.ValueType) StaticType {
+	switch typ {
+	case pcommon.ValueTypeEmpty:
+		return TypeNil
+	case pcommon.ValueTypeStr:
+		return TypeString
+	case pcommon.ValueTypeInt:
+		return TypeInt
+	case pcommon.ValueTypeDouble:
+		return TypeNumber
+	case pcommon.ValueTypeBool:
+		return TypeBool
+	case pcommon.ValueTypeBytes:
+		return TypeString
+	default:
+		return TypeAttribute
+	}
+}
+
 const (
 	TypeAttribute StaticType = iota
 	TypeString

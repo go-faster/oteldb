@@ -31,7 +31,12 @@ func (c *Consumer) ConsumeTraces(ctx context.Context, traces ptrace.Traces) erro
 			switch t := v.Type(); t {
 			case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
 			default:
-				tags[Tag{k, v.AsString(), int32(t), scope}] = struct{}{}
+				tags[Tag{
+					k,
+					v.AsString(),
+					traceql.StaticTypeFromValueType(t),
+					scope,
+				}] = struct{}{}
 			}
 			return true
 		})

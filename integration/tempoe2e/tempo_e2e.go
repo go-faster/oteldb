@@ -122,7 +122,7 @@ func (s *BatchSet) addTags(m pcommon.Map, scope traceql.AttributeScope) {
 			s.addTag(tracestorage.Tag{
 				Name:  k,
 				Value: v.AsString(),
-				Type:  int32(t),
+				Type:  traceql.StaticTypeFromValueType(t),
 				Scope: scope,
 			})
 		}

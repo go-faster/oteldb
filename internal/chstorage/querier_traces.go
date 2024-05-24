@@ -169,21 +169,21 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 		// TODO(tdakkota): probably we should do a proper query.
 		name := tag.String()
 		statuses := []tracestorage.Tag{
-			{Name: name, Value: "unset", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "ok", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "error", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "unset", Type: traceql.TypeSpanStatus},
+			{Name: name, Value: "ok", Type: traceql.TypeSpanStatus},
+			{Name: name, Value: "error", Type: traceql.TypeSpanStatus},
 		}
 		return iterators.Slice(statuses), nil
 	case traceql.SpanKind:
 		// TODO(tdakkota): probably we should do a proper query.
 		name := tag.String()
 		kinds := []tracestorage.Tag{
-			{Name: name, Value: "unspecified", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "internal", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "server", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "client", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "producer", Type: int32(pcommon.ValueTypeStr)},
-			{Name: name, Value: "consumer", Type: int32(pcommon.ValueTypeStr)},
+			{Name: name, Value: "unspecified", Type: traceql.TypeSpanKind},
+			{Name: name, Value: "internal", Type: traceql.TypeSpanKind},
+			{Name: name, Value: "server", Type: traceql.TypeSpanKind},
+			{Name: name, Value: "client", Type: traceql.TypeSpanKind},
+			{Name: name, Value: "producer", Type: traceql.TypeSpanKind},
+			{Name: name, Value: "consumer", Type: traceql.TypeSpanKind},
 		}
 		return iterators.Slice(kinds), nil
 	case traceql.SpanDuration, traceql.SpanChildCount, traceql.SpanParent, traceql.TraceDuration:
@@ -242,7 +242,7 @@ func (q *Querier) spanNames(ctx context.Context, opts tracestorage.TagValuesOpti
 				r = append(r, tracestorage.Tag{
 					Name:  "name",
 					Value: name.Row(i),
-					Type:  int32(pcommon.ValueTypeStr),
+					Type:  traceql.TypeString,
 					Scope: traceql.ScopeNone,
 				})
 			}
@@ -299,11 +299,12 @@ func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, _ 
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			return value.ForEach(func(i int, value string) error {
-				typ := valueType.Row(i)
+				typ := pcommon.ValueType(valueType.Row(i))
 				r = append(r, tracestorage.Tag{
 					Name:  tag.Name,
 					Value: value,
-					Type:  int32(typ),
+					Type:  traceql.StaticTypeFromValueType(typ),
+					Scope: traceql.ScopeNone,
 				})
 				return nil
 			})
