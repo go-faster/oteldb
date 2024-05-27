@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -47,6 +48,22 @@ func NewTempoAPI(
 		engine:             engine,
 		enableAutocomplete: opts.EnableAutocompleteQuery,
 	}
+}
+
+// BuildInfo implements buildInfo operation.
+//
+// Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+// Used by Grafana to check Tempo API version.
+//
+// GET /api/status/buildinfo
+func (h *TempoAPI) BuildInfo(ctx context.Context) (*tempoapi.PrometheusVersion, error) {
+	// defaultTempoVersion is a default Tempo version used by Grafana, in
+	// case if buildinfo request fails.
+	const defaultTempoVersion = "2.1.0"
+	return &tempoapi.PrometheusVersion{
+		Version:   defaultTempoVersion,
+		GoVersion: runtime.Version(),
+	}, nil
 }
 
 // Echo request for testing, issued by Grafana.
