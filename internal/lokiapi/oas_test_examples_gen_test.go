@@ -209,6 +209,7 @@ func TestSeries_EncodeDecode(t *testing.T) {
 }
 func TestStats_EncodeDecode(t *testing.T) {
 	var typ Stats
+	typ = make(Stats)
 	typ.SetFake()
 
 	e := jx.Encoder{}
@@ -217,6 +218,7 @@ func TestStats_EncodeDecode(t *testing.T) {
 	require.True(t, std.Valid(data), "Encoded: %s", data)
 
 	var typ2 Stats
+	typ2 = make(Stats)
 	require.NoError(t, typ2.Decode(jx.DecodeBytes(data)))
 }
 func TestStream_EncodeDecode(t *testing.T) {

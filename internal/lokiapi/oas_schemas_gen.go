@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 )
 
 func (s *ErrorStatusCode) Error() string {
@@ -266,8 +267,8 @@ type Matrix []Series
 
 // Ref: #/components/schemas/MatrixResult
 type MatrixResult struct {
-	Result Matrix `json:"result"`
-	Stats  *Stats `json:"stats"`
+	Result Matrix   `json:"result"`
+	Stats  OptStats `json:"stats"`
 }
 
 // GetResult returns the value of Result.
@@ -276,7 +277,7 @@ func (s *MatrixResult) GetResult() Matrix {
 }
 
 // GetStats returns the value of Stats.
-func (s *MatrixResult) GetStats() *Stats {
+func (s *MatrixResult) GetStats() OptStats {
 	return s.Stats
 }
 
@@ -286,7 +287,7 @@ func (s *MatrixResult) SetResult(val Matrix) {
 }
 
 // SetStats sets the value of Stats.
-func (s *MatrixResult) SetStats(val *Stats) {
+func (s *MatrixResult) SetStats(val OptStats) {
 	s.Stats = val
 }
 
@@ -514,6 +515,52 @@ func (o OptPrometheusDuration) Get() (v PrometheusDuration, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptPrometheusDuration) Or(d PrometheusDuration) PrometheusDuration {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptStats returns new OptStats with value set to v.
+func NewOptStats(v Stats) OptStats {
+	return OptStats{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptStats is optional Stats.
+type OptStats struct {
+	Value Stats
+	Set   bool
+}
+
+// IsSet returns true if OptStats was set.
+func (o OptStats) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptStats) Reset() {
+	var v Stats
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptStats) SetTo(v Stats) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptStats) Get() (v Stats, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptStats) Or(d Stats) Stats {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -775,8 +822,8 @@ func (s *Sample) SetValue(val FPoint) {
 
 // Ref: #/components/schemas/ScalarResult
 type ScalarResult struct {
-	Result FPoint `json:"result"`
-	Stats  *Stats `json:"stats"`
+	Result FPoint   `json:"result"`
+	Stats  OptStats `json:"stats"`
 }
 
 // GetResult returns the value of Result.
@@ -785,7 +832,7 @@ func (s *ScalarResult) GetResult() FPoint {
 }
 
 // GetStats returns the value of Stats.
-func (s *ScalarResult) GetStats() *Stats {
+func (s *ScalarResult) GetStats() OptStats {
 	return s.Stats
 }
 
@@ -795,7 +842,7 @@ func (s *ScalarResult) SetResult(val FPoint) {
 }
 
 // SetStats sets the value of Stats.
-func (s *ScalarResult) SetStats(val *Stats) {
+func (s *ScalarResult) SetStats(val OptStats) {
 	s.Stats = val
 }
 
@@ -826,7 +873,16 @@ func (s *Series) SetValues(val []FPoint) {
 }
 
 // Ref: #/components/schemas/Stats
-type Stats struct{}
+type Stats map[string]jx.Raw
+
+func (s *Stats) init() Stats {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
 
 // Ref: #/components/schemas/Stream
 type Stream struct {
@@ -858,8 +914,8 @@ type Streams []Stream
 
 // Ref: #/components/schemas/StreamsResult
 type StreamsResult struct {
-	Result Streams `json:"result"`
-	Stats  *Stats  `json:"stats"`
+	Result Streams  `json:"result"`
+	Stats  OptStats `json:"stats"`
 }
 
 // GetResult returns the value of Result.
@@ -868,7 +924,7 @@ func (s *StreamsResult) GetResult() Streams {
 }
 
 // GetStats returns the value of Stats.
-func (s *StreamsResult) GetStats() *Stats {
+func (s *StreamsResult) GetStats() OptStats {
 	return s.Stats
 }
 
@@ -878,7 +934,7 @@ func (s *StreamsResult) SetResult(val Streams) {
 }
 
 // SetStats sets the value of Stats.
-func (s *StreamsResult) SetStats(val *Stats) {
+func (s *StreamsResult) SetStats(val OptStats) {
 	s.Stats = val
 }
 
@@ -913,8 +969,8 @@ type Vector []Sample
 
 // Ref: #/components/schemas/VectorResult
 type VectorResult struct {
-	Result Vector `json:"result"`
-	Stats  *Stats `json:"stats"`
+	Result Vector   `json:"result"`
+	Stats  OptStats `json:"stats"`
 }
 
 // GetResult returns the value of Result.
@@ -923,7 +979,7 @@ func (s *VectorResult) GetResult() Vector {
 }
 
 // GetStats returns the value of Stats.
-func (s *VectorResult) GetStats() *Stats {
+func (s *VectorResult) GetStats() OptStats {
 	return s.Stats
 }
 
@@ -933,6 +989,6 @@ func (s *VectorResult) SetResult(val Vector) {
 }
 
 // SetStats sets the value of Stats.
-func (s *VectorResult) SetStats(val *Stats) {
+func (s *VectorResult) SetStats(val OptStats) {
 	s.Stats = val
 }
