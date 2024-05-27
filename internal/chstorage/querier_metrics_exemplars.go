@@ -48,16 +48,9 @@ var _ storage.ExemplarQuerier = (*exemplarQuerier)(nil)
 
 func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.Matcher) (_ []exemplar.QueryResult, rerr error) {
 	table := q.tables.Exemplars
+	start, end, queryLabels := q.extractParams(startMs, endMs, matcherSets)
 
-	var start, end time.Time
-	if startMs >= 0 {
-		start = time.UnixMilli(startMs)
-	}
-	if endMs >= 0 {
-		end = time.UnixMilli(endMs)
-	}
-
-	ctx, span := q.tracer.Start(q.ctx, "chstorage.exemplar.Select",
+	ctx, span := q.tracer.Start(q.ctx, "chstorage.exemplars.Select",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", start.UnixNano()),
 			attribute.Int64("chstorage.range.end", end.UnixNano()),
@@ -71,78 +64,12 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 		span.End()
 	}()
 
-	var queryLabels []string
-	for _, set := range matcherSets {
-		for _, m := range set {
-			queryLabels = append(queryLabels, m.Name)
-		}
-	}
 	mapping, err := q.getLabelMapping(ctx, queryLabels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	buildQuery := func(table string) (string, error) {
-		var query strings.Builder
-		fmt.Fprintf(&query, `SELECT %[1]s FROM %#[2]q WHERE true
-		`, newExemplarColumns().Columns().All(), table)
-		if !start.IsZero() {
-			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
-		}
-		if !end.IsZero() {
-			fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
-		}
-		query.WriteString("AND ( false\n")
-		for i, set := range matcherSets {
-			fmt.Fprintf(&query, "OR ( true -- matcher set %d\n", i)
-			for _, m := range set {
-				switch m.Type {
-				case labels.MatchEqual, labels.MatchRegexp:
-					query.WriteString(" AND ")
-				case labels.MatchNotEqual, labels.MatchNotRegexp:
-					query.WriteString(" AND NOT ")
-				default:
-					return "", errors.Errorf("unexpected type %q", m.Type)
-				}
-
-				{
-					selectors := []string{
-						"name",
-					}
-					if name := m.Name; name != labels.MetricName {
-						if mapped, ok := mapping[name]; ok {
-							name = mapped
-						}
-						selectors = []string{
-							fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(name)),
-							fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
-						}
-					}
-					query.WriteString("(\n")
-					for i, sel := range selectors {
-						if i != 0 {
-							query.WriteString(" OR ")
-						}
-						// Note: predicate negated above.
-						switch m.Type {
-						case labels.MatchEqual, labels.MatchNotEqual:
-							fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(m.Value))
-						case labels.MatchRegexp, labels.MatchNotRegexp:
-							fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(m.Value))
-						default:
-							return "", errors.Errorf("unexpected type %q", m.Type)
-						}
-					}
-					query.WriteString(")\n")
-				}
-			}
-			query.WriteString(")\n")
-		}
-		query.WriteString(") ORDER BY timestamp")
-		return query.String(), nil
-	}
-
-	query, err := buildQuery(table)
+	query, err := q.buildQuery(table, start, end, matcherSets, mapping)
 	if err != nil {
 		return nil, err
 	}
@@ -221,4 +148,84 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 		})
 	}
 	return result, nil
+}
+
+func (q *exemplarQuerier) extractParams(startMs, endMs int64, matcherSets [][]*labels.Matcher) (start, end time.Time, mlabels []string) {
+	if startMs >= 0 {
+		start = time.UnixMilli(startMs)
+	}
+	if endMs >= 0 {
+		end = time.UnixMilli(endMs)
+	}
+	for _, set := range matcherSets {
+		for _, m := range set {
+			mlabels = append(mlabels, m.Name)
+		}
+	}
+	return start, end, mlabels
+}
+
+func (q *exemplarQuerier) buildQuery(
+	table string,
+	start, end time.Time,
+	matcherSets [][]*labels.Matcher,
+	mapping map[string]string,
+) (string, error) {
+	var query strings.Builder
+	fmt.Fprintf(&query, `SELECT %[1]s FROM %#[2]q WHERE true
+		`, newExemplarColumns().Columns().All(), table)
+	if !start.IsZero() {
+		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
+	}
+	if !end.IsZero() {
+		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
+	}
+	query.WriteString("AND ( false\n")
+	for i, set := range matcherSets {
+		fmt.Fprintf(&query, "OR ( true -- matcher set %d\n", i)
+		for _, m := range set {
+			switch m.Type {
+			case labels.MatchEqual, labels.MatchRegexp:
+				query.WriteString(" AND ")
+			case labels.MatchNotEqual, labels.MatchNotRegexp:
+				query.WriteString(" AND NOT ")
+			default:
+				return "", errors.Errorf("unexpected type %q", m.Type)
+			}
+
+			{
+				selectors := []string{
+					"name",
+				}
+				if name := m.Name; name != labels.MetricName {
+					if mapped, ok := mapping[name]; ok {
+						name = mapped
+					}
+					selectors = []string{
+						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(name)),
+						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
+					}
+				}
+				query.WriteString("(\n")
+				for i, sel := range selectors {
+					if i != 0 {
+						query.WriteString(" OR ")
+					}
+					// Note: predicate negated above.
+					switch m.Type {
+					case labels.MatchEqual, labels.MatchNotEqual:
+						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(m.Value))
+					case labels.MatchRegexp, labels.MatchNotRegexp:
+						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(m.Value))
+					default:
+						return "", errors.Errorf("unexpected type %q", m.Type)
+					}
+				}
+				query.WriteString(")\n")
+			}
+		}
+		query.WriteString(")\n")
+	}
+	query.WriteString(") ORDER BY timestamp")
+	return query.String(), nil
 }

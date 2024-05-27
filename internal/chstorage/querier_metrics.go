@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -64,11 +65,10 @@ var _ storage.Querier = (*promQuerier)(nil)
 func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
 	table := p.tables.Labels
 
-	ctx, span := p.tracer.Start(ctx, "LabelValues",
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelValues",
 		trace.WithAttributes(
 			attribute.String("chstorage.table", table),
 			attribute.String("chstorage.label_to_query", name),
-			attribute.Int("chstorage.label_matchers", len(matchers)),
 		),
 	)
 	defer func() {
@@ -116,10 +116,9 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
 	table := p.tables.Labels
 
-	ctx, span := p.tracer.Start(ctx, "LabelNames",
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelNames",
 		trace.WithAttributes(
 			attribute.String("chstorage.table", table),
-			attribute.Int("chstorage.label_matchers", len(matchers)),
 		),
 	)
 	defer func() {
@@ -181,7 +180,7 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
 	ctx, span := q.tracer.Start(ctx, "chstorage.metrics.getMetricsLabelMapping",
 		trace.WithAttributes(
-			attribute.Int("chstorage.labels_count", len(input)),
+			attribute.StringSlice("chstorage.labels", input),
 		),
 	)
 	defer func() {
@@ -259,24 +258,22 @@ type seriesKey struct {
 }
 
 func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
-	var (
-		start = p.mint
-		end   = p.maxt
-	)
-	if hints != nil {
-		if t := time.UnixMilli(hints.Start); t.After(start) {
-			start = t
-		}
-		if t := time.UnixMilli(hints.End); t.Before(end) {
-			end = t
-		}
-	}
-	var queryLabels []string
-	for _, m := range matchers {
-		queryLabels = append(queryLabels, m.Name)
-	}
-	ctx, span := p.tracer.Start(ctx, "SelectSeries",
+	hints, start, end, queryLabels := p.extractHints(hints, matchers)
+
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.SelectSeries",
 		trace.WithAttributes(
+			attribute.Bool("promql.sort_series", sortSeries),
+			attribute.Int64("promql.hints.start", hints.Start),
+			attribute.Int64("promql.hints.end", hints.End),
+			attribute.Int64("promql.hints.step", hints.Step),
+			attribute.String("promql.hints.func", hints.Func),
+			attribute.StringSlice("promql.hints.grouping", hints.Grouping),
+			attribute.Bool("promql.hints.by", hints.By),
+			attribute.Int64("promql.hints.range", hints.Range),
+			attribute.String("promql.hints.shard_count", strconv.FormatUint(hints.ShardCount, 10)),
+			attribute.String("promql.hints.shard_index", strconv.FormatUint(hints.ShardIndex, 10)),
+			attribute.Bool("promql.hints.disable_trimming", hints.DisableTrimming),
+
 			attribute.Int64("chstorage.range.start", start.UnixNano()),
 			attribute.Int64("chstorage.range.end", end.UnixNano()),
 			attribute.StringSlice("chstorage.matchers.labels", queryLabels),
@@ -288,94 +285,21 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		}
 		span.End()
 	}()
+
 	mapping, err := p.getLabelMapping(ctx, queryLabels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	// TODO(tdakkota): optimize query by func hint (e.g. func "series").
-	buildQuery := func(table string) (string, error) {
-		var query strings.Builder
-		var columns string
-		switch table {
-		case p.tables.Points:
-			columns = newPointColumns().Columns().All()
-		case p.tables.ExpHistograms:
-			columns = newExpHistogramColumns().Columns().All()
-		default:
-			return "", errors.Errorf("unexpected table %q", table)
-		}
-		fmt.Fprintf(&query, "SELECT %[1]s\n\tFROM %#[2]q WHERE true\n", columns, table)
-		if !start.IsZero() {
-			fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
-		}
-		if !end.IsZero() {
-			fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
-		}
-		for _, m := range matchers {
-			switch m.Type {
-			case labels.MatchEqual, labels.MatchRegexp:
-				query.WriteString("AND ")
-			case labels.MatchNotEqual, labels.MatchNotRegexp:
-				query.WriteString("AND NOT ")
-			default:
-				return "", errors.Errorf("unexpected type %q", m.Type)
-			}
-			{
-				selectors := []string{
-					"name_normalized",
-				}
-				name := m.Name
-				if name != labels.MetricName {
-					if mapped, ok := mapping[name]; ok {
-						name = mapped
-					}
-					selectors = []string{
-						attrSelector(colAttrs, name),
-						attrSelector(colResource, name),
-					}
-				}
-				value := m.Value
-				query.WriteString("(\n")
-				for i, sel := range selectors {
-					query.WriteString("\t")
-					if i != 0 {
-						query.WriteString("OR ")
-					}
-					// Note: predicate negated above.
-					switch m.Type {
-					case labels.MatchEqual, labels.MatchNotEqual:
-						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(value))
-					case labels.MatchRegexp, labels.MatchNotRegexp:
-						fmt.Fprintf(&query, "match(%s, %s)\n", sel, singleQuoted(value))
-					default:
-						return "", errors.Errorf("unexpected type %q", m.Type)
-					}
-
-					// Apply possible index hints for attributes.
-					if m.Name == labels.MetricName {
-						// Not attributes.
-						continue
-					}
-				}
-				query.WriteString(")")
-			}
-		}
-		query.WriteString("\nORDER BY timestamp")
-		return query.String(), nil
-	}
-
 	var (
 		points        []storage.Series
-		histSeries    []storage.Series
 		expHistSeries []storage.Series
-		summarySeries []storage.Series
 	)
 	grp, grpCtx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		ctx := grpCtx
 
-		query, err := buildQuery(p.tables.Points)
+		query, err := p.buildQuery(p.tables.Points, start, end, matchers, mapping)
 		if err != nil {
 			return err
 		}
@@ -390,7 +314,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	grp.Go(func() error {
 		ctx := grpCtx
 
-		query, err := buildQuery(p.tables.ExpHistograms)
+		query, err := p.buildQuery(p.tables.ExpHistograms, start, end, matchers, mapping)
 		if err != nil {
 			return err
 		}
@@ -406,15 +330,113 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		return nil, err
 	}
 
-	points = append(points, histSeries...)
 	points = append(points, expHistSeries...)
-	points = append(points, summarySeries...)
 	if sortSeries {
 		slices.SortFunc(points, func(a, b storage.Series) int {
 			return labels.Compare(a.Labels(), b.Labels())
 		})
 	}
 	return newSeriesSet(points), nil
+}
+
+func (p *promQuerier) extractHints(
+	hints *storage.SelectHints,
+	matchers []*labels.Matcher,
+) (_ *storage.SelectHints, start, end time.Time, mlabels []string) {
+	start = p.mint
+	end = p.maxt
+
+	if hints != nil {
+		if t := time.UnixMilli(hints.Start); t.After(start) {
+			start = t
+		}
+		if t := time.UnixMilli(hints.End); t.Before(end) {
+			end = t
+		}
+	} else {
+		hints = new(storage.SelectHints)
+	}
+
+	mlabels = make([]string, 0, len(matchers))
+	for _, m := range matchers {
+		mlabels = append(mlabels, m.Name)
+	}
+
+	return hints, start, end, mlabels
+}
+
+func (p *promQuerier) buildQuery(table string, start, end time.Time, matchers []*labels.Matcher, mapping map[string]string) (string, error) {
+	var (
+		query   strings.Builder
+		columns string
+	)
+	switch table {
+	case p.tables.Points:
+		columns = newPointColumns().Columns().All()
+	case p.tables.ExpHistograms:
+		columns = newExpHistogramColumns().Columns().All()
+	default:
+		return "", errors.Errorf("unexpected table %q", table)
+	}
+
+	fmt.Fprintf(&query, "SELECT %[1]s\n\tFROM %#[2]q WHERE true\n", columns, table)
+	if !start.IsZero() {
+		fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
+	}
+	if !end.IsZero() {
+		fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
+	}
+	for _, m := range matchers {
+		switch m.Type {
+		case labels.MatchEqual, labels.MatchRegexp:
+			query.WriteString("AND ")
+		case labels.MatchNotEqual, labels.MatchNotRegexp:
+			query.WriteString("AND NOT ")
+		default:
+			return "", errors.Errorf("unexpected type %q", m.Type)
+		}
+		{
+			selectors := []string{
+				"name_normalized",
+			}
+			name := m.Name
+			if name != labels.MetricName {
+				if mapped, ok := mapping[name]; ok {
+					name = mapped
+				}
+				selectors = []string{
+					attrSelector(colAttrs, name),
+					attrSelector(colResource, name),
+				}
+			}
+			value := m.Value
+			query.WriteString("(\n")
+			for i, sel := range selectors {
+				query.WriteString("\t")
+				if i != 0 {
+					query.WriteString("OR ")
+				}
+				// Note: predicate negated above.
+				switch m.Type {
+				case labels.MatchEqual, labels.MatchNotEqual:
+					fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(value))
+				case labels.MatchRegexp, labels.MatchNotRegexp:
+					fmt.Fprintf(&query, "match(%s, %s)\n", sel, singleQuoted(value))
+				default:
+					return "", errors.Errorf("unexpected type %q", m.Type)
+				}
+
+				// Apply possible index hints for attributes.
+				if m.Name == labels.MetricName {
+					// Not attributes.
+					continue
+				}
+			}
+			query.WriteString(")")
+		}
+	}
+	query.WriteString("\nORDER BY timestamp")
+	return query.String(), nil
 }
 
 func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.Series, error) {
