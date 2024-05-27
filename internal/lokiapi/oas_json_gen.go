@@ -762,7 +762,7 @@ func (s *MatrixResult) encodeFields(e *jx.Encoder) {
 		s.Result.Encode(e)
 	}
 	{
-		if s.Stats != nil {
+		if s.Stats.Set {
 			e.FieldStart("stats")
 			s.Stats.Encode(e)
 		}
@@ -795,12 +795,10 @@ func (s *MatrixResult) Decode(d *jx.Decoder) error {
 			}
 		case "stats":
 			if err := func() error {
-				s.Stats = nil
-				var elem Stats
-				if err := elem.Decode(d); err != nil {
+				s.Stats.Reset()
+				if err := s.Stats.Decode(d); err != nil {
 					return err
 				}
-				s.Stats = &elem
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
@@ -891,6 +889,40 @@ func (s OptLabelSet) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLabelSet) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes Stats as json.
+func (o OptStats) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes Stats from json.
+func (o *OptStats) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptStats to nil")
+	}
+	o.Set = true
+	o.Value = make(Stats)
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptStats) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptStats) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -1100,7 +1132,7 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 				s.Result.Encode(e)
 			}
 			{
-				if s.Stats != nil {
+				if s.Stats.Set {
 					e.FieldStart("stats")
 					s.Stats.Encode(e)
 				}
@@ -1116,7 +1148,7 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 				s.Result.Encode(e)
 			}
 			{
-				if s.Stats != nil {
+				if s.Stats.Set {
 					e.FieldStart("stats")
 					s.Stats.Encode(e)
 				}
@@ -1132,7 +1164,7 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 				s.Result.Encode(e)
 			}
 			{
-				if s.Stats != nil {
+				if s.Stats.Set {
 					e.FieldStart("stats")
 					s.Stats.Encode(e)
 				}
@@ -1148,7 +1180,7 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 				s.Result.Encode(e)
 			}
 			{
-				if s.Stats != nil {
+				if s.Stats.Set {
 					e.FieldStart("stats")
 					s.Stats.Encode(e)
 				}
@@ -1366,7 +1398,7 @@ func (s *ScalarResult) encodeFields(e *jx.Encoder) {
 		s.Result.Encode(e)
 	}
 	{
-		if s.Stats != nil {
+		if s.Stats.Set {
 			e.FieldStart("stats")
 			s.Stats.Encode(e)
 		}
@@ -1399,12 +1431,10 @@ func (s *ScalarResult) Decode(d *jx.Decoder) error {
 			}
 		case "stats":
 			if err := func() error {
-				s.Stats = nil
-				var elem Stats
-				if err := elem.Decode(d); err != nil {
+				s.Stats.Reset()
+				if err := s.Stats.Decode(d); err != nil {
 					return err
 				}
-				s.Stats = &elem
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
@@ -1557,29 +1587,43 @@ func (s *Series) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s *Stats) Encode(e *jx.Encoder) {
+func (s Stats) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
 	e.ObjEnd()
 }
 
-// encodeFields encodes fields.
-func (s *Stats) encodeFields(e *jx.Encoder) {
-}
+// encodeFields implements json.Marshaler.
+func (s Stats) encodeFields(e *jx.Encoder) {
+	for k, elem := range s {
+		e.FieldStart(k)
 
-var jsonFieldsNameOfStats = [0]string{}
+		if len(elem) != 0 {
+			e.Raw(elem)
+		}
+	}
+}
 
 // Decode decodes Stats from json.
 func (s *Stats) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode Stats to nil")
 	}
-
+	m := s.init()
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		default:
-			return d.Skip()
+		var elem jx.Raw
+		if err := func() error {
+			v, err := d.RawAppend(nil)
+			elem = jx.Raw(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			return errors.Wrapf(err, "decode field %q", k)
 		}
+		m[string(k)] = elem
+		return nil
 	}); err != nil {
 		return errors.Wrap(err, "decode Stats")
 	}
@@ -1588,7 +1632,7 @@ func (s *Stats) Decode(d *jx.Decoder) error {
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s *Stats) MarshalJSON() ([]byte, error) {
+func (s Stats) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
@@ -1787,7 +1831,7 @@ func (s *StreamsResult) encodeFields(e *jx.Encoder) {
 		s.Result.Encode(e)
 	}
 	{
-		if s.Stats != nil {
+		if s.Stats.Set {
 			e.FieldStart("stats")
 			s.Stats.Encode(e)
 		}
@@ -1820,12 +1864,10 @@ func (s *StreamsResult) Decode(d *jx.Decoder) error {
 			}
 		case "stats":
 			if err := func() error {
-				s.Stats = nil
-				var elem Stats
-				if err := elem.Decode(d); err != nil {
+				s.Stats.Reset()
+				if err := s.Stats.Decode(d); err != nil {
 					return err
 				}
-				s.Stats = &elem
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")
@@ -2076,7 +2118,7 @@ func (s *VectorResult) encodeFields(e *jx.Encoder) {
 		s.Result.Encode(e)
 	}
 	{
-		if s.Stats != nil {
+		if s.Stats.Set {
 			e.FieldStart("stats")
 			s.Stats.Encode(e)
 		}
@@ -2109,12 +2151,10 @@ func (s *VectorResult) Decode(d *jx.Decoder) error {
 			}
 		case "stats":
 			if err := func() error {
-				s.Stats = nil
-				var elem Stats
-				if err := elem.Decode(d); err != nil {
+				s.Stats.Reset()
+				if err := s.Stats.Decode(d); err != nil {
 					return err
 				}
-				s.Stats = &elem
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"stats\"")

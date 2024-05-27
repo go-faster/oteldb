@@ -4,6 +4,8 @@ package lokiapi
 
 import (
 	"fmt"
+
+	"github.com/go-faster/jx"
 )
 
 // SetFake set fake values.
@@ -155,8 +157,8 @@ func (s *MatrixResult) SetFake() {
 		}
 	}
 	{
-		{ // Keep pointer nil to prevent infinite recursion.
-			s.Stats = nil
+		{
+			s.Stats.SetFake()
 		}
 	}
 }
@@ -164,6 +166,15 @@ func (s *MatrixResult) SetFake() {
 // SetFake set fake values.
 func (s *OptLabelSet) SetFake() {
 	var elem LabelSet
+	{
+		elem.SetFake()
+	}
+	s.SetTo(elem)
+}
+
+// SetFake set fake values.
+func (s *OptStats) SetFake() {
+	var elem Stats
 	{
 		elem.SetFake()
 	}
@@ -232,8 +243,8 @@ func (s *ScalarResult) SetFake() {
 		}
 	}
 	{
-		{ // Keep pointer nil to prevent infinite recursion.
-			s.Stats = nil
+		{
+			s.Stats.SetFake()
 		}
 	}
 }
@@ -261,6 +272,13 @@ func (s *Series) SetFake() {
 
 // SetFake set fake values.
 func (s *Stats) SetFake() {
+	var (
+		elem jx.Raw
+		m    map[string]jx.Raw = s.init()
+	)
+	for i := 0; i < 0; i++ {
+		m[fmt.Sprintf("fake%d", i)] = elem
+	}
 }
 
 // SetFake set fake values.
@@ -308,8 +326,8 @@ func (s *StreamsResult) SetFake() {
 		}
 	}
 	{
-		{ // Keep pointer nil to prevent infinite recursion.
-			s.Stats = nil
+		{
+			s.Stats.SetFake()
 		}
 	}
 }
@@ -359,8 +377,8 @@ func (s *VectorResult) SetFake() {
 		}
 	}
 	{
-		{ // Keep pointer nil to prevent infinite recursion.
-			s.Stats = nil
+		{
+			s.Stats.SetFake()
 		}
 	}
 }
