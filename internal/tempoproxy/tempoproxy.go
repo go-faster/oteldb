@@ -24,6 +24,16 @@ type Server struct {
 	api *tempoapi.Client
 }
 
+// BuildInfo implements buildInfo operation.
+//
+// Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+// Used by Grafana to check Tempo API version.
+//
+// GET /api/status/buildinfo
+func (s *Server) BuildInfo(ctx context.Context) (*tempoapi.PrometheusVersion, error) {
+	return s.api.BuildInfo(ctx)
+}
+
 // Echo implements echo operation.
 // Echo request for testing, issued by Grafana.
 //
