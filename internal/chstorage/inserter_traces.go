@@ -16,7 +16,7 @@ import (
 // InsertSpans inserts given spans.
 func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (rerr error) {
 	table := i.tables.Spans
-	ctx, span := i.tracer.Start(ctx, "InsertSpans", trace.WithAttributes(
+	ctx, span := i.tracer.Start(ctx, "chstorage.traces.InsertSpans", trace.WithAttributes(
 		attribute.Int("chstorage.spans_count", len(spans)),
 		attribute.String("chstorage.table", table),
 	))
@@ -50,7 +50,7 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 // InsertTags insert given set of tags to the storage.
 func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]struct{}) (rerr error) {
 	table := i.tables.Tags
-	ctx, span := i.tracer.Start(ctx, "InsertTags", trace.WithAttributes(
+	ctx, span := i.tracer.Start(ctx, "chstorage.traces.InsertTags", trace.WithAttributes(
 		attribute.Int("chstorage.tags_count", len(tags)),
 		attribute.String("chstorage.table", table),
 	))

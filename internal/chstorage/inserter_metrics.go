@@ -24,7 +24,22 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) error {
+func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error) {
+	ctx, span := i.tracer.Start(ctx, "chstorage.metrics.insertBatch")
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		} else {
+			i.insertedPoints.Add(ctx, int64(b.points.value.Rows()))
+			i.inserts.Add(ctx, 1,
+				metric.WithAttributes(
+					attribute.String("chstorage.signal", "metrics"),
+				),
+			)
+		}
+		span.End()
+	}()
+
 	eb := backoff.NewExponentialBackOff()
 	bo := backoff.WithContext(eb, ctx)
 	fn := func() error {
@@ -33,12 +48,6 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) error {
 	if err := backoff.Retry(fn, bo); err != nil {
 		return errors.Wrap(err, "insert batch")
 	}
-	i.inserts.Add(ctx, 1,
-		metric.WithAttributes(
-			attribute.String("chstorage.signal", "metrics"),
-		),
-	)
-	i.insertedPoints.Add(ctx, int64(b.points.value.Rows()))
 	b.Reset()
 	return nil
 }

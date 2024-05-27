@@ -20,40 +20,10 @@ func (i *Inserter) mapRecords(c *logColumns, records []logstorage.Record) {
 	}
 }
 
-// InsertLogLabels inserts given set of labels to the storage.
-func (i *Inserter) InsertLogLabels(ctx context.Context, set map[logstorage.Label]struct{}) (rerr error) {
-	table := i.tables.LogAttrs
-	ctx, span := i.tracer.Start(ctx, "InsertLogLabels", trace.WithAttributes(
-		attribute.Int("chstorage.labels_count", len(set)),
-		attribute.String("chstorage.table", table),
-	))
-	defer func() {
-		if rerr != nil {
-			span.RecordError(rerr)
-		}
-		span.End()
-	}()
-
-	attrs := newLogAttrMapColumns()
-	for label := range set {
-		name := otelstorage.KeyToLabel(label.Name)
-		attrs.AddRow(name, label.Name)
-	}
-	if err := i.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   attrs.Input().Into(table),
-		Input:  attrs.Input(),
-	}); err != nil {
-		return errors.Wrap(err, "insert labels")
-	}
-
-	return nil
-}
-
 // InsertRecords inserts given records.
 func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Record) (rerr error) {
 	table := i.tables.Logs
-	ctx, span := i.tracer.Start(ctx, "InsertRecords", trace.WithAttributes(
+	ctx, span := i.tracer.Start(ctx, "chstorage.logs.InsertRecords", trace.WithAttributes(
 		attribute.Int("chstorage.records_count", len(records)),
 		attribute.String("chstorage.table", table),
 	))
@@ -92,6 +62,36 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 	if err := i.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
 		Body:   attrs.Input().Into(i.tables.LogAttrs),
+		Input:  attrs.Input(),
+	}); err != nil {
+		return errors.Wrap(err, "insert labels")
+	}
+
+	return nil
+}
+
+// InsertLogLabels inserts given set of labels to the storage.
+func (i *Inserter) InsertLogLabels(ctx context.Context, set map[logstorage.Label]struct{}) (rerr error) {
+	table := i.tables.LogAttrs
+	ctx, span := i.tracer.Start(ctx, "chstorage.logs.InsertLogLabels", trace.WithAttributes(
+		attribute.Int("chstorage.labels_count", len(set)),
+		attribute.String("chstorage.table", table),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	attrs := newLogAttrMapColumns()
+	for label := range set {
+		name := otelstorage.KeyToLabel(label.Name)
+		attrs.AddRow(name, label.Name)
+	}
+	if err := i.ch.Do(ctx, ch.Query{
+		Logger: zctx.From(ctx).Named("ch"),
+		Body:   attrs.Input().Into(table),
 		Input:  attrs.Input(),
 	}); err != nil {
 		return errors.Wrap(err, "insert labels")
