@@ -179,7 +179,7 @@ func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error 
 }
 
 func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
-	ctx, span := q.tracer.Start(ctx, "getMetricsLabelMapping",
+	ctx, span := q.tracer.Start(ctx, "chstorage.metrics.getMetricsLabelMapping",
 		trace.WithAttributes(
 			attribute.Int("chstorage.labels_count", len(input)),
 		),

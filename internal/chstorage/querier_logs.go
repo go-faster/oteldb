@@ -28,7 +28,7 @@ var (
 func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions) (_ []string, rerr error) {
 	table := q.tables.Logs
 
-	ctx, span := q.tracer.Start(ctx, "LabelNames",
+	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelNames",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
@@ -120,7 +120,7 @@ func (l *labelStaticIterator) Close() error { return nil }
 func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logstorage.LabelsOptions) (_ iterators.Iterator[logstorage.Label], rerr error) {
 	table := q.tables.Logs
 
-	ctx, span := q.tracer.Start(ctx, "LabelValues",
+	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelValues",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
@@ -203,7 +203,7 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 }
 
 func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[string]string, rerr error) {
-	ctx, span := q.tracer.Start(ctx, "getLabelMapping",
+	ctx, span := q.tracer.Start(ctx, "chstorage.logs.getLabelMapping",
 		trace.WithAttributes(
 			attribute.Int("chstorage.labels_count", len(labels)),
 		),

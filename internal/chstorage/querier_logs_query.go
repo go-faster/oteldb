@@ -43,7 +43,7 @@ type LogsQuery[E any] struct {
 func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterator[E], rerr error) {
 	table := q.tables.Logs
 
-	ctx, span := q.tracer.Start(ctx, "LogsQuery",
+	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LogsQuery.Eval",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
 			attribute.Int64("chstorage.range.end", v.End.UnixNano()),
@@ -167,7 +167,7 @@ func (c *sampleQueryColumns) Result() proto.Results {
 func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.SampleIterator, rerr error) {
 	table := q.tables.Logs
 
-	ctx, span := q.tracer.Start(ctx, "SampleQuery",
+	ctx, span := q.tracer.Start(ctx, "chstorage.logs.SampleQuery.Eval",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
 			attribute.Int64("chstorage.range.end", v.End.UnixNano()),

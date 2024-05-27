@@ -57,7 +57,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 		end = time.UnixMilli(endMs)
 	}
 
-	ctx, span := q.tracer.Start(q.ctx, "Select",
+	ctx, span := q.tracer.Start(q.ctx, "chstorage.exemplar.Select",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", start.UnixNano()),
 			attribute.Int64("chstorage.range.end", end.UnixNano()),

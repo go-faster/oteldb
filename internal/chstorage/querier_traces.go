@@ -27,7 +27,7 @@ import (
 func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts tracestorage.SearchTagsOptions) (_ iterators.Iterator[tracestorage.Span], rerr error) {
 	table := q.tables.Spans
 
-	ctx, span := q.tracer.Start(ctx, "SearchTags",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.SearchTags",
 		trace.WithAttributes(
 			attribute.Int("chstorage.tags_count", len(tags)),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
@@ -92,7 +92,7 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOptions) (r []tracestorage.TagName, rerr error) {
 	table := q.tables.Tags
 
-	ctx, span := q.tracer.Start(ctx, "TagNames",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TagNames",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
@@ -148,7 +148,7 @@ func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOption
 
 // TagValues returns all available tag values for given tag.
 func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
-	ctx, span := q.tracer.Start(ctx, "TagValues",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TagValues",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
@@ -206,7 +206,7 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	table := q.tables.Spans
 
-	ctx, span := q.tracer.Start(ctx, "spanNames",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.spanNames",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
@@ -263,7 +263,7 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	table := q.tables.Tags
 
-	ctx, span := q.tracer.Start(ctx, "attributeValues",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.attributeValues",
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
@@ -328,7 +328,7 @@ func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, op
 func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tracestorage.TraceByIDOptions) (_ iterators.Iterator[tracestorage.Span], rerr error) {
 	table := q.tables.Spans
 
-	ctx, span := q.tracer.Start(ctx, "TraceByID",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TraceByID",
 		trace.WithAttributes(
 			attribute.String("chstorage.id_to_query", id.Hex()),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
@@ -359,7 +359,7 @@ var _ traceqlengine.Querier = (*Querier)(nil)
 
 // SelectSpansets get spansets from storage.
 func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.SelectSpansetsParams) (_ iterators.Iterator[traceqlengine.Trace], rerr error) {
-	ctx, span := q.tracer.Start(ctx, "SelectSpansets",
+	ctx, span := q.tracer.Start(ctx, "chstorage.traces.SelectSpansets",
 		trace.WithAttributes(
 			attribute.String("chstorage.span_matcher_operation", params.Op.String()),
 			attribute.Int("chstorage.span_matchers", len(params.Matchers)),
