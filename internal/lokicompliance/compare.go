@@ -211,8 +211,8 @@ func addFloatCompareOptions(options *cmp.Options) {
 		*options,
 		cmpopts.EquateApprox(fraction, margin),
 		// Ignore stats at all.
-		cmp.Transformer("TranslateStats", func(stats *lokiapi.Stats) *lokiapi.Stats {
-			return &lokiapi.Stats{}
+		cmp.Transformer("TranslateStats", func(lokiapi.OptStats) lokiapi.OptStats {
+			return lokiapi.OptStats{}
 		}),
 		// Normalize label set value.
 		cmp.Transformer("TranslateLabelSet", func(in lokiapi.OptLabelSet) lokiapi.OptLabelSet {
