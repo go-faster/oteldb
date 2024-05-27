@@ -8,6 +8,13 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// BuildInfo implements buildInfo operation.
+	//
+	// Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+	// Used by Grafana to check Tempo API version.
+	//
+	// GET /api/status/buildinfo
+	BuildInfo(ctx context.Context) (*PrometheusVersion, error)
 	// Echo implements echo operation.
 	//
 	// Echo request for testing, issued by Grafana.

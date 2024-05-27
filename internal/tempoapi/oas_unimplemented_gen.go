@@ -13,6 +13,16 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// BuildInfo implements buildInfo operation.
+//
+// Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+// Used by Grafana to check Tempo API version.
+//
+// GET /api/status/buildinfo
+func (UnimplementedHandler) BuildInfo(ctx context.Context) (r *PrometheusVersion, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // Echo implements echo operation.
 //
 // Echo request for testing, issued by Grafana.

@@ -23,6 +23,13 @@ import (
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
+	// BuildInfo invokes buildInfo operation.
+	//
+	// Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+	// Used by Grafana to check Tempo API version.
+	//
+	// GET /api/status/buildinfo
+	BuildInfo(ctx context.Context) (*PrometheusVersion, error)
 	// Echo invokes echo operation.
 	//
 	// Echo request for testing, issued by Grafana.
@@ -118,6 +125,79 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 		return c.serverURL
 	}
 	return u
+}
+
+// BuildInfo invokes buildInfo operation.
+//
+// Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+// Used by Grafana to check Tempo API version.
+//
+// GET /api/status/buildinfo
+func (c *Client) BuildInfo(ctx context.Context) (*PrometheusVersion, error) {
+	res, err := c.sendBuildInfo(ctx)
+	return res, err
+}
+
+func (c *Client) sendBuildInfo(ctx context.Context) (res *PrometheusVersion, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("buildInfo"),
+		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRouteKey.String("/api/status/buildinfo"),
+	}
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, "BuildInfo",
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/status/buildinfo"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	defer resp.Body.Close()
+
+	stage = "DecodeResponse"
+	result, err := decodeBuildInfoResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
 }
 
 // Echo invokes echo operation.

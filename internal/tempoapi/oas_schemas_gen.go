@@ -645,6 +645,76 @@ func (o OptUnixSeconds) Or(d time.Time) time.Time {
 	return d
 }
 
+// Ref: #/components/schemas/PrometheusVersion
+type PrometheusVersion struct {
+	Version   string `json:"version"`
+	Revision  string `json:"revision"`
+	Branch    string `json:"branch"`
+	BuildUser string `json:"buildUser"`
+	BuildDate string `json:"buildDate"`
+	GoVersion string `json:"goVersion"`
+}
+
+// GetVersion returns the value of Version.
+func (s *PrometheusVersion) GetVersion() string {
+	return s.Version
+}
+
+// GetRevision returns the value of Revision.
+func (s *PrometheusVersion) GetRevision() string {
+	return s.Revision
+}
+
+// GetBranch returns the value of Branch.
+func (s *PrometheusVersion) GetBranch() string {
+	return s.Branch
+}
+
+// GetBuildUser returns the value of BuildUser.
+func (s *PrometheusVersion) GetBuildUser() string {
+	return s.BuildUser
+}
+
+// GetBuildDate returns the value of BuildDate.
+func (s *PrometheusVersion) GetBuildDate() string {
+	return s.BuildDate
+}
+
+// GetGoVersion returns the value of GoVersion.
+func (s *PrometheusVersion) GetGoVersion() string {
+	return s.GoVersion
+}
+
+// SetVersion sets the value of Version.
+func (s *PrometheusVersion) SetVersion(val string) {
+	s.Version = val
+}
+
+// SetRevision sets the value of Revision.
+func (s *PrometheusVersion) SetRevision(val string) {
+	s.Revision = val
+}
+
+// SetBranch sets the value of Branch.
+func (s *PrometheusVersion) SetBranch(val string) {
+	s.Branch = val
+}
+
+// SetBuildUser sets the value of BuildUser.
+func (s *PrometheusVersion) SetBuildUser(val string) {
+	s.BuildUser = val
+}
+
+// SetBuildDate sets the value of BuildDate.
+func (s *PrometheusVersion) SetBuildDate(val string) {
+	s.BuildDate = val
+}
+
+// SetGoVersion sets the value of GoVersion.
+func (s *PrometheusVersion) SetGoVersion(val string) {
+	s.GoVersion = val
+}
+
 // Ref: #/components/schemas/ScopeTags
 type ScopeTags struct {
 	Name TagScope `json:"name"`
