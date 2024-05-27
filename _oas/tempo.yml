@@ -8,6 +8,17 @@ externalDocs:
 servers:
   - url: "http://localhost:3200"
 paths:
+  /api/status/buildinfo:
+    get:
+      operationId: buildInfo
+      description: |
+        Returns Tempo buildinfo, in the same format as Prometheus `/api/v1/status/buildinfo`.
+        Used by Grafana to check Tempo API version.
+      responses:
+        200:
+          $ref: "#/components/responses/BuildInfo"
+        default:
+          $ref: "#/components/responses/Error"
   /api/echo:
     get:
       operationId: echo
@@ -22,6 +33,7 @@ paths:
                 example: echo
         default:
           $ref: "#/components/responses/Error"
+
   /api/traces/{traceID}:
     get:
       operationId: traceByID
@@ -301,6 +313,12 @@ components:
         "application/json":
           schema:
             $ref: "#/components/schemas/Error"
+    BuildInfo:
+      description: Prometheus version JSON.
+      content:
+        "application/json":
+          schema:
+            $ref: "#/components/schemas/PrometheusVersion"
     TraceByID:
       description: Query by trace ID result
       content:
@@ -530,6 +548,29 @@ components:
         - "resource"
         - "intrinsic"
         - "none"
+
+    PrometheusVersion:
+      type: object
+      required:
+        - version
+        - revision
+        - branch
+        - buildUser
+        - buildDate
+        - goVersion
+      properties:
+        version:
+          type: string
+        revision:
+          type: string
+        branch:
+          type: string
+        buildUser:
+          type: string
+        buildDate:
+          type: string
+        goVersion:
+          type: string
 
     Error:
       type: string
