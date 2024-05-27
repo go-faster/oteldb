@@ -113,7 +113,7 @@ func addOgen[
 			Addr: addr,
 			Handler: httpmiddleware.Wrap(server,
 				httpmiddleware.InjectLogger(zctx.From(ctx)),
-				httpmiddleware.Instrument("oteldb", routeFinder, app.metrics),
+				httpmiddleware.Instrument("oteldb."+name, routeFinder, app.metrics),
 				httpmiddleware.LogRequests(routeFinder),
 			),
 			ReadHeaderTimeout: 15 * time.Second,
