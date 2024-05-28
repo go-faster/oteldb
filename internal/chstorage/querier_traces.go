@@ -22,6 +22,7 @@ import (
 	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // SearchTags performs search by given tags.
@@ -30,11 +31,12 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.SearchTags",
 		trace.WithAttributes(
-			attribute.Int("chstorage.tags_count", len(tags)),
+			xattribute.StringMap("chstorage.tags", tags),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
-			attribute.Int64("chstorage.max_duration", int64(opts.MaxDuration)),
 			attribute.Int64("chstorage.min_duration", int64(opts.MinDuration)),
+			attribute.Int64("chstorage.max_duration", int64(opts.MaxDuration)),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -95,9 +97,9 @@ func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOption
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TagNames",
 		trace.WithAttributes(
+			attribute.Stringer("chstorage.scope", opts.Scope),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
-			attribute.Stringer("chstorage.scope", opts.Scope),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -151,9 +153,9 @@ func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOption
 func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TagValues",
 		trace.WithAttributes(
+			attribute.Stringer("chstorage.tag", tag),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
-			attribute.Stringer("chstorage.tag", tag),
 		),
 	)
 	defer func() {
@@ -209,9 +211,9 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.spanNames",
 		trace.WithAttributes(
+			attribute.Stringer("chstorage.tag", tag),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
-			attribute.Stringer("chstorage.tag", tag),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -375,12 +377,12 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.SelectSpansets",
 		trace.WithAttributes(
-			attribute.String("traceql.span_matcher_operation", params.Op.String()),
-			attribute.Int("traceql.span_matchers", len(params.Matchers)),
+			attribute.Stringer("traceql.span_matcher_operation", params.Op),
+			xattribute.StringerSlice("traceql.matchers", params.Matchers),
 			attribute.Int64("traceql.range.start", int64(params.Start)),
 			attribute.Int64("traceql.range.end", int64(params.End)),
-			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
 			attribute.Int64("traceql.min_duration", int64(params.MinDuration)),
+			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
 			attribute.Int("traceql.limit", params.Limit),
 
 			attribute.String("chstorage.table", table),

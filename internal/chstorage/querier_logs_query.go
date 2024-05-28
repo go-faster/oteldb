@@ -25,6 +25,7 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // LogsQuery defines a logs query.
@@ -45,10 +46,13 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LogsQuery.Eval",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
-			attribute.Int64("chstorage.range.end", v.End.UnixNano()),
-			attribute.Stringer("chstorage.direction", v.Direction),
-			attribute.Int("chstorage.limit", v.Limit),
+			attribute.Int64("logql.range.start", v.Start.UnixNano()),
+			attribute.Int64("logql.range.end", v.End.UnixNano()),
+			attribute.Stringer("logql.direction", v.Direction),
+			attribute.Int("logql.limit", v.Limit),
+			xattribute.StringerSlice("logql.label_matchers", v.Labels),
+			xattribute.StringerSlice("logql.line_matchers", v.Line),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -169,9 +173,13 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.SampleQuery.Eval",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
-			attribute.Int64("chstorage.range.end", v.End.UnixNano()),
-			attribute.String("chstorage.sampling", v.Sampling.String()),
+			attribute.Int64("logql.range.start", v.Start.UnixNano()),
+			attribute.Int64("logql.range.end", v.End.UnixNano()),
+			attribute.String("logql.sampling", v.Sampling.String()),
+			xattribute.StringerSlice("logql.grouping_labels", v.GroupingLabels),
+			xattribute.StringerSlice("logql.label_matchers", v.Labels),
+			xattribute.StringerSlice("logql.line_matchers", v.Line),
+
 			attribute.String("chstorage.table", table),
 		),
 	)

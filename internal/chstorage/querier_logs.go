@@ -122,6 +122,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelValues",
 		trace.WithAttributes(
+			attribute.String("chstorage.label", labelName),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
 			attribute.String("chstorage.table", table),
@@ -205,7 +206,7 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[string]string, rerr error) {
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.getLabelMapping",
 		trace.WithAttributes(
-			attribute.Int("chstorage.labels_count", len(labels)),
+			attribute.StringSlice("chstorage.labels", labels),
 		),
 	)
 	defer func() {

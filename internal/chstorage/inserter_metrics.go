@@ -31,11 +31,9 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 			span.RecordError(rerr)
 		} else {
 			i.insertedPoints.Add(ctx, int64(b.points.value.Rows()))
-			i.inserts.Add(ctx, 1,
-				metric.WithAttributes(
-					attribute.String("chstorage.signal", "metrics"),
-				),
-			)
+			i.inserts.Add(ctx, 1, metric.WithAttributes(
+				attribute.String("chstorage.signal", "metrics"),
+			))
 		}
 		span.End()
 	}()

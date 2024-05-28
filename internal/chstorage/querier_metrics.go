@@ -22,6 +22,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 var _ storage.Queryable = (*Querier)(nil)
@@ -71,8 +72,9 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelValues",
 		trace.WithAttributes(
+			attribute.String("chstorage.label", name),
+			xattribute.StringerSlice("chstorage.matchers", matchers),
 			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.label_to_query", name),
 		),
 	)
 	defer func() {
@@ -122,6 +124,7 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelNames",
 		trace.WithAttributes(
+			xattribute.StringerSlice("chstorage.matchers", matchers),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -223,18 +226,10 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	}); err != nil {
 		return nil, errors.Wrap(err, "select")
 	}
-	{
-		var mapping []string
-		for k, v := range out {
-			mapping = append(mapping, fmt.Sprintf("%s=%s", k, v))
-		}
-		slices.Sort(mapping)
-		span.AddEvent("labels_fetched",
-			trace.WithAttributes(
-				attribute.StringSlice("chstorage.mapping", mapping),
-			),
-		)
-	}
+	span.AddEvent("labels_fetched", trace.WithAttributes(
+		xattribute.StringMap("chstorage.mapping", out),
+	))
+
 	return out, nil
 }
 
@@ -277,6 +272,7 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			attribute.String("promql.hints.shard_count", strconv.FormatUint(hints.ShardCount, 10)),
 			attribute.String("promql.hints.shard_index", strconv.FormatUint(hints.ShardIndex, 10)),
 			attribute.Bool("promql.hints.disable_trimming", hints.DisableTrimming),
+			xattribute.StringerSlice("promql.matchers", matchers),
 
 			attribute.Int64("chstorage.range.start", start.UnixNano()),
 			attribute.Int64("chstorage.range.end", end.UnixNano()),
