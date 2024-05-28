@@ -15,9 +15,9 @@ var _ tracestorage.Querier = (*Querier)(nil)
 type Querier struct {
 	ch     ClickhouseClient
 	tables Tables
-	tracer trace.Tracer
 
 	clickhouseRequestHistogram metric.Float64Histogram
+	tracer                     trace.Tracer
 }
 
 // QuerierOptions is Querier's options.

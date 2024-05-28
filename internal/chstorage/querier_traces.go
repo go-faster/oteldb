@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
@@ -12,9 +13,9 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -352,6 +353,17 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 	if e := opts.End; e != 0 {
 		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(end) <= %d", e)
 	}
+
+	queryStartTime := time.Now()
+	defer func() {
+		q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+			metric.WithAttributes(
+				attribute.String("chstorage.query_type", "TraceByID"),
+				attribute.String("chstorage.table", table),
+				attribute.String("chstorage.signal", "traces"),
+			),
+		)
+	}()
 	return q.querySpans(ctx, query)
 }
 
@@ -359,15 +371,19 @@ var _ traceqlengine.Querier = (*Querier)(nil)
 
 // SelectSpansets get spansets from storage.
 func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.SelectSpansetsParams) (_ iterators.Iterator[traceqlengine.Trace], rerr error) {
+	table := q.tables.Spans
+
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.SelectSpansets",
 		trace.WithAttributes(
-			attribute.String("chstorage.span_matcher_operation", params.Op.String()),
-			attribute.Int("chstorage.span_matchers", len(params.Matchers)),
-			attribute.Int64("chstorage.range.start", int64(params.Start)),
-			attribute.Int64("chstorage.range.end", int64(params.End)),
-			attribute.Int64("chstorage.max_duration", int64(params.MaxDuration)),
-			attribute.Int64("chstorage.min_duration", int64(params.MinDuration)),
-			attribute.Int("chstorage.limit", params.Limit),
+			attribute.String("traceql.span_matcher_operation", params.Op.String()),
+			attribute.Int("traceql.span_matchers", len(params.Matchers)),
+			attribute.Int64("traceql.range.start", int64(params.Start)),
+			attribute.Int64("traceql.range.end", int64(params.End)),
+			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
+			attribute.Int64("traceql.min_duration", int64(params.MinDuration)),
+			attribute.Int("traceql.limit", params.Limit),
+
+			attribute.String("chstorage.table", table),
 		),
 	)
 	defer func() {
@@ -377,9 +393,10 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 		span.End()
 	}()
 
-	query := q.buildSpansetsQuery(span, params)
-	zctx.From(ctx).Debug("Query", zap.String("query", query))
-
+	var (
+		queryStartTime = time.Now()
+		query          = q.buildSpansetsQuery(table, span, params)
+	)
 	iter, err := q.querySpans(ctx, query)
 	if err != nil {
 		return nil, errors.Wrap(err, "query traces")
@@ -387,6 +404,13 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 	defer func() {
 		_ = iter.Close()
 	}()
+	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.query_type", "SelectSpansets"),
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.signal", "traces"),
+		),
+	)
 
 	var (
 		traces = map[otelstorage.TraceID][]tracestorage.Span{}
@@ -418,11 +442,8 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 	return iterators.Slice(result), nil
 }
 
-func (q *Querier) buildSpansetsQuery(span trace.Span, params traceqlengine.SelectSpansetsParams) string {
-	var (
-		query strings.Builder
-		table = q.tables.Spans
-	)
+func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params traceqlengine.SelectSpansetsParams) string {
+	var query strings.Builder
 
 	fmt.Fprintf(&query, `SELECT %s FROM %#[2]q WHERE trace_id IN (
 		SELECT DISTINCT trace_id FROM %#[2]q WHERE true
@@ -614,6 +635,5 @@ func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Itera
 	}); err != nil {
 		return nil, errors.Wrap(err, "query")
 	}
-
 	return iterators.Slice(r), nil
 }

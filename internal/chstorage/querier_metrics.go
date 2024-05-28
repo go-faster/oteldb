@@ -17,6 +17,7 @@ import (
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 	"github.com/prometheus/prometheus/util/annotations"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
@@ -40,8 +41,10 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 
 		ch:              q.ch,
 		tables:          q.tables,
-		tracer:          q.tracer,
 		getLabelMapping: q.getMetricsLabelMapping,
+
+		clickhouseRequestHistogram: q.clickhouseRequestHistogram,
+		tracer:                     q.tracer,
 	}, nil
 }
 
@@ -53,7 +56,8 @@ type promQuerier struct {
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
 
-	tracer trace.Tracer
+	clickhouseRequestHistogram metric.Float64Histogram
+	tracer                     trace.Tracer
 }
 
 var _ storage.Querier = (*promQuerier)(nil)
@@ -298,13 +302,14 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	grp, grpCtx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		ctx := grpCtx
+		table := p.tables.Points
 
-		query, err := p.buildQuery(p.tables.Points, start, end, matchers, mapping)
+		query, err := p.buildQuery(table, start, end, matchers, mapping)
 		if err != nil {
 			return err
 		}
 
-		result, err := p.queryPoints(ctx, query)
+		result, err := p.queryPoints(ctx, table, query)
 		if err != nil {
 			return errors.Wrap(err, "query points")
 		}
@@ -313,13 +318,14 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	})
 	grp.Go(func() error {
 		ctx := grpCtx
+		table := p.tables.ExpHistograms
 
-		query, err := p.buildQuery(p.tables.ExpHistograms, start, end, matchers, mapping)
+		query, err := p.buildQuery(table, start, end, matchers, mapping)
 		if err != nil {
 			return err
 		}
 
-		result, err := p.queryExpHistograms(ctx, query)
+		result, err := p.queryExpHistograms(ctx, table, query)
 		if err != nil {
 			return errors.Wrap(err, "query exponential histograms")
 		}
@@ -439,13 +445,15 @@ func (p *promQuerier) buildQuery(table string, start, end time.Time, matchers []
 	return query.String(), nil
 }
 
-func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.Series, error) {
+func (p *promQuerier) queryPoints(ctx context.Context, table, query string) ([]storage.Series, error) {
 	type seriesWithLabels struct {
 		series *series[pointData]
 		labels map[string]string
 	}
 
 	var (
+		queryStartTime = time.Now()
+
 		set = map[seriesKey]seriesWithLabels{}
 		c   = newPointColumns()
 	)
@@ -489,6 +497,13 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 	}); err != nil {
 		return nil, errors.Wrap(err, "do query")
 	}
+	p.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.query_type", "QueryPoints"),
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.signal", "metrics"),
+		),
+	)
 
 	var (
 		result = make([]storage.Series, 0, len(set))
@@ -502,13 +517,15 @@ func (p *promQuerier) queryPoints(ctx context.Context, query string) ([]storage.
 	return result, nil
 }
 
-func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]storage.Series, error) {
+func (p *promQuerier) queryExpHistograms(ctx context.Context, table, query string) ([]storage.Series, error) {
 	type seriesWithLabels struct {
 		series *series[expHistData]
 		labels map[string]string
 	}
 
 	var (
+		queryStartTime = time.Now()
+
 		set = map[seriesKey]seriesWithLabels{}
 		c   = newExpHistogramColumns()
 	)
@@ -570,6 +587,13 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, query string) ([]s
 	}); err != nil {
 		return nil, errors.Wrap(err, "do query")
 	}
+	p.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.query_type", "QueryExpHistograms"),
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.signal", "metrics"),
+		),
+	)
 
 	var (
 		result = make([]storage.Series, 0, len(set))
