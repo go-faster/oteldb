@@ -73,12 +73,12 @@ func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi
 		_ = iter.Close()
 	}()
 
-	span.AddEvent("reading result")
+	span.AddEvent("read_result")
 	data, err = logqlmetric.ReadStepResponse(iter, params.IsInstant())
 	if err != nil {
 		return data, err
 	}
-	span.AddEvent("returning result", trace.WithAttributes(
+	span.AddEvent("return_result", trace.WithAttributes(
 		attribute.String("logql.data.type", string(data.Type)),
 	))
 

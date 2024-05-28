@@ -436,10 +436,10 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 			Spans:   spans,
 		})
 	}
-	span.SetAttributes(
+	span.AddEvent("spans_fetched", trace.WithAttributes(
 		attribute.Int("chstorage.queried_spans", spansCount),
 		attribute.Int("chstorage.queried_traces", len(result)),
-	)
+	))
 
 	return iterators.Slice(result), nil
 }

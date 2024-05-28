@@ -76,10 +76,10 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (tra
 			for _, m := range traces.Traces {
 				spans += len(m.SpanSet.Value.Spans)
 			}
-			span.SetAttributes(
-				attribute.Int("traceql.returned_spans", spans),
-				attribute.Int("traceql.returned_spansets", len(traces.Traces)),
-			)
+			span.AddEvent("return_result", trace.WithAttributes(
+				attribute.Int("traceql.total_spansets", len(traces.Traces)),
+				attribute.Int("traceql.total_spans", spans),
+			))
 		}
 		span.End()
 	}()

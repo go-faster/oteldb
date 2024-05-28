@@ -82,12 +82,12 @@ func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.St
 		_ = iter.Close()
 	}()
 
-	span.AddEvent("reading result")
+	span.AddEvent("read_result")
 	streams, total, err := groupEntries(iter)
 	if err != nil {
 		return data, err
 	}
-	span.AddEvent("returning result", trace.WithAttributes(
+	span.AddEvent("return_result", trace.WithAttributes(
 		attribute.Int("logql.total_streams", len(streams)),
 		attribute.Int("logql.total_entries", total),
 	))
