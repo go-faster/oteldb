@@ -131,44 +131,44 @@ func buildBinaryOp(op traceql.BinaryOp, right traceql.TypedExpr) (BinaryOp, erro
 		}, nil
 	case traceql.OpAdd:
 		return func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(a.AsFloat() + b.AsFloat())
+			r.SetNumber(a.ToFloat() + b.ToFloat())
 			return r
 		}, nil
 	case traceql.OpSub:
 		return func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(a.AsFloat() - b.AsFloat())
+			r.SetNumber(a.ToFloat() - b.ToFloat())
 			return r
 		}, nil
 	case traceql.OpMul:
 		return func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(a.AsFloat() * b.AsFloat())
+			r.SetNumber(a.ToFloat() * b.ToFloat())
 			return r
 		}, nil
 	case traceql.OpDiv:
 		return func(a, b traceql.Static) (r traceql.Static) {
-			dividend := a.AsFloat()
+			dividend := a.ToFloat()
 			// Checked division.
 			if dividend == 0 {
 				r.SetNumber(math.NaN())
 			} else {
-				r.SetNumber(dividend / b.AsFloat())
+				r.SetNumber(dividend / b.ToFloat())
 			}
 			return r
 		}, nil
 	case traceql.OpMod:
 		return func(a, b traceql.Static) (r traceql.Static) {
-			dividend := a.AsFloat()
+			dividend := a.ToFloat()
 			// Checked modular division.
 			if dividend == 0 {
 				r.SetNumber(math.NaN())
 			} else {
-				r.SetNumber(math.Mod(dividend, b.AsFloat()))
+				r.SetNumber(math.Mod(dividend, b.ToFloat()))
 			}
 			return r
 		}, nil
 	case traceql.OpPow:
 		return func(a, b traceql.Static) (r traceql.Static) {
-			r.SetNumber(math.Pow(a.AsFloat(), b.AsFloat()))
+			r.SetNumber(math.Pow(a.ToFloat(), b.ToFloat()))
 			return r
 		}, nil
 	case traceql.OpEq:
@@ -265,7 +265,7 @@ func (e *NegEvaluater) Eval(span tracestorage.Span, ctx EvaluateCtx) (r traceql.
 	if !val.Type.IsNumeric() {
 		r.SetNil()
 	} else {
-		r.SetNumber(-val.AsFloat())
+		r.SetNumber(-val.ToFloat())
 	}
 	return r
 }

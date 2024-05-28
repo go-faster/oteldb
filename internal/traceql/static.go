@@ -144,11 +144,11 @@ func (s *Static) Compare(to Static) int {
 	if !s.Type.IsNumeric() || !to.Type.IsNumeric() {
 		return -1 // incomparable
 	}
-	return cmp.Compare(s.AsFloat(), to.AsFloat())
+	return cmp.Compare(s.ToFloat(), to.ToFloat())
 }
 
-// AsFloat converts numeric Static to a float value.
-func (s *Static) AsFloat() float64 {
+// ToFloat converts numeric Static to a float value.
+func (s *Static) ToFloat() float64 {
 	switch s.Type {
 	case TypeInt:
 		return float64(s.AsInt())

@@ -72,7 +72,7 @@ func (agg MaxAgg) Aggregate(set Spanset) (r float64) {
 		if !result.Type.IsNumeric() {
 			continue
 		}
-		if val := result.AsFloat(); !resultSet || val > r {
+		if val := result.ToFloat(); !resultSet || val > r {
 			r = val
 			resultSet = true
 		}
@@ -96,7 +96,7 @@ func (agg MinAgg) Aggregate(set Spanset) (r float64) {
 		if !result.Type.IsNumeric() {
 			continue
 		}
-		if val := result.AsFloat(); !resultSet || val < r {
+		if val := result.ToFloat(); !resultSet || val < r {
 			r = val
 			resultSet = true
 		}
@@ -136,7 +136,7 @@ func (agg SumAgg) Aggregate(set Spanset) (r float64) {
 		if !result.Type.IsNumeric() {
 			continue
 		}
-		sum += result.AsFloat()
+		sum += result.ToFloat()
 	}
 	return sum
 }
