@@ -1,6 +1,9 @@
 package logql
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+)
 
 // LogExpr is a log query expression.
 //
@@ -23,4 +26,9 @@ type LabelMatcher struct {
 	Op    BinOp          // OpEq, OpNotEq, OpRe, OpNotRe
 	Value string         // Equals to value or to unparsed regexp
 	Re    *regexp.Regexp // Equals to nil, if Op is not OpRe or OpNotRe
+}
+
+// String implements [fmt.Stringer].
+func (m LabelMatcher) String() string {
+	return fmt.Sprintf("%s%s%q", m.Label, m.Op, m.Value)
 }

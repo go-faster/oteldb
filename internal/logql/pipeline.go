@@ -2,6 +2,8 @@ package logql
 
 import (
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,11 +26,45 @@ func (*DropLabelsExpr) pipelineStage()         {}
 func (*KeepLabelsExpr) pipelineStage()         {}
 func (*DistinctFilter) pipelineStage()         {}
 
-// LineFilter is a line filter (`|=`, `!=`, `=~`, `!~`).
+// LineFilter is a line filter (`|=`, `!=`, `=~`, `!~`, `|>`, `!>`).
 type LineFilter struct {
 	Op BinOp // OpEq, OpNotEq, OpRe, OpNotRe, OpPattern, OpNotPattern
 	By LineFilterValue
 	Or []LineFilterValue
+}
+
+// String implements [fmt.Stringer].
+func (f LineFilter) String() string {
+	var (
+		sb  strings.Builder
+		buf = make([]byte, 0, 32)
+	)
+	switch f.Op {
+	case OpEq:
+		sb.WriteString("|=")
+	case OpNotEq:
+		sb.WriteString("!=")
+	case OpRe:
+		sb.WriteString("|~")
+	case OpNotRe:
+		sb.WriteString("!~")
+	case OpPattern:
+		sb.WriteString("|>")
+	case OpNotPattern:
+		sb.WriteString("!>")
+	default:
+		sb.WriteString("<invalid op:")
+		sb.WriteString(f.Op.String())
+		sb.WriteByte('>')
+	}
+	sb.WriteByte(' ')
+
+	f.By.write(&sb, &buf)
+	for i := range f.Or {
+		sb.WriteString(" or ")
+		f.Or[i].write(&sb, &buf)
+	}
+	return sb.String()
 }
 
 // LineFilterValue is a line filter literal to search by.
@@ -36,6 +72,17 @@ type LineFilterValue struct {
 	Value string         // Equals to value or to unparsed regexp
 	Re    *regexp.Regexp // Equals to nil, if Op is not OpRe or OpNotRe
 	IP    bool           // true, if this line filter is IP filter.
+}
+
+func (v LineFilterValue) write(sb *strings.Builder, buf *[]byte) {
+	if v.IP {
+		sb.WriteString("ip(")
+	}
+	quoted := strconv.AppendQuote((*buf)[:0], v.Value)
+	sb.Write(quoted)
+	if v.IP {
+		sb.WriteByte(')')
+	}
 }
 
 // JSONExpressionParser extracts and filters labels from JSON.

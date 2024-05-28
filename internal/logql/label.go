@@ -18,6 +18,11 @@ const (
 	ErrorDetailsLabel = "__error_details__"
 )
 
+// String implements [fmt.Stringer].
+func (l Label) String() string {
+	return string(l)
+}
+
 // IsValidLabel validates label name.
 func IsValidLabel[S ~string | ~[]byte](s S, allowDot bool) error {
 	if len(s) == 0 {
