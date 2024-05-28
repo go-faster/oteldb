@@ -47,7 +47,7 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 		trace.WithAttributes(
 			attribute.Int64("chstorage.range.start", v.Start.UnixNano()),
 			attribute.Int64("chstorage.range.end", v.End.UnixNano()),
-			attribute.String("chstorage.direction", string(v.Direction)),
+			attribute.Stringer("chstorage.direction", v.Direction),
 			attribute.Int("chstorage.limit", v.Limit),
 			attribute.String("chstorage.table", table),
 		),

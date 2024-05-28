@@ -5,10 +5,10 @@ import (
 	"context"
 	"time"
 
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/logql"
 )
@@ -75,7 +75,17 @@ func NewEngine(querier Querier, opts Options) *Engine {
 }
 
 // NewQuery creates new [Query].
-func (e *Engine) NewQuery(ctx context.Context, query string) (Query, error) {
+func (e *Engine) NewQuery(ctx context.Context, query string) (_ Query, rerr error) {
+	ctx, span := e.tracer.Start(ctx, "logql.Engine.NewQuery", trace.WithAttributes(
+		attribute.String("logql.query", query),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	expr, err := logql.Parse(query, e.parseOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse")
@@ -94,12 +104,12 @@ func (e *Engine) NewQuery(ctx context.Context, query string) (Query, error) {
 	return q, nil
 }
 
-func (e *Engine) buildQuery(ctx context.Context, expr logql.Expr) (Query, error) {
+func (e *Engine) buildQuery(ctx context.Context, expr logql.Expr) (_ Query, rerr error) {
 	switch expr := logql.UnparenExpr(expr).(type) {
 	case *logql.LogExpr:
 		return e.buildLogQuery(ctx, expr)
 	case *logql.LiteralExpr:
-		return &LiteralQuery{Value: expr.Value}, nil
+		return e.buildLiteralQuery(ctx, expr)
 	case logql.MetricExpr:
 		return e.buildMetricQuery(ctx, expr)
 	default:

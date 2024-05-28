@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
@@ -15,6 +17,8 @@ import (
 // MetricQuery represents a metric query.
 type MetricQuery struct {
 	Root MetricNode
+
+	tracer trace.Tracer
 }
 
 func (e *Engine) buildMetricQuery(ctx context.Context, expr logql.MetricExpr) (Query, error) {
@@ -24,7 +28,8 @@ func (e *Engine) buildMetricQuery(ctx context.Context, expr logql.MetricExpr) (Q
 	}
 
 	return &MetricQuery{
-		Root: root,
+		Root:   root,
+		tracer: e.tracer,
 	}, nil
 }
 
@@ -39,7 +44,21 @@ func (q *MetricQuery) Eval(ctx context.Context, params EvalParams) (lokiapi.Quer
 	return data, nil
 }
 
-func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, _ error) {
+func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
+	ctx, span := q.tracer.Start(ctx, "logql.MetricQuery", trace.WithAttributes(
+		attribute.Int64("logql.params.start", params.Start.UnixNano()),
+		attribute.Int64("logql.params.end", params.End.UnixNano()),
+		attribute.Int64("logql.params.step", int64(params.Step)),
+		attribute.Stringer("logql.params.direction", params.Direction),
+		attribute.Int("logql.params.limit", params.Limit),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	iter, err := q.Root.EvalMetric(ctx, MetricParams{
 		// NOTE(tdakkota): for some reason, timestamps in Loki appear truncated by step.
 		// 	Do the same thing.
@@ -54,10 +73,14 @@ func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi
 		_ = iter.Close()
 	}()
 
+	span.AddEvent("reading result")
 	data, err = logqlmetric.ReadStepResponse(iter, params.IsInstant())
 	if err != nil {
 		return data, err
 	}
+	span.AddEvent("returning result", trace.WithAttributes(
+		attribute.String("logql.data.type", string(data.Type)),
+	))
 
 	return data, nil
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/logql"
@@ -17,6 +19,8 @@ import (
 type LogQuery struct {
 	Root             PipelineNode
 	LookbackDuration time.Duration
+
+	tracer trace.Tracer
 }
 
 var _ Query = (*LogQuery)(nil)
@@ -30,6 +34,7 @@ func (e *Engine) buildLogQuery(ctx context.Context, expr *logql.LogExpr) (Query,
 	return &LogQuery{
 		Root:             root,
 		LookbackDuration: e.lookbackDuration,
+		tracer:           e.tracer,
 	}, nil
 }
 
@@ -54,7 +59,21 @@ func (q *LogQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.Qu
 	return data, nil
 }
 
-func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.Streams, _ error) {
+func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.Streams, rerr error) {
+	ctx, span := q.tracer.Start(ctx, "logql.LogQuery", trace.WithAttributes(
+		attribute.Int64("logql.params.start", params.Start.UnixNano()),
+		attribute.Int64("logql.params.end", params.End.UnixNano()),
+		attribute.Int64("logql.params.step", int64(params.Step)),
+		attribute.Stringer("logql.params.direction", params.Direction),
+		attribute.Int("logql.params.limit", params.Limit),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	iter, err := q.Root.EvalPipeline(ctx, params)
 	if err != nil {
 		return data, err
@@ -63,15 +82,20 @@ func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.St
 		_ = iter.Close()
 	}()
 
-	streams, err := groupEntries(iter)
+	span.AddEvent("reading result")
+	streams, total, err := groupEntries(iter)
 	if err != nil {
 		return data, err
 	}
+	span.AddEvent("returning result", trace.WithAttributes(
+		attribute.Int("logql.total_streams", len(streams)),
+		attribute.Int("logql.total_entries", total),
+	))
 
 	return streams, nil
 }
 
-func groupEntries(iter EntryIterator) (s lokiapi.Streams, _ error) {
+func groupEntries(iter EntryIterator) (s lokiapi.Streams, total int, _ error) {
 	var (
 		e       Entry
 		streams = map[string]lokiapi.Stream{}
@@ -87,9 +111,10 @@ func groupEntries(iter EntryIterator) (s lokiapi.Streams, _ error) {
 		}
 		stream.Values = append(stream.Values, lokiapi.LogEntry{T: uint64(e.Timestamp), V: e.Line})
 		streams[key] = stream
+		total++
 	}
 	if err := iter.Err(); err != nil {
-		return s, err
+		return s, 0, err
 	}
 
 	result := maps.Values(streams)
@@ -98,7 +123,7 @@ func groupEntries(iter EntryIterator) (s lokiapi.Streams, _ error) {
 			return cmp.Compare(a.T, b.T)
 		})
 	}
-	return result, nil
+	return result, total, nil
 }
 
 // ProcessorNode implements [PipelineNode].

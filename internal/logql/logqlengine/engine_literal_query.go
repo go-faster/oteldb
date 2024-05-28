@@ -5,18 +5,45 @@ import (
 	"strconv"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
 // LiteralQuery is simple literal expression query.
 type LiteralQuery struct {
 	Value float64
+
+	tracer trace.Tracer
 }
 
 var _ Query = (*LiteralQuery)(nil)
 
+func (e *Engine) buildLiteralQuery(_ context.Context, expr *logql.LiteralExpr) (Query, error) {
+	return &LiteralQuery{
+		Value:  expr.Value,
+		tracer: e.tracer,
+	}, nil
+}
+
 // Eval implements [Query].
-func (q *LiteralQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, _ error) {
+func (q *LiteralQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
+	_, span := q.tracer.Start(ctx, "logql.LiteralQuery", trace.WithAttributes(
+		attribute.Int64("logql.params.start", params.Start.UnixNano()),
+		attribute.Int64("logql.params.end", params.End.UnixNano()),
+		attribute.Int64("logql.params.step", int64(params.Step)),
+		attribute.Stringer("logql.params.direction", params.Direction),
+		attribute.Int("logql.params.limit", params.Limit),
+	))
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	if params.IsInstant() {
 		data.SetScalarResult(lokiapi.ScalarResult{
 			Result: lokiapi.FPoint{

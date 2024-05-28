@@ -35,6 +35,11 @@ const (
 	DirectionForward Direction = "forward"
 )
 
+// String implements [fmt.Stringer].
+func (d Direction) String() string {
+	return string(d)
+}
+
 // Entry represents a log entry.
 type Entry struct {
 	Timestamp otelstorage.Timestamp
