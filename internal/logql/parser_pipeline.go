@@ -171,7 +171,10 @@ func (p *parser) parseLineFilterValue(op BinOp) (f LineFilterValue, err error) {
 		case OpRe, OpNotRe:
 			f.Re, err = regexp.Compile(f.Value)
 			if err != nil {
-				return f, errors.Wrapf(err, "invalid regex in line filter %q", f.Value)
+				return f, &ParseError{
+					Pos: t.Pos,
+					Err: err,
+				}
 			}
 		}
 	case lexer.IP:
@@ -180,7 +183,10 @@ func (p *parser) parseLineFilterValue(op BinOp) (f LineFilterValue, err error) {
 		switch op {
 		case OpEq, OpNotEq:
 		default:
-			return f, errors.Errorf("invalid IP line filter operation %q", op)
+			return f, &ParseError{
+				Pos: t.Pos,
+				Err: errors.Errorf("invalid IP line filter operation %q", op),
+			}
 		}
 
 		if err := p.consume(lexer.OpenParen); err != nil {
@@ -214,7 +220,10 @@ func (p *parser) parseLogfmtFlags() (flags LogfmtFlags, _ error) {
 		case "--keep-empty":
 			flags.Set(LogfmtFlagKeepEmpty)
 		default:
-			return flags, errors.Errorf("invalid parser flag %q", t.Text)
+			return flags, &ParseError{
+				Pos: t.Pos,
+				Err: errors.Errorf("unknown parser flag %q", t.Text),
+			}
 		}
 		p.next()
 	}
@@ -264,14 +273,17 @@ func (p *parser) parseLabelExtraction() (labels []Label, exprs []LabelExtraction
 }
 
 func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
-	pattern, err := p.parseString()
+	pattern, patternTok, err := p.consumeText(lexer.String)
 	if err != nil {
 		return nil, err
 	}
 
 	re, err := regexp.Compile(pattern)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid regex in regexp stage %q", pattern)
+		return nil, &ParseError{
+			Pos: patternTok.Pos,
+			Err: err,
+		}
 	}
 
 	mapping := map[int]Label{}
@@ -283,12 +295,18 @@ func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
 		}
 
 		if _, ok := unique[name]; ok {
-			return nil, errors.Wrapf(err, "duplicate capture %q", name)
+			return nil, &ParseError{
+				Pos: patternTok.Pos,
+				Err: errors.Errorf("duplicate capture %q", name),
+			}
 		}
 		unique[name] = struct{}{}
 
 		if err := IsValidLabel(name, p.allowDots); err != nil {
-			return nil, errors.Wrapf(err, "invalid label name %q", name)
+			return nil, &ParseError{
+				Pos: patternTok.Pos,
+				Err: errors.Errorf("invalid label name %q", name),
+			}
 		}
 		mapping[i] = Label(name)
 	}
@@ -343,7 +361,10 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			switch opTok.Type {
 			case lexer.Eq, lexer.NotEq, lexer.Re, lexer.NotRe:
 			default:
-				return nil, errors.Errorf("invalid operation %q", opTok.Type)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("invalid string operator %q", opTok.Type),
+				}
 			}
 
 			v, err := p.parseString()
@@ -356,7 +377,10 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			case OpRe, OpNotRe:
 				re, err = compileLabelRegex(v)
 				if err != nil {
-					return nil, errors.Wrapf(err, "invalid regex in label matcher predicate %q", v)
+					return nil, &ParseError{
+						Pos: literalTok.Pos,
+						Err: err,
+					}
 				}
 			}
 			pred = &LabelMatcher{Label: Label(t.Text), Op: op, Value: v, Re: re}
@@ -364,7 +388,10 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:
 			default:
-				return nil, errors.Errorf("invalid operation %q", opTok.Type)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("invalid number operator %q", opTok.Type),
+				}
 			}
 
 			v, err := p.parseNumber()
@@ -376,7 +403,10 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:
 			default:
-				return nil, errors.Errorf("invalid operation %q", opTok.Type)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("invalid duration operator %q", opTok.Type),
+				}
 			}
 
 			d, err := p.parseDuration()
@@ -388,7 +418,10 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:
 			default:
-				return nil, errors.Errorf("invalid operation %q", opTok.Type)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("invalid bytes operator %q", opTok.Type),
+				}
 			}
 
 			b, err := p.parseBytes()
@@ -400,7 +433,10 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			switch opTok.Type {
 			case lexer.Eq, lexer.NotEq:
 			default:
-				return nil, errors.Errorf("invalid operation %q", opTok.Type)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("invalid IP operator %q", opTok.Type),
+				}
 			}
 			// Read "ip" token.
 			p.next()
@@ -462,7 +498,10 @@ func (p *parser) parseLabelFormatExpr() (lf *LabelFormatExpr, err error) {
 		label := Label(value)
 
 		if _, ok := labels[label]; ok {
-			return nil, errors.Errorf("label %q can be formatted only once per stage: at %s", label, token.Pos)
+			return nil, &ParseError{
+				Pos: token.Pos,
+				Err: errors.Errorf("label %q can be formatted only once per stage", label),
+			}
 		}
 		labels[label] = struct{}{}
 

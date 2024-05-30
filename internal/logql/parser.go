@@ -21,7 +21,7 @@ type ParseOptions struct {
 func Parse(s string, opts ParseOptions) (Expr, error) {
 	tokens, err := lexer.Tokenize(s, lexer.TokenizeOptions{AllowDots: opts.AllowDots})
 	if err != nil {
-		return nil, errors.Wrap(err, "tokenize")
+		return nil, err
 	}
 	p := parser{
 		tokens:    tokens,
@@ -33,7 +33,7 @@ func Parse(s string, opts ParseOptions) (Expr, error) {
 		return nil, err
 	}
 	if t := p.next(); t.Type != lexer.EOF {
-		return nil, p.unexpectedToken(t)
+		return nil, p.tailToken(t)
 	}
 	return expr, nil
 }
@@ -42,7 +42,7 @@ func Parse(s string, opts ParseOptions) (Expr, error) {
 func ParseSelector(s string, opts ParseOptions) (sel Selector, _ error) {
 	tokens, err := lexer.Tokenize(s, lexer.TokenizeOptions{AllowDots: opts.AllowDots})
 	if err != nil {
-		return sel, errors.Wrap(err, "tokenize")
+		return sel, err
 	}
 	p := parser{
 		tokens:    tokens,
@@ -54,7 +54,7 @@ func ParseSelector(s string, opts ParseOptions) (sel Selector, _ error) {
 		return sel, err
 	}
 	if t := p.next(); t.Type != lexer.EOF {
-		return sel, errors.Errorf("unexpected tail token %q", t.Type)
+		return sel, p.tailToken(t)
 	}
 	return sel, nil
 }
@@ -94,17 +94,13 @@ func (p *parser) unread() {
 	}
 }
 
-func (p *parser) unexpectedToken(t lexer.Token) error {
-	if t.Type == lexer.EOF {
-		return errors.New("unexpected EOF")
-	}
-	return errors.Errorf("unexpected token %q at %s", t.Type, t.Pos)
-}
-
 func (p *parser) consumeText(tt lexer.TokenType) (string, lexer.Token, error) {
 	t := p.next()
 	if t.Type != tt {
-		return "", t, errors.Wrapf(p.unexpectedToken(t), "expected %q", tt)
+		return "", t, &ParseError{
+			Pos: t.Pos,
+			Err: errors.Errorf("expected %q, got %q", tt, t.Type),
+		}
 	}
 	return t.Text, t, nil
 }

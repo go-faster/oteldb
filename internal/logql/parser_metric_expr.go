@@ -77,7 +77,7 @@ func (p *parser) parseBinOp(left MetricExpr, minPrecedence int) (MetricExpr, err
 			return left, nil
 		}
 		// Consume op.
-		p.next()
+		opTok := p.next()
 
 		modifier, err := p.parseBinOpModifier()
 		if err != nil {
@@ -91,10 +91,16 @@ func (p *parser) parseBinOp(left MetricExpr, minPrecedence int) (MetricExpr, err
 
 		if op.IsLogic() {
 			if v, ok := left.(*LiteralExpr); ok {
-				return nil, errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, op)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("unexpected left scalar %v in a logical operation %s", v.Value, op),
+				}
 			}
 			if v, ok := right.(*LiteralExpr); ok {
-				return nil, errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, op)
+				return nil, &ParseError{
+					Pos: opTok.Pos,
+					Err: errors.Errorf("unexpected right scalar %v in a logical operation %s", v.Value, op),
+				}
 			}
 		}
 
@@ -162,7 +168,9 @@ func (p *parser) peekBinOp() (op BinOp, ok bool) {
 
 func (p *parser) parseRangeAggregationExpr() (e *RangeAggregationExpr, _ error) {
 	e = new(RangeAggregationExpr)
-	switch t := p.next(); t.Type {
+
+	opTok := p.next()
+	switch opTok.Type {
 	case lexer.CountOverTime:
 		e.Op = RangeOpCount
 	case lexer.Rate:
@@ -229,13 +237,19 @@ func (p *parser) parseRangeAggregationExpr() (e *RangeAggregationExpr, _ error) 
 		}
 	}
 
-	err = e.validate()
-	return e, err
+	if err := e.validate(); err != nil {
+		return nil, &ParseError{
+			Pos: opTok.Pos,
+			Err: err,
+		}
+	}
+	return e, nil
 }
 
 func (p *parser) parseVectorAggregationExpr() (e *VectorAggregationExpr, err error) {
 	e = new(VectorAggregationExpr)
-	switch t := p.next(); t.Type {
+	opTok := p.next()
+	switch opTok.Type {
 	case lexer.Sum:
 		e.Op = VectorOpSum
 	case lexer.Avg:
@@ -312,8 +326,13 @@ func (p *parser) parseVectorAggregationExpr() (e *VectorAggregationExpr, err err
 		return nil, p.unexpectedToken(t)
 	}
 
-	err = e.validate()
-	return e, err
+	if err := e.validate(); err != nil {
+		return nil, &ParseError{
+			Pos: opTok.Pos,
+			Err: err,
+		}
+	}
+	return e, nil
 }
 
 func (p *parser) parseLiteralExpr() (*LiteralExpr, error) {
@@ -376,12 +395,16 @@ func (p *parser) parseLabelReplace() (lr *LabelReplaceExpr, err error) {
 	if err := readParam(&lr.SrcLabel); err != nil {
 		return nil, err
 	}
+	regexTok := p.peek()
 	if err := readParam(&lr.Regex); err != nil {
 		return nil, err
 	}
 	lr.Re, err = compileLabelRegex(lr.Regex)
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid regex in label_replace %q", lr.Regex)
+		return nil, &ParseError{
+			Pos: regexTok.Pos,
+			Err: err,
+		}
 	}
 
 	if err := p.consume(lexer.CloseParen); err != nil {
