@@ -9,6 +9,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/prometheus/common/model"
 
+	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
@@ -107,4 +108,15 @@ func ParseDuration[S ~string](param S) (time.Duration, error) {
 	}
 	md, err := model.ParseDuration(value)
 	return time.Duration(md), err
+}
+
+func parseDirection(opt lokiapi.OptDirection) (r logqlengine.Direction, _ error) {
+	switch d := opt.Or(lokiapi.DirectionBackward); d {
+	case lokiapi.DirectionBackward:
+		return logqlengine.DirectionBackward, nil
+	case lokiapi.DirectionForward:
+		return logqlengine.DirectionForward, nil
+	default:
+		return r, errors.Errorf("invalid direction %q", d)
+	}
 }
