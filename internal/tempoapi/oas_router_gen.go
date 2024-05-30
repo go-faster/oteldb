@@ -438,9 +438,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: Echo
 						r.name = "Echo"
 						r.summary = ""
 						r.operationID = "echo"
@@ -531,9 +531,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								}
 
 								if len(elem) == 0 {
+									// Leaf node.
 									switch method {
 									case "GET":
-										// Leaf: SearchTagValues
 										r.name = "SearchTagValues"
 										r.summary = ""
 										r.operationID = "searchTagValues"
@@ -559,9 +559,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							}
 
 							if len(elem) == 0 {
+								// Leaf node.
 								switch method {
 								case "GET":
-									// Leaf: SearchTags
 									r.name = "SearchTags"
 									r.summary = ""
 									r.operationID = "searchTags"
@@ -590,9 +590,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					if len(elem) == 0 {
+						// Leaf node.
 						switch method {
 						case "GET":
-							// Leaf: BuildInfo
 							r.name = "BuildInfo"
 							r.summary = ""
 							r.operationID = "buildInfo"
@@ -623,9 +623,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				elem = ""
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: TraceByID
 						r.name = "TraceByID"
 						r.summary = ""
 						r.operationID = "traceByID"
@@ -681,9 +681,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						if len(elem) == 0 {
+							// Leaf node.
 							switch method {
 							case "GET":
-								// Leaf: SearchTagValuesV2
 								r.name = "SearchTagValuesV2"
 								r.summary = ""
 								r.operationID = "searchTagValuesV2"
@@ -709,9 +709,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					if len(elem) == 0 {
+						// Leaf node.
 						switch method {
 						case "GET":
-							// Leaf: SearchTagsV2
 							r.name = "SearchTagsV2"
 							r.summary = ""
 							r.operationID = "searchTagsV2"

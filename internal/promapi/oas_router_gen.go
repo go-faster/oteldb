@@ -433,9 +433,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						if len(elem) == 0 {
+							// Leaf node.
 							switch method {
 							case "GET":
-								// Leaf: GetLabelValues
 								r.name = "GetLabelValues"
 								r.summary = ""
 								r.operationID = "getLabelValues"
@@ -461,9 +461,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					if len(elem) == 0 {
+						// Leaf node.
 						switch method {
 						case "GET":
-							// Leaf: GetLabels
 							r.name = "GetLabels"
 							r.summary = ""
 							r.operationID = "getLabels"
@@ -472,7 +472,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.count = 0
 							return r, true
 						case "POST":
-							// Leaf: PostLabels
 							r.name = "PostLabels"
 							r.summary = ""
 							r.operationID = "postLabels"
@@ -498,9 +497,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: GetMetadata
 						r.name = "GetMetadata"
 						r.summary = ""
 						r.operationID = "getMetadata"
@@ -566,9 +565,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						if len(elem) == 0 {
+							// Leaf node.
 							switch method {
 							case "GET":
-								// Leaf: GetQueryExemplars
 								r.name = "GetQueryExemplars"
 								r.summary = ""
 								r.operationID = "getQueryExemplars"
@@ -577,7 +576,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 0
 								return r, true
 							case "POST":
-								// Leaf: PostQueryExemplars
 								r.name = "PostQueryExemplars"
 								r.summary = ""
 								r.operationID = "postQueryExemplars"
@@ -600,9 +598,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						if len(elem) == 0 {
+							// Leaf node.
 							switch method {
 							case "GET":
-								// Leaf: GetQueryRange
 								r.name = "GetQueryRange"
 								r.summary = ""
 								r.operationID = "getQueryRange"
@@ -611,7 +609,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 0
 								return r, true
 							case "POST":
-								// Leaf: PostQueryRange
 								r.name = "PostQueryRange"
 								r.summary = ""
 								r.operationID = "postQueryRange"
@@ -640,9 +637,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: GetRules
 						r.name = "GetRules"
 						r.summary = ""
 						r.operationID = "getRules"
@@ -665,9 +662,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: GetSeries
 						r.name = "GetSeries"
 						r.summary = ""
 						r.operationID = "getSeries"
@@ -676,7 +673,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.count = 0
 						return r, true
 					case "POST":
-						// Leaf: PostSeries
 						r.name = "PostSeries"
 						r.summary = ""
 						r.operationID = "postSeries"

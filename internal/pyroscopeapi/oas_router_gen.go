@@ -284,9 +284,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: GetApps
 						r.name = "GetApps"
 						r.summary = ""
 						r.operationID = "getApps"
@@ -309,9 +309,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "POST":
-						// Leaf: Ingest
 						r.name = "Ingest"
 						r.summary = ""
 						r.operationID = "ingest"
@@ -346,9 +346,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					if len(elem) == 0 {
+						// Leaf node.
 						switch method {
 						case "GET":
-							// Leaf: LabelValues
 							r.name = "LabelValues"
 							r.summary = ""
 							r.operationID = "labelValues"
@@ -371,9 +371,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					}
 
 					if len(elem) == 0 {
+						// Leaf node.
 						switch method {
 						case "GET":
-							// Leaf: Labels
 							r.name = "Labels"
 							r.summary = ""
 							r.operationID = "labels"
@@ -399,9 +399,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: Render
 						r.name = "Render"
 						r.summary = ""
 						r.operationID = "render"

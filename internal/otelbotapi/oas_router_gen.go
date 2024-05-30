@@ -227,9 +227,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: Ping
 						r.name = "Ping"
 						r.summary = ""
 						r.operationID = "ping"
@@ -252,9 +252,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "POST":
-						// Leaf: SubmitReport
 						r.name = "SubmitReport"
 						r.summary = ""
 						r.operationID = "submitReport"
@@ -277,9 +277,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				}
 
 				if len(elem) == 0 {
+					// Leaf node.
 					switch method {
 					case "GET":
-						// Leaf: GetStatus
 						r.name = "GetStatus"
 						r.summary = ""
 						r.operationID = "getStatus"
