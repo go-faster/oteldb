@@ -3,6 +3,7 @@ package logql
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 // LogExpr is a log query expression.
@@ -18,6 +19,21 @@ func (*LogExpr) expr() {}
 // Selector is a labels selector.
 type Selector struct {
 	Matchers []LabelMatcher
+}
+
+// String implements [fmt.Stringer].
+func (s Selector) String() string {
+	var sb strings.Builder
+	sb.WriteByte('{')
+	for i, m := range s.Matchers {
+		if i != 0 {
+			sb.WriteByte(',')
+		}
+		// FIXME(tdakkota): suboptimal
+		sb.WriteString(m.String())
+	}
+	sb.WriteByte('}')
+	return sb.String()
 }
 
 // LabelMatcher is label matching predicate.
