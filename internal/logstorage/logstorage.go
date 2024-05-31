@@ -3,8 +3,10 @@ package logstorage
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -14,9 +16,11 @@ type Querier interface {
 	LabelNames(ctx context.Context, opts LabelsOptions) ([]string, error)
 	// LabelValues returns all available label values for given label.
 	LabelValues(ctx context.Context, labelName string, opts LabelsOptions) (iterators.Iterator[Label], error)
+	// Series returns all available log series.
+	Series(ctx context.Context, opts SeriesOptions) (Series, error)
 }
 
-// LabelsOptions defines options for Labels and LabelValues methods.
+// LabelsOptions defines options for [Querier.LabelNames] and [Querier.LabelValues] methods.
 type LabelsOptions struct {
 	// Start defines time range for search.
 	//
@@ -26,6 +30,20 @@ type LabelsOptions struct {
 	//
 	// Querier ignores parameter, if it is zero.
 	End otelstorage.Timestamp
+}
+
+// SeriesOptions defines options for [Querier.Series] method.
+type SeriesOptions struct {
+	// Start defines time range for search.
+	//
+	// Querier ignores parameter, if it is zero.
+	Start time.Time
+	// End defines time range for search.
+	//
+	// Querier ignores parameter, if it is zero.
+	End time.Time
+	// Selectors defines a list of matchers to filter series.
+	Selectors []logql.Selector
 }
 
 // Inserter is a log storage insert interface.

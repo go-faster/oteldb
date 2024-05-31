@@ -332,11 +332,51 @@ func (q logQueryPredicates) write(
 ) error {
 	fmt.Fprintf(query, "(toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)",
 		q.Start.UnixNano(), q.End.UnixNano())
-	for _, m := range q.Labels {
+	if err := writeLabelMatchers(query, q.Labels, mapping); err != nil {
+		return err
+	}
+
+	for _, m := range q.Line {
+		switch m.Op {
+		case logql.OpEq, logql.OpRe:
+			query.WriteString(" AND (")
+		case logql.OpNotEq, logql.OpNotRe:
+			query.WriteString(" AND NOT (")
+		default:
+			return errors.Errorf("unexpected op %q", m.Op)
+		}
+
+		switch m.Op {
+		case logql.OpEq, logql.OpNotEq:
+			fmt.Fprintf(query, "positionUTF8(body, %s) > 0", singleQuoted(m.By.Value))
+			{
+				// HACK: check for special case of hex-encoded trace_id and span_id.
+				// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
+				// TODO(ernado): also handle regex?
+				encoded := strings.ToLower(m.By.Value)
+				v, _ := hex.DecodeString(encoded)
+				switch len(v) {
+				case len(otelstorage.TraceID{}):
+					fmt.Fprintf(query, " OR trace_id = unhex(%s)", singleQuoted(encoded))
+				case len(otelstorage.SpanID{}):
+					fmt.Fprintf(query, " OR span_id = unhex(%s)", singleQuoted(encoded))
+				}
+			}
+		case logql.OpRe, logql.OpNotRe:
+			fmt.Fprintf(query, "match(body, %s)", singleQuoted(m.By.Value))
+		}
+		query.WriteByte(')')
+	}
+	return nil
+}
+
+func writeLabelMatchers(query *strings.Builder, labels []logql.LabelMatcher, mapping map[string]string) error {
+	for _, m := range labels {
 		labelName := string(m.Label)
 		if key, ok := mapping[labelName]; ok {
 			labelName = key
 		}
+
 		switch m.Op {
 		case logql.OpEq, logql.OpRe:
 			query.WriteString(" AND (")
@@ -446,38 +486,6 @@ func (q logQueryPredicates) write(
 					return errors.Errorf("unexpected op %q", m.Op)
 				}
 			}
-		}
-		query.WriteByte(')')
-	}
-
-	for _, m := range q.Line {
-		switch m.Op {
-		case logql.OpEq, logql.OpRe:
-			query.WriteString(" AND (")
-		case logql.OpNotEq, logql.OpNotRe:
-			query.WriteString(" AND NOT (")
-		default:
-			return errors.Errorf("unexpected op %q", m.Op)
-		}
-
-		switch m.Op {
-		case logql.OpEq, logql.OpNotEq:
-			fmt.Fprintf(query, "positionUTF8(body, %s) > 0", singleQuoted(m.By.Value))
-			{
-				// HACK: check for special case of hex-encoded trace_id and span_id.
-				// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
-				// TODO(ernado): also handle regex?
-				encoded := strings.ToLower(m.By.Value)
-				v, _ := hex.DecodeString(encoded)
-				switch len(v) {
-				case len(otelstorage.TraceID{}):
-					fmt.Fprintf(query, " OR trace_id = unhex(%s)", singleQuoted(encoded))
-				case len(otelstorage.SpanID{}):
-					fmt.Fprintf(query, " OR span_id = unhex(%s)", singleQuoted(encoded))
-				}
-			}
-		case logql.OpRe, logql.OpNotRe:
-			fmt.Fprintf(query, "match(body, %s)", singleQuoted(m.By.Value))
 		}
 		query.WriteByte(')')
 	}

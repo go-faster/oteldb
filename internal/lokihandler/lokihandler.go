@@ -3,6 +3,7 @@ package lokihandler
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/go-faster/sdk/zctx"
 
 	"github.com/go-faster/oteldb/internal/iterators"
+	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -227,30 +229,32 @@ func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lok
 		return nil, validationErr(err, "parse time range")
 	}
 
-	out := make([]lokiapi.MapsDataItem, 0, len(params.Match))
-	for _, q := range params.Match {
-		// TODO(ernado): offload
-		data, err := h.eval(ctx, q, logqlengine.EvalParams{
-			Start:     start,
-			End:       end,
-			Direction: logqlengine.DirectionBackward,
-			Limit:     1_000,
-		})
+	selectors := make([]logql.Selector, len(params.Match))
+	for i, m := range params.Match {
+		selectors[i], err = logql.ParseSelector(m, logql.ParseOptions{})
 		if err != nil {
-			return nil, executionErr(err, "evaluate series query")
-		}
-		if streams, ok := data.GetStreamsResult(); ok {
-			for _, stream := range streams.Result {
-				if labels, ok := stream.Stream.Get(); ok {
-					// TODO(ernado): should be MapsDataItem 1:1 match?
-					out = append(out, lokiapi.MapsDataItem(labels))
-				}
-			}
+			return nil, validationErr(err, fmt.Sprintf("invalid match[%d]", i))
 		}
 	}
+
+	series, err := h.q.Series(ctx, logstorage.SeriesOptions{
+		Start:     start,
+		End:       end,
+		Selectors: selectors,
+	})
+	if err != nil {
+		return nil, executionErr(err, "get series")
+	}
+
+	// FIXME(tdakkota): copying slice only because generated type is named.
+	result := make([]lokiapi.MapsDataItem, len(series))
+	for i, s := range series {
+		result[i] = s
+	}
+
 	return &lokiapi.Maps{
 		Status: "success",
-		Data:   out,
+		Data:   result,
 	}, nil
 }
 

@@ -138,6 +138,10 @@ func attrKeys(name string) string {
 	return fmt.Sprintf("JSONExtractKeys(%s)", name)
 }
 
+func attrStringMap(name string) string {
+	return fmt.Sprintf("JSONExtract(%s, 'Map(String, String)')", name)
+}
+
 // Columns returns a slice of Columns for this attribute set.
 func (a *Attributes) Columns() Columns {
 	return Columns{

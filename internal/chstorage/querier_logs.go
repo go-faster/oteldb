@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
+	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
@@ -11,6 +13,7 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
@@ -18,6 +21,7 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 var (
@@ -251,5 +255,137 @@ func (q *Querier) getMaterializedLabelColumn(labelName string) (column string, i
 		return labelName, true
 	default:
 		return "", false
+	}
+}
+
+// Series returns all available log series.
+func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (result logstorage.Series, rerr error) {
+	table := q.tables.Logs
+
+	ctx, span := q.tracer.Start(ctx, "chstorage.logs.Series",
+		trace.WithAttributes(
+			attribute.Int64("chstorage.range.start", opts.Start.UnixNano()),
+			attribute.Int64("chstorage.range.end", opts.Start.UnixNano()),
+			xattribute.StringerSlice("chstorage.selectors", opts.Selectors),
+
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	var materializedStringMap strings.Builder
+	{
+		materializedStringMap.WriteString("map(")
+		for i, label := range []string{
+			logstorage.LabelTraceID,
+			logstorage.LabelSpanID,
+			logstorage.LabelSeverity,
+			logstorage.LabelBody,
+			logstorage.LabelServiceName,
+			logstorage.LabelServiceInstanceID,
+			logstorage.LabelServiceNamespace,
+		} {
+			if i != 0 {
+				materializedStringMap.WriteByte(',')
+			}
+			materializedStringMap.WriteString(singleQuoted(label))
+			materializedStringMap.WriteByte(',')
+			expr, _ := q.getMaterializedLabelColumn(label)
+			if label == logstorage.LabelSeverity {
+				expr = fmt.Sprintf("toString(%s)", expr)
+			}
+			materializedStringMap.WriteString(expr)
+		}
+		materializedStringMap.WriteByte(')')
+	}
+
+	var query strings.Builder
+	fmt.Fprintf(&query, `SELECT DISTINCT
+	mapConcat(%s, %s, %s, %s) as series
+FROM %s
+WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)`,
+		&materializedStringMap,
+		attrStringMap(colAttrs),
+		attrStringMap(colResource),
+		attrStringMap(colScope),
+		table,
+		opts.Start.UnixNano(), opts.End.UnixNano(),
+	)
+
+	if sels := opts.Selectors; len(sels) > 0 {
+		// Gather all labels for mapping fetch.
+		labels := make([]string, 0, len(sels))
+		for _, sel := range sels {
+			for _, m := range sel.Matchers {
+				labels = append(labels, string(m.Label))
+			}
+		}
+		mapping, err := q.getLabelMapping(ctx, labels)
+		if err != nil {
+			return nil, errors.Wrap(err, "get label mapping")
+		}
+
+		query.WriteString(" AND (false")
+		for _, sel := range sels {
+			query.WriteString(" OR (true")
+			if err := writeLabelMatchers(&query, sel.Matchers, mapping); err != nil {
+				return nil, err
+			}
+			query.WriteByte(')')
+		}
+		query.WriteByte(')')
+	}
+	query.WriteString(" LIMIT 1000")
+
+	var (
+		queryStartTime = time.Now()
+
+		series = proto.NewMap(
+			new(proto.ColStr),
+			new(proto.ColStr),
+		)
+	)
+	if err := q.ch.Do(ctx, ch.Query{
+		Body: query.String(),
+		Result: proto.Results{
+			{Name: "series", Data: series},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < series.Rows(); i++ {
+				s := make(map[string]string)
+				forEachColMap(series, i, func(k, v string) {
+					s[otelstorage.KeyToLabel(k)] = v
+				})
+				result = append(result, s)
+			}
+			return nil
+		},
+	}); err != nil {
+		return nil, err
+	}
+
+	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.query_type", "Series"),
+			attribute.String("chstorage.table", table),
+			attribute.String("chstorage.signal", "logs"),
+		),
+	)
+	return result, nil
+}
+
+func forEachColMap[K comparable, V any](c *proto.ColMap[K, V], row int, cb func(K, V)) {
+	var start int
+	end := int(c.Offsets[row])
+	if row > 0 {
+		start = int(c.Offsets[row-1])
+	}
+	for idx := start; idx < end; idx++ {
+		cb(c.Keys.Row(idx), c.Values.Row(idx))
 	}
 }

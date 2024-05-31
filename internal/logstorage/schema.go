@@ -42,3 +42,6 @@ type Label struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
+
+// Series defines a list of series.
+type Series []map[string]string
