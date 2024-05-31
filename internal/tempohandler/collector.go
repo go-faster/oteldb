@@ -1,6 +1,8 @@
 package tempohandler
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
@@ -55,6 +57,9 @@ func (b *metadataCollector) Result() (r []tempoapi.TraceSearchMetadata) {
 		}
 		r = append(r, v)
 	}
+	slices.SortFunc(r, func(a, b tempoapi.TraceSearchMetadata) int {
+		return a.StartTimeUnixNano.Compare(b.StartTimeUnixNano)
+	})
 	return r
 }
 
