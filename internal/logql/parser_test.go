@@ -1165,9 +1165,6 @@ func TestParse(t *testing.T) {
 		tt := tt
 		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 			defer func() {
-				if tt.wantErr {
-					t.Fail()
-				}
 				if t.Failed() {
 					t.Logf("Input:\n%s", tt.input)
 				}
@@ -1175,7 +1172,6 @@ func TestParse(t *testing.T) {
 
 			got, err := Parse(tt.input, ParseOptions{AllowDots: true})
 			if tt.wantErr {
-				t.Logf("err:\n%v", err)
 				require.Error(t, err)
 				return
 			}
