@@ -3,6 +3,7 @@ package traceqlengine
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -199,10 +200,13 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 			})
 		}
 	}
-
 	if err := iter.Err(); err != nil {
 		return nil, err
 	}
+
+	slices.SortFunc(result, func(a, b tempoapi.TraceSearchMetadata) int {
+		return a.StartTimeUnixNano.Compare(b.StartTimeUnixNano)
+	})
 	return &tempoapi.Traces{Traces: result}, nil
 }
 
