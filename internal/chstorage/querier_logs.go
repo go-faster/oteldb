@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
@@ -41,9 +42,19 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		}
 		span.End()
 	}()
+
 	var (
 		names proto.ColStr
-		out   []string
+		dedup = map[string]struct{}{
+			// Add materialized labels.
+			logstorage.LabelTraceID:           {},
+			logstorage.LabelSpanID:            {},
+			logstorage.LabelSeverity:          {},
+			logstorage.LabelBody:              {},
+			logstorage.LabelServiceName:       {},
+			logstorage.LabelServiceInstanceID: {},
+			logstorage.LabelServiceNamespace:  {},
+		}
 	)
 	if err := q.ch.Do(ctx, ch.Query{
 		Logger: zctx.From(ctx).Named("ch"),
@@ -52,10 +63,9 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < names.Rows(); i++ {
-				name := names.Row(i)
 				// TODO: add configuration option
-				name = otelstorage.KeyToLabel(name)
-				out = append(out, name)
+				name := otelstorage.KeyToLabel(names.Row(i))
+				dedup[name] = struct{}{}
 			}
 			return nil
 		},
@@ -70,29 +80,11 @@ LIMIT 1000`,
 			table, opts.Start, opts.End,
 		),
 	}); err != nil {
-		return nil, errors.Wrap(err, "select")
+		return nil, err
 	}
-
-	// Append materialized labels.
-	out = append(out,
-		logstorage.LabelTraceID,
-		logstorage.LabelSpanID,
-		logstorage.LabelSeverity,
-		logstorage.LabelBody,
-		logstorage.LabelServiceName,
-		logstorage.LabelServiceInstanceID,
-		logstorage.LabelServiceNamespace,
-	)
 
 	// Deduplicate.
-	seen := make(map[string]struct{}, len(out))
-	for _, v := range out {
-		seen[v] = struct{}{}
-	}
-	out = out[:0]
-	for k := range seen {
-		out = append(out, k)
-	}
+	out := maps.Keys(dedup)
 	slices.Sort(out)
 
 	return out, nil
@@ -134,6 +126,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		}
 		span.End()
 	}()
+
 	switch labelName {
 	case logstorage.LabelBody, logstorage.LabelSpanID, logstorage.LabelTraceID:
 		return &labelStaticIterator{
@@ -195,8 +188,9 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 			table, opts.Start, opts.End,
 		),
 	}); err != nil {
-		return nil, errors.Wrap(err, "select")
+		return nil, err
 	}
+
 	return &labelStaticIterator{
 		name:   labelName,
 		values: out,
@@ -237,7 +231,7 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 		},
 		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.LogAttrs),
 	}); err != nil {
-		return nil, errors.Wrap(err, "select")
+		return nil, err
 	}
 
 	return out, nil
