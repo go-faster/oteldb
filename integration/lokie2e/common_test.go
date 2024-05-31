@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
+	"golang.org/x/exp/maps"
 	"sigs.k8s.io/yaml"
 
 	"github.com/go-faster/oteldb/integration"
@@ -124,7 +125,7 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 
 			t.Run(labelName, func(t *testing.T) {
 				a := require.New(t)
-				t.Logf("%q: %v", labelName, values)
+
 				r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
 					Name: labelName,
 					// Always sending time range because default is current time.
@@ -133,12 +134,61 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 				})
 				a.NoError(err)
 				a.Len(r.Data, len(values))
-				t.Logf("got values %v", r.Data)
 				for _, val := range r.Data {
 					a.Containsf(values, val, "check label %q", labelName)
 				}
 			})
 		}
+	})
+	t.Run("Series", func(t *testing.T) {
+		t.Run("All", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.Series(ctx, lokiapi.SeriesParams{
+				// Always sending time range because default is current time.
+				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+			})
+			a.NoError(err)
+
+			names := make(map[string]struct{}, len(set.Labels))
+			for _, series := range r.Data {
+				for k := range series {
+					names[k] = struct{}{}
+				}
+			}
+			a.ElementsMatch(maps.Keys(names), maps.Keys(set.Labels))
+		})
+		t.Run("OneMatcher", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.Series(ctx, lokiapi.SeriesParams{
+				// Always sending time range because default is current time.
+				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				Match: []string{`{http_method="GET"}`},
+			})
+			a.NoError(err)
+
+			for _, series := range r.Data {
+				a.Equal("GET", series["http_method"])
+			}
+		})
+		t.Run("Matchers", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.Series(ctx, lokiapi.SeriesParams{
+				// Always sending time range because default is current time.
+				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				Match: []string{`{http_method="GET"}`, `{http_method="POST"}`},
+			})
+			a.NoError(err)
+
+			for _, series := range r.Data {
+				a.Contains([]string{"GET", "POST"}, series["http_method"])
+			}
+		})
 	})
 	t.Run("LogQueries", func(t *testing.T) {
 		tests := []struct {
