@@ -26,9 +26,9 @@ type Columns []Column
 
 // Names returns a slice of column names.
 func (c Columns) Names() []string {
-	var names []string
-	for _, col := range c {
-		names = append(names, col.Name)
+	names := make([]string, len(c))
+	for i, col := range c {
+		names[i] = col.Name
 	}
 	return names
 }

@@ -64,7 +64,7 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 	}()
 
 	// Gather all labels for mapping fetch.
-	var labels []string
+	labels := make([]string, 0, len(v.Labels))
 	for _, m := range v.Labels {
 		labels = append(labels, string(m.Label))
 	}
@@ -191,7 +191,7 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 	}()
 
 	// Gather all labels for mapping fetch.
-	var labels []string
+	labels := make([]string, 0, len(v.Labels)+len(v.GroupingLabels))
 	for _, m := range v.Labels {
 		labels = append(labels, string(m.Label))
 	}

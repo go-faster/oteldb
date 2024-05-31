@@ -49,9 +49,12 @@ func newLogColumns() *logColumns {
 }
 
 func (c *logColumns) StaticColumns() []string {
-	var cols []string
-	for _, col := range c.Input() {
-		cols = append(cols, col.Name)
+	var (
+		input = c.Input()
+		cols  = make([]string, len(input))
+	)
+	for i, col := range input {
+		cols[i] = col.Name
 	}
 	return cols
 }
