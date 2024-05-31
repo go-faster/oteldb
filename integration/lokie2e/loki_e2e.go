@@ -48,7 +48,6 @@ func NewBatchSet() *BatchSet {
 		s.addLabel(logstorage.Label{
 			Name:  logstorage.LabelSeverity,
 			Value: i.String(),
-			Type:  int32(pcommon.ValueTypeStr),
 		})
 	}
 
@@ -113,7 +112,6 @@ func (s *BatchSet) addLabels(m pcommon.Map) {
 			s.addLabel(logstorage.Label{
 				Name:  k,
 				Value: v.AsString(),
-				Type:  int32(t),
 			})
 		}
 		return true

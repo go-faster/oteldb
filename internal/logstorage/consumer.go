@@ -30,7 +30,7 @@ func (c *Consumer) ConsumeLogs(ctx context.Context, logs plog.Logs) error {
 			switch t := v.Type(); t {
 			case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
 			default:
-				labels[Label{k, v.AsString(), int32(t)}] = struct{}{}
+				labels[Label{k, v.AsString()}] = struct{}{}
 			}
 			return true
 		})
