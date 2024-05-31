@@ -8,7 +8,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_TAG: ghcr.io/${{ github.repository }}
-  KUBECTL_VERSION: v1.27.1
+  KUBECTL_VERSION: v1.27.6
 
 jobs:
   oteldb:
@@ -140,7 +140,7 @@ jobs:
           /tmp/kubectl -n faster rollout status deployment otelproxy chotel --timeout=5m
       - name: Deploy (Helm)
         run: |
-          helm upgrade --install otel ./helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
+          helm upgrade --timeout 5m --wait --install otel ./helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
 
   otelbot:
     environment: prod
@@ -252,8 +252,7 @@ jobs:
 
       - name: Deploy (Helm)
         run: |
-          helm upgrade --install bot ./helm/otelbot --namespace faster --values .k8s/otelbot.values.yml --set image.tag=${{ env.sha }}
-          /tmp/kubectl -n faster rollout status deployment bot-otelbot --timeout=10m
+          helm upgrade --timeout 5m --wait --install bot ./helm/otelbot --namespace faster --values .k8s/otelbot.values.yml --set image.tag=${{ env.sha }}
 
   otel:
     environment: prod
@@ -306,5 +305,5 @@ jobs:
       - name: Deploy
         run: |
           /tmp/kubectl -n monitoring apply -f .k8s/otel.yml
-          /tmp/kubectl -n monitoring rollout status --timeout=1m deployment otel-collector
-          /tmp/kubectl -n monitoring rollout status --timeout=1m daemonset otel-agent
+          /tmp/kubectl -n monitoring rollout status --timeout=2m deployment otel-collector
+          /tmp/kubectl -n monitoring rollout status --timeout=2m daemonset otel-agent
