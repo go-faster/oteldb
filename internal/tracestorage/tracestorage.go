@@ -57,11 +57,9 @@ type TagNamesOptions struct {
 
 // TagValuesOptions defines options for [Querier.TagValues].
 type TagValuesOptions struct {
-	// Query is a set of spanset matchers to only return tags seen
+	// AutocompleteQuery is a set of spanset matchers to only return tags seen
 	// on matching spansets.
-	//
-	// Querier ignores parameter, if it is zero.
-	Query traceql.Autocomplete
+	AutocompleteQuery traceql.Autocomplete
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
