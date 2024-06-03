@@ -2,6 +2,7 @@ package traceql
 
 import (
 	"regexp/syntax"
+	"strings"
 
 	"github.com/go-faster/oteldb/internal/traceql/lexer"
 )
@@ -9,6 +10,26 @@ import (
 // Autocomplete is a AND set of spanset matchers.
 type Autocomplete struct {
 	Matchers []SpanMatcher
+}
+
+// String implements [fmt.Stringer] for [Autocomplete].
+func (c Autocomplete) String() string {
+	if len(c.Matchers) == 0 {
+		return "{}"
+	}
+
+	var sb strings.Builder
+	sb.WriteString("{ ")
+	for i, m := range c.Matchers {
+		if i != 0 {
+			sb.WriteString(" && ")
+		}
+		// FIXME(tdakkota): suboptimal
+		sb.WriteString(m.String())
+	}
+	sb.WriteString(" }")
+
+	return sb.String()
 }
 
 // ParseAutocomplete parses matchers from potentially uncomplete TraceQL spanset filter from string.
