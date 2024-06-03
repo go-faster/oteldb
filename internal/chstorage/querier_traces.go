@@ -156,6 +156,7 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 			attribute.Stringer("chstorage.tag", tag),
 			attribute.Int64("chstorage.range.start", int64(opts.Start)),
 			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			attribute.Stringer("traceql.autocomplete", opts.AutocompleteQuery),
 		),
 	)
 	defer func() {
