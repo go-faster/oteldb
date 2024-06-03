@@ -176,6 +176,21 @@ func TestParseAutocomplete(t *testing.T) {
 	}
 }
 
+func FuzzParseAutocomplete(f *testing.F) {
+	for _, tt := range autocompleteTests {
+		f.Add(tt.input)
+	}
+	f.Fuzz(func(t *testing.T, input string) {
+		defer func() {
+			if t.Failed() {
+				t.Logf("Input: %#q", input)
+			}
+		}()
+
+		ParseAutocomplete(input)
+	})
+}
+
 func TestAutocompleteString(t *testing.T) {
 	tests := []struct {
 		input Autocomplete
