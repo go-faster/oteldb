@@ -564,7 +564,7 @@ func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params trace
 			query.WriteString("(\n")
 			switch attribute.Key(attr.Name) {
 			case semconv.ServiceNamespaceKey:
-				fmt.Fprintf(&query, "service.namespace %s %s", cmp, singleQuoted(value))
+				fmt.Fprintf(&query, "service_namespace %s %s", cmp, singleQuoted(value))
 			case semconv.ServiceNameKey:
 				fmt.Fprintf(&query, "service_name %s %s", cmp, singleQuoted(value))
 			case semconv.ServiceInstanceIDKey:
