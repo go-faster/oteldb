@@ -483,6 +483,14 @@ func runTest(
 				// Ensure that engine properly handles types mismatch.
 				{`{ .http.status_code = "200" }`, nil},
 				{`{ .http.status_code =~ "^POST$" }`, nil},
+				// Search materialized attributes.
+				{`{ duration < 0s }`, nil},
+				{`{ name = "clearly-does-not-exist" }`, nil},
+				{`{ status = ok && status = error }`, nil},
+				{`{ kind = client && kind = server }`, nil},
+				{`{ .service.namespace = "clearly-does-not-exist" }`, nil},
+				{`{ .service.name = "clearly-does-not-exist" }`, nil},
+				{`{ .service.instance.id = "clearly-does-not-exist" }`, nil},
 			}
 			for i, tt := range queries {
 				tt := tt
