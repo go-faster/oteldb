@@ -1,0 +1,1 @@
+SELECT (span_id AS span_id) FROM (SELECT (span_id AS span_id),(timestamp AS timestamp) FROM spans WHERE (true) AND (duration > 3.14) AND (duration < 3.14))
