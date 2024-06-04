@@ -1,4 +1,4 @@
-package traceqlengine
+package traceql
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/ptrace"
-
-	"github.com/go-faster/oteldb/internal/traceql"
 )
 
 func TestSpanMatcher_String(t *testing.T) {
@@ -18,12 +16,12 @@ func TestSpanMatcher_String(t *testing.T) {
 	}{
 		{
 			SpanMatcher{
-				Attribute: traceql.Attribute{
-					Prop: traceql.SpanName,
+				Attribute: Attribute{
+					Prop: SpanName,
 				},
-				Op: traceql.OpEq,
-				Static: traceql.Static{
-					Type: traceql.TypeString,
+				Op: OpEq,
+				Static: Static{
+					Type: TypeString,
 					Str:  "span",
 				},
 			},
@@ -31,12 +29,12 @@ func TestSpanMatcher_String(t *testing.T) {
 		},
 		{
 			SpanMatcher{
-				Attribute: traceql.Attribute{
+				Attribute: Attribute{
 					Name: "http.status_code",
 				},
-				Op: traceql.OpGte,
-				Static: traceql.Static{
-					Type: traceql.TypeInt,
+				Op: OpGte,
+				Static: Static{
+					Type: TypeInt,
 					Data: 400,
 				},
 			},
@@ -44,12 +42,12 @@ func TestSpanMatcher_String(t *testing.T) {
 		},
 		{
 			SpanMatcher{
-				Attribute: traceql.Attribute{
-					Prop: traceql.TraceDuration,
+				Attribute: Attribute{
+					Prop: TraceDuration,
 				},
-				Op: traceql.OpLte,
-				Static: traceql.Static{
-					Type: traceql.TypeDuration,
+				Op: OpLte,
+				Static: Static{
+					Type: TypeDuration,
 					Data: uint64(time.Second),
 				},
 			},
@@ -57,12 +55,12 @@ func TestSpanMatcher_String(t *testing.T) {
 		},
 		{
 			SpanMatcher{
-				Attribute: traceql.Attribute{
-					Prop: traceql.SpanStatus,
+				Attribute: Attribute{
+					Prop: SpanStatus,
 				},
-				Op: traceql.OpEq,
-				Static: traceql.Static{
-					Type: traceql.TypeSpanStatus,
+				Op: OpEq,
+				Static: Static{
+					Type: TypeSpanStatus,
 					Data: uint64(ptrace.StatusCodeOk),
 				},
 			},
@@ -70,12 +68,12 @@ func TestSpanMatcher_String(t *testing.T) {
 		},
 		{
 			SpanMatcher{
-				Attribute: traceql.Attribute{
-					Prop: traceql.SpanKind,
+				Attribute: Attribute{
+					Prop: SpanKind,
 				},
-				Op: traceql.OpEq,
-				Static: traceql.Static{
-					Type: traceql.TypeSpanKind,
+				Op: OpEq,
+				Static: Static{
+					Type: TypeSpanKind,
 					Data: uint64(ptrace.SpanKindClient),
 				},
 			},
@@ -88,8 +86,8 @@ func TestSpanMatcher_String(t *testing.T) {
 			s := tt.m.String()
 			require.Equal(t, tt.want, s)
 
-			// Ensure stringer produces valid TraceQL.
-			_, err := traceql.Parse("{" + s + "}")
+			// Ensure stringer produces valid
+			_, err := Parse("{" + s + "}")
 			require.NoError(t, err)
 		})
 	}
