@@ -284,23 +284,6 @@ func (app *App) handleStartupProbe(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (app *App) setupCollector() error {
-	conf, err := otelcol.NewConfigProvider(otelcol.ConfigProviderSettings{
-		ResolverSettings: confmap.ResolverSettings{
-			URIs: []string{"oteldb:/"},
-			ProviderFactories: []confmap.ProviderFactory{
-				confmap.NewProviderFactory(func(s confmap.ProviderSettings) confmap.Provider {
-					return otelreceiver.NewMapProvider("oteldb", app.cfg.Collector)
-				}),
-			},
-			ConverterFactories: []confmap.ConverterFactory{
-				expandconverter.NewFactory(),
-			},
-		},
-	})
-	if err != nil {
-		return errors.Wrap(err, "create otelcol config provider")
-	}
-
 	col, err := otelcol.NewCollector(otelcol.CollectorSettings{
 		Factories: otelreceiver.Factories,
 		BuildInfo: component.NewDefaultBuildInfo(),
@@ -310,8 +293,20 @@ func (app *App) setupCollector() error {
 			}),
 		},
 		DisableGracefulShutdown: false,
-		ConfigProvider:          conf,
-		SkipSettingGRPCLogger:   false,
+		ConfigProviderSettings: otelcol.ConfigProviderSettings{
+			ResolverSettings: confmap.ResolverSettings{
+				URIs: []string{"oteldb:/"},
+				ProviderFactories: []confmap.ProviderFactory{
+					confmap.NewProviderFactory(func(s confmap.ProviderSettings) confmap.Provider {
+						return otelreceiver.NewMapProvider("oteldb", app.cfg.Collector)
+					}),
+				},
+				ConverterFactories: []confmap.ConverterFactory{
+					expandconverter.NewFactory(),
+				},
+			},
+		},
+		SkipSettingGRPCLogger: false,
 	})
 	if err != nil {
 		return errors.Wrap(err, "create collector")
