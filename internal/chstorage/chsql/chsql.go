@@ -2,9 +2,30 @@
 package chsql
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-faster/errors"
+)
+
+// Order defines sorting order.
+type Order uint8
+
+// String implements [fmt.Stringer].
+func (o Order) String() string {
+	switch o {
+	case Desc:
+		return "DESC"
+	case Asc:
+		return "ASC"
+	default:
+		return fmt.Sprintf("unknown order %d", o)
+	}
+}
+
+const (
+	Desc Order = iota + 1
+	Asc
 )
 
 // Printer prints SQL query.
@@ -162,6 +183,26 @@ func (p *Printer) From() {
 // Where writes `WHERE` ident.
 func (p *Printer) Where() {
 	p.Ident("WHERE")
+}
+
+// Order writes `ORDER` ident.
+func (p *Printer) Order() {
+	p.Ident("ORDER")
+}
+
+// By writes `BY` ident.
+func (p *Printer) By() {
+	p.Ident("BY")
+}
+
+// Asc writes `ASC` ident.
+func (p *Printer) Asc() {
+	p.Ident("ASC")
+}
+
+// Desc writes `DESC` ident.
+func (p *Printer) Desc() {
+	p.Ident("DESC")
 }
 
 // Limit writes `LIMIT` ident.

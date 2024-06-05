@@ -18,8 +18,14 @@ type SelectQuery struct {
 
 	// where is a set of expression joined by AND
 	where []expr
+	order []orderExpr
 
 	limit int
+}
+
+type orderExpr struct {
+	expr  expr
+	order Order
 }
 
 // Select creates a new [SelectQuery].
@@ -47,6 +53,12 @@ func (q *SelectQuery) Distinct(b bool) *SelectQuery {
 // Where adds filters to query.
 func (q *SelectQuery) Where(filters ...expr) *SelectQuery {
 	q.where = append(q.where, filters...)
+	return q
+}
+
+// Order adds order to query.
+func (q *SelectQuery) Order(e expr, order Order) *SelectQuery {
+	q.order = append(q.order, orderExpr{expr: e, order: order})
 	return q
 }
 
@@ -107,6 +119,27 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 				return errors.Wrapf(err, "filter %d", i)
 			}
 			p.CloseParen()
+		}
+	}
+	if len(q.order) > 0 {
+		p.Order()
+		p.By()
+
+		for i, e := range q.order {
+			if i != 0 {
+				p.Comma()
+			}
+			if err := p.WriteExpr(e.expr); err != nil {
+				return errors.Wrapf(err, "order by %d", i)
+			}
+			switch e.order {
+			case Asc:
+				p.Asc()
+			case Desc:
+				p.Desc()
+			default:
+				return errors.Errorf("unexpected order %v", e.order)
+			}
 		}
 	}
 

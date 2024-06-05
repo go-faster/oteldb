@@ -76,10 +76,38 @@ func TestSelect(t *testing.T) {
 						Lt(Ident("duration"), Value[float32](3.14)),
 					),
 					Column("span_id", nil),
+				).
+					Limit(1)
+			},
+			false,
+		},
+		{
+			func() *SelectQuery {
+				return Select("spans",
+					Column("timestamp", nil),
+				).Order(
+					Ident("timestamp"),
+					Desc,
 				)
 			},
 			false,
 		},
+		{
+			func() *SelectQuery {
+				return Select("spans",
+					Column("timestamp", nil),
+				).Order(
+					Ident("timestamp"),
+					Asc,
+				).Order(
+					Ident("duration"),
+					Desc,
+				)
+			},
+			false,
+		},
+
+		// No columns.
 		{
 			func() *SelectQuery { return Select("logs") },
 			true,
