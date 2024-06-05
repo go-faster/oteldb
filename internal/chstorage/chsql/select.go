@@ -73,9 +73,9 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			p.Comma()
 		}
 		cexpr := c.Expr
-		if !(cexpr.typ == exprBinaryOp && strings.EqualFold(cexpr.tok, "AS")) {
+		if needColumnAlias(c) {
 			// Do not alias the name if name is explicitly aliased by user.
-			cexpr = binaryOp(c.Expr, "AS", Ident(c.Name))
+			cexpr = binaryOp(cexpr, "AS", Ident(c.Name))
 		}
 		p.OpenParen()
 		if err := p.WriteExpr(cexpr); err != nil {
@@ -115,6 +115,18 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 		p.Literal(strconv.Itoa(q.limit))
 	}
 	return nil
+}
+
+func needColumnAlias(c ResultColumn) bool {
+	cexpr := c.Expr
+	switch cexpr.typ {
+	case exprBinaryOp:
+		return !strings.EqualFold(cexpr.tok, "AS")
+	case exprIdent:
+		return cexpr.tok != c.Name
+	default:
+		return true
+	}
 }
 
 // ResultColumn defines a column result.
