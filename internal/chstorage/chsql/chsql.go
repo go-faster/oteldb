@@ -39,6 +39,9 @@ func GetPrinter() *Printer {
 	return new(Printer)
 }
 
+// PutPrinter returns [Printer] to pool.
+func PutPrinter(*Printer) {}
+
 // String returns query.
 func (p *Printer) String() string {
 	return p.sb.String()
@@ -90,7 +93,7 @@ func (p *Printer) Literal(lit string) {
 	p.needSpace = true
 }
 
-func (p *Printer) WriteExpr(e expr) error {
+func (p *Printer) WriteExpr(e Expr) error {
 	switch e.typ {
 	case exprIdent:
 		p.Ident(e.tok)

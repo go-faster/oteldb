@@ -18,21 +18,31 @@ const (
 	exprTuple
 )
 
-type expr struct {
+// Expr is a Clickhouse expression.
+type Expr struct {
 	typ  exprType
 	tok  string
-	args []expr
+	args []Expr
 }
 
-func (expr) tableExpr() {}
+func (e Expr) IsZero() bool {
+	var s struct {
+		typ  exprType
+		tok  string
+		args []Expr
+	} = e
+	return s.typ == 0 &&
+		s.tok == "" &&
+		s.args == nil
+}
 
 // Ident returns identifier.
-func Ident(tok string) expr {
-	return expr{typ: exprIdent, tok: tok}
+func Ident(tok string) Expr {
+	return Expr{typ: exprIdent, tok: tok}
 }
 
 // Value returns literal.
-func Value[V litValue](v V) expr {
+func Value[V litValue](v V) Expr {
 	switch v := any(v).(type) {
 	case string:
 		return String(v)
@@ -76,16 +86,16 @@ type litValue interface {
 }
 
 // String returns string literal.
-func String(v string) expr {
-	return expr{
+func String(v string) Expr {
+	return Expr{
 		typ: exprLiteral,
 		tok: singleQuoted(v),
 	}
 }
 
 // Integer returns integer literal.
-func Integer[I constraints.Integer](v I) expr {
-	return expr{
+func Integer[I constraints.Integer](v I) Expr {
+	return Expr{
 		typ: exprLiteral,
 		// FIXME(tdakkota): suboptimal
 		tok: fmt.Sprintf("%d", v),
@@ -93,36 +103,36 @@ func Integer[I constraints.Integer](v I) expr {
 }
 
 // Float returns float literal.
-func Float[I constraints.Float](v I) expr {
+func Float[I constraints.Float](v I) Expr {
 	size := 64
 	if _, ok := any(v).(float32); ok {
 		size = 32
 	}
-	return expr{
+	return Expr{
 		typ: exprLiteral,
 		tok: strconv.FormatFloat(float64(v), 'f', -1, size),
 	}
 }
 
 // Bool returns bool literal.
-func Bool(v bool) expr {
-	return expr{
+func Bool(v bool) Expr {
+	return Expr{
 		typ: exprLiteral,
 		tok: strconv.FormatBool(v),
 	}
 }
 
 // Tuple returns tuple of given expressions.
-func Tuple(args ...expr) expr {
-	return expr{
+func Tuple(args ...Expr) Expr {
+	return Expr{
 		typ:  exprTuple,
 		args: args,
 	}
 }
 
 // TupleValues returns tuple of given values.
-func TupleValues[V litValue](vals ...V) expr {
-	args := make([]expr, len(vals))
+func TupleValues[V litValue](vals ...V) Expr {
+	args := make([]Expr, len(vals))
 	for i, val := range vals {
 		args[i] = Value(val)
 	}

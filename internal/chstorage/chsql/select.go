@@ -1,11 +1,13 @@
 package chsql
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
 	"github.com/go-faster/errors"
 
+	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 )
 
@@ -17,14 +19,14 @@ type SelectQuery struct {
 	columns  []ResultColumn
 
 	// where is a set of expression joined by AND
-	where []expr
+	where []Expr
 	order []orderExpr
 
 	limit int
 }
 
 type orderExpr struct {
-	expr  expr
+	expr  Expr
 	order Order
 }
 
@@ -51,13 +53,13 @@ func (q *SelectQuery) Distinct(b bool) *SelectQuery {
 }
 
 // Where adds filters to query.
-func (q *SelectQuery) Where(filters ...expr) *SelectQuery {
+func (q *SelectQuery) Where(filters ...Expr) *SelectQuery {
 	q.where = append(q.where, filters...)
 	return q
 }
 
 // Order adds order to query.
-func (q *SelectQuery) Order(e expr, order Order) *SelectQuery {
+func (q *SelectQuery) Order(e Expr, order Order) *SelectQuery {
 	q.order = append(q.order, orderExpr{expr: e, order: order})
 	return q
 }
@@ -68,6 +70,37 @@ func (q *SelectQuery) Order(e expr, order Order) *SelectQuery {
 func (q *SelectQuery) Limit(n int) *SelectQuery {
 	q.limit = n
 	return q
+}
+
+// OnResult defines [ch.Query.OnResult] callback type.
+type OnResult = func(ctx context.Context, block proto.Block) error
+
+// Prepare builds SQL query and passes columns to [ch.Query].
+func (q *SelectQuery) Prepare(onResult OnResult) (ch.Query, error) {
+	p := GetPrinter()
+	defer PutPrinter(p)
+
+	if err := q.WriteSQL(p); err != nil {
+		return ch.Query{}, err
+	}
+
+	return ch.Query{
+		Body:     p.String(),
+		Result:   q.Results(),
+		OnResult: onResult,
+	}, nil
+}
+
+// Results returns list of result columns.
+func (q *SelectQuery) Results() (r proto.Results) {
+	r = make(proto.Results, len(q.columns))
+	for _, c := range q.columns {
+		r = append(r, proto.ResultColumn{
+			Name: c.Name,
+			Data: c.Data,
+		})
+	}
+	return r
 }
 
 // WriteSQL writes SQL query.
@@ -85,7 +118,10 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			p.Comma()
 		}
 		cexpr := c.Expr
-		if needColumnAlias(c) {
+		if cexpr.IsZero() {
+			cexpr = Ident(c.Name)
+		}
+		if needColumnAlias(c.Name, cexpr) {
 			// Do not alias the name if name is explicitly aliased by user.
 			cexpr = binaryOp(cexpr, "AS", Ident(c.Name))
 		}
@@ -150,13 +186,12 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 	return nil
 }
 
-func needColumnAlias(c ResultColumn) bool {
-	cexpr := c.Expr
+func needColumnAlias(name string, cexpr Expr) bool {
 	switch cexpr.typ {
 	case exprBinaryOp:
 		return !strings.EqualFold(cexpr.tok, "AS")
 	case exprIdent:
-		return cexpr.tok != c.Name
+		return cexpr.tok != name
 	default:
 		return true
 	}
@@ -164,16 +199,16 @@ func needColumnAlias(c ResultColumn) bool {
 
 // ResultColumn defines a column result.
 type ResultColumn struct {
-	Name   string
-	Expr   expr
-	Result proto.ColResult
+	Name string
+	Expr Expr
+	Data proto.ColResult
 }
 
 // Column returns new Result
-func Column(name string, result proto.ColResult) ResultColumn {
+func Column(name string, data proto.ColResult) ResultColumn {
 	return ResultColumn{
-		Name:   name,
-		Expr:   Ident(name),
-		Result: result,
+		Name: name,
+		Expr: Ident(name),
+		Data: data,
 	}
 }
