@@ -350,13 +350,20 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr, rerr error) {
 			// HACK: check for special case of hex-encoded trace_id and span_id.
 			// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
 			// TODO(ernado): also handle regex?
-			encoded := strings.ToLower(m.By.Value)
-			v, _ := hex.DecodeString(encoded)
+
+			v, _ := hex.DecodeString(m.By.Value)
+
 			switch len(v) {
 			case len(otelstorage.TraceID{}):
-				expr = chsql.Or(expr, chsql.ColumnEq("trace_id", encoded))
+				expr = chsql.Or(expr, chsql.Eq(
+					chsql.Ident("trace_id"),
+					chsql.Unhex(chsql.String(m.By.Value)),
+				))
 			case len(otelstorage.SpanID{}):
-				expr = chsql.Or(expr, chsql.ColumnEq("span_id", encoded))
+				expr = chsql.Or(expr, chsql.Eq(
+					chsql.Ident("span_id"),
+					chsql.Unhex(chsql.String(m.By.Value)),
+				))
 			}
 		}
 		return expr, nil
