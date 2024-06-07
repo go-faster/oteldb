@@ -184,7 +184,7 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 
 func promQLLabelMatcher(valueSel []chsql.Expr, typ labels.MatchType, value string) (e chsql.Expr, rerr error) {
 	defer func() {
-		if rerr != nil {
+		if rerr == nil {
 			switch typ {
 			case labels.MatchNotEqual, labels.MatchNotRegexp:
 				e = chsql.Not(e)

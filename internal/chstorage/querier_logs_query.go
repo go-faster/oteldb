@@ -317,7 +317,7 @@ func (p logQueryPredicates) write(
 		chsql.InTimeRange("timestamp", p.Start, p.End),
 	)
 	for _, m := range p.Labels {
-		expr, err := q.logqlLabelMatcher(m, mapping)
+		expr, err := q.logQLLabelMatcher(m, mapping)
 		if err != nil {
 			return err
 		}
@@ -335,7 +335,7 @@ func (p logQueryPredicates) write(
 
 func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr, rerr error) {
 	defer func() {
-		if rerr != nil {
+		if rerr == nil {
 			switch m.Op {
 			case logql.OpNotEq, logql.OpNotRe:
 				e = chsql.Not(e)
@@ -367,12 +367,12 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr, rerr error) {
 	}
 }
 
-func (q *Querier) logqlLabelMatcher(
+func (q *Querier) logQLLabelMatcher(
 	m logql.LabelMatcher,
 	mapping map[string]string,
 ) (e chsql.Expr, rerr error) {
 	defer func() {
-		if rerr != nil {
+		if rerr == nil {
 			switch m.Op {
 			case logql.OpNotEq, logql.OpNotRe:
 				e = chsql.Not(e)

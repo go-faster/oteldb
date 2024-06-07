@@ -353,7 +353,7 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 		for _, sel := range sels {
 			selExprs := make([]chsql.Expr, 0, len(sel.Matchers))
 			for _, m := range sel.Matchers {
-				expr, err := q.logqlLabelMatcher(m, mapping)
+				expr, err := q.logQLLabelMatcher(m, mapping)
 				if err != nil {
 					return result, err
 				}
