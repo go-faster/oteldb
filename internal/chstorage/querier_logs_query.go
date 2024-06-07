@@ -4,20 +4,17 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
@@ -46,8 +43,8 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LogsQuery.Eval",
 		trace.WithAttributes(
-			attribute.Int64("logql.range.start", v.Start.UnixNano()),
-			attribute.Int64("logql.range.end", v.End.UnixNano()),
+			xattribute.UnixNano("logql.range.start", v.Start),
+			xattribute.UnixNano("logql.range.end", v.End),
 			attribute.Stringer("logql.direction", v.Direction),
 			attribute.Int("logql.limit", v.Limit),
 			xattribute.StringerSlice("logql.label_matchers", v.Labels),
@@ -73,47 +70,32 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	out := newLogColumns()
-	var query strings.Builder
-	query.WriteString("SELECT ")
-	for i, column := range out.StaticColumns() {
-		if i != 0 {
-			query.WriteByte(',')
-		}
-		query.WriteString(column)
-	}
-	fmt.Fprintf(&query, "\nFROM %s WHERE\n", table)
-
+	var (
+		out   = newLogColumns()
+		query = chsql.Select(table, out.ChsqlResult()...)
+	)
 	if err := (logQueryPredicates{
 		Start:  v.Start,
 		End:    v.End,
 		Labels: v.Labels,
 		Line:   v.Line,
-	}).write(&query, mapping); err != nil {
+	}).write(query, mapping, q); err != nil {
 		return nil, err
 	}
 
-	query.WriteString(" ORDER BY timestamp ")
 	switch d := v.Direction; d {
 	case logqlengine.DirectionBackward:
-		query.WriteString("DESC")
+		query.Order(chsql.Ident("timestamp"), chsql.Desc)
 	case logqlengine.DirectionForward:
-		query.WriteString("ASC")
+		query.Order(chsql.Ident("timestamp"), chsql.Asc)
 	default:
 		return nil, errors.Errorf("unexpected direction %q", d)
 	}
-	if l := v.Limit; l >= 0 {
-		fmt.Fprintf(&query, " LIMIT %d", v.Limit)
-	}
+	query.Limit(v.Limit)
 
-	var (
-		queryStartTime = time.Now()
-		data           []E
-	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: out.Result(),
+	var data []E
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			if err := out.ForEach(func(r logstorage.Record) error {
 				e, err := v.Mapper(r)
@@ -125,19 +107,16 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 			}); err != nil {
 				return errors.Wrap(err, "for each")
 			}
-			return rerr
+			return nil
 		},
+
+		Type:   "QueryLogs",
+		Signal: "logs",
+		Table:  table,
 	}); err != nil {
 		return nil, err
 	}
 
-	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-		metric.WithAttributes(
-			attribute.String("chstorage.query_type", fmt.Sprintf("%T", v)),
-			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.signal", "logs"),
-		),
-	)
 	return iterators.Slice(data), nil
 }
 
@@ -173,8 +152,8 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.SampleQuery.Eval",
 		trace.WithAttributes(
-			attribute.Int64("logql.range.start", v.Start.UnixNano()),
-			attribute.Int64("logql.range.end", v.End.UnixNano()),
+			xattribute.UnixNano("logql.range.start", v.Start),
+			xattribute.UnixNano("logql.range.end", v.End),
 			attribute.String("logql.sampling", v.Sampling.String()),
 			xattribute.StringerSlice("logql.grouping_labels", v.GroupingLabels),
 			xattribute.StringerSlice("logql.label_matchers", v.Labels),
@@ -203,13 +182,13 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	var query strings.Builder
 	sampleExpr, err := getSampleExpr(v.Sampling)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Fprintf(&query, "SELECT timestamp, toFloat64(%s) AS sample, map(\n", sampleExpr)
-	for i, key := range v.GroupingLabels {
+
+	entries := make([]chsql.Expr, 0, len(v.GroupingLabels)*2)
+	for _, key := range v.GroupingLabels {
 		label := string(key)
 		if key, ok := mapping[label]; ok {
 			label = key
@@ -220,30 +199,13 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 			labelExpr = firstAttrSelector(label)
 		}
 
-		if i != 0 {
-			query.WriteString(",\n")
-		}
-		quotedLabel := singleQuoted(key)
-		fmt.Fprintf(&query, "%s, toString(%s)", quotedLabel, labelExpr)
+		entries = append(entries,
+			chsql.String(string(key)),
+			labelExpr,
+		)
 	}
-	query.WriteString("\n) AS labels\n")
-
-	fmt.Fprintf(&query, "FROM %s WHERE\n", table)
-	pred := logQueryPredicates{
-		Start:  v.Start,
-		End:    v.End,
-		Labels: v.Labels,
-		Line:   v.Line,
-	}
-	if err := pred.write(&query, mapping); err != nil {
-		return nil, err
-	}
-	query.WriteString(`ORDER BY timestamp ASC;`)
 
 	var (
-		queryStartTime = time.Now()
-		result         []logqlmetric.SampledEntry
-
 		columns = sampleQueryColumns{
 			Timestamp: proto.ColDateTime64{},
 			Sample:    proto.ColFloat64{},
@@ -252,11 +214,34 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 				new(proto.ColStr),
 			),
 		}
+
+		query = chsql.Select(table,
+			chsql.Column("timestamp", &columns.Timestamp),
+			chsql.ResultColumn{
+				Name: "sample",
+				Expr: chsql.ToFloat64(sampleExpr),
+				Data: &columns.Sample,
+			},
+			chsql.ResultColumn{
+				Name: "labels",
+				Expr: chsql.Map(entries...),
+				Data: columns.Labels,
+			},
+		)
 	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: columns.Result(),
+	if err := (logQueryPredicates{
+		Start:  v.Start,
+		End:    v.End,
+		Labels: v.Labels,
+		Line:   v.Line,
+	}).write(query, mapping, q); err != nil {
+		return nil, err
+	}
+	query.Order(chsql.Ident("timestamp"), chsql.Asc)
+
+	var result []logqlmetric.SampledEntry
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < columns.Timestamp.Rows(); i++ {
 				timestamp := columns.Timestamp.Row(i)
@@ -272,17 +257,14 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 			}
 			return nil
 		},
+
+		Type:   "QuerySamples",
+		Signal: "logs",
+		Table:  table,
 	}); err != nil {
 		return nil, err
 	}
 
-	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-		metric.WithAttributes(
-			attribute.String("chstorage.query_type", fmt.Sprintf("%T", v)),
-			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.signal", "logs"),
-		),
-	)
 	return iterators.Slice(result), nil
 }
 
@@ -308,14 +290,14 @@ func (s SamplingOp) String() string {
 	}
 }
 
-func getSampleExpr(op SamplingOp) (string, error) {
+func getSampleExpr(op SamplingOp) (chsql.Expr, error) {
 	switch op {
 	case CountSampling:
-		return "1", nil
+		return chsql.Integer(1), nil
 	case BytesSampling:
-		return "length(body)", nil
+		return chsql.Length(chsql.Ident("body")), nil
 	default:
-		return "", errors.Errorf("unexpected sampling op: %v", op)
+		return chsql.Expr{}, errors.Errorf("unexpected sampling op: %v", op)
 	}
 }
 
@@ -326,168 +308,158 @@ type logQueryPredicates struct {
 	Line       []logql.LineFilter
 }
 
-func (q logQueryPredicates) write(
-	query *strings.Builder,
+func (p logQueryPredicates) write(
+	query *chsql.SelectQuery,
 	mapping map[string]string,
+	q *Querier,
 ) error {
-	fmt.Fprintf(query, "(toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)",
-		q.Start.UnixNano(), q.End.UnixNano())
-	if err := writeLabelMatchers(query, q.Labels, mapping); err != nil {
-		return err
+	query.Where(
+		chsql.InTimeRange("timestamp", p.Start, p.End),
+	)
+	for _, m := range p.Labels {
+		expr, err := q.logqlLabelMatcher(m, mapping)
+		if err != nil {
+			return err
+		}
+		query.Where(expr)
 	}
-
-	for _, m := range q.Line {
-		switch m.Op {
-		case logql.OpEq, logql.OpRe:
-			query.WriteString(" AND (")
-		case logql.OpNotEq, logql.OpNotRe:
-			query.WriteString(" AND NOT (")
-		default:
-			return errors.Errorf("unexpected op %q", m.Op)
+	for _, m := range p.Line {
+		expr, err := q.lineFilter(m)
+		if err != nil {
+			return err
 		}
-
-		switch m.Op {
-		case logql.OpEq, logql.OpNotEq:
-			fmt.Fprintf(query, "positionUTF8(body, %s) > 0", singleQuoted(m.By.Value))
-			{
-				// HACK: check for special case of hex-encoded trace_id and span_id.
-				// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
-				// TODO(ernado): also handle regex?
-				encoded := strings.ToLower(m.By.Value)
-				v, _ := hex.DecodeString(encoded)
-				switch len(v) {
-				case len(otelstorage.TraceID{}):
-					fmt.Fprintf(query, " OR trace_id = unhex(%s)", singleQuoted(encoded))
-				case len(otelstorage.SpanID{}):
-					fmt.Fprintf(query, " OR span_id = unhex(%s)", singleQuoted(encoded))
-				}
-			}
-		case logql.OpRe, logql.OpNotRe:
-			fmt.Fprintf(query, "match(body, %s)", singleQuoted(m.By.Value))
-		}
-		query.WriteByte(')')
+		query.Where(expr)
 	}
 	return nil
 }
 
-func writeLabelMatchers(query *strings.Builder, labels []logql.LabelMatcher, mapping map[string]string) error {
-	for _, m := range labels {
-		labelName := string(m.Label)
-		if key, ok := mapping[labelName]; ok {
-			labelName = key
+func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr, rerr error) {
+	defer func() {
+		if rerr != nil {
+			switch m.Op {
+			case logql.OpNotEq, logql.OpNotRe:
+				e = chsql.Not(e)
+			}
 		}
+	}()
 
-		switch m.Op {
-		case logql.OpEq, logql.OpRe:
-			query.WriteString(" AND (")
-		case logql.OpNotEq, logql.OpNotRe:
-			query.WriteString(" AND NOT (")
-		default:
-			return errors.Errorf("unexpected op %q", m.Op)
+	switch m.Op {
+	case logql.OpEq, logql.OpNotEq:
+		expr := chsql.Contains("body", m.By.Value)
+		{
+			// HACK: check for special case of hex-encoded trace_id and span_id.
+			// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
+			// TODO(ernado): also handle regex?
+			encoded := strings.ToLower(m.By.Value)
+			v, _ := hex.DecodeString(encoded)
+			switch len(v) {
+			case len(otelstorage.TraceID{}):
+				expr = chsql.Or(expr, chsql.ColumnEq("trace_id", encoded))
+			case len(otelstorage.SpanID{}):
+				expr = chsql.Or(expr, chsql.ColumnEq("span_id", encoded))
+			}
 		}
-		switch labelName {
-		case logstorage.LabelTraceID:
+		return expr, nil
+	case logql.OpRe, logql.OpNotRe:
+		return chsql.Match(chsql.Ident("body"), chsql.String(m.By.Value)), nil
+	default:
+		return e, errors.Errorf("unexpected op %q", m.Op)
+	}
+}
+
+func (q *Querier) logqlLabelMatcher(
+	m logql.LabelMatcher,
+	mapping map[string]string,
+) (e chsql.Expr, rerr error) {
+	defer func() {
+		if rerr != nil {
 			switch m.Op {
-			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(query, "trace_id = unhex(%s)", singleQuoted(m.Value))
-			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(query, "match(hex(trace_id), %s)", singleQuoted(m.Value))
-			default:
-				return errors.Errorf("unexpected op %q", m.Op)
+			case logql.OpNotEq, logql.OpNotRe:
+				e = chsql.Not(e)
 			}
-		case logstorage.LabelSpanID:
-			switch m.Op {
-			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(query, "span_id = unhex(%s)", singleQuoted(m.Value))
-			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(query, "match(hex(span_id), %s)", singleQuoted(m.Value))
-			default:
-				return errors.Errorf("unexpected op %q", m.Op)
+		}
+	}()
+
+	labelName := string(m.Label)
+	if key, ok := mapping[labelName]; ok {
+		labelName = key
+	}
+
+	switch labelName {
+	case logstorage.LabelSeverity:
+		switch m.Op {
+		case logql.OpEq, logql.OpNotEq:
+			// Direct comparison with severity number.
+			var severityNumber uint8
+			for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
+				if strings.EqualFold(i.String(), m.Value) {
+					severityNumber = uint8(i)
+					break
+				}
 			}
-		case logstorage.LabelSeverity:
-			switch m.Op {
-			case logql.OpEq, logql.OpNotEq:
-				// Direct comparison with severity number.
-				var severityNumber uint8
-				for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
-					if strings.EqualFold(i.String(), m.Value) {
-						severityNumber = uint8(i)
+			return chsql.ColumnEq("severity_number", severityNumber), nil
+		case logql.OpRe, logql.OpNotRe:
+			var matches []int
+			for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
+				for _, s := range []string{
+					i.String(),
+					strings.ToLower(i.String()),
+					strings.ToUpper(i.String()),
+				} {
+					if m.Re.MatchString(s) {
+						matches = append(matches, int(i))
 						break
 					}
 				}
-				fmt.Fprintf(query, "severity_number = %d", severityNumber)
-			case logql.OpRe, logql.OpNotRe:
-				re, err := regexp.Compile(m.Value)
-				if err != nil {
-					return errors.Wrap(err, "compile regex")
-				}
-				var matches []int
-				for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
-					for _, s := range []string{
-						i.String(),
-						strings.ToLower(i.String()),
-						strings.ToUpper(i.String()),
-					} {
-						if re.MatchString(s) {
-							matches = append(matches, int(i))
-							break
-						}
-					}
-				}
-				query.WriteString("severity_number IN (")
-				for i, v := range matches {
-					if i != 0 {
-						query.WriteByte(',')
-					}
-					fmt.Fprintf(query, "%d", v)
-				}
-				query.WriteByte(')')
-			default:
-				return errors.Errorf("unexpected op %q", m.Op)
 			}
-		case logstorage.LabelBody:
-			switch m.Op {
-			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(query, "positionUTF8(body, %s) > 0", singleQuoted(m.Value))
-			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(query, "match(body, %s)", singleQuoted(m.Value))
-			default:
-				return errors.Errorf("unexpected op %q", m.Op)
-			}
-		case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
-			// Materialized from resource.service.{name,namespace,instance.id}.
-			switch m.Op {
-			case logql.OpEq, logql.OpNotEq:
-				fmt.Fprintf(query, "%s = %s", labelName, singleQuoted(m.Value))
-			case logql.OpRe, logql.OpNotRe:
-				fmt.Fprintf(query, "match(%s, %s)", labelName, singleQuoted(m.Value))
-			default:
-				return errors.Errorf("unexpected op %q", m.Op)
-			}
+			return chsql.In(chsql.Ident("severity_number"), chsql.TupleValues(matches...)), nil
 		default:
-			// Search in all attributes.
-			for i, column := range []string{
-				colAttrs,
-				colResource,
-				colScope,
-			} {
-				if i != 0 {
-					query.WriteString(" OR ")
-				}
-				// TODO: how to match integers, booleans, floats, arrays?
-
-				selector := attrSelector(column, labelName)
-				switch m.Op {
-				case logql.OpEq, logql.OpNotEq:
-					fmt.Fprintf(query, "%s = %s", selector, singleQuoted(m.Value))
-				case logql.OpRe, logql.OpNotRe:
-					fmt.Fprintf(query, "match(%s, %s)", selector, singleQuoted(m.Value))
-				default:
-					return errors.Errorf("unexpected op %q", m.Op)
-				}
+			return e, errors.Errorf("unexpected op %q", m.Op)
+		}
+	case logstorage.LabelBody:
+		switch m.Op {
+		case logql.OpEq, logql.OpNotEq:
+			return chsql.Contains("body", m.Value), nil
+		case logql.OpRe, logql.OpNotRe:
+			return chsql.Match(chsql.Ident("body"), chsql.String(m.Value)), nil
+		default:
+			return e, errors.Errorf("unexpected op %q", m.Op)
+		}
+	default:
+		expr, ok := q.getMaterializedLabelColumn(labelName)
+		if ok {
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				return chsql.Eq(expr, chsql.String(m.Value)), nil
+			case logql.OpRe, logql.OpNotRe:
+				return chsql.Match(expr, chsql.String(m.Value)), nil
+			default:
+				return e, errors.Errorf("unexpected op %q", m.Op)
 			}
 		}
-		query.WriteByte(')')
+
+		exprs := make([]chsql.Expr, 0, 3)
+		// Search in all attributes.
+		for _, column := range []string{
+			colAttrs,
+			colResource,
+			colScope,
+		} {
+			// TODO: how to match integers, booleans, floats, arrays?
+			var (
+				selector = attrSelector(column, labelName)
+				sub      chsql.Expr
+			)
+			switch m.Op {
+			case logql.OpEq, logql.OpNotEq:
+				sub = chsql.Eq(selector, chsql.String(m.Value))
+			case logql.OpRe, logql.OpNotRe:
+				sub = chsql.Match(selector, chsql.String(m.Value))
+			default:
+				return e, errors.Errorf("unexpected op %q", m.Op)
+			}
+			exprs = append(exprs, sub)
+		}
+		return chsql.JoinOr(exprs...), nil
 	}
-	return nil
 }

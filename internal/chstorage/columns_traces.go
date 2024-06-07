@@ -7,6 +7,7 @@ import (
 	"github.com/go-faster/errors"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -95,13 +96,9 @@ func (c *spanColumns) columns() Columns {
 	)
 }
 
-func (c *spanColumns) Input() proto.Input {
-	return c.columns().Input()
-}
-
-func (c *spanColumns) Result() proto.Results {
-	return c.columns().Result()
-}
+func (c *spanColumns) Input() proto.Input                { return c.columns().Input() }
+func (c *spanColumns) Result() proto.Results             { return c.columns().Result() }
+func (c *spanColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
 
 func (c *spanColumns) AddRow(s tracestorage.Span) {
 	c.traceID.Append(s.TraceID)
@@ -132,52 +129,60 @@ func (c *spanColumns) AddRow(s tracestorage.Span) {
 	c.links.AddRow(s.Links)
 }
 
+func (c *spanColumns) Row(i int) (s tracestorage.Span, _ error) {
+	attrs := c.attributes.Row(i)
+	resource := c.resource.Row(i)
+	{
+		v := resource.AsMap()
+		if s := c.serviceInstanceID.Row(i); s != "" {
+			v.PutStr(string(semconv.ServiceInstanceIDKey), s)
+		}
+		if s := c.serviceName.Row(i); s != "" {
+			v.PutStr(string(semconv.ServiceNameKey), s)
+		}
+		if s := c.serviceNamespace.Row(i); s != "" {
+			v.PutStr(string(semconv.ServiceNamespaceKey), s)
+		}
+	}
+	scopeAttrs := c.scopeAttributes.Row(i)
+	events, err := c.events.Row(i)
+	if err != nil {
+		return s, errors.Wrap(err, "decode events")
+	}
+	links, err := c.links.Row(i)
+	if err != nil {
+		return s, errors.Wrap(err, "decode links")
+	}
+
+	return tracestorage.Span{
+		TraceID:       c.traceID.Row(i),
+		SpanID:        c.spanID.Row(i),
+		TraceState:    c.traceState.Row(i),
+		ParentSpanID:  c.parentSpanID.Row(i),
+		Name:          c.name.Row(i),
+		Kind:          int32(c.kind.Row(i)),
+		Start:         otelstorage.NewTimestampFromTime(c.start.Row(i)),
+		End:           otelstorage.NewTimestampFromTime(c.end.Row(i)),
+		Attrs:         attrs,
+		StatusCode:    int32(c.statusCode.Row(i)),
+		StatusMessage: c.statusMessage.Row(i),
+		BatchID:       c.batchID.Row(i),
+		ResourceAttrs: resource,
+		ScopeName:     c.scopeName.Row(i),
+		ScopeVersion:  c.scopeVersion.Row(i),
+		ScopeAttrs:    scopeAttrs,
+		Events:        events,
+		Links:         links,
+	}, nil
+}
+
 func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span, error) {
 	for i := 0; i < c.traceID.Rows(); i++ {
-		attrs := c.attributes.Row(i)
-		resource := c.resource.Row(i)
-		{
-			v := resource.AsMap()
-			if s := c.serviceInstanceID.Row(i); s != "" {
-				v.PutStr(string(semconv.ServiceInstanceIDKey), s)
-			}
-			if s := c.serviceName.Row(i); s != "" {
-				v.PutStr(string(semconv.ServiceNameKey), s)
-			}
-			if s := c.serviceNamespace.Row(i); s != "" {
-				v.PutStr(string(semconv.ServiceNamespaceKey), s)
-			}
-		}
-		scopeAttrs := c.scopeAttributes.Row(i)
-		events, err := c.events.Row(i)
+		span, err := c.Row(i)
 		if err != nil {
-			return nil, errors.Wrap(err, "decode events")
+			return nil, err
 		}
-		links, err := c.links.Row(i)
-		if err != nil {
-			return nil, errors.Wrap(err, "decode links")
-		}
-
-		spans = append(spans, tracestorage.Span{
-			TraceID:       c.traceID.Row(i),
-			SpanID:        c.spanID.Row(i),
-			TraceState:    c.traceState.Row(i),
-			ParentSpanID:  c.parentSpanID.Row(i),
-			Name:          c.name.Row(i),
-			Kind:          int32(c.kind.Row(i)),
-			Start:         otelstorage.NewTimestampFromTime(c.start.Row(i)),
-			End:           otelstorage.NewTimestampFromTime(c.end.Row(i)),
-			Attrs:         attrs,
-			StatusCode:    int32(c.statusCode.Row(i)),
-			StatusMessage: c.statusMessage.Row(i),
-			BatchID:       c.batchID.Row(i),
-			ResourceAttrs: resource,
-			ScopeName:     c.scopeName.Row(i),
-			ScopeVersion:  c.scopeVersion.Row(i),
-			ScopeAttrs:    scopeAttrs,
-			Events:        events,
-			Links:         links,
-		})
+		spans = append(spans, span)
 	}
 
 	return spans, nil

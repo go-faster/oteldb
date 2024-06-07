@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
@@ -21,6 +19,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/xattribute"
 )
@@ -43,6 +42,7 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		ch:              q.ch,
 		tables:          q.tables,
 		getLabelMapping: q.getMetricsLabelMapping,
+		do:              q.do,
 
 		clickhouseRequestHistogram: q.clickhouseRequestHistogram,
 		tracer:                     q.tracer,
@@ -56,6 +56,7 @@ type promQuerier struct {
 	ch              ClickhouseClient
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
+	do              func(ctx context.Context, s selectQuery) error
 
 	clickhouseRequestHistogram metric.Float64Histogram
 	tracer                     trace.Tracer
@@ -67,12 +68,12 @@ var _ storage.Querier = (*promQuerier)(nil)
 // It is not safe to use the strings beyond the lifetime of the querier.
 // If matchers are specified the returned result set is reduced
 // to label values of metrics matching the matchers.
-func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+func (p *promQuerier) LabelValues(ctx context.Context, labelName string, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
 	table := p.tables.Labels
 
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelValues",
 		trace.WithAttributes(
-			attribute.String("chstorage.label", name),
+			attribute.String("chstorage.label", labelName),
 			xattribute.StringerSlice("chstorage.matchers", matchers),
 			attribute.String("chstorage.table", table),
 		),
@@ -85,34 +86,44 @@ func (p *promQuerier) LabelValues(ctx context.Context, name string, matchers ...
 	}()
 
 	var (
-		query strings.Builder
-
+		value       proto.ColStr
 		valueColumn = "value"
 	)
-	if name == labels.MetricName {
+	if labelName == labels.MetricName {
 		valueColumn = "value_normalized"
 	}
-	fmt.Fprintf(&query, "SELECT DISTINCT %s FROM %#q WHERE name_normalized = %s\n", valueColumn, table, singleQuoted(name))
-	if err := addLabelMatchers(&query, matchers); err != nil {
-		return nil, nil, err
+
+	query := chsql.Select(table, chsql.Column(valueColumn, &value)).
+		Distinct(true).
+		Where(chsql.ColumnEq("name_normalized", labelName))
+	for _, m := range matchers {
+		expr, err := promQLLabelMatcher(
+			[]chsql.Expr{chsql.Ident("name_normalized")},
+			m.Type,
+			m.Value,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+		query.Where(expr)
 	}
 
-	var column proto.ColStr
-	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: proto.Results{
-			{Name: valueColumn, Data: &column},
-		},
+	if err := p.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < column.Rows(); i++ {
-				result = append(result, column.Row(i))
+			for i := 0; i < value.Rows(); i++ {
+				result = append(result, value.Row(i))
 			}
 			return nil
 		},
+
+		Type:   "LabelValues",
+		Signal: "metrics",
+		Table:  table,
 	}); err != nil {
-		return nil, nil, errors.Wrap(err, "do query")
+		return nil, nil, err
 	}
+
 	return result, nil, nil
 }
 
@@ -135,53 +146,71 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 		span.End()
 	}()
 
-	var query strings.Builder
-	fmt.Fprintf(&query, "SELECT DISTINCT name_normalized FROM %#q WHERE true\n", table)
-	if err := addLabelMatchers(&query, matchers); err != nil {
-		return nil, nil, err
+	var (
+		value = new(proto.ColStr).LowCardinality()
+		query = chsql.Select(table, chsql.Column("name_normalized", value)).
+			Distinct(true)
+	)
+	for _, m := range matchers {
+		expr, err := promQLLabelMatcher(
+			[]chsql.Expr{chsql.Ident("name_normalized")},
+			m.Type,
+			m.Value,
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+		query.Where(expr)
 	}
 
-	column := new(proto.ColStr).LowCardinality()
-	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: proto.Results{
-			{Name: "name_normalized", Data: column},
-		},
+	if err := p.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < column.Rows(); i++ {
-				result = append(result, column.Row(i))
+			for i := 0; i < value.Rows(); i++ {
+				result = append(result, value.Row(i))
 			}
 			return nil
 		},
+
+		Type:   "LabelNames",
+		Signal: "metrics",
+		Table:  table,
 	}); err != nil {
-		return nil, nil, errors.Wrap(err, "do query")
+		return nil, nil, err
 	}
+
 	return result, nil, nil
 }
 
-func addLabelMatchers(query *strings.Builder, matchers []*labels.Matcher) error {
-	for _, m := range matchers {
-		switch m.Type {
-		case labels.MatchEqual, labels.MatchRegexp:
-			query.WriteString("AND ")
-		case labels.MatchNotEqual, labels.MatchNotRegexp:
-			query.WriteString("AND NOT ")
-		default:
-			return errors.Errorf("unexpected type %q", m.Type)
+func promQLLabelMatcher(valueSel []chsql.Expr, typ labels.MatchType, value string) (e chsql.Expr, rerr error) {
+	defer func() {
+		if rerr != nil {
+			switch typ {
+			case labels.MatchNotEqual, labels.MatchNotRegexp:
+				e = chsql.Not(e)
+			}
 		}
+	}()
 
-		// Note: predicate negated above.
-		switch m.Type {
-		case labels.MatchEqual, labels.MatchNotEqual:
-			fmt.Fprintf(query, "name_normalized = %s\n", singleQuoted(m.Value))
-		case labels.MatchRegexp, labels.MatchNotRegexp:
-			fmt.Fprintf(query, "name_normalized REGEXP %s\n", singleQuoted(m.Value))
-		default:
-			return errors.Errorf("unexpected type %q", m.Type)
+	// Note: predicate negated above.
+	var (
+		valueExpr = chsql.String(value)
+		exprs     = make([]chsql.Expr, 0, len(valueSel))
+	)
+	switch typ {
+	case labels.MatchEqual, labels.MatchNotEqual:
+		for _, sel := range valueSel {
+			exprs = append(exprs, chsql.Eq(sel, valueExpr))
 		}
+	case labels.MatchRegexp, labels.MatchNotRegexp:
+		for _, sel := range valueSel {
+			exprs = append(exprs, chsql.Match(sel, valueExpr))
+		}
+	default:
+		return e, errors.Errorf("unexpected type %q", typ)
 	}
-	return nil
+
+	return chsql.JoinOr(exprs...), nil
 }
 
 func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
@@ -274,8 +303,8 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 			attribute.Bool("promql.hints.disable_trimming", hints.DisableTrimming),
 			xattribute.StringerSlice("promql.matchers", matchers),
 
-			attribute.Int64("chstorage.range.start", start.UnixNano()),
-			attribute.Int64("chstorage.range.end", end.UnixNano()),
+			xattribute.UnixNano("chstorage.range.start", start),
+			xattribute.UnixNano("chstorage.range.end", end),
 			attribute.StringSlice("chstorage.matchers.labels", queryLabels),
 		),
 	)
@@ -299,13 +328,19 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	grp.Go(func() error {
 		ctx := grpCtx
 		table := p.tables.Points
+		columns := newPointColumns()
 
-		query, err := p.buildQuery(table, start, end, matchers, mapping)
+		query, err := p.buildQuery(
+			table, columns.ChsqlResult(),
+			start, end,
+			matchers,
+			mapping,
+		)
 		if err != nil {
 			return err
 		}
 
-		result, err := p.queryPoints(ctx, table, query)
+		result, err := p.queryPoints(ctx, table, query, columns)
 		if err != nil {
 			return errors.Wrap(err, "query points")
 		}
@@ -315,13 +350,19 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	grp.Go(func() error {
 		ctx := grpCtx
 		table := p.tables.ExpHistograms
+		columns := newExpHistogramColumns()
 
-		query, err := p.buildQuery(table, start, end, matchers, mapping)
+		query, err := p.buildQuery(
+			table, columns.ChsqlResult(),
+			start, end,
+			matchers,
+			mapping,
+		)
 		if err != nil {
 			return err
 		}
 
-		result, err := p.queryExpHistograms(ctx, table, query)
+		result, err := p.queryExpHistograms(ctx, table, query, columns)
 		if err != nil {
 			return errors.Wrap(err, "query exponential histograms")
 		}
@@ -367,96 +408,49 @@ func (p *promQuerier) extractHints(
 	return hints, start, end, mlabels
 }
 
-func (p *promQuerier) buildQuery(table string, start, end time.Time, matchers []*labels.Matcher, mapping map[string]string) (string, error) {
-	var (
-		query   strings.Builder
-		columns string
-	)
-	switch table {
-	case p.tables.Points:
-		columns = newPointColumns().Columns().All()
-	case p.tables.ExpHistograms:
-		columns = newExpHistogramColumns().Columns().All()
-	default:
-		return "", errors.Errorf("unexpected table %q", table)
-	}
+func (p *promQuerier) buildQuery(
+	table string, columns []chsql.ResultColumn,
+	start, end time.Time,
+	matchers []*labels.Matcher,
+	mapping map[string]string,
+) (*chsql.SelectQuery, error) {
+	query := chsql.Select(table, columns...).
+		Where(chsql.InTimeRange("timestamp", start, end))
 
-	fmt.Fprintf(&query, "SELECT %[1]s\n\tFROM %#[2]q WHERE true\n", columns, table)
-	if !start.IsZero() {
-		fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
-	}
-	if !end.IsZero() {
-		fmt.Fprintf(&query, "AND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
-	}
 	for _, m := range matchers {
-		switch m.Type {
-		case labels.MatchEqual, labels.MatchRegexp:
-			query.WriteString("AND ")
-		case labels.MatchNotEqual, labels.MatchNotRegexp:
-			query.WriteString("AND NOT ")
-		default:
-			return "", errors.Errorf("unexpected type %q", m.Type)
+		selectors := []chsql.Expr{
+			chsql.Ident("name_normalized"),
 		}
-		{
-			selectors := []string{
-				"name_normalized",
+		if name := m.Name; name != labels.MetricName {
+			if mapped, ok := mapping[name]; ok {
+				name = mapped
 			}
-			name := m.Name
-			if name != labels.MetricName {
-				if mapped, ok := mapping[name]; ok {
-					name = mapped
-				}
-				selectors = []string{
-					attrSelector(colAttrs, name),
-					attrSelector(colResource, name),
-				}
+			selectors = []chsql.Expr{
+				attrSelector(colAttrs, name),
+				attrSelector(colResource, name),
 			}
-			value := m.Value
-			query.WriteString("(\n")
-			for i, sel := range selectors {
-				query.WriteString("\t")
-				if i != 0 {
-					query.WriteString("OR ")
-				}
-				// Note: predicate negated above.
-				switch m.Type {
-				case labels.MatchEqual, labels.MatchNotEqual:
-					fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(value))
-				case labels.MatchRegexp, labels.MatchNotRegexp:
-					fmt.Fprintf(&query, "match(%s, %s)\n", sel, singleQuoted(value))
-				default:
-					return "", errors.Errorf("unexpected type %q", m.Type)
-				}
+		}
 
-				// Apply possible index hints for attributes.
-				if m.Name == labels.MetricName {
-					// Not attributes.
-					continue
-				}
-			}
-			query.WriteString(")")
+		expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+		if err != nil {
+			return nil, err
 		}
+		query.Where(expr)
 	}
-	query.WriteString("\nORDER BY timestamp")
-	return query.String(), nil
+
+	query.Order(chsql.Ident("timestamp"), chsql.Asc)
+	return query, nil
 }
 
-func (p *promQuerier) queryPoints(ctx context.Context, table, query string) ([]storage.Series, error) {
+func (p *promQuerier) queryPoints(ctx context.Context, table string, query *chsql.SelectQuery, c *pointColumns) ([]storage.Series, error) {
 	type seriesWithLabels struct {
 		series *series[pointData]
 		labels map[string]string
 	}
 
-	var (
-		queryStartTime = time.Now()
-
-		set = map[seriesKey]seriesWithLabels{}
-		c   = newPointColumns()
-	)
-	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query,
-		Result: c.Result(),
+	set := map[seriesKey]seriesWithLabels{}
+	if err := p.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				var (
@@ -490,16 +484,13 @@ func (p *promQuerier) queryPoints(ctx context.Context, table, query string) ([]s
 			}
 			return nil
 		},
+
+		Type:   "QueryPoints",
+		Signal: "metrics",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "do query")
+		return nil, err
 	}
-	p.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-		metric.WithAttributes(
-			attribute.String("chstorage.query_type", "QueryPoints"),
-			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.signal", "metrics"),
-		),
-	)
 
 	var (
 		result = make([]storage.Series, 0, len(set))
@@ -513,22 +504,15 @@ func (p *promQuerier) queryPoints(ctx context.Context, table, query string) ([]s
 	return result, nil
 }
 
-func (p *promQuerier) queryExpHistograms(ctx context.Context, table, query string) ([]storage.Series, error) {
+func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, query *chsql.SelectQuery, c *expHistogramColumns) ([]storage.Series, error) {
 	type seriesWithLabels struct {
 		series *series[expHistData]
 		labels map[string]string
 	}
 
-	var (
-		queryStartTime = time.Now()
-
-		set = map[seriesKey]seriesWithLabels{}
-		c   = newExpHistogramColumns()
-	)
-	if err := p.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query,
-		Result: c.Result(),
+	set := map[seriesKey]seriesWithLabels{}
+	if err := p.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				var (
@@ -580,16 +564,13 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, table, query strin
 			}
 			return nil
 		},
+
+		Type:   "QueryExpHistograms",
+		Signal: "metrics",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "do query")
+		return nil, err
 	}
-	p.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-		metric.WithAttributes(
-			attribute.String("chstorage.query_type", "QueryExpHistograms"),
-			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.signal", "metrics"),
-		),
-	)
 
 	var (
 		result = make([]storage.Series, 0, len(set))

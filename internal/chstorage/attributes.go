@@ -1,15 +1,13 @@
 package chstorage
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/maps"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -134,12 +132,12 @@ func NewAttributes(name string) *Attributes {
 	}
 }
 
-func attrKeys(name string) string {
-	return fmt.Sprintf("JSONExtractKeys(%s)", name)
+func attrKeys(name string) chsql.Expr {
+	return chsql.JSONExtractKeys(chsql.Ident(name))
 }
 
-func attrStringMap(name string) string {
-	return fmt.Sprintf("JSONExtract(%s, 'Map(String, String)')", name)
+func attrStringMap(name string) chsql.Expr {
+	return chsql.JSONExtract(chsql.Ident(name), "Map(String, String)")
 }
 
 // Columns returns a slice of Columns for this attribute set.
@@ -155,29 +153,24 @@ const (
 	colScope    = "scope"
 )
 
-func attrSelector(name, key string) string {
-	return fmt.Sprintf("JSONExtractString(%s, %s)",
-		name, singleQuoted(key),
-	)
+func attrSelector(name, key string) chsql.Expr {
+	return chsql.JSONExtractString(chsql.Ident(name), key)
 }
 
-func firstAttrSelector(label string) string {
-	quoted := singleQuoted(label)
-	var sb strings.Builder
-	sb.WriteString("coalesce(")
-	for i, column := range []string{
+func firstAttrSelector(label string) chsql.Expr {
+	columns := make([]chsql.Expr, 0, 3)
+	for _, column := range []string{
 		colAttrs,
 		colScope,
 		colResource,
 	} {
-		if i != 0 {
-			sb.WriteString(",")
-		}
-		fmt.Fprintf(&sb, "JSONExtract(%s, %s, 'Nullable(String)')", column, quoted)
+		columns = append(columns, chsql.JSONExtractField(
+			chsql.Ident(column),
+			label,
+			"Nullable(String)",
+		))
 	}
-	sb.WriteString(",''")
-	sb.WriteString(")")
-	return sb.String()
+	return chsql.Coalesce(columns...)
 }
 
 // Append adds a new map of attributes.
