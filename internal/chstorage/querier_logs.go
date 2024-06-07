@@ -265,7 +265,7 @@ func (q *Querier) getMaterializedLabelColumn(labelName string) (column chsql.Exp
 	case logstorage.LabelSpanID:
 		return chsql.Hex(chsql.Ident("span_id")), true
 	case logstorage.LabelSeverity:
-		return chsql.Ident("severity_number"), true
+		return chsql.Ident("severity_text"), true
 	case logstorage.LabelBody:
 		return chsql.Ident("body"), true
 	case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
@@ -309,12 +309,8 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 			}
 			entries = make([]chsql.Expr, 0, len(materialized)*2)
 		)
-
 		for _, label := range materialized {
-			if label == logstorage.LabelSeverity {
-				continue
-			}
-			expr := chsql.Ident(label)
+			expr, _ := q.getMaterializedLabelColumn(label)
 			entries = append(entries, chsql.String(label), expr)
 		}
 
@@ -353,27 +349,21 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 			return nil, errors.Wrap(err, "get label mapping")
 		}
 
-		var filter chsql.Expr
-		for i, sel := range sels {
-			var selExpr chsql.Expr
-			for i, m := range sel.Matchers {
+		sets := make([]chsql.Expr, 0, len(sels))
+		for _, sel := range sels {
+			selExprs := make([]chsql.Expr, 0, len(sel.Matchers))
+			for _, m := range sel.Matchers {
 				expr, err := q.logqlLabelMatcher(m, mapping)
 				if err != nil {
 					return result, err
 				}
-				if i == 0 {
-					selExpr = expr
-				} else {
-					selExpr = chsql.And(selExpr, expr)
-				}
+				selExprs = append(selExprs, expr)
 			}
-			if i == 0 {
-				filter = selExpr
-			} else {
-				filter = chsql.Or(filter, selExpr)
-			}
+			sets = append(sets, chsql.JoinAnd(selExprs...))
 		}
-		query.Where(filter)
+		if len(sets) > 0 {
+			query.Where(chsql.JoinOr(sets...))
+		}
 	}
 
 	if err := q.do(ctx, selectQuery{
