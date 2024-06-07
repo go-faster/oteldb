@@ -16,9 +16,9 @@ func TestInTimeRange(t *testing.T) {
 		want   string
 	}{
 		{"timestamp", time.Time{}, time.Time{}, "true"},
-		{"timestamp", time.Unix(0, 1), time.Time{}, "timestamp >= toUnixTimestamp64Nano(1)"},
-		{"timestamp", time.Time{}, time.Unix(0, 10), "timestamp <= toUnixTimestamp64Nano(10)"},
-		{"timestamp", time.Unix(0, 1), time.Unix(0, 10), "timestamp >= toUnixTimestamp64Nano(1) AND timestamp <= toUnixTimestamp64Nano(10)"},
+		{"timestamp", time.Unix(0, 1), time.Time{}, "toUnixTimestamp64Nano(timestamp) >= 1"},
+		{"timestamp", time.Time{}, time.Unix(0, 10), "toUnixTimestamp64Nano(timestamp) <= 10"},
+		{"timestamp", time.Unix(0, 1), time.Unix(0, 10), "toUnixTimestamp64Nano(timestamp) >= 1 AND toUnixTimestamp64Nano(timestamp) <= 10"},
 	}
 	for i, tt := range tests {
 		tt := tt

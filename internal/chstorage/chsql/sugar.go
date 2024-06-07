@@ -4,15 +4,15 @@ import (
 	"time"
 )
 
-// UnixNano returns time.Time as `toUnixTimestamp64Nano()`.
+// UnixNano returns time.Time as unix nano timestamp.
 func UnixNano(t time.Time) Expr {
-	return Function("toUnixTimestamp64Nano", Integer(t.UnixNano()))
+	return Integer(t.UnixNano())
 }
 
 // InTimeRange returns boolean expression to filter by [start:end].
 func InTimeRange(column string, start, end time.Time) Expr {
 	var (
-		columnExpr = Ident(column)
+		columnExpr = ToUnixTimestamp64Nano(Ident(column))
 		expr       Expr
 	)
 	if !start.IsZero() {
