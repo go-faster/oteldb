@@ -37,8 +37,8 @@ type LogsQuery[E any] struct {
 	Mapper func(logstorage.Record) (E, error)
 }
 
-// Eval evaluates the query using given querier.
-func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterator[E], rerr error) {
+// Execute executes the query using given querier.
+func (v *LogsQuery[E]) Execute(ctx context.Context, q *Querier) (_ iterators.Iterator[E], rerr error) {
 	table := q.tables.Logs
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LogsQuery.Eval",
@@ -114,7 +114,7 @@ func (v *LogsQuery[E]) Eval(ctx context.Context, q *Querier) (_ iterators.Iterat
 		Signal: "logs",
 		Table:  table,
 	}); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "execute LogsQuery")
 	}
 
 	return iterators.Slice(data), nil
@@ -146,8 +146,8 @@ func (c *sampleQueryColumns) Result() proto.Results {
 	}
 }
 
-// Eval evaluates the query using given querier.
-func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.SampleIterator, rerr error) {
+// Execute executes the query using given querier.
+func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.SampleIterator, rerr error) {
 	table := q.tables.Logs
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.SampleQuery.Eval",
@@ -201,7 +201,7 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 
 		entries = append(entries,
 			chsql.String(string(key)),
-			labelExpr,
+			chsql.ToString(labelExpr),
 		)
 	}
 
@@ -262,7 +262,7 @@ func (v *SampleQuery) Eval(ctx context.Context, q *Querier) (_ logqlengine.Sampl
 		Signal: "logs",
 		Table:  table,
 	}); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "execute SampleQuery")
 	}
 
 	return iterators.Slice(result), nil

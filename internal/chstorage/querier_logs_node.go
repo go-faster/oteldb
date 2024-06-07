@@ -51,7 +51,7 @@ func (n *InputNode) EvalPipeline(ctx context.Context, params logqlengine.EvalPar
 		Line:      n.Line,
 		Mapper:    entryMapper,
 	}
-	return q.Eval(ctx, n.q)
+	return q.Execute(ctx, n.q)
 }
 
 func entryMapper(r logstorage.Record) (logqlengine.Entry, error) {
@@ -93,5 +93,5 @@ func (n *SamplingNode) EvalSample(ctx context.Context, params logqlengine.EvalPa
 		Labels:         n.Labels,
 		Line:           n.Line,
 	}
-	return q.Eval(ctx, n.q)
+	return q.Execute(ctx, n.q)
 }

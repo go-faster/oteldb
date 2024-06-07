@@ -158,7 +158,7 @@ func attrSelector(name, key string) chsql.Expr {
 }
 
 func firstAttrSelector(label string) chsql.Expr {
-	columns := make([]chsql.Expr, 0, 3)
+	columns := make([]chsql.Expr, 0, 4)
 	for _, column := range []string{
 		colAttrs,
 		colScope,
@@ -170,6 +170,7 @@ func firstAttrSelector(label string) chsql.Expr {
 			"Nullable(String)",
 		))
 	}
+	columns = append(columns, chsql.String(""))
 	return chsql.Coalesce(columns...)
 }
 
