@@ -63,3 +63,8 @@ func UnixNano(k string, t time.Time) attribute.KeyValue {
 	}
 	return attribute.Int64(k, v)
 }
+
+// Duration returns [time.Duration] as integer attribute.
+func Duration(k string, d time.Duration) attribute.KeyValue {
+	return attribute.Int64(k, d.Nanoseconds())
+}

@@ -34,7 +34,7 @@ func (q *LiteralQuery) Eval(ctx context.Context, params EvalParams) (data lokiap
 	_, span := q.tracer.Start(ctx, "logql.LiteralQuery", trace.WithAttributes(
 		xattribute.UnixNano("logql.params.start", params.Start),
 		xattribute.UnixNano("logql.params.end", params.End),
-		attribute.Int64("logql.params.step", int64(params.Step)),
+		xattribute.Duration("logql.params.step", params.Step),
 		attribute.Stringer("logql.params.direction", params.Direction),
 		attribute.Int("logql.params.limit", params.Limit),
 	))

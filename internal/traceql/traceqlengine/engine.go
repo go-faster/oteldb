@@ -62,8 +62,8 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (tra
 	ctx, span := e.tracer.Start(ctx, "Eval",
 		trace.WithAttributes(
 			attribute.String("traceql.query", query),
-			attribute.Int64("traceql.params.min_duration", int64(params.MinDuration)),
-			attribute.Int64("traceql.params.max_duration", int64(params.MaxDuration)),
+			xattribute.Duration("traceql.params.min_duration", params.MinDuration),
+			xattribute.Duration("traceql.params.max_duration", params.MaxDuration),
 			xattribute.UnixNano("traceql.params.start", params.Start),
 			xattribute.UnixNano("traceql.params.end", params.End),
 			attribute.Int("traceql.params.limit", params.Limit),

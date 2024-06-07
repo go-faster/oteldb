@@ -49,7 +49,7 @@ func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi
 	ctx, span := q.tracer.Start(ctx, "logql.MetricQuery", trace.WithAttributes(
 		xattribute.UnixNano("logql.params.start", params.Start),
 		xattribute.UnixNano("logql.params.end", params.End),
-		attribute.Int64("logql.params.step", int64(params.Step)),
+		xattribute.Duration("logql.params.step", params.Step),
 		attribute.Stringer("logql.params.direction", params.Direction),
 		attribute.Int("logql.params.limit", params.Limit),
 	))

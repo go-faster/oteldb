@@ -29,8 +29,8 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 			xattribute.StringMap("chstorage.tags", tags),
 			xattribute.UnixNano("chstorage.range.start", opts.Start),
 			xattribute.UnixNano("chstorage.range.end", opts.End),
-			attribute.Int64("chstorage.min_duration", int64(opts.MinDuration)),
-			attribute.Int64("chstorage.max_duration", int64(opts.MaxDuration)),
+			xattribute.Duration("chstorage.min_duration", opts.MinDuration),
+			xattribute.Duration("chstorage.max_duration", opts.MaxDuration),
 
 			attribute.String("chstorage.table", table),
 		),
@@ -427,8 +427,8 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 			xattribute.StringerSlice("traceql.matchers", params.Matchers),
 			xattribute.UnixNano("traceql.range.start", params.Start),
 			xattribute.UnixNano("traceql.range.end", params.End),
-			attribute.Int64("traceql.min_duration", int64(params.MinDuration)),
-			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
+			xattribute.Duration("traceql.min_duration", params.MinDuration),
+			xattribute.Duration("traceql.max_duration", params.MaxDuration),
 			attribute.Int("traceql.limit", params.Limit),
 
 			attribute.String("chstorage.table", table),
