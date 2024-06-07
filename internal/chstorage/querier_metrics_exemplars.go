@@ -97,12 +97,6 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					attributes         = c.attributes.Row(i)
 					resource           = c.resource.Row(i)
 				)
-				if err != nil {
-					return errors.Wrap(err, "decode attributes")
-				}
-				if err != nil {
-					return errors.Wrap(err, "decode resource")
-				}
 				key := seriesKey{
 					name:       name,
 					attributes: attributes.Hash(),
