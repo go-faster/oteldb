@@ -2,12 +2,10 @@ package chstorage
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strconv"
 	"time"
 
-	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/prometheus/prometheus/model/labels"
@@ -214,9 +212,12 @@ func promQLLabelMatcher(valueSel []chsql.Expr, typ labels.MatchType, value strin
 }
 
 func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
+	table := q.tables.Labels
+
 	ctx, span := q.tracer.Start(ctx, "chstorage.metrics.getMetricsLabelMapping",
 		trace.WithAttributes(
 			attribute.StringSlice("chstorage.labels", input),
+			attribute.String("chstorage.table", table),
 		),
 	)
 	defer func() {
@@ -227,20 +228,28 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	}()
 
 	var (
-		out = make(map[string]string, len(input))
-
 		name       = new(proto.ColStr).LowCardinality()
 		normalized = new(proto.ColStr).LowCardinality()
+
+		query = chsql.Select(table,
+			chsql.Column("name", name),
+			chsql.Column("name_normalized", normalized),
+		).
+			Where(chsql.In(
+				chsql.Ident("name_normalized"),
+				chsql.Ident("labels"),
+			))
 	)
-	var inputData proto.ColStr
+
+	var (
+		out       = make(map[string]string, len(input))
+		inputData proto.ColStr
+	)
 	for _, label := range input {
 		inputData.Append(label)
 	}
-	if err := q.ch.Do(ctx, ch.Query{
-		Result: proto.Results{
-			{Name: "name", Data: name},
-			{Name: "name_normalized", Data: normalized},
-		},
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < normalized.Rows(); i++ {
 				out[normalized.Row(i)] = name.Row(i)
@@ -251,9 +260,12 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 		ExternalData: []proto.InputColumn{
 			{Name: "name", Data: &inputData},
 		},
-		Body: fmt.Sprintf(`SELECT name, name_normalized FROM %[1]s WHERE name_normalized IN labels`, q.tables.Labels),
+
+		Type:   "getMetricsLabelMapping",
+		Signal: "metrics",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "select")
+		return nil, err
 	}
 	span.AddEvent("labels_fetched", trace.WithAttributes(
 		xattribute.StringMap("chstorage.mapping", out),

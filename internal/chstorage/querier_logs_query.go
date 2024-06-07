@@ -97,24 +97,21 @@ func (v *LogsQuery[E]) Execute(ctx context.Context, q *Querier) (_ iterators.Ite
 	if err := q.do(ctx, selectQuery{
 		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			if err := out.ForEach(func(r logstorage.Record) error {
+			return out.ForEach(func(r logstorage.Record) error {
 				e, err := v.Mapper(r)
 				if err != nil {
 					return err
 				}
 				data = append(data, e)
 				return nil
-			}); err != nil {
-				return errors.Wrap(err, "for each")
-			}
-			return nil
+			})
 		},
 
 		Type:   "QueryLogs",
 		Signal: "logs",
 		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "execute LogsQuery")
+		return nil, err
 	}
 
 	return iterators.Slice(data), nil
@@ -262,7 +259,7 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 		Signal: "logs",
 		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "execute SampleQuery")
+		return nil, err
 	}
 
 	return iterators.Slice(result), nil

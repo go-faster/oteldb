@@ -248,7 +248,7 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 			{Name: "name", Data: &inputData},
 		},
 
-		Type:   "LabelMapping",
+		Type:   "getLabelMapping",
 		Signal: "logs",
 		Table:  table,
 	}); err != nil {

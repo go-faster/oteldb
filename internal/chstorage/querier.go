@@ -96,7 +96,7 @@ func (q *Querier) do(ctx context.Context, s selectQuery) error {
 
 	queryStartTime := time.Now()
 	if err := q.ch.Do(ctx, query); err != nil {
-		return err
+		return errors.Wrapf(err, "execute %s (signal: %s)", s.Type, s.Signal)
 	}
 
 	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
