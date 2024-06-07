@@ -25,6 +25,8 @@ type SelectQuery struct {
 	limit int
 }
 
+var _ Query = (*SelectQuery)(nil)
+
 type orderExpr struct {
 	expr  Expr
 	order Order

@@ -3,8 +3,6 @@ package chsql
 import (
 	"fmt"
 	"strconv"
-
-	"golang.org/x/exp/constraints"
 )
 
 type exprType uint8
@@ -16,24 +14,28 @@ const (
 	exprBinaryOp                     // `+`,`-`,`IN`, etc.
 	exprFunction                     // functions
 	exprTuple
+	exprSubQuery
 )
 
 // Expr is a Clickhouse expression.
 type Expr struct {
-	typ  exprType
-	tok  string
-	args []Expr
+	typ      exprType
+	tok      string
+	args     []Expr
+	subQuery Query
 }
 
 func (e Expr) IsZero() bool {
 	var s struct {
-		typ  exprType
-		tok  string
-		args []Expr
+		typ      exprType
+		tok      string
+		args     []Expr
+		subQuery Query
 	} = e
 	return s.typ == 0 &&
 		s.tok == "" &&
-		s.args == nil
+		s.args == nil &&
+		s.subQuery == nil
 }
 
 // Ident returns identifier.
@@ -77,12 +79,17 @@ func Value[V litValue](v V) Expr {
 	}
 }
 
+type litInt interface {
+	int | int8 | int16 | int32 | int64 |
+		uint | uint8 | uint16 | uint32 | uint64
+}
+
+type litFloat interface {
+	float32 | float64
+}
+
 type litValue interface {
-	string |
-		bool |
-		int | int8 | int16 | int32 | int64 |
-		uint | uint8 | uint16 | uint32 | uint64 |
-		float32 | float64
+	string | bool | litInt | litFloat
 }
 
 // String returns string literal.
@@ -94,7 +101,7 @@ func String(v string) Expr {
 }
 
 // Integer returns integer literal.
-func Integer[I constraints.Integer](v I) Expr {
+func Integer[I litInt](v I) Expr {
 	return Expr{
 		typ: exprLiteral,
 		// FIXME(tdakkota): suboptimal
@@ -103,7 +110,7 @@ func Integer[I constraints.Integer](v I) Expr {
 }
 
 // Float returns float literal.
-func Float[I constraints.Float](v I) Expr {
+func Float[I litFloat](v I) Expr {
 	size := 64
 	if _, ok := any(v).(float32); ok {
 		size = 32
@@ -137,4 +144,12 @@ func TupleValues[V litValue](vals ...V) Expr {
 		args[i] = Value(val)
 	}
 	return Tuple(args...)
+}
+
+// SubQuery returns sub-query as an expression.
+func SubQuery(q Query) Expr {
+	return Expr{
+		typ:      exprSubQuery,
+		subQuery: q,
+	}
 }

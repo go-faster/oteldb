@@ -8,6 +8,11 @@ import (
 	"github.com/go-faster/errors"
 )
 
+// Query is an query interface.
+type Query interface {
+	WriteSQL(p *Printer) error
+}
+
 // Order defines sorting order.
 type Order uint8
 
@@ -93,6 +98,7 @@ func (p *Printer) Literal(lit string) {
 	p.needSpace = true
 }
 
+// WriteExpr writes given expression.
 func (p *Printer) WriteExpr(e Expr) error {
 	switch e.typ {
 	case exprIdent:
@@ -154,6 +160,18 @@ func (p *Printer) WriteExpr(e Expr) error {
 			if err := p.WriteExpr(arg); err != nil {
 				return err
 			}
+		}
+		p.CloseParen()
+
+		return nil
+	case exprSubQuery:
+		if e.subQuery == nil {
+			return errors.New("subquery is nil")
+		}
+
+		p.OpenParen()
+		if err := e.subQuery.WriteSQL(p); err != nil {
+			return err
 		}
 		p.CloseParen()
 
