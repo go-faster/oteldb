@@ -96,11 +96,11 @@ func (q *SelectQuery) Prepare(onResult OnResult) (ch.Query, error) {
 // Results returns list of result columns.
 func (q *SelectQuery) Results() (r proto.Results) {
 	r = make(proto.Results, len(q.columns))
-	for _, c := range q.columns {
-		r = append(r, proto.ResultColumn{
+	for i, c := range q.columns {
+		r[i] = proto.ResultColumn{
 			Name: c.Name,
 			Data: c.Data,
-		})
+		}
 	}
 	return r
 }
