@@ -257,7 +257,9 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 			{`{http_method=~".+"} != "HEAD"`, len(set.Records) - 22},
 			{`{http_method=~".+"} !~ "HEAD"`, len(set.Records) - 22},
 			// Trace to logs.
-			{`{http_method=~".+"} |= "af36000000000000c517000000000003"`, 1},
+			{`{http_method=~".+"} |= "af36000000000000c517000000000003"`, 1}, // lower case
+			{`{http_method=~".+"} |= "AF36000000000000C517000000000003"`, 1}, // upper case
+			{`{http_method=~".+"} |= "aF36000000000000c517000000000003"`, 1}, // mixed case
 
 			// Label filter.
 			{`{http_method=~".+"} | http_method = "GET"`, 21},
