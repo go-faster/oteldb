@@ -282,7 +282,7 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 		Signal: "traces",
 		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, err
 	}
 
 	return iterators.Slice(r), nil
@@ -314,9 +314,10 @@ func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, op
 
 		query = chsql.Select(table,
 			chsql.Column("value", &value),
-			chsql.Column("valueType", proto.Wrap(&valueType, valueTypeDDL)),
+			chsql.Column("value_type", proto.Wrap(&valueType, valueTypeDDL)),
 		).
-			Distinct(true)
+			Distinct(true).
+			Where(chsql.ColumnEq("name", tag.Name))
 	)
 	switch scope := tag.Scope; scope {
 	case traceql.ScopeNone:
@@ -616,13 +617,13 @@ func traceInTimeRange(start, end time.Time) chsql.Expr {
 	exprs := make([]chsql.Expr, 0, 2)
 	if !start.IsZero() {
 		exprs = append(exprs, chsql.Gte(
-			chsql.Ident("start"),
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("start")),
 			chsql.UnixNano(start),
 		))
 	}
 	if !end.IsZero() {
 		exprs = append(exprs, chsql.Lte(
-			chsql.Ident("end"),
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("end")),
 			chsql.UnixNano(end),
 		))
 	}
