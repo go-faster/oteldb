@@ -110,8 +110,8 @@ func (h *TempoAPI) searchTraceQL(ctx context.Context, query string, params tempo
 	return h.engine.Eval(ctx, query, traceqlengine.EvalParams{
 		MinDuration: params.MinDuration.Or(0),
 		MaxDuration: params.MinDuration.Or(0),
-		Start:       timeToTimestamp(params.Start),
-		End:         timeToTimestamp(params.End),
+		Start:       params.Start.Or(time.Time{}),
+		End:         params.End.Or(time.Time{}),
 		Limit:       params.Limit.Or(20),
 	})
 }
@@ -128,8 +128,8 @@ func (h *TempoAPI) searchTags(ctx context.Context, query string, params tempoapi
 	i, err := h.q.SearchTags(ctx, tags, tracestorage.SearchTagsOptions{
 		MinDuration: params.MinDuration.Or(0),
 		MaxDuration: params.MaxDuration.Or(0),
-		Start:       timeToTimestamp(params.Start),
-		End:         timeToTimestamp(params.End),
+		Start:       params.Start.Or(time.Time{}),
+		End:         params.End.Or(time.Time{}),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "search tags")
@@ -183,8 +183,8 @@ func (h *TempoAPI) SearchTagValues(ctx context.Context, params tempoapi.SearchTa
 
 	iter, err := h.q.TagValues(ctx, attr, tracestorage.TagValuesOptions{
 		AutocompleteQuery: query,
-		Start:             timeToTimestamp(params.Start),
-		End:               timeToTimestamp(params.End),
+		Start:             params.Start.Or(time.Time{}),
+		End:               params.End.Or(time.Time{}),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "get tag values")
@@ -231,8 +231,8 @@ func (h *TempoAPI) SearchTagValuesV2(ctx context.Context, params tempoapi.Search
 
 	iter, err := h.q.TagValues(ctx, attr, tracestorage.TagValuesOptions{
 		AutocompleteQuery: query,
-		Start:             timeToTimestamp(params.Start),
-		End:               timeToTimestamp(params.End),
+		Start:             params.Start.Or(time.Time{}),
+		End:               params.End.Or(time.Time{}),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "get tag values")
@@ -316,8 +316,8 @@ func (h *TempoAPI) SearchTags(ctx context.Context, params tempoapi.SearchTagsPar
 
 	tags, err := h.q.TagNames(ctx, tracestorage.TagNamesOptions{
 		Scope: scope,
-		Start: timeToTimestamp(params.Start),
-		End:   timeToTimestamp(params.End),
+		Start: params.Start.Or(time.Time{}),
+		End:   params.End.Or(time.Time{}),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "get tag names")
@@ -365,8 +365,8 @@ func (h *TempoAPI) SearchTagsV2(ctx context.Context, params tempoapi.SearchTagsV
 
 	tags, err := h.q.TagNames(ctx, tracestorage.TagNamesOptions{
 		Scope: searchScope,
-		Start: timeToTimestamp(params.Start),
-		End:   timeToTimestamp(params.End),
+		Start: params.Start.Or(time.Time{}),
+		End:   params.End.Or(time.Time{}),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "get tag names")
@@ -421,8 +421,8 @@ func (h *TempoAPI) TraceByID(ctx context.Context, params tempoapi.TraceByIDParam
 	}
 
 	iter, err := h.q.TraceByID(ctx, traceID, tracestorage.TraceByIDOptions{
-		Start: timeToTimestamp(params.Start),
-		End:   timeToTimestamp(params.End),
+		Start: params.Start.Or(time.Time{}),
+		End:   params.End.Or(time.Time{}),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "query traceID")
@@ -460,12 +460,4 @@ func (h *TempoAPI) NewError(_ context.Context, err error) *tempoapi.ErrorStatusC
 		StatusCode: http.StatusBadRequest,
 		Response:   tempoapi.Error(err.Error()),
 	}
-}
-
-func timeToTimestamp[O interface{ Get() (time.Time, bool) }](o O) otelstorage.Timestamp {
-	t, ok := o.Get()
-	if !ok {
-		return 0
-	}
-	return otelstorage.NewTimestampFromTime(t)
 }

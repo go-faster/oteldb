@@ -32,11 +32,11 @@ type SearchTagsOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start otelstorage.Timestamp
+	Start time.Time
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End otelstorage.Timestamp
+	End time.Time
 }
 
 // TagNamesOptions defines options for [Querier.TagNames].
@@ -48,11 +48,11 @@ type TagNamesOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start otelstorage.Timestamp
+	Start time.Time
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End otelstorage.Timestamp
+	End time.Time
 }
 
 // TagValuesOptions defines options for [Querier.TagValues].
@@ -63,11 +63,11 @@ type TagValuesOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start otelstorage.Timestamp
+	Start time.Time
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End otelstorage.Timestamp
+	End time.Time
 }
 
 // TraceByIDOptions defines options for [Querier.TraceByID] method.
@@ -75,11 +75,11 @@ type TraceByIDOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start otelstorage.Timestamp
+	Start time.Time
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End otelstorage.Timestamp
+	End time.Time
 }
 
 // TagNames is a set of tags by scope.

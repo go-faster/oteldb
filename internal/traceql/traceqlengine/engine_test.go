@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
@@ -269,34 +270,34 @@ func TestTimeRange(t *testing.T) {
 		},
 		// Only start.
 		{
-			timeRange{start: 9},
+			timeRange{start: time.Unix(0, 9)},
 			10, 12,
 			true,
 		},
 		{
-			timeRange{start: 11},
+			timeRange{start: time.Unix(0, 11)},
 			10, 12,
 			false,
 		},
 		// Only end.
 		{
-			timeRange{end: 13},
+			timeRange{end: time.Unix(0, 13)},
 			10, 12,
 			true,
 		},
 		{
-			timeRange{end: 11},
+			timeRange{end: time.Unix(0, 11)},
 			10, 12,
 			false,
 		},
 		// Both.
 		{
-			timeRange{start: 9, end: 13},
+			timeRange{start: time.Unix(0, 9), end: time.Unix(0, 13)},
 			10, 12,
 			true,
 		},
 		{
-			timeRange{start: 9, end: 11},
+			timeRange{start: time.Unix(0, 9), end: time.Unix(0, 1)},
 			5, 15,
 			false,
 		},
