@@ -64,6 +64,7 @@ func TestSelect(t *testing.T) {
 			},
 			false,
 		},
+		// Test subqueries.
 		{
 			func() *SelectQuery {
 				return SelectFrom(
@@ -81,6 +82,7 @@ func TestSelect(t *testing.T) {
 			},
 			false,
 		},
+		// Test ORDER By.
 		{
 			func() *SelectQuery {
 				return Select("spans",
@@ -103,6 +105,46 @@ func TestSelect(t *testing.T) {
 					Ident("duration"),
 					Desc,
 				)
+			},
+			false,
+		},
+		// Ensure aliasing is properly handled.
+		//
+		// Alias expression.
+		{
+			func() *SelectQuery {
+				return Select("spans", ResultColumn{
+					Name: "name",
+					Expr: ToString(Ident("name")),
+				})
+			},
+			false,
+		},
+		// User-defined alias.
+		{
+			func() *SelectQuery {
+				return Select("spans", ResultColumn{
+					Name: "name",
+					Expr: binaryOp(
+						Ident("column"),
+						"AS",
+						Ident("spanName"),
+					),
+				})
+			},
+			false,
+		},
+		// User-defined alias with the same name as column.
+		{
+			func() *SelectQuery {
+				return Select("spans", ResultColumn{
+					Name: "column",
+					Expr: binaryOp(
+						Ident("column"),
+						"AS",
+						Ident("spanName"),
+					),
+				})
 			},
 			false,
 		},

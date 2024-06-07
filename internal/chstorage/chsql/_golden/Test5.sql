@@ -1,0 +1,1 @@
+SELECT (toString(name) AS name) FROM spans

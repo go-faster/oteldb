@@ -119,14 +119,15 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 		if i != 0 {
 			p.Comma()
 		}
+
 		cexpr := c.Expr
 		if cexpr.IsZero() {
+			// If expression is not defined, assume that column
+			// name is expected.
 			cexpr = Ident(c.Name)
 		}
-		if needColumnAlias(c.Name, cexpr) {
-			// Do not alias the name if name is explicitly aliased by user.
-			cexpr = binaryOp(cexpr, "AS", Ident(c.Name))
-		}
+		cexpr = aliasColumn(c.Name, cexpr)
+
 		p.OpenParen()
 		if err := p.WriteExpr(cexpr); err != nil {
 			return errors.Wrapf(err, "column %q", c.Name)
@@ -188,15 +189,21 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 	return nil
 }
 
-func needColumnAlias(name string, cexpr Expr) bool {
-	switch cexpr.typ {
-	case exprBinaryOp:
-		return !strings.EqualFold(cexpr.tok, "AS")
-	case exprIdent:
-		return cexpr.tok != name
-	default:
-		return true
+func aliasColumn(name string, cexpr Expr) Expr {
+	if cexpr.typ == exprBinaryOp && strings.EqualFold(cexpr.tok, "AS") {
+		// If expression already aliased, rename the alias.
+		if len(cexpr.args) < 2 {
+			// Return invalid expression as-is.
+			return cexpr
+		}
+		cexpr = cexpr.args[0]
 	}
+	if cexpr.typ == exprIdent && cexpr.tok == name {
+		// Do not alias expression if it is an identifier (column name)
+		// with same name.
+		return cexpr
+	}
+	return binaryOp(cexpr, "AS", Ident(name))
 }
 
 // ResultColumn defines a column result.

@@ -34,18 +34,17 @@ func TestInTimeRange(t *testing.T) {
 
 func TestJoinAnd(t *testing.T) {
 	tests := []struct {
-		args    []Expr
-		want    string
-		wantErr bool
+		args []Expr
+		want string
 	}{
-		{nil, "true", false},
+		{nil, "true"},
+		{[]Expr{Ident("foo")}, "foo"},
 		{
 			[]Expr{
 				Ident("foo"),
 				Ident("bar"),
 			},
 			"foo AND bar",
-			false,
 		},
 		{
 			[]Expr{
@@ -54,10 +53,7 @@ func TestJoinAnd(t *testing.T) {
 				Ident("baz"),
 			},
 			"foo AND bar AND baz",
-			false,
 		},
-
-		{[]Expr{Ident("foo")}, "", true},
 	}
 	for i, tt := range tests {
 		tt := tt
@@ -66,10 +62,6 @@ func TestJoinAnd(t *testing.T) {
 
 			p := GetPrinter()
 			err := p.WriteExpr(got)
-			if tt.wantErr {
-				require.Error(t, err)
-				return
-			}
 			require.NoError(t, err)
 			require.Equal(t, tt.want, p.String())
 		})
