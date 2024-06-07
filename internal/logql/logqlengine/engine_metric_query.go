@@ -12,6 +12,7 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlmetric"
 	"github.com/go-faster/oteldb/internal/lokiapi"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // MetricQuery represents a metric query.
@@ -46,8 +47,8 @@ func (q *MetricQuery) Eval(ctx context.Context, params EvalParams) (lokiapi.Quer
 
 func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
 	ctx, span := q.tracer.Start(ctx, "logql.MetricQuery", trace.WithAttributes(
-		attribute.Int64("logql.params.start", params.Start.UnixNano()),
-		attribute.Int64("logql.params.end", params.End.UnixNano()),
+		xattribute.UnixNano("logql.params.start", params.Start),
+		xattribute.UnixNano("logql.params.end", params.End),
 		attribute.Int64("logql.params.step", int64(params.Step)),
 		attribute.Stringer("logql.params.direction", params.Direction),
 		attribute.Int("logql.params.limit", params.Limit),

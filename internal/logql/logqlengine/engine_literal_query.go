@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // LiteralQuery is simple literal expression query.
@@ -31,8 +32,8 @@ func (e *Engine) buildLiteralQuery(_ context.Context, expr *logql.LiteralExpr) (
 // Eval implements [Query].
 func (q *LiteralQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
 	_, span := q.tracer.Start(ctx, "logql.LiteralQuery", trace.WithAttributes(
-		attribute.Int64("logql.params.start", params.Start.UnixNano()),
-		attribute.Int64("logql.params.end", params.End.UnixNano()),
+		xattribute.UnixNano("logql.params.start", params.Start),
+		xattribute.UnixNano("logql.params.end", params.End),
 		attribute.Int64("logql.params.step", int64(params.Step)),
 		attribute.Stringer("logql.params.direction", params.Direction),
 		attribute.Int("logql.params.limit", params.Limit),

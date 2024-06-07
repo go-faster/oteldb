@@ -160,7 +160,7 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
-		return nil, executionErr(err, "evaluate instant query")
+		return nil, executionErr(err, "instant query")
 	}
 
 	return &lokiapi.QueryResponse{
@@ -203,7 +203,7 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
-		return nil, executionErr(err, "evaluate range query")
+		return nil, executionErr(err, "range query")
 	}
 
 	return &lokiapi.QueryResponse{
@@ -264,7 +264,7 @@ func (h *LokiAPI) eval(ctx context.Context, query string, params logqlengine.Eva
 	}
 	r, err = q.Eval(ctx, params)
 	if err != nil {
-		return r, errors.Wrap(err, "eval")
+		return r, err
 	}
 	return r, nil
 }

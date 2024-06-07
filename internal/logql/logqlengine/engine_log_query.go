@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // LogQuery represents a log query.
@@ -61,8 +62,8 @@ func (q *LogQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.Qu
 
 func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.Streams, rerr error) {
 	ctx, span := q.tracer.Start(ctx, "logql.LogQuery", trace.WithAttributes(
-		attribute.Int64("logql.params.start", params.Start.UnixNano()),
-		attribute.Int64("logql.params.end", params.End.UnixNano()),
+		xattribute.UnixNano("logql.params.start", params.Start),
+		xattribute.UnixNano("logql.params.end", params.End),
 		attribute.Int64("logql.params.step", int64(params.Step)),
 		attribute.Stringer("logql.params.direction", params.Direction),
 		attribute.Int("logql.params.limit", params.Limit),
