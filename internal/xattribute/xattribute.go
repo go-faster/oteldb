@@ -4,6 +4,7 @@ package xattribute
 import (
 	"fmt"
 	"slices"
+	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -50,4 +51,15 @@ func StringMap(k string, m map[string]string) attribute.KeyValue {
 	slices.Sort(ss.val)
 
 	return attribute.StringSlice(k, ss.val)
+}
+
+// UnixNano returns [time.Time] as unix nano timestamp.
+//
+// If value is zero, timestamp would be zero too.
+func UnixNano(k string, t time.Time) attribute.KeyValue {
+	var v int64
+	if !t.IsZero() {
+		v = t.UnixNano()
+	}
+	return attribute.Int64(k, v)
 }
