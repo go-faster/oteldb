@@ -524,23 +524,8 @@ func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params trace
 			continue
 		}
 
-		var value chsql.Expr
-		switch s := matcher.Static; s.Type {
-		case traceql.TypeString:
-			value = chsql.String(s.AsString())
-		case traceql.TypeInt:
-			value = chsql.Integer(s.AsInt())
-		case traceql.TypeNumber:
-			value = chsql.Float(s.AsNumber())
-		case traceql.TypeBool:
-			value = chsql.Bool(true)
-		case traceql.TypeDuration:
-			value = chsql.Integer(s.AsDuration().Nanoseconds())
-		case traceql.TypeSpanStatus:
-			value = chsql.Integer(int(s.AsSpanStatus()))
-		case traceql.TypeSpanKind:
-			value = chsql.Integer(int(s.AsSpanKind()))
-		default:
+		value, ok := getTraceQLLiteral(matcher.Static)
+		if !ok {
 			// Unsupported for now.
 			dropped++
 			continue
@@ -598,7 +583,7 @@ func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params trace
 				for _, column := range getTraceQLAttributeColumns(attr) {
 					exprs = append(exprs, op(
 						attrSelector(column, attr.Name),
-						value,
+						chsql.ToString(value),
 					))
 				}
 				if len(exprs) > 0 {
@@ -642,6 +627,27 @@ func traceInTimeRange(start, end time.Time) chsql.Expr {
 		))
 	}
 	return chsql.JoinAnd(exprs...)
+}
+
+func getTraceQLLiteral(s traceql.Static) (value chsql.Expr, _ bool) {
+	switch s.Type {
+	case traceql.TypeString:
+		return chsql.String(s.AsString()), true
+	case traceql.TypeInt:
+		return chsql.Integer(s.AsInt()), true
+	case traceql.TypeNumber:
+		return chsql.Float(s.AsNumber()), true
+	case traceql.TypeBool:
+		return chsql.Bool(s.AsBool()), true
+	case traceql.TypeDuration:
+		return chsql.Integer(s.AsDuration().Nanoseconds()), true
+	case traceql.TypeSpanStatus:
+		return chsql.Integer(int(s.AsSpanStatus())), true
+	case traceql.TypeSpanKind:
+		return chsql.Integer(int(s.AsSpanKind())), true
+	default:
+		return value, false
+	}
 }
 
 func getTraceQLMatcherOp(op traceql.BinaryOp) (func(l, r chsql.Expr) chsql.Expr, bool) {
