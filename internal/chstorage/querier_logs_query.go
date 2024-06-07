@@ -380,6 +380,24 @@ func (q *Querier) logQLLabelMatcher(
 		}
 	}()
 
+	matchHex := func(column chsql.Expr, m logql.LabelMatcher) (e chsql.Expr, _ error) {
+		switch m.Op {
+		case logql.OpEq, logql.OpNotEq:
+			return chsql.Eq(
+				column,
+				chsql.Unhex(chsql.String(m.Value)),
+			), nil
+		case logql.OpRe, logql.OpNotRe:
+			// FIXME(tdakkota): match is case-sensitive
+			return chsql.Match(
+				chsql.Hex(column),
+				chsql.String(m.Value),
+			), nil
+		default:
+			return e, errors.Errorf("unexpected op %q", m.Op)
+		}
+	}
+
 	labelName := string(m.Label)
 	if key, ok := mapping[labelName]; ok {
 		labelName = key
@@ -399,7 +417,7 @@ func (q *Querier) logQLLabelMatcher(
 			}
 			return chsql.ColumnEq("severity_number", severityNumber), nil
 		case logql.OpRe, logql.OpNotRe:
-			var matches []int
+			matches := make([]int, 0, 6)
 			for i := plog.SeverityNumberUnspecified; i <= plog.SeverityNumberFatal4; i++ {
 				for _, s := range []string{
 					i.String(),
@@ -425,6 +443,10 @@ func (q *Querier) logQLLabelMatcher(
 		default:
 			return e, errors.Errorf("unexpected op %q", m.Op)
 		}
+	case logstorage.LabelSpanID:
+		return matchHex(chsql.Ident("span_id"), m)
+	case logstorage.LabelTraceID:
+		return matchHex(chsql.Ident("trace_id"), m)
 	default:
 		expr, ok := q.getMaterializedLabelColumn(labelName)
 		if ok {
