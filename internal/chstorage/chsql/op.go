@@ -13,14 +13,18 @@ func binaryOp(left Expr, op string, right Expr) Expr {
 	return Expr{typ: exprBinaryOp, tok: op, args: []Expr{left, right}}
 }
 
+func joinBinaryOp(op string, args []Expr) Expr {
+	return Expr{typ: exprBinaryOp, tok: op, args: args}
+}
+
 // Eq returns new `=` operation.
 func Eq(left, right Expr) Expr {
 	return binaryOp(left, "=", right)
 }
 
-// ColumnEq returns new `=` operation on column and literal.
-func ColumnEq[V litValue](left string, right V) Expr {
-	return binaryOp(Ident(left), "=", Value(right))
+// NotEq returns new `!=` operation.
+func NotEq(left, right Expr) Expr {
+	return binaryOp(left, "!=", right)
 }
 
 // Gt returns new `>` operation.
@@ -51,6 +55,11 @@ func And(left, right Expr) Expr {
 // Or returns new `OR` operation.
 func Or(left, right Expr) Expr {
 	return binaryOp(left, "OR", right)
+}
+
+// Minus returns new `-` operation.
+func Minus(left, right Expr) Expr {
+	return binaryOp(left, "-", right)
 }
 
 // In returns new `IN` operation.

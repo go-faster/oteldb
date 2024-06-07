@@ -123,16 +123,17 @@ func (p *Printer) WriteExpr(e Expr) error {
 
 		return nil
 	case exprBinaryOp:
-		if l := len(e.args); l != 2 {
-			return errors.Errorf("binary expression must have exacty two args, got %d", l)
+		if l := len(e.args); l < 2 {
+			return errors.Errorf("binary expression must have at least two args, got %d", l)
 		}
 
-		if err := p.WriteExpr(e.args[0]); err != nil {
-			return err
-		}
-		p.Ident(e.tok)
-		if err := p.WriteExpr(e.args[1]); err != nil {
-			return err
+		for i, arg := range e.args {
+			if i != 0 {
+				p.Ident(e.tok)
+			}
+			if err := p.WriteExpr(arg); err != nil {
+				return err
+			}
 		}
 
 		return nil

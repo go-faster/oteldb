@@ -15,9 +15,19 @@ func ToFloat64(arg Expr) Expr {
 	return Function("toFloat64", arg)
 }
 
+// ToUnixTimestamp64Nano returns `toUnixTimestamp64Nano(<arg>)` function call expression.
+func ToUnixTimestamp64Nano(arg Expr) Expr {
+	return Function("toUnixTimestamp64Nano", arg)
+}
+
 // Coalesce returns `coalesce(<args>...)` function call expression.
 func Coalesce(args ...Expr) Expr {
 	return Function("coalesce", args...)
+}
+
+// Has returns `has(<arr>, <elem>)` function call expression.
+func Has(arr, elem Expr) Expr {
+	return Function("has", arr, elem)
 }
 
 // Map returns `map(<args>...)` function call expression.
@@ -55,6 +65,11 @@ func Unhex(arg Expr) Expr {
 	return Function("unhex", arg)
 }
 
+// Length returns `length(<arg>)` function call expression.
+func Length(arg Expr) Expr {
+	return Function("length", arg)
+}
+
 // PositionUTF8 returns `positionUTF8(<haystack>, <needle>)` function call expression.
 func PositionUTF8(haystack, needle Expr) Expr {
 	return Function("positionUTF8", haystack, needle)
@@ -63,11 +78,6 @@ func PositionUTF8(haystack, needle Expr) Expr {
 // Match returns `match(<haystack>, <pattern>)` function call expression.
 func Match(haystack, pattern Expr) Expr {
 	return Function("match", haystack, pattern)
-}
-
-// Length returns `length(<arg>)` function call expression.
-func Length(arg Expr) Expr {
-	return Function("length", arg)
 }
 
 // JSONExtract returns `JSONExtract(<from>, <typ>)` function call expression.

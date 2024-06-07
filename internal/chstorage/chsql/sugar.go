@@ -32,10 +32,47 @@ func InTimeRange(column string, start, end time.Time) Expr {
 	return expr
 }
 
+// ColumnEq returns new `=` operation on column and literal.
+func ColumnEq[V litValue](column string, right V) Expr {
+	return binaryOp(Ident(column), "=", Value(right))
+}
+
 // Contains returns boolean expression to filter strings containing needle.
 func Contains(column, needle string) Expr {
 	return Gt(
 		PositionUTF8(Ident(column), String(needle)),
 		Integer(0),
 	)
+}
+
+// JoinAnd joins given expressions using AND op.
+//
+//   - If len(args) == 0, returns `true` literal.
+//   - If len(args) == 1, returns first argument.
+//   - Otherwise, joins arguments with AND.
+func JoinAnd(args ...Expr) Expr {
+	switch len(args) {
+	case 0:
+		return Bool(true)
+	case 1:
+		return args[0]
+	default:
+		return joinBinaryOp("AND", args)
+	}
+}
+
+// JoinOr joins given expressions using OR op.
+//
+//   - If len(args) == 0, returns `true` literal.
+//   - If len(args) == 1, returns first argument.
+//   - Otherwise, joins arguments with OR.
+func JoinOr(args ...Expr) Expr {
+	switch len(args) {
+	case 0:
+		return Bool(true)
+	case 1:
+		return args[0]
+	default:
+		return joinBinaryOp("OR", args)
+	}
 }
