@@ -14,6 +14,7 @@ import (
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // Engine is a TraceQL evaluation engine.
@@ -61,11 +62,11 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (tra
 	ctx, span := e.tracer.Start(ctx, "Eval",
 		trace.WithAttributes(
 			attribute.String("traceql.query", query),
-			attribute.Int64("traceql.min_duration", int64(params.MinDuration)),
-			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
-			attribute.Int64("traceql.start", params.Start.UnixNano()),
-			attribute.Int64("traceql.end", params.End.UnixNano()),
-			attribute.Int("traceql.limit", params.Limit),
+			attribute.Int64("traceql.params.min_duration", int64(params.MinDuration)),
+			attribute.Int64("traceql.params.max_duration", int64(params.MaxDuration)),
+			xattribute.UnixNano("traceql.params.start", params.Start),
+			xattribute.UnixNano("traceql.params.end", params.End),
+			attribute.Int("traceql.params.limit", params.Limit),
 		),
 	)
 	defer func() {
