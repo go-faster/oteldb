@@ -81,29 +81,209 @@ func runTest(
 	c := setupDB(ctx, t, set, consumer, querier, exemplarQuerier)
 
 	t.Run("Labels", func(t *testing.T) {
-		t.Run("GetLabels", func(t *testing.T) {
+		t.Run("All", func(t *testing.T) {
 			a := require.New(t)
 
 			r, err := c.GetLabels(ctx, promapi.GetLabelsParams{})
 			a.NoError(err)
 			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
-		})
-		t.Run("PostLabels", func(t *testing.T) {
-			a := require.New(t)
 
-			r, err := c.PostLabels(ctx, &promapi.LabelsForm{})
+			r2, err := c.PostLabels(ctx, &promapi.LabelsForm{})
 			a.NoError(err)
-			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
+			a.ElementsMatch(maps.Keys(set.Labels), []string(r2.Data))
 		})
+		for _, tt := range []struct {
+			name  string
+			match []string
+		}{
+			{
+				"OneMatcher",
+				[]string{
+					`{handler="/api/v1/series"}`,
+				},
+			},
+			{
+				"NameMatcher",
+				[]string{
+					`prometheus_http_requests_total{}`,
+				},
+			},
+			{
+				"RegexMatcher",
+				[]string{
+					`{handler=~"/api/v1/(series|query)$"}`,
+				},
+			},
+			{
+				"MultipleMatchers",
+				[]string{
+					`{handler="/api/v1/series"}`,
+					`{handler="/api/v1/query"}`,
+				},
+			},
+		} {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				a := require.New(t)
+				a.NotEmpty(tt.match)
+
+				r, err := c.GetLabels(ctx, promapi.GetLabelsParams{
+					Match: tt.match,
+				})
+				a.NoError(err)
+
+				series, err := set.MatchingSeries(tt.match)
+				a.NoError(err)
+
+				labels := map[string]struct{}{}
+				for _, set := range series {
+					for label := range set {
+						labels[label] = struct{}{}
+					}
+				}
+				a.ElementsMatch(maps.Keys(labels), []string(r.Data))
+			})
+		}
 	})
 	t.Run("LabelValues", func(t *testing.T) {
-		a := require.New(t)
+		t.Run("All", func(t *testing.T) {
+			a := require.New(t)
 
-		for labelName, valueSet := range set.Labels {
-			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{Label: labelName})
+			for labelName, valueSet := range set.Labels {
+				r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{Label: labelName})
+				a.NoError(err)
+
+				var (
+					expected = maps.Keys(valueSet)
+					got      = []string(r.Data)
+				)
+				a.ElementsMatch(expected, got, "check label %q", labelName)
+			}
+		})
+		t.Run("OneMatcher", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{
+				Label: "handler",
+				Match: []string{
+					`{handler="/api/v1/series"}`,
+				},
+			})
 			a.NoError(err)
-			a.ElementsMatch(maps.Keys(valueSet), []string(r.Data), "check label %q", labelName)
-		}
+
+			a.NotEmpty(r.Data)
+			for _, value := range r.Data {
+				a.Equal("/api/v1/series", value)
+			}
+		})
+		t.Run("NameMatcher", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{
+				Label: "__name__",
+				Match: []string{
+					`prometheus_http_requests_total{}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, value := range r.Data {
+				a.Equal("prometheus_http_requests_total", value)
+			}
+		})
+		t.Run("RegexMatcher", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{
+				Label: "handler",
+				Match: []string{
+					`{handler=~"/api/v1/(series|query)$"}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, value := range r.Data {
+				a.Contains([]string{
+					"/api/v1/query",
+					"/api/v1/series",
+				}, value)
+			}
+		})
+		t.Run("MultpleMatchers", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{
+				Label: "handler",
+				Match: []string{
+					`{handler="/api/v1/series"}`,
+					`{handler="/api/v1/query"}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, value := range r.Data {
+				a.Contains([]string{
+					"/api/v1/query",
+					"/api/v1/series",
+				}, value)
+			}
+		})
+		t.Run("AnotherLabel", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{
+				Label: "handler",
+				Match: []string{
+					`{handler="/api/v1/series",code="200"}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, value := range r.Data {
+				a.Equal("/api/v1/series", value)
+			}
+		})
+		t.Run("MatchWithName", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{
+				Label: "handler",
+				Match: []string{
+					`prometheus_http_requests_total{handler="/api/v1/series"}`,
+					`prometheus_http_requests_total{handler="/api/v1/query"}`,
+				},
+			})
+			a.NoError(err)
+
+			a.NotEmpty(r.Data)
+			for _, value := range r.Data {
+				a.Contains([]string{
+					"/api/v1/query",
+					"/api/v1/series",
+				}, value)
+			}
+		})
+		t.Run("OutsideTimeRange", func(t *testing.T) {
+			for _, p := range []promapi.GetLabelValuesParams{
+				{
+					Label: "handler",
+					Match: []string{
+						`prometheus_http_requests_total{handler="/api/v1/series"}`,
+						`prometheus_http_requests_total{handler="/api/v1/query"}`,
+					},
+					Start: promapi.NewOptPrometheusTimestamp(getPromTS(10)),
+					End:   promapi.NewOptPrometheusTimestamp(getPromTS(20)),
+				},
+			} {
+				r, err := c.GetLabelValues(ctx, p)
+				require.NoError(t, err)
+				require.Emptyf(t, r.Data, "params: %#v", p)
+			}
+		})
 	})
 	t.Run("Series", func(t *testing.T) {
 		testName := func(name string) func(t *testing.T) {

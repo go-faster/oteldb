@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
@@ -27,10 +28,12 @@ var _ storage.Queryable = (*Querier)(nil)
 // Querier returns a new Querier on the storage.
 func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 	var minTime, maxTime time.Time
-	if mint > 0 {
+
+	// In case if Prometheus passes min/max time, keep it zero.
+	if mint != promapi.MinTime.UnixMilli() {
 		minTime = time.UnixMilli(mint)
 	}
-	if maxt > 0 {
+	if maxt != promapi.MaxTime.UnixMilli() {
 		maxTime = time.UnixMilli(maxt)
 	}
 	return &promQuerier{
@@ -62,17 +65,80 @@ type promQuerier struct {
 
 var _ storage.Querier = (*promQuerier)(nil)
 
+func (p *promQuerier) getStart(t time.Time) time.Time {
+	switch {
+	case t.IsZero():
+		return p.mint
+	case p.mint.IsZero():
+		return t
+	case t.After(p.mint):
+		return t
+	default:
+		return p.mint
+	}
+}
+
+func (p *promQuerier) getEnd(t time.Time) time.Time {
+	switch {
+	case t.IsZero():
+		return p.maxt
+	case p.maxt.IsZero():
+		return t
+	case t.Before(p.maxt):
+		return t
+	default:
+		return p.maxt
+	}
+}
+
 // LabelValues returns all potential values for a label name.
 // It is not safe to use the strings beyond the lifetime of the querier.
 // If matchers are specified the returned result set is reduced
 // to label values of metrics matching the matchers.
 func (p *promQuerier) LabelValues(ctx context.Context, labelName string, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
-	table := p.tables.Labels
-
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelValues",
 		trace.WithAttributes(
 			attribute.String("chstorage.label", labelName),
 			xattribute.StringerSlice("chstorage.matchers", matchers),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		} else {
+			span.AddEvent("values_fetched", trace.WithAttributes(
+				attribute.Int("chstorage.total_values", len(result)),
+			))
+		}
+		span.End()
+	}()
+
+	matchesOtherLabels := slices.ContainsFunc(matchers, func(m *labels.Matcher) bool {
+		return labelName != m.Name
+	})
+	if matchesOtherLabels {
+		r, err := p.getMatchingLabelValues(ctx, labelName, matchers)
+		if err != nil {
+			return nil, nil, err
+		}
+		return r, nil, nil
+	}
+
+	r, err := p.getLabelValues(ctx, labelName, matchers...)
+	if err != nil {
+		return nil, nil, err
+	}
+	return r, nil, nil
+}
+
+func (p *promQuerier) getLabelValues(ctx context.Context, labelName string, matchers ...*labels.Matcher) (result []string, rerr error) {
+	table := p.tables.Labels
+
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.getLabelValues",
+		trace.WithAttributes(
+			attribute.String("chstorage.label", labelName),
+			xattribute.StringerSlice("chstorage.matchers", matchers),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -95,13 +161,17 @@ func (p *promQuerier) LabelValues(ctx context.Context, labelName string, matcher
 		Distinct(true).
 		Where(chsql.ColumnEq("name_normalized", labelName))
 	for _, m := range matchers {
+		if m.Name != labelName {
+			return nil, errors.Errorf("unexpected label matcher %s (label must be %q)", m, labelName)
+		}
+
 		expr, err := promQLLabelMatcher(
-			[]chsql.Expr{chsql.Ident("name_normalized")},
+			[]chsql.Expr{chsql.Ident(valueColumn)},
 			m.Type,
 			m.Value,
 		)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		query.Where(expr)
 	}
@@ -115,14 +185,140 @@ func (p *promQuerier) LabelValues(ctx context.Context, labelName string, matcher
 			return nil
 		},
 
-		Type:   "LabelValues",
+		Type:   "getLabelValues",
 		Signal: "metrics",
 		Table:  table,
 	}); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return result, nil, nil
+	return result, nil
+}
+
+func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName string, matchers []*labels.Matcher) (_ []string, rerr error) {
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.getMatchingLabelValues",
+		trace.WithAttributes(
+			attribute.String("chstorage.label", labelName),
+			xattribute.StringerSlice("chstorage.matchers", matchers),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	mlabels := make([]string, 0, len(matchers))
+	for _, m := range matchers {
+		mlabels = append(mlabels, m.Name)
+	}
+	mapping, err := p.getLabelMapping(ctx, mlabels)
+	if err != nil {
+		return nil, errors.Wrap(err, "get label mapping")
+	}
+
+	query := func(ctx context.Context, table string) (result []string, rerr error) {
+		var columnExpr chsql.Expr
+		if labelName == labels.MetricName {
+			columnExpr = chsql.Ident("name_normalized")
+		} else {
+			columnExpr = firstAttrSelector(labelName)
+		}
+
+		var (
+			value proto.ColStr
+
+			query = chsql.Select(table, chsql.ResultColumn{
+				Name: "value",
+				Expr: columnExpr,
+				Data: &value,
+			}).
+				Distinct(true).
+				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
+		)
+		for _, m := range matchers {
+			selectors := []chsql.Expr{
+				chsql.Ident("name_normalized"),
+			}
+			if name := m.Name; name != labels.MetricName {
+				if mapped, ok := mapping[name]; ok {
+					name = mapped
+				}
+				selectors = []chsql.Expr{
+					attrSelector(colAttrs, name),
+					attrSelector(colScope, name),
+					attrSelector(colResource, name),
+				}
+			}
+
+			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+			if err != nil {
+				return nil, err
+			}
+			query.Where(expr)
+		}
+		query.Limit(1000)
+
+		if err := p.do(ctx, selectQuery{
+			Query: query,
+			OnResult: func(ctx context.Context, block proto.Block) error {
+				for i := 0; i < value.Rows(); i++ {
+					if v := value.Row(i); v != "" {
+						result = append(result, v)
+					}
+				}
+				return nil
+			},
+
+			Type:   "getMatchingLabelValues",
+			Signal: "metrics",
+			Table:  table,
+		}); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	var (
+		points   []string
+		expHists []string
+	)
+	grp, grpCtx := errgroup.WithContext(ctx)
+	grp.Go(func() error {
+		ctx := grpCtx
+		table := p.tables.Points
+
+		result, err := query(ctx, table)
+		if err != nil {
+			return errors.Wrap(err, "query points series")
+		}
+		points = result
+
+		return nil
+	})
+	grp.Go(func() error {
+		ctx := grpCtx
+		table := p.tables.ExpHistograms
+
+		result, err := query(ctx, table)
+		if err != nil {
+			return errors.Wrap(err, "query exponential histogram series")
+		}
+		expHists = result
+
+		return nil
+	})
+	if err := grp.Wait(); err != nil {
+		return nil, err
+	}
+
+	points = append(points, expHists...)
+	slices.Sort(points)
+	points = slices.Clip(points)
+
+	return points, nil
 }
 
 // LabelNames returns all the unique label names present in the block in sorted order.
@@ -140,6 +336,41 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			span.AddEvent("names_fetched", trace.WithAttributes(
+				attribute.Int("chstorage.total_names", len(result)),
+			))
+		}
+		span.End()
+	}()
+
+	var err error
+	if len(matchers) > 0 {
+		result, err = p.getMatchingLabelNames(ctx, matchers)
+		if err != nil {
+			return nil, nil, err
+		}
+		return result, nil, nil
+	}
+
+	result, err = p.getLabelNames(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return result, nil, nil
+}
+
+func (p *promQuerier) getLabelNames(ctx context.Context) (result []string, rerr error) {
+	table := p.tables.Labels
+
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.getLabelNames",
+		trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
 		}
 		span.End()
 	}()
@@ -149,23 +380,11 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 		query = chsql.Select(table, chsql.Column("name_normalized", value)).
 			Distinct(true)
 	)
-	for _, m := range matchers {
-		expr, err := promQLLabelMatcher(
-			[]chsql.Expr{chsql.Ident("name_normalized")},
-			m.Type,
-			m.Value,
-		)
-		if err != nil {
-			return nil, nil, err
-		}
-		query.Where(expr)
-	}
-
 	if err := p.do(ctx, selectQuery{
 		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < value.Rows(); i++ {
-				result = append(result, value.Row(i))
+				result = append(result, otelstorage.KeyToLabel(value.Row(i)))
 			}
 			return nil
 		},
@@ -174,10 +393,133 @@ func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matche
 		Signal: "metrics",
 		Table:  table,
 	}); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return result, nil, nil
+	return result, nil
+}
+
+func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*labels.Matcher) (_ []string, rerr error) {
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.getMatchingLabelNames",
+		trace.WithAttributes(
+			xattribute.StringerSlice("chstorage.matchers", matchers),
+		),
+	)
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
+	mlabels := make([]string, 0, len(matchers))
+	for _, m := range matchers {
+		mlabels = append(mlabels, m.Name)
+	}
+	mapping, err := p.getLabelMapping(ctx, mlabels)
+	if err != nil {
+		return nil, errors.Wrap(err, "get label mapping")
+	}
+
+	query := func(ctx context.Context, table string) (result []string, rerr error) {
+		var (
+			value proto.ColStr
+
+			query = chsql.Select(table, chsql.ResultColumn{
+				Name: "values",
+				Expr: chsql.ArrayJoin(
+					chsql.ArrayConcat(
+						attrKeys(colAttrs),
+						attrKeys(colScope),
+						attrKeys(colResource),
+					),
+				),
+				Data: &value,
+			}).
+				Distinct(true).
+				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
+		)
+		for _, m := range matchers {
+			selectors := []chsql.Expr{
+				chsql.Ident("name_normalized"),
+			}
+			if name := m.Name; name != labels.MetricName {
+				if mapped, ok := mapping[name]; ok {
+					name = mapped
+				}
+				selectors = []chsql.Expr{
+					attrSelector(colAttrs, name),
+					attrSelector(colScope, name),
+					attrSelector(colResource, name),
+				}
+			}
+
+			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+			if err != nil {
+				return nil, err
+			}
+			query.Where(expr)
+		}
+		query.Limit(1000)
+
+		if err := p.do(ctx, selectQuery{
+			Query: query,
+			OnResult: func(ctx context.Context, block proto.Block) error {
+				for i := 0; i < value.Rows(); i++ {
+					result = append(result, otelstorage.KeyToLabel(value.Row(i)))
+				}
+				return nil
+			},
+
+			Type:   "getMatchingLabelValues",
+			Signal: "metrics",
+			Table:  table,
+		}); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	var (
+		points   []string
+		expHists []string
+	)
+	grp, grpCtx := errgroup.WithContext(ctx)
+	grp.Go(func() error {
+		ctx := grpCtx
+		table := p.tables.Points
+
+		result, err := query(ctx, table)
+		if err != nil {
+			return errors.Wrap(err, "query points series")
+		}
+		points = result
+
+		return nil
+	})
+	grp.Go(func() error {
+		ctx := grpCtx
+		table := p.tables.ExpHistograms
+
+		result, err := query(ctx, table)
+		if err != nil {
+			return errors.Wrap(err, "query exponential histogram series")
+		}
+		expHists = result
+
+		return nil
+	})
+	if err := grp.Wait(); err != nil {
+		return nil, err
+	}
+
+	points = append(points, labels.MetricName)
+	points = append(points, expHists...)
+	slices.Sort(points)
+	points = slices.Clip(points)
+
+	return points, nil
 }
 
 func promQLLabelMatcher(valueSel []chsql.Expr, typ labels.MatchType, value string) (e chsql.Expr, rerr error) {
@@ -267,7 +609,7 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	}); err != nil {
 		return nil, err
 	}
-	span.AddEvent("labels_fetched", trace.WithAttributes(
+	span.AddEvent("mapping_fetched", trace.WithAttributes(
 		xattribute.StringMap("chstorage.mapping", out),
 	))
 
@@ -398,15 +740,12 @@ func (p *promQuerier) extractHints(
 	hints *storage.SelectHints,
 	matchers []*labels.Matcher,
 ) (_ *storage.SelectHints, start, end time.Time, mlabels []string) {
-	start = p.mint
-	end = p.maxt
-
 	if hints != nil {
-		if t := time.UnixMilli(hints.Start); t.After(start) {
-			start = t
+		if ms := hints.Start; ms != promapi.MinTime.UnixMilli() {
+			start = p.getStart(time.UnixMilli(ms))
 		}
-		if t := time.UnixMilli(hints.End); t.Before(end) {
-			end = t
+		if ms := hints.End; ms != promapi.MaxTime.UnixMilli() {
+			end = p.getEnd(time.UnixMilli(ms))
 		}
 	} else {
 		hints = new(storage.SelectHints)
