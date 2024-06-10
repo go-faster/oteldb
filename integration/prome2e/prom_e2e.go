@@ -7,6 +7,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 	"github.com/prometheus/prometheus/model/labels"
+	"github.com/prometheus/prometheus/promql/parser"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 
@@ -17,6 +18,7 @@ import (
 type BatchSet struct {
 	Batches []pmetric.Metrics
 	Labels  map[string]map[string]struct{}
+	Series  []map[string]string
 
 	Start pcommon.Timestamp
 	End   pcommon.Timestamp
@@ -45,6 +47,38 @@ func ParseBatchSet(r io.Reader) (s BatchSet, _ error) {
 	return s, nil
 }
 
+// MatchingSeries returns series that match given label matchers.
+func (s *BatchSet) MatchingSeries(match []string) (r []map[string]string, _ error) {
+	matcherSets := make([][]*labels.Matcher, 0, len(match))
+	for _, s := range match {
+		matchers, err := parser.ParseMetricSelector(s)
+		if err != nil {
+			return nil, errors.Wrapf(err, "parse metric selector %q", s)
+		}
+		matcherSets = append(matcherSets, matchers)
+	}
+
+	for _, series := range s.Series {
+		for _, set := range matcherSets {
+			if matchesSeries(series, set) {
+				r = append(r, series)
+				break
+			}
+		}
+	}
+	return r, nil
+}
+
+func matchesSeries(series map[string]string, set []*labels.Matcher) bool {
+	for _, m := range set {
+		v, ok := series[m.Name]
+		if !ok || !m.Matches(v) {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *BatchSet) addBatch(raw pmetric.Metrics) error {
 	s.Batches = append(s.Batches, raw)
 
@@ -52,18 +86,16 @@ func (s *BatchSet) addBatch(raw pmetric.Metrics) error {
 	for i := 0; i < resMetrics.Len(); i++ {
 		resLog := resMetrics.At(i)
 		res := resLog.Resource()
-		s.addLabels(res.Attributes())
 
 		scopeMetrics := resLog.ScopeMetrics()
 		for i := 0; i < scopeMetrics.Len(); i++ {
 			scopeMetrics := scopeMetrics.At(i)
 			scope := scopeMetrics.Scope()
-			s.addLabels(scope.Attributes())
 
 			metrics := scopeMetrics.Metrics()
 			for i := 0; i < metrics.Len(); i++ {
 				metric := metrics.At(i)
-				if err := s.addMetric(metric); err != nil {
+				if err := s.addMetric(res.Attributes(), scope.Attributes(), metric); err != nil {
 					return errors.Wrap(err, "add metric")
 				}
 			}
@@ -72,77 +104,96 @@ func (s *BatchSet) addBatch(raw pmetric.Metrics) error {
 	return nil
 }
 
-func (s *BatchSet) addMetric(metric pmetric.Metric) error {
+func (s *BatchSet) addMetric(res, scope pcommon.Map, metric pmetric.Metric) error {
 	switch t := metric.Type(); t {
 	case pmetric.MetricTypeGauge:
-		s.addName(metric.Name())
-
 		points := metric.Gauge().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
-			s.addLabels(point.Attributes())
+
 			s.addTimestamp(point.Timestamp())
+			s.addSeries(metric.Name(), res, scope, point.Attributes())
 		}
 		return nil
 	case pmetric.MetricTypeSum:
-		s.addName(metric.Name())
-
 		points := metric.Sum().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
-			s.addLabels(point.Attributes())
+
 			s.addTimestamp(point.Timestamp())
+			s.addSeries(metric.Name(), res, scope, point.Attributes())
 		}
 		return nil
 	case pmetric.MetricTypeHistogram:
-		for _, suffix := range []string{
+		suffixes := []string{
 			"_count",
 			"_bucket",
-		} {
-			s.addName(metric.Name() + suffix)
 		}
 
 		points := metric.Histogram().DataPoints()
+		if points.Len() == 0 {
+			name := metric.Name()
+			attrs := pcommon.NewMap()
+			for _, suffix := range suffixes {
+				s.addSeries(name+suffix, res, scope, attrs)
+			}
+		}
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
+			attrs := point.Attributes()
+
 			if point.HasSum() {
-				s.addName(metric.Name() + "_sum")
+				s.addSeries(metric.Name()+"_sum", res, scope, attrs)
 			}
 			if point.HasMin() {
-				s.addName(metric.Name() + "_min")
+				s.addSeries(metric.Name()+"_min", res, scope, attrs)
 			}
 			if point.HasMax() {
-				s.addName(metric.Name() + "_max")
+				s.addSeries(metric.Name()+"_max", res, scope, attrs)
 			}
 
-			s.addLabels(point.Attributes())
 			s.addTimestamp(point.Timestamp())
+			// NOTE: histogram names are not saved as-is.
+			name := metric.Name()
+			for _, suffix := range suffixes {
+				s.addSeries(name+suffix, res, scope, attrs)
+			}
 		}
 		return nil
 	case pmetric.MetricTypeExponentialHistogram:
-		s.addLabel(labels.MetricName, metric.Name())
-
 		points := metric.ExponentialHistogram().DataPoints()
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
-			s.addLabels(point.Attributes())
+
 			s.addTimestamp(point.Timestamp())
+			s.addSeries(metric.Name(), res, scope, point.Attributes())
 		}
 		return nil
 	case pmetric.MetricTypeSummary:
-		s.addName(metric.Name())
-		for _, suffix := range []string{
+		suffixes := []string{
 			"_count",
 			"_sum",
-		} {
-			s.addName(metric.Name() + suffix)
 		}
 
 		points := metric.Summary().DataPoints()
+		if points.Len() == 0 {
+			name := metric.Name()
+			attrs := pcommon.NewMap()
+			s.addSeries(name, res, scope, attrs)
+			for _, suffix := range suffixes {
+				s.addSeries(name+suffix, res, scope, attrs)
+			}
+		}
 		for i := 0; i < points.Len(); i++ {
 			point := points.At(i)
-			s.addLabels(point.Attributes())
+			attrs := point.Attributes()
+
 			s.addTimestamp(point.Timestamp())
+			name := metric.Name()
+			s.addSeries(name, res, scope, attrs)
+			for _, suffix := range suffixes {
+				s.addSeries(name+suffix, res, scope, attrs)
+			}
 		}
 		return nil
 	case pmetric.MetricTypeEmpty:
@@ -152,6 +203,34 @@ func (s *BatchSet) addMetric(metric pmetric.Metric) error {
 	}
 }
 
+func (s *BatchSet) addSeries(name string, res, scope, attrs pcommon.Map) {
+	s.addLabel(labels.MetricName, name)
+
+	lb := map[string]string{
+		labels.MetricName: name,
+	}
+	for _, m := range []pcommon.Map{
+		res,
+		scope,
+		attrs,
+	} {
+		m.Range(func(k string, v pcommon.Value) bool {
+			switch t := v.Type(); t {
+			case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
+			default:
+				key := otelstorage.KeyToLabel(k)
+				val := v.AsString()
+
+				s.addLabel(key, val)
+				lb[key] = val
+			}
+			return true
+		})
+	}
+
+	s.Series = append(s.Series, lb)
+}
+
 func (s *BatchSet) addTimestamp(ts pcommon.Timestamp) {
 	if s.Start == 0 || ts < s.Start {
 		s.Start = ts
@@ -159,21 +238,6 @@ func (s *BatchSet) addTimestamp(ts pcommon.Timestamp) {
 	if ts > s.End {
 		s.End = ts
 	}
-}
-
-func (s *BatchSet) addLabels(m pcommon.Map) {
-	m.Range(func(k string, v pcommon.Value) bool {
-		switch t := v.Type(); t {
-		case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
-		default:
-			s.addLabel(k, v.AsString())
-		}
-		return true
-	})
-}
-
-func (s *BatchSet) addName(val string) {
-	s.addLabel(labels.MetricName, val)
 }
 
 func (s *BatchSet) addLabel(label, val string) {

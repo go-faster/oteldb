@@ -81,20 +81,69 @@ func runTest(
 	c := setupDB(ctx, t, set, consumer, querier, exemplarQuerier)
 
 	t.Run("Labels", func(t *testing.T) {
-		t.Run("GetLabels", func(t *testing.T) {
+		t.Run("All", func(t *testing.T) {
 			a := require.New(t)
 
 			r, err := c.GetLabels(ctx, promapi.GetLabelsParams{})
 			a.NoError(err)
 			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
-		})
-		t.Run("PostLabels", func(t *testing.T) {
-			a := require.New(t)
 
-			r, err := c.PostLabels(ctx, &promapi.LabelsForm{})
+			r2, err := c.PostLabels(ctx, &promapi.LabelsForm{})
 			a.NoError(err)
-			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
+			a.ElementsMatch(maps.Keys(set.Labels), []string(r2.Data))
 		})
+		for _, tt := range []struct {
+			name  string
+			match []string
+		}{
+			{
+				"OneMatcher",
+				[]string{
+					`{handler="/api/v1/series"}`,
+				},
+			},
+			{
+				"NameMatcher",
+				[]string{
+					`prometheus_http_requests_total{}`,
+				},
+			},
+			{
+				"RegexMatcher",
+				[]string{
+					`{handler=~"/api/v1/(series|query)$"}`,
+				},
+			},
+			{
+				"MultipleMatchers",
+				[]string{
+					`{handler="/api/v1/series"}`,
+					`{handler="/api/v1/query"}`,
+				},
+			},
+		} {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				a := require.New(t)
+				a.NotEmpty(tt.match)
+
+				r, err := c.GetLabels(ctx, promapi.GetLabelsParams{
+					Match: tt.match,
+				})
+				a.NoError(err)
+
+				series, err := set.MatchingSeries(tt.match)
+				a.NoError(err)
+
+				labels := map[string]struct{}{}
+				for _, set := range series {
+					for label := range set {
+						labels[label] = struct{}{}
+					}
+				}
+				a.ElementsMatch(maps.Keys(labels), []string(r.Data))
+			})
+		}
 	})
 	t.Run("LabelValues", func(t *testing.T) {
 		t.Run("All", func(t *testing.T) {
@@ -103,7 +152,12 @@ func runTest(
 			for labelName, valueSet := range set.Labels {
 				r, err := c.GetLabelValues(ctx, promapi.GetLabelValuesParams{Label: labelName})
 				a.NoError(err)
-				a.ElementsMatch(maps.Keys(valueSet), []string(r.Data), "check label %q", labelName)
+
+				var (
+					expected = maps.Keys(valueSet)
+					got      = []string(r.Data)
+				)
+				a.ElementsMatch(expected, got, "check label %q", labelName)
 			}
 		})
 		t.Run("OneMatcher", func(t *testing.T) {
