@@ -115,7 +115,7 @@ func runTest(
 					`{handler="/api/v1/series"}`,
 				},
 			})
-			require.NoError(t, err)
+			a.NoError(err)
 
 			a.NotEmpty(r.Data)
 			for _, value := range r.Data {
@@ -131,7 +131,7 @@ func runTest(
 					`prometheus_http_requests_total{}`,
 				},
 			})
-			require.NoError(t, err)
+			a.NoError(err)
 
 			a.NotEmpty(r.Data)
 			for _, value := range r.Data {
@@ -147,7 +147,7 @@ func runTest(
 					`{handler=~"/api/v1/(series|query)$"}`,
 				},
 			})
-			require.NoError(t, err)
+			a.NoError(err)
 
 			a.NotEmpty(r.Data)
 			for _, value := range r.Data {
@@ -167,7 +167,7 @@ func runTest(
 					`{handler="/api/v1/query"}`,
 				},
 			})
-			require.NoError(t, err)
+			a.NoError(err)
 
 			a.NotEmpty(r.Data)
 			for _, value := range r.Data {
@@ -186,7 +186,7 @@ func runTest(
 					`{handler="/api/v1/series",code="200"}`,
 				},
 			})
-			require.NoError(t, err)
+			a.NoError(err)
 
 			a.NotEmpty(r.Data)
 			for _, value := range r.Data {
@@ -203,7 +203,7 @@ func runTest(
 					`prometheus_http_requests_total{handler="/api/v1/query"}`,
 				},
 			})
-			require.NoError(t, err)
+			a.NoError(err)
 
 			a.NotEmpty(r.Data)
 			for _, value := range r.Data {
@@ -211,6 +211,23 @@ func runTest(
 					"/api/v1/query",
 					"/api/v1/series",
 				}, value)
+			}
+		})
+		t.Run("OutsideTimeRange", func(t *testing.T) {
+			for _, p := range []promapi.GetLabelValuesParams{
+				{
+					Label: "handler",
+					Match: []string{
+						`prometheus_http_requests_total{handler="/api/v1/series"}`,
+						`prometheus_http_requests_total{handler="/api/v1/query"}`,
+					},
+					Start: promapi.NewOptPrometheusTimestamp(getPromTS(10)),
+					End:   promapi.NewOptPrometheusTimestamp(getPromTS(20)),
+				},
+			} {
+				r, err := c.GetLabelValues(ctx, p)
+				require.NoError(t, err)
+				require.Emptyf(t, r.Data, "params: %#v", p)
 			}
 		})
 	})
