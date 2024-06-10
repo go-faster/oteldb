@@ -2,21 +2,16 @@ package chstorage
 
 import (
 	"context"
-	"fmt"
 	"slices"
-	"strings"
-	"time"
 
-	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
@@ -35,8 +30,8 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelNames",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -60,11 +55,25 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 			logstorage.LabelServiceNamespace:  {},
 		}
 	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Result: proto.Results{
-			{Name: "key", Data: &names},
-		},
+	if err := q.do(ctx, selectQuery{
+		Query: chsql.Select(table,
+			chsql.ResultColumn{
+				Name: "names",
+				Expr: chsql.ArrayJoin(
+					chsql.ArrayConcat(
+						attrKeys(colAttrs),
+						attrKeys(colResource),
+						attrKeys(colScope),
+					),
+				),
+				Data: &names,
+			},
+		).
+			Distinct(true).
+			Where(
+				chsql.InTimeRange("timestamp", opts.Start, opts.End),
+			).
+			Limit(1000),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < names.Rows(); i++ {
 				// TODO: add configuration option
@@ -73,16 +82,10 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 			}
 			return nil
 		},
-		Body: fmt.Sprintf(`SELECT DISTINCT
-arrayJoin(arrayConcat(%s, %s, %s)) as key
-FROM %s
-WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)
-LIMIT 1000`,
-			attrKeys(colAttrs),
-			attrKeys(colResource),
-			attrKeys(colScope),
-			table, opts.Start, opts.End,
-		),
+
+		Type:   "LabelNames",
+		Signal: "logs",
+		Table:  table,
 	}); err != nil {
 		return nil, err
 	}
@@ -119,8 +122,8 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelValues",
 		trace.WithAttributes(
 			attribute.String("chstorage.label", labelName),
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -160,13 +163,24 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			labelName = key
 		}
 	}
-	var out []string
-	values := new(proto.ColStr).Array()
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Result: proto.Results{
-			{Name: "values", Data: values},
-		},
+
+	var (
+		out    []string
+		values = new(proto.ColStr).Array()
+	)
+	if err := q.do(ctx, selectQuery{
+		Query: chsql.Select(table, chsql.ResultColumn{
+			Name: "values",
+			Expr: chsql.Array(
+				attrSelector(colAttrs, labelName),
+				attrSelector(colResource, labelName),
+				attrSelector(colScope, labelName),
+			),
+			Data: values,
+		}).
+			Distinct(true).
+			Where(chsql.InTimeRange("timestamp", opts.Start, opts.End)).
+			Limit(1000),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < values.Rows(); i++ {
 				for _, v := range values.Row(i) {
@@ -178,19 +192,10 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			}
 			return nil
 		},
-		Body: fmt.Sprintf(`SELECT DISTINCT
-array(
-	%s,
-	%s,
-	%s
-) as values
-FROM %s
-WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d) LIMIT 1000`,
-			attrSelector(colAttrs, labelName),
-			attrSelector(colResource, labelName),
-			attrSelector(colScope, labelName),
-			table, opts.Start, opts.End,
-		),
+
+		Type:   "LabelValues",
+		Signal: "logs",
+		Table:  table,
 	}); err != nil {
 		return nil, err
 	}
@@ -202,9 +207,12 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 }
 
 func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[string]string, rerr error) {
+	table := q.tables.LogAttrs
+
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.getLabelMapping",
 		trace.WithAttributes(
 			attribute.StringSlice("chstorage.labels", labels),
+			attribute.String("chstorage.table", table),
 		),
 	)
 	defer func() {
@@ -214,15 +222,21 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 		span.End()
 	}()
 
-	out := make(map[string]string, len(labels))
-	attrs := newLogAttrMapColumns()
-	var inputData proto.ColStr
+	var (
+		out   = make(map[string]string, len(labels))
+		attrs = newLogAttrMapColumns()
+
+		inputData proto.ColStr
+	)
 	for _, label := range labels {
 		inputData.Append(label)
 	}
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Result: attrs.Result(),
+	if err := q.do(ctx, selectQuery{
+		Query: chsql.Select(q.tables.LogAttrs, attrs.ChsqlResult()...).
+			Where(chsql.In(
+				chsql.Ident("name"),
+				chsql.Ident("labels"),
+			)),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			attrs.ForEach(func(name, key string) {
 				out[name] = key
@@ -233,7 +247,10 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 		ExternalData: []proto.InputColumn{
 			{Name: "name", Data: &inputData},
 		},
-		Body: fmt.Sprintf(`SELECT name, key FROM %[1]s WHERE name IN labels`, q.tables.LogAttrs),
+
+		Type:   "getLabelMapping",
+		Signal: "logs",
+		Table:  table,
 	}); err != nil {
 		return nil, err
 	}
@@ -241,20 +258,20 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 	return out, nil
 }
 
-func (q *Querier) getMaterializedLabelColumn(labelName string) (column string, isColumn bool) {
+func (q *Querier) getMaterializedLabelColumn(labelName string) (column chsql.Expr, isColumn bool) {
 	switch labelName {
 	case logstorage.LabelTraceID:
-		return "hex(trace_id)", true
+		return chsql.Hex(chsql.Ident("trace_id")), true
 	case logstorage.LabelSpanID:
-		return "hex(span_id)", true
+		return chsql.Hex(chsql.Ident("span_id")), true
 	case logstorage.LabelSeverity:
-		return "severity_number", true
+		return chsql.Ident("severity_text"), true
 	case logstorage.LabelBody:
-		return "body", true
+		return chsql.Ident("body"), true
 	case logstorage.LabelServiceName, logstorage.LabelServiceNamespace, logstorage.LabelServiceInstanceID:
-		return labelName, true
+		return chsql.Ident(labelName), true
 	default:
-		return "", false
+		return column, false
 	}
 }
 
@@ -264,8 +281,8 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.Series",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.range.start", opts.Start.UnixNano()),
-			attribute.Int64("chstorage.range.end", opts.Start.UnixNano()),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			xattribute.StringerSlice("chstorage.selectors", opts.Selectors),
 
 			attribute.String("chstorage.table", table),
@@ -278,45 +295,47 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 		span.End()
 	}()
 
-	var materializedStringMap strings.Builder
+	var materializedMap chsql.Expr
 	{
-		materializedStringMap.WriteString("map(")
-		for i, label := range []string{
-			logstorage.LabelTraceID,
-			logstorage.LabelSpanID,
-			logstorage.LabelSeverity,
-			logstorage.LabelBody,
-			logstorage.LabelServiceName,
-			logstorage.LabelServiceInstanceID,
-			logstorage.LabelServiceNamespace,
-		} {
-			if i != 0 {
-				materializedStringMap.WriteByte(',')
+		var (
+			materialized = []string{
+				logstorage.LabelTraceID,
+				logstorage.LabelSpanID,
+				logstorage.LabelSeverity,
+				logstorage.LabelBody,
+				logstorage.LabelServiceName,
+				logstorage.LabelServiceInstanceID,
+				logstorage.LabelServiceNamespace,
 			}
-			materializedStringMap.WriteString(singleQuoted(label))
-			materializedStringMap.WriteByte(',')
+			entries = make([]chsql.Expr, 0, len(materialized)*2)
+		)
+		for _, label := range materialized {
 			expr, _ := q.getMaterializedLabelColumn(label)
-			if label == logstorage.LabelSeverity {
-				expr = fmt.Sprintf("toString(%s)", expr)
-			}
-			materializedStringMap.WriteString(expr)
+			entries = append(entries, chsql.String(label), expr)
 		}
-		materializedStringMap.WriteByte(')')
+
+		materializedMap = chsql.Map(entries...)
 	}
 
-	var query strings.Builder
-	fmt.Fprintf(&query, `SELECT DISTINCT
-	mapConcat(%s, %s, %s, %s) as series
-FROM %s
-WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestamp) <= %d)`,
-		&materializedStringMap,
-		attrStringMap(colAttrs),
-		attrStringMap(colResource),
-		attrStringMap(colScope),
-		table,
-		opts.Start.UnixNano(), opts.End.UnixNano(),
-	)
+	var (
+		series = proto.NewMap(
+			new(proto.ColStr),
+			new(proto.ColStr),
+		)
 
+		query = chsql.Select(table, chsql.ResultColumn{
+			Name: "series",
+			Expr: chsql.MapConcat(
+				materializedMap,
+				attrStringMap(colAttrs),
+				attrStringMap(colResource),
+				attrStringMap(colScope),
+			),
+			Data: series,
+		}).Where(
+			chsql.InTimeRange("timestamp", opts.Start, opts.End),
+		)
+	)
 	if sels := opts.Selectors; len(sels) > 0 {
 		// Gather all labels for mapping fetch.
 		labels := make([]string, 0, len(sels))
@@ -330,31 +349,25 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 			return nil, errors.Wrap(err, "get label mapping")
 		}
 
-		query.WriteString(" AND (false")
+		sets := make([]chsql.Expr, 0, len(sels))
 		for _, sel := range sels {
-			query.WriteString(" OR (true")
-			if err := writeLabelMatchers(&query, sel.Matchers, mapping); err != nil {
-				return nil, err
+			selExprs := make([]chsql.Expr, 0, len(sel.Matchers))
+			for _, m := range sel.Matchers {
+				expr, err := q.logQLLabelMatcher(m, mapping)
+				if err != nil {
+					return result, err
+				}
+				selExprs = append(selExprs, expr)
 			}
-			query.WriteByte(')')
+			sets = append(sets, chsql.JoinAnd(selExprs...))
 		}
-		query.WriteByte(')')
+		if len(sets) > 0 {
+			query.Where(chsql.JoinOr(sets...))
+		}
 	}
-	query.WriteString(" LIMIT 1000")
 
-	var (
-		queryStartTime = time.Now()
-
-		series = proto.NewMap(
-			new(proto.ColStr),
-			new(proto.ColStr),
-		)
-	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Body: query.String(),
-		Result: proto.Results{
-			{Name: "series", Data: series},
-		},
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < series.Rows(); i++ {
 				s := make(map[string]string)
@@ -365,17 +378,14 @@ WHERE (toUnixTimestamp64Nano(timestamp) >= %d AND toUnixTimestamp64Nano(timestam
 			}
 			return nil
 		},
+
+		Type:   "Series",
+		Signal: "logs",
+		Table:  table,
 	}); err != nil {
 		return nil, err
 	}
 
-	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-		metric.WithAttributes(
-			attribute.String("chstorage.query_type", "Series"),
-			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.signal", "logs"),
-		),
-	)
 	return result, nil
 }
 

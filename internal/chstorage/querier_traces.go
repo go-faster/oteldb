@@ -2,21 +2,16 @@ package chstorage
 
 import (
 	"context"
-	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
-	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/traceql"
@@ -32,10 +27,10 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.SearchTags",
 		trace.WithAttributes(
 			xattribute.StringMap("chstorage.tags", tags),
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
-			attribute.Int64("chstorage.min_duration", int64(opts.MinDuration)),
-			attribute.Int64("chstorage.max_duration", int64(opts.MaxDuration)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
+			xattribute.Duration("chstorage.min_duration", opts.MinDuration),
+			xattribute.Duration("chstorage.max_duration", opts.MaxDuration),
 
 			attribute.String("chstorage.table", table),
 		),
@@ -47,48 +42,69 @@ func (q *Querier) SearchTags(ctx context.Context, tags map[string]string, opts t
 		span.End()
 	}()
 
-	var query strings.Builder
-	fmt.Fprintf(&query, `SELECT %s FROM %#[2]q WHERE trace_id IN (
-		SELECT DISTINCT trace_id FROM %#[2]q WHERE true
-	`, newSpanColumns().columns().All(), table)
+	subquery := chsql.Select(table, chsql.Column("trace_id", nil)).
+		Distinct(true).
+		Where(traceInTimeRange(opts.Start, opts.End))
+	{
+		durationExpr := chsql.Ident("duration_ns")
+		if d := opts.MinDuration; d != 0 {
+			subquery.Where(
+				chsql.Gte(durationExpr, chsql.Integer(int64(d))),
+			)
+		}
+		if d := opts.MaxDuration; d != 0 {
+			subquery.Where(
+				chsql.Lte(durationExpr, chsql.Integer(int64(d))),
+			)
+		}
+	}
 	for key, value := range tags {
 		if key == "name" {
-			fmt.Fprintf(&query, " AND name = %s", singleQuoted(value))
+			subquery.Where(
+				chsql.ColumnEq("name", value),
+			)
 			continue
 		}
 
-		query.WriteString(" AND (")
-		for i, column := range []string{
+		exprs := make([]chsql.Expr, 0, 3)
+		for _, column := range []string{
 			colAttrs,
 			colResource,
 			colScope,
 		} {
-			if i != 0 {
-				query.WriteString(" OR ")
-			}
-			fmt.Fprintf(&query,
-				`%s = %s`,
-				attrSelector(column, key), singleQuoted(value),
-			)
-			query.WriteByte('\n')
+			exprs = append(exprs, chsql.Eq(
+				attrSelector(column, key),
+				chsql.String(value),
+			))
 		}
-		query.WriteByte(')')
+		subquery.Where(chsql.JoinOr(exprs...))
 	}
-	query.WriteByte(')')
 
-	if s := opts.Start; s != 0 {
-		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
+	var (
+		c     = newSpanColumns()
+		query = chsql.Select(table, c.ChsqlResult()...).
+			Where(chsql.In(
+				chsql.Ident("trace_id"),
+				chsql.SubQuery(subquery),
+			))
+
+		r []tracestorage.Span
+	)
+	if err := q.do(ctx, selectQuery{
+		Query: query,
+		OnResult: func(ctx context.Context, block proto.Block) (err error) {
+			r, err = c.ReadRowsTo(r)
+			return err
+		},
+
+		Type:   "SearchTags",
+		Signal: "traces",
+		Table:  table,
+	}); err != nil {
+		return nil, err
 	}
-	if e := opts.End; e != 0 {
-		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
-	}
-	if d := opts.MinDuration; d != 0 {
-		fmt.Fprintf(&query, " AND (toUnixTimestamp64Nano(end) - toUnixTimestamp64Nano(start)) >= %d", d)
-	}
-	if d := opts.MaxDuration; d != 0 {
-		fmt.Fprintf(&query, " AND (toUnixTimestamp64Nano(end) - toUnixTimestamp64Nano(start)) <= %d", d)
-	}
-	return q.querySpans(ctx, query.String())
+
+	return iterators.Slice(r), nil
 }
 
 // TagNames returns all available tag names.
@@ -98,8 +114,8 @@ func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOption
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TagNames",
 		trace.WithAttributes(
 			attribute.Stringer("chstorage.scope", opts.Scope),
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -110,30 +126,39 @@ func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOption
 		span.End()
 	}()
 
-	var query strings.Builder
-	fmt.Fprintf(&query, "SELECT DISTINCT name, scope FROM %#q", table)
+	var (
+		name  = new(proto.ColStr).LowCardinality()
+		scope proto.ColEnum8
+
+		query = chsql.Select(table,
+			chsql.Column("name", name),
+			chsql.Column("scope", &scope),
+		).
+			Distinct(true)
+	)
 	switch scope := opts.Scope; scope {
 	case traceql.ScopeNone:
 	case traceql.ScopeResource:
 		// Tempo merges scope attributes and resource attributes.
-		fmt.Fprintf(&query, " WHERE scope IN (%d, %d)", scope, traceql.ScopeInstrumentation)
+		query.Where(
+			chsql.In(
+				chsql.Ident("scope"),
+				chsql.TupleValues(int(scope), int(traceql.ScopeInstrumentation)),
+			),
+		)
 	case traceql.ScopeSpan:
-		fmt.Fprintf(&query, " WHERE scope = %d", scope)
+		query.Where(
+			chsql.In(
+				chsql.Ident("scope"),
+				chsql.Integer(int(scope)),
+			),
+		)
 	default:
 		return r, errors.Errorf("unexpected scope %v", scope)
 	}
 
-	var (
-		name  = new(proto.ColStr).LowCardinality()
-		scope proto.ColEnum8
-	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: proto.Results{
-			{Name: "name", Data: name},
-			{Name: "scope", Data: proto.Wrap(&scope, scopeTypeDDL)},
-		},
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < name.Rows(); i++ {
 				r = append(r, tracestorage.TagName{
@@ -143,9 +168,14 @@ func (q *Querier) TagNames(ctx context.Context, opts tracestorage.TagNamesOption
 			}
 			return nil
 		},
+
+		Type:   "TagNames",
+		Signal: "traces",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, err
 	}
+
 	return r, nil
 }
 
@@ -154,8 +184,8 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TagValues",
 		trace.WithAttributes(
 			attribute.Stringer("chstorage.tag", tag),
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			attribute.Stringer("traceql.autocomplete", opts.AutocompleteQuery),
 		),
 	)
@@ -213,8 +243,8 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.spanNames",
 		trace.WithAttributes(
 			attribute.Stringer("chstorage.tag", tag),
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -225,27 +255,17 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 		span.End()
 	}()
 
-	var query strings.Builder
-	fmt.Fprintf(&query, `SELECT DISTINCT name FROM %#q WHERE true`, table)
-	if s := opts.Start; s != 0 {
-		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
-	}
-	if e := opts.End; e != 0 {
-		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
-	}
-
 	var (
-		tagName = tag.String()
+		name  = new(proto.ColStr).LowCardinality()
+		query = chsql.Select(table, chsql.Column("name", name)).
+			Distinct(true).
+			Where(traceInTimeRange(opts.Start, opts.End))
 
-		name = new(proto.ColStr).LowCardinality()
-		r    []tracestorage.Tag
+		tagName = tag.String()
+		r       []tracestorage.Tag
 	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: proto.Results{
-			{Name: "name", Data: name},
-		},
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < name.Rows(); i++ {
 				r = append(r, tracestorage.Tag{
@@ -257,8 +277,12 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 			}
 			return nil
 		},
+
+		Type:   "SpanNames",
+		Signal: "traces",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, err
 	}
 
 	return iterators.Slice(r), nil
@@ -269,9 +293,10 @@ func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, op
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.attributeValues",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
 			attribute.Stringer("chstorage.tag", tag),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -283,32 +308,41 @@ func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, op
 	}()
 
 	// FIXME(tdakkota): respect time range parameters.
-	var query strings.Builder
-	fmt.Fprintf(&query, `SELECT DISTINCT value, value_type FROM %#q WHERE name = %s`, table, singleQuoted(tag.Name))
-	switch scope := tag.Scope; scope {
-	case traceql.ScopeNone:
-	case traceql.ScopeResource:
-		// Tempo merges scope attributes and resource attributes.
-		fmt.Fprintf(&query, " AND scope IN (%d, %d)", scope, traceql.ScopeInstrumentation)
-	case traceql.ScopeSpan:
-		fmt.Fprintf(&query, " AND scope = %d", scope)
-	default:
-		return nil, errors.Errorf("unexpected scope %v", scope)
-	}
-
 	var (
 		value     proto.ColStr
 		valueType proto.ColEnum8
 
-		r []tracestorage.Tag
+		query = chsql.Select(table,
+			chsql.Column("value", &value),
+			chsql.Column("value_type", proto.Wrap(&valueType, valueTypeDDL)),
+		).
+			Distinct(true).
+			Where(chsql.ColumnEq("name", tag.Name))
 	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query.String(),
-		Result: proto.Results{
-			{Name: "value", Data: &value},
-			{Name: "value_type", Data: proto.Wrap(&valueType, valueTypeDDL)},
-		},
+	switch scope := tag.Scope; scope {
+	case traceql.ScopeNone:
+	case traceql.ScopeResource:
+		// Tempo merges scope attributes and resource attributes.
+		query.Where(
+			chsql.In(
+				chsql.Ident("scope"),
+				chsql.TupleValues(int(scope), int(traceql.ScopeInstrumentation)),
+			),
+		)
+	case traceql.ScopeSpan:
+		query.Where(
+			chsql.In(
+				chsql.Ident("scope"),
+				chsql.Integer(int(scope)),
+			),
+		)
+	default:
+		return nil, errors.Errorf("unexpected scope %v", scope)
+	}
+
+	var r []tracestorage.Tag
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			return value.ForEach(func(i int, value string) error {
 				typ := pcommon.ValueType(valueType.Row(i))
@@ -321,8 +355,12 @@ func (q *Querier) attributeValues(ctx context.Context, tag traceql.Attribute, op
 				return nil
 			})
 		},
+
+		Type:   "attributeValues",
+		Signal: "traces",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "query")
+		return nil, err
 	}
 
 	return iterators.Slice(r), nil
@@ -335,8 +373,9 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 	ctx, span := q.tracer.Start(ctx, "chstorage.traces.TraceByID",
 		trace.WithAttributes(
 			attribute.String("chstorage.id_to_query", id.Hex()),
-			attribute.Int64("chstorage.range.start", int64(opts.Start)),
-			attribute.Int64("chstorage.range.end", int64(opts.End)),
+			xattribute.UnixNano("chstorage.range.start", opts.Start),
+			xattribute.UnixNano("chstorage.range.end", opts.End),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -347,27 +386,34 @@ func (q *Querier) TraceByID(ctx context.Context, id otelstorage.TraceID, opts tr
 		span.End()
 	}()
 
-	query := fmt.Sprintf("SELECT %s FROM %#q WHERE trace_id = unhex(%s)",
-		newSpanColumns().columns().All(), table, singleQuoted(id.Hex()),
+	var (
+		c     = newSpanColumns()
+		query = chsql.Select(table, c.ChsqlResult()...).
+			Where(
+				chsql.Eq(
+					chsql.Ident("trace_id"),
+					chsql.Unhex(chsql.String(id.Hex())),
+				),
+				traceInTimeRange(opts.Start, opts.End),
+			)
 	)
-	if s := opts.Start; s != 0 {
-		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(start) >= %d", s)
-	}
-	if e := opts.End; e != 0 {
-		query += fmt.Sprintf(" AND toUnixTimestamp64Nano(end) <= %d", e)
+
+	var r []tracestorage.Span
+	if err := q.do(ctx, selectQuery{
+		Query: query,
+		OnResult: func(ctx context.Context, block proto.Block) (err error) {
+			r, err = c.ReadRowsTo(r)
+			return err
+		},
+
+		Type:   "TraceByID",
+		Signal: "traces",
+		Table:  table,
+	}); err != nil {
+		return nil, err
 	}
 
-	queryStartTime := time.Now()
-	defer func() {
-		q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-			metric.WithAttributes(
-				attribute.String("chstorage.query_type", "TraceByID"),
-				attribute.String("chstorage.table", table),
-				attribute.String("chstorage.signal", "traces"),
-			),
-		)
-	}()
-	return q.querySpans(ctx, query)
+	return iterators.Slice(r), nil
 }
 
 var _ traceqlengine.Querier = (*Querier)(nil)
@@ -380,10 +426,10 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 		trace.WithAttributes(
 			attribute.Stringer("traceql.span_matcher_operation", params.Op),
 			xattribute.StringerSlice("traceql.matchers", params.Matchers),
-			attribute.Int64("traceql.range.start", int64(params.Start)),
-			attribute.Int64("traceql.range.end", int64(params.End)),
-			attribute.Int64("traceql.min_duration", int64(params.MinDuration)),
-			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
+			xattribute.UnixNano("traceql.range.start", params.Start),
+			xattribute.UnixNano("traceql.range.end", params.End),
+			xattribute.Duration("traceql.min_duration", params.MinDuration),
+			xattribute.Duration("traceql.max_duration", params.MaxDuration),
 			attribute.Int("traceql.limit", params.Limit),
 
 			attribute.String("chstorage.table", table),
@@ -397,32 +443,35 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 	}()
 
 	var (
-		queryStartTime = time.Now()
-		query          = q.buildSpansetsQuery(table, span, params)
-	)
-	iter, err := q.querySpans(ctx, query)
-	if err != nil {
-		return nil, errors.Wrap(err, "query traces")
-	}
-	defer func() {
-		_ = iter.Close()
-	}()
-	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
-		metric.WithAttributes(
-			attribute.String("chstorage.query_type", "SelectSpansets"),
-			attribute.String("chstorage.table", table),
-			attribute.String("chstorage.signal", "traces"),
-		),
-	)
+		c     = newSpanColumns()
+		query = chsql.Select(table, c.ChsqlResult()...).
+			Where(
+				chsql.In(
+					chsql.Ident("trace_id"),
+					chsql.SubQuery(q.buildSpansetsQuery(table, span, params)),
+				),
+			).
+			Order(chsql.Ident("start"), chsql.Asc)
 
-	var (
 		traces = map[otelstorage.TraceID][]tracestorage.Span{}
-		val    tracestorage.Span
 	)
-	for iter.Next(&val) {
-		traces[val.TraceID] = append(traces[val.TraceID], val)
-	}
-	if err := iter.Err(); err != nil {
+	if err := q.do(ctx, selectQuery{
+		Query: query,
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < c.traceID.Rows(); i++ {
+				span, err := c.Row(i)
+				if err != nil {
+					return err
+				}
+				traces[span.TraceID] = append(traces[span.TraceID], span)
+			}
+			return nil
+		},
+
+		Type:   "SelectSpansets",
+		Signal: "traces",
+		Table:  table,
+	}); err != nil {
 		return nil, err
 	}
 
@@ -445,113 +494,65 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 	return iterators.Slice(result), nil
 }
 
-func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params traceqlengine.SelectSpansetsParams) string {
-	var query strings.Builder
-
-	fmt.Fprintf(&query, `SELECT %s FROM %#[2]q WHERE trace_id IN (
-		SELECT DISTINCT trace_id FROM %#[2]q WHERE true
-	`, newSpanColumns().columns().All(), table)
-
+func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params traceqlengine.SelectSpansetsParams) *chsql.SelectQuery {
 	var (
-		dropped   int
-		writeNext = func() {
-			if params.Op == traceql.SpansetOpAnd {
-				query.WriteString("\nAND ")
-			} else {
-				query.WriteString("\nOR ")
-			}
-		}
+		dropped    int
+		matchExprs = make([]chsql.Expr, 0, len(params.Matchers))
 	)
 	for _, matcher := range params.Matchers {
 		if matcher.Op == 0 {
-			writeNext()
-
 			// Just query spans with this attribute.
-			attr := matcher.Attribute
-			query.WriteString("(\n")
-			for i, column := range getTraceQLAttributeColumns(attr) {
-				if i != 0 {
-					query.WriteString(" OR ")
-				}
-				fmt.Fprintf(&query,
-					`has(%s, %s)`,
-					attrKeys(column), singleQuoted(attr.Name),
-				)
-				query.WriteByte('\n')
+			var (
+				attr  = matcher.Attribute
+				exprs = make([]chsql.Expr, 0, 3)
+			)
+			for _, column := range getTraceQLAttributeColumns(attr) {
+				exprs = append(exprs, chsql.Has(
+					attrKeys(column),
+					chsql.String(attr.Name),
+				))
 			}
-			query.WriteString("\n)")
+			if len(exprs) > 0 {
+				matchExprs = append(matchExprs, chsql.JoinOr(exprs...))
+			}
+			continue
 		}
 
-		var cmp string
-		switch matcher.Op {
-		case traceql.OpEq:
-			cmp = "="
-		case traceql.OpNotEq:
-			cmp = "!="
-		case traceql.OpGt:
-			cmp = ">"
-		case traceql.OpGte:
-			cmp = ">="
-		case traceql.OpLt:
-			cmp = "<"
-		case traceql.OpLte:
-			cmp = "<="
-		case traceql.OpRe:
-			cmp = "REGEXP"
-		default:
+		op, ok := getTraceQLMatcherOp(matcher.Op)
+		if !ok {
 			// Unsupported for now.
 			dropped++
 			continue
 		}
 
-		var value, typeName string
-		switch s := matcher.Static; s.Type {
-		case traceql.TypeString:
-			value = s.Str
-			typeName = "String"
-		case traceql.TypeInt:
-			value = strconv.FormatInt(s.AsInt(), 10)
-			typeName = "Int64"
-		case traceql.TypeNumber:
-			value = strconv.FormatFloat(s.AsNumber(), 'f', -1, 64)
-			typeName = "Float64"
-		case traceql.TypeBool:
-			if s.AsBool() {
-				value = "true"
-			} else {
-				value = "false"
-			}
-			typeName = "Boolean"
-		case traceql.TypeDuration:
-			value = strconv.FormatInt(s.AsDuration().Nanoseconds(), 10)
-			typeName = "Int64"
-		case traceql.TypeSpanStatus:
-			value = strconv.Itoa(int(s.AsSpanStatus()))
-			typeName = "Int64"
-		case traceql.TypeSpanKind:
-			value = strconv.Itoa(int(s.AsSpanKind()))
-			typeName = "Int64"
-		default:
+		value, ok := getTraceQLLiteral(matcher.Static)
+		if !ok {
 			// Unsupported for now.
 			dropped++
 			continue
 		}
 
-		{
-			_ = typeName
-			// TODO(ernado): use it with "_types".
-		}
-
-		writeNext()
 		switch attr := matcher.Attribute; attr.Prop {
 		case traceql.SpanDuration:
-			fmt.Fprintf(&query, "duration_ns %s %s", cmp, value)
+			matchExprs = append(matchExprs, op(
+				chsql.Ident("duration_ns"),
+				value,
+			))
 		case traceql.SpanName:
-			fmt.Fprintf(&query, "name %s %s", cmp, singleQuoted(value))
+			matchExprs = append(matchExprs, op(
+				chsql.Ident("name"),
+				value,
+			))
 		case traceql.SpanStatus:
-			fmt.Fprintf(&query, "status_code %s %s", cmp, singleQuoted(value))
+			matchExprs = append(matchExprs, op(
+				chsql.Ident("status_code"),
+				value,
+			))
 		case traceql.SpanKind:
-			fmt.Fprintf(&query, "kind %s %s", cmp, singleQuoted(value))
+			matchExprs = append(matchExprs, op(
+				chsql.Ident("kind"),
+				value,
+			))
 		case traceql.SpanParent,
 			traceql.SpanChildCount,
 			traceql.RootSpanName,
@@ -559,43 +560,116 @@ func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params trace
 			traceql.TraceDuration:
 			// Unsupported yet.
 			dropped++
-			query.WriteString("true")
+			continue
 		default:
 			// SpanAttribute
-			query.WriteString("(\n")
 			switch attribute.Key(attr.Name) {
 			case semconv.ServiceNamespaceKey:
-				fmt.Fprintf(&query, "service_namespace %s %s", cmp, singleQuoted(value))
+				matchExprs = append(matchExprs, op(
+					chsql.Ident("service_namespace"),
+					value,
+				))
 			case semconv.ServiceNameKey:
-				fmt.Fprintf(&query, "service_name %s %s", cmp, singleQuoted(value))
+				matchExprs = append(matchExprs, op(
+					chsql.Ident("service_name"),
+					value,
+				))
 			case semconv.ServiceInstanceIDKey:
-				fmt.Fprintf(&query, "service_instance_id %s %s", cmp, singleQuoted(value))
+				matchExprs = append(matchExprs, op(
+					chsql.Ident("service_instance_id"),
+					value,
+				))
 			default:
-				for i, column := range getTraceQLAttributeColumns(attr) {
-					if i != 0 {
-						query.WriteString("\nOR ")
-					}
-					fmt.Fprintf(&query, "%s %s %s",
+				exprs := make([]chsql.Expr, 0, 3)
+				for _, column := range getTraceQLAttributeColumns(attr) {
+					exprs = append(exprs, op(
 						attrSelector(column, attr.Name),
-						cmp, singleQuoted(value),
-					)
+						chsql.ToString(value),
+					))
+				}
+				if len(exprs) > 0 {
+					matchExprs = append(matchExprs, chsql.JoinOr(exprs...))
 				}
 			}
-			query.WriteString("\n)")
 		}
-	}
-	query.WriteString("\n)")
-	if s := params.Start; s != 0 {
-		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(start) >= %d", s)
-	}
-	if e := params.End; e != 0 {
-		fmt.Fprintf(&query, " AND toUnixTimestamp64Nano(end) <= %d", e)
 	}
 	span.SetAttributes(
 		attribute.Int("chstorage.unsupported_span_matchers", dropped),
 		attribute.String("chstorage.table", table),
 	)
-	return query.String()
+
+	query := chsql.Select(table,
+		chsql.Column("trace_id", nil)).
+		Distinct(true).
+		Where(traceInTimeRange(params.Start, params.End))
+
+	if len(matchExprs) > 0 {
+		if params.Op == traceql.SpansetOpAnd {
+			query.Where(matchExprs...)
+		} else {
+			query.Where(chsql.JoinOr(matchExprs...))
+		}
+	}
+	return query
+}
+
+func traceInTimeRange(start, end time.Time) chsql.Expr {
+	exprs := make([]chsql.Expr, 0, 2)
+	if !start.IsZero() {
+		exprs = append(exprs, chsql.Gte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("start")),
+			chsql.UnixNano(start),
+		))
+	}
+	if !end.IsZero() {
+		exprs = append(exprs, chsql.Lte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("end")),
+			chsql.UnixNano(end),
+		))
+	}
+	return chsql.JoinAnd(exprs...)
+}
+
+func getTraceQLLiteral(s traceql.Static) (value chsql.Expr, _ bool) {
+	switch s.Type {
+	case traceql.TypeString:
+		return chsql.String(s.AsString()), true
+	case traceql.TypeInt:
+		return chsql.Integer(s.AsInt()), true
+	case traceql.TypeNumber:
+		return chsql.Float(s.AsNumber()), true
+	case traceql.TypeBool:
+		return chsql.Bool(s.AsBool()), true
+	case traceql.TypeDuration:
+		return chsql.Integer(s.AsDuration().Nanoseconds()), true
+	case traceql.TypeSpanStatus:
+		return chsql.Integer(int(s.AsSpanStatus())), true
+	case traceql.TypeSpanKind:
+		return chsql.Integer(int(s.AsSpanKind())), true
+	default:
+		return value, false
+	}
+}
+
+func getTraceQLMatcherOp(op traceql.BinaryOp) (func(l, r chsql.Expr) chsql.Expr, bool) {
+	switch op {
+	case traceql.OpEq:
+		return chsql.Eq, true
+	case traceql.OpNotEq:
+		return chsql.NotEq, true
+	case traceql.OpGt:
+		return chsql.Gt, true
+	case traceql.OpGte:
+		return chsql.Gte, true
+	case traceql.OpLt:
+		return chsql.Lt, true
+	case traceql.OpLte:
+		return chsql.Lte, true
+	case traceql.OpRe:
+		return chsql.Match, true
+	default:
+		return nil, false
+	}
 }
 
 func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
@@ -621,22 +695,4 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
 	default:
 		return nil
 	}
-}
-
-func (q *Querier) querySpans(ctx context.Context, query string) (iterators.Iterator[tracestorage.Span], error) {
-	c := newSpanColumns()
-
-	var r []tracestorage.Span
-	if err := q.ch.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   query,
-		Result: c.Result(),
-		OnResult: func(ctx context.Context, block proto.Block) (err error) {
-			r, err = c.ReadRowsTo(r)
-			return err
-		},
-	}); err != nil {
-		return nil, errors.Wrap(err, "query")
-	}
-	return iterators.Slice(r), nil
 }

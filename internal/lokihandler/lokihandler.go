@@ -19,7 +19,6 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/lokiapi"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // LokiAPI implements lokiapi.Handler.
@@ -66,8 +65,8 @@ func (h *LokiAPI) LabelValues(ctx context.Context, params lokiapi.LabelValuesPar
 	}
 
 	iter, err := h.q.LabelValues(ctx, params.Name, logstorage.LabelsOptions{
-		Start: otelstorage.NewTimestampFromTime(start),
-		End:   otelstorage.NewTimestampFromTime(end),
+		Start: start,
+		End:   end,
 	})
 	if err != nil {
 		return nil, executionErr(err, "get label values")
@@ -114,8 +113,8 @@ func (h *LokiAPI) Labels(ctx context.Context, params lokiapi.LabelsParams) (*lok
 	}
 
 	names, err := h.q.LabelNames(ctx, logstorage.LabelsOptions{
-		Start: otelstorage.NewTimestampFromTime(start),
-		End:   otelstorage.NewTimestampFromTime(end),
+		Start: start,
+		End:   end,
 	})
 	if err != nil {
 		return nil, executionErr(err, "get label names")
@@ -161,7 +160,7 @@ func (h *LokiAPI) Query(ctx context.Context, params lokiapi.QueryParams) (*lokia
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
-		return nil, executionErr(err, "evaluate instant query")
+		return nil, executionErr(err, "instant query")
 	}
 
 	return &lokiapi.QueryResponse{
@@ -204,7 +203,7 @@ func (h *LokiAPI) QueryRange(ctx context.Context, params lokiapi.QueryRangeParam
 		Limit:     params.Limit.Or(100),
 	})
 	if err != nil {
-		return nil, executionErr(err, "evaluate range query")
+		return nil, executionErr(err, "range query")
 	}
 
 	return &lokiapi.QueryResponse{
@@ -265,7 +264,7 @@ func (h *LokiAPI) eval(ctx context.Context, query string, params logqlengine.Eva
 	}
 	r, err = q.Eval(ctx, params)
 	if err != nil {
-		return r, errors.Wrap(err, "eval")
+		return r, err
 	}
 	return r, nil
 }

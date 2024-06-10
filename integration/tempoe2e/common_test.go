@@ -556,7 +556,7 @@ func runTest(
 						if _, ok := inMemory[metadata.TraceID]; ok {
 							continue
 						}
-						t.Logf("[%q]: unexpexted", metadata.TraceID)
+						t.Logf("[%q]: unexpected", metadata.TraceID)
 					}
 					for _, metadata := range r2.Traces {
 						if _, ok := got[metadata.TraceID]; ok {

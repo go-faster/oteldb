@@ -11,10 +11,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
 	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 // Engine is a TraceQL evaluation engine.
@@ -52,8 +52,8 @@ type EvalParams struct {
 	MinDuration time.Duration
 	MaxDuration time.Duration
 	// Time range to search, optional.
-	Start otelstorage.Timestamp
-	End   otelstorage.Timestamp
+	Start time.Time
+	End   time.Time
 	Limit int
 }
 
@@ -62,11 +62,11 @@ func (e *Engine) Eval(ctx context.Context, query string, params EvalParams) (tra
 	ctx, span := e.tracer.Start(ctx, "Eval",
 		trace.WithAttributes(
 			attribute.String("traceql.query", query),
-			attribute.Int64("traceql.min_duration", int64(params.MinDuration)),
-			attribute.Int64("traceql.max_duration", int64(params.MaxDuration)),
-			attribute.Int64("traceql.start", int64(params.Start)),
-			attribute.Int64("traceql.end", int64(params.End)),
-			attribute.Int("traceql.limit", params.Limit),
+			xattribute.Duration("traceql.params.min_duration", params.MinDuration),
+			xattribute.Duration("traceql.params.max_duration", params.MaxDuration),
+			xattribute.UnixNano("traceql.params.start", params.Start),
+			xattribute.UnixNano("traceql.params.end", params.End),
+			attribute.Int("traceql.params.limit", params.Limit),
 		),
 	)
 	defer func() {
@@ -211,16 +211,16 @@ func (e *Engine) evalExpr(ctx context.Context, expr traceql.Expr, params EvalPar
 }
 
 type timeRange struct {
-	start, end otelstorage.Timestamp
+	start, end time.Time
 	min, max   time.Duration
 }
 
 func (r timeRange) within(start, end time.Time) bool {
-	if r.start != 0 && start.Before(r.start.AsTime()) {
+	if !r.start.IsZero() && start.Before(r.start) {
 		return false
 	}
 
-	if r.end != 0 && end.After(r.end.AsTime()) {
+	if !r.end.IsZero() && end.After(r.end) {
 		return false
 	}
 

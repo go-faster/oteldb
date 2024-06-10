@@ -1,4 +1,4 @@
-package chstorage
+package chsql
 
 import (
 	"strings"

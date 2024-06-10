@@ -6,6 +6,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
@@ -172,9 +173,10 @@ func (c *logColumns) columns() Columns {
 	)
 }
 
-func (c *logColumns) Input() proto.Input    { return c.columns().Input() }
-func (c *logColumns) Result() proto.Results { return c.columns().Result() }
-func (c *logColumns) Reset()                { c.columns().Reset() }
+func (c *logColumns) Input() proto.Input                { return c.columns().Input() }
+func (c *logColumns) Result() proto.Results             { return c.columns().Result() }
+func (c *logColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
+func (c *logColumns) Reset()                            { c.columns().Reset() }
 
 type logAttrMapColumns struct {
 	name proto.ColStr // http_method
@@ -192,9 +194,10 @@ func (c *logAttrMapColumns) columns() Columns {
 	}
 }
 
-func (c *logAttrMapColumns) Input() proto.Input    { return c.columns().Input() }
-func (c *logAttrMapColumns) Result() proto.Results { return c.columns().Result() }
-func (c *logAttrMapColumns) Reset()                { c.columns().Reset() }
+func (c *logAttrMapColumns) Input() proto.Input                { return c.columns().Input() }
+func (c *logAttrMapColumns) Result() proto.Results             { return c.columns().Result() }
+func (c *logAttrMapColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
+func (c *logAttrMapColumns) Reset()                            { c.columns().Reset() }
 
 func (c *logAttrMapColumns) ForEach(f func(name, key string)) {
 	for i := 0; i < c.name.Rows(); i++ {

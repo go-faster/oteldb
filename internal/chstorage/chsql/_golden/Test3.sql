@@ -1,0 +1,1 @@
+SELECT (timestamp) FROM spans ORDER BY timestamp DESC

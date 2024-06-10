@@ -1,11 +1,18 @@
 package chstorage
 
 import (
+	"context"
+	"time"
+
+	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -64,4 +71,40 @@ func NewQuerier(c ClickhouseClient, opts QuerierOptions) (*Querier, error) {
 
 		clickhouseRequestHistogram: clickhouseRequestHistogram,
 	}, nil
+}
+
+type selectQuery struct {
+	Query    *chsql.SelectQuery
+	OnResult chsql.OnResult
+
+	ExternalData  []proto.InputColumn
+	ExternalTable string
+
+	Type   string
+	Signal string
+	Table  string
+}
+
+func (q *Querier) do(ctx context.Context, s selectQuery) error {
+	query, err := s.Query.Prepare(s.OnResult)
+	if err != nil {
+		return errors.Wrap(err, "build query")
+	}
+	query.ExternalData = s.ExternalData
+	query.ExternalTable = s.ExternalTable
+	query.Logger = zctx.From(ctx).Named("ch")
+
+	queryStartTime := time.Now()
+	if err := q.ch.Do(ctx, query); err != nil {
+		return errors.Wrapf(err, "execute %s (signal: %s)", s.Type, s.Signal)
+	}
+
+	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+		metric.WithAttributes(
+			attribute.String("chstorage.query_type", s.Type),
+			attribute.String("chstorage.table", s.Table),
+			attribute.String("chstorage.signal", s.Signal),
+		),
+	)
+	return nil
 }

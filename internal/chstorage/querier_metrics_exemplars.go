@@ -3,11 +3,8 @@ package chstorage
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
-	"strings"
 	"time"
 
-	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/prometheus/prometheus/model/exemplar"
@@ -16,7 +13,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
 var _ storage.ExemplarQueryable = (*Querier)(nil)
@@ -29,6 +28,7 @@ func (q *Querier) ExemplarQuerier(ctx context.Context) (storage.ExemplarQuerier,
 		ch:              q.ch,
 		tables:          q.tables,
 		getLabelMapping: q.getMetricsLabelMapping,
+		do:              q.do,
 
 		tracer: q.tracer,
 	}, nil
@@ -40,6 +40,7 @@ type exemplarQuerier struct {
 	ch              ClickhouseClient
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
+	do              func(ctx context.Context, s selectQuery) error
 
 	tracer trace.Tracer
 }
@@ -52,8 +53,9 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 
 	ctx, span := q.tracer.Start(q.ctx, "chstorage.exemplars.Select",
 		trace.WithAttributes(
-			attribute.Int64("chstorage.range.start", start.UnixNano()),
-			attribute.Int64("chstorage.range.end", end.UnixNano()),
+			xattribute.UnixNano("chstorage.range.start", start),
+			xattribute.UnixNano("chstorage.range.end", end),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -69,22 +71,27 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	query, err := q.buildQuery(table, start, end, matcherSets, mapping)
+	c := newExemplarColumns()
+	query, err := q.buildQuery(
+		table, c.ChsqlResult(),
+		start, end,
+		matcherSets,
+		mapping,
+	)
 	if err != nil {
 		return nil, err
 	}
+
 	type groupedExemplars struct {
 		labels    map[string]string
 		exemplars []exemplar.Exemplar
 	}
 	var (
-		c   = newExemplarColumns()
 		set = map[seriesKey]*groupedExemplars{}
 		lb  labels.ScratchBuilder
 	)
-	if err := q.ch.Do(ctx, ch.Query{
-		Body:   query,
-		Result: c.Result(),
+	if err := q.do(ctx, selectQuery{
+		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				var (
@@ -130,8 +137,12 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 			}
 			return nil
 		},
+
+		Type:   "QueryExemplars",
+		Signal: "metrics",
+		Table:  table,
 	}); err != nil {
-		return nil, errors.Wrap(err, "do query")
+		return nil, err
 	}
 
 	result := make([]exemplar.QueryResult, 0, len(set))
@@ -160,66 +171,41 @@ func (q *exemplarQuerier) extractParams(startMs, endMs int64, matcherSets [][]*l
 }
 
 func (q *exemplarQuerier) buildQuery(
-	table string,
+	table string, columns []chsql.ResultColumn,
 	start, end time.Time,
 	matcherSets [][]*labels.Matcher,
 	mapping map[string]string,
-) (string, error) {
-	var query strings.Builder
-	fmt.Fprintf(&query, `SELECT %[1]s FROM %#[2]q WHERE true
-		`, newExemplarColumns().Columns().All(), table)
-	if !start.IsZero() {
-		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) >= %d\n", start.UnixNano())
-	}
-	if !end.IsZero() {
-		fmt.Fprintf(&query, "\tAND toUnixTimestamp64Nano(timestamp) <= %d\n", end.UnixNano())
-	}
-	query.WriteString("AND ( false\n")
-	for i, set := range matcherSets {
-		fmt.Fprintf(&query, "OR ( true -- matcher set %d\n", i)
+) (*chsql.SelectQuery, error) {
+	query := chsql.Select(table, columns...).
+		Where(chsql.InTimeRange("timestamp", start, end))
+
+	sets := make([]chsql.Expr, 0, len(matcherSets))
+	for _, set := range matcherSets {
+		matchers := make([]chsql.Expr, 0, len(set))
 		for _, m := range set {
-			switch m.Type {
-			case labels.MatchEqual, labels.MatchRegexp:
-				query.WriteString(" AND ")
-			case labels.MatchNotEqual, labels.MatchNotRegexp:
-				query.WriteString(" AND NOT ")
-			default:
-				return "", errors.Errorf("unexpected type %q", m.Type)
+			selectors := []chsql.Expr{
+				chsql.Ident("name"),
+			}
+			if name := m.Name; name != labels.MetricName {
+				if mapped, ok := mapping[name]; ok {
+					name = mapped
+				}
+				selectors = []chsql.Expr{
+					attrSelector(colAttrs, name),
+					attrSelector(colResource, name),
+				}
 			}
 
-			{
-				selectors := []string{
-					"name",
-				}
-				if name := m.Name; name != labels.MetricName {
-					if mapped, ok := mapping[name]; ok {
-						name = mapped
-					}
-					selectors = []string{
-						fmt.Sprintf("JSONExtractString(attributes, %s)", singleQuoted(name)),
-						fmt.Sprintf("JSONExtractString(resource, %s)", singleQuoted(name)),
-					}
-				}
-				query.WriteString("(\n")
-				for i, sel := range selectors {
-					if i != 0 {
-						query.WriteString(" OR ")
-					}
-					// Note: predicate negated above.
-					switch m.Type {
-					case labels.MatchEqual, labels.MatchNotEqual:
-						fmt.Fprintf(&query, "%s = %s\n", sel, singleQuoted(m.Value))
-					case labels.MatchRegexp, labels.MatchNotRegexp:
-						fmt.Fprintf(&query, "%s REGEXP %s\n", sel, singleQuoted(m.Value))
-					default:
-						return "", errors.Errorf("unexpected type %q", m.Type)
-					}
-				}
-				query.WriteString(")\n")
+			matcher, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+			if err != nil {
+				return query, err
 			}
+			matchers = append(matchers, matcher)
 		}
-		query.WriteString(")\n")
+		sets = append(sets, chsql.JoinAnd(matchers...))
 	}
-	query.WriteString(") ORDER BY timestamp")
-	return query.String(), nil
+
+	return query.
+		Where(chsql.JoinOr(sets...)).
+		Order(chsql.Ident("timestamp"), chsql.Asc), nil
 }

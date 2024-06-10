@@ -28,7 +28,7 @@ type SelectSpansetsParams struct {
 	Matchers []traceql.SpanMatcher
 
 	// Time range to query, optional.
-	Start, End otelstorage.Timestamp
+	Start, End time.Time
 
 	// Trace duration, querier should ignore field, if it is zero.
 	// TODO(tdakkota): probably, we can put it as SpanMatcher with traceDuration attribute

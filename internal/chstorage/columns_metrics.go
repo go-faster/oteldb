@@ -2,6 +2,8 @@ package chstorage
 
 import (
 	"github.com/ClickHouse/ch-go/proto"
+
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 )
 
 type pointColumns struct {
@@ -41,8 +43,9 @@ func (c *pointColumns) Columns() Columns {
 	}, c.attributes.Columns(), c.resource.Columns())
 }
 
-func (c *pointColumns) Input() proto.Input    { return c.Columns().Input() }
-func (c *pointColumns) Result() proto.Results { return c.Columns().Result() }
+func (c *pointColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *pointColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *pointColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
 
 type expHistogramColumns struct {
 	name           *proto.ColLowCardinality[string]
@@ -103,8 +106,9 @@ func (c *expHistogramColumns) Columns() Columns {
 	}, c.attributes.Columns(), c.resource.Columns())
 }
 
-func (c *expHistogramColumns) Input() proto.Input    { return c.Columns().Input() }
-func (c *expHistogramColumns) Result() proto.Results { return c.Columns().Result() }
+func (c *expHistogramColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *expHistogramColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *expHistogramColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
 
 type labelsColumns struct {
 	name           *proto.ColLowCardinality[string]
@@ -129,8 +133,9 @@ func (c *labelsColumns) Columns() Columns {
 		{Name: "value_normalized", Data: &c.valueNormalized},
 	}
 }
-func (c *labelsColumns) Input() proto.Input    { return c.Columns().Input() }
-func (c *labelsColumns) Result() proto.Results { return c.Columns().Result() }
+func (c *labelsColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *labelsColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *labelsColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
 
 type exemplarColumns struct {
 	name           *proto.ColLowCardinality[string]
@@ -172,5 +177,6 @@ func (c *exemplarColumns) Columns() Columns {
 	}, c.attributes.Columns(), c.resource.Columns())
 }
 
-func (c *exemplarColumns) Input() proto.Input    { return c.Columns().Input() }
-func (c *exemplarColumns) Result() proto.Results { return c.Columns().Result() }
+func (c *exemplarColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *exemplarColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *exemplarColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-faster/oteldb/internal/iterators"
 	"github.com/go-faster/oteldb/internal/logql"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // Querier is a logs storage query interface.
@@ -25,11 +24,11 @@ type LabelsOptions struct {
 	// Start defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	Start otelstorage.Timestamp
+	Start time.Time
 	// End defines time range for search.
 	//
 	// Querier ignores parameter, if it is zero.
-	End otelstorage.Timestamp
+	End time.Time
 }
 
 // SeriesOptions defines options for [Querier.Series] method.

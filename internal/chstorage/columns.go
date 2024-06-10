@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/ClickHouse/ch-go/proto"
+
+	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 )
 
 // Column is a column with name and data that can be used in INSERT or SELECT query.
@@ -57,6 +59,19 @@ func (c Columns) Result() proto.Results {
 	for _, col := range c {
 		cols = append(cols, proto.ResultColumn{
 			Name: col.Name,
+			Data: col.Data,
+		})
+	}
+	return cols
+}
+
+// ChsqlResult returns columns for using in SELECT query.
+func (c Columns) ChsqlResult() []chsql.ResultColumn {
+	cols := make([]chsql.ResultColumn, 0, len(c))
+	for _, col := range c {
+		cols = append(cols, chsql.ResultColumn{
+			Name: col.Name,
+			Expr: chsql.Ident(col.Name),
 			Data: col.Data,
 		})
 	}

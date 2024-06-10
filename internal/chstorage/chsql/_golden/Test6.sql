@@ -1,0 +1,1 @@
+SELECT (column AS name) FROM spans
