@@ -54,11 +54,11 @@ func NewPromAPI(
 // GetLabelValues implements getLabelValues operation.
 // GET /api/v1/label/{label}/values
 func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelValuesParams) (*promapi.LabelValuesResponse, error) {
-	mint, err := parseOptTimestamp(params.Start, MinTime)
+	mint, err := parseOptTimestamp(params.Start, promapi.MinTime)
 	if err != nil {
 		return nil, validationErr("parse start", err)
 	}
-	maxt, err := parseOptTimestamp(params.End, MaxTime)
+	maxt, err := parseOptTimestamp(params.End, promapi.MaxTime)
 	if err != nil {
 		return nil, validationErr("parse end", err)
 	}
@@ -121,11 +121,11 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 //
 // GET /api/v1/labels
 func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams) (*promapi.LabelsResponse, error) {
-	mint, err := parseOptTimestamp(params.Start, MinTime)
+	mint, err := parseOptTimestamp(params.Start, promapi.MinTime)
 	if err != nil {
 		return nil, validationErr("parse start", err)
 	}
-	maxt, err := parseOptTimestamp(params.End, MaxTime)
+	maxt, err := parseOptTimestamp(params.End, promapi.MaxTime)
 	if err != nil {
 		return nil, validationErr("parse end", err)
 	}
@@ -383,11 +383,11 @@ func (h *PromAPI) GetRules(context.Context, promapi.GetRulesParams) (*promapi.Ru
 //
 // GET /api/v1/series
 func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams) (*promapi.SeriesResponse, error) {
-	mint, err := parseOptTimestamp(params.Start, MinTime)
+	mint, err := parseOptTimestamp(params.Start, promapi.MinTime)
 	if err != nil {
 		return nil, validationErr("parse start", err)
 	}
-	maxt, err := parseOptTimestamp(params.End, MaxTime)
+	maxt, err := parseOptTimestamp(params.End, promapi.MaxTime)
 	if err != nil {
 		return nil, validationErr("parse end", err)
 	}
