@@ -439,6 +439,7 @@ func (p *promQuerier) buildQuery(
 			}
 			selectors = []chsql.Expr{
 				attrSelector(colAttrs, name),
+				attrSelector(colScope, name),
 				attrSelector(colResource, name),
 			}
 		}

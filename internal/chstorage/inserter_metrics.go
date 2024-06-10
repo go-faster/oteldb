@@ -138,7 +138,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 	return nil
 }
 
-func (b *metricsBatch) addPoints(name string, res lazyAttributes, slice pmetric.NumberDataPointSlice) error {
+func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice pmetric.NumberDataPointSlice) error {
 	c := b.points
 
 	for i := 0; i < slice.Len(); i++ {
@@ -171,6 +171,7 @@ func (b *metricsBatch) addPoints(name string, res lazyAttributes, slice pmetric.
 				Name:       name,
 				Timestamp:  ts,
 				Attributes: attrs,
+				Scope:      scope,
 				Resource:   res,
 			},
 			point.Exemplars(),
@@ -184,12 +185,13 @@ func (b *metricsBatch) addPoints(name string, res lazyAttributes, slice pmetric.
 		c.value.Append(val)
 		c.flags.Append(uint8(flags))
 		c.attributes.Append(attrs.Attributes())
+		c.scope.Append(scope.Attributes())
 		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
 
-func (b *metricsBatch) addHistogramPoints(name string, res lazyAttributes, slice pmetric.HistogramDataPointSlice) error {
+func (b *metricsBatch) addHistogramPoints(name string, res, scope lazyAttributes, slice pmetric.HistogramDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
 		point := slice.At(i)
 		ts := point.Timestamp().AsTime()
@@ -221,6 +223,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res lazyAttributes, slice
 			Timestamp:  ts,
 			Flags:      flags,
 			Attributes: attrs,
+			Scope:      scope,
 			Resource:   res,
 		}
 		if sum.Set {
@@ -358,7 +361,7 @@ type histogramBucketBounds struct {
 	bucketKey [2]string
 }
 
-func (b *metricsBatch) addExpHistogramPoints(name string, res lazyAttributes, slice pmetric.ExponentialHistogramDataPointSlice) error {
+func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttributes, slice pmetric.ExponentialHistogramDataPointSlice) error {
 	var (
 		c          = b.expHistograms
 		mapBuckets = func(b pmetric.ExponentialHistogramDataPointBuckets) (offset int32, counts []uint64) {
@@ -391,6 +394,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res lazyAttributes, sl
 				Name:       name,
 				Timestamp:  ts,
 				Attributes: attrs,
+				Scope:      scope,
 				Resource:   res,
 			},
 			point.Exemplars(),
@@ -412,12 +416,13 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res lazyAttributes, sl
 		c.negativeBucketCounts.Append(negativeBucketCounts)
 		c.flags.Append(uint8(flags))
 		c.attributes.Append(attrs.Attributes())
+		c.scope.Append(scope.Attributes())
 		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
 
-func (b *metricsBatch) addSummaryPoints(name string, res lazyAttributes, slice pmetric.SummaryDataPointSlice) error {
+func (b *metricsBatch) addSummaryPoints(name string, res, scope lazyAttributes, slice pmetric.SummaryDataPointSlice) error {
 	for i := 0; i < slice.Len(); i++ {
 		var (
 			point = slice.At(i)
@@ -446,6 +451,7 @@ func (b *metricsBatch) addSummaryPoints(name string, res lazyAttributes, slice p
 			Timestamp:  ts,
 			Flags:      flags,
 			Attributes: attrs,
+			Scope:      scope,
 			Resource:   res,
 		}
 		b.addMappedSample(ms, name+"_count", summaryCount, float64(count))
@@ -469,6 +475,7 @@ type mappedSeries struct {
 	Timestamp  time.Time
 	Flags      pmetric.DataPointFlags
 	Attributes lazyAttributes
+	Scope      lazyAttributes
 	Resource   lazyAttributes
 }
 
@@ -488,13 +495,15 @@ func (b *metricsBatch) addMappedSample(
 	c.value.Append(val)
 	c.flags.Append(uint8(series.Flags))
 	c.attributes.Append(series.Attributes.Attributes(bucketKey...))
-	c.resource.Append(series.Resource.Attributes(bucketKey...))
+	c.scope.Append(series.Scope.Attributes())
+	c.resource.Append(series.Resource.Attributes())
 }
 
 type exemplarSeries struct {
 	Name       string
 	Timestamp  time.Time
 	Attributes lazyAttributes
+	Scope      lazyAttributes
 	Resource   lazyAttributes
 }
 
@@ -535,6 +544,7 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	c.traceID.Append(e.TraceID())
 
 	c.attributes.Append(p.Attributes.Attributes(bucketKey...))
+	c.scope.Append(p.Scope.Attributes())
 	c.resource.Append(p.Resource.Attributes())
 	return nil
 }
@@ -558,17 +568,25 @@ func (b *metricsBatch) addLabels(attrs lazyAttributes) {
 func (b *metricsBatch) mapMetrics(metrics pmetric.Metrics) error {
 	resMetrics := metrics.ResourceMetrics()
 	for i := 0; i < resMetrics.Len(); i++ {
-		resMetric := resMetrics.At(i)
-		resAttrs := lazyAttributes{
-			orig: resMetric.Resource().Attributes(),
-		}
+		var (
+			resMetric = resMetrics.At(i)
+			resAttrs  = lazyAttributes{
+				orig: resMetric.Resource().Attributes(),
+			}
+		)
 		b.addLabels(resAttrs)
 
 		scopeMetrics := resMetric.ScopeMetrics()
 		for i := 0; i < scopeMetrics.Len(); i++ {
-			scopeLog := scopeMetrics.At(i)
+			var (
+				scopeMetric = scopeMetrics.At(i)
+				scopeAttrs  = lazyAttributes{
+					orig: scopeMetric.Scope().Attributes(),
+				}
+			)
+			b.addLabels(scopeAttrs)
 
-			records := scopeLog.Metrics()
+			records := scopeMetric.Metrics()
 			for i := 0; i < records.Len(); i++ {
 				record := records.At(i)
 				name := record.Name()
@@ -576,27 +594,27 @@ func (b *metricsBatch) mapMetrics(metrics pmetric.Metrics) error {
 				switch typ := record.Type(); typ {
 				case pmetric.MetricTypeGauge:
 					gauge := record.Gauge()
-					if err := b.addPoints(name, resAttrs, gauge.DataPoints()); err != nil {
+					if err := b.addPoints(name, resAttrs, scopeAttrs, gauge.DataPoints()); err != nil {
 						return err
 					}
 				case pmetric.MetricTypeSum:
 					sum := record.Sum()
-					if err := b.addPoints(name, resAttrs, sum.DataPoints()); err != nil {
+					if err := b.addPoints(name, resAttrs, scopeAttrs, sum.DataPoints()); err != nil {
 						return err
 					}
 				case pmetric.MetricTypeHistogram:
 					hist := record.Histogram()
-					if err := b.addHistogramPoints(name, resAttrs, hist.DataPoints()); err != nil {
+					if err := b.addHistogramPoints(name, resAttrs, scopeAttrs, hist.DataPoints()); err != nil {
 						return err
 					}
 				case pmetric.MetricTypeExponentialHistogram:
 					hist := record.ExponentialHistogram()
-					if err := b.addExpHistogramPoints(name, resAttrs, hist.DataPoints()); err != nil {
+					if err := b.addExpHistogramPoints(name, resAttrs, scopeAttrs, hist.DataPoints()); err != nil {
 						return err
 					}
 				case pmetric.MetricTypeSummary:
 					summary := record.Summary()
-					if err := b.addSummaryPoints(name, resAttrs, summary.DataPoints()); err != nil {
+					if err := b.addSummaryPoints(name, resAttrs, scopeAttrs, summary.DataPoints()); err != nil {
 						return err
 					}
 				default:
