@@ -16,6 +16,7 @@ type pointColumns struct {
 
 	flags      proto.ColUInt8
 	attributes *Attributes
+	scope      *Attributes
 	resource   *Attributes
 }
 
@@ -26,21 +27,27 @@ func newPointColumns() *pointColumns {
 		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
 		attributes: NewAttributes(colAttrs),
+		scope:      NewAttributes(colScope),
 		resource:   NewAttributes(colResource),
 	}
 }
 
 func (c *pointColumns) Columns() Columns {
-	return MergeColumns(Columns{
-		{Name: "name", Data: c.name},
-		{Name: "name_normalized", Data: c.nameNormalized},
-		{Name: "timestamp", Data: c.timestamp},
+	return MergeColumns(
+		Columns{
+			{Name: "name", Data: c.name},
+			{Name: "name_normalized", Data: c.nameNormalized},
+			{Name: "timestamp", Data: c.timestamp},
 
-		{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
-		{Name: "value", Data: &c.value},
+			{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
+			{Name: "value", Data: &c.value},
 
-		{Name: "flags", Data: &c.flags},
-	}, c.attributes.Columns(), c.resource.Columns())
+			{Name: "flags", Data: &c.flags},
+		},
+		c.attributes.Columns(),
+		c.scope.Columns(),
+		c.resource.Columns(),
+	)
 }
 
 func (c *pointColumns) Input() proto.Input                { return c.Columns().Input() }
@@ -65,6 +72,7 @@ type expHistogramColumns struct {
 
 	flags      proto.ColUInt8
 	attributes *Attributes
+	scope      *Attributes
 	resource   *Attributes
 }
 
@@ -81,29 +89,35 @@ func newExpHistogramColumns() *expHistogramColumns {
 		negativeBucketCounts: new(proto.ColUInt64).Array(),
 
 		attributes: NewAttributes(colAttrs),
+		scope:      NewAttributes(colScope),
 		resource:   NewAttributes(colResource),
 	}
 }
 
 func (c *expHistogramColumns) Columns() Columns {
-	return MergeColumns(Columns{
-		{Name: "name", Data: c.name},
-		{Name: "name_normalized", Data: c.nameNormalized},
-		{Name: "timestamp", Data: c.timestamp},
+	return MergeColumns(
+		Columns{
+			{Name: "name", Data: c.name},
+			{Name: "name_normalized", Data: c.nameNormalized},
+			{Name: "timestamp", Data: c.timestamp},
 
-		{Name: "exp_histogram_count", Data: &c.count},
-		{Name: "exp_histogram_sum", Data: c.sum},
-		{Name: "exp_histogram_min", Data: c.min},
-		{Name: "exp_histogram_max", Data: c.max},
-		{Name: "exp_histogram_scale", Data: &c.scale},
-		{Name: "exp_histogram_zerocount", Data: &c.zerocount},
-		{Name: "exp_histogram_positive_offset", Data: &c.positiveOffset},
-		{Name: "exp_histogram_positive_bucket_counts", Data: c.positiveBucketCounts},
-		{Name: "exp_histogram_negative_offset", Data: &c.negativeOffset},
-		{Name: "exp_histogram_negative_bucket_counts", Data: c.negativeBucketCounts},
+			{Name: "exp_histogram_count", Data: &c.count},
+			{Name: "exp_histogram_sum", Data: c.sum},
+			{Name: "exp_histogram_min", Data: c.min},
+			{Name: "exp_histogram_max", Data: c.max},
+			{Name: "exp_histogram_scale", Data: &c.scale},
+			{Name: "exp_histogram_zerocount", Data: &c.zerocount},
+			{Name: "exp_histogram_positive_offset", Data: &c.positiveOffset},
+			{Name: "exp_histogram_positive_bucket_counts", Data: c.positiveBucketCounts},
+			{Name: "exp_histogram_negative_offset", Data: &c.negativeOffset},
+			{Name: "exp_histogram_negative_bucket_counts", Data: c.negativeBucketCounts},
 
-		{Name: "flags", Data: &c.flags},
-	}, c.attributes.Columns(), c.resource.Columns())
+			{Name: "flags", Data: &c.flags},
+		},
+		c.attributes.Columns(),
+		c.scope.Columns(),
+		c.resource.Columns(),
+	)
 }
 
 func (c *expHistogramColumns) Input() proto.Input                { return c.Columns().Input() }
@@ -149,6 +163,7 @@ type exemplarColumns struct {
 	traceID            proto.ColFixedStr16
 
 	attributes *Attributes
+	scope      *Attributes
 	resource   *Attributes
 }
 
@@ -159,22 +174,28 @@ func newExemplarColumns() *exemplarColumns {
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		attributes:        NewAttributes(colAttrs),
+		scope:             NewAttributes(colScope),
 		resource:          NewAttributes(colResource),
 	}
 }
 
 func (c *exemplarColumns) Columns() Columns {
-	return MergeColumns(Columns{
-		{Name: "name", Data: c.name},
-		{Name: "name_normalized", Data: c.nameNormalized},
-		{Name: "timestamp", Data: c.timestamp},
+	return MergeColumns(
+		Columns{
+			{Name: "name", Data: c.name},
+			{Name: "name_normalized", Data: c.nameNormalized},
+			{Name: "timestamp", Data: c.timestamp},
 
-		{Name: "filtered_attributes", Data: &c.filteredAttributes},
-		{Name: "exemplar_timestamp", Data: c.exemplarTimestamp},
-		{Name: "value", Data: &c.value},
-		{Name: "span_id", Data: &c.spanID},
-		{Name: "trace_id", Data: &c.traceID},
-	}, c.attributes.Columns(), c.resource.Columns())
+			{Name: "filtered_attributes", Data: &c.filteredAttributes},
+			{Name: "exemplar_timestamp", Data: c.exemplarTimestamp},
+			{Name: "value", Data: &c.value},
+			{Name: "span_id", Data: &c.spanID},
+			{Name: "trace_id", Data: &c.traceID},
+		},
+		c.attributes.Columns(),
+		c.scope.Columns(),
+		c.resource.Columns(),
+	)
 }
 
 func (c *exemplarColumns) Input() proto.Input                { return c.Columns().Input() }
