@@ -28,6 +28,8 @@ var _ storage.Queryable = (*Querier)(nil)
 // Querier returns a new Querier on the storage.
 func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 	var minTime, maxTime time.Time
+
+	// In case if Prometheus passes min/max time, keep it zero.
 	if mint != promapi.MinTime.UnixMilli() {
 		minTime = time.UnixMilli(mint)
 	}
@@ -62,6 +64,32 @@ type promQuerier struct {
 }
 
 var _ storage.Querier = (*promQuerier)(nil)
+
+func (p *promQuerier) getStart(t time.Time) time.Time {
+	switch {
+	case t.IsZero():
+		return p.mint
+	case p.mint.IsZero():
+		return t
+	case t.After(p.mint):
+		return t
+	default:
+		return p.mint
+	}
+}
+
+func (p *promQuerier) getEnd(t time.Time) time.Time {
+	switch {
+	case t.IsZero():
+		return p.maxt
+	case p.maxt.IsZero():
+		return t
+	case t.Before(p.maxt):
+		return t
+	default:
+		return p.maxt
+	}
+}
 
 // LabelValues returns all potential values for a label name.
 // It is not safe to use the strings beyond the lifetime of the querier.
@@ -159,6 +187,9 @@ func (p *promQuerier) getLabelValues(ctx context.Context, labelName string, matc
 	}); err != nil {
 		return nil, err
 	}
+	span.AddEvent("values_fetched", trace.WithAttributes(
+		attribute.Int("chstorage.total_values", len(result)),
+	))
 
 	return result, nil
 }
@@ -202,7 +233,8 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 				Expr: columnExpr,
 				Data: &value,
 			}).
-				Distinct(true)
+				Distinct(true).
+				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
 		)
 		for _, m := range matchers {
 			selectors := []chsql.Expr{
@@ -224,19 +256,6 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 				return nil, err
 			}
 			query.Where(expr)
-		}
-		{
-			columnExpr := chsql.ToUnixTimestamp64Nano(chsql.Ident("timestamp"))
-			if t := p.mint; !(t.IsZero() || t == promapi.MinTime) {
-				query.Where(
-					chsql.Gte(columnExpr, chsql.UnixNano(t)),
-				)
-			}
-			if t := p.maxt; !(t.IsZero() || t == promapi.MaxTime) {
-				query.Where(
-					chsql.Lte(columnExpr, chsql.UnixNano(t)),
-				)
-			}
 		}
 
 		if err := p.do(ctx, selectQuery{
@@ -443,7 +462,7 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	}); err != nil {
 		return nil, err
 	}
-	span.AddEvent("labels_fetched", trace.WithAttributes(
+	span.AddEvent("mapping_fetched", trace.WithAttributes(
 		xattribute.StringMap("chstorage.mapping", out),
 	))
 
@@ -574,15 +593,12 @@ func (p *promQuerier) extractHints(
 	hints *storage.SelectHints,
 	matchers []*labels.Matcher,
 ) (_ *storage.SelectHints, start, end time.Time, mlabels []string) {
-	start = p.mint
-	end = p.maxt
-
 	if hints != nil {
-		if t := time.UnixMilli(hints.Start); t.After(start) {
-			start = t
+		if ms := hints.Start; ms != promapi.MinTime.UnixMilli() {
+			start = p.getStart(time.UnixMilli(ms))
 		}
-		if t := time.UnixMilli(hints.End); t.Before(end) {
-			end = t
+		if ms := hints.End; ms != promapi.MaxTime.UnixMilli() {
+			end = p.getEnd(time.UnixMilli(ms))
 		}
 	} else {
 		hints = new(storage.SelectHints)
