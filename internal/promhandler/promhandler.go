@@ -3,6 +3,7 @@ package promhandler
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -97,7 +98,7 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 	}
 
 	var (
-		data     = map[string]struct{}{}
+		dedup    = map[string]struct{}{}
 		warnings annotations.Annotations
 	)
 	for _, set := range sets {
@@ -107,15 +108,17 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 		}
 
 		for _, val := range vals {
-			data[val] = struct{}{}
+			dedup[val] = struct{}{}
 		}
 		warnings = warnings.Merge(w)
 	}
+	data := maps.Keys(dedup)
+	slices.Sort(data)
 
 	return &promapi.LabelValuesResponse{
 		Status:   "success",
 		Warnings: warnings.AsStrings("", 0),
-		Data:     maps.Keys(data),
+		Data:     data,
 	}, nil
 }
 
@@ -164,7 +167,7 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 	}
 
 	var (
-		data     = map[string]struct{}{}
+		dedup    = map[string]struct{}{}
 		warnings annotations.Annotations
 	)
 	for _, set := range sets {
@@ -174,15 +177,17 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 		}
 
 		for _, val := range vals {
-			data[val] = struct{}{}
+			dedup[val] = struct{}{}
 		}
 		warnings = warnings.Merge(w)
 	}
+	data := maps.Keys(dedup)
+	slices.Sort(data)
 
 	return &promapi.LabelsResponse{
 		Status:   "success",
 		Warnings: warnings.AsStrings("", 0),
-		Data:     maps.Keys(data),
+		Data:     data,
 	}, nil
 }
 
