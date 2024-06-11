@@ -100,6 +100,8 @@ func (p *promQuerier) LabelValues(ctx context.Context, labelName string, matcher
 		trace.WithAttributes(
 			attribute.String("chstorage.label", labelName),
 			xattribute.StringerSlice("chstorage.matchers", matchers),
+			xattribute.UnixNano("chstorage.mint", p.mint),
+			xattribute.UnixNano("chstorage.maxt", p.maxt),
 		),
 	)
 	defer func() {
@@ -277,6 +279,10 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 		}); err != nil {
 			return nil, err
 		}
+		span.AddEvent("values_fetched", trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+			attribute.Int("chstorage.total_values", len(result)),
+		))
 
 		return result, nil
 	}
@@ -292,7 +298,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 
 		result, err := query(ctx, table)
 		if err != nil {
-			return errors.Wrap(err, "query points series")
+			return errors.Wrapf(err, "query label values from %q", table)
 		}
 		points = result
 
@@ -304,7 +310,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 
 		result, err := query(ctx, table)
 		if err != nil {
-			return errors.Wrap(err, "query exponential histogram series")
+			return errors.Wrapf(err, "query label values from %q", table)
 		}
 		expHists = result
 
@@ -325,12 +331,11 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 // If matchers are specified the returned result set is reduced
 // to label names of metrics matching the matchers.
 func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
-	table := p.tables.Labels
-
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelNames",
 		trace.WithAttributes(
 			xattribute.StringerSlice("chstorage.matchers", matchers),
-			attribute.String("chstorage.table", table),
+			xattribute.UnixNano("chstorage.mint", p.mint),
+			xattribute.UnixNano("chstorage.maxt", p.maxt),
 		),
 	)
 	defer func() {
@@ -477,6 +482,10 @@ func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*lab
 		}); err != nil {
 			return nil, err
 		}
+		span.AddEvent("labels_fetched", trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+			attribute.Int("chstorage.total_values", len(result)),
+		))
 
 		return result, nil
 	}

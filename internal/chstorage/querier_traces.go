@@ -245,6 +245,7 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 			attribute.Stringer("chstorage.tag", tag),
 			xattribute.UnixNano("chstorage.range.start", opts.Start),
 			xattribute.UnixNano("chstorage.range.end", opts.End),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -487,8 +488,8 @@ func (q *Querier) SelectSpansets(ctx context.Context, params traceqlengine.Selec
 		})
 	}
 	span.AddEvent("spans_fetched", trace.WithAttributes(
-		attribute.Int("chstorage.queried_spans", spansCount),
-		attribute.Int("chstorage.queried_traces", len(result)),
+		attribute.Int("chstorage.total_spans", spansCount),
+		attribute.Int("chstorage.total_traces", len(result)),
 	))
 
 	return iterators.Slice(result), nil
