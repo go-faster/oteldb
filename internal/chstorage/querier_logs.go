@@ -25,7 +25,7 @@ var (
 )
 
 // LabelNames implements logstorage.Querier.
-func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions) (_ []string, rerr error) {
+func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions) (result []string, rerr error) {
 	table := q.tables.Logs
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelNames",
@@ -38,12 +38,16 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			span.AddEvent("names_fetched", trace.WithAttributes(
+				attribute.Int("chstorage.total_names", len(result)),
+			))
 		}
 		span.End()
 	}()
 
 	var (
-		names proto.ColStr
+		name  proto.ColStr
 		dedup = map[string]struct{}{
 			// Add materialized labels.
 			logstorage.LabelTraceID:           {},
@@ -58,7 +62,7 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 	if err := q.do(ctx, selectQuery{
 		Query: chsql.Select(table,
 			chsql.ResultColumn{
-				Name: "names",
+				Name: "name",
 				Expr: chsql.ArrayJoin(
 					chsql.ArrayConcat(
 						attrKeys(colAttrs),
@@ -66,19 +70,17 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 						attrKeys(colScope),
 					),
 				),
-				Data: &names,
+				Data: &name,
 			},
 		).
 			Distinct(true).
-			Where(
-				chsql.InTimeRange("timestamp", opts.Start, opts.End),
-			).
+			Where(chsql.InTimeRange("timestamp", opts.Start, opts.End)).
 			Limit(1000),
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < names.Rows(); i++ {
+			for i := 0; i < name.Rows(); i++ {
 				// TODO: add configuration option
-				name := otelstorage.KeyToLabel(names.Row(i))
-				dedup[name] = struct{}{}
+				label := otelstorage.KeyToLabel(name.Row(i))
+				dedup[label] = struct{}{}
 			}
 			return nil
 		},
@@ -91,10 +93,10 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 	}
 
 	// Deduplicate.
-	out := maps.Keys(dedup)
-	slices.Sort(out)
+	result = maps.Keys(dedup)
+	slices.Sort(result)
 
-	return out, nil
+	return result, nil
 }
 
 type labelStaticIterator struct {
@@ -116,7 +118,7 @@ func (l *labelStaticIterator) Err() error   { return nil }
 func (l *labelStaticIterator) Close() error { return nil }
 
 // LabelValues implements logstorage.Querier.
-func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logstorage.LabelsOptions) (_ iterators.Iterator[logstorage.Label], rerr error) {
+func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logstorage.LabelsOptions) (riter iterators.Iterator[logstorage.Label], rerr error) {
 	table := q.tables.Logs
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.logs.LabelValues",
@@ -134,75 +136,69 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		span.End()
 	}()
 
+	var values []string
 	switch labelName {
 	case logstorage.LabelBody, logstorage.LabelSpanID, logstorage.LabelTraceID:
-		return &labelStaticIterator{
-			name:   labelName,
-			values: nil,
-		}, nil
 	case logstorage.LabelSeverity:
-		return &labelStaticIterator{
-			name: labelName,
-			values: []string{
-				plog.SeverityNumberUnspecified.String(),
-				plog.SeverityNumberTrace.String(),
-				plog.SeverityNumberDebug.String(),
-				plog.SeverityNumberInfo.String(),
-				plog.SeverityNumberWarn.String(),
-				plog.SeverityNumberError.String(),
-				plog.SeverityNumberFatal.String(),
-			},
-		}, nil
-	}
-	{
-		mapping, err := q.getLabelMapping(ctx, []string{labelName})
-		if err != nil {
-			return nil, errors.Wrap(err, "get label mapping")
+		values = []string{
+			plog.SeverityNumberUnspecified.String(),
+			plog.SeverityNumberTrace.String(),
+			plog.SeverityNumberDebug.String(),
+			plog.SeverityNumberInfo.String(),
+			plog.SeverityNumberWarn.String(),
+			plog.SeverityNumberError.String(),
+			plog.SeverityNumberFatal.String(),
 		}
-		if key, ok := mapping[labelName]; ok {
-			labelName = key
-		}
-	}
-
-	var (
-		out    []string
-		values = new(proto.ColStr).Array()
-	)
-	if err := q.do(ctx, selectQuery{
-		Query: chsql.Select(table, chsql.ResultColumn{
-			Name: "values",
-			Expr: chsql.Array(
-				attrSelector(colAttrs, labelName),
-				attrSelector(colResource, labelName),
-				attrSelector(colScope, labelName),
-			),
-			Data: values,
-		}).
-			Distinct(true).
-			Where(chsql.InTimeRange("timestamp", opts.Start, opts.End)).
-			Limit(1000),
-		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < values.Rows(); i++ {
-				for _, v := range values.Row(i) {
-					if v == "" {
-						continue
-					}
-					out = append(out, v)
-				}
+		slices.Sort(values)
+	default:
+		{
+			mapping, err := q.getLabelMapping(ctx, []string{labelName})
+			if err != nil {
+				return nil, errors.Wrap(err, "get label mapping")
 			}
-			return nil
-		},
+			if key, ok := mapping[labelName]; ok {
+				labelName = key
+			}
+		}
 
-		Type:   "LabelValues",
-		Signal: "logs",
-		Table:  table,
-	}); err != nil {
-		return nil, err
+		var value proto.ColStr
+		if err := q.do(ctx, selectQuery{
+			Query: chsql.Select(table, chsql.ResultColumn{
+				Name: "value",
+				Expr: chsql.ArrayJoin(chsql.Array(
+					attrSelector(colAttrs, labelName),
+					attrSelector(colResource, labelName),
+					attrSelector(colScope, labelName),
+				)),
+				Data: &value,
+			}).
+				Distinct(true).
+				Where(chsql.InTimeRange("timestamp", opts.Start, opts.End)).
+				Order(chsql.Ident("value"), chsql.Asc).
+				Limit(1000),
+			OnResult: func(ctx context.Context, block proto.Block) error {
+				for i := 0; i < value.Rows(); i++ {
+					if v := value.Row(i); v != "" {
+						values = append(values, v)
+					}
+				}
+				return nil
+			},
+
+			Type:   "LabelValues",
+			Signal: "logs",
+			Table:  table,
+		}); err != nil {
+			return nil, err
+		}
 	}
 
+	span.AddEvent("values_fetched", trace.WithAttributes(
+		attribute.Int("chstorage.total_values", len(values)),
+	))
 	return &labelStaticIterator{
 		name:   labelName,
-		values: out,
+		values: values,
 	}, nil
 }
 
