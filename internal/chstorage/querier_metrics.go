@@ -322,6 +322,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 
 	points = append(points, expHists...)
 	slices.Sort(points)
+	// Remove duplicates.
 	points = slices.Clip(points)
 
 	return points, nil
@@ -389,7 +390,7 @@ func (p *promQuerier) getLabelNames(ctx context.Context) (result []string, rerr 
 		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < value.Rows(); i++ {
-				result = append(result, otelstorage.KeyToLabel(value.Row(i)))
+				result = append(result, value.Row(i))
 			}
 			return nil
 		},
@@ -526,6 +527,7 @@ func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*lab
 	points = append(points, labels.MetricName)
 	points = append(points, expHists...)
 	slices.Sort(points)
+	// Remove duplicates.
 	points = slices.Clip(points)
 
 	return points, nil
