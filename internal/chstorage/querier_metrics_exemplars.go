@@ -15,6 +15,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/xattribute"
 )
 
@@ -156,10 +157,10 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 }
 
 func (q *exemplarQuerier) extractParams(startMs, endMs int64, matcherSets [][]*labels.Matcher) (start, end time.Time, mlabels []string) {
-	if startMs >= 0 {
+	if startMs != promapi.MinTime.UnixMilli() {
 		start = time.UnixMilli(startMs)
 	}
-	if endMs >= 0 {
+	if endMs != promapi.MaxTime.UnixMilli() {
 		end = time.UnixMilli(endMs)
 	}
 	for _, set := range matcherSets {
