@@ -13,6 +13,8 @@ import (
 	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/util/annotations"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/promapi"
@@ -67,9 +69,9 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 		return nil, validationErr("parse match", err)
 	}
 
-	q, err := h.store.Querier(mint.UnixMilli(), maxt.UnixMilli())
+	q, err := h.querier(ctx, mint, maxt)
 	if err != nil {
-		return nil, executionErr("get querier", err)
+		return nil, err
 	}
 	defer func() {
 		_ = q.Close()
@@ -134,9 +136,9 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 		return nil, validationErr("parse match", err)
 	}
 
-	q, err := h.store.Querier(mint.UnixMilli(), maxt.UnixMilli())
+	q, err := h.querier(ctx, mint, maxt)
 	if err != nil {
-		return nil, executionErr("get querier", err)
+		return nil, err
 	}
 	defer func() {
 		_ = q.Close()
@@ -319,7 +321,7 @@ func (h *PromAPI) GetQueryExemplars(ctx context.Context, params promapi.GetQuery
 
 	q, err := h.exemplars.ExemplarQuerier(ctx)
 	if err != nil {
-		return nil, executionErr("get querier", err)
+		return nil, executionErr("get exemplar querier", err)
 	}
 	queryResults, err := q.Select(start.UnixMilli(), end.UnixMilli(), matcherSets...)
 	if err != nil {
@@ -400,9 +402,9 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 		return nil, validationErr("validate match", err)
 	}
 
-	q, err := h.store.Querier(mint.UnixMilli(), maxt.UnixMilli())
+	q, err := h.querier(ctx, mint, maxt)
 	if err != nil {
-		return nil, executionErr("get querier", err)
+		return nil, err
 	}
 	defer func() {
 		_ = q.Close()
@@ -458,6 +460,18 @@ func (h *PromAPI) PostSeries(ctx context.Context, req *promapi.SeriesForm) (*pro
 		End:   req.End,
 		Match: req.Match,
 	})
+}
+
+func (h *PromAPI) querier(ctx context.Context, mint, maxt time.Time) (storage.Querier, error) {
+	q, err := h.store.Querier(mint.UnixMilli(), maxt.UnixMilli())
+	if err != nil {
+		return nil, executionErr("get querier", err)
+	}
+	trace.SpanFromContext(ctx).AddEvent("querier_created", trace.WithAttributes(
+		attribute.Int64("promapi.mint", mint.UnixMilli()),
+		attribute.Int64("promapi.maxt", maxt.UnixMilli()),
+	))
+	return q, nil
 }
 
 // NewError creates *FailStatusCode from error returned by handler.
