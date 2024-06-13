@@ -648,6 +648,7 @@ func (p *promQuerier) Select(ctx context.Context, sortSeries bool, hints *storag
 type seriesKey struct {
 	name       string
 	attributes otelstorage.Hash
+	scope      otelstorage.Hash
 	resource   otelstorage.Hash
 	bucketKey  [2]string
 }
@@ -824,11 +825,13 @@ func (p *promQuerier) queryPoints(ctx context.Context, table string, query *chsq
 					value          = c.value.Row(i)
 					timestamp      = c.timestamp.Row(i)
 					attributes     = c.attributes.Row(i)
+					scope          = c.scope.Row(i)
 					resource       = c.resource.Row(i)
 				)
 				key := seriesKey{
 					name:       name,
 					attributes: attributes.Hash(),
+					scope:      scope.Hash(),
 					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
@@ -845,6 +848,7 @@ func (p *promQuerier) queryPoints(ctx context.Context, table string, query *chsq
 
 				s.labels[labels.MetricName] = nameNormalized
 				attrsToLabels(attributes, s.labels)
+				attrsToLabels(scope, s.labels)
 				attrsToLabels(resource, s.labels)
 			}
 			return nil
@@ -895,11 +899,13 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, quer
 					negativeOffset       = c.negativeOffset.Row(i)
 					negativeBucketCounts = c.negativeBucketCounts.Row(i)
 					attributes           = c.attributes.Row(i)
+					scope                = c.scope.Row(i)
 					resource             = c.resource.Row(i)
 				)
 				key := seriesKey{
 					name:       name,
 					attributes: attributes.Hash(),
+					scope:      scope.Hash(),
 					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
@@ -925,6 +931,7 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, quer
 
 				s.labels[labels.MetricName] = nameNormalized
 				attrsToLabels(attributes, s.labels)
+				attrsToLabels(scope, s.labels)
 				attrsToLabels(resource, s.labels)
 			}
 			return nil

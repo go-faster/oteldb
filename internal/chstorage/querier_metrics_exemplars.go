@@ -103,6 +103,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					spanID             = c.spanID.Row(i)
 					traceID            = c.traceID.Row(i)
 					attributes         = c.attributes.Row(i)
+					scope              = c.scope.Row(i)
 					resource           = c.resource.Row(i)
 				)
 				key := seriesKey{
@@ -134,6 +135,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 
 				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
 				attrsToLabels(attributes, s.labels)
+				attrsToLabels(scope, s.labels)
 				attrsToLabels(resource, s.labels)
 			}
 			return nil
