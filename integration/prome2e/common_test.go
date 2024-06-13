@@ -16,6 +16,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/integration/prome2e"
+	"github.com/go-faster/oteldb/integration/requirex"
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/promhandler"
 )
@@ -87,6 +88,8 @@ func runTest(
 			r, err := c.GetLabels(ctx, promapi.GetLabelsParams{})
 			a.NoError(err)
 			a.ElementsMatch(maps.Keys(set.Labels), []string(r.Data))
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 
 			r2, err := c.PostLabels(ctx, &promapi.LabelsForm{})
 			a.NoError(err)
@@ -142,6 +145,8 @@ func runTest(
 					}
 				}
 				a.ElementsMatch(maps.Keys(labels), []string(r.Data))
+				requirex.Unique(t, r.Data)
+				requirex.Sorted(t, r.Data)
 			})
 		}
 	})
@@ -158,6 +163,8 @@ func runTest(
 					got      = []string(r.Data)
 				)
 				a.ElementsMatch(expected, got, "check label %q", labelName)
+				requirex.Unique(t, got)
+				requirex.Sorted(t, got)
 			}
 		})
 		t.Run("OneMatcher", func(t *testing.T) {
@@ -172,6 +179,8 @@ func runTest(
 			a.NoError(err)
 
 			a.NotEmpty(r.Data)
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 			for _, value := range r.Data {
 				a.Equal("/api/v1/series", value)
 			}
@@ -188,6 +197,8 @@ func runTest(
 			a.NoError(err)
 
 			a.NotEmpty(r.Data)
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 			for _, value := range r.Data {
 				a.Equal("prometheus_http_requests_total", value)
 			}
@@ -204,6 +215,8 @@ func runTest(
 			a.NoError(err)
 
 			a.NotEmpty(r.Data)
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 			for _, value := range r.Data {
 				a.Contains([]string{
 					"/api/v1/query",
@@ -224,6 +237,8 @@ func runTest(
 			a.NoError(err)
 
 			a.NotEmpty(r.Data)
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 			for _, value := range r.Data {
 				a.Contains([]string{
 					"/api/v1/query",
@@ -243,6 +258,8 @@ func runTest(
 			a.NoError(err)
 
 			a.NotEmpty(r.Data)
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 			for _, value := range r.Data {
 				a.Equal("/api/v1/series", value)
 			}
@@ -260,6 +277,8 @@ func runTest(
 			a.NoError(err)
 
 			a.NotEmpty(r.Data)
+			requirex.Unique(t, r.Data)
+			requirex.Sorted(t, r.Data)
 			for _, value := range r.Data {
 				a.Contains([]string{
 					"/api/v1/query",

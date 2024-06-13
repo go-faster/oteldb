@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/integration/lokie2e"
+	"github.com/go-faster/oteldb/integration/requirex"
 	"github.com/go-faster/oteldb/internal/chstorage"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
@@ -105,8 +106,12 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 		})
 		span.End()
 		provider.Flush()
+
 		a.NoError(err)
+
 		a.Len(r.Data, len(set.Labels))
+		requirex.Unique(t, r.Data)
+		requirex.Sorted(t, r.Data)
 		for _, label := range r.Data {
 			a.Contains(set.Labels, label)
 		}
@@ -133,7 +138,10 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 				})
 				a.NoError(err)
+
 				a.Len(r.Data, len(values))
+				requirex.Unique(t, r.Data)
+				requirex.Sorted(t, r.Data)
 				for _, val := range r.Data {
 					a.Containsf(values, val, "check label %q", labelName)
 				}

@@ -177,6 +177,7 @@ func (p *promQuerier) getLabelValues(ctx context.Context, labelName string, matc
 		}
 		query.Where(expr)
 	}
+	query.Order(chsql.Ident(valueColumn), chsql.Asc)
 
 	if err := p.do(ctx, selectQuery{
 		Query: query,
@@ -384,7 +385,8 @@ func (p *promQuerier) getLabelNames(ctx context.Context) (result []string, rerr 
 	var (
 		value = new(proto.ColStr).LowCardinality()
 		query = chsql.Select(table, chsql.Column("name_normalized", value)).
-			Distinct(true)
+			Distinct(true).
+			Order(chsql.Ident("name_normalized"), chsql.Asc)
 	)
 	if err := p.do(ctx, selectQuery{
 		Query: query,
