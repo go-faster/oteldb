@@ -26,7 +26,7 @@ require (
 	github.com/grafana/loki/pkg/push v0.0.0-20240415130356-945a0f516ad2
 	github.com/grafana/pyroscope-go v1.1.1
 	github.com/jackc/pgx/v5 v5.6.0
-	github.com/klauspost/compress v1.17.8
+	github.com/klauspost/compress v1.17.9
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/ogen-go/ogen v1.2.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.102.0
