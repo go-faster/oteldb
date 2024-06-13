@@ -29,6 +29,8 @@ type LabelsOptions struct {
 	//
 	// Querier ignores parameter, if it is zero.
 	End time.Time
+	// Selector that selects the streams to match.
+	Query logql.Selector
 }
 
 // SeriesOptions defines options for [Querier.Series] method.
