@@ -124,6 +124,18 @@ func runTest(
 					`{handler="/api/v1/query"}`,
 				},
 			},
+			{
+				"UnknownValue",
+				[]string{
+					`{handler="value_clearly_not_exist"}`,
+				},
+			},
+			{
+				"NoMatch",
+				[]string{
+					`{handler=~".+",clearly="not_exist"}`,
+				},
+			},
 		} {
 			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
@@ -239,6 +251,36 @@ func runTest(
 					},
 				},
 				[]string{"/api/v1/series", "/api/v1/query"},
+				false,
+			},
+			{
+				"UnknownLabel",
+				promapi.GetLabelValuesParams{
+					Label: "label_clearly_not_exist",
+				},
+				nil,
+				false,
+			},
+			{
+				"UnknownValue",
+				promapi.GetLabelValuesParams{
+					Label: "handler",
+					Match: []string{
+						`{handler="value_clearly_not_exist"}`,
+					},
+				},
+				nil,
+				false,
+			},
+			{
+				"NoMatch",
+				promapi.GetLabelValuesParams{
+					Label: "handler",
+					Match: []string{
+						`{handler=~".+",clearly="not_exist"}`,
+					},
+				},
+				nil,
 				false,
 			},
 			{
