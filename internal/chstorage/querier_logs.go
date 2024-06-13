@@ -189,7 +189,8 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			}
 			query.Where(expr)
 		}
-		query.Order(chsql.Ident("value"), chsql.Asc).Limit(1000)
+		query.Order(chsql.Ident("value"), chsql.Asc).
+			Limit(1000)
 
 		if err := q.do(ctx, selectQuery{
 			Query: query,
@@ -267,6 +268,9 @@ func (q *Querier) getLabelMapping(ctx context.Context, labels []string) (_ map[s
 	}); err != nil {
 		return nil, err
 	}
+	span.AddEvent("mapping_fetched", trace.WithAttributes(
+		xattribute.StringMap("chstorage.mapping", out),
+	))
 
 	return out, nil
 }
@@ -304,6 +308,10 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
+		} else {
+			span.AddEvent("series_fetched", trace.WithAttributes(
+				attribute.Int("chstorage.total_series", len(result)),
+			))
 		}
 		span.End()
 	}()
@@ -345,9 +353,9 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 				attrStringMap(colScope),
 			),
 			Data: series,
-		}).Where(
-			chsql.InTimeRange("timestamp", opts.Start, opts.End),
-		)
+		}).
+			Distinct(true).
+			Where(chsql.InTimeRange("timestamp", opts.Start, opts.End))
 	)
 	if sels := opts.Selectors; len(sels) > 0 {
 		// Gather all labels for mapping fetch.
@@ -385,6 +393,9 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 			for i := 0; i < series.Rows(); i++ {
 				s := make(map[string]string)
 				forEachColMap(series, i, func(k, v string) {
+					if k == "" {
+						return
+					}
 					s[otelstorage.KeyToLabel(k)] = v
 				})
 				result = append(result, s)
