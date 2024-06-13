@@ -126,6 +126,8 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			attribute.String("chstorage.label", labelName),
 			xattribute.UnixNano("chstorage.range.start", opts.Start),
 			xattribute.UnixNano("chstorage.range.end", opts.End),
+			attribute.Stringer("chstorage.matchers", opts.Query),
+
 			attribute.String("chstorage.table", table),
 		),
 	)
@@ -140,6 +142,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 	switch labelName {
 	case logstorage.LabelBody, logstorage.LabelSpanID, logstorage.LabelTraceID:
 	case logstorage.LabelSeverity:
+		// FIXME(tdakkota): do a proper query with filtering
 		values = []string{
 			plog.SeverityNumberUnspecified.String(),
 			plog.SeverityNumberTrace.String(),
@@ -151,19 +154,23 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 		}
 		slices.Sort(values)
 	default:
-		{
-			mapping, err := q.getLabelMapping(ctx, []string{labelName})
-			if err != nil {
-				return nil, errors.Wrap(err, "get label mapping")
-			}
-			if key, ok := mapping[labelName]; ok {
-				labelName = key
-			}
+		queryLabels := make([]string, 1+len(opts.Query.Matchers))
+		queryLabels = append(queryLabels, labelName)
+		for _, m := range opts.Query.Matchers {
+			queryLabels = append(queryLabels, string(m.Label))
 		}
 
-		var value proto.ColStr
-		if err := q.do(ctx, selectQuery{
-			Query: chsql.Select(table, chsql.ResultColumn{
+		mapping, err := q.getLabelMapping(ctx, queryLabels)
+		if err != nil {
+			return nil, errors.Wrap(err, "get label mapping")
+		}
+		if key, ok := mapping[labelName]; ok {
+			labelName = key
+		}
+
+		var (
+			value proto.ColStr
+			query = chsql.Select(table, chsql.ResultColumn{
 				Name: "value",
 				Expr: chsql.ArrayJoin(chsql.Array(
 					attrSelector(colAttrs, labelName),
@@ -173,9 +180,19 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 				Data: &value,
 			}).
 				Distinct(true).
-				Where(chsql.InTimeRange("timestamp", opts.Start, opts.End)).
-				Order(chsql.Ident("value"), chsql.Asc).
-				Limit(1000),
+				Where(chsql.InTimeRange("timestamp", opts.Start, opts.End))
+		)
+		for _, m := range opts.Query.Matchers {
+			expr, err := q.logQLLabelMatcher(m, mapping)
+			if err != nil {
+				return nil, err
+			}
+			query.Where(expr)
+		}
+		query.Order(chsql.Ident("value"), chsql.Asc).Limit(1000)
+
+		if err := q.do(ctx, selectQuery{
+			Query: query,
 			OnResult: func(ctx context.Context, block proto.Block) error {
 				for i := 0; i < value.Rows(); i++ {
 					if v := value.Row(i); v != "" {
