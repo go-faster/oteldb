@@ -367,7 +367,7 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr, rerr error) {
 	case logql.OpRe, logql.OpNotRe:
 		return chsql.Match(chsql.Ident("body"), chsql.String(m.By.Value)), nil
 	default:
-		return e, errors.Errorf("unexpected op %q", m.Op)
+		return e, errors.Errorf("unexpected line matcher op %v", m.Op)
 	}
 }
 
@@ -398,7 +398,7 @@ func (q *Querier) logQLLabelMatcher(
 				chsql.String(m.Value),
 			), nil
 		default:
-			return e, errors.Errorf("unexpected op %q", m.Op)
+			return e, errors.Errorf("unexpected label matcher op %v", m.Op)
 		}
 	}
 
@@ -436,7 +436,7 @@ func (q *Querier) logQLLabelMatcher(
 			}
 			return chsql.In(chsql.Ident("severity_number"), chsql.TupleValues(matches...)), nil
 		default:
-			return e, errors.Errorf("unexpected op %q", m.Op)
+			return e, errors.Errorf("unexpected label matcher op %v", m.Op)
 		}
 	case logstorage.LabelBody:
 		switch m.Op {
@@ -445,7 +445,7 @@ func (q *Querier) logQLLabelMatcher(
 		case logql.OpRe, logql.OpNotRe:
 			return chsql.Match(chsql.Ident("body"), chsql.String(m.Value)), nil
 		default:
-			return e, errors.Errorf("unexpected op %q", m.Op)
+			return e, errors.Errorf("unexpected label matcher op %v", m.Op)
 		}
 	case logstorage.LabelSpanID:
 		return matchHex(chsql.Ident("span_id"), m)
@@ -460,7 +460,7 @@ func (q *Querier) logQLLabelMatcher(
 			case logql.OpRe, logql.OpNotRe:
 				return chsql.Match(expr, chsql.String(m.Value)), nil
 			default:
-				return e, errors.Errorf("unexpected op %q", m.Op)
+				return e, errors.Errorf("unexpected label matcher op %v", m.Op)
 			}
 		}
 
@@ -482,7 +482,7 @@ func (q *Querier) logQLLabelMatcher(
 			case logql.OpRe, logql.OpNotRe:
 				sub = chsql.Match(selector, chsql.String(m.Value))
 			default:
-				return e, errors.Errorf("unexpected op %q", m.Op)
+				return e, errors.Errorf("unexpected label matcher op %v", m.Op)
 			}
 			exprs = append(exprs, sub)
 		}

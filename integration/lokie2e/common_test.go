@@ -117,34 +117,153 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 		}
 	})
 	t.Run("LabelValues", func(t *testing.T) {
-		for labelName, labels := range set.Labels {
-			unique := map[string]struct{}{}
-			for _, t := range labels {
-				unique[t.Value] = struct{}{}
-			}
-			values := make([]string, 0, len(unique))
-			for v := range unique {
-				values = append(values, v)
-			}
-			slices.Sort(values)
+		t.Run("All", func(t *testing.T) {
+			for labelName, labels := range set.Labels {
+				unique := map[string]struct{}{}
+				for _, t := range labels {
+					unique[t.Value] = struct{}{}
+				}
+				values := maps.Keys(unique)
+				slices.Sort(values)
 
-			t.Run(labelName, func(t *testing.T) {
-				a := require.New(t)
+				t.Run(labelName, func(t *testing.T) {
+					a := require.New(t)
 
-				r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
-					Name: labelName,
-					// Always sending time range because default is current time.
+					r, err := c.LabelValues(ctx, lokiapi.LabelValuesParams{
+						Name: labelName,
+						// Always sending time range because default is current time.
+						Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+						End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+					})
+					a.NoError(err)
+
+					a.Len(r.Data, len(values))
+					requirex.Unique(t, r.Data)
+					requirex.Sorted(t, r.Data)
+					for _, val := range r.Data {
+						a.Containsf(values, val, "check label %q", labelName)
+					}
+				})
+			}
+		})
+		for _, tt := range []struct {
+			name    string
+			params  lokiapi.LabelValuesParams
+			want    []string
+			wantErr bool
+		}{
+			{
+				"OneMatcher",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Query: lokiapi.NewOptString(`{http_method="GET"}`),
 					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
-				})
+				},
+				[]string{"GET"},
+				false,
+			},
+			{
+				"AnotherLabel",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Query: lokiapi.NewOptString(`{http_method="HEAD",http_status_code="500"}`),
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				},
+				[]string{"HEAD"},
+				false,
+			},
+			{
+				"UnknownLabel",
+				lokiapi.LabelValuesParams{
+					Name:  "label_clearly_not_exist",
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				},
+				nil,
+				false,
+			},
+			{
+				"UnknownValue",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Query: lokiapi.NewOptString(`{http_method="clearly_not_exist"}`),
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				},
+				nil,
+				false,
+			},
+			{
+				"NoMatch",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Query: lokiapi.NewOptString(`{handler=~".+",clearly="not_exist"}`),
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				},
+				nil,
+				false,
+			},
+			{
+				"OutOfRange",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Start: lokiapi.NewOptLokiTime(asLokiTime(10)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(20)),
+				},
+				nil,
+				false,
+			},
+			{
+				"OutOfRangeWithQuery",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Start: lokiapi.NewOptLokiTime(asLokiTime(10)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(20)),
+				},
+				nil,
+				false,
+			},
+			{
+				"InvalidSelector",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Query: lokiapi.NewOptString(`\{\}`),
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				},
+				nil,
+				true,
+			},
+			{
+				"InvalidRange",
+				lokiapi.LabelValuesParams{
+					Name:  "http_method",
+					Query: lokiapi.NewOptString(`\{\}`),
+					Start: lokiapi.NewOptLokiTime(asLokiTime(20)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(10)),
+				},
+				nil,
+				true,
+			},
+		} {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				a := require.New(t)
+
+				r, err := c.LabelValues(ctx, tt.params)
+				if tt.wantErr {
+					var gotErr *lokiapi.ErrorStatusCode
+					a.ErrorAs(err, &gotErr)
+					return
+				}
 				a.NoError(err)
 
-				a.Len(r.Data, len(values))
 				requirex.Unique(t, r.Data)
 				requirex.Sorted(t, r.Data)
-				for _, val := range r.Data {
-					a.Containsf(values, val, "check label %q", labelName)
-				}
+				a.ElementsMatch(tt.want, r.Data)
 			})
 		}
 	})
