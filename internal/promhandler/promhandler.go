@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/promapi"
 )
@@ -424,14 +425,31 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 		result storage.SeriesSet
 	)
 	if len(matchers) > 1 {
-		var sets []storage.SeriesSet
-		for _, mset := range matchers {
-			set := q.Select(ctx, true, hints, mset...)
-			if err := set.Err(); err != nil {
-				return nil, executionErr("select", err)
-			}
-			sets = append(sets, set)
+		var (
+			sets        = make([]storage.SeriesSet, len(matchers))
+			grp, grpCtx = errgroup.WithContext(ctx)
+		)
+		for i, mset := range matchers {
+			i, mset := i, mset
+			grp.Go(func() error {
+				ctx := grpCtx
+
+				set := q.Select(ctx, true, hints, mset...)
+				if err := set.Err(); err != nil {
+					sel := "<match>"
+					if m := params.Match; i < len(m) {
+						sel = m[i]
+					}
+					return errors.Wrapf(err, "select %s", sel)
+				}
+				sets[i] = set
+				return nil
+			})
 		}
+		if err := grp.Wait(); err != nil {
+			return nil, executionErr("select", err)
+		}
+
 		result = storage.NewMergeSeriesSet(sets, storage.ChainedSeriesMerge)
 	} else {
 		result = q.Select(ctx, false, hints, matchers[0]...)
