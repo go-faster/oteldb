@@ -9,6 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_TAG: ghcr.io/${{ github.repository }}
   KUBECTL_VERSION: v1.27.6
+  DEPLOY_BROKEN: true
 
 jobs:
   oteldb:
@@ -135,10 +136,12 @@ jobs:
         id: install
 
       - name: Deploy
+        if: ${{ env.DEPLOY_BROKEN != 'true' }}
         run: |
           /tmp/kubectl apply -f .k8s/deployment.deploy.yml
           /tmp/kubectl -n faster rollout status deployment otelproxy chotel --timeout=5m
       - name: Deploy (Helm)
+        if: ${{ env.DEPLOY_BROKEN != 'true' }}
         run: |
           helm upgrade --timeout 5m --wait --install otel ./helm/oteldb --namespace faster --values .k8s/values.yml --set image.tag=${{ env.sha }}
 
@@ -251,6 +254,7 @@ jobs:
         id: install
 
       - name: Deploy (Helm)
+        if: ${{ env.DEPLOY_BROKEN != 'true' }}
         run: |
           helm upgrade --timeout 5m --wait --install bot ./helm/otelbot --namespace faster --values .k8s/otelbot.values.yml --set image.tag=${{ env.sha }}
 
@@ -303,6 +307,7 @@ jobs:
         run: .k8s/kubeconfig.sh
 
       - name: Deploy
+        if: ${{ env.DEPLOY_BROKEN != 'true' }}
         run: |
           /tmp/kubectl -n monitoring apply -f .k8s/otel.yml
           /tmp/kubectl -n monitoring rollout status --timeout=2m deployment otel-collector
