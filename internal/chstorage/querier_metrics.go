@@ -526,8 +526,12 @@ func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*lab
 		return nil, err
 	}
 
-	points = append(points, labels.MetricName)
 	points = append(points, expHists...)
+	if len(points) > 0 {
+		// Add `__name__` only if there is any matching series.
+		points = append(points, labels.MetricName)
+	}
+
 	slices.Sort(points)
 	// Remove duplicates.
 	points = slices.Clip(points)
