@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/go-faster/errors"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 )

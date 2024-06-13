@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/cheggaaa/pb/v3"
-	"github.com/pkg/errors"
+	"github.com/go-faster/errors"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"go.uber.org/atomic"
@@ -181,7 +181,8 @@ func getTime(timeStr string, defaultTime time.Time) time.Time {
 }
 
 func getNonZeroDuration(
-	seconds float64, defaultDuration time.Duration) time.Duration {
+	seconds float64, defaultDuration time.Duration,
+) time.Duration {
 	if seconds == 0.0 {
 		return defaultDuration
 	}
