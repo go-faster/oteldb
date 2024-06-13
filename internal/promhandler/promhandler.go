@@ -421,13 +421,12 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 			End:   maxt.UnixMilli(),
 			Func:  "series",
 		}
-		sortSeries = false
-		result     storage.SeriesSet
+		result storage.SeriesSet
 	)
 	if len(matchers) > 1 {
 		var sets []storage.SeriesSet
 		for _, mset := range matchers {
-			set := q.Select(ctx, sortSeries, hints, mset...)
+			set := q.Select(ctx, true, hints, mset...)
 			if err := set.Err(); err != nil {
 				return nil, executionErr("select", err)
 			}
@@ -435,7 +434,7 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 		}
 		result = storage.NewMergeSeriesSet(sets, storage.ChainedSeriesMerge)
 	} else {
-		result = q.Select(ctx, sortSeries, hints, matchers[0]...)
+		result = q.Select(ctx, false, hints, matchers[0]...)
 	}
 
 	var data []promapi.LabelSet
