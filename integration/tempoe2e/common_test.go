@@ -292,75 +292,164 @@ func runTest(
 				}
 			}
 		})
-		t.Run("ResourceAttribute", func(t *testing.T) {
-			a := require.New(t)
 
-			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
-				AttributeSelector: `resource.service.name`,
-				Start:             start,
-				End:               end,
+		serviceNames := map[string]struct{}{}
+		for _, t := range set.Tags["service.name"] {
+			serviceNames[t.Value] = struct{}{}
+		}
+
+		for _, tt := range []struct {
+			name     string
+			params   tempoapi.SearchTagValuesV2Params
+			wantType string
+			want     []string
+			wantErr  bool
+		}{
+			// Resource attribute.
+			{
+				"ResourceAttribute",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `resource.service.name`,
+					Start:             start,
+					End:               end,
+				},
+				"string",
+				maps.Keys(serviceNames),
+				false,
+			},
+			// Intrinsics.
+			{
+				"SpanDuration",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `duration`,
+					Start:             start,
+					End:               end,
+				},
+				"duration",
+				nil,
+				false,
+			},
+			{
+				"SpanChildCount",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `childCount`,
+					Start:             start,
+					End:               end,
+				},
+				"integer",
+				nil,
+				false,
+			},
+			{
+				"SpanName",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `name`,
+					Start:             start,
+					End:               end,
+				},
+				"string",
+				maps.Keys(set.SpanNames),
+				false,
+			},
+			{
+				"SpanStatus",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `status`,
+					Start:             start,
+					End:               end,
+				},
+				"keyword",
+				[]string{
+					"unset",
+					"ok",
+					"error",
+				},
+				false,
+			},
+			{
+				"SpanKind",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `kind`,
+					Start:             start,
+					End:               end,
+				},
+				"keyword",
+				[]string{
+					"unspecified",
+					"internal",
+					"server",
+					"client",
+					"producer",
+					"consumer",
+				},
+				false,
+			},
+			{
+				"SpanParent",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `parent`,
+					Start:             start,
+					End:               end,
+				},
+				"string",
+				nil,
+				false,
+			},
+			{
+				"RootSpanName",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `rootName`,
+					Start:             start,
+					End:               end,
+				},
+				"string",
+				maps.Keys(set.RootSpanNames),
+				false,
+			},
+			{
+				"RootServiceName",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `rootServiceName`,
+					Start:             start,
+					End:               end,
+				},
+				"string",
+				maps.Keys(serviceNames),
+				false,
+			},
+			{
+				"TraceDuration",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `traceDuration`,
+					Start:             start,
+					End:               end,
+				},
+				"duration",
+				nil,
+				false,
+			},
+		} {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				a := require.New(t)
+
+				r, err := c.SearchTagValuesV2(ctx, tt.params)
+				if tt.wantErr {
+					var gotErr *tempoapi.ErrorStatusCode
+					a.ErrorAs(err, &gotErr)
+					return
+				}
+				a.NoError(err)
+
+				var got []string
+				for _, v := range r.TagValues {
+					a.Equal(tt.wantType, v.Type)
+					got = append(got, v.Value)
+				}
+				requirex.Unique(t, got)
+				a.ElementsMatch(tt.want, got)
 			})
-			a.NoError(err)
-
-			tagValues := map[string]struct{}{}
-			for _, t := range set.Tags["service.name"] {
-				tagValues[t.Value] = struct{}{}
-			}
-
-			a.Len(r.TagValues, len(tagValues))
-			for _, tag := range r.TagValues {
-				a.Equal("string", tag.Type)
-				a.Contains(tagValues, tag.Value)
-			}
-		})
-		t.Run("SpanName", func(t *testing.T) {
-			a := require.New(t)
-
-			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
-				AttributeSelector: `name`,
-				Start:             start,
-				End:               end,
-			})
-			a.NoError(err)
-			a.Len(r.TagValues, len(set.SpanNames))
-			for _, tag := range r.TagValues {
-				a.Equal("string", tag.Type)
-				a.Contains(set.SpanNames, tag.Value)
-			}
-		})
-		t.Run("SpanStatus", func(t *testing.T) {
-			a := require.New(t)
-
-			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
-				AttributeSelector: `status`,
-				Start:             start,
-				End:               end,
-			})
-			a.NoError(err)
-
-			statuses := []string{
-				"unset",
-				"ok",
-				"error",
-			}
-			a.Len(r.TagValues, len(statuses))
-			for _, tag := range r.TagValues {
-				a.Equal("keyword", tag.Type)
-				a.Contains(statuses, tag.Value)
-			}
-		})
-		t.Run("SpanDuration", func(t *testing.T) {
-			a := require.New(t)
-
-			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
-				AttributeSelector: `spanDuration`,
-				Start:             start,
-				End:               end,
-			})
-			a.NoError(err)
-			// Not implemented yet.
-			a.Empty(r.TagValues)
-		})
+		}
 	})
 	t.Run("TraceByID", func(t *testing.T) {
 		t.Run("Query", func(t *testing.T) {

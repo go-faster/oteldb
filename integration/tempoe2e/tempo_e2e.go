@@ -18,10 +18,12 @@ import (
 
 // BatchSet is a set of batches.
 type BatchSet struct {
-	Batches   []ptrace.Traces
-	Tags      map[string][]tracestorage.Tag
-	Traces    map[pcommon.TraceID]Trace
-	SpanNames map[string]struct{}
+	Batches []ptrace.Traces
+	Tags    map[string][]tracestorage.Tag
+	Traces  map[pcommon.TraceID]Trace
+
+	SpanNames     map[string]struct{}
+	RootSpanNames map[string]struct{}
 
 	Start otelstorage.Timestamp
 	End   otelstorage.Timestamp
@@ -103,10 +105,10 @@ func (s *BatchSet) addSpan(span ptrace.Span) {
 	t.Spanset[span.SpanID()] = span
 	s.Traces[traceID] = t
 
-	if s.SpanNames == nil {
-		s.SpanNames = map[string]struct{}{}
+	addToSet(&s.SpanNames, span.Name())
+	if span.ParentSpanID().IsEmpty() {
+		addToSet(&s.RootSpanNames, span.Name())
 	}
-	s.SpanNames[span.Name()] = struct{}{}
 }
 
 // Trace contains spanset fields to check storage behavior.
@@ -135,4 +137,11 @@ func (s *BatchSet) addTag(tag tracestorage.Tag) {
 		s.Tags = map[string][]tracestorage.Tag{}
 	}
 	s.Tags[tag.Name] = append(s.Tags[tag.Name], tag)
+}
+
+func addToSet[K comparable](set *map[K]struct{}, k K) {
+	if *set == nil {
+		*set = map[K]struct{}{}
+	}
+	(*set)[k] = struct{}{}
 }
