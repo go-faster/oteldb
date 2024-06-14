@@ -109,6 +109,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 				key := seriesKey{
 					name:       name,
 					attributes: attributes.Hash(),
+					scope:      scope.Hash(),
 					resource:   resource.Hash(),
 				}
 				s, ok := set[key]
