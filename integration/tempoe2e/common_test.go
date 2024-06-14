@@ -16,7 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+	"golang.org/x/exp/maps"
 
+	"github.com/go-faster/oteldb/integration/requirex"
 	"github.com/go-faster/oteldb/integration/tempoe2e"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/tempoapi"
@@ -81,58 +83,171 @@ func runTest(
 	require.NotEmpty(t, set.Tags)
 	require.NotEmpty(t, set.Traces)
 
+	var (
+		resourceTagNames = map[string]struct{}{}
+		spanTagNames     = map[string]struct{}{}
+	)
+	for _, tags := range set.Tags {
+		for _, tag := range tags {
+			switch tag.Scope {
+			case traceql.ScopeResource:
+				resourceTagNames[tag.Name] = struct{}{}
+			case traceql.ScopeSpan:
+				spanTagNames[tag.Name] = struct{}{}
+			default:
+				t.Fatalf("unexpected scope %v", tag.Scope)
+			}
+		}
+	}
+
 	c := setupDB(ctx, t, set, inserter, querier, engineQuerier)
-	start := tempoapi.NewOptUnixSeconds(set.Start.AsTime().Add(-time.Second))
-	end := tempoapi.NewOptUnixSeconds(set.End.AsTime())
-
+	var (
+		start = tempoapi.NewOptUnixSeconds(set.Start.AsTime().Add(-time.Second))
+		end   = tempoapi.NewOptUnixSeconds(set.End.AsTime())
+	)
 	t.Run("SearchTags", func(t *testing.T) {
-		a := require.New(t)
+		for _, tt := range []struct {
+			name    string
+			params  tempoapi.SearchTagsParams
+			want    []string
+			wantErr bool
+		}{
+			{
+				"All",
+				tempoapi.SearchTagsParams{
+					Start: start,
+					End:   end,
+				},
+				maps.Keys(set.Tags),
+				false,
+			},
+			{
+				"Intrinsic",
+				tempoapi.SearchTagsParams{
+					Scope: tempoapi.NewOptTagScope(tempoapi.TagScopeIntrinsic),
+					Start: start,
+					End:   end,
+				},
+				traceql.IntrinsicNames(),
+				false,
+			},
+			{
+				"Resource",
+				tempoapi.SearchTagsParams{
+					Scope: tempoapi.NewOptTagScope(tempoapi.TagScopeResource),
+					Start: start,
+					End:   end,
+				},
+				maps.Keys(resourceTagNames),
+				false,
+			},
+			{
+				"Span",
+				tempoapi.SearchTagsParams{
+					Scope: tempoapi.NewOptTagScope(tempoapi.TagScopeSpan),
+					Start: start,
+					End:   end,
+				},
+				maps.Keys(spanTagNames),
+				false,
+			},
+		} {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				a := require.New(t)
 
-		r, err := c.SearchTags(ctx, tempoapi.SearchTagsParams{
-			Start: start,
-			End:   end,
-		})
-		a.NoError(err)
-		a.Len(r.TagNames, len(set.Tags))
-		for _, tagName := range r.TagNames {
-			a.Contains(set.Tags, tagName)
+				r, err := c.SearchTags(ctx, tt.params)
+				if tt.wantErr {
+					var gotErr *tempoapi.ErrorStatusCode
+					a.ErrorAs(err, &gotErr)
+					return
+				}
+				a.NoError(err)
+
+				requirex.Unique(t, r.TagNames)
+				a.ElementsMatch(tt.want, r.TagNames)
+			})
 		}
 	})
 	t.Run("SearchTagsV2", func(t *testing.T) {
-		a := require.New(t)
+		for _, tt := range []struct {
+			name    string
+			params  tempoapi.SearchTagsV2Params
+			want    map[tempoapi.TagScope][]string
+			wantErr bool
+		}{
+			{
+				"All",
+				tempoapi.SearchTagsV2Params{
+					Start: start,
+					End:   end,
+				},
+				map[tempoapi.TagScope][]string{
+					tempoapi.TagScopeIntrinsic: traceql.IntrinsicNames(),
+					tempoapi.TagScopeResource:  maps.Keys(resourceTagNames),
+					tempoapi.TagScopeSpan:      maps.Keys(spanTagNames),
+				},
+				false,
+			},
+			{
+				"Intrinsic",
+				tempoapi.SearchTagsV2Params{
+					Scope: tempoapi.NewOptTagScope(tempoapi.TagScopeIntrinsic),
+					Start: start,
+					End:   end,
+				},
+				map[tempoapi.TagScope][]string{
+					tempoapi.TagScopeIntrinsic: traceql.IntrinsicNames(),
+				},
+				false,
+			},
+			{
+				"Resource",
+				tempoapi.SearchTagsV2Params{
+					Scope: tempoapi.NewOptTagScope(tempoapi.TagScopeResource),
+					Start: start,
+					End:   end,
+				},
+				map[tempoapi.TagScope][]string{
+					tempoapi.TagScopeResource: maps.Keys(resourceTagNames),
+				},
+				false,
+			},
+			{
+				"Span",
+				tempoapi.SearchTagsV2Params{
+					Scope: tempoapi.NewOptTagScope(tempoapi.TagScopeSpan),
+					Start: start,
+					End:   end,
+				},
+				map[tempoapi.TagScope][]string{
+					tempoapi.TagScopeSpan: maps.Keys(spanTagNames),
+				},
+				false,
+			},
+		} {
+			tt := tt
+			t.Run(tt.name, func(t *testing.T) {
+				a := require.New(t)
 
-		r, err := c.SearchTagsV2(ctx, tempoapi.SearchTagsV2Params{
-			Start: start,
-			End:   end,
-		})
-		a.NoError(err)
-
-		var spanLen, resourceLen int
-		for _, scope := range r.Scopes {
-			switch scope.Name {
-			case tempoapi.TagScopeSpan:
-				spanLen = len(scope.Tags)
-			case tempoapi.TagScopeResource:
-				resourceLen = len(scope.Tags)
-			}
-
-			switch scope.Name {
-			case tempoapi.TagScopeSpan, tempoapi.TagScopeResource:
-				names := set.Tags
-				for _, tagName := range scope.Tags {
-					a.Contains(names, tagName)
+				r, err := c.SearchTagsV2(ctx, tt.params)
+				if tt.wantErr {
+					var gotErr *tempoapi.ErrorStatusCode
+					a.ErrorAs(err, &gotErr)
+					return
 				}
-			case tempoapi.TagScopeIntrinsic:
-				names := traceql.IntrinsicNames()
-				a.Len(scope.Tags, len(names))
-				for _, tagName := range scope.Tags {
-					a.Contains(names, tagName)
+				a.NoError(err)
+
+				dedup := map[tempoapi.TagScope]struct{}{}
+				for _, s := range r.Scopes {
+					a.NotContainsf(dedup, s.Name, "duplicate scope %v", s.Name)
+					dedup[s.Name] = struct{}{}
+
+					requirex.Unique(t, s.Tags)
+					a.ElementsMatch(tt.want[s.Name], s.Tags)
 				}
-			default:
-				t.Fatalf("unexpected scope %q", scope.Name)
-			}
+			})
 		}
-		a.Equal(len(set.Tags), spanLen+resourceLen)
 	})
 	t.Run("SearchTagValues", func(t *testing.T) {
 		a := require.New(t)
@@ -233,6 +348,18 @@ func runTest(
 				a.Equal("keyword", tag.Type)
 				a.Contains(statuses, tag.Value)
 			}
+		})
+		t.Run("SpanDuration", func(t *testing.T) {
+			a := require.New(t)
+
+			r, err := c.SearchTagValuesV2(ctx, tempoapi.SearchTagValuesV2Params{
+				AttributeSelector: `spanDuration`,
+				Start:             start,
+				End:               end,
+			})
+			a.NoError(err)
+			// Not implemented yet.
+			a.Empty(r.TagValues)
 		})
 	})
 	t.Run("TraceByID", func(t *testing.T) {

@@ -314,6 +314,7 @@ func (h *TempoAPI) SearchTags(ctx context.Context, params tempoapi.SearchTagsPar
 		scope = traceql.ScopeNone
 	}
 
+	// NOTE: Tempo does not add intrinsics to SearchTags response.
 	tags, err := h.q.TagNames(ctx, tracestorage.TagNamesOptions{
 		Scope: scope,
 		Start: params.Start.Or(time.Time{}),
