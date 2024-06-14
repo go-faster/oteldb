@@ -247,6 +247,7 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 			attribute.Stringer("chstorage.tag", tag),
 			xattribute.UnixNano("chstorage.range.start", opts.Start),
 			xattribute.UnixNano("chstorage.range.end", opts.End),
+			attribute.Stringer("traceql.autocomplete", opts.AutocompleteQuery),
 
 			attribute.String("chstorage.table", table),
 		),
@@ -264,11 +265,17 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 			Distinct(true).
 			Where(traceInTimeRange(opts.Start, opts.End))
 	)
-	if tag.Prop == traceql.RootSpanName {
-		query.Where(chsql.Eq(
-			chsql.Ident("parent_span_id"),
-			chsql.Unhex(chsql.String(zeroSpanIDHex)),
-		))
+	{
+		if tag.Prop == traceql.RootSpanName {
+			query.Where(spanIsRoot())
+		}
+		for _, m := range opts.AutocompleteQuery.Matchers {
+			e, ok := getTraceQLMatcher(m)
+			if !ok {
+				continue
+			}
+			query.Where(e)
+		}
 	}
 
 	var (
@@ -511,98 +518,12 @@ func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params trace
 		matchExprs = make([]chsql.Expr, 0, len(params.Matchers))
 	)
 	for _, matcher := range params.Matchers {
-		if matcher.Op == 0 {
-			// Just query spans with this attribute.
-			var (
-				attr  = matcher.Attribute
-				exprs = make([]chsql.Expr, 0, 3)
-			)
-			for _, column := range getTraceQLAttributeColumns(attr) {
-				exprs = append(exprs, chsql.Has(
-					attrKeys(column),
-					chsql.String(attr.Name),
-				))
-			}
-			if len(exprs) > 0 {
-				matchExprs = append(matchExprs, chsql.JoinOr(exprs...))
-			}
-			continue
-		}
-
-		op, ok := getTraceQLMatcherOp(matcher.Op)
+		expr, ok := getTraceQLMatcher(matcher)
 		if !ok {
-			// Unsupported for now.
 			dropped++
 			continue
 		}
-
-		value, ok := getTraceQLLiteral(matcher.Static)
-		if !ok {
-			// Unsupported for now.
-			dropped++
-			continue
-		}
-
-		switch attr := matcher.Attribute; attr.Prop {
-		case traceql.SpanDuration:
-			matchExprs = append(matchExprs, op(
-				chsql.Ident("duration_ns"),
-				value,
-			))
-		case traceql.SpanName:
-			matchExprs = append(matchExprs, op(
-				chsql.Ident("name"),
-				value,
-			))
-		case traceql.SpanStatus:
-			matchExprs = append(matchExprs, op(
-				chsql.Ident("status_code"),
-				value,
-			))
-		case traceql.SpanKind:
-			matchExprs = append(matchExprs, op(
-				chsql.Ident("kind"),
-				value,
-			))
-		case traceql.SpanParent,
-			traceql.SpanChildCount,
-			traceql.RootSpanName,
-			traceql.RootServiceName,
-			traceql.TraceDuration:
-			// Unsupported yet.
-			dropped++
-			continue
-		default:
-			// SpanAttribute
-			switch attribute.Key(attr.Name) {
-			case semconv.ServiceNamespaceKey:
-				matchExprs = append(matchExprs, op(
-					chsql.Ident("service_namespace"),
-					value,
-				))
-			case semconv.ServiceNameKey:
-				matchExprs = append(matchExprs, op(
-					chsql.Ident("service_name"),
-					value,
-				))
-			case semconv.ServiceInstanceIDKey:
-				matchExprs = append(matchExprs, op(
-					chsql.Ident("service_instance_id"),
-					value,
-				))
-			default:
-				exprs := make([]chsql.Expr, 0, 3)
-				for _, column := range getTraceQLAttributeColumns(attr) {
-					exprs = append(exprs, op(
-						attrSelector(column, attr.Name),
-						chsql.ToString(value),
-					))
-				}
-				if len(exprs) > 0 {
-					matchExprs = append(matchExprs, chsql.JoinOr(exprs...))
-				}
-			}
-		}
+		matchExprs = append(matchExprs, expr)
 	}
 	span.SetAttributes(
 		attribute.Int("chstorage.unsupported_span_matchers", dropped),
@@ -624,6 +545,13 @@ func (q *Querier) buildSpansetsQuery(table string, span trace.Span, params trace
 	return query
 }
 
+func spanIsRoot() chsql.Expr {
+	return chsql.Eq(
+		chsql.Ident("parent_span_id"),
+		chsql.Unhex(chsql.String(zeroSpanIDHex)),
+	)
+}
+
 func traceInTimeRange(start, end time.Time) chsql.Expr {
 	exprs := make([]chsql.Expr, 0, 2)
 	if !start.IsZero() {
@@ -639,6 +567,107 @@ func traceInTimeRange(start, end time.Time) chsql.Expr {
 		))
 	}
 	return chsql.JoinAnd(exprs...)
+}
+
+func getTraceQLMatcher(matcher traceql.SpanMatcher) (e chsql.Expr, _ bool) {
+	if matcher.Op == 0 {
+		// Just query spans with this attribute.
+		var (
+			attr  = matcher.Attribute
+			exprs = make([]chsql.Expr, 0, 3)
+		)
+		for _, column := range getTraceQLAttributeColumns(attr) {
+			exprs = append(exprs, chsql.Has(
+				attrKeys(column),
+				chsql.String(attr.Name),
+			))
+		}
+		return chsql.JoinOr(exprs...), true
+	}
+
+	var op func(l, r chsql.Expr) chsql.Expr
+	switch matcher.Op {
+	case traceql.OpEq:
+		op = chsql.Eq
+	case traceql.OpNotEq:
+		op = chsql.NotEq
+	case traceql.OpGt:
+		op = chsql.Gt
+	case traceql.OpGte:
+		op = chsql.Gte
+	case traceql.OpLt:
+		op = chsql.Lt
+	case traceql.OpLte:
+		op = chsql.Lte
+	case traceql.OpRe:
+		op = chsql.Match
+	default:
+		return e, false
+	}
+
+	value, ok := getTraceQLLiteral(matcher.Static)
+	if !ok {
+		// Unsupported yet.
+		return e, false
+	}
+
+	switch attr := matcher.Attribute; attr.Prop {
+	case traceql.SpanDuration:
+		return op(
+			chsql.Ident("duration_ns"),
+			value,
+		), true
+	case traceql.SpanName:
+		return op(
+			chsql.Ident("name"),
+			value,
+		), true
+	case traceql.SpanStatus:
+		return op(
+			chsql.Ident("status_code"),
+			value,
+		), true
+	case traceql.SpanKind:
+		return op(
+			chsql.Ident("kind"),
+			value,
+		), true
+	case traceql.SpanParent,
+		traceql.SpanChildCount,
+		traceql.RootSpanName,
+		traceql.RootServiceName,
+		traceql.TraceDuration:
+		// Unsupported yet.
+		return e, false
+	default:
+		// SpanAttribute
+		switch attribute.Key(attr.Name) {
+		case semconv.ServiceNamespaceKey:
+			return op(
+				chsql.Ident("service_namespace"),
+				value,
+			), true
+		case semconv.ServiceNameKey:
+			return op(
+				chsql.Ident("service_name"),
+				value,
+			), true
+		case semconv.ServiceInstanceIDKey:
+			return op(
+				chsql.Ident("service_instance_id"),
+				value,
+			), true
+		default:
+			exprs := make([]chsql.Expr, 0, 3)
+			for _, column := range getTraceQLAttributeColumns(attr) {
+				exprs = append(exprs, op(
+					attrSelector(column, attr.Name),
+					chsql.ToString(value),
+				))
+			}
+			return chsql.JoinOr(exprs...), true
+		}
+	}
 }
 
 func getTraceQLLiteral(s traceql.Static) (value chsql.Expr, _ bool) {
@@ -659,27 +688,6 @@ func getTraceQLLiteral(s traceql.Static) (value chsql.Expr, _ bool) {
 		return chsql.Integer(int(s.AsSpanKind())), true
 	default:
 		return value, false
-	}
-}
-
-func getTraceQLMatcherOp(op traceql.BinaryOp) (func(l, r chsql.Expr) chsql.Expr, bool) {
-	switch op {
-	case traceql.OpEq:
-		return chsql.Eq, true
-	case traceql.OpNotEq:
-		return chsql.NotEq, true
-	case traceql.OpGt:
-		return chsql.Gt, true
-	case traceql.OpGte:
-		return chsql.Gte, true
-	case traceql.OpLt:
-		return chsql.Lt, true
-	case traceql.OpLte:
-		return chsql.Lte, true
-	case traceql.OpRe:
-		return chsql.Match, true
-	default:
-		return nil, false
 	}
 }
 
