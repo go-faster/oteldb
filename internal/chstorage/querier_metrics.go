@@ -654,7 +654,6 @@ type seriesKey struct {
 	attributes otelstorage.Hash
 	scope      otelstorage.Hash
 	resource   otelstorage.Hash
-	bucketKey  [2]string
 }
 
 func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
