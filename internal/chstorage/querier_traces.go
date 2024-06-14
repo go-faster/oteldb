@@ -2,6 +2,7 @@ package chstorage
 
 import (
 	"context"
+	"encoding/hex"
 	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -224,7 +225,6 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 		// Too high cardinality to query.
 		return iterators.Empty[tracestorage.Tag](), nil
 	case traceql.SpanName, traceql.RootSpanName:
-		// FIXME(tdakkota): we don't check if span name is actually coming from a root span.
 		return q.spanNames(ctx, tag, opts)
 	case traceql.RootServiceName:
 		// FIXME(tdakkota): we don't check if service.name actually coming from a root span.
@@ -236,6 +236,8 @@ func (q *Querier) TagValues(ctx context.Context, tag traceql.Attribute, opts tra
 		return nil, errors.Errorf("unexpected span property %v (attribute: %q)", tag.Prop, tag)
 	}
 }
+
+var zeroSpanIDHex = hex.EncodeToString(new(pcommon.SpanID)[:])
 
 func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tracestorage.TagValuesOptions) (_ iterators.Iterator[tracestorage.Tag], rerr error) {
 	table := q.tables.Spans
@@ -261,7 +263,15 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 		query = chsql.Select(table, chsql.Column("name", name)).
 			Distinct(true).
 			Where(traceInTimeRange(opts.Start, opts.End))
+	)
+	if tag.Prop == traceql.RootSpanName {
+		query.Where(chsql.Eq(
+			chsql.Ident("parent_span_id"),
+			chsql.Unhex(chsql.String(zeroSpanIDHex)),
+		))
+	}
 
+	var (
 		tagName = tag.String()
 		r       []tracestorage.Tag
 	)
