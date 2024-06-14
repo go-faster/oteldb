@@ -58,7 +58,9 @@ func setupDB(
 	if engineQuerier != nil {
 		engine = traceqlengine.NewEngine(engineQuerier, traceqlengine.Options{})
 	}
-	api := tempohandler.NewTempoAPI(querier, engine, tempohandler.TempoAPIOptions{})
+	api := tempohandler.NewTempoAPI(querier, engine, tempohandler.TempoAPIOptions{
+		EnableAutocompleteQuery: true,
+	})
 	tempoh, err := tempoapi.NewServer(api)
 	require.NoError(t, err)
 
@@ -352,6 +354,18 @@ func runTest(
 				false,
 			},
 			{
+				"SpanNameWithQuery",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `name`,
+					Start:             start,
+					End:               end,
+					Q:                 tempoapi.NewOptString(`{ name = "authenticate" && .service.name = }`),
+				},
+				"string",
+				[]string{"authenticate"},
+				false,
+			},
+			{
 				"SpanStatus",
 				tempoapi.SearchTagValuesV2Params{
 					AttributeSelector: `status`,
@@ -404,6 +418,32 @@ func runTest(
 				},
 				"string",
 				maps.Keys(set.RootSpanNames),
+				false,
+			},
+			{
+				"RootSpanNameWithQuery",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `rootName`,
+					Start:             start,
+					End:               end,
+					Q:                 tempoapi.NewOptString(`{ name = "list-articles" }`),
+				},
+				"string",
+				[]string{"list-articles"},
+				false,
+			},
+			{
+				// Ensure that `rootName` would return nothing if we query a
+				// non-root span.
+				"RootSpanNameNoMatch",
+				tempoapi.SearchTagValuesV2Params{
+					AttributeSelector: `rootName`,
+					Start:             start,
+					End:               end,
+					Q:                 tempoapi.NewOptString(`{ name = "authenticate" }`),
+				},
+				"string",
+				nil,
 				false,
 			},
 			{
