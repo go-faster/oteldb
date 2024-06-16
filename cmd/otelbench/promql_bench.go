@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -75,7 +76,9 @@ type PromQL struct {
 	start              time.Time
 	end                time.Time
 
-	queries []tracedQuery
+	queries    []tracedQuery
+	queriesMux sync.Mutex
+
 	reports []PromQLReportQuery
 	tracer  trace.Tracer
 }
@@ -261,7 +264,11 @@ func (p *PromQL) sendAndRecord(ctx context.Context, id int, q promproxy.Query) (
 		return errors.Wrap(err, "send")
 	}
 	tq.Duration = time.Since(start)
+
+	p.queriesMux.Lock()
 	p.queries = append(p.queries, tq)
+	p.queriesMux.Unlock()
+
 	return nil
 }
 
