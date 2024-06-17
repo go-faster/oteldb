@@ -194,7 +194,7 @@ func (p *promQuerier) buildSeriesQuery(
 		matchers := make([]chsql.Expr, 0, len(set))
 		for _, m := range set {
 			selectors := []chsql.Expr{
-				chsql.Ident("name"),
+				chsql.Ident("name_normalized"),
 			}
 			if name := m.Name; name != labels.MetricName {
 				if mapped, ok := mapping[name]; ok {
