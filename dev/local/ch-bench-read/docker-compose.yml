@@ -10,9 +10,9 @@ services:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:8123:8123"
     volumes:
-      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml:ro
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
       interval: 1s
       timeout: 1s
       retries: 30
@@ -20,9 +20,9 @@ services:
   prometheus:
     image: "ghcr.io/go-faster/prom/prometheus"
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
-      - './prometheus.yml:/etc/prometheus/prometheus.yml'
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml:ro"
     restart: unless-stopped
 
   oteldb:
@@ -49,13 +49,13 @@ services:
       - GOMAXPROCS=6
       - GOMEMLIMIT=1500MiB
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:13133/liveness']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:13133/liveness"]
       interval: 1s
       timeout: 1s
       retries: 30
     ports:
-      - "127.0.0.1:9090:9090"   # promql
-      - "127.0.0.1:9010:9010"   # pprof
+      - "127.0.0.1:9090:9090" # promql
+      - "127.0.0.1:9010:9010" # pprof
       - "127.0.0.1:19291:19291" # prometheus remote write
     depends_on:
       - clickhouse
@@ -75,38 +75,24 @@ services:
     depends_on:
       - clickhouse
 
-  otelproxy:
-    build:
-      context: ../../../
-      dockerfile: otelproxy.Dockerfile
-    volumes:
-      - ./record:/record
-    environment:
-      - PROMETHEUS_URL=http://oteldb:9090
-      - PROMETHEUS_RECORD=/record/queries.jsonl
-      - OTEL_LOG_LEVEL=info
-      - OTEL_METRICS_EXPORTER=none
-      - OTEL_LOGS_EXPORTER=none
-      - OTEL_TRACES_EXPORTER=none
-      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.otelproxy
   tempo:
     image: "ghcr.io/go-faster/tempo"
-    command: [ "-config.file=/etc/tempo.yml" ]
+    command: ["-config.file=/etc/tempo.yml"]
     ports:
       - "127.0.0.1:3200:3200"
     volumes:
-      - ./tempo.yml:/etc/tempo.yml
+      - ./tempo.yml:/etc/tempo.yml:ro
 
   # https://opentelemetry.io/docs/collector/installation/#docker-compose
   otelcol:
     image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0
     volumes:
-      - ./otelcol.yml:/etc/otelcol-contrib/config.yaml
+      - ./otelcol.yml:/etc/otelcol-contrib/config.yaml:ro
     ports:
       - "127.0.0.1:4317:4317"
     command:
-      - '--config'
-      - '/etc/otelcol-contrib/config.yaml'
+      - "--config"
+      - "/etc/otelcol-contrib/config.yaml"
 
   grafana:
     image: "ghcr.io/go-faster/grafana:10.0.0"
@@ -122,8 +108,8 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
-      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - oteldb
