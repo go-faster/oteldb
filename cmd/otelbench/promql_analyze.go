@@ -6,7 +6,10 @@ import (
 	"io"
 	"os"
 	"slices"
+	"strconv"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
@@ -82,12 +85,32 @@ func (a PromQLAnalyze) renderPretty(report PromQLReport, w io.Writer) error {
 
 func (a PromQLAnalyze) renderBenchstat(report PromQLReport, w io.Writer) error {
 	var recs []benchfmt.Result
+
 	for _, q := range report.Queries {
+		var name []byte
+		if q.Title != "" {
+			// Normalize title as benchmark name.
+			for _, r := range q.Title {
+				switch {
+				case unicode.IsSpace(r):
+					name = append(name, '_')
+				case !strconv.IsPrint(r):
+					s := strconv.QuoteRune(r)
+					name = append(name, s[1:len(s)-1]...)
+				default:
+					name = utf8.AppendRune(name, r)
+				}
+			}
+		}
+		if len(name) == 0 {
+			name = fmt.Appendf(name, "Query%d", q.ID)
+		}
+
 		rec := benchfmt.Result{
 			Name: bytes.Join(
 				[][]byte{
 					[]byte(`PromQL`),
-					fmt.Appendf(nil, "Query%d", q.ID),
+					name,
 				},
 				[]byte{'/'},
 			),
