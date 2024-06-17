@@ -14,7 +14,7 @@ echo ">> Setup oteldb locally"
 docker compose up -d --remove-orphans --build --force-recreate
 
 echo ">> Upload benchmark data"
-wget -N -O req.rwq https://storage.yandexcloud.net/faster-public/oteldb/req.rwq
+wget -N https://storage.yandexcloud.net/faster-public/oteldb/req.rwq
 go run github.com/go-faster/oteldb/cmd/otelbench promrw replay -i req.rwq
 
 queries_file="${BENCH_QUERIES:-testdata/node-exporter-selected.promql.yml}"
