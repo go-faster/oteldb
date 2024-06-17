@@ -37,7 +37,7 @@ require (
 	github.com/prometheus/common v0.54.0
 	github.com/prometheus/prometheus v0.52.1
 	github.com/schollz/progressbar/v3 v3.14.4
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.31.0
 	github.com/valyala/bytebufferpool v1.0.0
