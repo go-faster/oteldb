@@ -127,6 +127,8 @@ func (a PromQLAnalyze) renderBenchstat(report PromQLReport, w io.Writer) error {
 			readBytes += v.ReadBytes
 			readRows += v.ReadRows
 		}
+		// NOTE(tdakkota): it is important to keep 'ns/op', `bytes/op`
+		// 	suffix in Unit, because it lets benchstat to figure out measurement unit.
 		rec.Values = append(rec.Values,
 			benchfmt.Value{
 				Value: float64(chDurationNanos),
@@ -134,7 +136,7 @@ func (a PromQLAnalyze) renderBenchstat(report PromQLReport, w io.Writer) error {
 			},
 			benchfmt.Value{
 				Value: float64(memUsage),
-				Unit:  "ch-mem-usage/op",
+				Unit:  "ch-mem-bytes/op",
 			},
 			benchfmt.Value{
 				Value: float64(readBytes),
