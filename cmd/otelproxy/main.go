@@ -122,7 +122,7 @@ func (s *services) Prometheus(m *app.Metrics) error {
 	)
 	if fName := os.Getenv(prefix + "_RECORD"); fName != "" {
 		// #nosec G304 G302
-		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 		if err != nil {
 			return errors.Wrap(err, "create record file")
 		}
@@ -249,7 +249,7 @@ func (s *services) Tempo(m *app.Metrics) error {
 	client, err := tempoapi.NewClient(upstreamURL,
 		tempoapi.WithTracerProvider(m.TracerProvider()),
 		tempoapi.WithMeterProvider(m.MeterProvider()),
-		tempoapi.WithClient(s.httpClient(newTempoTransport, m)),
+		tempoapi.WithClient(s.httpClient(nil, m)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
