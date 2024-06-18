@@ -127,6 +127,7 @@ func (p *Printer) WriteExpr(e Expr) error {
 			return errors.Errorf("binary expression must have at least two args, got %d", l)
 		}
 
+		p.OpenParen()
 		for i, arg := range e.args {
 			if i != 0 {
 				p.Ident(e.tok)
@@ -135,6 +136,7 @@ func (p *Printer) WriteExpr(e Expr) error {
 				return err
 			}
 		}
+		p.CloseParen()
 
 		return nil
 	case exprFunction:

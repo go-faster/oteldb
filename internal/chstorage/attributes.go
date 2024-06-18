@@ -186,7 +186,7 @@ func (a *Attributes) Row(idx int) otelstorage.Attrs {
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
 	m.AsMap().Range(func(k string, v pcommon.Value) bool {
-		to[k] = v.Str()
+		to[otelstorage.KeyToLabel(k)] = v.Str()
 		return true
 	})
 }

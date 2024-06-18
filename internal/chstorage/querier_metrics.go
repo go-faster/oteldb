@@ -65,6 +65,11 @@ type promQuerier struct {
 
 var _ storage.Querier = (*promQuerier)(nil)
 
+// Close releases the resources of the Querier.
+func (p *promQuerier) Close() error {
+	return nil
+}
+
 func (p *promQuerier) getStart(t time.Time) time.Time {
 	switch {
 	case t.IsZero():
@@ -633,15 +638,18 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	return out, nil
 }
 
-// Close releases the resources of the Querier.
-func (p *promQuerier) Close() error {
-	return nil
-}
-
 // Select returns a set of series that matches the given label matchers.
 // Caller can specify if it requires returned series to be sorted. Prefer not requiring sorting for better performance.
 // It allows passing hints that can help in optimizing select, but it's up to implementation how this is used if used at all.
 func (p *promQuerier) Select(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) storage.SeriesSet {
+	if hints != nil && hints.Func == "series" {
+		ss, err := p.selectOnlySeries(ctx, sortSeries, hints.Start, hints.End, matchers)
+		if err != nil {
+			return storage.ErrSeriesSet(err)
+		}
+		return ss
+	}
+
 	ss, err := p.selectSeries(ctx, sortSeries, hints, matchers...)
 	if err != nil {
 		return storage.ErrSeriesSet(err)
@@ -659,7 +667,7 @@ type seriesKey struct {
 func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *storage.SelectHints, matchers ...*labels.Matcher) (_ storage.SeriesSet, rerr error) {
 	hints, start, end, queryLabels := p.extractHints(hints, matchers)
 
-	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.SelectSeries",
+	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.selectSeries",
 		trace.WithAttributes(
 			attribute.Bool("promql.sort_series", sortSeries),
 			attribute.Int64("promql.hints.start", hints.Start),
@@ -962,7 +970,6 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, quer
 func buildPromLabels(lb *labels.ScratchBuilder, set map[string]string) labels.Labels {
 	lb.Reset()
 	for key, value := range set {
-		key = otelstorage.KeyToLabel(key)
 		lb.Add(key, value)
 	}
 	lb.Sort()

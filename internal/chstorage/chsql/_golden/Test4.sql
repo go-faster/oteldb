@@ -1,1 +1,1 @@
-SELECT (timestamp) FROM spans ORDER BY timestamp ASC,duration DESC
+SELECT timestamp FROM spans ORDER BY timestamp ASC,duration DESC

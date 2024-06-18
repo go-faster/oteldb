@@ -128,11 +128,9 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 		}
 		cexpr = aliasColumn(c.Name, cexpr)
 
-		p.OpenParen()
 		if err := p.WriteExpr(cexpr); err != nil {
 			return errors.Wrapf(err, "column %q", c.Name)
 		}
-		p.CloseParen()
 	}
 	p.From()
 	switch {

@@ -19,6 +19,7 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/go-faster/oteldb/internal/metricstorage"
 	"github.com/go-faster/oteldb/internal/promapi"
 )
 
@@ -416,6 +417,38 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 		_ = q.Close()
 	}()
 
+	var result storage.SeriesSet
+	if osq, ok := q.(metricstorage.OptimizedSeriesQuerier); ok {
+		result = osq.OnlySeries(ctx, false, mint.UnixMilli(), maxt.UnixMilli(), matchers...)
+	} else {
+		result, err = h.querySeries(ctx, q, mint, maxt, matchers, params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var data []promapi.LabelSet
+	for result.Next() {
+		series := result.At()
+		data = append(data, series.Labels().Map())
+	}
+	if err := result.Err(); err != nil {
+		return nil, executionErr("select", err)
+	}
+
+	return &promapi.SeriesResponse{
+		Status:   "success",
+		Warnings: result.Warnings().AsStrings("", 0),
+		Data:     data,
+	}, nil
+}
+
+func (h *PromAPI) querySeries(ctx context.Context,
+	q storage.Querier,
+	mint, maxt time.Time,
+	matchers [][]*labels.Matcher,
+	params promapi.GetSeriesParams,
+) (storage.SeriesSet, error) {
 	var (
 		hints = &storage.SelectHints{
 			Start: mint.UnixMilli(),
@@ -454,21 +487,7 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 	} else {
 		result = q.Select(ctx, false, hints, matchers[0]...)
 	}
-
-	var data []promapi.LabelSet
-	for result.Next() {
-		series := result.At()
-		data = append(data, series.Labels().Map())
-	}
-	if err := result.Err(); err != nil {
-		return nil, executionErr("select", err)
-	}
-
-	return &promapi.SeriesResponse{
-		Status:   "success",
-		Warnings: result.Warnings().AsStrings("", 0),
-		Data:     data,
-	}, nil
+	return result, nil
 }
 
 // PostSeries implements postSeries operation.
