@@ -993,6 +993,10 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 					Name: "end",
 					In:   "query",
 				}: params.End,
+				{
+					Name: "Accept",
+					In:   "header",
+				}: params.Accept,
 			},
 			Raw: r,
 		}

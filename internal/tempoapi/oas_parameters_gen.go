@@ -1301,7 +1301,8 @@ type TraceByIDParams struct {
 	// If the parameters are provided, it will only check in the blocks within the specified time range,
 	// this can result in trace not being found or partial results if it does not fall in the specified
 	// time range.
-	End OptUnixSeconds
+	End    OptUnixSeconds
+	Accept string
 }
 
 func unpackTraceByIDParams(packed middleware.Parameters) (params TraceByIDParams) {
@@ -1330,11 +1331,19 @@ func unpackTraceByIDParams(packed middleware.Parameters) (params TraceByIDParams
 			params.End = v.(OptUnixSeconds)
 		}
 	}
+	{
+		key := middleware.ParameterKey{
+			Name: "Accept",
+			In:   "header",
+		}
+		params.Accept = packed[key].(string)
+	}
 	return params
 }
 
 func decodeTraceByIDParams(args [1]string, argsEscaped bool, r *http.Request) (params TraceByIDParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
+	h := uri.NewHeaderDecoder(r.Header)
 	// Decode path: traceID.
 	if err := func() error {
 		param := args[0]
@@ -1459,6 +1468,40 @@ func decodeTraceByIDParams(args [1]string, argsEscaped bool, r *http.Request) (p
 		return params, &ogenerrors.DecodeParamError{
 			Name: "end",
 			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode header: Accept.
+	if err := func() error {
+		cfg := uri.HeaderParameterDecodingConfig{
+			Name:    "Accept",
+			Explode: false,
+		}
+		if err := h.HasParam(cfg); err == nil {
+			if err := h.DecodeParam(cfg, func(d uri.Decoder) error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.Accept = c
+				return nil
+			}); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "Accept",
+			In:   "header",
 			Err:  err,
 		}
 	}
