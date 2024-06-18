@@ -499,7 +499,16 @@ func (p *PromQL) report(ctx context.Context, q tracedQuery) error {
 	}
 
 	// For each clickhouse query ID, save query.
-	rsl := res.ResourceSpans()
+	type queryReport struct {
+		// "query" span coming from Clickhouse
+		clickhouseSpan ptrace.Span
+		// "Do" span coming from ch-go
+		chgoSpan ptrace.Span
+	}
+	var (
+		rsl     = res.ResourceSpans()
+		queries = map[string]queryReport{}
+	)
 	for i := 0; i < rsl.Len(); i++ {
 		rs := rsl.At(i)
 		spansSlices := rs.ScopeSpans()
@@ -507,29 +516,74 @@ func (p *PromQL) report(ctx context.Context, q tracedQuery) error {
 			spans := spansSlices.At(j).Spans()
 			for k := 0; k < spans.Len(); k++ {
 				span := spans.At(k)
-				if span.Name() != "query" {
-					continue
-				}
-				var reportQuery ClickhouseQueryReport
+
 				attrs := span.Attributes()
-				statement, ok := attrs.Get("db.statement")
-				if !ok {
+				if _, ok := attrs.Get("db.statement"); !ok {
 					continue
 				}
-				reportQuery.Query = statement.AsString()
-				if readBytes, ok := attrs.Get("clickhouse.read_bytes"); ok {
-					reportQuery.ReadBytes = readBytes.Int()
+
+				switch span.Name() {
+				case "query":
+					queryIDVal, ok := attrs.Get("clickhouse.query_id")
+					if !ok {
+						continue
+					}
+					queryID := queryIDVal.AsString()
+
+					report := queries[queryID]
+					report.clickhouseSpan = span
+					queries[queryID] = report
+				case "Do":
+					queryIDVal, ok := attrs.Get("ch.query.id")
+					if !ok {
+						continue
+					}
+					queryID := queryIDVal.AsString()
+
+					report := queries[queryID]
+					report.chgoSpan = span
+					queries[queryID] = report
+				default:
+					continue
 				}
-				if readRows, ok := attrs.Get("clickhouse.read_rows"); ok {
-					reportQuery.ReadRows = readRows.Int()
-				}
-				if memoryUsage, ok := attrs.Get("clickhouse.memory_usage"); ok {
-					reportQuery.MemoryUsage = memoryUsage.Int()
-				}
-				reportQuery.DurationNanos = span.EndTimestamp().AsTime().Sub(span.StartTimestamp().AsTime()).Nanoseconds()
-				reportEntry.Queries = append(reportEntry.Queries, reportQuery)
 			}
 		}
+	}
+
+	for _, r := range queries {
+		var reportQuery ClickhouseQueryReport
+
+		if span := r.clickhouseSpan; span != (ptrace.Span{}) {
+			attrs := span.Attributes()
+
+			if statement, ok := attrs.Get("db.statement"); ok {
+				reportQuery.Query = statement.AsString()
+			}
+			if readBytes, ok := attrs.Get("clickhouse.read_bytes"); ok {
+				reportQuery.ReadBytes = readBytes.Int()
+			}
+			if readRows, ok := attrs.Get("clickhouse.read_rows"); ok {
+				reportQuery.ReadRows = readRows.Int()
+			}
+			if memoryUsage, ok := attrs.Get("clickhouse.memory_usage"); ok {
+				reportQuery.MemoryUsage = memoryUsage.Int()
+			}
+			reportQuery.DurationNanos = span.EndTimestamp().AsTime().Sub(span.StartTimestamp().AsTime()).Nanoseconds()
+		} else {
+			continue
+		}
+
+		if span := r.chgoSpan; span != (ptrace.Span{}) {
+			attrs := span.Attributes()
+			if receivedBytes, ok := attrs.Get("ch.bytes"); ok {
+				reportQuery.ReceivedBytes = receivedBytes.Int()
+			}
+			if receivedRows, ok := attrs.Get("ch.rows_received"); ok {
+				reportQuery.ReceivedRows = receivedRows.Int()
+			}
+		}
+
+		reportEntry.Queries = append(reportEntry.Queries, reportQuery)
 	}
 
 	p.reports = append(p.reports, reportEntry)
@@ -543,6 +597,9 @@ type ClickhouseQueryReport struct {
 	ReadBytes     int64  `yaml:"read_bytes,omitempty"`
 	ReadRows      int64  `yaml:"read_rows,omitempty"`
 	MemoryUsage   int64  `yaml:"memory_usage,omitempty"`
+
+	ReceivedBytes int64 `yaml:"recevied_bytes,omitempty"`
+	ReceivedRows  int64 `yaml:"recevied_rows,omitempty"`
 }
 
 type PromQLReportQuery struct {
