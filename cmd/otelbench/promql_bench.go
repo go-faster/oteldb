@@ -125,12 +125,7 @@ func (p *PromQL) setupTracing(ctx context.Context) error {
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 	)
 	p.tracer = p.tracerProvider.Tracer("promql")
-	httpClient := &http.Client{
-		Transport: newTempoTransport(http.DefaultTransport),
-	}
-	tempoClient, err := tempoapi.NewClient(p.TempoAddr,
-		tempoapi.WithClient(httpClient),
-	)
+	tempoClient, err := tempoapi.NewClient(p.TempoAddr)
 	if err != nil {
 		return errors.Wrap(err, "create tempo client")
 	}
@@ -378,34 +373,6 @@ func (p *PromQL) each(ctx context.Context, fn func(ctx context.Context, id int, 
 	return nil
 }
 
-// tempoTransport sets Accept for some endpoints.
-//
-// FIXME(tdakkota): probably, we need to add an Accept header.
-type tempoTransport struct {
-	next http.RoundTripper
-}
-
-func newTempoTransport(next http.RoundTripper) http.RoundTripper {
-	return &tempoTransport{next: next}
-}
-
-func (t *tempoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	next := t.next
-	if next == nil {
-		next = http.DefaultTransport
-	}
-	if strings.Contains(req.URL.Path, "api/traces/") {
-		if req.Header.Get("Accept") == "" {
-			req.Header.Set("Accept", "application/protobuf")
-		}
-	}
-	resp, err := next.RoundTrip(req)
-	if err != nil {
-		return resp, err
-	}
-	return resp, nil
-}
-
 func (p *PromQL) flushTraces(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
@@ -450,7 +417,10 @@ func (p *PromQL) report(ctx context.Context, q tracedQuery) error {
 
 	bo := backoff.NewConstantBackOff(time.Millisecond * 100)
 	res, err := backoff.RetryWithData(func() (v ptrace.Traces, err error) {
-		res, err := p.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{TraceID: q.TraceID})
+		res, err := p.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{
+			TraceID: q.TraceID,
+			Accept:  "application/protobuf",
+		})
 		if err != nil {
 			return v, backoff.Permanent(err)
 		}
