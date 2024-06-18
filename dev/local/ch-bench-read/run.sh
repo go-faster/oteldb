@@ -24,13 +24,15 @@ go run github.com/go-faster/oteldb/cmd/otelbench promql bench \
     -i "$queries_file" \
     --warmup 10
 
+benchmark_runs="${BENCH_RUNS:-15}"
+
 echo ">> Benchmark"
 OTEL_EXPORTER_OTLP_INSECURE="true" go run github.com/go-faster/oteldb/cmd/otelbench promql bench \
     -i "$queries_file" \
     -o report.yml \
     --trace \
     --allow-empty=false \
-    --count 5 \
+    --count "$benchmark_runs" \
     --warmup 5
 
 echo ">> Done"
