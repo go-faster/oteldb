@@ -187,6 +187,7 @@ func (p *promQuerier) buildSeriesQuery(
 	mapping map[string]string,
 ) (*chsql.SelectQuery, error) {
 	query := chsql.Select(table, column).
+		Distinct(true).
 		Where(chsql.InTimeRange("timestamp", start, end))
 
 	sets := make([]chsql.Expr, 0, len(matcherSets))
