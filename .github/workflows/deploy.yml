@@ -75,7 +75,7 @@ jobs:
           go build -trimpath -buildvcs=false -v ./cmd/chotel
 
       - name: Base image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy.Dockerfile
@@ -85,7 +85,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Proxy image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy.proxy.Dockerfile
@@ -95,7 +95,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: ClickHouse OTEL Exporter Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy.chotel.Dockerfile
@@ -206,7 +206,7 @@ jobs:
           go build -trimpath -buildvcs=false -v ./cmd/otelbot
 
       - name: Application image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy.otelbot.Dockerfile
@@ -216,7 +216,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Migrate image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: internal/otelbench/migrate.Dockerfile
           push: true
