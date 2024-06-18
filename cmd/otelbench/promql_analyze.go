@@ -168,6 +168,7 @@ func newPromQLAnalyzeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "analyze",
 		Short: "Run promql queries",
+		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
 			return p.Run()
 		},

@@ -717,6 +717,7 @@ func newPromQLBenchmarkCommand() *cobra.Command {
 		Use:     "bench",
 		Aliases: []string{"benchmark"},
 		Short:   "Run promql queries",
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := cmd.Context()
 			if err := p.Setup(cmd); err != nil {
