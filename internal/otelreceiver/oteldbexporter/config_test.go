@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
 
@@ -14,5 +13,9 @@ func TestUnmarshalConfig(t *testing.T) {
 	require.NoError(t, err)
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
-	require.NoError(t, component.UnmarshalConfig(cm, cfg))
+	require.NoError(t, cm.Unmarshal(&cfg))
+	require.Equal(t,
+		&Config{DSN: "clickhouse://clickhouse:9000"},
+		cfg,
+	)
 }
