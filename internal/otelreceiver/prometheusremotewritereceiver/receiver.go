@@ -41,7 +41,7 @@ const receiverFormat = "protobuf"
 
 // Receiver is a Prometheus remote write receiver.
 type Receiver struct {
-	params       receiver.CreateSettings
+	params       receiver.Settings
 	host         component.Host
 	nextConsumer consumer.Metrics
 
@@ -58,7 +58,7 @@ type Receiver struct {
 }
 
 // NewReceiver creates new [Start].
-func NewReceiver(params receiver.CreateSettings, config *Config, mconsumer consumer.Metrics) (*Receiver, error) {
+func NewReceiver(params receiver.Settings, config *Config, mconsumer consumer.Metrics) (*Receiver, error) {
 	obsrecv, err := receiverhelper.NewObsReport(receiverhelper.ObsReportSettings{
 		ReceiverID:             params.ID,
 		Transport:              "http",
