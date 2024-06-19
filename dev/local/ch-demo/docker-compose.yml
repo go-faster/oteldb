@@ -12,17 +12,18 @@ services:
     volumes:
       - ../clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
       interval: 1s
       timeout: 1s
       retries: 30
 
   # Exports traces from clickhouse internal table to otel.
   chotel:
-    restart: always
+    image: ghcr.io/go-faster/oteldb/chotel
     build:
       context: ../../../
       dockerfile: chotel.Dockerfile
+    restart: always
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
@@ -34,10 +35,11 @@ services:
       - clickhouse
 
   client:
-    restart: always
+    image: ghcr.io/go-faster/oteldb/oteldemo
     build:
       context: ../../../
       dockerfile: oteldemo.Dockerfile
+    restart: always
     command: ["client"]
     environment:
       - OTEL_LOG_LEVEL=debug
@@ -49,11 +51,12 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=client
   server:
-    restart: always
+    image: ghcr.io/go-faster/oteldb/oteldemo
     command: ["server"]
     build:
       context: ../../../
       dockerfile: oteldemo.Dockerfile
+    restart: always
     environment:
       - OTEL_LOG_LEVEL=debug
       - OTEL_METRICS_EXPORTER=otlp
@@ -65,6 +68,7 @@ services:
       - OTEL_RESOURCE_ATTRIBUTES=service.name=server
 
   oteldb:
+    image: ghcr.io/go-faster/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile
@@ -80,7 +84,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
     ports:
-      - "9090:9090"   # prometheus API
+      - "9090:9090" # prometheus API
     depends_on:
       - clickhouse
 
@@ -96,11 +100,11 @@ services:
       - OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://otelcol:4317
     command:
-      - '--config'
-      - '/etc/otelcol-contrib/config.yaml'
+      - "--config"
+      - "/etc/otelcol-contrib/config.yaml"
       #  https://github.com/open-telemetry/opentelemetry-collector/blob/main/docs/observability.md#how-we-expose-telemetry
-      - '--feature-gates=telemetry.useOtelForInternalMetrics'
-      - '--feature-gates=telemetry.useOtelWithSDKConfigurationForInternalTelemetry'
+      - "--feature-gates=telemetry.useOtelForInternalMetrics"
+      - "--feature-gates=telemetry.useOtelWithSDKConfigurationForInternalTelemetry"
 
   node-exporter:
     image: prom/node-exporter
@@ -110,12 +114,12 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.processes'
-      - '--web.max-requests=40'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.processes"
+      - "--web.max-requests=40"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
   grafana:
     image: "ghcr.io/go-faster/grafana:10.0.0"

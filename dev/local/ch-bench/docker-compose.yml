@@ -9,12 +9,13 @@ services:
     volumes:
       - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
       interval: 1s
       timeout: 1s
       retries: 30
 
   generator:
+    image: ghcr.io/go-faster/oteldb/otelbench
     build:
       context: ../../../
       dockerfile: otelbench.Dockerfile
@@ -41,6 +42,7 @@ services:
       - oteldb
 
   oteldb:
+    image: ghcr.io/go-faster/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile
@@ -56,7 +58,7 @@ services:
       - GOMAXPROCS=6
       - GOMEMLIMIT=3GiB
     ports:
-      - "127.0.0.1:9010:9010"   # pprof http://localhost:9010/debug/pprof/
+      - "127.0.0.1:9010:9010" # pprof http://localhost:9010/debug/pprof/
     depends_on:
       - clickhouse
 

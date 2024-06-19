@@ -12,7 +12,7 @@ services:
     volumes:
       - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
       interval: 1s
       timeout: 1s
       retries: 30
@@ -20,12 +20,13 @@ services:
   prometheus:
     image: "ghcr.io/go-faster/prom/prometheus"
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+      - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
-      - './prometheus.yml:/etc/prometheus/prometheus.yml'
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
     restart: unless-stopped
 
   oteldb:
+    image: ghcr.io/go-faster/oteldb
     build:
       context: ../../../
       dockerfile: deploy.Dockerfile
@@ -49,23 +50,24 @@ services:
       - GOMAXPROCS=3
       - GOMEMLIMIT=1GiB
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:13133/liveness']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:13133/liveness"]
       interval: 1s
       timeout: 1s
       retries: 30
     ports:
-      - "127.0.0.1:9090:9090"   # promql
-      - "127.0.0.1:9010:9010"   # pprof
+      - "127.0.0.1:9090:9090" # promql
+      - "127.0.0.1:9010:9010" # pprof
       - "127.0.0.1:19291:19291" # prometheus remote write
     depends_on:
       - clickhouse
 
   # Exports traces from clickhouse internal table to otel.
   chotel:
-    restart: always
+    image: ghcr.io/go-faster/oteldb/chotel
     build:
       context: ../../../
       dockerfile: deploy.chotel.Dockerfile
+    restart: always
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
@@ -77,7 +79,7 @@ services:
 
   tempo:
     image: "ghcr.io/go-faster/tempo"
-    command: [ "-config.file=/etc/tempo.yml" ]
+    command: ["-config.file=/etc/tempo.yml"]
     ports:
       - "127.0.0.1:3200:3200"
     volumes:
@@ -91,5 +93,5 @@ services:
     ports:
       - "127.0.0.1:4317:4317"
     command:
-      - '--config'
-      - '/etc/otelcol-contrib/config.yaml'
+      - "--config"
+      - "/etc/otelcol-contrib/config.yaml"

@@ -12,12 +12,13 @@ services:
     volumes:
       - ../clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml
     healthcheck:
-      test: ['CMD', 'wget', '--spider', '-q', '127.0.0.1:8123/ping']
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
       interval: 1s
       timeout: 1s
       retries: 30
 
   oteldb:
+    image: ghcr.io/go-faster/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile
