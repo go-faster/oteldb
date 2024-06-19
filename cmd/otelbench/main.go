@@ -21,6 +21,7 @@ func main() {
 	}
 	rootCmd.AddCommand(
 		newPromQLCommand(),
+		newLogQLCommand(),
 		newPrometheusRemoteWriteCommand(),
 		newOtelCommand(),
 		newAPICommand(),
