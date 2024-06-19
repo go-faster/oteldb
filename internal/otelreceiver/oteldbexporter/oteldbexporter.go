@@ -36,7 +36,7 @@ func createDefaultConfig() component.Config {
 
 func createTracesExporter(
 	ctx context.Context,
-	settings exporter.CreateSettings,
+	settings exporter.Settings,
 	cfg component.Config,
 ) (exporter.Traces, error) {
 	ecfg := cfg.(*Config)
@@ -49,7 +49,7 @@ func createTracesExporter(
 
 func createMetricsExporter(
 	ctx context.Context,
-	settings exporter.CreateSettings,
+	settings exporter.Settings,
 	cfg component.Config,
 ) (exporter.Metrics, error) {
 	ecfg := cfg.(*Config)
@@ -62,7 +62,7 @@ func createMetricsExporter(
 
 func createLogsExporter(
 	ctx context.Context,
-	settings exporter.CreateSettings,
+	settings exporter.Settings,
 	cfg component.Config,
 ) (exporter.Logs, error) {
 	ecfg := cfg.(*Config)

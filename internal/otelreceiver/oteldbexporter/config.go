@@ -14,7 +14,7 @@ type Config struct {
 	DSN string `mapstructure:"dsn"`
 }
 
-func (c *Config) connect(ctx context.Context, settings exporter.CreateSettings) (*chstorage.Inserter, error) {
+func (c *Config) connect(ctx context.Context, settings exporter.Settings) (*chstorage.Inserter, error) {
 	pool, err := chstorage.Dial(ctx, c.DSN, chstorage.DialOptions{
 		MeterProvider:  settings.MeterProvider,
 		TracerProvider: settings.TracerProvider,
