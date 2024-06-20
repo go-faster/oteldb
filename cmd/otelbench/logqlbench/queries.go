@@ -24,6 +24,7 @@ type ConfigQuery struct {
 
 // Query is a benchmarked query.
 type Query struct {
+	ID   int
 	Type string
 
 	Title       string
@@ -42,7 +43,7 @@ type Input struct {
 	Series  []ConfigQuery `yaml:"series"`
 }
 
-func (p *LogQLBenchmark) each(ctx context.Context, fn func(ctx context.Context, id int, q Query) error) error {
+func (p *LogQLBenchmark) each(ctx context.Context, fn func(ctx context.Context, q Query) error) error {
 	data, err := os.ReadFile(p.Input)
 	if err != nil {
 		return errors.Wrap(err, "read input")
@@ -53,9 +54,11 @@ func (p *LogQLBenchmark) each(ctx context.Context, fn func(ctx context.Context, 
 		return errors.Wrap(err, "unmarshal input")
 	}
 
+	var id int
 	mapQuery := func(typ string, cq ConfigQuery) (Query, error) {
 		q := Query{
 			Type:        typ,
+			ID:          id,
 			Title:       cq.Title,
 			Description: cq.Description,
 			Step:        cq.Step,
@@ -71,33 +74,36 @@ func (p *LogQLBenchmark) each(ctx context.Context, fn func(ctx context.Context, 
 		if err != nil {
 			return q, errors.Wrap(err, "parse end")
 		}
+
+		id++
+		q.ID = id
 		return q, nil
 	}
 
-	for idx, cq := range input.Instant {
+	for _, cq := range input.Instant {
 		q, err := mapQuery("instant", cq)
 		if err != nil {
 			return err
 		}
-		if err := fn(ctx, idx+1, q); err != nil {
+		if err := fn(ctx, q); err != nil {
 			return errors.Wrap(err, "callback")
 		}
 	}
-	for idx, cq := range input.Range {
+	for _, cq := range input.Range {
 		q, err := mapQuery("range", cq)
 		if err != nil {
 			return err
 		}
-		if err := fn(ctx, idx+1, q); err != nil {
+		if err := fn(ctx, q); err != nil {
 			return errors.Wrap(err, "callback")
 		}
 	}
-	for idx, cq := range input.Series {
+	for _, cq := range input.Series {
 		q, err := mapQuery("series", cq)
 		if err != nil {
 			return err
 		}
-		if err := fn(ctx, idx+1, q); err != nil {
+		if err := fn(ctx, q); err != nil {
 			return errors.Wrap(err, "callback")
 		}
 	}

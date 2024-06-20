@@ -7,44 +7,12 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
-func (p *LogQLBenchmark) sendAndRecord(ctx context.Context, id int, q Query) (rerr error) {
-	start := time.Now()
-	tq := tracedQuery{
-		ID:    id,
-		Query: q,
-	}
-	if p.Trace {
-		traceCtx, span := p.tracer.Start(ctx, "Send",
-			trace.WithSpanKind(trace.SpanKindClient),
-		)
-		tq.TraceID = span.SpanContext().TraceID().String()
-		ctx = traceCtx
-		defer func() {
-			if rerr != nil {
-				span.RecordError(rerr)
-				span.SetStatus(codes.Error, rerr.Error())
-			} else {
-				span.SetStatus(codes.Ok, "")
-			}
-			span.End()
-		}()
-	}
-	if err := p.send(ctx, q); err != nil {
-		return errors.Wrap(err, "send")
-	}
-	tq.Duration = time.Since(start)
-
-	p.queriesMux.Lock()
-	p.queries = append(p.queries, tq)
-	p.queriesMux.Unlock()
-
-	return nil
+func (p *LogQLBenchmark) sendAndRecord(ctx context.Context, q Query) (rerr error) {
+	return p.tracker.Track(ctx, q, p.send)
 }
 
 func toLokiTimestamp(t time.Time) (opt lokiapi.OptLokiTime) {

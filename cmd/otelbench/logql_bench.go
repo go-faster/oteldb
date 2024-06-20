@@ -29,13 +29,13 @@ func newLogQLBenchmarkCommand() *cobra.Command {
 	f.StringVarP(&p.Input, "input", "i", "logql.yml", "Input file")
 	f.StringVarP(&p.Output, "output", "o", "report.yml", "Output report file")
 	f.DurationVar(&p.RequestTimeout, "request-timeout", time.Second*10, "Request timeout")
-	f.StringVar(&p.TracesExporterAddr, "traces-exporter-addr", "http://127.0.0.1:4317", "Traces exporter OTLP endpoint")
-	f.StringVar(&p.TempoAddr, "tempo-addr", "http://127.0.0.1:3200", "Tempo endpoint")
 	f.StringVar(&p.StartTime, "start", "", "Start time override (RFC3339 or unix timestamp)")
 	f.StringVar(&p.EndTime, "end", "", "End time override (RFC3339 or unix timestamp)")
 	f.BoolVar(&p.AllowEmpty, "allow-empty", true, "Allow empty results")
 
-	f.BoolVar(&p.Trace, "trace", false, "Trace queries")
+	f.StringVar(&p.TrackerOptions.TempoAddr, "tempo-addr", "http://127.0.0.1:3200", "Tempo endpoint")
+	f.BoolVar(&p.TrackerOptions.Trace, "trace", false, "Trace queries")
+
 	f.IntVar(&p.Count, "count", 1, "Number of times to run each query (only for sequential)")
 	f.IntVar(&p.Warmup, "warmup", 0, "Number of warmup runs (only for sequential)")
 

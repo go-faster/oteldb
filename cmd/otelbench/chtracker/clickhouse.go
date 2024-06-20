@@ -1,4 +1,4 @@
-package logqlbench
+package chtracker
 
 import (
 	"context"
@@ -8,73 +8,24 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/ptrace"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/go-faster/oteldb/internal/tempoapi"
 )
 
-type tracedQuery struct {
-	ID       int
-	TraceID  string
-	Query    Query
-	Duration time.Duration
+// QueryReport is a Clickhouse query stats retrieved from trace.
+type QueryReport struct {
+	DurationNanos int64  `json:"duration_nanos,omitempty" yaml:"duration_nanos,omitempty"`
+	Query         string `json:"query,omitempty" yaml:"query,omitempty"`
+	ReadBytes     int64  `json:"read_bytes,omitempty" yaml:"read_bytes,omitempty"`
+	ReadRows      int64  `json:"read_rows,omitempty" yaml:"read_rows,omitempty"`
+	MemoryUsage   int64  `json:"memory_usage,omitempty" yaml:"memory_usage,omitempty"`
+
+	ReceivedRows int64 `json:"recevied_rows,omitempty" yaml:"recevied_rows,omitempty"`
 }
 
-func (p *LogQLBenchmark) setupTracing(ctx context.Context) error {
-	if !p.Trace {
-		p.tracerProvider = noop.NewTracerProvider()
-		return nil
-	}
-	exporter, err := otlptracegrpc.New(ctx)
-	if err != nil {
-		return errors.Wrap(err, "create exporter")
-	}
-	p.batchSpanProcessor = sdktrace.NewBatchSpanProcessor(exporter)
-	p.tracerProvider = sdktrace.NewTracerProvider(
-		sdktrace.WithResource(resource.NewSchemaless(
-			attribute.String("service.name", "otelbench.logql"),
-		)),
-		sdktrace.WithSpanProcessor(p.batchSpanProcessor),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-	)
-	p.tracer = p.tracerProvider.Tracer("logql")
-	tempoClient, err := tempoapi.NewClient(p.TempoAddr)
-	if err != nil {
-		return errors.Wrap(err, "create tempo client")
-	}
-	p.tempo = tempoClient
-	return nil
-}
-
-func (p *LogQLBenchmark) flushTraces(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-
-	if err := p.batchSpanProcessor.ForceFlush(ctx); err != nil {
-		return errors.Wrap(err, "flush")
-	}
-
-	return nil
-}
-
-func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
-	// Produce query report.
-	reportEntry := LogQLReportQuery{
-		ID:            q.ID,
-		DurationNanos: q.Duration.Nanoseconds(),
-		Query:         q.Query.Query,
-		Title:         q.Query.Title,
-		Description:   q.Query.Description,
-		Matchers:      q.Query.Match,
-	}
-
-	if !p.Trace {
-		p.reports = append(p.reports, reportEntry)
-		return nil
+func (t *Tracker[Q]) retrieveReports(ctx context.Context, tq TrackedQuery[Q]) (reports []QueryReport, _ error) {
+	if !t.trace {
+		return reports, nil
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
@@ -82,8 +33,8 @@ func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
 
 	bo := backoff.NewConstantBackOff(time.Millisecond * 100)
 	res, err := backoff.RetryWithData(func() (v ptrace.Traces, err error) {
-		res, err := p.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{
-			TraceID: q.TraceID,
+		res, err := t.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{
+			TraceID: tq.TraceID,
 			Accept:  "application/protobuf",
 		})
 		if err != nil {
@@ -91,7 +42,7 @@ func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
 		}
 		switch r := res.(type) {
 		case *tempoapi.TraceByIDNotFound:
-			return v, errors.Errorf("trace %q not found", q.TraceID)
+			return v, errors.Errorf("trace %q not found", tq.TraceID)
 		case *tempoapi.TraceByID:
 			var um ptrace.ProtoUnmarshaler
 			buf, err := io.ReadAll(r.Data)
@@ -102,6 +53,7 @@ func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
 			if err != nil {
 				return v, backoff.Permanent(errors.Wrap(err, "unmarshal traces"))
 			}
+
 			services := make(map[string]int)
 			list := traces.ResourceSpans()
 			for i := 0; i < list.Len(); i++ {
@@ -113,7 +65,7 @@ func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
 				services[attrValue.AsString()]++
 			}
 			for _, svc := range []string{
-				"otelbench.logql",
+				"otelbench." + t.senderName,
 				"go-faster.oteldb",
 				"clickhouse",
 			} {
@@ -121,16 +73,17 @@ func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
 					return v, errors.Errorf("service %q not found", svc)
 				}
 			}
+
 			return traces, nil
 		default:
 			return v, backoff.Permanent(errors.Errorf("unknown response type %T", res))
 		}
 	}, backoff.WithContext(bo, ctx))
 	if err != nil {
-		return errors.Wrap(err, "retry")
+		return nil, errors.Wrap(err, "get trace")
 	}
 	if res.SpanCount() < 1 {
-		return errors.Errorf("trace %q spans length is zero", q.TraceID)
+		return nil, errors.New("response is empty, no spans returned")
 	}
 
 	// For each clickhouse query ID, save query.
@@ -186,42 +139,36 @@ func (p *LogQLBenchmark) report(ctx context.Context, q tracedQuery) error {
 	}
 
 	for _, r := range queries {
-		var reportQuery ClickhouseQueryReport
+		var report QueryReport
 
 		if span := r.clickhouseSpan; span != (ptrace.Span{}) {
 			attrs := span.Attributes()
 
 			if statement, ok := attrs.Get("db.statement"); ok {
-				reportQuery.Query = statement.AsString()
+				report.Query = statement.AsString()
 			}
 			if readBytes, ok := attrs.Get("clickhouse.read_bytes"); ok {
-				reportQuery.ReadBytes = readBytes.Int()
+				report.ReadBytes = readBytes.Int()
 			}
 			if readRows, ok := attrs.Get("clickhouse.read_rows"); ok {
-				reportQuery.ReadRows = readRows.Int()
+				report.ReadRows = readRows.Int()
 			}
 			if memoryUsage, ok := attrs.Get("clickhouse.memory_usage"); ok {
-				reportQuery.MemoryUsage = memoryUsage.Int()
+				report.MemoryUsage = memoryUsage.Int()
 			}
-			reportQuery.DurationNanos = span.EndTimestamp().AsTime().Sub(span.StartTimestamp().AsTime()).Nanoseconds()
+			report.DurationNanos = span.EndTimestamp().AsTime().Sub(span.StartTimestamp().AsTime()).Nanoseconds()
 		} else {
 			continue
 		}
 
 		if span := r.chgoSpan; span != (ptrace.Span{}) {
 			attrs := span.Attributes()
-			if receivedBytes, ok := attrs.Get("ch.bytes"); ok {
-				reportQuery.ReceivedBytes = receivedBytes.Int()
-			}
 			if receivedRows, ok := attrs.Get("ch.rows_received"); ok {
-				reportQuery.ReceivedRows = receivedRows.Int()
+				report.ReceivedRows = receivedRows.Int()
 			}
 		}
 
-		reportEntry.Queries = append(reportEntry.Queries, reportQuery)
+		reports = append(reports, report)
 	}
-
-	p.reports = append(p.reports, reportEntry)
-
-	return nil
+	return reports, nil
 }

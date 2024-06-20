@@ -1,5 +1,7 @@
 package logqlbench
 
+import "github.com/go-faster/oteldb/cmd/otelbench/chtracker"
+
 type LogQLReport struct {
 	Queries []LogQLReportQuery `json:"queries"`
 }
@@ -11,16 +13,5 @@ type LogQLReportQuery struct {
 	Description   string                  `yaml:"description,omitempty"`
 	DurationNanos int64                   `yaml:"duration_nanos,omitempty"`
 	Matchers      []string                `yaml:"matchers,omitempty"`
-	Queries       []ClickhouseQueryReport `yaml:"queries,omitempty"`
-}
-
-type ClickhouseQueryReport struct {
-	DurationNanos int64  `yaml:"duration_nanos,omitempty"`
-	Query         string `yaml:"query,omitempty"`
-	ReadBytes     int64  `yaml:"read_bytes,omitempty"`
-	ReadRows      int64  `yaml:"read_rows,omitempty"`
-	MemoryUsage   int64  `yaml:"memory_usage,omitempty"`
-
-	ReceivedBytes int64 `yaml:"recevied_bytes,omitempty"`
-	ReceivedRows  int64 `yaml:"recevied_rows,omitempty"`
+	Queries       []chtracker.QueryReport `yaml:"queries,omitempty"`
 }
