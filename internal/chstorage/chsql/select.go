@@ -18,6 +18,8 @@ type SelectQuery struct {
 	distinct bool
 	columns  []ResultColumn
 
+	// prewhere is a set of expression joined by AND
+	prewhere []Expr
 	// where is a set of expression joined by AND
 	where []Expr
 	order []orderExpr
@@ -51,6 +53,12 @@ func SelectFrom(sub *SelectQuery, columns ...ResultColumn) *SelectQuery {
 // Distinct sets if query is `DISTINCT`.
 func (q *SelectQuery) Distinct(b bool) *SelectQuery {
 	q.distinct = true
+	return q
+}
+
+// Prewhere adds filters to query.
+func (q *SelectQuery) Prewhere(filters ...Expr) *SelectQuery {
+	q.prewhere = append(q.prewhere, filters...)
 	return q
 }
 
@@ -145,6 +153,19 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 	default:
 		return errors.New("either table or sub-query must be present")
 	}
+	if len(q.prewhere) > 0 {
+		p.Prewhere()
+		for i, filter := range q.prewhere {
+			if i != 0 {
+				p.And()
+			}
+			p.OpenParen()
+			if err := p.WriteExpr(filter); err != nil {
+				return errors.Wrapf(err, "prewhere %d", i)
+			}
+			p.CloseParen()
+		}
+	}
 	if len(q.where) > 0 {
 		p.Where()
 		for i, filter := range q.where {
@@ -153,7 +174,7 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			}
 			p.OpenParen()
 			if err := p.WriteExpr(filter); err != nil {
-				return errors.Wrapf(err, "filter %d", i)
+				return errors.Wrapf(err, "where %d", i)
 			}
 			p.CloseParen()
 		}

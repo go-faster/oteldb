@@ -204,6 +204,11 @@ func (p *Printer) From() {
 	p.Ident("FROM")
 }
 
+// Prewhere writes `PREWHERE` ident.
+func (p *Printer) Prewhere() {
+	p.Ident("PREWHERE")
+}
+
 // Where writes `WHERE` ident.
 func (p *Printer) Where() {
 	p.Ident("WHERE")

@@ -149,6 +149,20 @@ func TestSelect(t *testing.T) {
 			false,
 		},
 
+		// Test PREWHERE.
+		{
+			func() *SelectQuery {
+				return Select(
+					"logs",
+					Column("body", nil),
+				).
+					Prewhere(
+						HasToken(Ident("body"), "Error"),
+					)
+			},
+			false,
+		},
+
 		// No columns.
 		{
 			func() *SelectQuery { return Select("logs") },
