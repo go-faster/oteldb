@@ -7,44 +7,29 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	yamlx "github.com/go-faster/yaml"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
-	"go.opentelemetry.io/collector/pdata/ptrace"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace"
-	"go.opentelemetry.io/otel/trace/noop"
 	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/yaml"
 
+	"github.com/go-faster/oteldb/cmd/otelbench/chtracker"
 	"github.com/go-faster/oteldb/internal/logparser"
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/promproxy"
-	"github.com/go-faster/oteldb/internal/tempoapi"
 )
 
-type tracedQuery struct {
-	ID       int
-	TraceID  string
-	Query    promproxy.Query
-	Duration time.Duration
+type promQLQuery struct {
+	ID int
+	promproxy.Query
 }
 
 type PromQL struct {
@@ -62,25 +47,17 @@ type PromQL struct {
 	EndTime    string
 	AllowEmpty bool
 
-	TracesExporterAddr string
-	TempoAddr          string
+	TrackerOptions chtracker.SetupOptions
 
 	Input          string
 	Output         string
 	RequestTimeout time.Duration
 
-	client             *promapi.Client
-	batchSpanProcessor sdktrace.SpanProcessor
-	tracerProvider     trace.TracerProvider
-	tempo              *tempoapi.Client
-	start              time.Time
-	end                time.Time
+	tracker *chtracker.Tracker[promQLQuery]
 
-	queries    []tracedQuery
-	queriesMux sync.Mutex
-
-	reports []PromQLReportQuery
-	tracer  trace.Tracer
+	client *promapi.Client
+	start  time.Time
+	end    time.Time
 }
 
 func parseTime(s string) (time.Time, error) {
@@ -107,32 +84,6 @@ func parseTime(s string) (time.Time, error) {
 	return time.Unix(0, nanos), nil
 }
 
-func (p *PromQL) setupTracing(ctx context.Context) error {
-	if !p.Trace {
-		p.tracerProvider = noop.NewTracerProvider()
-		return nil
-	}
-	exporter, err := otlptracegrpc.New(ctx)
-	if err != nil {
-		return errors.Wrap(err, "create exporter")
-	}
-	p.batchSpanProcessor = sdktrace.NewBatchSpanProcessor(exporter)
-	p.tracerProvider = sdktrace.NewTracerProvider(
-		sdktrace.WithResource(resource.NewSchemaless(
-			attribute.String("service.name", "otelbench.promql"),
-		)),
-		sdktrace.WithSpanProcessor(p.batchSpanProcessor),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-	)
-	p.tracer = p.tracerProvider.Tracer("promql")
-	tempoClient, err := tempoapi.NewClient(p.TempoAddr)
-	if err != nil {
-		return errors.Wrap(err, "create tempo client")
-	}
-	p.tempo = tempoClient
-	return nil
-}
-
 func (p *PromQL) Setup(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 
@@ -154,22 +105,13 @@ func (p *PromQL) Setup(cmd *cobra.Command) error {
 		return nil
 	}
 
-	if err := p.setupTracing(ctx); err != nil {
-		return errors.Wrap(err, "setup tracing")
-	}
-	propagator := propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-	httpClient := &http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport,
-			otelhttp.WithTracerProvider(p.tracerProvider),
-			otelhttp.WithPropagators(propagator),
-		),
+	p.tracker, err = chtracker.Setup[promQLQuery](ctx, "promql", p.TrackerOptions)
+	if err != nil {
+		return errors.Wrap(err, "create tracker")
 	}
 	p.client, err = promapi.NewClient(p.Addr,
-		promapi.WithTracerProvider(p.tracerProvider),
-		promapi.WithClient(httpClient),
+		promapi.WithTracerProvider(p.tracker.TracerProvider()),
+		promapi.WithClient(p.tracker.HTTPClient()),
 	)
 	if err != nil {
 		return errors.Wrap(err, "create client")
@@ -233,44 +175,15 @@ func (p *PromQL) sendSeriesQuery(ctx context.Context, query promproxy.SeriesQuer
 	return nil
 }
 
-func (p *PromQL) sendAndRecord(ctx context.Context, id int, q promproxy.Query) (rerr error) {
-	start := time.Now()
-	tq := tracedQuery{
-		ID:    id,
-		Query: q,
-	}
-	if p.Trace {
-		traceCtx, span := p.tracer.Start(ctx, "Send",
-			trace.WithSpanKind(trace.SpanKindClient),
-		)
-		tq.TraceID = span.SpanContext().TraceID().String()
-		ctx = traceCtx
-		defer func() {
-			if rerr != nil {
-				span.RecordError(rerr)
-				span.SetStatus(codes.Error, rerr.Error())
-			} else {
-				span.SetStatus(codes.Ok, "")
-			}
-			span.End()
-		}()
-	}
-	if err := p.send(ctx, q); err != nil {
-		return errors.Wrap(err, "send")
-	}
-	tq.Duration = time.Since(start)
-
-	p.queriesMux.Lock()
-	p.queries = append(p.queries, tq)
-	p.queriesMux.Unlock()
-
-	return nil
+func (p *PromQL) sendAndRecord(ctx context.Context, q promQLQuery) (rerr error) {
+	return p.tracker.Track(ctx, q, p.send)
 }
 
-func (p *PromQL) send(ctx context.Context, q promproxy.Query) error {
+func (p *PromQL) send(ctx context.Context, pq promQLQuery) error {
 	ctx, cancel := context.WithTimeout(ctx, p.RequestTimeout)
 	defer cancel()
-	switch q.Type {
+
+	switch q := pq.Query; q.Type {
 	case promproxy.InstantQueryQuery:
 		return p.sendInstantQuery(ctx, q.InstantQuery)
 	case promproxy.RangeQueryQuery:
@@ -373,205 +286,6 @@ func (p *PromQL) each(ctx context.Context, fn func(ctx context.Context, id int, 
 	return nil
 }
 
-func (p *PromQL) flushTraces(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-
-	if err := p.batchSpanProcessor.ForceFlush(ctx); err != nil {
-		return errors.Wrap(err, "flush")
-	}
-
-	return nil
-}
-
-func (p *PromQL) report(ctx context.Context, q tracedQuery) error {
-	// Produce query report.
-	reportEntry := PromQLReportQuery{
-		ID:            q.ID,
-		DurationNanos: q.Duration.Nanoseconds(),
-	}
-	switch q.Query.Type {
-	case promproxy.InstantQueryQuery:
-		reportEntry.Query = q.Query.InstantQuery.Query
-		reportEntry.Title = q.Query.InstantQuery.Title.Value
-		reportEntry.Description = q.Query.InstantQuery.Description.Value
-	case promproxy.RangeQueryQuery:
-		reportEntry.Query = q.Query.RangeQuery.Query
-		reportEntry.Title = q.Query.RangeQuery.Title.Value
-		reportEntry.Description = q.Query.RangeQuery.Description.Value
-	case promproxy.SeriesQueryQuery:
-		reportEntry.Matchers = q.Query.SeriesQuery.Matchers
-		reportEntry.Title = q.Query.SeriesQuery.Title.Value
-		reportEntry.Description = q.Query.SeriesQuery.Description.Value
-	default:
-		return errors.Errorf("unknown query type %q", q.Query.Type)
-	}
-
-	if !p.Trace {
-		p.reports = append(p.reports, reportEntry)
-		return nil
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-
-	bo := backoff.NewConstantBackOff(time.Millisecond * 100)
-	res, err := backoff.RetryWithData(func() (v ptrace.Traces, err error) {
-		res, err := p.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{
-			TraceID: q.TraceID,
-			Accept:  "application/protobuf",
-		})
-		if err != nil {
-			return v, backoff.Permanent(err)
-		}
-		switch r := res.(type) {
-		case *tempoapi.TraceByIDNotFound:
-			return v, errors.Errorf("trace %q not found", q.TraceID)
-		case *tempoapi.TraceByID:
-			var um ptrace.ProtoUnmarshaler
-			buf, err := io.ReadAll(r.Data)
-			if err != nil {
-				return v, backoff.Permanent(errors.Wrap(err, "read data"))
-			}
-			traces, err := um.UnmarshalTraces(buf)
-			if err != nil {
-				return v, backoff.Permanent(errors.Wrap(err, "unmarshal traces"))
-			}
-			services := make(map[string]int)
-			list := traces.ResourceSpans()
-			for i := 0; i < list.Len(); i++ {
-				rs := list.At(i)
-				attrValue, ok := rs.Resource().Attributes().Get("service.name")
-				if !ok {
-					return v, backoff.Permanent(errors.New("service name not found"))
-				}
-				services[attrValue.AsString()]++
-			}
-			for _, svc := range []string{
-				"otelbench.promql",
-				"go-faster.oteldb",
-				"clickhouse",
-			} {
-				if _, ok := services[svc]; !ok {
-					return v, errors.Errorf("service %q not found", svc)
-				}
-			}
-			return traces, nil
-		default:
-			return v, backoff.Permanent(errors.Errorf("unknown response type %T", res))
-		}
-	}, backoff.WithContext(bo, ctx))
-	if err != nil {
-		return errors.Wrap(err, "retry")
-	}
-	if res.SpanCount() < 1 {
-		return errors.Errorf("trace %q spans length is zero", q.TraceID)
-	}
-
-	// For each clickhouse query ID, save query.
-	type queryReport struct {
-		// "query" span coming from Clickhouse
-		clickhouseSpan ptrace.Span
-		// "Do" span coming from ch-go
-		chgoSpan ptrace.Span
-	}
-	var (
-		rsl     = res.ResourceSpans()
-		queries = map[string]queryReport{}
-	)
-	for i := 0; i < rsl.Len(); i++ {
-		rs := rsl.At(i)
-		spansSlices := rs.ScopeSpans()
-		for j := 0; j < spansSlices.Len(); j++ {
-			spans := spansSlices.At(j).Spans()
-			for k := 0; k < spans.Len(); k++ {
-				span := spans.At(k)
-
-				attrs := span.Attributes()
-				if _, ok := attrs.Get("db.statement"); !ok {
-					continue
-				}
-
-				switch span.Name() {
-				case "query":
-					queryIDVal, ok := attrs.Get("clickhouse.query_id")
-					if !ok {
-						continue
-					}
-					queryID := queryIDVal.AsString()
-
-					report := queries[queryID]
-					report.clickhouseSpan = span
-					queries[queryID] = report
-				case "Do":
-					queryIDVal, ok := attrs.Get("ch.query.id")
-					if !ok {
-						continue
-					}
-					queryID := queryIDVal.AsString()
-
-					report := queries[queryID]
-					report.chgoSpan = span
-					queries[queryID] = report
-				default:
-					continue
-				}
-			}
-		}
-	}
-
-	for _, r := range queries {
-		var reportQuery ClickhouseQueryReport
-
-		if span := r.clickhouseSpan; span != (ptrace.Span{}) {
-			attrs := span.Attributes()
-
-			if statement, ok := attrs.Get("db.statement"); ok {
-				reportQuery.Query = statement.AsString()
-			}
-			if readBytes, ok := attrs.Get("clickhouse.read_bytes"); ok {
-				reportQuery.ReadBytes = readBytes.Int()
-			}
-			if readRows, ok := attrs.Get("clickhouse.read_rows"); ok {
-				reportQuery.ReadRows = readRows.Int()
-			}
-			if memoryUsage, ok := attrs.Get("clickhouse.memory_usage"); ok {
-				reportQuery.MemoryUsage = memoryUsage.Int()
-			}
-			reportQuery.DurationNanos = span.EndTimestamp().AsTime().Sub(span.StartTimestamp().AsTime()).Nanoseconds()
-		} else {
-			continue
-		}
-
-		if span := r.chgoSpan; span != (ptrace.Span{}) {
-			attrs := span.Attributes()
-			if receivedBytes, ok := attrs.Get("ch.bytes"); ok {
-				reportQuery.ReceivedBytes = receivedBytes.Int()
-			}
-			if receivedRows, ok := attrs.Get("ch.rows_received"); ok {
-				reportQuery.ReceivedRows = receivedRows.Int()
-			}
-		}
-
-		reportEntry.Queries = append(reportEntry.Queries, reportQuery)
-	}
-
-	p.reports = append(p.reports, reportEntry)
-
-	return nil
-}
-
-type ClickhouseQueryReport struct {
-	DurationNanos int64  `yaml:"duration_nanos,omitempty"`
-	Query         string `yaml:"query,omitempty"`
-	ReadBytes     int64  `yaml:"read_bytes,omitempty"`
-	ReadRows      int64  `yaml:"read_rows,omitempty"`
-	MemoryUsage   int64  `yaml:"memory_usage,omitempty"`
-
-	ReceivedBytes int64 `yaml:"recevied_bytes,omitempty"`
-	ReceivedRows  int64 `yaml:"recevied_rows,omitempty"`
-}
-
 type PromQLReportQuery struct {
 	ID            int                     `yaml:"id,omitempty"`
 	Query         string                  `yaml:"query,omitempty"`
@@ -579,7 +293,7 @@ type PromQLReportQuery struct {
 	Description   string                  `yaml:"description,omitempty"`
 	DurationNanos int64                   `yaml:"duration_nanos,omitempty"`
 	Matchers      []string                `yaml:"matchers,omitempty"`
-	Queries       []ClickhouseQueryReport `yaml:"queries,omitempty"`
+	Queries       []chtracker.QueryReport `yaml:"queries,omitempty"`
 }
 
 type PromQLReport struct {
@@ -588,9 +302,12 @@ type PromQLReport struct {
 
 func (p *PromQL) runConcurrentBenchmark(ctx context.Context) error {
 	// Load queries.
-	var queries []promproxy.Query
-	if err := p.each(ctx, func(ctx context.Context, _ int, q promproxy.Query) error {
-		queries = append(queries, q)
+	var queries []promQLQuery
+	if err := p.each(ctx, func(ctx context.Context, id int, q promproxy.Query) error {
+		queries = append(queries, promQLQuery{
+			ID:    id,
+			Query: q,
+		})
 		return nil
 	}); err != nil {
 		return errors.Wrap(err, "load queries")
@@ -598,7 +315,7 @@ func (p *PromQL) runConcurrentBenchmark(ctx context.Context) error {
 
 	// Spawn workers and execute random queries until time is up.
 	g, ctx := errgroup.WithContext(ctx)
-	tasks := make(chan promproxy.Query, p.Jobs)
+	tasks := make(chan promQLQuery, p.Jobs)
 	for i := 0; i < p.Jobs; i++ {
 		g.Go(func() error {
 			for {
@@ -661,9 +378,11 @@ func (p *PromQL) Run(ctx context.Context) error {
 	pb := progressbar.Default(int64(total))
 	start := time.Now()
 	if err := p.each(ctx, func(ctx context.Context, id int, q promproxy.Query) (rerr error) {
+		pq := promQLQuery{ID: id, Query: q}
+
 		// Warmup.
 		for i := 0; i < p.Warmup; i++ {
-			if err := p.send(ctx, q); err != nil {
+			if err := p.send(ctx, pq); err != nil {
 				return errors.Wrap(err, "send")
 			}
 			if err := pb.Add(1); err != nil {
@@ -672,7 +391,7 @@ func (p *PromQL) Run(ctx context.Context) error {
 		}
 		// Run.
 		for i := 0; i < p.Count; i++ {
-			if err := p.sendAndRecord(ctx, id, q); err != nil {
+			if err := p.sendAndRecord(ctx, pq); err != nil {
 				return errors.Wrap(err, "send")
 			}
 			if err := pb.Add(1); err != nil {
@@ -691,28 +410,46 @@ func (p *PromQL) Run(ctx context.Context) error {
 
 	if p.Trace {
 		fmt.Println("waiting for traces")
-		if err := p.flushTraces(ctx); err != nil {
+		if err := p.tracker.Flush(ctx); err != nil {
 			return errors.Wrap(err, "flush traces")
 		}
 	} else {
 		fmt.Println("saving")
 	}
 
-	pb = progressbar.Default(int64(len(p.queries)))
-	for _, v := range p.queries {
-		if err := p.report(ctx, v); err != nil {
-			return errors.Wrap(err, "wait for trace")
-		}
-		if err := pb.Add(1); err != nil {
-			return errors.Wrap(err, "update progress bar")
-		}
-	}
-	if err := pb.Finish(); err != nil {
-		return errors.Wrap(err, "finish progress bar")
+	var reports []PromQLReportQuery
+	if err := p.tracker.Report(ctx,
+		func(ctx context.Context, tq chtracker.TrackedQuery[promQLQuery], queries []chtracker.QueryReport) error {
+			entry := PromQLReportQuery{
+				ID:            tq.Meta.ID,
+				DurationNanos: tq.Duration.Nanoseconds(),
+				Queries:       queries,
+			}
+			switch q := tq.Meta.Query; q.Type {
+			case promproxy.InstantQueryQuery:
+				entry.Query = q.InstantQuery.Query
+				entry.Title = q.InstantQuery.Title.Value
+				entry.Description = q.InstantQuery.Description.Value
+			case promproxy.RangeQueryQuery:
+				entry.Query = q.RangeQuery.Query
+				entry.Title = q.RangeQuery.Title.Value
+				entry.Description = q.RangeQuery.Description.Value
+			case promproxy.SeriesQueryQuery:
+				entry.Matchers = q.SeriesQuery.Matchers
+				entry.Title = q.SeriesQuery.Title.Value
+				entry.Description = q.SeriesQuery.Description.Value
+			default:
+				return errors.Errorf("unknown query type %q", q.Type)
+			}
+			reports = append(reports, entry)
+			return nil
+		},
+	); err != nil {
+		return err
 	}
 
 	report := PromQLReport{
-		Queries: p.reports,
+		Queries: reports,
 	}
 	slices.SortFunc(report.Queries, func(a, b PromQLReportQuery) int {
 		if a.DurationNanos == b.DurationNanos {
@@ -758,13 +495,13 @@ func newPromQLBenchmarkCommand() *cobra.Command {
 	f.StringVarP(&p.Input, "input", "i", "queries.jsonl", "Input file")
 	f.StringVarP(&p.Output, "output", "o", "report.yml", "Output report file")
 	f.DurationVar(&p.RequestTimeout, "request-timeout", time.Second*10, "Request timeout")
-	f.StringVar(&p.TracesExporterAddr, "traces-exporter-addr", "http://127.0.0.1:4317", "Traces exporter OTLP endpoint")
-	f.StringVar(&p.TempoAddr, "tempo-addr", "http://127.0.0.1:3200", "Tempo endpoint")
 	f.StringVar(&p.StartTime, "start", "", "Start time override (RFC3339 or unix timestamp)")
 	f.StringVar(&p.EndTime, "end", "", "End time override (RFC3339 or unix timestamp)")
 	f.BoolVar(&p.AllowEmpty, "allow-empty", true, "Allow empty results")
 
-	f.BoolVar(&p.Trace, "trace", false, "Trace queries")
+	f.StringVar(&p.TrackerOptions.TempoAddr, "tempo-addr", "http://127.0.0.1:3200", "Tempo endpoint")
+	f.BoolVar(&p.TrackerOptions.Trace, "trace", false, "Trace queries")
+
 	f.IntVar(&p.Count, "count", 1, "Number of times to run each query (only for sequential)")
 	f.IntVar(&p.Warmup, "warmup", 0, "Number of warmup runs (only for sequential)")
 

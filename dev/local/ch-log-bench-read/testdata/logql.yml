@@ -1,0 +1,7 @@
+range:
+  - title: Failed POST requests
+    query: |-
+      {http_method="POST"} |= "Error"
+series:
+  - title: All POST series
+    match: ['{http_method="POST"}']

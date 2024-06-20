@@ -1,0 +1,86 @@
+version: "3"
+
+services:
+  clickhouse:
+    image: "ghcr.io/go-faster/clickhouse-server:23.12"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:8123:8123"
+    volumes:
+      - ./clickhouse.xml:/etc/clickhouse-server/config.d/monitoring.xml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:8123/ping"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  oteldb:
+    image: ghcr.io/go-faster/oteldb
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    command:
+      - --config=/etc/otel/cfg.yml
+    volumes:
+      - ./oteldb.yml:/etc/otel/cfg.yml:ro
+    environment:
+      - PPROF_ADDR=0.0.0.0:9010
+      - OTELDB_STORAGE=ch
+      - OTEL_LOG_LEVEL=info
+      - OTEL_EXPORTER_PROMETHEUS_HOST=0.0.0.0
+      - OTEL_EXPORTER_PROMETHEUS_PORT=9464
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_TRACES_SAMPLER=parentbased_always_off
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb
+      - GOMAXPROCS=6
+      - GOMEMLIMIT=1500MiB
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "127.0.0.1:13133/liveness"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    ports:
+      - "127.0.0.1:3100:3100" # logql
+      - "127.0.0.1:4318:4317" # OpenTelemetry receiver
+      - "127.0.0.1:9010:9010" # pprof
+    depends_on:
+      - clickhouse
+
+  # Exports traces from clickhouse internal table to otel.
+  chotel:
+    image: ghcr.io/go-faster/oteldb/chotel
+    build:
+      context: ../../../
+      dockerfile: chotel.Dockerfile
+    restart: always
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb.chotel
+      - CHOTEL_SEND_RATE=1s
+    depends_on:
+      - clickhouse
+
+  tempo:
+    image: "ghcr.io/go-faster/tempo"
+    command: ["-config.file=/etc/tempo.yml"]
+    ports:
+      - "127.0.0.1:3200:3200"
+    volumes:
+      - ./tempo.yml:/etc/tempo.yml:ro
+
+  # https://opentelemetry.io/docs/collector/installation/#docker-compose
+  otelcol:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.89.0
+    volumes:
+      - ./otelcol.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+    command:
+      - "--config"
+      - "/etc/otelcol-contrib/config.yaml"

@@ -12,6 +12,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/plog/plogotlp"
 	"go.uber.org/atomic"
@@ -21,18 +22,22 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/go-faster/oteldb/internal/lokicompliance"
+	"github.com/go-faster/oteldb/internal/lokihandler"
 )
 
 type LogsBench struct {
 	resourceCount   int
 	entriesPerBatch int
 	rate            time.Duration
+	limit           int64
 	targets         []logsBenchTarget
+	start           lokiTimeVar
 
 	clickhouseAddr string
 	writtenLines   atomic.Int64
 	writtenBytes   atomic.Int64
 	storageInfo    atomic.Pointer[ClickhouseStats]
+	stop           chan struct{}
 }
 
 type logsBenchTarget struct {
@@ -41,7 +46,9 @@ type logsBenchTarget struct {
 }
 
 func (b *LogsBench) Run(ctx context.Context) error {
+	b.stop = make(chan struct{})
 	g, ctx := errgroup.WithContext(ctx)
+
 	if b.clickhouseAddr != "" {
 		g.Go(func() error {
 			return b.RunClickhouseReporter(ctx)
@@ -64,6 +71,8 @@ func (b *LogsBench) RunClickhouseReporter(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-b.stop:
+			return nil
 		case <-ticker.C:
 			info, err := fetchClickhouseStats(ctx, b.clickhouseAddr, "logs")
 			if err != nil {
@@ -86,6 +95,8 @@ func (b *LogsBench) RunReporter(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-b.stop:
+			return nil
 		case now := <-ticker.C:
 			var (
 				lines = b.writtenLines.Load()
@@ -112,21 +123,35 @@ func (b *LogsBench) RunReporter(ctx context.Context) error {
 	}
 }
 
+var errLogsLimit = errors.New("limit reached")
+
 func (b *LogsBench) run(ctx context.Context) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec: G404
 
 	ticker := time.NewTicker(b.rate)
 	defer ticker.Stop()
 
+	now := b.start.Value
+	if now.IsZero() {
+		now = time.Now()
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case now := <-ticker.C:
+		case <-b.stop:
+			return nil
+		case <-ticker.C:
+			now = now.Add(b.rate)
+
 			batch, lines, bytes := b.generateBatch(r, now)
 			b.send(ctx, batch)
-			b.writtenLines.Add(lines)
+			totalLines := b.writtenLines.Add(lines)
 			b.writtenBytes.Add(bytes)
+			if b.limit > 0 && totalLines >= b.limit {
+				close(b.stop)
+				return nil
+			}
 		}
 	}
 }
@@ -160,6 +185,9 @@ func (b *LogsBench) generateBatch(r *rand.Rand, now time.Time) (logs plog.Logs, 
 
 	rt := now
 	for i := 0; i < b.entriesPerBatch; i++ {
+		if b.limit > 0 && b.writtenLines.Load()+1 >= b.limit {
+			break
+		}
 		rt = rt.Add(100 * time.Microsecond)
 		entry := lokicompliance.NewLogEntry(r, rt)
 
@@ -254,13 +282,49 @@ func newOtelLogsBenchCommand() *cobra.Command {
 			if err := b.prepareTargets(ctx, args); err != nil {
 				return err
 			}
-			return b.Run(ctx)
+
+			err = b.Run(ctx)
+			if errors.Is(err, errLogsLimit) {
+				err = nil
+			}
+			return err
 		},
 	}
 	f := cmd.Flags()
 	f.IntVar(&b.resourceCount, "resources", 3, "The number of resources")
-	f.IntVar(&b.entriesPerBatch, "entries", 5, "The number of entries per batc")
+	f.IntVar(&b.entriesPerBatch, "entries", 5, "The number of entries per batch")
+	f.Int64Var(&b.limit, "total", 0, "The total number of generated entries (0 to disable limit)")
 	f.DurationVar(&b.rate, "rate", time.Second, "Rate of log emitter")
 	f.StringVar(&b.clickhouseAddr, "clickhouseAddr", "", "clickhouse tcp protocol addr to get actual stats from")
+	f.Var(&b.start, "start", "Set starting point for log timestamps")
 	return cmd
+}
+
+type lokiTimeVar struct {
+	Value time.Time
+}
+
+var _ pflag.Value = (*lokiTimeVar)(nil)
+
+func (v *lokiTimeVar) String() string {
+	if v.Value.IsZero() {
+		return "<zero>"
+	}
+	return v.Value.String()
+}
+
+func (v *lokiTimeVar) Set(s string) error {
+	if s == "" {
+		return errors.New("empty value")
+	}
+	ts, err := lokihandler.ParseTimestamp(s, time.Time{})
+	if err != nil {
+		return err
+	}
+	v.Value = ts
+	return nil
+}
+
+func (v *lokiTimeVar) Type() string {
+	return "string"
 }
