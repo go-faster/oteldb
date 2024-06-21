@@ -320,10 +320,7 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 	{
 		var (
 			materialized = []string{
-				logstorage.LabelTraceID,
-				logstorage.LabelSpanID,
 				logstorage.LabelSeverity,
-				logstorage.LabelBody,
 				logstorage.LabelServiceName,
 				logstorage.LabelServiceInstanceID,
 				logstorage.LabelServiceNamespace,
