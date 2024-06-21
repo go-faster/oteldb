@@ -284,6 +284,17 @@ func runTest(ctx context.Context, t *testing.T, provider *integration.Provider, 
 					names[k] = struct{}{}
 				}
 			}
+
+			// oteldb does not return these fields as part of series
+			// because they have too high cardinality.
+			for _, name := range []string{
+				logstorage.LabelTraceID,
+				logstorage.LabelSpanID,
+				logstorage.LabelBody,
+			} {
+				names[name] = struct{}{}
+			}
+
 			a.ElementsMatch(maps.Keys(names), maps.Keys(set.Labels))
 		})
 		t.Run("OneMatcher", func(t *testing.T) {
