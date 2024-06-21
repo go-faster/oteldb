@@ -159,11 +159,9 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			if i != 0 {
 				p.And()
 			}
-			p.OpenParen()
 			if err := p.WriteExpr(filter); err != nil {
 				return errors.Wrapf(err, "prewhere %d", i)
 			}
-			p.CloseParen()
 		}
 	}
 	if len(q.where) > 0 {
@@ -172,11 +170,9 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			if i != 0 {
 				p.And()
 			}
-			p.OpenParen()
 			if err := p.WriteExpr(filter); err != nil {
 				return errors.Wrapf(err, "where %d", i)
 			}
-			p.CloseParen()
 		}
 	}
 	if len(q.order) > 0 {
