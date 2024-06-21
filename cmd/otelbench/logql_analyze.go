@@ -12,19 +12,21 @@ import (
 	yamlx "github.com/go-faster/yaml"
 	"github.com/spf13/cobra"
 	"golang.org/x/perf/benchfmt"
+
+	"github.com/go-faster/oteldb/cmd/otelbench/logqlbench"
 )
 
-type PromQLAnalyze struct {
+type LogQLAnalyze struct {
 	Input  string
 	Format string
 }
 
-func (a PromQLAnalyze) Run() error {
+func (a LogQLAnalyze) Run() error {
 	data, err := os.ReadFile(a.Input)
 	if err != nil {
 		return errors.Wrap(err, "read file")
 	}
-	var report PromQLReport
+	var report logqlbench.LogQLReport
 	if err := yamlx.Unmarshal(data, &report); err != nil {
 		return errors.Wrap(err, "unmarshal yaml")
 	}
@@ -39,7 +41,7 @@ func (a PromQLAnalyze) Run() error {
 	}
 }
 
-func (a PromQLAnalyze) renderPretty(report PromQLReport, w io.Writer) error {
+func (a LogQLAnalyze) renderPretty(report logqlbench.LogQLReport, w io.Writer) error {
 	var buf bytes.Buffer
 	for _, q := range report.Queries {
 		if q.ID != 0 {
@@ -76,7 +78,7 @@ func (a PromQLAnalyze) renderPretty(report PromQLReport, w io.Writer) error {
 	return err
 }
 
-func (a PromQLAnalyze) renderBenchstat(report PromQLReport, w io.Writer) error {
+func (a LogQLAnalyze) renderBenchstat(report logqlbench.LogQLReport, w io.Writer) error {
 	var recs []benchfmt.Result
 	for _, q := range report.Queries {
 		name := normalizeBenchName(q.Title)
@@ -86,7 +88,7 @@ func (a PromQLAnalyze) renderBenchstat(report PromQLReport, w io.Writer) error {
 		recs = append(recs, benchfmt.Result{
 			Name: bytes.Join(
 				[][]byte{
-					[]byte(`PromQL`),
+					[]byte(`LogQL`),
 					name,
 				},
 				[]byte{'/'},
@@ -105,11 +107,11 @@ func (a PromQLAnalyze) renderBenchstat(report PromQLReport, w io.Writer) error {
 	return writeBenchstat(w, recs)
 }
 
-func newPromQLAnalyzeCommand() *cobra.Command {
-	p := &PromQLAnalyze{}
+func newLogQLAnalyzeCommand() *cobra.Command {
+	p := &LogQLAnalyze{}
 	cmd := &cobra.Command{
 		Use:   "analyze",
-		Short: "Run promql queries",
+		Short: "Run LogQL queries",
 		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
 			return p.Run()

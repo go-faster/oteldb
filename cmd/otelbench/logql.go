@@ -8,6 +8,7 @@ func newLogQLCommand() *cobra.Command {
 		Short: "Suite for LogQL benchmarks",
 	}
 	cmd.AddCommand(
+		newLogQLAnalyzeCommand(),
 		newLogQLBenchmarkCommand(),
 	)
 	return cmd
