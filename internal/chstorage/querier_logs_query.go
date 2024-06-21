@@ -343,13 +343,25 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr, rerr error) {
 	switch m.Op {
 	case logql.OpEq, logql.OpNotEq:
 		expr := chsql.Contains("body", m.By.Value)
+
+		// Clickhouse does not use tokenbf_v1 index to skip blocks
+		// with position* functions for some reason.
+		//
+		// Force to skip using hasToken function.
+		//
+		// Note that such optimization is applied only if operation is not negated to
+		// avoid false-negative skipping.
+		if val := m.By.Value; m.Op != logql.OpNotEq && chsql.IsSingleToken(val) {
+			expr = chsql.And(expr,
+				chsql.HasToken(chsql.Ident("body"), val),
+			)
+		}
+
 		{
 			// HACK: check for special case of hex-encoded trace_id and span_id.
 			// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
 			// TODO(ernado): also handle regex?
-
 			v, _ := hex.DecodeString(m.By.Value)
-
 			switch len(v) {
 			case len(otelstorage.TraceID{}):
 				expr = chsql.Or(expr, chsql.Eq(
