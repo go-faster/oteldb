@@ -26,6 +26,8 @@ import (
 )
 
 type LogsBench struct {
+	seed int64
+
 	resourceCount   int
 	entriesPerBatch int
 	rate            time.Duration
@@ -126,7 +128,7 @@ func (b *LogsBench) RunReporter(ctx context.Context) error {
 var errLogsLimit = errors.New("limit reached")
 
 func (b *LogsBench) run(ctx context.Context) error {
-	r := rand.New(rand.NewSource(time.Now().UnixNano())) // #nosec: G404
+	r := rand.New(rand.NewSource(b.seed)) // #nosec: G404
 
 	ticker := time.NewTicker(b.rate)
 	defer ticker.Stop()
@@ -291,6 +293,7 @@ func newOtelLogsBenchCommand() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
+	f.Int64Var(&b.seed, "seed", time.Now().UnixNano(), "Seed of random generator")
 	f.IntVar(&b.resourceCount, "resources", 3, "The number of resources")
 	f.IntVar(&b.entriesPerBatch, "entries", 5, "The number of entries per batch")
 	f.Int64Var(&b.limit, "total", 0, "The total number of generated entries (0 to disable limit)")
