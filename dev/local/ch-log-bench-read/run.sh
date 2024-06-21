@@ -19,6 +19,7 @@ end_time="2024-01-01T00:05:10Z"
 echo ">> Generate benchmark data"
 go run github.com/go-faster/oteldb/cmd/otelbench otel logs bench \
     localhost:4318 \
+    --seed 10 \
     --start "$start_time" \
     --rate 1ms \
     --entries 150 \
