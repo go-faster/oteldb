@@ -3,6 +3,7 @@ package chstorage
 import (
 	"bytes"
 	"testing"
+	"unicode"
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/sdk/gold"
@@ -59,4 +60,46 @@ func Test_attributeCol(t *testing.T) {
 		require.Equal(t, 0, dec.Rows())
 		require.Equal(t, proto.ColumnTypeLowCardinality.Sub(proto.ColumnTypeString), dec.Type())
 	})
+}
+
+func testMap() pcommon.Map {
+	m := pcommon.NewMap()
+	m.PutStr("net.transport", "ip_tcp")
+	m.PutStr("net.sock.family", "inet")
+	m.PutStr("net.sock.host.addr", "192.168.210.83")
+	m.PutStr("net.host.name", "shop-backend.local")
+	m.PutStr("http.flavor", "1.1")
+	m.PutStr("http.method", "PUT")
+	m.PutInt("http.status_code", 204)
+	m.PutStr("http.url", "https://shop-backend.local:8409/article-to-cart")
+	m.PutStr("http.scheme", "https")
+	m.PutStr("http.target", "/article-to-cart")
+	m.PutInt("http.response_content_length", 937939)
+	m.PutInt("http.request_content_length", 39543)
+	return m
+}
+
+func TestEncodeAttributes(t *testing.T) {
+	data := encodeAttributes(testMap(), [2]string{"le", "50"})
+	require.JSONEq(t, `{
+"net.transport": "ip_tcp",
+"net.sock.family": "inet",
+"net.sock.host.addr": "192.168.210.83",
+"net.host.name": "shop-backend.local",
+"http.flavor": "1.1",
+"http.method": "PUT",
+"http.status_code": 204,
+"http.url": "https://shop-backend.local:8409/article-to-cart",
+"http.scheme": "https",
+"http.target": "/article-to-cart",
+"http.response_content_length": 937939,
+"http.request_content_length": 39543,
+"le": "50"
+	}`, string(data))
+
+	// See https://clickhouse.com/docs/en/sql-reference/functions/json-functions#simplejson-visitparam-functions.
+	require.False(t,
+		bytes.ContainsFunc(data, unicode.IsSpace),
+		"ensure that resulting JSON is simpleJSON-compatible",
+	)
 }
