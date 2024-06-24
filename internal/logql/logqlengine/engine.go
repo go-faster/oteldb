@@ -74,6 +74,11 @@ func NewEngine(querier Querier, opts Options) *Engine {
 	}
 }
 
+// ParseOptions returns [logql.ParseOptions] used by engine.
+func (e *Engine) ParseOptions() logql.ParseOptions {
+	return e.parseOpts
+}
+
 // NewQuery creates new [Query].
 func (e *Engine) NewQuery(ctx context.Context, query string) (_ Query, rerr error) {
 	ctx, span := e.tracer.Start(ctx, "logql.Engine.NewQuery", trace.WithAttributes(

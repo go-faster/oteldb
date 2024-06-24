@@ -23,9 +23,8 @@ import (
 
 // LokiAPI implements lokiapi.Handler.
 type LokiAPI struct {
-	q         logstorage.Querier
-	engine    *logqlengine.Engine
-	parseOpts logql.ParseOptions
+	q      logstorage.Querier
+	engine *logqlengine.Engine
 }
 
 var _ lokiapi.Handler = (*LokiAPI)(nil)
@@ -35,8 +34,6 @@ func NewLokiAPI(q logstorage.Querier, engine *logqlengine.Engine) *LokiAPI {
 	return &LokiAPI{
 		q:      q,
 		engine: engine,
-		// TODO(tdakkota): configure parse options.
-		parseOpts: logql.ParseOptions{},
 	}
 }
 
@@ -69,7 +66,7 @@ func (h *LokiAPI) LabelValues(ctx context.Context, params lokiapi.LabelValuesPar
 
 	var sel logql.Selector
 	if q := params.Query.Or(""); q != "" {
-		sel, err = logql.ParseSelector(q, h.parseOpts)
+		sel, err = logql.ParseSelector(q, h.engine.ParseOptions())
 		if err != nil {
 			return nil, validationErr(err, "parse query")
 		}
@@ -242,7 +239,7 @@ func (h *LokiAPI) Series(ctx context.Context, params lokiapi.SeriesParams) (*lok
 
 	selectors := make([]logql.Selector, len(params.Match))
 	for i, m := range params.Match {
-		selectors[i], err = logql.ParseSelector(m, h.parseOpts)
+		selectors[i], err = logql.ParseSelector(m, h.engine.ParseOptions())
 		if err != nil {
 			return nil, validationErr(err, fmt.Sprintf("invalid match[%d]", i))
 		}
