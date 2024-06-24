@@ -577,9 +577,9 @@ func getTraceQLMatcher(matcher traceql.SpanMatcher) (e chsql.Expr, _ bool) {
 			exprs = make([]chsql.Expr, 0, 3)
 		)
 		for _, column := range getTraceQLAttributeColumns(attr) {
-			exprs = append(exprs, chsql.Has(
-				attrKeys(column),
-				chsql.String(attr.Name),
+			exprs = append(exprs, chsql.SimpleJSONHas(
+				chsql.Ident(column),
+				attr.Name,
 			))
 		}
 		return chsql.JoinOr(exprs...), true

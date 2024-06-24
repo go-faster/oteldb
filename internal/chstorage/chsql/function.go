@@ -95,6 +95,11 @@ func HasToken(haystack Expr, token string) Expr {
 	return Function("hasToken", haystack, String(token))
 }
 
+// SimpleJSONHas returns `simpleJSONHas(<json>, <field>)` function call expression.
+func SimpleJSONHas(json Expr, field string) Expr {
+	return Function("simpleJSONHas", json, String(field))
+}
+
 // JSONExtract returns `JSONExtract(<from>, <typ>)` function call expression.
 func JSONExtract(from Expr, typ string) Expr {
 	return Function("JSONExtract", from, String(typ))
