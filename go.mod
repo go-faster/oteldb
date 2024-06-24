@@ -28,7 +28,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/klauspost/compress v1.17.9
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
-	github.com/ogen-go/ogen v1.2.1
+	github.com/ogen-go/ogen v1.2.2
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.103.0
