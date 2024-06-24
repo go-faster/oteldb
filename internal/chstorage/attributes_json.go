@@ -1,6 +1,9 @@
 package chstorage
 
 import (
+	"slices"
+	"strings"
+
 	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
@@ -61,15 +64,56 @@ func encodeMap(e *jx.Encoder, m pcommon.Map, additional ...[2]string) {
 		e.ObjEmpty()
 		return
 	}
-	e.ObjStart()
+
+	type value struct {
+		str  string
+		otel pcommon.Value
+	}
+	type pair struct {
+		key   string
+		value value
+	}
+	var pairs []pair
+	if l := m.Len(); l < 16 {
+		pairs = make([]pair, 0, 16)
+	} else {
+		pairs = make([]pair, 0, m.Len()+len(additional))
+	}
+
 	m.Range(func(k string, v pcommon.Value) bool {
-		e.FieldStart(k)
-		encodeValue(e, v)
+		pairs = append(pairs, pair{
+			key:   k,
+			value: value{otel: v},
+		})
 		return true
 	})
-	for _, pair := range additional {
-		e.FieldStart(pair[0])
-		e.Str(pair[1])
+	for _, p := range additional {
+		pairs = append(pairs, pair{
+			key:   p[0],
+			value: value{str: p[1]},
+		})
+	}
+
+	slices.SortFunc(pairs, func(a, b pair) int {
+		// [cmp.Compare] has significantly worse performance
+		// than [strings.Compare] due to NaN checks.
+		//
+		// Note that [strings.Compare] is not intrinsified, although
+		// SIMD-based implementation would not give any performance
+		// gains, since attribute names tend to be relatively small (<64 bytes).
+		//
+		// See https://go.dev/issue/61725.
+		return strings.Compare(a.key, b.key)
+	})
+
+	e.ObjStart()
+	for _, p := range pairs {
+		e.FieldStart(p.key)
+		if v := p.value.otel; v != (pcommon.Value{}) {
+			encodeValue(e, v)
+		} else {
+			e.Str(p.value.str)
+		}
 	}
 	e.ObjEnd()
 }

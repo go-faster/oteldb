@@ -2,10 +2,12 @@ package chstorage
 
 import (
 	"bytes"
+	"slices"
 	"testing"
 	"unicode"
 
 	"github.com/ClickHouse/ch-go/proto"
+	"github.com/go-faster/jx"
 	"github.com/go-faster/sdk/gold"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -97,9 +99,44 @@ func TestEncodeAttributes(t *testing.T) {
 "le": "50"
 	}`, string(data))
 
+	var keys []string
+	require.NoError(t,
+		jx.DecodeBytes(data).Obj(func(d *jx.Decoder, key string) error {
+			keys = append(keys, key)
+			return d.Skip()
+		}),
+	)
+
+	// Ensure that keys in resulting JSON are sorted to reduce cardinality.
+	require.True(t,
+		slices.IsSorted(keys),
+		"resulting JSON must be sorted",
+	)
+
 	// See https://clickhouse.com/docs/en/sql-reference/functions/json-functions#simplejson-visitparam-functions.
 	require.False(t,
 		bytes.ContainsFunc(data, unicode.IsSpace),
-		"ensure that resulting JSON is simpleJSON-compatible",
+		"resulting JSON must be simpleJSON-compatible",
 	)
+}
+
+func BenchmarkEncodeAttributes(b *testing.B) {
+	var (
+		m = testMap()
+		e jx.Encoder
+	)
+	encodeMap(&e, m, [2]string{"le", "50"})
+	e.Reset()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		e.Reset()
+		encodeMap(&e, m, [2]string{"le", "50"})
+	}
+
+	if len(e.Bytes()) == 0 {
+		b.Fatal("unexpected result")
+	}
 }
