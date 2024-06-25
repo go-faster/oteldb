@@ -203,6 +203,7 @@ func (p *promQuerier) buildSeriesQuery(
 				}
 				selectors = []chsql.Expr{
 					attrSelector(colAttrs, name),
+					attrSelector(colScope, name),
 					attrSelector(colResource, name),
 				}
 			}
