@@ -42,6 +42,7 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 
 		ch:              q.ch,
 		tables:          q.tables,
+		labelLimit:      q.labelLimit,
 		getLabelMapping: q.getMetricsLabelMapping,
 		do:              q.do,
 
@@ -56,6 +57,7 @@ type promQuerier struct {
 
 	ch              ClickhouseClient
 	tables          Tables
+	labelLimit      int
 	getLabelMapping func(context.Context, []string) (map[string]string, error)
 	do              func(ctx context.Context, s selectQuery) error
 
@@ -266,7 +268,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 			}
 			query.Where(expr)
 		}
-		query.Limit(1000)
+		query.Limit(p.labelLimit)
 
 		if err := p.do(ctx, selectQuery{
 			Query: query,
@@ -473,7 +475,7 @@ func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*lab
 			}
 			query.Where(expr)
 		}
-		query.Limit(1000)
+		query.Limit(p.labelLimit)
 
 		if err := p.do(ctx, selectQuery{
 			Query: query,

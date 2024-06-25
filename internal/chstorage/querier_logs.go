@@ -75,7 +75,7 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		).
 			Distinct(true).
 			Where(chsql.InTimeRange("timestamp", opts.Start, opts.End)).
-			Limit(1000),
+			Limit(q.labelLimit),
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < name.Rows(); i++ {
 				// TODO: add configuration option
@@ -190,7 +190,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			query.Where(expr)
 		}
 		query.Order(chsql.Ident("value"), chsql.Asc).
-			Limit(1000)
+			Limit(q.labelLimit)
 
 		if err := q.do(ctx, selectQuery{
 			Query: query,

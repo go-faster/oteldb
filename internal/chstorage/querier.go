@@ -20,8 +20,9 @@ var _ tracestorage.Querier = (*Querier)(nil)
 
 // Querier implements tracestorage.Querier using Clickhouse.
 type Querier struct {
-	ch     ClickhouseClient
-	tables Tables
+	ch         ClickhouseClient
+	tables     Tables
+	labelLimit int
 
 	clickhouseRequestHistogram metric.Float64Histogram
 	tracer                     trace.Tracer
@@ -31,6 +32,8 @@ type Querier struct {
 type QuerierOptions struct {
 	// Tables provides table paths to query.
 	Tables Tables
+	// LabelLimit defines limit for label lookup in the main table.
+	LabelLimit int
 	// MeterProvider provides OpenTelemetry meter for this querier.
 	MeterProvider metric.MeterProvider
 	// TracerProvider provides OpenTelemetry tracer for this querier.
@@ -40,6 +43,9 @@ type QuerierOptions struct {
 func (opts *QuerierOptions) setDefaults() {
 	if opts.Tables == (Tables{}) {
 		opts.Tables = DefaultTables()
+	}
+	if opts.LabelLimit == 0 {
+		opts.LabelLimit = 1000
 	}
 	if opts.MeterProvider == nil {
 		opts.MeterProvider = otel.GetMeterProvider()
@@ -65,10 +71,11 @@ func NewQuerier(c ClickhouseClient, opts QuerierOptions) (*Querier, error) {
 		return nil, errors.Wrap(err, "create clickhouse.request histogram metric")
 	}
 	return &Querier{
-		ch:     c,
-		tables: opts.Tables,
-		tracer: opts.TracerProvider.Tracer("chstorage.Querier"),
+		ch:         c,
+		tables:     opts.Tables,
+		labelLimit: opts.LabelLimit,
 
+		tracer:                     opts.TracerProvider.Tracer("chstorage.Querier"),
 		clickhouseRequestHistogram: clickhouseRequestHistogram,
 	}, nil
 }
