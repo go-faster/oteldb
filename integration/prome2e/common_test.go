@@ -466,6 +466,26 @@ func runTest(
 			a.Equal(promapi.FailErrorTypeBadData, perr.Response.ErrorType)
 		})
 	})
+	t.Run("QueryExemplars", func(t *testing.T) {
+		a := require.New(t)
+
+		r, err := c.GetQueryExemplars(ctx, promapi.GetQueryExemplarsParams{
+			Query: `
+				count(prometheus_http_requests_total{
+						http_method="POST",
+						http_status_code!="200"
+				}) > count(prometheus_http_requests_total{
+						http_method="GET",
+						http_status_code!="200"
+				})`,
+			Start: getPromTS(set.Start),
+			End:   getPromTS(set.End),
+		})
+		a.NoError(err)
+		// We don't have any exemplars in testdata for now, yet we try to do query
+		// just to be sure that API and storage are working correctly.
+		a.Empty(r.Data)
+	})
 	t.Run("QueryRange", func(t *testing.T) {
 		a := require.New(t)
 
