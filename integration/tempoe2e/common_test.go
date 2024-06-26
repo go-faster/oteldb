@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/integration/requirex"
@@ -42,6 +43,7 @@ func readBatchSet(p string) (s tempoe2e.BatchSet, _ error) {
 func setupDB(
 	ctx context.Context,
 	t *testing.T,
+	provider trace.TracerProvider,
 	set tempoe2e.BatchSet,
 	inserter tracestorage.Inserter,
 	querier tracestorage.Querier,
@@ -56,18 +58,25 @@ func setupDB(
 
 	var engine *traceqlengine.Engine
 	if engineQuerier != nil {
-		engine = traceqlengine.NewEngine(engineQuerier, traceqlengine.Options{})
+		engine = traceqlengine.NewEngine(engineQuerier, traceqlengine.Options{
+			TracerProvider: provider,
+		})
 	}
 	api := tempohandler.NewTempoAPI(querier, engine, tempohandler.TempoAPIOptions{
 		EnableAutocompleteQuery: true,
 	})
-	tempoh, err := tempoapi.NewServer(api)
+	tempoh, err := tempoapi.NewServer(api,
+		tempoapi.WithTracerProvider(provider),
+	)
 	require.NoError(t, err)
 
 	s := httptest.NewServer(tempoh)
 	t.Cleanup(s.Close)
 
-	c, err := tempoapi.NewClient(s.URL, tempoapi.WithClient(s.Client()))
+	c, err := tempoapi.NewClient(s.URL,
+		tempoapi.WithClient(s.Client()),
+		tempoapi.WithTracerProvider(provider),
+	)
 	require.NoError(t, err)
 	return c
 }
@@ -75,6 +84,7 @@ func setupDB(
 func runTest(
 	ctx context.Context,
 	t *testing.T,
+	provider trace.TracerProvider,
 	inserter tracestorage.Inserter,
 	querier tracestorage.Querier,
 	engineQuerier traceqlengine.Querier,
@@ -102,7 +112,7 @@ func runTest(
 		}
 	}
 
-	c := setupDB(ctx, t, set, inserter, querier, engineQuerier)
+	c := setupDB(ctx, t, provider, set, inserter, querier, engineQuerier)
 	var (
 		start = tempoapi.NewOptUnixSeconds(set.Start.AsTime().Add(-time.Second))
 		end   = tempoapi.NewOptUnixSeconds(set.End.AsTime())
