@@ -40,7 +40,7 @@ type exemplarQuerier struct {
 
 	ch              ClickhouseClient
 	tables          Tables
-	getLabelMapping func(context.Context, []string) (map[string]string, error)
+	getLabelMapping func(context.Context, []string) (metricsLabelMapping, error)
 	do              func(ctx context.Context, s selectQuery) error
 
 	tracer trace.Tracer
@@ -178,7 +178,7 @@ func (q *exemplarQuerier) buildQuery(
 	table string, columns []chsql.ResultColumn,
 	start, end time.Time,
 	matcherSets [][]*labels.Matcher,
-	mapping map[string]string,
+	mapping metricsLabelMapping,
 ) (*chsql.SelectQuery, error) {
 	query := chsql.Select(table, columns...).
 		Where(chsql.InTimeRange("timestamp", start, end))
@@ -191,14 +191,7 @@ func (q *exemplarQuerier) buildQuery(
 				chsql.Ident("name"),
 			}
 			if name := m.Name; name != labels.MetricName {
-				if mapped, ok := mapping[name]; ok {
-					name = mapped
-				}
-				selectors = []chsql.Expr{
-					attrSelector(colAttrs, name),
-					attrSelector(colScope, name),
-					attrSelector(colResource, name),
-				}
+				selectors = mapping.Selectors(name)
 			}
 
 			matcher, err := promQLLabelMatcher(selectors, m.Type, m.Value)

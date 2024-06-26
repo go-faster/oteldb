@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -58,7 +59,9 @@ func (opts *QuerierOptions) setDefaults() {
 // NewQuerier creates new Querier.
 func NewQuerier(c ClickhouseClient, opts QuerierOptions) (*Querier, error) {
 	// HACK(ernado): for some reason, we are getting no-op here.
-	opts.TracerProvider = otel.GetTracerProvider()
+	if _, ok := opts.TracerProvider.(noop.TracerProvider); ok {
+		opts.TracerProvider = otel.GetTracerProvider()
+	}
 	opts.MeterProvider = otel.GetMeterProvider()
 	opts.setDefaults()
 

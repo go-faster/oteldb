@@ -104,10 +104,13 @@ const (
 		name_normalized LowCardinality(String), -- normalized name, 'foo_bar'
 
 		value            String, -- original value, 'foo.bar'
-		value_normalized String  -- normalized value, 'foo_bar' or empty, if original already normalized
+		value_normalized String,  -- normalized value, 'foo_bar' or empty, if original already normalized
+
+		scope Enum8(` + metricLabelScopeDDL + `)
 	)
 	ENGINE = ReplacingMergeTree
-	ORDER BY (name_normalized, value)`
+	ORDER BY (name_normalized, value, scope)`
+	metricLabelScopeDDL = `'NONE' = 0, 'RESOURCE' = 1, 'INSTRUMENTATION' = 2, 'ATTRIBUTE' = 4`
 )
 
 func parseLabels(s []byte, to map[string]string) error {

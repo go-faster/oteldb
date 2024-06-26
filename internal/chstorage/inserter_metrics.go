@@ -62,15 +62,11 @@ func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 	return nil
 }
 
-func (b metricsBatch) Len() int {
-	return b.points.value.Rows()
-}
-
 type metricsBatch struct {
 	points        *pointColumns
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
-	labels        map[[2]string]struct{}
+	labels        map[[2]string]labelScope
 }
 
 func (b *metricsBatch) Reset() {
@@ -85,21 +81,55 @@ func newMetricBatch() *metricsBatch {
 		points:        newPointColumns(),
 		expHistograms: newExpHistogramColumns(),
 		exemplars:     newExemplarColumns(),
-		labels:        map[[2]string]struct{}{},
+		labels:        map[[2]string]labelScope{},
 	}
 }
 
+type labelScope uint8
+
+const (
+	labelScopeNone     labelScope = 0
+	labelScopeResource labelScope = 1 << iota
+	labelScopeInstrumentation
+	labelScopeAttribute
+)
+
 func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickhouseClient) error {
 	labelColumns := newLabelsColumns()
-	for pair := range b.labels {
-		key := pair[0]
+	insertLabel := func(
+		key, keyNormalized string,
+		value, valueNormalized string,
+		scope labelScope,
+	) {
 		labelColumns.name.Append(key)
-		labelColumns.nameNormalized.Append(otelstorage.KeyToLabel(key))
-		labelColumns.value.Append(pair[1])
+		labelColumns.nameNormalized.Append(keyNormalized)
+		labelColumns.value.Append(value)
 		if key == labels.MetricName {
-			labelColumns.valueNormalized.Append(otelstorage.KeyToLabel(pair[1]))
+			labelColumns.valueNormalized.Append(valueNormalized)
 		} else {
 			labelColumns.valueNormalized.Append("")
+		}
+		labelColumns.scope.Append(proto.Enum8(scope))
+	}
+	for pair, scopes := range b.labels {
+		key := pair[0]
+		keyNormalized := otelstorage.KeyToLabel(key)
+		value := pair[1]
+		valueNormalized := otelstorage.KeyToLabel(value)
+
+		if scopes == 0 {
+			insertLabel(key, keyNormalized, value, valueNormalized, labelScopeNone)
+		} else {
+			for _, scope := range [3]labelScope{
+				labelScopeResource,
+				labelScopeInstrumentation,
+				labelScopeAttribute,
+			} {
+				if scopes&scope == 0 {
+					continue
+				}
+				insertLabel(key, keyNormalized, value, valueNormalized, scope)
+			}
 		}
 	}
 
@@ -164,7 +194,7 @@ func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice p
 		}
 
 		b.addName(name)
-		b.addLabels(attrs)
+		b.addLabels(labelScopeAttribute, attrs)
 
 		if err := b.addExemplars(
 			exemplarSeries{
@@ -216,7 +246,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res, scope lazyAttributes
 		explicitBounds := point.ExplicitBounds().AsRaw()
 
 		// Do not add metric name as-is, since we mapping it into multiple series with prefixes.
-		b.addLabels(attrs)
+		b.addLabels(labelScopeAttribute, attrs)
 
 		// Map histogram as set of series for Prometheus compatibility.
 		series := mappedSeries{
@@ -388,7 +418,7 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttribu
 		negativeOffset, negativeBucketCounts := mapBuckets(point.Negative())
 
 		b.addName(name)
-		b.addLabels(attrs)
+		b.addLabels(labelScopeAttribute, attrs)
 		if err := b.addExemplars(
 			exemplarSeries{
 				Name:       name,
@@ -445,7 +475,7 @@ func (b *metricsBatch) addSummaryPoints(name string, res, scope lazyAttributes, 
 		}
 
 		b.addName(name)
-		b.addLabels(attrs)
+		b.addLabels(labelScopeAttribute, attrs)
 
 		ms := mappedSeries{
 			Timestamp:  ts,
@@ -550,17 +580,17 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 }
 
 func (b *metricsBatch) addName(name string) {
-	b.labels[[2]string{labels.MetricName, name}] = struct{}{}
+	b.labels[[2]string{labels.MetricName, name}] |= 0
 }
 
-func (b *metricsBatch) addLabels(attrs lazyAttributes) {
+func (b *metricsBatch) addLabels(scope labelScope, attrs lazyAttributes) {
 	attrs.orig.Range(func(key string, value pcommon.Value) bool {
 		pair := [2]string{
 			key,
 			// FIXME(tdakkota): annoying allocations
 			value.AsString(),
 		}
-		b.labels[pair] = struct{}{}
+		b.labels[pair] |= scope
 		return true
 	})
 }
@@ -574,7 +604,7 @@ func (b *metricsBatch) mapMetrics(metrics pmetric.Metrics) error {
 				orig: resMetric.Resource().Attributes(),
 			}
 		)
-		b.addLabels(resAttrs)
+		b.addLabels(labelScopeResource, resAttrs)
 
 		scopeMetrics := resMetric.ScopeMetrics()
 		for i := 0; i < scopeMetrics.Len(); i++ {
@@ -584,7 +614,7 @@ func (b *metricsBatch) mapMetrics(metrics pmetric.Metrics) error {
 					orig: scopeMetric.Scope().Attributes(),
 				}
 			)
-			b.addLabels(scopeAttrs)
+			b.addLabels(labelScopeInstrumentation, scopeAttrs)
 
 			records := scopeMetric.Metrics()
 			for i := 0; i < records.Len(); i++ {
