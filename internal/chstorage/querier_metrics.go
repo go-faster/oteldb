@@ -58,7 +58,7 @@ type promQuerier struct {
 	ch              ClickhouseClient
 	tables          Tables
 	labelLimit      int
-	getLabelMapping func(context.Context, []string) (map[string]string, error)
+	getLabelMapping func(context.Context, []string) (metricsLabelMapping, error)
 	do              func(ctx context.Context, s selectQuery) error
 
 	clickhouseRequestHistogram metric.Float64Histogram
@@ -252,14 +252,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 				chsql.Ident("name_normalized"),
 			}
 			if name := m.Name; name != labels.MetricName {
-				if mapped, ok := mapping[name]; ok {
-					name = mapped
-				}
-				selectors = []chsql.Expr{
-					attrSelector(colAttrs, name),
-					attrSelector(colScope, name),
-					attrSelector(colResource, name),
-				}
+				selectors = mapping.Selectors(name)
 			}
 
 			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
@@ -459,14 +452,7 @@ func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*lab
 				chsql.Ident("name_normalized"),
 			}
 			if name := m.Name; name != labels.MetricName {
-				if mapped, ok := mapping[name]; ok {
-					name = mapped
-				}
-				selectors = []chsql.Expr{
-					attrSelector(colAttrs, name),
-					attrSelector(colScope, name),
-					attrSelector(colResource, name),
-				}
+				selectors = mapping.Selectors(name)
 			}
 
 			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
@@ -577,7 +563,43 @@ func promQLLabelMatcher(valueSel []chsql.Expr, typ labels.MatchType, value strin
 	return chsql.JoinOr(exprs...), nil
 }
 
-func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_ map[string]string, rerr error) {
+type metricsLabelMapping struct {
+	normalized map[string]string
+	scope      map[string]labelScope
+}
+
+func (m metricsLabelMapping) Selectors(key string) []chsql.Expr {
+	name := key
+	if mapped, ok := m.normalized[key]; ok {
+		name = mapped
+	}
+
+	scopes := m.scope[key]
+	if scopes == 0 {
+		return []chsql.Expr{
+			attrSelector(colAttrs, name),
+			attrSelector(colScope, name),
+			attrSelector(colResource, name),
+		}
+	}
+
+	exprs := make([]chsql.Expr, 0, 3)
+	for _, s := range []struct {
+		flag   labelScope
+		column string
+	}{
+		{labelScopeAttribute, colAttrs},
+		{labelScopeInstrumentation, colScope},
+		{labelScopeResource, colResource},
+	} {
+		if scopes&s.flag != 0 {
+			exprs = append(exprs, attrSelector(s.column, name))
+		}
+	}
+	return exprs
+}
+
+func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (r metricsLabelMapping, rerr error) {
 	table := q.tables.Labels
 
 	ctx, span := q.tracer.Start(ctx, "chstorage.metrics.getMetricsLabelMapping",
@@ -596,10 +618,12 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 	var (
 		name       = new(proto.ColStr).LowCardinality()
 		normalized = new(proto.ColStr).LowCardinality()
+		scope      = new(proto.ColEnum8)
 
 		query = chsql.Select(table,
 			chsql.Column("name", name),
 			chsql.Column("name_normalized", normalized),
+			chsql.Column("scope", scope),
 		).
 			Where(chsql.In(
 				chsql.Ident("name_normalized"),
@@ -607,10 +631,10 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 			))
 	)
 
-	var (
-		out       = make(map[string]string, len(input))
-		inputData proto.ColStr
-	)
+	r.normalized = make(map[string]string, len(input))
+	r.scope = make(map[string]labelScope, len(input))
+
+	var inputData proto.ColStr
 	for _, label := range input {
 		inputData.Append(label)
 	}
@@ -618,7 +642,8 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 		Query: query,
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < normalized.Rows(); i++ {
-				out[normalized.Row(i)] = name.Row(i)
+				r.normalized[normalized.Row(i)] = name.Row(i)
+				r.scope[normalized.Row(i)] |= labelScope(scope.Row(i))
 			}
 			return nil
 		},
@@ -631,13 +656,13 @@ func (q *Querier) getMetricsLabelMapping(ctx context.Context, input []string) (_
 		Signal: "metrics",
 		Table:  table,
 	}); err != nil {
-		return nil, err
+		return r, err
 	}
 	span.AddEvent("mapping_fetched", trace.WithAttributes(
-		xattribute.StringMap("chstorage.mapping", out),
+		xattribute.StringMap("chstorage.mapping", r.normalized),
 	))
 
-	return out, nil
+	return r, nil
 }
 
 // Select returns a set of series that matches the given label matchers.
@@ -790,7 +815,7 @@ func (p *promQuerier) buildQuery(
 	table string, columns []chsql.ResultColumn,
 	start, end time.Time,
 	matchers []*labels.Matcher,
-	mapping map[string]string,
+	mapping metricsLabelMapping,
 ) (*chsql.SelectQuery, error) {
 	query := chsql.Select(table, columns...).
 		Where(chsql.InTimeRange("timestamp", start, end))
@@ -800,14 +825,7 @@ func (p *promQuerier) buildQuery(
 			chsql.Ident("name_normalized"),
 		}
 		if name := m.Name; name != labels.MetricName {
-			if mapped, ok := mapping[name]; ok {
-				name = mapped
-			}
-			selectors = []chsql.Expr{
-				attrSelector(colAttrs, name),
-				attrSelector(colScope, name),
-				attrSelector(colResource, name),
-			}
+			selectors = mapping.Selectors(name)
 		}
 
 		expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)

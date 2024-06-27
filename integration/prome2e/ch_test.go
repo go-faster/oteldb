@@ -23,6 +23,7 @@ func TestCH(t *testing.T) {
 	t.Parallel()
 	integration.Skip(t)
 	ctx := context.Background()
+	provider := integration.IntegrationProvider(t)
 
 	req := testcontainers.ContainerRequest{
 		Name:         "oteldb-prome2e-clickhouse",
@@ -43,6 +44,9 @@ func TestCH(t *testing.T) {
 	opts := ch.Options{
 		Address:  endpoint,
 		Database: "default",
+
+		OpenTelemetryInstrumentation: true,
+		TracerProvider:               provider,
 	}
 
 	connectBackoff := backoff.NewExponentialBackOff()
@@ -71,12 +75,18 @@ func TestCH(t *testing.T) {
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
 
-	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{Tables: tables})
+	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{
+		Tables:         tables,
+		TracerProvider: provider,
+	})
 	require.NoError(t, err)
 
-	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{Tables: tables})
+	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{
+		Tables:         tables,
+		TracerProvider: provider,
+	})
 	require.NoError(t, err)
 
 	ctx = zctx.Base(ctx, integration.Logger(t))
-	runTest(ctx, t, inserter, querier, querier)
+	runTest(ctx, t, provider, inserter, querier, querier)
 }

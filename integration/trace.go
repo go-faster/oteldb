@@ -3,11 +3,16 @@ package integration
 import (
 	"context"
 	"math/rand"
+	"os"
 	"sync"
+	"testing"
+	"time"
 
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 type randomIDGenerator struct {
@@ -36,7 +41,7 @@ func (gen *randomIDGenerator) NewIDs(context.Context) (tid trace.TraceID, sid tr
 // Provider is a helper for tests providing a TracerProvider and an
 // InMemoryExporter.
 type Provider struct {
-	*tracesdk.TracerProvider
+	*sdktrace.TracerProvider
 	Exporter *tracetest.InMemoryExporter
 }
 
@@ -52,18 +57,50 @@ func (p *Provider) Flush() {
 	}
 }
 
+// IntegrationProvider returns trace exporter for debugging.
+//
+// E2E_TRACES_EXPORTER enironment variable sets gRPC OTLP receiver address
+// to export traces.
+func IntegrationProvider(t *testing.T) trace.TracerProvider {
+	if addr := os.Getenv("E2E_TRACES_EXPORTER"); addr != "" {
+		ctx := context.Background()
+
+		exp, err := otlptracegrpc.New(ctx,
+			otlptracegrpc.WithEndpoint(addr),
+			otlptracegrpc.WithInsecure(),
+		)
+		if err != nil {
+			t.Fatalf("create trace exporter: %+v", err)
+		}
+		tracer := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp))
+		t.Cleanup(func() {
+			flushCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+			defer cancel()
+			if err := tracer.ForceFlush(flushCtx); err != nil {
+				t.Logf("Flush traces error: %+v", err)
+			}
+			if err := tracer.Shutdown(ctx); err != nil {
+				t.Logf("Shutdown tracer error: %+v", err)
+			}
+		})
+
+		return tracer
+	}
+	return noop.NewTracerProvider()
+}
+
 // NewProvider initializes and returns a new Provider along with an exporter.
 func NewProvider() *Provider {
 	exporter := tracetest.NewInMemoryExporter()
 	randSource := rand.NewSource(10)
-	tp := tracesdk.NewTracerProvider(
+	tp := sdktrace.NewTracerProvider(
 		// Using deterministic random ids.
-		tracesdk.WithIDGenerator(&randomIDGenerator{
+		sdktrace.WithIDGenerator(&randomIDGenerator{
 			// #nosec G404
 			rand: rand.New(randSource),
 		}),
-		tracesdk.WithBatcher(exporter,
-			tracesdk.WithBatchTimeout(0), // instant
+		sdktrace.WithBatcher(exporter,
+			sdktrace.WithBatchTimeout(0), // instant
 		),
 	)
 	return &Provider{

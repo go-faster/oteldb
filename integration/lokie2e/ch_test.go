@@ -28,6 +28,7 @@ func randomPrefix() string {
 func TestCH(t *testing.T) {
 	integration.Skip(t)
 	ctx := context.Background()
+	provider := integration.IntegrationProvider(t)
 
 	req := testcontainers.ContainerRequest{
 		Name:         "oteldb-lokie2e-clickhouse",
@@ -48,6 +49,9 @@ func TestCH(t *testing.T) {
 	opts := ch.Options{
 		Address:  endpoint,
 		Database: "default",
+
+		OpenTelemetryInstrumentation: true,
+		TracerProvider:               provider,
 	}
 
 	connectBackoff := backoff.NewExponentialBackOff()
@@ -77,7 +81,6 @@ func TestCH(t *testing.T) {
 	t.Logf("Test tables prefix: %s", prefix)
 	require.NoError(t, tables.Create(ctx, c))
 
-	provider := integration.NewProvider()
 	inserter, err := chstorage.NewInserter(c, chstorage.InserterOptions{
 		Tables:         tables,
 		TracerProvider: provider,

@@ -130,6 +130,8 @@ type labelsColumns struct {
 
 	value           proto.ColStr
 	valueNormalized proto.ColStr
+
+	scope proto.ColEnum8
 }
 
 func newLabelsColumns() *labelsColumns {
@@ -145,6 +147,8 @@ func (c *labelsColumns) Columns() Columns {
 		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "value", Data: &c.value},
 		{Name: "value_normalized", Data: &c.valueNormalized},
+
+		{Name: "scope", Data: proto.Wrap(&c.scope, metricLabelScopeDDL)},
 	}
 }
 func (c *labelsColumns) Input() proto.Input                { return c.Columns().Input() }

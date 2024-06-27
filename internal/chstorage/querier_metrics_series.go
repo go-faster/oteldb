@@ -184,7 +184,7 @@ func (p *promQuerier) buildSeriesQuery(
 	table string, column chsql.ResultColumn,
 	start, end time.Time,
 	matcherSets [][]*labels.Matcher,
-	mapping map[string]string,
+	mapping metricsLabelMapping,
 ) (*chsql.SelectQuery, error) {
 	query := chsql.Select(table, column).
 		Distinct(true).
@@ -198,14 +198,7 @@ func (p *promQuerier) buildSeriesQuery(
 				chsql.Ident("name_normalized"),
 			}
 			if name := m.Name; name != labels.MetricName {
-				if mapped, ok := mapping[name]; ok {
-					name = mapped
-				}
-				selectors = []chsql.Expr{
-					attrSelector(colAttrs, name),
-					attrSelector(colScope, name),
-					attrSelector(colResource, name),
-				}
+				selectors = mapping.Selectors(name)
 			}
 
 			matcher, err := promQLLabelMatcher(selectors, m.Type, m.Value)

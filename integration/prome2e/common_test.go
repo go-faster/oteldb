@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/integration/prome2e"
@@ -40,6 +41,7 @@ func readBatchSet(p string) (s prome2e.BatchSet, _ error) {
 func setupDB(
 	ctx context.Context,
 	t *testing.T,
+	provider trace.TracerProvider,
 	set prome2e.BatchSet,
 	consumer MetricsConsumer,
 	querier storage.Queryable,
@@ -57,13 +59,18 @@ func setupDB(
 		EnableNegativeOffset: true,
 	})
 	api := promhandler.NewPromAPI(engine, querier, exemplarQuerier, promhandler.PromAPIOptions{})
-	promh, err := promapi.NewServer(api)
+	promh, err := promapi.NewServer(api,
+		promapi.WithTracerProvider(provider),
+	)
 	require.NoError(t, err)
 
 	s := httptest.NewServer(promh)
 	t.Cleanup(s.Close)
 
-	c, err := promapi.NewClient(s.URL, promapi.WithClient(s.Client()))
+	c, err := promapi.NewClient(s.URL,
+		promapi.WithClient(s.Client()),
+		promapi.WithTracerProvider(provider),
+	)
 	require.NoError(t, err)
 	return c
 }
@@ -71,6 +78,7 @@ func setupDB(
 func runTest(
 	ctx context.Context,
 	t *testing.T,
+	provider trace.TracerProvider,
 	consumer MetricsConsumer,
 	querier storage.Queryable,
 	exemplarQuerier storage.ExemplarQueryable,
@@ -79,7 +87,7 @@ func runTest(
 	require.NoError(t, err)
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
-	c := setupDB(ctx, t, set, consumer, querier, exemplarQuerier)
+	c := setupDB(ctx, t, provider, set, consumer, querier, exemplarQuerier)
 
 	t.Run("Labels", func(t *testing.T) {
 		t.Run("All", func(t *testing.T) {
