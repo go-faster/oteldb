@@ -58,7 +58,17 @@ func (l *LabelSet) AsMap() map[string]string {
 func (l *LabelSet) AppendString(buf []byte) []byte {
 	buf = append(buf, '{')
 
-	keys := maps.Keys(l.labels)
+	const stackThreshold = 24
+	var keys []logql.Label
+	if len(l.labels) < stackThreshold {
+		keys = make([]logql.Label, 0, stackThreshold)
+	} else {
+		keys = make([]logql.Label, 0, len(l.labels))
+	}
+
+	for key := range l.labels {
+		keys = append(keys, key)
+	}
 	slices.Sort(keys)
 
 	i := 0
