@@ -3,7 +3,6 @@ package logqlabels
 import (
 	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -55,27 +54,41 @@ func (l *LabelSet) AsMap() map[string]string {
 	return set
 }
 
-// String returns text representation of labels.
-func (l *LabelSet) String() string {
-	var sb strings.Builder
-	sb.WriteByte('{')
+// AppendString appends text representation of labels.
+func (l *LabelSet) AppendString(buf []byte) []byte {
+	buf = append(buf, '{')
 
-	keys := maps.Keys(l.labels)
+	const stackThreshold = 24
+	var keys []logql.Label
+	if len(l.labels) < stackThreshold {
+		keys = make([]logql.Label, 0, stackThreshold)
+	} else {
+		keys = make([]logql.Label, 0, len(l.labels))
+	}
+
+	for key := range l.labels {
+		keys = append(keys, key)
+	}
 	slices.Sort(keys)
 
 	i := 0
 	for _, k := range keys {
 		v := l.labels[k]
 		if i != 0 {
-			sb.WriteByte(',')
+			buf = append(buf, ',')
 		}
-		sb.WriteString(string(k))
-		sb.WriteByte('=')
-		sb.WriteString(strconv.Quote(v.AsString()))
+		buf = append(buf, k...)
+		buf = append(buf, '=')
+		buf = strconv.AppendQuote(buf, v.AsString())
 		i++
 	}
-	sb.WriteByte('}')
-	return sb.String()
+	buf = append(buf, '}')
+	return buf
+}
+
+// String returns text representation of labels.
+func (l *LabelSet) String() string {
+	return string(l.AppendString(nil))
 }
 
 // SetFromRecord sets labels from given log record.
