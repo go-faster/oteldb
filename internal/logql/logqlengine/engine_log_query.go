@@ -99,19 +99,20 @@ func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.St
 func groupEntries(iter EntryIterator) (s lokiapi.Streams, total int, _ error) {
 	var (
 		e       Entry
+		buf     = make([]byte, 0, 1024)
 		streams = map[string]lokiapi.Stream{}
 	)
 	for iter.Next(&e) {
 		// FIXME(tdakkota): allocates a string for every record.
-		key := e.Set.String()
-		stream, ok := streams[key]
+		buf = e.Set.AppendString(buf[:0])
+		stream, ok := streams[string(buf)]
 		if !ok {
 			stream = lokiapi.Stream{
 				Stream: lokiapi.NewOptLabelSet(e.Set.AsLokiAPI()),
 			}
 		}
 		stream.Values = append(stream.Values, lokiapi.LogEntry{T: uint64(e.Timestamp), V: e.Line})
-		streams[key] = stream
+		streams[string(buf)] = stream
 		total++
 	}
 	if err := iter.Err(); err != nil {
