@@ -59,10 +59,15 @@ type SliceIterator[T any] struct {
 
 // Slice creates new SliceIterator from given values.
 func Slice[T any](vals []T) *SliceIterator[T] {
-	return &SliceIterator[T]{
-		data: vals,
-		n:    0,
-	}
+	i := new(SliceIterator[T])
+	i.Reset(vals)
+	return i
+}
+
+// Reset restores state of iterator using given data.
+func (i *SliceIterator[T]) Reset(vals []T) {
+	i.data = vals
+	i.n = 0
 }
 
 // Next returns true, if there is element and fills t.
