@@ -103,7 +103,6 @@ func groupEntries(iter EntryIterator) (s lokiapi.Streams, total int, _ error) {
 		streams = map[string]lokiapi.Stream{}
 	)
 	for iter.Next(&e) {
-		// FIXME(tdakkota): allocates a string for every record.
 		buf = e.Set.AppendString(buf[:0])
 		stream, ok := streams[string(buf)]
 		if !ok {
