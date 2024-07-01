@@ -21,6 +21,7 @@ type LogQuery struct {
 	Root             PipelineNode
 	LookbackDuration time.Duration
 
+	stats  engineStats
 	tracer trace.Tracer
 }
 
@@ -35,7 +36,9 @@ func (e *Engine) buildLogQuery(ctx context.Context, expr *logql.LogExpr) (Query,
 	return &LogQuery{
 		Root:             root,
 		LookbackDuration: e.lookbackDuration,
-		tracer:           e.tracer,
+
+		stats:  e.stats,
+		tracer: e.tracer,
 	}, nil
 }
 
@@ -61,6 +64,7 @@ func (q *LogQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.Qu
 }
 
 func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.Streams, rerr error) {
+	start := time.Now()
 	ctx, span := q.tracer.Start(ctx, "logql.LogQuery", trace.WithAttributes(
 		xattribute.UnixNano("logql.params.start", params.Start),
 		xattribute.UnixNano("logql.params.end", params.End),
@@ -69,6 +73,7 @@ func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.St
 		attribute.Int("logql.params.limit", params.Limit),
 	))
 	defer func() {
+		q.stats.QueryDuration.Record(ctx, time.Since(start).Seconds())
 		if rerr != nil {
 			span.RecordError(rerr)
 		}

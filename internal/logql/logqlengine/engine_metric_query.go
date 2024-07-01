@@ -3,6 +3,7 @@ package logqlengine
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -19,6 +20,7 @@ import (
 type MetricQuery struct {
 	Root MetricNode
 
+	stats  engineStats
 	tracer trace.Tracer
 }
 
@@ -29,7 +31,9 @@ func (e *Engine) buildMetricQuery(ctx context.Context, expr logql.MetricExpr) (Q
 	}
 
 	return &MetricQuery{
-		Root:   root,
+		Root: root,
+
+		stats:  e.stats,
 		tracer: e.tracer,
 	}, nil
 }
@@ -46,6 +50,7 @@ func (q *MetricQuery) Eval(ctx context.Context, params EvalParams) (lokiapi.Quer
 }
 
 func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
+	start := time.Now()
 	ctx, span := q.tracer.Start(ctx, "logql.MetricQuery", trace.WithAttributes(
 		xattribute.UnixNano("logql.params.start", params.Start),
 		xattribute.UnixNano("logql.params.end", params.End),
@@ -54,6 +59,7 @@ func (q *MetricQuery) eval(ctx context.Context, params EvalParams) (data lokiapi
 		attribute.Int("logql.params.limit", params.Limit),
 	))
 	defer func() {
+		q.stats.QueryDuration.Record(ctx, time.Since(start).Seconds())
 		if rerr != nil {
 			span.RecordError(rerr)
 		}

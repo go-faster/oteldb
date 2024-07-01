@@ -8,6 +8,7 @@ import (
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/logql"
@@ -24,6 +25,8 @@ type Engine struct {
 
 	optimizers []Optimizer
 
+	stats  engineStats
+	meter  metric.Meter
 	tracer trace.Tracer
 }
 
@@ -43,6 +46,9 @@ type Options struct {
 	// Optimizers defines a list of optimiziers to use.
 	Optimizers []Optimizer
 
+	// MeterProvider provides OpenTelemetry meter for this engine.
+	MeterProvider metric.MeterProvider
+
 	// TracerProvider provides OpenTelemetry tracer for this engine.
 	TracerProvider trace.TracerProvider
 }
@@ -54,14 +60,25 @@ func (o *Options) setDefaults() {
 	if o.Optimizers == nil {
 		o.Optimizers = DefaultOptimizers()
 	}
+	if o.MeterProvider == nil {
+		o.MeterProvider = otel.GetMeterProvider()
+	}
 	if o.TracerProvider == nil {
 		o.TracerProvider = otel.GetTracerProvider()
 	}
 }
 
 // NewEngine creates new Engine.
-func NewEngine(querier Querier, opts Options) *Engine {
+func NewEngine(querier Querier, opts Options) (*Engine, error) {
 	opts.setDefaults()
+
+	var (
+		meter = opts.MeterProvider.Meter("logqlengine.Engine")
+		stats engineStats
+	)
+	if err := stats.Register(meter); err != nil {
+		return nil, errors.Wrap(err, "register metrics")
+	}
 
 	return &Engine{
 		querier:          querier,
@@ -70,8 +87,11 @@ func NewEngine(querier Querier, opts Options) *Engine {
 		otelAdapter:      opts.OTELAdapter,
 		parseOpts:        opts.ParseOptions,
 		optimizers:       opts.Optimizers,
-		tracer:           opts.TracerProvider.Tracer("logql.Engine"),
-	}
+
+		stats:  stats,
+		meter:  meter,
+		tracer: opts.TracerProvider.Tracer("logql.Engine"),
+	}, nil
 }
 
 // ParseOptions returns [logql.ParseOptions] used by engine.

@@ -473,7 +473,8 @@ func TestEngineEvalStream(t *testing.T) {
 			opts := Options{
 				ParseOptions: logql.ParseOptions{AllowDots: true},
 			}
-			e := NewEngine(&mockQuerier{lines: tt.input}, opts)
+			e, err := NewEngine(&mockQuerier{lines: tt.input}, opts)
+			require.NoError(t, err)
 
 			gotData, err := eval(ctx, e, tt.query, EvalParams{
 				Start: startTime,
@@ -679,7 +680,8 @@ func TestEngineEvalLiteral(t *testing.T) {
 			opts := Options{
 				ParseOptions: logql.ParseOptions{AllowDots: true},
 			}
-			e := NewEngine(&mockQuerier{}, opts)
+			e, err := NewEngine(&mockQuerier{}, opts)
+			require.NoError(t, err)
 
 			gotData, err := eval(ctx, e, tt.query, EvalParams{
 				Start: otelstorage.Timestamp(tt.tsRange.start).AsTime(),

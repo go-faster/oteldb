@@ -18,7 +18,15 @@ func DefaultOptimizers() []Optimizer {
 	return []Optimizer{}
 }
 
-func (e *Engine) applyOptimizers(ctx context.Context, q Query) (Query, error) {
+func (e *Engine) applyOptimizers(ctx context.Context, q Query) (_ Query, rerr error) {
+	ctx, span := e.tracer.Start(ctx, "logql.Engine.applyOptimizers")
+	defer func() {
+		if rerr != nil {
+			span.RecordError(rerr)
+		}
+		span.End()
+	}()
+
 	var err error
 	for _, o := range e.optimizers {
 		q, err = o.Optimize(ctx, q)

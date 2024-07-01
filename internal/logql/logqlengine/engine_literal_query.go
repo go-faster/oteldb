@@ -17,6 +17,7 @@ import (
 type LiteralQuery struct {
 	Value float64
 
+	stats  engineStats
 	tracer trace.Tracer
 }
 
@@ -24,14 +25,17 @@ var _ Query = (*LiteralQuery)(nil)
 
 func (e *Engine) buildLiteralQuery(_ context.Context, expr *logql.LiteralExpr) (Query, error) {
 	return &LiteralQuery{
-		Value:  expr.Value,
+		Value: expr.Value,
+
+		stats:  e.stats,
 		tracer: e.tracer,
 	}, nil
 }
 
 // Eval implements [Query].
 func (q *LiteralQuery) Eval(ctx context.Context, params EvalParams) (data lokiapi.QueryResponseData, rerr error) {
-	_, span := q.tracer.Start(ctx, "logql.LiteralQuery", trace.WithAttributes(
+	start := time.Now()
+	ctx, span := q.tracer.Start(ctx, "logql.LiteralQuery", trace.WithAttributes(
 		xattribute.UnixNano("logql.params.start", params.Start),
 		xattribute.UnixNano("logql.params.end", params.End),
 		xattribute.Duration("logql.params.step", params.Step),
@@ -39,6 +43,7 @@ func (q *LiteralQuery) Eval(ctx context.Context, params EvalParams) (data lokiap
 		attribute.Int("logql.params.limit", params.Limit),
 	))
 	defer func() {
+		q.stats.QueryDuration.Record(ctx, time.Since(start).Seconds())
 		if rerr != nil {
 			span.RecordError(rerr)
 		}
