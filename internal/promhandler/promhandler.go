@@ -4,6 +4,7 @@ package promhandler
 import (
 	"context"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -102,18 +103,34 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 	var (
 		dedup    = map[string]struct{}{}
 		warnings annotations.Annotations
+		mux      sync.Mutex
 	)
+	grp, grpCtx := errgroup.WithContext(ctx)
 	for _, set := range sets {
-		vals, w, err := q.LabelValues(ctx, params.Label, set...)
-		if err != nil {
-			return nil, executionErr("get label values", err)
-		}
+		set := set
 
-		for _, val := range vals {
-			dedup[val] = struct{}{}
-		}
-		warnings = warnings.Merge(w)
+		grp.Go(func() error {
+			ctx := grpCtx
+
+			vals, w, err := q.LabelValues(ctx, params.Label, set...)
+			if err != nil {
+				return err
+			}
+
+			mux.Lock()
+			defer mux.Unlock()
+
+			for _, val := range vals {
+				dedup[val] = struct{}{}
+			}
+			warnings = warnings.Merge(w)
+			return nil
+		})
 	}
+	if err := grp.Wait(); err != nil {
+		return nil, executionErr("get labels", err)
+	}
+
 	data := maps.Keys(dedup)
 	slices.Sort(data)
 
@@ -171,18 +188,34 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 	var (
 		dedup    = map[string]struct{}{}
 		warnings annotations.Annotations
+		mux      sync.Mutex
 	)
+	grp, grpCtx := errgroup.WithContext(ctx)
 	for _, set := range sets {
-		vals, w, err := q.LabelNames(ctx, set...)
-		if err != nil {
-			return nil, executionErr("get label names", err)
-		}
+		set := set
 
-		for _, val := range vals {
-			dedup[val] = struct{}{}
-		}
-		warnings = warnings.Merge(w)
+		grp.Go(func() error {
+			ctx := grpCtx
+
+			vals, w, err := q.LabelNames(ctx, set...)
+			if err != nil {
+				return err
+			}
+
+			mux.Lock()
+			defer mux.Unlock()
+
+			for _, val := range vals {
+				dedup[val] = struct{}{}
+			}
+			warnings = warnings.Merge(w)
+			return nil
+		})
 	}
+	if err := grp.Wait(); err != nil {
+		return nil, executionErr("get labels", err)
+	}
+
 	data := maps.Keys(dedup)
 	slices.Sort(data)
 
