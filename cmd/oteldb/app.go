@@ -179,14 +179,18 @@ func (app *App) trySetupLoki() error {
 	var optimizers []logqlengine.Optimizer
 	optimizers = append(optimizers, logqlengine.DefaultOptimizers()...)
 	optimizers = append(optimizers, &chstorage.ClickhouseOptimizer{})
-	engine := logqlengine.NewEngine(q, logqlengine.Options{
+	engine, err := logqlengine.NewEngine(q, logqlengine.Options{
 		ParseOptions: logql.ParseOptions{
 			AllowDots: true,
 		},
 		LookbackDuration: cfg.LookbackDelta,
 		Optimizers:       optimizers,
+		MeterProvider:    app.metrics.MeterProvider(),
 		TracerProvider:   app.metrics.TracerProvider(),
 	})
+	if err != nil {
+		return errors.Wrap(err, "create LogQL engine")
+	}
 	loki := lokihandler.NewLokiAPI(q, engine)
 
 	s, err := lokiapi.NewServer(loki,
