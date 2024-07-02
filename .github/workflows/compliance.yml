@@ -55,7 +55,7 @@ jobs:
 
       - name: Start
         working-directory: dev/local/ch-compliance
-        run: docker compose -f docker-compose.ci.yml up -d
+        run: docker compose -f docker-compose.ci.yml up -d --build --force-recreate
 
       - name: Wait
         working-directory: dev/local/ch-compliance
@@ -126,7 +126,7 @@ jobs:
 
       - name: Start
         working-directory: dev/local/ch-logql-compliance
-        run: docker compose -f docker-compose.ci.yml up -d
+        run: docker compose -f docker-compose.ci.yml up -d --build --force-recreate
 
       - name: Run
         working-directory: dev/local/ch-logql-compliance
