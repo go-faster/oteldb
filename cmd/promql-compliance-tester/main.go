@@ -136,11 +136,17 @@ func main() {
 	)
 	expandedTestCases := testcases.ExpandTestCases(cfg.TestCases, cfg.QueryTweaks, start, end, resolution)
 
-	var wg sync.WaitGroup
-	results := make([]*comparer.Result, len(expandedTestCases))
-	progressBar := pb.StartNew(len(results))
-	wg.Add(len(results))
+	var (
+		results     = make([]*comparer.Result, len(expandedTestCases))
+		progressBar = pb.StartNew(len(results))
+	)
+	// Progress bar messes up Github Actions logs, so keep it static.
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		progressBar.SetTemplate(pb.Default + `{{ "\n" }}`)
+	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(results))
 	workCh := make(chan struct{}, *queryParallelism)
 
 	allSuccess := atomic.NewBool(true)
