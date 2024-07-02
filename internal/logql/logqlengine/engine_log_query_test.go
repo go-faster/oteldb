@@ -2,7 +2,6 @@ package logqlengine
 
 import (
 	"cmp"
-	"encoding/binary"
 	"fmt"
 	"slices"
 	"strings"
@@ -17,7 +16,6 @@ import (
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/lokiapi"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 func labelSet(keyval ...string) logqlabels.LabelSet {
@@ -112,7 +110,7 @@ func generateLogs(now time.Time) (entries []Entry) {
 		IP       string
 		Protocol string
 	}
-	for j, b := range []httpLogBatch{
+	for _, b := range []httpLogBatch{
 		{Method: "GET", Status: 200, Count: 11, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
 		{Method: "GET", Status: 200, Count: 10, IP: "200.1.1.1", Protocol: "HTTP/1.1"},
 		{Method: "DELETE", Status: 200, Count: 20, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
@@ -125,20 +123,6 @@ func generateLogs(now time.Time) (entries []Entry) {
 		{Method: "PUT", Status: 200, Count: 20, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
 	} {
 		for i := 0; i < b.Count; i++ {
-			var (
-				spanID  otelstorage.SpanID
-				traceID otelstorage.TraceID
-			)
-			{
-				// Predictable IDs for testing.
-				binary.PutUvarint(spanID[:], uint64(i+1056123959+j*100))
-				spanID[7] = byte(j)
-				spanID[6] = byte(i)
-				binary.PutUvarint(traceID[:], uint64(i+3959+j*1000))
-				binary.PutUvarint(traceID[8:], uint64(i+13+j*1000))
-				traceID[15] = byte(j)
-				traceID[14] = byte(i)
-			}
 			now = now.Add(time.Millisecond * 120)
 			severity := plog.SeverityNumberInfo
 			switch b.Status / 100 {
@@ -156,8 +140,6 @@ func generateLogs(now time.Time) (entries []Entry) {
 				Line:      "line",
 				Set: labelSet(
 					"level", strings.ToLower(severity.String()),
-					"span_id", spanID.Hex(),
-					"trace_id", traceID.Hex(),
 					"method", b.Method,
 					"status", fmt.Sprint(b.Status),
 					"bytes", fmt.Sprint(250),
