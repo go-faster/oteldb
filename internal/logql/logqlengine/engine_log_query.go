@@ -9,7 +9,6 @@ import (
 	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/lokiapi"
@@ -103,33 +102,38 @@ func (q *LogQuery) eval(ctx context.Context, params EvalParams) (data lokiapi.St
 
 func groupEntries(iter EntryIterator) (s lokiapi.Streams, total int, _ error) {
 	var (
-		e       Entry
-		buf     = make([]byte, 0, 1024)
-		streams = map[string]lokiapi.Stream{}
+		e   Entry
+		buf = make([]byte, 0, 1024)
+
+		set     = map[string]int{}
+		streams []lokiapi.Stream
 	)
 	for iter.Next(&e) {
 		buf = e.Set.AppendString(buf[:0])
-		stream, ok := streams[string(buf)]
+
+		idx, ok := set[string(buf)]
 		if !ok {
-			stream = lokiapi.Stream{
+			streams = append(streams, lokiapi.Stream{
 				Stream: lokiapi.NewOptLabelSet(e.Set.AsLokiAPI()),
-			}
+			})
+			idx = len(streams) - 1
+			set[string(buf)] = idx
 		}
+		stream := &streams[idx]
+
 		stream.Values = append(stream.Values, lokiapi.LogEntry{T: uint64(e.Timestamp), V: e.Line})
-		streams[string(buf)] = stream
 		total++
 	}
 	if err := iter.Err(); err != nil {
 		return s, 0, err
 	}
 
-	result := maps.Values(streams)
-	for _, stream := range result {
+	for _, stream := range streams {
 		slices.SortFunc(stream.Values, func(a, b lokiapi.LogEntry) int {
 			return cmp.Compare(a.T, b.T)
 		})
 	}
-	return result, total, nil
+	return streams, total, nil
 }
 
 // ProcessorNode implements [PipelineNode].
