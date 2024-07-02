@@ -15,25 +15,59 @@ func buildLineFilter(stage *logql.LineFilter) (Processor, error) {
 	case logql.OpPattern, logql.OpNotPattern:
 		return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("%s line filter is unsupported", op)}
 	}
-	if len(stage.Or) > 0 {
-		return nil, &logqlerrors.UnsupportedError{Msg: "or in line filters is unsupported"}
-	}
 
-	if stage.By.IP {
-		matcher, err := buildIPMatcher(stage.Op, stage.By.Value)
-		if err != nil {
-			return nil, err
-		}
-
-		return &IPLineFilter{matcher: matcher}, nil
-	}
-
-	matcher, err := buildStringMatcher(stage.Op, stage.By.Value, stage.By.Re, false)
+	matcher, err := buildLineMatcher(stage.Op, stage.By)
 	if err != nil {
 		return nil, err
 	}
 
+	if len(stage.Or) > 0 {
+		matchers := make([]StringMatcher, 0, len(stage.Or)+1)
+		matchers = append(matchers, matcher)
+
+		for _, by := range stage.Or {
+			m, err := buildLineMatcher(stage.Op, by)
+			if err != nil {
+				return nil, err
+			}
+			matchers = append(matchers, m)
+		}
+		return &OrLineFilter{matchers: matchers}, nil
+	}
+
 	return &LineFilter{matcher: matcher}, nil
+}
+
+func buildLineMatcher(op logql.BinOp, by logql.LineFilterValue) (StringMatcher, error) {
+	switch op {
+	case logql.OpPattern, logql.OpNotPattern:
+		return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("%s line filter is unsupported", op)}
+	}
+
+	if by.IP {
+		matcher, err := buildIPMatcher(op, by.Value)
+		if err != nil {
+			return nil, err
+		}
+		return &IPLineMatcher{matcher: matcher}, nil
+	}
+	return buildStringMatcher(op, by.Value, by.Re, false)
+}
+
+// OrLineFilter is a line matching Processor.
+type OrLineFilter struct {
+	matchers []StringMatcher
+}
+
+// Process implements Processor.
+func (lf *OrLineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabels.LabelSet) (_ string, keep bool) {
+	// TODO(tdakkota): cache IP captures
+	for _, m := range lf.matchers {
+		if m.Match(line) {
+			return line, true
+		}
+	}
+	return line, false
 }
 
 // LineFilter is a line matching Processor.
@@ -47,13 +81,15 @@ func (lf *LineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabels
 	return line, keep
 }
 
-// IPLineFilter looks for IP address in a line and applies matcher to it.
-type IPLineFilter struct {
+// IPLineMatcher looks for IP address in a line and applies matcher to it.
+type IPLineMatcher struct {
 	matcher IPMatcher
 }
 
-// Process implements Processor.
-func (lf *IPLineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabels.LabelSet) (_ string, keep bool) {
+var _ StringMatcher = (*IPLineMatcher)(nil)
+
+// Match implements StringMatcher.
+func (lf *IPLineMatcher) Match(line string) bool {
 	for i := 0; i < len(line); {
 		c := line[i]
 		if !isHexDigit(c) && c != ':' {
@@ -66,7 +102,7 @@ func (lf *IPLineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabe
 
 			ip, err := netip.ParseAddr(capture)
 			if err == nil && lf.matcher.Match(ip) {
-				return line, true
+				return true
 			}
 			continue
 		}
@@ -75,14 +111,14 @@ func (lf *IPLineFilter) Process(_ otelstorage.Timestamp, line string, _ logqlabe
 
 			ip, err := netip.ParseAddr(capture)
 			if err == nil && lf.matcher.Match(ip) {
-				return line, true
+				return true
 			}
 			continue
 		}
 		i++
 	}
 
-	return line, false
+	return false
 }
 
 func tryCaptureIPv4(s string) (string, bool) {

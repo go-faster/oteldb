@@ -2,6 +2,7 @@ package logqlengine
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,6 +10,110 @@ import (
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 )
+
+func TestLineFilter(t *testing.T) {
+	tests := []struct {
+		input  string
+		filter logql.LineFilter
+		wantOk bool
+	}{
+		{
+			"",
+			logql.LineFilter{
+				Op: logql.OpEq,
+				By: logql.LineFilterValue{
+					Value: "",
+				},
+			},
+			true,
+		},
+		{
+			"foo",
+			logql.LineFilter{
+				Op: logql.OpEq,
+				By: logql.LineFilterValue{
+					Value: "foo",
+				},
+			},
+			true,
+		},
+		{
+			"",
+			logql.LineFilter{
+				Op: logql.OpRe,
+				By: logql.LineFilterValue{
+					Value: ".+",
+					Re:    regexp.MustCompile(".+"),
+				},
+			},
+			false,
+		},
+		{
+			"foo",
+			logql.LineFilter{
+				Op: logql.OpRe,
+				By: logql.LineFilterValue{
+					Value: "(foo|bar)",
+					Re:    regexp.MustCompile("(foo|bar)"),
+				},
+			},
+			true,
+		},
+		{
+			"192.168.1.1",
+			logql.LineFilter{
+				Op: logql.OpEq,
+				By: logql.LineFilterValue{
+					Value: "192.168.1.0/24",
+					IP:    true,
+				},
+			},
+			true,
+		},
+		{
+			"foo",
+			logql.LineFilter{
+				Op: logql.OpEq,
+				By: logql.LineFilterValue{
+					Value: "bar",
+				},
+				Or: []logql.LineFilterValue{
+					{Value: "baz"},
+					{Value: "foo"},
+				},
+			},
+			true,
+		},
+		{
+			"foo 192.168.1.1",
+			logql.LineFilter{
+				Op: logql.OpEq,
+				By: logql.LineFilterValue{
+					Value: "bar",
+				},
+				Or: []logql.LineFilterValue{
+					{Value: "baz"},
+					{Value: "192.168.1.0/24", IP: true},
+				},
+			},
+			true,
+		},
+	}
+	for i, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+			set := logqlabels.NewLabelSet()
+
+			f, err := buildLineFilter(&tt.filter)
+			require.NoError(t, err)
+
+			newLine, gotOk := f.Process(0, tt.input, set)
+			// Ensure that extractor does not change the line.
+			require.Equal(t, tt.input, newLine)
+			require.Equal(t, tt.wantOk, gotOk)
+		})
+	}
+}
 
 var ipLineFilterTests = []struct {
 	input   string
