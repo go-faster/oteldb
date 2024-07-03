@@ -71,7 +71,7 @@ type EqualIPMatcher struct {
 
 // Match implements IPMatcher.
 func (m EqualIPMatcher) Match(ip netip.Addr) bool {
-	return m.Value.Compare(ip) == 0
+	return m.Value.Compare(ip.Unmap()) == 0
 }
 
 // RangeIPMatcher checks if an IP is in given range.
@@ -81,7 +81,7 @@ type RangeIPMatcher struct {
 
 // Match implements IPMatcher.
 func (m RangeIPMatcher) Match(ip netip.Addr) bool {
-	return m.Range.Contains(ip)
+	return m.Range.Contains(ip.Unmap())
 }
 
 // PrefixIPMatcher checks if an IP has given prefix.
@@ -91,5 +91,5 @@ type PrefixIPMatcher struct {
 
 // Match implements IPMatcher.
 func (m PrefixIPMatcher) Match(ip netip.Addr) bool {
-	return m.Prefix.Contains(ip)
+	return m.Prefix.Contains(ip.Unmap())
 }

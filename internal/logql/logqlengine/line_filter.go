@@ -194,7 +194,7 @@ func tryCaptureIPv6(s string) (string, bool) {
 
 match:
 	for i, c := range []byte(s) {
-		if !isHexDigit(c) && c != ':' {
+		if !isHexDigit(c) && c != ':' && c != '.' {
 			s = s[:i]
 			break
 		}
