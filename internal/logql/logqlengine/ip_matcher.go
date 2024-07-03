@@ -76,8 +76,6 @@ func (m EqualIPMatcher) Match(ip netip.Addr) bool {
 
 // RangeIPMatcher checks if an IP is in given range.
 type RangeIPMatcher struct {
-	// FIXME(tdakkota): probably, it is better to just use two addrs
-	// 	and compare them.
 	Range netipx.IPRange
 }
 

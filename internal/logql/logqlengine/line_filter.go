@@ -11,11 +11,6 @@ import (
 )
 
 func buildLineFilter(stage *logql.LineFilter) (Processor, error) {
-	switch op := stage.Op; op {
-	case logql.OpPattern, logql.OpNotPattern:
-		return nil, &logqlerrors.UnsupportedError{Msg: fmt.Sprintf("%s line filter is unsupported", op)}
-	}
-
 	matcher, err := buildLineMatcher(stage.Op, stage.By)
 	if err != nil {
 		return nil, err
