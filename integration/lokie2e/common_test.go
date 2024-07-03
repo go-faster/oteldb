@@ -398,6 +398,7 @@ func runTest(
 			{`{http_method=~".+"} |~ "HEAD" |= " 500 "`, 2},
 			{`{http_method=~".+"} |~ "(GET|HEAD)"`, 43},
 			{`{http_method=~".+"} |~ "GE.+"`, 21},
+			{`{http_method=~".+"} |= "GET" or "HEAD"`, 43},
 			// Try to not use offloading.
 			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "DELETE"`, 20},
 			{`{http_method=~".+"} | line_format "{{ __line__ }}" |= "HEAD" |= " 500 "`, 2},
@@ -438,6 +439,8 @@ func runTest(
 			// Sure empty queries.
 			{`{http_method="GET"} | http_method != "GET"`, 0},
 			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
+			{`{http_method=~".+"} |= "GET" or "HEAD" != "GET" or "HEAD"`, 0},
+			{`{http_method=~".+"} |= "GET" or "HEAD" !~ "(GET|HEAD)"`, 0},
 		}
 
 		for i, tt := range tests {
