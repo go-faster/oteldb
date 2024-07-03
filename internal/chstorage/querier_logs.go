@@ -183,11 +183,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 				Where(chsql.InTimeRange("timestamp", opts.Start, opts.End))
 		)
 		for _, m := range opts.Query.Matchers {
-			expr, err := q.logQLLabelMatcher(m, mapping)
-			if err != nil {
-				return nil, err
-			}
-			query.Where(expr)
+			query.Where(q.logQLLabelMatcher(m, mapping))
 		}
 		query.Order(chsql.Ident("value"), chsql.Asc).
 			Limit(q.labelLimit)
@@ -371,11 +367,7 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 		for _, sel := range sels {
 			selExprs := make([]chsql.Expr, 0, len(sel.Matchers))
 			for _, m := range sel.Matchers {
-				expr, err := q.logQLLabelMatcher(m, mapping)
-				if err != nil {
-					return result, err
-				}
-				selExprs = append(selExprs, expr)
+				selExprs = append(selExprs, q.logQLLabelMatcher(m, mapping))
 			}
 			sets = append(sets, chsql.JoinAnd(selExprs...))
 		}

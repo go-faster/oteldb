@@ -184,8 +184,13 @@ func (o *ClickhouseOptimizer) canOffloadLineFilter(lf *logql.LineFilter) bool {
 	case logql.OpPattern, logql.OpNotPattern:
 		return false
 	}
-	if lf.By.IP || len(lf.Or) > 0 {
+	if lf.By.IP {
 		return false
+	}
+	for _, by := range lf.Or {
+		if by.IP {
+			return false
+		}
 	}
 	return true
 }
