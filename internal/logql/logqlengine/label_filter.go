@@ -307,9 +307,14 @@ type IPLabelFilter struct {
 }
 
 func buildIPLabelFilter(pred *logql.IPFilter) (Processor, error) {
-	matcher, err := buildIPMatcher(pred.Op, pred.Value)
+	matcher, err := buildIPMatcher(pred.Value)
 	if err != nil {
 		return nil, err
+	}
+	if pred.Op == logql.OpNotEq {
+		matcher = NotMatcher[netip.Addr, IPMatcher]{
+			Next: matcher,
+		}
 	}
 	return &IPLabelFilter{name: pred.Label, matcher: matcher}, nil
 }

@@ -6,8 +6,6 @@ import (
 
 	"github.com/go-faster/errors"
 	"go4.org/netipx"
-
-	"github.com/go-faster/oteldb/internal/logql"
 )
 
 // IPMatcher matches an IP.
@@ -15,35 +13,15 @@ type IPMatcher interface {
 	Matcher[netip.Addr]
 }
 
-func buildIPMatcher(op logql.BinOp, pattern string) (m IPMatcher, _ error) {
+func buildIPMatcher(pattern string) (m IPMatcher, _ error) {
 	switch {
 	case strings.Contains(pattern, "-"):
-		ipRange, err := netipx.ParseIPRange(pattern)
-		if err == nil {
-			switch op {
-			case logql.OpEq:
-				return RangeIPMatcher{Range: ipRange}, nil
-			case logql.OpNotEq:
-				return NotMatcher[netip.Addr, RangeIPMatcher]{
-					Next: RangeIPMatcher{Range: ipRange},
-				}, nil
-			default:
-				return nil, errors.Errorf("unexpected operation %q", op)
-			}
+		if ipRange, err := netipx.ParseIPRange(pattern); err == nil {
+			return RangeIPMatcher{Range: ipRange}, nil
 		}
 	case strings.Contains(pattern, "/"):
-		prefix, err := netip.ParsePrefix(pattern)
-		if err == nil {
-			switch op {
-			case logql.OpEq:
-				return PrefixIPMatcher{Prefix: prefix}, nil
-			case logql.OpNotEq:
-				return NotMatcher[netip.Addr, PrefixIPMatcher]{
-					Next: PrefixIPMatcher{Prefix: prefix},
-				}, nil
-			default:
-				return nil, errors.Errorf("unexpected operation %q", op)
-			}
+		if prefix, err := netip.ParsePrefix(pattern); err == nil {
+			return PrefixIPMatcher{Prefix: prefix}, nil
 		}
 	}
 
@@ -51,17 +29,7 @@ func buildIPMatcher(op logql.BinOp, pattern string) (m IPMatcher, _ error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid addr %q", pattern)
 	}
-
-	switch op {
-	case logql.OpEq:
-		return EqualIPMatcher{Value: addr}, nil
-	case logql.OpNotEq:
-		return NotMatcher[netip.Addr, EqualIPMatcher]{
-			Next: EqualIPMatcher{Value: addr},
-		}, nil
-	default:
-		return nil, errors.Errorf("unexpected operation %q", op)
-	}
+	return EqualIPMatcher{Value: addr}, nil
 }
 
 // EqualIPMatcher checks if an IP equal to given value.

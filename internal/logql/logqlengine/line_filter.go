@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/netip"
 
+	"github.com/go-faster/errors"
+
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlerrors"
@@ -63,11 +65,20 @@ func buildLineMatcher(op logql.BinOp, by logql.LineFilterValue) (StringMatcher, 
 	}
 
 	if by.IP {
-		matcher, err := buildIPMatcher(op, by.Value)
+		matcher, err := buildIPMatcher(by.Value)
 		if err != nil {
 			return nil, err
 		}
-		return &IPLineMatcher{matcher: matcher}, nil
+		switch op {
+		case logql.OpEq:
+			return IPLineMatcher{matcher: matcher}, nil
+		case logql.OpNotEq:
+			return NotMatcher[string, IPLineMatcher]{
+				Next: IPLineMatcher{matcher: matcher},
+			}, nil
+		default:
+			return nil, errors.Errorf("unexpected operation %q", op)
+		}
 	}
 	return buildStringMatcher(op, by.Value, by.Re, false)
 }
@@ -117,7 +128,7 @@ type IPLineMatcher struct {
 var _ StringMatcher = (*IPLineMatcher)(nil)
 
 // Match implements StringMatcher.
-func (lf *IPLineMatcher) Match(line string) bool {
+func (lf IPLineMatcher) Match(line string) bool {
 	for i := 0; i < len(line); {
 		c := line[i]
 		if !isHexDigit(c) && c != ':' {
