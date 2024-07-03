@@ -351,6 +351,12 @@ func runTest(
 			{`{trace_id=~"AF3600.+000C517000.+00003"}`, 1},
 			{`{trace_id="badbadbadbadbadbaddeadbeafbadbad"}`, 0},
 			{`{trace_id=~"bad.+"}`, 0},
+			// By span id.
+			{`{span_id="e3daccf703000003"}`, 1},
+			{`{span_id="E3DACCF703000003"}`, 1},
+			{`{span_id=~"E3DA.+F7030000.+3"}`, 1},
+			{`{span_id="0123456789abcdef"}`, 0},
+			{`{span_id=~"bad.+"}`, 0},
 			// By severity.
 			{`{level="Info"}`, 121},
 			{`{level="INFO"}`, 121},
@@ -406,7 +412,11 @@ func runTest(
 			// Negative line matcher.
 			{`{http_method=~".+"} != "HEAD"`, len(set.Records) - 22},
 			{`{http_method=~".+"} !~ "HEAD"`, len(set.Records) - 22},
-			// Trace to logs.
+			// Trace to logs (span_id).
+			{`{http_method=~".+"} |= "e3daccf703000003"`, 1}, // lower case
+			{`{http_method=~".+"} |= "E3DACCF703000003"`, 1}, // upper case
+			{`{http_method=~".+"} |= "e3dacCF703000003"`, 1}, // mixed case
+			// Trace to logs (trace_id).
 			{`{http_method=~".+"} |= "af36000000000000c517000000000003"`, 1}, // lower case
 			{`{http_method=~".+"} |= "AF36000000000000C517000000000003"`, 1}, // upper case
 			{`{http_method=~".+"} |= "aF36000000000000c517000000000003"`, 1}, // mixed case
@@ -414,6 +424,12 @@ func runTest(
 			// Label filter.
 			{`{http_method=~".+"} | http_method = "GET"`, 21},
 			{`{http_method=~".+"} | http_method = "HEAD", http_status_code = "500"`, 2},
+			// Label filter (span_id).
+			{`{http_method=~".+"} | span_id = "e3daccf703000003"`, 1},        // lower case
+			{`{http_method=~".+"} | json | span_id = "e3daccf703000003"`, 1}, // lower case
+			// Label filter (trace_id).
+			{`{http_method=~".+"} | trace_id = "af36000000000000c517000000000003"`, 1},        // lower case
+			{`{http_method=~".+"} | json | trace_id = "af36000000000000c517000000000003"`, 1}, // lower case
 			// Number of lines per protocol.
 			//
 			// 	"HTTP/1.0" 55
@@ -447,12 +463,6 @@ func runTest(
 			tt := tt
 			t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
 				t.Parallel()
-
-				defer func() {
-					if t.Failed() {
-						t.Logf("query: \n%s", tt.query)
-					}
-				}()
 
 				for _, direction := range []lokiapi.Direction{
 					lokiapi.DirectionForward,
@@ -596,6 +606,9 @@ func testLogQuery(c *lokiapi.Client, params LogQueryTest) func(*testing.T) {
 
 		streams, ok := resp.Data.GetStreamsResult()
 		require.True(t, ok)
+		if params.ExpectedEntries > 0 {
+			require.NotEmpty(t, streams.Result, "unexpected empty result")
+		}
 
 		entries := 0
 		for _, stream := range streams.Result {
