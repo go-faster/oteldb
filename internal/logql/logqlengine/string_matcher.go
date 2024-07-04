@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-faster/errors"
+	"github.com/prometheus/prometheus/model/labels"
 
 	"github.com/go-faster/oteldb/internal/logql"
 )
@@ -36,10 +37,27 @@ func buildStringMatcher(op logql.BinOp, value string, re *regexp.Regexp, label b
 			m = NotMatcher[string, ContainsMatcher]{Next: ContainsMatcher{Value: value}}
 		}
 	case logql.OpRe:
-		// TODO(tdakkota): optimize regexp.
-		m = RegexpMatcher{Re: re}
+		if label {
+			frm, err := labels.NewFastRegexMatcher(value)
+			if err != nil {
+				return nil, errors.Wrapf(err, "optimize regex %q", value)
+			}
+			m = FastRegexpMatcher{Re: frm}
+		} else {
+			// TODO(tdakkota): optimize regexp.
+			m = RegexpMatcher{Re: re}
+		}
 	case logql.OpNotRe:
-		m = NotMatcher[string, RegexpMatcher]{Next: RegexpMatcher{Re: re}}
+		if label {
+			frm, err := labels.NewFastRegexMatcher(value)
+			if err != nil {
+				return nil, errors.Wrapf(err, "optimize regex %q", value)
+			}
+			m = NotMatcher[string, FastRegexpMatcher]{Next: FastRegexpMatcher{Re: frm}}
+		} else {
+			// TODO(tdakkota): optimize regexp.
+			m = NotMatcher[string, RegexpMatcher]{Next: RegexpMatcher{Re: re}}
+		}
 	default:
 		return nil, errors.Errorf("unexpected operation %q", op)
 	}
@@ -73,5 +91,15 @@ type RegexpMatcher struct {
 
 // Match implements StringMatcher.
 func (m RegexpMatcher) Match(s string) bool {
+	return m.Re.MatchString(s)
+}
+
+// FastRegexpMatcher checks if a matches regular expression.
+type FastRegexpMatcher struct {
+	Re *labels.FastRegexMatcher
+}
+
+// Match implements StringMatcher.
+func (m FastRegexpMatcher) Match(s string) bool {
 	return m.Re.MatchString(s)
 }

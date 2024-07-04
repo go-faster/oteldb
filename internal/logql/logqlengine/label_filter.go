@@ -111,6 +111,10 @@ func buildLabelMatcher(pred logql.LabelMatcher) (Processor, error) {
 
 // Process implements Processor.
 func (lf *LabelMatcher) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (_ string, keep bool) {
+	// NOTE(tdakkota): unlike other label matchers, string matcher does not
+	// 	return false in case if label not found. Instead, a zero value is matched.
+	//
+	// See https://github.com/grafana/loki/blob/b4f7181c7aa9484e66976e8a933111a9b85ea8c2/pkg/logql/log/label_filter.go#L377
 	labelValue, _ := set.GetString(lf.name)
 	keep = lf.matcher.Match(labelValue)
 	return line, keep
