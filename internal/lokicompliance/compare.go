@@ -140,7 +140,7 @@ func (c *Comparer) Compare(ctx context.Context, tc *TestCase) (*Result, error) {
 	}
 
 	if err := checkEmpty(refResult.Data, tc.ShouldBeEmpty); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "query reference")
 	}
 	if err := checkEmpty(testResult.Data, tc.ShouldBeEmpty); err != nil {
 		return &Result{
