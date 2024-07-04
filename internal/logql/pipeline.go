@@ -1,10 +1,13 @@
 package logql
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 // PipelineStage is a LogQL pipeline stage.
@@ -165,6 +168,18 @@ type LabelFilter struct {
 // LabelPredicate is a label predicate.
 type LabelPredicate interface {
 	labelPredicate()
+	fmt.Stringer
+}
+
+// UnparenLabelPredicate recursively extracts [LabelPredicate] from parentheses.
+func UnparenLabelPredicate(p LabelPredicate) LabelPredicate {
+	for {
+		sub, ok := p.(*LabelPredicateParen)
+		if !ok {
+			return p
+		}
+		p = sub.X
+	}
 }
 
 // LabelPredicateBinOp defines a logical operation between predicates.
@@ -174,11 +189,21 @@ type LabelPredicateBinOp struct {
 	Right LabelPredicate
 }
 
+// String implements [fmt.Stringer].
+func (p *LabelPredicateBinOp) String() string {
+	return fmt.Sprintf("%s %s %s", p.Left, p.Op, p.Right)
+}
+
 // LabelPredicateParen is a prediacte within parenthesis.
 //
 // FIXME(tdakkota): are we really need it?
 type LabelPredicateParen struct {
 	X LabelPredicate
+}
+
+// String implements [fmt.Stringer].
+func (p *LabelPredicateParen) String() string {
+	return "(" + p.X.String() + ")"
 }
 
 func (*LabelPredicateBinOp) labelPredicate() {}
@@ -196,11 +221,21 @@ type IPFilter struct {
 	Value string
 }
 
+// String implements [fmt.Stringer].
+func (m IPFilter) String() string {
+	return fmt.Sprintf("%s %s ip(%q)", m.Label, m.Op, m.Value)
+}
+
 // DurationFilter is a duration filtering predicate (`elapsed > 10s`).
 type DurationFilter struct {
 	Label Label
 	Op    BinOp // OpEq, OpNotEq, OpLt, OpLte, OpGt, OpGte
 	Value time.Duration
+}
+
+// String implements [fmt.Stringer].
+func (m DurationFilter) String() string {
+	return fmt.Sprintf("%s %s %s", m.Label, labelOpString(m.Op), m.Value)
 }
 
 // BytesFilter is a byte size filtering predicate (`size > 10gb`).
@@ -210,12 +245,31 @@ type BytesFilter struct {
 	Value uint64
 }
 
+// String implements [fmt.Stringer].
+func (m BytesFilter) String() string {
+	// Remove space between value and size.
+	value := strings.ReplaceAll(humanize.IBytes(m.Value), " ", "")
+	return fmt.Sprintf("%s %s %s", m.Label, labelOpString(m.Op), value)
+}
+
 // NumberFilter is a number filtering predicate (`status >= 400`).
 type NumberFilter struct {
 	Label Label
 	Op    BinOp // OpEq, OpNotEq, OpLt, OpLte, OpGt, OpGte
 	// FIXME(tdakkota): add integer field?
 	Value float64
+}
+
+// String implements [fmt.Stringer].
+func (m NumberFilter) String() string {
+	return fmt.Sprintf("%s %s %v", m.Label, labelOpString(m.Op), m.Value)
+}
+
+func labelOpString(op BinOp) string {
+	if op == OpEq {
+		return "=="
+	}
+	return op.String()
 }
 
 // LabelFormatExpr renames, modifies or add labels.
