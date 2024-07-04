@@ -103,13 +103,13 @@ func (op BinOp) String() string {
 	case OpNotPattern:
 		return "!>"
 	case OpGt:
-		return "<"
-	case OpGte:
-		return "<="
-	case OpLt:
 		return ">"
-	case OpLte:
+	case OpGte:
 		return ">="
+	case OpLt:
+		return "<"
+	case OpLte:
+		return "<="
 	default:
 		return fmt.Sprintf("<unknown op %d>", op)
 	}
