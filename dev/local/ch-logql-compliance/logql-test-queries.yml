@@ -40,6 +40,7 @@ test_cases:
   - query: '{job="varlogs"} != "HEAD" or "GET"'
   # IP line filter.
   - query: '{job="varlogs"} |= ip("127.0.0.1")'
+  - query: '{job="varlogs"} |= ip("127.0.0.1") or ip("192.168.1.0/24")'
   - query: '{job="varlogs"} != ip("127.0.0.1")'
     should_be_empty: true
   - query: '{job="varlogs"} |= ip("127.0.0.0/24")'
