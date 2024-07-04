@@ -18,6 +18,8 @@ func buildLabelFilter(stage *logql.LabelFilter) (Processor, error) {
 }
 
 func buildLabelPredicate(pred logql.LabelPredicate) (Processor, error) {
+	pred = logql.UnparenLabelPredicate(pred)
+
 	switch pred := pred.(type) {
 	case *logql.LabelPredicateBinOp:
 		left, err := buildLabelPredicate(pred.Left)
@@ -44,8 +46,6 @@ func buildLabelPredicate(pred logql.LabelPredicate) (Processor, error) {
 		default:
 			return nil, errors.Errorf("unexpected operation %q", pred.Op)
 		}
-	case *logql.LabelPredicateParen:
-		return buildLabelPredicate(pred.X)
 	case *logql.LabelMatcher:
 		return buildLabelMatcher(*pred)
 	case *logql.DurationFilter:
