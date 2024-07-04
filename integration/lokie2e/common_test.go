@@ -423,7 +423,9 @@ func runTest(
 
 			// Label filter.
 			{`{http_method=~".+"} | http_method = "GET"`, 21},
+			{`{http_method=~".+"} | http_method = "GET" or http_method = "HEAD"`, 43},
 			{`{http_method=~".+"} | http_method = "HEAD", http_status_code = "500"`, 2},
+			{`{http_method=~".+"} | http_method = "HEAD", http_status_code == 500`, 2},
 			// Label filter (span_id).
 			{`{http_method=~".+"} | span_id = "e3daccf703000003"`, 1},        // lower case
 			{`{http_method=~".+"} | json | span_id = "e3daccf703000003"`, 1}, // lower case
@@ -442,6 +444,8 @@ func runTest(
 			{`{http_method=~".+"} | json | protocol =~ "HTTP/1.\\d"`, 55 + 10},
 			{`{http_method=~".+"} | json | protocol != "HTTP/2.0"`, 55 + 10},
 			{`{http_method=~".+"} | json | protocol !~ "HTTP/2.\\d"`, 55 + 10},
+			{`{http_method=~".+"} | json | protocol = "HTTP/1.0" or protocol = "HTTP/1.1"`, 55 + 10},
+			{`{http_method=~".+"} | json | protocol =~ "HTTP/1.\\d" and protocol = "HTTP/1.1"`, 10},
 			// IP label filter.
 			{`{http_method="HEAD"} | client_address = "236.7.233.166"`, 1},
 			{`{http_method="HEAD"} | client_address = ip("236.7.233.166")`, 1},
@@ -453,10 +457,13 @@ func runTest(
 			{`{http_method=~".+"} | distinct protocol`, 3},
 
 			// Sure empty queries.
-			{`{http_method="GET"} | http_method != "GET"`, 0},
-			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
 			{`{http_method=~".+"} |= "GET" or "HEAD" != "GET" or "HEAD"`, 0},
 			{`{http_method=~".+"} |= "GET" or "HEAD" !~ "(GET|HEAD)"`, 0},
+			{`{http_method=~".+"} |= ip("127.0.0.1")`, 0},
+			{`{http_method=~".+"} |= ip("127.0.0.1") or ip("192.168.1.0/24")`, 0},
+			{`{http_method="GET"} | http_method != "GET"`, 0},
+			{`{http_method="HEAD"} | clearly_not_exist > 0`, 0},
+			{`{http_method=~".+"} | http_method = "GET" and http_method = "HEAD"`, 0},
 		}
 
 		for i, tt := range tests {
