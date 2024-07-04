@@ -28,11 +28,9 @@ import (
 // LogsQuery defines a logs query.
 type LogsQuery[E any] struct {
 	Start, End time.Time
+	Sel        LogsSelector
 	Direction  logqlengine.Direction
 	Limit      int
-
-	Labels []logql.LabelMatcher
-	Line   []logql.LineFilter
 
 	Mapper func(logstorage.Record) (E, error)
 }
@@ -47,8 +45,9 @@ func (v *LogsQuery[E]) Execute(ctx context.Context, q *Querier) (_ iterators.Ite
 			xattribute.UnixNano("logql.range.end", v.End),
 			attribute.Stringer("logql.direction", v.Direction),
 			attribute.Int("logql.limit", v.Limit),
-			xattribute.StringerSlice("logql.label_matchers", v.Labels),
-			xattribute.StringerSlice("logql.line_matchers", v.Line),
+			xattribute.StringerSlice("logql.label_matchers", v.Sel.Labels),
+			xattribute.StringerSlice("logql.line_matchers", v.Sel.Line),
+			xattribute.StringerSlice("logql.label_predicates", v.Sel.PipelineLabels),
 
 			attribute.String("chstorage.table", table),
 		),
@@ -60,26 +59,19 @@ func (v *LogsQuery[E]) Execute(ctx context.Context, q *Querier) (_ iterators.Ite
 		span.End()
 	}()
 
-	// Gather all labels for mapping fetch.
-	labels := make([]string, 0, len(v.Labels))
-	for _, m := range v.Labels {
-		labels = append(labels, string(m.Label))
-	}
-	mapping, err := q.getLabelMapping(ctx, labels)
+	mapping, err := q.getLabelMapping(ctx, v.Sel.mappingLabels())
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
 	var (
 		out   = newLogColumns()
-		query = chsql.Select(table, out.ChsqlResult()...)
+		query = chsql.Select(table, out.ChsqlResult()...).
+			Where(
+				chsql.InTimeRange("timestamp", v.Start, v.End),
+			)
 	)
-	(logQueryPredicates{
-		Start:  v.Start,
-		End:    v.End,
-		Labels: v.Labels,
-		Line:   v.Line,
-	}).write(query, mapping, q)
+	v.Sel.addPredicates(query, mapping, q)
 
 	switch d := v.Direction; d {
 	case logqlengine.DirectionBackward:
@@ -117,13 +109,10 @@ func (v *LogsQuery[E]) Execute(ctx context.Context, q *Querier) (_ iterators.Ite
 
 // SampleQuery defines a sample query.
 type SampleQuery struct {
-	Start, End time.Time
-
+	Start, End     time.Time
+	Sel            LogsSelector
 	Sampling       SamplingOp
 	GroupingLabels []logql.Label
-
-	Labels []logql.LabelMatcher
-	Line   []logql.LineFilter
 }
 
 // sampleQueryColumns defines result columns of [SampleQuery].
@@ -151,8 +140,9 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 			xattribute.UnixNano("logql.range.end", v.End),
 			attribute.String("logql.sampling", v.Sampling.String()),
 			xattribute.StringerSlice("logql.grouping_labels", v.GroupingLabels),
-			xattribute.StringerSlice("logql.label_matchers", v.Labels),
-			xattribute.StringerSlice("logql.line_matchers", v.Line),
+			xattribute.StringerSlice("logql.label_matchers", v.Sel.Labels),
+			xattribute.StringerSlice("logql.line_matchers", v.Sel.Line),
+			xattribute.StringerSlice("logql.label_predicates", v.Sel.PipelineLabels),
 
 			attribute.String("chstorage.table", table),
 		),
@@ -165,10 +155,7 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 	}()
 
 	// Gather all labels for mapping fetch.
-	labels := make([]string, 0, len(v.Labels)+len(v.GroupingLabels))
-	for _, m := range v.Labels {
-		labels = append(labels, string(m.Label))
-	}
+	labels := v.Sel.mappingLabels()
 	for _, l := range v.GroupingLabels {
 		labels = append(labels, string(l))
 	}
@@ -222,14 +209,11 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 				Expr: chsql.Map(entries...),
 				Data: columns.Labels,
 			},
+		).Where(
+			chsql.InTimeRange("timestamp", v.Start, v.End),
 		)
 	)
-	(logQueryPredicates{
-		Start:  v.Start,
-		End:    v.End,
-		Labels: v.Labels,
-		Line:   v.Line,
-	}).write(query, mapping, q)
+	v.Sel.addPredicates(query, mapping, q)
 	query.Order(chsql.Ident("timestamp"), chsql.Asc)
 
 	var result []logqlmetric.SampledEntry
@@ -294,26 +278,37 @@ func getSampleExpr(op SamplingOp) (chsql.Expr, error) {
 	}
 }
 
-// logQueryPredicates translates common predicates for log querying.
-type logQueryPredicates struct {
-	Start, End time.Time
-	Labels     []logql.LabelMatcher
-	Line       []logql.LineFilter
+// LogsSelector defines common parameters for logs selection.
+type LogsSelector struct {
+	Labels         []logql.LabelMatcher
+	Line           []logql.LineFilter
+	PipelineLabels []logql.LabelPredicate
 }
 
-func (p logQueryPredicates) write(
+func (s LogsSelector) mappingLabels() []string {
+	labels := make([]string, 0, len(s.Labels)+len(s.PipelineLabels))
+	for _, m := range s.Labels {
+		labels = append(labels, string(m.Label))
+	}
+	for _, p := range s.PipelineLabels {
+		labels = collectPredicateLabels(labels, p)
+	}
+	return labels
+}
+
+func (s LogsSelector) addPredicates(
 	query *chsql.SelectQuery,
 	mapping map[string]string,
 	q *Querier,
 ) {
-	query.Where(
-		chsql.InTimeRange("timestamp", p.Start, p.End),
-	)
-	for _, m := range p.Labels {
+	for _, m := range s.Labels {
 		query.Where(q.logQLLabelMatcher(m, mapping))
 	}
-	for _, m := range p.Line {
+	for _, m := range s.Line {
 		query.Where(q.lineFilter(m))
+	}
+	for _, m := range s.PipelineLabels {
+		query.Where(q.logQLLabelPredicate(m, mapping))
 	}
 }
 
@@ -378,6 +373,32 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr) {
 		matchers = append(matchers, matcher(m.Op, by))
 	}
 	return chsql.JoinOr(matchers...)
+}
+
+func (q *Querier) logQLLabelPredicate(
+	p logql.LabelPredicate,
+	mapping map[string]string,
+) (e chsql.Expr) {
+	p = logql.UnparenLabelPredicate(p)
+
+	switch p := p.(type) {
+	case *logql.LabelPredicateBinOp:
+		left := q.logQLLabelPredicate(p.Left, mapping)
+		right := q.logQLLabelPredicate(p.Right, mapping)
+
+		switch p.Op {
+		case logql.OpAnd:
+			return chsql.And(left, right)
+		case logql.OpOr:
+			return chsql.Or(left, right)
+		default:
+			panic(fmt.Sprintf("unexpected label predicate binary op: %v", p.Op))
+		}
+	case *logql.LabelMatcher:
+		return q.logQLLabelMatcher(*p, mapping)
+	default:
+		panic(fmt.Sprintf("unexpected label predicate %T", p))
+	}
 }
 
 func (q *Querier) logQLLabelMatcher(
@@ -495,4 +516,30 @@ func (q *Querier) logQLLabelMatcher(
 		}
 		return chsql.JoinOr(exprs...)
 	}
+}
+
+func collectPredicateLabels(to []string, p logql.LabelPredicate) []string {
+	p = logql.UnparenLabelPredicate(p)
+
+	var label logql.Label
+	switch p := p.(type) {
+	case *logql.LabelPredicateBinOp:
+		to = collectPredicateLabels(to, p.Left)
+		to = collectPredicateLabels(to, p.Right)
+		return to
+	case *logql.LabelMatcher:
+		label = p.Label
+	case *logql.DurationFilter:
+		label = p.Label
+	case *logql.BytesFilter:
+		label = p.Label
+	case *logql.NumberFilter:
+		label = p.Label
+	case *logql.IPFilter:
+		label = p.Label
+	default:
+		panic(fmt.Sprintf("unexpected label predicate %T", p))
+	}
+	to = append(to, string(label))
+	return to
 }

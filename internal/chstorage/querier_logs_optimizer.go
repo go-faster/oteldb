@@ -94,10 +94,9 @@ func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.Range
 	}
 
 	n.Input = &SamplingNode{
+		Sel:            pipelineNode.Sel,
 		Sampling:       samplingOp,
 		GroupingLabels: grouping,
-		Labels:         pipelineNode.Labels,
-		Line:           pipelineNode.Line,
 		q:              pipelineNode.q,
 	}
 	return n
@@ -137,19 +136,65 @@ func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode) logql
 		return n
 	}
 
-	var (
-		line          []logql.LineFilter
-		skippedStages int
-	)
+	sn.Sel.Line = o.offloadLineFilters(pn.Pipeline)
+	sn.Sel.PipelineLabels = o.offloadLabelFilters(pn.Pipeline)
+	offloaded := len(sn.Sel.Line) + len(sn.Sel.PipelineLabels)
+	// Replace original node with [InputNode], since we can execute filtering entirely in
+	// Clickhouse.
+	if len(pn.Pipeline) == offloaded && !pn.EnableOTELAdapter {
+		return sn
+	}
+	return n
+}
+
+func (o *ClickhouseOptimizer) offloadLabelFilters(pipeline []logql.PipelineStage) (filters []logql.LabelPredicate) {
 stageLoop:
-	for _, stage := range pn.Pipeline {
+	for _, stage := range pipeline {
+		switch stage := stage.(type) {
+		case *logql.LabelFilter:
+			if !o.canOffloadLabelPredicate(stage.Pred) {
+				continue
+			}
+			filters = append(filters, stage.Pred)
+		case *logql.LineFormat,
+			*logql.DecolorizeExpr,
+			*logql.LineFilter:
+			// Do nothing on label set, just skip.
+		default:
+			// Stage modify the label set, can't offload label filters after this stage.
+			break stageLoop
+		}
+	}
+	return filters
+}
+
+func (o *ClickhouseOptimizer) canOffloadLabelPredicate(p logql.LabelPredicate) bool {
+	switch p := p.(type) {
+	case *logql.LabelPredicateBinOp:
+		switch p.Op {
+		case logql.OpAnd, logql.OpOr:
+		default:
+			return false
+		}
+		return o.canOffloadLabelPredicate(p.Left) &&
+			o.canOffloadLabelPredicate(p.Right)
+	case *logql.LabelPredicateParen:
+		return o.canOffloadLabelPredicate(p.X)
+	case *logql.LabelMatcher:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o *ClickhouseOptimizer) offloadLineFilters(pipeline []logql.PipelineStage) (line []logql.LineFilter) {
+stageLoop:
+	for _, stage := range pipeline {
 		switch stage := stage.(type) {
 		case *logql.LineFilter:
 			if !o.canOffloadLineFilter(stage) {
-				skippedStages++
 				continue
 			}
-			// TODO(tdakkota): remove stages from pipeline.
 			line = append(line, *stage)
 		case *logql.JSONExpressionParser,
 			*logql.LogfmtExpressionParser,
@@ -161,22 +206,12 @@ stageLoop:
 			*logql.KeepLabelsExpr,
 			*logql.DistinctFilter:
 			// Do nothing on line, just skip.
-			skippedStages++
-		case *logql.LineFormat,
-			*logql.DecolorizeExpr,
-			*logql.UnpackLabelParser:
+		default:
 			// Stage modify the line, can't offload line filters after this stage.
-			skippedStages++
 			break stageLoop
 		}
 	}
-	sn.Line = line
-	// Replace original node with [InputNode], since we can execute filtering entirely in
-	// Clickhouse.
-	if skippedStages == 0 && !pn.EnableOTELAdapter {
-		return sn
-	}
-	return n
+	return line
 }
 
 func (o *ClickhouseOptimizer) canOffloadLineFilter(lf *logql.LineFilter) bool {

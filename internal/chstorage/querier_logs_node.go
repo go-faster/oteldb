@@ -21,16 +21,18 @@ func (q *Querier) Capabilities() (caps logqlengine.QuerierCapabilities) {
 // Query creates new [InputNode].
 func (q *Querier) Query(ctx context.Context, labels []logql.LabelMatcher) (logqlengine.PipelineNode, error) {
 	return &InputNode{
-		Labels: labels,
-		q:      q,
+		Sel: LogsSelector{
+			Labels: labels,
+		},
+		q: q,
 	}, nil
 }
 
 // InputNode rebuilds LogQL pipeline in as Clickhouse query.
 type InputNode struct {
-	Labels []logql.LabelMatcher
-	Line   []logql.LineFilter
-	q      *Querier
+	Sel LogsSelector
+
+	q *Querier
 }
 
 var _ logqlengine.PipelineNode = (*InputNode)(nil)
@@ -43,12 +45,11 @@ func (n *InputNode) Traverse(cb logqlengine.NodeVisitor) error {
 // EvalPipeline implements [logqlengine.PipelineNode].
 func (n *InputNode) EvalPipeline(ctx context.Context, params logqlengine.EvalParams) (logqlengine.EntryIterator, error) {
 	q := LogsQuery[logqlengine.Entry]{
+		Sel:       n.Sel,
 		Start:     params.Start,
 		End:       params.End,
 		Direction: params.Direction,
 		Limit:     params.Limit,
-		Labels:    n.Labels,
-		Line:      n.Line,
 		Mapper:    entryMapper,
 	}
 	return q.Execute(ctx, n.q)
@@ -67,11 +68,9 @@ func entryMapper(r logstorage.Record) (logqlengine.Entry, error) {
 
 // SamplingNode is a [logqlengine.SampleNode], which offloads sampling to Clickhouse
 type SamplingNode struct {
+	Sel            LogsSelector
 	Sampling       SamplingOp
 	GroupingLabels []logql.Label
-
-	Labels []logql.LabelMatcher
-	Line   []logql.LineFilter
 
 	q *Querier
 }
@@ -88,10 +87,9 @@ func (n *SamplingNode) EvalSample(ctx context.Context, params logqlengine.EvalPa
 	q := SampleQuery{
 		Start:          params.Start,
 		End:            params.End,
+		Sel:            n.Sel,
 		Sampling:       n.Sampling,
 		GroupingLabels: n.GroupingLabels,
-		Labels:         n.Labels,
-		Line:           n.Line,
 	}
 	return q.Execute(ctx, n.q)
 }
