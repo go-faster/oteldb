@@ -257,6 +257,20 @@ var tests = []TestCase{
 		},
 		false,
 	},
+
+	// Explain token.
+	{
+		`@explain {foo =~ "bar"}`,
+		[]Token{
+			{Type: Explain, Text: "@explain"},
+			{Type: OpenBrace, Text: "{"},
+			{Type: Ident, Text: "foo"},
+			{Type: Re, Text: "=~"},
+			{Type: String, Text: "bar"},
+			{Type: CloseBrace, Text: "}"},
+		},
+		false,
+	},
 }
 
 func TestTokenize(t *testing.T) {
@@ -299,6 +313,10 @@ func TestTokenizeErrors(t *testing.T) {
 		{
 			`0ee1`,
 			`at test.ql:1:1: exponent has no digits`,
+		},
+		{
+			`@error`,
+			`at test.ql:1:1: unexpected pragma "error"`,
 		},
 	}
 	for i, tt := range tests {

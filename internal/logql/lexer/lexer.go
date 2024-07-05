@@ -70,10 +70,20 @@ func (l *lexer) setError(msg string, pos scanner.Position) {
 func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	tok.Pos = l.scanner.Position
 	tok.Text = text
-	if r == '-' && l.scanner.Peek() == '-' {
+	switch c := [2]rune{r, l.scanner.Peek()}; c {
+	case [2]rune{'-', '-'}:
 		tok.Type = ParserFlag
 		tok.Text = scanFlag(&l.scanner, text)
 		return tok, true
+	case [2]rune{'@', 'e'}:
+		l.scanner.Scan()
+		if l.scanner.TokenText() == "explain" {
+			tok.Type = Explain
+			tok.Text = "@explain"
+			return tok, true
+		}
+		l.setError(fmt.Sprintf("unexpected pragma %q", l.scanner.TokenText()), tok.Pos)
+		return tok, false
 	}
 	switch r {
 	case scanner.Int, scanner.Float:
