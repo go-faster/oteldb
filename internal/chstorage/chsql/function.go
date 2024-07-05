@@ -5,6 +5,11 @@ func Function(name string, args ...Expr) Expr {
 	return Expr{typ: exprFunction, tok: name, args: args}
 }
 
+// Cast returns `CAST(<x>, <typ>)` function call expression.
+func Cast(x Expr, typ string) Expr {
+	return Function("CAST", x, String(typ))
+}
+
 // ToString returns `toString(<arg>)` function call expression.
 func ToString(arg Expr) Expr {
 	return Function("toString", arg)
