@@ -183,7 +183,8 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 
 		entries = append(entries,
 			chsql.String(string(key)),
-			chsql.ToString(labelExpr),
+			// Ensure `LowCardinality` column type.
+			chsql.Cast(labelExpr, "LowCardinality(String)"),
 		)
 	}
 
