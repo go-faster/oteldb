@@ -523,43 +523,62 @@ func runTest(
 		}
 	})
 	t.Run("MetricQueries", func(t *testing.T) {
-		resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
-			Query: `sum by (http_method) ( count_over_time({http_method=~".+"} [30s]) )`,
-			// Query all data in a one step.
-			Start: lokiapi.NewOptLokiTime(asLokiTime(set.End)),
-			End:   lokiapi.NewOptLokiTime(asLokiTime(set.End + otelstorage.Timestamp(10*time.Second))),
-			Step:  lokiapi.NewOptPrometheusDuration("30s"),
-			Limit: lokiapi.NewOptInt(1000),
+		t.Run("EmptySampleQuery", func(t *testing.T) {
+			resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
+				// Expected result is empty
+				Query: `sum by (http_method) ( count_over_time({http_method!~".+"} [30s]) )`,
+				// Query all data in a one step.
+				Start: lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End + otelstorage.Timestamp(10*time.Second))),
+				Step:  lokiapi.NewOptPrometheusDuration("30s"),
+				Limit: lokiapi.NewOptInt(1000),
+			})
+			require.NoError(t, err)
+
+			data, ok := resp.Data.GetMatrixResult()
+			require.True(t, ok)
+			matrix := data.Result
+			require.Empty(t, matrix)
 		})
-		require.NoError(t, err)
+		t.Run("SampleQuery", func(t *testing.T) {
+			resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
+				Query: `sum by (http_method) ( count_over_time({http_method=~".+"} [30s]) )`,
+				// Query all data in a one step.
+				Start: lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End + otelstorage.Timestamp(10*time.Second))),
+				Step:  lokiapi.NewOptPrometheusDuration("30s"),
+				Limit: lokiapi.NewOptInt(1000),
+			})
+			require.NoError(t, err)
 
-		data, ok := resp.Data.GetMatrixResult()
-		require.True(t, ok)
-		matrix := data.Result
-		require.NotEmpty(t, matrix)
+			data, ok := resp.Data.GetMatrixResult()
+			require.True(t, ok)
+			matrix := data.Result
+			require.NotEmpty(t, matrix)
 
-		methods := map[string]string{}
-		for _, series := range matrix {
-			labels := series.Metric.Value
-			assert.Contains(t, labels, "http_method")
-			assert.Len(t, labels, 1)
-			method := labels["http_method"]
+			methods := map[string]string{}
+			for _, series := range matrix {
+				labels := series.Metric.Value
+				assert.Contains(t, labels, "http_method")
+				assert.Len(t, labels, 1)
+				method := labels["http_method"]
 
-			values := series.Values
-			assert.Len(t, values, 1)
+				values := series.Values
+				assert.Len(t, values, 1)
 
-			methods[method] = values[0].V
-		}
+				methods[method] = values[0].V
+			}
 
-		expect := map[string]string{
-			"GET":    "21",
-			"HEAD":   "22",
-			"DELETE": "20",
-			"PUT":    "20",
-			"POST":   "21",
-			"PATCH":  "19",
-		}
-		assert.Equal(t, expect, methods)
+			expect := map[string]string{
+				"GET":    "21",
+				"HEAD":   "22",
+				"DELETE": "20",
+				"PUT":    "20",
+				"POST":   "21",
+				"PATCH":  "19",
+			}
+			assert.Equal(t, expect, methods)
+		})
 	})
 }
 
