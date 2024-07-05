@@ -193,7 +193,7 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 			Sample:    proto.ColFloat64{},
 			Labels: proto.NewMap(
 				new(proto.ColStr),
-				new(proto.ColStr),
+				new(proto.ColStr).LowCardinality(),
 			),
 		}
 
