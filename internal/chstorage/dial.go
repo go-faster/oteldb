@@ -11,7 +11,6 @@ import (
 	"github.com/ClickHouse/ch-go/chpool"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -50,8 +49,7 @@ func Dial(ctx context.Context, dsn string, opts DialOptions) (ClickhouseClient, 
 	if err != nil {
 		return nil, errors.Wrap(err, "parse DSN")
 	}
-
-	zctx.From(ctx).Info("DSN", zap.String("v", dsn))
+	lg.Debug("Dial Clickhouse", zap.String("dsn", dsn))
 
 	pass, _ := u.User.Password()
 	chLogger := lg.Named("ch")
