@@ -100,7 +100,7 @@ func (e *Engine) ParseOptions() logql.ParseOptions {
 }
 
 // NewQuery creates new [Query].
-func (e *Engine) NewQuery(ctx context.Context, query string) (_ Query, rerr error) {
+func (e *Engine) NewQuery(ctx context.Context, query string) (q Query, rerr error) {
 	ctx, span := e.tracer.Start(ctx, "logql.Engine.NewQuery", trace.WithAttributes(
 		attribute.String("logql.query", query),
 	))
@@ -116,12 +116,25 @@ func (e *Engine) NewQuery(ctx context.Context, query string) (_ Query, rerr erro
 		return nil, errors.Wrap(err, "parse")
 	}
 
-	q, err := e.buildQuery(ctx, expr)
+	_, explain := expr.(*logql.ExplainExpr)
+	if explain {
+		logs := new(explainLogs)
+		ctx = logs.InjectLogger(ctx)
+
+		defer func() {
+			q = &ExplainQuery{
+				Explain: q,
+				logs:    logs,
+			}
+		}()
+	}
+
+	q, err = e.buildQuery(ctx, expr)
 	if err != nil {
 		return nil, err
 	}
 
-	q, err = e.applyOptimizers(ctx, q)
+	q, err = e.applyOptimizers(ctx, q, OptimizeOptions{Explain: explain})
 	if err != nil {
 		return nil, errors.Wrap(err, "optimize")
 	}
@@ -131,6 +144,8 @@ func (e *Engine) NewQuery(ctx context.Context, query string) (_ Query, rerr erro
 
 func (e *Engine) buildQuery(ctx context.Context, expr logql.Expr) (_ Query, rerr error) {
 	switch expr := logql.UnparenExpr(expr).(type) {
+	case *logql.ExplainExpr:
+		return e.buildQuery(ctx, expr.X)
 	case *logql.LogExpr:
 		return e.buildLogQuery(ctx, expr)
 	case *logql.LiteralExpr:

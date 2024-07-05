@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
 )
 
 // ClickhouseOptimizer replaces LogQL engine execution
@@ -19,7 +21,14 @@ func (o *ClickhouseOptimizer) Name() string {
 }
 
 // Optimize implements [Optimizer].
-func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query) (logqlengine.Query, error) {
+func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query, opts logqlengine.OptimizeOptions) (logqlengine.Query, error) {
+	lg := zap.NewNop()
+	if opts.Explain {
+		lg = zctx.From(ctx).With(
+			zap.String("optimizer", o.Name()),
+		)
+	}
+
 	switch q := q.(type) {
 	case *logqlengine.LogQuery:
 		q.Root = o.optimizePipeline(q.Root)
