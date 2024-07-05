@@ -3,10 +3,11 @@ package chstorage
 import (
 	"context"
 
-	"github.com/go-faster/oteldb/internal/logql"
-	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
+
+	"github.com/go-faster/oteldb/internal/logql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 )
 
 // ClickhouseOptimizer replaces LogQL engine execution
@@ -31,10 +32,10 @@ func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query,
 
 	switch q := q.(type) {
 	case *logqlengine.LogQuery:
-		q.Root = o.optimizePipeline(q.Root)
+		q.Root = o.optimizePipeline(q.Root, lg)
 	case *logqlengine.MetricQuery:
 		if err := logqlengine.VisitNode(q.Root, func(n *logqlengine.SamplingNode) error {
-			n.Input = o.optimizePipeline(n.Input)
+			n.Input = o.optimizePipeline(n.Input, lg)
 			return nil
 		}); err != nil {
 			return nil, err
@@ -132,7 +133,7 @@ func getSamplingOp(e *logql.RangeAggregationExpr) (op SamplingOp, _ bool) {
 	}
 }
 
-func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode) logqlengine.PipelineNode {
+func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode, lg *zap.Logger) logqlengine.PipelineNode {
 	pn, ok := n.(*logqlengine.ProcessorNode)
 	if !ok {
 		return n
@@ -146,11 +147,26 @@ func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode) logql
 	}
 
 	sn.Sel.Line = o.offloadLineFilters(pn.Pipeline)
+	if len(sn.Sel.Line) > 0 {
+		if ce := lg.Check(zap.DebugLevel, "Offloaded line filters"); ce != nil {
+			ce.Write(zap.Stringers("line_filters", sn.Sel.Line))
+		}
+	}
+
 	sn.Sel.PipelineLabels = o.offloadLabelFilters(pn.Pipeline)
+	if len(sn.Sel.PipelineLabels) > 0 {
+		if ce := lg.Check(zap.DebugLevel, "Offloaded pipeline label filters"); ce != nil {
+			ce.Write(zap.Stringers("pipeline_labels", sn.Sel.Line))
+		}
+	}
+
 	offloaded := len(sn.Sel.Line) + len(sn.Sel.PipelineLabels)
 	// Replace original node with [InputNode], since we can execute filtering entirely in
 	// Clickhouse.
 	if len(pn.Pipeline) == offloaded && !pn.EnableOTELAdapter {
+		lg.Debug("Pipeline could be fully offloaded to Clickhouse",
+			zap.Stringer("selector", logql.Selector{Matchers: sn.Sel.Labels}),
+		)
 		return sn
 	}
 	return n
