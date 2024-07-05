@@ -5,14 +5,13 @@ type Expr interface {
 	expr()
 }
 
-func (*ParenExpr) expr() {}
-
-func (*ParenExpr) metricExpr() {}
-
 // ParenExpr is parenthesized Expr.
 type ParenExpr struct {
 	X Expr
 }
+
+func (*ParenExpr) expr()       {}
+func (*ParenExpr) metricExpr() {}
 
 // UnparenExpr recursively extracts expression from parentheses.
 func UnparenExpr(e Expr) Expr {
@@ -22,3 +21,11 @@ func UnparenExpr(e Expr) Expr {
 	}
 	return UnparenExpr(p.X)
 }
+
+// ExplainExpr is a wrapper around Expr to explain.
+type ExplainExpr struct {
+	X Expr
+}
+
+func (*ExplainExpr) expr()       {}
+func (*ExplainExpr) metricExpr() {}
