@@ -40,12 +40,12 @@ func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query,
 		}); err != nil {
 			return nil, err
 		}
-		q.Root = o.optimizeSampling(q.Root)
+		q.Root = o.optimizeSampling(q.Root, lg)
 	}
 	return q, nil
 }
 
-func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode) logqlengine.MetricNode {
+func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode, lg *zap.Logger) logqlengine.MetricNode {
 	switch n := n.(type) {
 	case *logqlengine.VectorAggregation:
 		switch n.Expr.Op {
@@ -63,25 +63,25 @@ func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode) logqlen
 		if !ok {
 			return n
 		}
-		n.Input = o.buildRangeAggregationSampling(rn, labels)
+		n.Input = o.buildRangeAggregationSampling(rn, labels, lg)
 
 		return n
 	case *logqlengine.LabelReplace:
-		n.Input = o.optimizeSampling(n.Input)
+		n.Input = o.optimizeSampling(n.Input, lg)
 		return n
 	case *logqlengine.LiteralBinOp:
-		n.Input = o.optimizeSampling(n.Input)
+		n.Input = o.optimizeSampling(n.Input, lg)
 		return n
 	case *logqlengine.BinOp:
-		n.Left = o.optimizeSampling(n.Left)
-		n.Right = o.optimizeSampling(n.Right)
+		n.Left = o.optimizeSampling(n.Left, lg)
+		n.Right = o.optimizeSampling(n.Right, lg)
 		return n
 	default:
 		return n
 	}
 }
 
-func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.RangeAggregation, grouping []logql.Label) logqlengine.MetricNode {
+func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.RangeAggregation, grouping []logql.Label, lg *zap.Logger) logqlengine.MetricNode {
 	if g := n.Expr.Grouping; g != nil {
 		return n
 	}
@@ -103,6 +103,12 @@ func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.Range
 		return n
 	}
 
+	if ce := lg.Check(zap.DebugLevel, "Offloading sampling"); ce != nil {
+		ce.Write(
+			zap.Stringer("sampling_op", samplingOp),
+			zap.Stringers("grouping_labels", grouping),
+		)
+	}
 	n.Input = &SamplingNode{
 		Sel:            pipelineNode.Sel,
 		Sampling:       samplingOp,
@@ -148,14 +154,14 @@ func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode, lg *z
 
 	sn.Sel.Line = o.offloadLineFilters(pn.Pipeline)
 	if len(sn.Sel.Line) > 0 {
-		if ce := lg.Check(zap.DebugLevel, "Offloaded line filters"); ce != nil {
+		if ce := lg.Check(zap.DebugLevel, "Offloading line filters"); ce != nil {
 			ce.Write(zap.Stringers("line_filters", sn.Sel.Line))
 		}
 	}
 
 	sn.Sel.PipelineLabels = o.offloadLabelFilters(pn.Pipeline)
 	if len(sn.Sel.PipelineLabels) > 0 {
-		if ce := lg.Check(zap.DebugLevel, "Offloaded pipeline label filters"); ce != nil {
+		if ce := lg.Check(zap.DebugLevel, "Offloading pipeline label filters"); ce != nil {
 			ce.Write(zap.Stringers("pipeline_labels", sn.Sel.Line))
 		}
 	}
