@@ -119,7 +119,6 @@ func (q *Querier) do(ctx context.Context, s selectQuery) error {
 			zap.String("query_type", s.Type),
 			zap.String("table", s.Table),
 			zap.String("signal", s.Signal),
-			zap.String("body", query.Body),
 			zap.Duration("took", took),
 			errField,
 		)

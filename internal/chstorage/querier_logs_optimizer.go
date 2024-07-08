@@ -103,7 +103,7 @@ func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.Range
 		return n
 	}
 
-	if ce := lg.Check(zap.DebugLevel, "Offloading sampling"); ce != nil {
+	if ce := lg.Check(zap.DebugLevel, "Sampling could be offloaded to Clickhouse"); ce != nil {
 		ce.Write(
 			zap.Stringer("sampling_op", samplingOp),
 			zap.Stringers("grouping_labels", grouping),
@@ -153,16 +153,16 @@ func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode, lg *z
 	}
 
 	sn.Sel.Line = o.offloadLineFilters(pn.Pipeline)
-	if len(sn.Sel.Line) > 0 {
+	if f := sn.Sel.Line; len(f) > 0 {
 		if ce := lg.Check(zap.DebugLevel, "Offloading line filters"); ce != nil {
-			ce.Write(zap.Stringers("line_filters", sn.Sel.Line))
+			ce.Write(zap.Stringers("line_filters", f))
 		}
 	}
 
 	sn.Sel.PipelineLabels = o.offloadLabelFilters(pn.Pipeline)
-	if len(sn.Sel.PipelineLabels) > 0 {
+	if f := sn.Sel.PipelineLabels; len(f) > 0 {
 		if ce := lg.Check(zap.DebugLevel, "Offloading pipeline label filters"); ce != nil {
-			ce.Write(zap.Stringers("pipeline_labels", sn.Sel.Line))
+			ce.Write(zap.Stringers("pipeline_labels", f))
 		}
 	}
 
