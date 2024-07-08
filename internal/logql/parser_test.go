@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlpattern"
 )
 
 func ptrTo[T any](v T) *T {
@@ -226,7 +228,7 @@ var tests = []TestCase{
 						1: "method",
 					},
 				},
-				&PatternLabelParser{Pattern: "<ip>"},
+				&PatternLabelParser{Pattern: logqlpattern.MustParse("<ip>", logqlpattern.ExtractorFlags)},
 				&UnpackLabelParser{},
 				&LineFormat{Template: "{{ . }}"},
 				&DecolorizeExpr{},
@@ -1177,6 +1179,7 @@ var tests = []TestCase{
 	{`{foo = "bar"} | label_format status=foo,status=bar`, nil, true},
 
 	// Invalid regexp.
+	//
 	{`{foo=~"\\"}`, nil, true},
 	{`{} |~ "\\"`, nil, true},
 	{`{} |~ ".+" or "\\"`, nil, true},
@@ -1187,6 +1190,15 @@ var tests = []TestCase{
 	{`{} | regexp "(?P<method>\\w+)(?P<method>\\w+)"`, nil, true},
 	// Invalid capture name.
 	{`{} | regexp "(?P<0a>\\w+)"`, nil, true},
+
+	// Invalid pattern.
+	//
+	// No capture.
+	{`{} | pattern "a"`, nil, true},
+	// Duplicate capture.
+	{`{} | pattern "<a> foo <a>"`, nil, true},
+	// Consecutive capture.
+	{`{} | pattern "<a><b>"`, nil, true},
 }
 
 func TestParse(t *testing.T) {

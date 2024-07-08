@@ -46,7 +46,16 @@ const (
 	LineFilterFlags = DisallowNamed
 )
 
-// Parse parses pattern.
+// MustParse is like [Parse] but panics if the expression cannot be parsed.
+func MustParse(input string, flags ParseFlags) Pattern {
+	p, err := Parse(input, flags)
+	if err != nil {
+		panic(err)
+	}
+	return p
+}
+
+// Parse parses LogQL pattern.
 func Parse(input string, flags ParseFlags) (p Pattern, _ error) {
 	if !utf8.ValidString(input) {
 		return p, errors.New("pattern is invalid UTF-8")

@@ -6,6 +6,7 @@ import (
 	"github.com/go-faster/errors"
 
 	"github.com/go-faster/oteldb/internal/logql/lexer"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlpattern"
 )
 
 func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err error) {
@@ -49,12 +50,18 @@ func (p *parser) parsePipeline(allowUnwrap bool) (stages []PipelineStage, err er
 				}
 				stages = append(stages, p)
 			case lexer.Pattern:
-				pattern, err := p.parseString()
+				pattern, patternTok, err := p.consumeText(lexer.String)
 				if err != nil {
 					return stages, err
 				}
-				// FIXME(tdakkota): parse pattern?
-				stages = append(stages, &PatternLabelParser{Pattern: pattern})
+				compiled, err := logqlpattern.Parse(pattern, logqlpattern.ExtractorFlags)
+				if err != nil {
+					return nil, &ParseError{
+						Pos: patternTok.Pos,
+						Err: errors.Wrap(err, "pattern"),
+					}
+				}
+				stages = append(stages, &PatternLabelParser{Pattern: compiled})
 			case lexer.Unpack:
 				stages = append(stages, &UnpackLabelParser{})
 			case lexer.LineFormat:

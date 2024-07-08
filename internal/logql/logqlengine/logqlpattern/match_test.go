@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/go-faster/oteldb/internal/logql"
 )
 
 var matchTests = []struct {
@@ -145,8 +143,8 @@ func TestMatch(t *testing.T) {
 			require.NoError(t, err)
 
 			matches := map[string]string{}
-			fullMatch := Match(compiled, tt.input, func(label logql.Label, value string) {
-				matches[string(label)] = value
+			fullMatch := Match(compiled, tt.input, func(label, value string) {
+				matches[label] = value
 			})
 			require.Equal(t, tt.match, matches)
 			require.Equal(t, tt.full, fullMatch)
@@ -164,6 +162,6 @@ func FuzzMatch(f *testing.F) {
 			t.Skipf("Invalid pattern %q: %+v", pattern, err)
 			return
 		}
-		Match(compiled, input, func(logql.Label, string) {})
+		Match(compiled, input, func(string, string) {})
 	})
 }

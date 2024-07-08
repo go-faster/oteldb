@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+
+	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlpattern"
 )
 
 // PipelineStage is a LogQL pipeline stage.
@@ -144,7 +146,7 @@ type RegexpLabelParser struct {
 //
 // See https://grafana.com/docs/loki/latest/logql/log_queries/#pattern.
 type PatternLabelParser struct {
-	Pattern string
+	Pattern logqlpattern.Pattern
 }
 
 // UnpackLabelParser unpacks data from promtail.
