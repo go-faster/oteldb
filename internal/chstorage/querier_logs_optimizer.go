@@ -187,8 +187,7 @@ stageLoop:
 				continue
 			}
 			filters = append(filters, stage.Pred)
-		case *logql.LineFormat,
-			*logql.DecolorizeExpr,
+		case *logql.DecolorizeExpr,
 			*logql.LineFilter:
 			// Do nothing on label set, just skip.
 		default:
