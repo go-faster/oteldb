@@ -3,6 +3,9 @@ package chstorage
 import (
 	"context"
 
+	"github.com/go-faster/sdk/zctx"
+	"go.uber.org/zap"
+
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 )
@@ -19,23 +22,30 @@ func (o *ClickhouseOptimizer) Name() string {
 }
 
 // Optimize implements [Optimizer].
-func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query) (logqlengine.Query, error) {
+func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query, opts logqlengine.OptimizeOptions) (logqlengine.Query, error) {
+	lg := zap.NewNop()
+	if opts.Explain {
+		lg = zctx.From(ctx).With(
+			zap.String("optimizer", o.Name()),
+		)
+	}
+
 	switch q := q.(type) {
 	case *logqlengine.LogQuery:
-		q.Root = o.optimizePipeline(q.Root)
+		q.Root = o.optimizePipeline(q.Root, lg)
 	case *logqlengine.MetricQuery:
 		if err := logqlengine.VisitNode(q.Root, func(n *logqlengine.SamplingNode) error {
-			n.Input = o.optimizePipeline(n.Input)
+			n.Input = o.optimizePipeline(n.Input, lg)
 			return nil
 		}); err != nil {
 			return nil, err
 		}
-		q.Root = o.optimizeSampling(q.Root)
+		q.Root = o.optimizeSampling(q.Root, lg)
 	}
 	return q, nil
 }
 
-func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode) logqlengine.MetricNode {
+func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode, lg *zap.Logger) logqlengine.MetricNode {
 	switch n := n.(type) {
 	case *logqlengine.VectorAggregation:
 		switch n.Expr.Op {
@@ -53,25 +63,25 @@ func (o *ClickhouseOptimizer) optimizeSampling(n logqlengine.MetricNode) logqlen
 		if !ok {
 			return n
 		}
-		n.Input = o.buildRangeAggregationSampling(rn, labels)
+		n.Input = o.buildRangeAggregationSampling(rn, labels, lg)
 
 		return n
 	case *logqlengine.LabelReplace:
-		n.Input = o.optimizeSampling(n.Input)
+		n.Input = o.optimizeSampling(n.Input, lg)
 		return n
 	case *logqlengine.LiteralBinOp:
-		n.Input = o.optimizeSampling(n.Input)
+		n.Input = o.optimizeSampling(n.Input, lg)
 		return n
 	case *logqlengine.BinOp:
-		n.Left = o.optimizeSampling(n.Left)
-		n.Right = o.optimizeSampling(n.Right)
+		n.Left = o.optimizeSampling(n.Left, lg)
+		n.Right = o.optimizeSampling(n.Right, lg)
 		return n
 	default:
 		return n
 	}
 }
 
-func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.RangeAggregation, grouping []logql.Label) logqlengine.MetricNode {
+func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.RangeAggregation, grouping []logql.Label, lg *zap.Logger) logqlengine.MetricNode {
 	if g := n.Expr.Grouping; g != nil {
 		return n
 	}
@@ -93,6 +103,12 @@ func (o *ClickhouseOptimizer) buildRangeAggregationSampling(n *logqlengine.Range
 		return n
 	}
 
+	if ce := lg.Check(zap.DebugLevel, "Sampling could be offloaded to Clickhouse"); ce != nil {
+		ce.Write(
+			zap.Stringer("sampling_op", samplingOp),
+			zap.Stringers("grouping_labels", grouping),
+		)
+	}
 	n.Input = &SamplingNode{
 		Sel:            pipelineNode.Sel,
 		Sampling:       samplingOp,
@@ -123,7 +139,7 @@ func getSamplingOp(e *logql.RangeAggregationExpr) (op SamplingOp, _ bool) {
 	}
 }
 
-func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode) logqlengine.PipelineNode {
+func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode, lg *zap.Logger) logqlengine.PipelineNode {
 	pn, ok := n.(*logqlengine.ProcessorNode)
 	if !ok {
 		return n
@@ -137,11 +153,26 @@ func (o *ClickhouseOptimizer) optimizePipeline(n logqlengine.PipelineNode) logql
 	}
 
 	sn.Sel.Line = o.offloadLineFilters(pn.Pipeline)
+	if f := sn.Sel.Line; len(f) > 0 {
+		if ce := lg.Check(zap.DebugLevel, "Offloading line filters"); ce != nil {
+			ce.Write(zap.Stringers("line_filters", f))
+		}
+	}
+
 	sn.Sel.PipelineLabels = o.offloadLabelFilters(pn.Pipeline)
+	if f := sn.Sel.PipelineLabels; len(f) > 0 {
+		if ce := lg.Check(zap.DebugLevel, "Offloading pipeline label filters"); ce != nil {
+			ce.Write(zap.Stringers("pipeline_labels", f))
+		}
+	}
+
 	offloaded := len(sn.Sel.Line) + len(sn.Sel.PipelineLabels)
 	// Replace original node with [InputNode], since we can execute filtering entirely in
 	// Clickhouse.
 	if len(pn.Pipeline) == offloaded && !pn.EnableOTELAdapter {
+		lg.Debug("Pipeline could be fully offloaded to Clickhouse",
+			zap.Stringer("selector", logql.Selector{Matchers: sn.Sel.Labels}),
+		)
 		return sn
 	}
 	return n
@@ -156,8 +187,7 @@ stageLoop:
 				continue
 			}
 			filters = append(filters, stage.Pred)
-		case *logql.LineFormat,
-			*logql.DecolorizeExpr,
+		case *logql.DecolorizeExpr,
 			*logql.LineFilter:
 			// Do nothing on label set, just skip.
 		default:

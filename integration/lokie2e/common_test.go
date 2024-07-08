@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"slices"
 	"testing"
 	"time"
@@ -519,6 +520,86 @@ func runTest(
 					entries += len(stream.Values)
 				}
 				require.Equal(t, limit, entries)
+			})
+		}
+	})
+	t.Run("Explain", func(t *testing.T) {
+		for i, tt := range []struct {
+			query    string
+			contains []string
+		}{
+			{
+				`{http_method=~".+"} |= "HEAD"`,
+				[]string{
+					`Offloading line filters.+|=`,
+					`Pipeline could be fully offloaded to Clickhouse`,
+				},
+			},
+			{
+				`{http_method=~".+"} | http_method = "GET"`,
+				[]string{
+					`Offloading pipeline label filters.+http_method=`,
+					`Pipeline could be fully offloaded to Clickhouse`,
+				},
+			},
+			{
+				`{http_method=~".+"} |= "HEAD" | http_method = "GET" | json | status != 200`,
+				[]string{
+					`Offloading line filters.+|=`,
+					`Offloading pipeline label filters.+http_method=`,
+				},
+			},
+
+			{
+				`sum by (http_method) ( count_over_time({http_method=~".+"} [30s]) )`,
+				[]string{
+					`Sampling could be offloaded to Clickhouse`,
+				},
+			},
+			{
+				`sum by (http_method) ( count_over_time({http_method=~".+"} |= "HEAD" [30s]) )`,
+				[]string{
+					`Offloading line filters.+|=`,
+					`Pipeline could be fully offloaded to Clickhouse`,
+					`Sampling could be offloaded to Clickhouse`,
+				},
+			},
+		} {
+			tt := tt
+			t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+				t.Parallel()
+
+				resp, err := c.QueryRange(ctx, lokiapi.QueryRangeParams{
+					// Expected result is empty
+					Query: "@explain\n" + tt.query,
+					// Query all data in a one step.
+					Start: lokiapi.NewOptLokiTime(asLokiTime(set.End)),
+					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End + otelstorage.Timestamp(10*time.Second))),
+					Step:  lokiapi.NewOptPrometheusDuration("30s"),
+					Limit: lokiapi.NewOptInt(1000),
+				})
+				require.NoError(t, err)
+
+				data, ok := resp.Data.GetStreamsResult()
+				require.True(t, ok)
+				streams := data.Result
+				require.Len(t, streams, 1)
+				entries := streams[0].Values
+				require.NotEmpty(t, streams, entries)
+
+				for _, pattern := range tt.contains {
+					re, err := regexp.Compile(pattern)
+					require.NoError(t, err)
+
+					require.True(t,
+						slices.ContainsFunc(entries, func(s lokiapi.LogEntry) bool {
+							return re.MatchString(s.V)
+						}),
+						"There is should be at least one log entry that matches %q in %#v",
+						pattern,
+						entries,
+					)
+				}
 			})
 		}
 	})

@@ -4,7 +4,24 @@ import (
 	"github.com/go-faster/oteldb/internal/logql/lexer"
 )
 
-func (p *parser) parseExpr() (expr Expr, err error) {
+func (p *parser) parseExpr() (Expr, error) {
+	var explain bool
+	if t := p.peek(); t.Type == lexer.Explain {
+		p.next()
+		explain = true
+	}
+
+	expr, err := p.parseExpr1()
+	if err != nil {
+		return nil, err
+	}
+	if explain {
+		expr = &ExplainExpr{X: expr}
+	}
+	return expr, nil
+}
+
+func (p *parser) parseExpr1() (Expr, error) {
 	switch t := p.peek(); t.Type {
 	case lexer.OpenBrace:
 		return p.parseLogExpr()

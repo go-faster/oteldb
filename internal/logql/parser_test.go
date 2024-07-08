@@ -1048,6 +1048,35 @@ var tests = []TestCase{
 		false,
 	},
 
+	// Explain.
+	{
+		`@explain {foo="bar"}`,
+		&ExplainExpr{
+			X: &LogExpr{
+				Sel: Selector{
+					Matchers: []LabelMatcher{
+						{Label: "foo", Op: OpEq, Value: "bar"},
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`@explain sum(vector(2)*vector(2))`,
+		&ExplainExpr{
+			X: &VectorAggregationExpr{
+				Op: VectorOpSum,
+				Expr: &BinOpExpr{
+					Left:  &VectorExpr{Value: 2},
+					Op:    OpMul,
+					Right: &VectorExpr{Value: 2},
+				},
+			},
+		},
+		false,
+	},
+
 	// Invalid syntax.
 	{"{", nil, true},
 	{"{foo}", nil, true},

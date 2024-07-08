@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -96,20 +97,37 @@ type selectQuery struct {
 }
 
 func (q *Querier) do(ctx context.Context, s selectQuery) error {
+	lg := zctx.From(ctx)
+
 	query, err := s.Query.Prepare(s.OnResult)
 	if err != nil {
 		return errors.Wrap(err, "build query")
 	}
 	query.ExternalData = s.ExternalData
 	query.ExternalTable = s.ExternalTable
-	query.Logger = zctx.From(ctx).Named("ch")
+	query.Logger = lg.Named("ch")
 
 	queryStartTime := time.Now()
-	if err := q.ch.Do(ctx, query); err != nil {
+	err = q.ch.Do(ctx, query)
+	took := time.Since(queryStartTime)
+	if ce := lg.Check(zap.DebugLevel, "Query Clickhouse"); ce != nil {
+		errField := zap.Skip()
+		if err != nil {
+			errField = zap.Error(err)
+		}
+		ce.Write(
+			zap.String("query_type", s.Type),
+			zap.String("table", s.Table),
+			zap.String("signal", s.Signal),
+			zap.Duration("took", took),
+			errField,
+		)
+	}
+	if err != nil {
 		return errors.Wrapf(err, "execute %s (signal: %s)", s.Type, s.Signal)
 	}
 
-	q.clickhouseRequestHistogram.Record(ctx, time.Since(queryStartTime).Seconds(),
+	q.clickhouseRequestHistogram.Record(ctx, took.Seconds(),
 		metric.WithAttributes(
 			attribute.String("chstorage.query_type", s.Type),
 			attribute.String("chstorage.table", s.Table),
