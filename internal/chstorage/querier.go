@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
@@ -15,6 +16,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
+	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -91,6 +93,8 @@ type selectQuery struct {
 	ExternalData  []proto.InputColumn
 	ExternalTable string
 
+	TraceLogs bool
+
 	Type   string
 	Signal string
 	Table  string
@@ -106,6 +110,14 @@ func (q *Querier) do(ctx context.Context, s selectQuery) error {
 	query.ExternalData = s.ExternalData
 	query.ExternalTable = s.ExternalTable
 	query.Logger = lg.Named("ch")
+
+	if logqlengine.IsExplainQuery(ctx) {
+		query.Settings = append(query.Settings, ch.Setting{
+			Key:       "send_logs_level",
+			Value:     "trace",
+			Important: true,
+		})
+	}
 
 	queryStartTime := time.Now()
 	err = q.ch.Do(ctx, query)

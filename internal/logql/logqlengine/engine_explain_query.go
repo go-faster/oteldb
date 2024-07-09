@@ -14,6 +14,26 @@ import (
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
+type (
+	explainKey    struct{}
+	explainTracer struct{}
+)
+
+// IsExplainQuery whether if this LogQL query is explained.
+func IsExplainQuery(ctx context.Context) bool {
+	_, ok := ctx.Value(explainKey{}).(*explainTracer)
+	return ok
+}
+
+func buildExplainQuery(ctx context.Context, logs *explainLogs) context.Context {
+	return startExplainQuery(ctx, logs)
+}
+
+func startExplainQuery(ctx context.Context, logs *explainLogs) context.Context {
+	ctx = context.WithValue(ctx, explainKey{}, &explainTracer{})
+	return logs.InjectLogger(ctx)
+}
+
 type explainLogs struct {
 	entries []lokiapi.LogEntry
 	mux     sync.Mutex
@@ -124,7 +144,7 @@ var _ Query = (*ExplainQuery)(nil)
 
 // Eval implements [Query].
 func (q *ExplainQuery) Eval(ctx context.Context, params EvalParams) (lokiapi.QueryResponseData, error) {
-	ctx = q.logs.InjectLogger(ctx)
+	ctx = startExplainQuery(ctx, q.logs)
 	lg := zctx.From(ctx)
 
 	var (

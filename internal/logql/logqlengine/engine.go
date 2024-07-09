@@ -116,10 +116,9 @@ func (e *Engine) NewQuery(ctx context.Context, query string) (q Query, rerr erro
 		return nil, errors.Wrap(err, "parse")
 	}
 
-	_, explain := expr.(*logql.ExplainExpr)
-	if explain {
+	if _, explain := expr.(*logql.ExplainExpr); explain {
 		logs := new(explainLogs)
-		ctx = logs.InjectLogger(ctx)
+		ctx = buildExplainQuery(ctx, logs)
 
 		defer func() {
 			q = &ExplainQuery{
@@ -134,7 +133,7 @@ func (e *Engine) NewQuery(ctx context.Context, query string) (q Query, rerr erro
 		return nil, err
 	}
 
-	q, err = e.applyOptimizers(ctx, q, OptimizeOptions{Explain: explain})
+	q, err = e.applyOptimizers(ctx, q)
 	if err != nil {
 		return nil, errors.Wrap(err, "optimize")
 	}

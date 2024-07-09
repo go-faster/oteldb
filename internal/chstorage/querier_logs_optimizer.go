@@ -22,9 +22,9 @@ func (o *ClickhouseOptimizer) Name() string {
 }
 
 // Optimize implements [Optimizer].
-func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query, opts logqlengine.OptimizeOptions) (logqlengine.Query, error) {
+func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query) (logqlengine.Query, error) {
 	lg := zap.NewNop()
-	if opts.Explain {
+	if logqlengine.IsExplainQuery(ctx) {
 		lg = zctx.From(ctx).With(
 			zap.String("optimizer", o.Name()),
 		)
