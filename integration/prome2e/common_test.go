@@ -38,6 +38,71 @@ func readBatchSet(p string) (s prome2e.BatchSet, _ error) {
 	return prome2e.ParseBatchSet(f)
 }
 
+const exemplarMetric = "prometheus_build_info"
+
+var (
+	exemplarSpanID  = pcommon.SpanID{1, 2, 3, 4, 5, 6, 7, 8}
+	exemplarTraceID = pcommon.TraceID{
+		1, 2, 3, 4, 5, 6, 7, 8,
+		1, 2, 3, 4, 5, 6, 7, 8,
+	}
+)
+
+func tryGenerateExemplars(batch pmetric.Metrics) {
+	var (
+		resources = batch.ResourceMetrics()
+		point     pmetric.NumberDataPoint
+		found     bool
+	)
+findLoop:
+	for resIdx := 0; resIdx < resources.Len(); resIdx++ {
+		scopes := resources.At(resIdx).ScopeMetrics()
+		if scopes.Len() == 0 {
+			continue
+		}
+		for scopeIdx := 0; scopeIdx < scopes.Len(); scopeIdx++ {
+			metrics := scopes.At(scopeIdx).Metrics()
+			if metrics.Len() == 0 {
+				continue
+			}
+			for metricIdx := 0; metricIdx < metrics.Len(); metricIdx++ {
+				metric := metrics.At(metricIdx)
+				if metric.Name() != exemplarMetric {
+					continue
+				}
+
+				var points pmetric.NumberDataPointSlice
+				switch metric.Type() {
+				case pmetric.MetricTypeGauge:
+					points = metric.Gauge().DataPoints()
+				case pmetric.MetricTypeSum:
+					points = metric.Sum().DataPoints()
+				default:
+					continue
+				}
+
+				if points.Len() != 0 {
+					point = points.At(0)
+					found = true
+					break findLoop
+				}
+			}
+		}
+	}
+	if !found {
+		return
+	}
+
+	exemplar := point.Exemplars().AppendEmpty()
+	exemplar.SetTimestamp(point.Timestamp())
+	exemplar.SetIntValue(10)
+	exemplar.SetSpanID(exemplarSpanID)
+	exemplar.SetTraceID(exemplarTraceID)
+	attrs := exemplar.FilteredAttributes()
+	attrs.PutStr("foo", "bar")
+	attrs.PutInt("code", 10)
+}
+
 func setupDB(
 	ctx context.Context,
 	t *testing.T,
@@ -48,6 +113,7 @@ func setupDB(
 	exemplarQuerier storage.ExemplarQueryable,
 ) *promapi.Client {
 	for i, b := range set.Batches {
+		tryGenerateExemplars(b)
 		if err := consumer.ConsumeMetrics(ctx, b); err != nil {
 			t.Fatalf("Send batch %d: %+v", i, err)
 		}
@@ -478,21 +544,24 @@ func runTest(
 		a := require.New(t)
 
 		r, err := c.GetQueryExemplars(ctx, promapi.GetQueryExemplarsParams{
-			Query: `
-				count(prometheus_http_requests_total{
-						http_method="POST",
-						http_status_code!="200"
-				}) > count(prometheus_http_requests_total{
-						http_method="GET",
-						http_status_code!="200"
-				})`,
+			Query: exemplarMetric + `{}`,
 			Start: getPromTS(set.Start),
 			End:   getPromTS(set.End),
 		})
 		a.NoError(err)
-		// We don't have any exemplars in testdata for now, yet we try to do query
-		// just to be sure that API and storage are working correctly.
-		a.Empty(r.Data)
+		a.Len(r.Data, 1)
+		set := r.Data[0]
+
+		a.Equal(exemplarMetric, set.SeriesLabels.Value["__name__"])
+		for _, e := range set.Exemplars {
+			a.Equal(promapi.LabelSet{
+				"code":     "10",
+				"foo":      "bar",
+				"span_id":  exemplarSpanID.String(),
+				"trace_id": exemplarTraceID.String(),
+			}, e.Labels)
+			a.Equal(10.0, e.Value)
+		}
 	})
 	t.Run("QueryRange", func(t *testing.T) {
 		a := require.New(t)
