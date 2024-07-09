@@ -65,6 +65,10 @@ func hashValue(h *xxh3.Hasher, val pcommon.Value) {
 }
 
 func hashMap(h *xxh3.Hasher, m pcommon.Map) {
+	if Attrs(m).IsZero() {
+		return
+	}
+
 	type pair struct {
 		key   string
 		value pcommon.Value
