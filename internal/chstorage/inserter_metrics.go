@@ -340,6 +340,7 @@ func (b *metricsBatch) addHistogramPoints(name string, res, scope lazyAttributes
 				Name:       bucketName,
 				Timestamp:  ts,
 				Attributes: attrs,
+				Scope:      scope,
 				Resource:   res,
 			},
 			point.Exemplars(),
