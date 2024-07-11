@@ -139,7 +139,9 @@ func (r *Replay) Run(ctx context.Context) error {
 					bo := backoff.NewExponentialBackOff()
 					bo.MaxElapsedTime = time.Minute
 					do := func() error { return fn(data) }
-					if err := backoff.Retry(do, backoff.WithContext(bo, ctx)); err != nil {
+					if err := backoff.RetryNotify(do, backoff.WithContext(bo, ctx), func(err error, d time.Duration) {
+						fmt.Printf("Retry after %s: %v\n", d, err)
+					}); err != nil {
 						return errors.Wrap(err, "retry")
 					}
 					if err := r.report(data); err != nil {
