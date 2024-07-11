@@ -31,6 +31,8 @@ import (
 // FromTimeSeries converts TimeSeries to OTLP metrics.
 func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics, error) {
 	var (
+		lg = settings.Logger
+
 		pms           = pmetric.NewMetrics()
 		timeThreshold = time.Now().Add(-time.Duration(settings.TimeThreshold) * time.Hour)
 	)
@@ -60,7 +62,10 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 			}
 		}
 
-		if countPoints(ts.Samples, timeThreshold) != 0 {
+		actualSamples := countPoints(ts.Samples, timeThreshold)
+		actualHistograms := countPoints(ts.Histograms, timeThreshold)
+
+		if actualSamples > 0 {
 			var slice pmetric.NumberDataPointSlice
 			if IsValidCumulativeSuffix(metricsType) {
 				pm.SetEmptySum()
@@ -75,8 +80,8 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 			for _, s := range ts.Samples {
 				timestamp := mapTimestamp(s.Timestamp)
 				if ts := timestamp.AsTime(); ts.Before(timeThreshold) {
-					settings.Logger.Debug("Metric older than the threshold",
-						zap.String("metric name", pm.Name()),
+					lg.Debug("Metric older than the threshold",
+						zap.String("metric_name", pm.Name()),
 						zap.Time("metric_timestamp", ts),
 					)
 					continue
@@ -95,14 +100,14 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 				}
 				mapExemplars(ts.Exemplars, ppoint.Exemplars())
 			}
-		} else if countPoints(ts.Histograms, timeThreshold) > 0 {
+		} else if actualHistograms > 0 {
 			eh := pm.SetEmptyExponentialHistogram()
 
 			for _, h := range ts.Histograms {
 				timestamp := mapTimestamp(h.Timestamp)
 				if ts := timestamp.AsTime(); ts.Before(timeThreshold) {
-					settings.Logger.Debug("Metric older than the threshold",
-						zap.String("metric name", pm.Name()),
+					lg.Debug("Metric older than the threshold",
+						zap.String("metric_name", pm.Name()),
 						zap.Time("metric_timestamp", ts),
 					)
 					continue
@@ -142,6 +147,21 @@ func FromTimeSeries(tss []prompb.TimeSeries, settings Settings) (pmetric.Metrics
 					attrs.PutStr(string(l.Name), string(l.Value))
 				}
 				mapExemplars(ts.Exemplars, ppoint.Exemplars())
+			}
+
+			if dropped := len(ts.Samples) - actualSamples; dropped > 0 {
+				lg.Warn(
+					"Some samples are too old and would be dropped",
+					zap.Int("received", len(ts.Samples)),
+					zap.Int("dropped", dropped),
+				)
+			}
+			if dropped := len(ts.Histograms) - actualHistograms; dropped > 0 {
+				lg.Warn(
+					"Some histograms are too old and would be dropped",
+					zap.Int("received", len(ts.Histograms)),
+					zap.Int("dropped", dropped),
+				)
 			}
 		}
 	}
