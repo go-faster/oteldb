@@ -70,21 +70,21 @@ var matchTests = []struct {
 		`foo bar baz`,
 		map[string]string{},
 		false,
-		ExtractorFlags,
+		0,
 	},
 	{
 		"foo <_>",
 		`foo bar baz`,
 		map[string]string{},
 		true,
-		ExtractorFlags,
+		0,
 	},
 	{
 		"<_> baz",
 		`foo bar baz`,
 		map[string]string{},
 		true,
-		ExtractorFlags,
+		0,
 	},
 	{
 		"<foo>",
@@ -100,14 +100,14 @@ var matchTests = []struct {
 		` bar `,
 		map[string]string{},
 		false,
-		ExtractorFlags,
+		0,
 	},
 	{
 		"<_>bar<_>",
 		` bar `,
 		map[string]string{},
 		true,
-		ExtractorFlags,
+		0,
 	},
 
 	// Realistic patterns.

@@ -25,6 +25,10 @@ type Part struct {
 	Value string
 }
 
+func (p Part) isNamedCapture() bool {
+	return p.Type == Capture && p.Value != "_"
+}
+
 // Pattern is a parsed pattern.
 type Pattern struct {
 	Parts []Part
@@ -71,7 +75,7 @@ func Parse(input string, flags ParseFlags) (p Pattern, _ error) {
 			break
 		}
 
-		if part.Type == Capture {
+		if part.isNamedCapture() {
 			captures++
 		}
 		p.Parts = append(p.Parts, part)
@@ -85,14 +89,14 @@ func Parse(input string, flags ParseFlags) (p Pattern, _ error) {
 
 	if flags.Has(DisallowNamed) {
 		for _, part := range p.Parts {
-			if part.Type == Capture && part.Value != "_" {
+			if part.isNamedCapture() {
 				return p, errors.Errorf("unexpected named pattern %q", part.Value)
 			}
 		}
 	} else {
 		dedup := make(map[string]struct{}, captures)
 		for _, part := range p.Parts {
-			if part.Type != Capture || part.Value == "_" {
+			if !part.isNamedCapture() {
 				continue
 			}
 			if _, ok := dedup[part.Value]; ok {

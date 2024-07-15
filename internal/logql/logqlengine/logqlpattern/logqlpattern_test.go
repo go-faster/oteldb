@@ -23,7 +23,7 @@ var parseTests = []struct {
 		"<_>",
 		[]Part{capture("_")},
 		"",
-		ExtractorFlags,
+		0,
 	},
 	{
 		"<_1foo>",
@@ -198,9 +198,15 @@ func TestParse(t *testing.T) {
 			gotP, err := Parse(tt.input, tt.flags)
 			if tt.wantErr != "" {
 				require.EqualError(t, err, tt.wantErr)
+				require.PanicsWithError(t, tt.wantErr, func() {
+					MustParse(tt.input, tt.flags)
+				})
 				return
 			}
 			require.NoError(t, err)
+			require.NotPanics(t, func() {
+				MustParse(tt.input, tt.flags)
+			})
 			require.Equal(t, tt.wantP, gotP.Parts)
 		})
 	}
