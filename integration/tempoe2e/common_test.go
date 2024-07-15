@@ -593,12 +593,10 @@ func runTest(
 			a.Equal(int64(expectSpan.StartTimestamp()), start)
 			a.Equal(int64(expectSpan.EndTimestamp()), end)
 
-			gotAttrs := gotSpan.Attributes
-			if expectAttrs := expectSpan.Attributes(); expectAttrs.Len() > 0 {
-				// TODO(tdakkota): do a full attributes comparison.
-				a.NotNil(gotSpan.Attributes)
-				a.Len(gotAttrs, expectAttrs.Len())
-			}
+			a.Equal(
+				getRawMapFromAPI(gotSpan.Attributes),
+				expectSpan.Attributes().AsRaw(),
+			)
 		}
 	}
 
@@ -858,6 +856,40 @@ func runTest(
 			a.Empty(r.Traces)
 		})
 	})
+}
+
+func getRawMapFromAPI(obj []tempoapi.KeyValue) map[string]any {
+	r := make(map[string]any, len(obj))
+	for _, kv := range obj {
+		r[kv.Key] = getRawValueFromAPI(kv.Value)
+	}
+	return r
+}
+
+func getRawValueFromAPI(val tempoapi.AnyValue) any {
+	switch val.Type {
+	case tempoapi.StringValueAnyValue:
+		return val.StringValue.StringValue
+	case tempoapi.BoolValueAnyValue:
+		return val.BoolValue.BoolValue
+	case tempoapi.IntValueAnyValue:
+		return val.IntValue.IntValue
+	case tempoapi.DoubleValueAnyValue:
+		return val.DoubleValue.DoubleValue
+	case tempoapi.ArrayValueAnyValue:
+		arr := val.ArrayValue.ArrayValue
+		r := make([]any, len(arr))
+		for i, val := range arr {
+			r[i] = getRawValueFromAPI(val)
+		}
+		return arr
+	case tempoapi.KvlistValueAnyValue:
+		return getRawMapFromAPI(val.KvlistValue.KvlistValue)
+	case tempoapi.BytesValueAnyValue:
+		return val.BytesValue.BytesValue
+	default:
+		panic(fmt.Sprintf("unexpected type %#v", val.Type))
+	}
 }
 
 type selectedSpans = map[pcommon.TraceID]map[pcommon.SpanID]struct{}
