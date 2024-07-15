@@ -1186,6 +1186,9 @@ var tests = []TestCase{
 	{`{} | regexp "\\"`, nil, true},
 	{`{} | foo=~"\\"`, nil, true},
 	{`label_replace(rate({job="mysql"}[1m]), "dst", "replacement", "src", "\\")`, nil, true},
+	// No capture.
+	{`{} | regexp "a"`, nil, true},
+	{`{} | regexp "a (\\w+)"`, nil, true},
 	// Duplicate capture.
 	{`{} | regexp "(?P<method>\\w+)(?P<method>\\w+)"`, nil, true},
 	// Invalid capture name.
@@ -1195,6 +1198,7 @@ var tests = []TestCase{
 	//
 	// No capture.
 	{`{} | pattern "a"`, nil, true},
+	{`{} | pattern "a <_> a"`, nil, true},
 	// Duplicate capture.
 	{`{} | pattern "<a> foo <a>"`, nil, true},
 	// Consecutive capture.

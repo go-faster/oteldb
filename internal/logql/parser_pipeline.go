@@ -292,10 +292,20 @@ func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
 			Err: err,
 		}
 	}
+	if re.NumSubexp() == 0 {
+		return nil, &ParseError{
+			Pos: patternTok.Pos,
+			Err: errors.New("at least one capture expected"),
+		}
+	}
 
-	mapping := map[int]Label{}
-	unique := map[string]struct{}{}
-	for i, name := range re.SubexpNames() {
+	var (
+		captures = re.SubexpNames()
+		mapping  = make(map[int]Label, len(captures))
+		unique   = make(map[string]struct{}, len(captures))
+	)
+
+	for i, name := range captures {
 		// Not capturing.
 		if name == "" {
 			continue
@@ -316,6 +326,12 @@ func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
 			}
 		}
 		mapping[i] = Label(name)
+	}
+	if len(mapping) == 0 {
+		return nil, &ParseError{
+			Pos: patternTok.Pos,
+			Err: errors.New("at least one capture expected"),
+		}
 	}
 
 	return &RegexpLabelParser{
