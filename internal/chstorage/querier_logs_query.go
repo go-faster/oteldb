@@ -373,17 +373,6 @@ func (q *Querier) lineFilter(m logql.LineFilter, c *tokenCollector) (e chsql.Exp
 		case logql.OpEq, logql.OpNotEq:
 			expr := chsql.Contains("body", by.Value)
 
-			// Clickhouse does not use tokenbf_v1 index to skip blocks
-			// with position* functions for some reason.
-			//
-			// Force to skip using hasToken function.
-			//
-			// Note that such optimization is applied only if operation is not negated to
-			// avoid false-negative skipping.
-			if val := by.Value; len(m.Or) == 0 && op != logql.OpNotEq {
-				c.Add(val)
-			}
-
 			{
 				// HACK: check for special case of hex-encoded trace_id and span_id.
 				// Like `{http_method=~".+"} |= "af36000000000000c517000000000003"`.
@@ -400,8 +389,22 @@ func (q *Querier) lineFilter(m logql.LineFilter, c *tokenCollector) (e chsql.Exp
 						chsql.Ident("span_id"),
 						chsql.Unhex(chsql.String(by.Value)),
 					))
+				default:
+					// In case if value is not a trace_id/span_id.
+					//
+					// Clickhouse does not use tokenbf_v1 index to skip blocks
+					// with position* functions for some reason.
+					//
+					// Force to skip using hasToken function.
+					//
+					// Note that such optimization is applied only if operation is not negated to
+					// avoid false-negative skipping.
+					if val := by.Value; len(m.Or) == 0 && op != logql.OpNotEq {
+						c.Add(val)
+					}
 				}
 			}
+
 			return expr
 		case logql.OpRe, logql.OpNotRe:
 			return chsql.Match(chsql.Ident("body"), chsql.String(by.Value))
