@@ -23,9 +23,11 @@ func (o *ClickhouseOptimizer) Name() string {
 	return "ClickhouseOptimizer"
 }
 
+var nopLogger = zap.NewNop()
+
 // Optimize implements [Optimizer].
 func (o *ClickhouseOptimizer) Optimize(ctx context.Context, q logqlengine.Query) (logqlengine.Query, error) {
-	lg := zap.NewNop()
+	lg := nopLogger
 	if logqlengine.IsExplainQuery(ctx) {
 		lg = zctx.From(ctx).With(
 			zap.String("optimizer", o.Name()),

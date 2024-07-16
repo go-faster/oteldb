@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -533,6 +534,17 @@ func runTest(
 				[]string{
 					`Offloading line filters.+|=`,
 					`Pipeline could be fully offloaded to Clickhouse`,
+					`Adding hasToken.+HEAD`,
+				},
+			},
+			{
+				`{http_method=~".+"} |= "HEAD" |= "\"error\": \"ENOENT\""`,
+				[]string{
+					`Offloading line filters.+|=`,
+					`Pipeline could be fully offloaded to Clickhouse`,
+					`Adding hasToken.+HEAD`,
+					`Adding hasToken.+error`,
+					`Adding hasToken.+ENOENT`,
 				},
 			},
 			{
@@ -547,6 +559,7 @@ func runTest(
 				[]string{
 					`Offloading line filters.+|=`,
 					`Offloading pipeline label filters.+http_method=`,
+					`Adding hasToken.+HEAD`,
 				},
 			},
 
@@ -562,6 +575,7 @@ func runTest(
 					`Offloading line filters.+|=`,
 					`Pipeline could be fully offloaded to Clickhouse`,
 					`Sampling could be offloaded to Clickhouse`,
+					`Adding hasToken.+HEAD`,
 				},
 			},
 		} {
@@ -587,6 +601,19 @@ func runTest(
 				entries := streams[0].Values
 				require.NotEmpty(t, streams, entries)
 
+				defer func() {
+					if !t.Failed() {
+						return
+					}
+					for _, e := range entries {
+						msg := strings.TrimSpace(e.V)
+						if strings.Contains(msg, "explain.ch") {
+							continue
+						}
+						t.Log(msg)
+					}
+				}()
+
 				for _, pattern := range tt.contains {
 					re, err := regexp.Compile(pattern)
 					require.NoError(t, err)
@@ -595,9 +622,8 @@ func runTest(
 						slices.ContainsFunc(entries, func(s lokiapi.LogEntry) bool {
 							return re.MatchString(s.V)
 						}),
-						"There is should be at least one log entry that matches %q in %#v",
+						"There is should be at least one log entry that matches %q",
 						pattern,
-						entries,
 					)
 				}
 			})

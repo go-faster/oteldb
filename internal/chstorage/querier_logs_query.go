@@ -9,10 +9,12 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/iterators"
@@ -71,7 +73,7 @@ func (v *LogsQuery[E]) Execute(ctx context.Context, q *Querier) (_ iterators.Ite
 				chsql.InTimeRange("timestamp", v.Start, v.End),
 			)
 	)
-	v.Sel.addPredicates(query, mapping, q)
+	v.Sel.addPredicates(ctx, query, mapping, q)
 
 	switch d := v.Direction; d {
 	case logqlengine.DirectionBackward:
@@ -214,7 +216,7 @@ func (v *SampleQuery) Execute(ctx context.Context, q *Querier) (_ logqlengine.Sa
 			chsql.InTimeRange("timestamp", v.Start, v.End),
 		)
 	)
-	v.Sel.addPredicates(query, mapping, q)
+	v.Sel.addPredicates(ctx, query, mapping, q)
 	query.Order(chsql.Ident("timestamp"), chsql.Asc)
 
 	var result []logqlmetric.SampledEntry
@@ -298,22 +300,67 @@ func (s LogsSelector) mappingLabels() []string {
 }
 
 func (s LogsSelector) addPredicates(
+	ctx context.Context,
 	query *chsql.SelectQuery,
 	mapping map[string]string,
 	q *Querier,
 ) {
+	lg := nopLogger
+	if logqlengine.IsExplainQuery(ctx) {
+		lg = zctx.From(ctx)
+	}
+
 	for _, m := range s.Labels {
 		query.Where(q.logQLLabelMatcher(m, mapping))
 	}
+
+	var c tokenCollector
+	c.tokenLimit = 20
 	for _, m := range s.Line {
-		query.Where(q.lineFilter(m))
+		query.Where(q.lineFilter(m, &c))
 	}
+	{
+		column := chsql.Ident("body")
+		for tok := range c.tokens {
+			if ce := lg.Check(zap.DebugLevel, "Adding hasToken"); ce != nil {
+				ce.Write(zap.String("token", tok))
+			}
+			query.Where(chsql.HasToken(column, tok))
+		}
+	}
+
 	for _, m := range s.PipelineLabels {
 		query.Where(q.logQLLabelPredicate(m, mapping))
 	}
 }
 
-func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr) {
+// tokenCollector collects and deduplicates tokens in line filters.
+type tokenCollector struct {
+	tokens     map[string]struct{}
+	tokenLimit int
+}
+
+func (c *tokenCollector) Add(value string) {
+	haveLimit := c.tokenLimit > 0
+
+	switch {
+	case c.tokens == nil:
+		hint := max(c.tokenLimit, 0)
+		c.tokens = make(map[string]struct{}, hint)
+	case haveLimit && len(c.tokens) >= c.tokenLimit:
+		return
+	}
+
+	chsql.CollectTokens(value, func(tok string) bool {
+		c.tokens[tok] = struct{}{}
+		if haveLimit && len(c.tokens) >= c.tokenLimit {
+			return false
+		}
+		return true
+	})
+}
+
+func (q *Querier) lineFilter(m logql.LineFilter, c *tokenCollector) (e chsql.Expr) {
 	defer func() {
 		switch m.Op {
 		case logql.OpNotEq, logql.OpNotRe:
@@ -325,19 +372,6 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr) {
 		switch op {
 		case logql.OpEq, logql.OpNotEq:
 			expr := chsql.Contains("body", by.Value)
-
-			// Clickhouse does not use tokenbf_v1 index to skip blocks
-			// with position* functions for some reason.
-			//
-			// Force to skip using hasToken function.
-			//
-			// Note that such optimization is applied only if operation is not negated to
-			// avoid false-negative skipping.
-			if val := by.Value; op != logql.OpNotEq && chsql.IsSingleToken(val) {
-				expr = chsql.And(expr,
-					chsql.HasToken(chsql.Ident("body"), val),
-				)
-			}
 
 			{
 				// HACK: check for special case of hex-encoded trace_id and span_id.
@@ -355,8 +389,22 @@ func (q *Querier) lineFilter(m logql.LineFilter) (e chsql.Expr) {
 						chsql.Ident("span_id"),
 						chsql.Unhex(chsql.String(by.Value)),
 					))
+				default:
+					// In case if value is not a trace_id/span_id.
+					//
+					// Clickhouse does not use tokenbf_v1 index to skip blocks
+					// with position* functions for some reason.
+					//
+					// Force to skip using hasToken function.
+					//
+					// Note that such optimization is applied only if operation is not negated to
+					// avoid false-negative skipping.
+					if val := by.Value; len(m.Or) == 0 && op != logql.OpNotEq {
+						c.Add(val)
+					}
 				}
 			}
+
 			return expr
 		case logql.OpRe, logql.OpNotRe:
 			return chsql.Match(chsql.Ident("body"), chsql.String(by.Value))
