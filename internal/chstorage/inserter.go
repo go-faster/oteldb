@@ -17,11 +17,18 @@ type Inserter struct {
 	ch     ClickhouseClient
 	tables Tables
 
-	insertedPoints  metric.Int64Counter
-	insertedSpans   metric.Int64Counter
-	insertedTags    metric.Int64Counter
+	// Logs metrics.
 	insertedRecords metric.Int64Counter
-	inserts         metric.Int64Counter
+	// Metrics metrics (it counts metrics insertion).
+	insertedPoints       metric.Int64Counter
+	insertedHistograms   metric.Int64Counter
+	insertedExemplars    metric.Int64Counter
+	insertedMetricLabels metric.Int64Counter
+	// Trace metrics.
+	insertedSpans metric.Int64Counter
+	insertedTags  metric.Int64Counter
+	// Common metrics.
+	inserts metric.Int64Counter
 
 	tracer trace.Tracer
 }
@@ -55,47 +62,40 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 	opts.MeterProvider = otel.GetMeterProvider()
 	opts.setDefaults()
 
-	meter := opts.MeterProvider.Meter("chstorage.Inserter")
-	insertedSpans, err := meter.Int64Counter("chstorage.traces.inserted_spans",
-		metric.WithDescription("Number of inserted spans"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create inserted_spans")
-	}
-	insertedTags, err := meter.Int64Counter("chstorage.traces.inserted_tags",
-		metric.WithDescription("Number of inserted tags"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create inserted_tags")
-	}
-	insertedRecords, err := meter.Int64Counter("chstorage.logs.inserted_records",
-		metric.WithDescription("Number of inserted log records"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create inserted_records")
-	}
-	insertedPoints, err := meter.Int64Counter("chstorage.metrics.inserted_points",
-		metric.WithDescription("Number of inserted points"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create inserted_points")
-	}
-	inserts, err := meter.Int64Counter("chstorage.inserts",
-		metric.WithDescription("Number of insert invocations"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create inserts")
+	inserter := &Inserter{
+		ch:     c,
+		tables: opts.Tables,
+		tracer: opts.TracerProvider.Tracer("chstorage.Inserter"),
 	}
 
-	inserter := &Inserter{
-		ch:              c,
-		tables:          opts.Tables,
-		insertedSpans:   insertedSpans,
-		insertedTags:    insertedTags,
-		insertedRecords: insertedRecords,
-		insertedPoints:  insertedPoints,
-		inserts:         inserts,
-		tracer:          opts.TracerProvider.Tracer("chstorage.Inserter"),
+	meter := opts.MeterProvider.Meter("chstorage.Inserter")
+	for _, desc := range []struct {
+		ptr         *metric.Int64Counter
+		name        string
+		description string
+	}{
+		// Logs.
+		{&inserter.insertedRecords, "chstorage.logs.inserted_records", "Number of inserted log records"},
+		// Metrics.
+		{&inserter.insertedPoints, "chstorage.metrics.inserted_points", "Number of inserted points"},
+		{&inserter.insertedHistograms, "chstorage.metrics.inserted_histograms", "Number of inserted exponential (native) histograms"},
+		{&inserter.insertedExemplars, "chstorage.metrics.inserted_exemplars", "Number of inserted exemplars"},
+		{&inserter.insertedMetricLabels, "chstorage.metrics.inserted_metric_labels", "Number of inserted metric labels"},
+		// Traces.
+		{&inserter.insertedSpans, "chstorage.traces.inserted_spans", "Number of inserted spans"},
+		{&inserter.insertedTags, "chstorage.traces.inserted_tags", "Number of inserted trace attributes"},
+		// Common.
+		{&inserter.insertedPoints, "chstorage.inserts", "Number of insert invocations"},
+	} {
+		counter, err := meter.Int64Counter(desc.name,
+			metric.WithDescription(desc.description),
+			metric.WithUnit("1"),
+		)
+		if err != nil {
+			return nil, errors.Wrapf(err, "create %q", desc.name)
+		}
+		*desc.ptr = counter
 	}
+
 	return inserter, nil
 }
