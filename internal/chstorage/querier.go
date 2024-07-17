@@ -117,16 +117,12 @@ func (q *Querier) do(ctx context.Context, s selectQuery) error {
 	err = q.ch.Do(ctx, query)
 	took := time.Since(queryStartTime)
 	if ce := lg.Check(zap.DebugLevel, "Query Clickhouse"); ce != nil {
-		errField := zap.Skip()
-		if err != nil {
-			errField = zap.Error(err)
-		}
 		ce.Write(
 			zap.String("query_type", s.Type),
 			zap.String("table", s.Table),
 			zap.String("signal", s.Signal),
 			zap.Duration("took", took),
-			errField,
+			zap.Error(err),
 		)
 	}
 	if err != nil {
