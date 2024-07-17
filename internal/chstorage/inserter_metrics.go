@@ -32,12 +32,12 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 		if rerr != nil {
 			span.RecordError(rerr)
 		} else {
-			i.insertedPoints.Add(ctx, int64(b.points.value.Rows()))
-			i.insertedHistograms.Add(ctx, int64(b.expHistograms.count.Rows()))
-			i.insertedExemplars.Add(ctx, int64(b.exemplars.value.Rows()))
-			i.insertedMetricLabels.Add(ctx, int64(len(b.labels)))
+			i.stats.InsertedPoints.Add(ctx, int64(b.points.value.Rows()))
+			i.stats.InsertedHistograms.Add(ctx, int64(b.expHistograms.count.Rows()))
+			i.stats.InsertedExemplars.Add(ctx, int64(b.exemplars.value.Rows()))
+			i.stats.InsertedMetricLabels.Add(ctx, int64(len(b.labels)))
 
-			i.inserts.Add(ctx, 1, metric.WithAttributes(
+			i.stats.Inserts.Add(ctx, 1, metric.WithAttributes(
 				attribute.String("chstorage.signal", "metrics"),
 			))
 		}
