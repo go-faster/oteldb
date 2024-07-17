@@ -13,11 +13,13 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
+	"github.com/google/uuid"
 	"github.com/prometheus/prometheus/model/labels"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 
@@ -37,17 +39,7 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 		}
 		span.End()
 	}()
-
-	eb := backoff.NewExponentialBackOff()
-	bo := backoff.WithContext(eb, ctx)
-	fn := func() error {
-		return b.Insert(ctx, i.tables, i.ch)
-	}
-	if err := backoff.Retry(fn, bo); err != nil {
-		return errors.Wrap(err, "insert batch")
-	}
-	b.Reset()
-	return nil
+	return b.Insert(ctx, i.tables, i.ch)
 }
 
 // ConsumeMetrics inserts given metrics.
@@ -95,6 +87,8 @@ const (
 )
 
 func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickhouseClient) error {
+	lg := zctx.From(ctx)
+
 	labelColumns := newLabelsColumns()
 	insertLabel := func(
 		key, keyNormalized string,
@@ -150,11 +144,41 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 		grp.Go(func() error {
 			ctx := grpCtx
 
-			input := table.columns.Input()
-			if err := client.Do(ctx, ch.Query{
-				Logger: zctx.From(ctx).Named("ch"),
-				Body:   input.Into(table.name),
-				Input:  input,
+			var (
+				queryID = uuid.New().String()
+				lg      = lg.With(
+					zap.String("query_id", queryID),
+					zap.String("table", table.name),
+				)
+
+				input  = table.columns.Input()
+				insert = func() error {
+					err := client.Do(ctx, ch.Query{
+						Body:   input.Into(table.name),
+						Input:  input,
+						Logger: zctx.From(ctx).Named("ch"),
+					})
+					if pe, ok := errors.Into[proto.Error](err); ok && pe == proto.ErrQueryWithSameIDIsAlreadyRunning {
+						lg.Debug("Query already running")
+						err = nil
+					}
+					return err
+				}
+			)
+
+			rows := -1
+			if len(input) > 0 {
+				rows = input[0].Data.Rows()
+			}
+			lg.Debug("Inserting metrics", zap.Int("rows", rows))
+
+			eb := backoff.NewExponentialBackOff()
+			bo := backoff.WithContext(eb, ctx)
+			if err := backoff.RetryNotify(insert, bo, func(err error, d time.Duration) {
+				lg.Warn("Metrics insert failed",
+					zap.Error(err),
+					zap.Duration("retry_after", d),
+				)
 			}); err != nil {
 				return errors.Wrapf(err, "insert %q", table.name)
 			}
