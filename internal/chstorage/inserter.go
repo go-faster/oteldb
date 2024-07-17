@@ -85,7 +85,7 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 		{&inserter.insertedSpans, "chstorage.traces.inserted_spans", "Number of inserted spans"},
 		{&inserter.insertedTags, "chstorage.traces.inserted_tags", "Number of inserted trace attributes"},
 		// Common.
-		{&inserter.insertedPoints, "chstorage.inserts", "Number of insert invocations"},
+		{&inserter.inserts, "chstorage.inserts", "Number of insert invocations"},
 	} {
 		counter, err := meter.Int64Counter(desc.name,
 			metric.WithDescription(desc.description),
