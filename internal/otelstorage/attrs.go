@@ -8,15 +8,15 @@ import (
 
 // KeyToLabel converts key to label name.
 func KeyToLabel(key string) string {
-	isDigit := func(r rune) bool {
+	isDigit := func(r byte) bool {
 		return r >= '0' && r <= '9'
 	}
-	isAlpha := func(r rune) bool {
+	isAlpha := func(r byte) bool {
 		return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
 	}
 
 	var label strings.Builder
-	for i, r := range key {
+	for i, r := range []byte(key) {
 		switch {
 		case isDigit(r):
 			// Label could not start with digit.
@@ -25,7 +25,7 @@ func KeyToLabel(key string) string {
 				label.WriteString("_")
 				goto slow
 			}
-		case r == '_' || isAlpha(r):
+		case r >= 0x80 && r == '_' || isAlpha(r):
 		default:
 			label.Grow(len(key))
 			label.WriteString(key[:i])
@@ -35,9 +35,9 @@ func KeyToLabel(key string) string {
 	}
 	return key
 slow:
-	for _, r := range key {
-		if r == '_' || isDigit(r) || isAlpha(r) {
-			label.WriteRune(r)
+	for _, r := range []byte(key) {
+		if r >= 0x80 || r == '_' || isDigit(r) || isAlpha(r) {
+			label.WriteByte(r)
 			continue
 		}
 		// Replace rune with '_'.
