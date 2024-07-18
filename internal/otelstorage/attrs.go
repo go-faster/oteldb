@@ -21,11 +21,13 @@ func KeyToLabel(key string) string {
 		case isDigit(r):
 			// Label could not start with digit.
 			if i == 0 {
+				label.Grow(len(key) + 1)
 				label.WriteString("_")
 				goto slow
 			}
 		case r == '_' || isAlpha(r):
 		default:
+			label.Grow(len(key))
 			label.WriteString(key[:i])
 			key = key[i:]
 			goto slow
