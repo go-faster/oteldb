@@ -49,8 +49,18 @@ type SeriesOptions struct {
 
 // Inserter is a log storage insert interface.
 type Inserter interface {
-	// InsertRecords inserts given records.
-	InsertRecords(ctx context.Context, records []Record) error
-	// InsertLogLabels insert given set of labels to the storage.
-	InsertLogLabels(ctx context.Context, labels map[Label]struct{}) error
+	// RecordWriter creates a new batch.
+	RecordWriter(ctx context.Context) (RecordWriter, error)
+}
+
+// RecordWriter represents a log record batch.
+type RecordWriter interface {
+	// Add adds record to the batch.
+	Add(record Record) error
+	// Submit sends batch.
+	Submit(ctx context.Context) error
+	// Close frees resources.
+	//
+	// Callers should call [RecordWriter.Close] regardless if they called [RecordWriter.Submit] or not.
+	Close() error
 }
