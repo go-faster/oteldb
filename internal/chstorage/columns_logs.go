@@ -42,6 +42,7 @@ type logColumns struct {
 	scopeAttributes *Attributes
 
 	columns func() Columns
+	Input   func() proto.Input
 }
 
 func newLogColumns() *logColumns {
@@ -81,6 +82,9 @@ func newLogColumns() *logColumns {
 			c.scopeAttributes.Columns(),
 			c.resource.Columns(),
 		)
+	})
+	c.Input = sync.OnceValue(func() proto.Input {
+		return c.columns().Input()
 	})
 	return c
 }
@@ -183,7 +187,6 @@ func (c *logColumns) AddRow(r logstorage.Record) {
 	c.scopeAttributes.Append(r.ScopeAttrs)
 }
 
-func (c *logColumns) Input() proto.Input                { return c.columns().Input() }
 func (c *logColumns) Result() proto.Results             { return c.columns().Result() }
 func (c *logColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
 func (c *logColumns) Reset()                            { c.columns().Reset() }
@@ -193,6 +196,7 @@ type logAttrMapColumns struct {
 	key  proto.ColStr // http.method
 
 	columns func() Columns
+	Input   func() proto.Input
 }
 
 func newLogAttrMapColumns() *logAttrMapColumns {
@@ -203,10 +207,12 @@ func newLogAttrMapColumns() *logAttrMapColumns {
 			{Name: "key", Data: &c.key},
 		}
 	})
+	c.Input = sync.OnceValue(func() proto.Input {
+		return c.columns().Input()
+	})
 	return c
 }
 
-func (c *logAttrMapColumns) Input() proto.Input                { return c.columns().Input() }
 func (c *logAttrMapColumns) Result() proto.Results             { return c.columns().Result() }
 func (c *logAttrMapColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
 func (c *logAttrMapColumns) Reset()                            { c.columns().Reset() }
