@@ -53,3 +53,15 @@ func TestKeyToLabelAllocs(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkKeyToLabel(b *testing.B) {
+	b.ReportAllocs()
+
+	var sink string
+	for i := 0; i < b.N; i++ {
+		sink = KeyToLabel("receiver/accepted_spans/0")
+	}
+	if sink == "" {
+		b.Fatal()
+	}
+}
