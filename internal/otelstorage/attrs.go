@@ -62,6 +62,14 @@ func (m Attrs) IsZero() bool {
 	return m == (Attrs{})
 }
 
+// Len returns number of attributes.
+func (m Attrs) Len() int {
+	if m.IsZero() {
+		return 0
+	}
+	return m.AsMap().Len()
+}
+
 // CopyTo copies all attributes from m to target.
 func (m Attrs) CopyTo(target pcommon.Map) {
 	m.AsMap().CopyTo(target)
