@@ -21,6 +21,7 @@ func TestKeyToLabel(t *testing.T) {
 		{"foo.bar", "foo_bar"},
 		{"foo/bar", "foo_bar"},
 		{"receiver/accepted_spans/0", "receiver_accepted_spans_0"},
+		{"🐹/🐹/0", "🐹_🐹_0"},
 	}
 	for i, tt := range tests {
 		tt := tt
@@ -40,6 +41,7 @@ func TestKeyToLabelAllocs(t *testing.T) {
 		{"foo", 0},
 		{"foo.bar", 1},
 		{"receiver/accepted_spans/0", 1},
+		{"🐹/🐹/0", 1},
 		{"_" + strings.Repeat("receiver/accepted_spans/0", 25), 1},
 	} {
 		got := testing.AllocsPerRun(1000, func() {
