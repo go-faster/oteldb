@@ -24,8 +24,8 @@ func (i *Inserter) InsertSpans(ctx context.Context, spans []tracestorage.Span) (
 		if rerr != nil {
 			span.RecordError(rerr)
 		} else {
-			i.insertedSpans.Add(ctx, int64(len(spans)))
-			i.inserts.Add(ctx, 1,
+			i.stats.InsertedSpans.Add(ctx, int64(len(spans)))
+			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
 					attribute.String("chstorage.table", table),
 					attribute.String("chstorage.signal", "traces"),
@@ -58,8 +58,8 @@ func (i *Inserter) InsertTags(ctx context.Context, tags map[tracestorage.Tag]str
 		if rerr != nil {
 			span.RecordError(rerr)
 		} else {
-			i.insertedTags.Add(ctx, int64(len(tags)))
-			i.inserts.Add(ctx, 1,
+			i.stats.InsertedTags.Add(ctx, int64(len(tags)))
+			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
 					attribute.String("chstorage.table", table),
 					attribute.String("chstorage.signal", "tags"),

@@ -31,8 +31,8 @@ func (i *Inserter) InsertRecords(ctx context.Context, records []logstorage.Recor
 		if rerr != nil {
 			span.RecordError(rerr)
 		} else {
-			i.insertedRecords.Add(ctx, int64(len(records)))
-			i.inserts.Add(ctx, 1,
+			i.stats.InsertedRecords.Add(ctx, int64(len(records)))
+			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
 					attribute.String("chstorage.table", table),
 					attribute.String("chstorage.signal", "logs"),

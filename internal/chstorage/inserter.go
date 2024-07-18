@@ -1,12 +1,12 @@
 package chstorage
 
 import (
+	"github.com/go-faster/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/go-faster/errors"
-
+	"github.com/go-faster/oteldb/internal/autometric"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -17,19 +17,20 @@ type Inserter struct {
 	ch     ClickhouseClient
 	tables Tables
 
-	// Logs metrics.
-	insertedRecords metric.Int64Counter
-	// Metrics metrics (it counts metrics insertion).
-	insertedPoints       metric.Int64Counter
-	insertedHistograms   metric.Int64Counter
-	insertedExemplars    metric.Int64Counter
-	insertedMetricLabels metric.Int64Counter
-	// Trace metrics.
-	insertedSpans metric.Int64Counter
-	insertedTags  metric.Int64Counter
-	// Common metrics.
-	inserts metric.Int64Counter
-
+	stats struct {
+		// Logs.
+		InsertedRecords metric.Int64Counter `name:"logs.inserted_records" description:"Number of inserted log records"`
+		// Metrics.
+		InsertedPoints       metric.Int64Counter `name:"metrics.inserted_points" description:"Number of inserted points"`
+		InsertedHistograms   metric.Int64Counter `name:"metrics.inserted_histograms" description:"Number of inserted exponential (native) histograms"`
+		InsertedExemplars    metric.Int64Counter `name:"metrics.inserted_exemplars" description:"Number of inserted exemplars"`
+		InsertedMetricLabels metric.Int64Counter `name:"metrics.inserted_metric_labels" description:"Number of inserted metric labels"`
+		// Traces.
+		InsertedSpans metric.Int64Counter `name:"traces.inserted_spans" description:"Number of inserted spans"`
+		InsertedTags  metric.Int64Counter `name:"traces.inserted_tags" description:"Number of inserted trace attributes"`
+		// Common.
+		Inserts metric.Int64Counter `name:"inserts" description:"Number of insert invocations"`
+	}
 	tracer trace.Tracer
 }
 
@@ -69,32 +70,10 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 	}
 
 	meter := opts.MeterProvider.Meter("chstorage.Inserter")
-	for _, desc := range []struct {
-		ptr         *metric.Int64Counter
-		name        string
-		description string
-	}{
-		// Logs.
-		{&inserter.insertedRecords, "chstorage.logs.inserted_records", "Number of inserted log records"},
-		// Metrics.
-		{&inserter.insertedPoints, "chstorage.metrics.inserted_points", "Number of inserted points"},
-		{&inserter.insertedHistograms, "chstorage.metrics.inserted_histograms", "Number of inserted exponential (native) histograms"},
-		{&inserter.insertedExemplars, "chstorage.metrics.inserted_exemplars", "Number of inserted exemplars"},
-		{&inserter.insertedMetricLabels, "chstorage.metrics.inserted_metric_labels", "Number of inserted metric labels"},
-		// Traces.
-		{&inserter.insertedSpans, "chstorage.traces.inserted_spans", "Number of inserted spans"},
-		{&inserter.insertedTags, "chstorage.traces.inserted_tags", "Number of inserted trace attributes"},
-		// Common.
-		{&inserter.inserts, "chstorage.inserts", "Number of insert invocations"},
-	} {
-		counter, err := meter.Int64Counter(desc.name,
-			metric.WithDescription(desc.description),
-			metric.WithUnit("1"),
-		)
-		if err != nil {
-			return nil, errors.Wrapf(err, "create %q", desc.name)
-		}
-		*desc.ptr = counter
+	if err := autometric.Init(meter, &inserter.stats, autometric.InitOptions{
+		Prefix: "chstorage.",
+	}); err != nil {
+		return nil, errors.Wrap(err, "init stats")
 	}
 
 	return inserter, nil
