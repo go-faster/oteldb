@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
+	"github.com/go-faster/oteldb/internal/typedpool"
 )
 
 type recordWriter struct {
@@ -37,7 +38,9 @@ func (w *recordWriter) Submit(ctx context.Context) error {
 }
 
 // Close frees resources.
-func (*recordWriter) Close() error {
+func (w *recordWriter) Close() error {
+	logColumnsPool.Put(w.logs)
+	logAttrMapColumnsPool.Put(w.attrs)
 	return nil
 }
 
@@ -45,9 +48,12 @@ var _ logstorage.Inserter = (*Inserter)(nil)
 
 // RecordWriter returns a new [logstorage.RecordWriter]
 func (i *Inserter) RecordWriter(ctx context.Context) (logstorage.RecordWriter, error) {
+	logs := typedpool.GetReset(logColumnsPool)
+	attrs := typedpool.GetReset(logAttrMapColumnsPool)
+
 	return &recordWriter{
-		logs:     newLogColumns(),
-		attrs:    newLogAttrMapColumns(),
+		logs:     logs,
+		attrs:    attrs,
 		inserter: i,
 	}, nil
 }
@@ -57,7 +63,6 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 	ctx, span := i.tracer.Start(ctx, "chstorage.logs.submitLogs", trace.WithAttributes(
 		attribute.Int("chstorage.records_count", logs.body.Rows()),
 		attribute.Int("chstorage.attrs_count", attrs.name.Rows()),
-		attribute.String("chstorage.table", table),
 	))
 	defer func() {
 		if rerr != nil {
@@ -68,7 +73,6 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 
 			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
-					attribute.String("chstorage.table", table),
 					attribute.String("chstorage.signal", "logs"),
 				),
 			)

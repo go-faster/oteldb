@@ -9,6 +9,12 @@ import (
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/typedpool"
+)
+
+var (
+	logColumnsPool        = typedpool.NewPool(newLogColumns)
+	logAttrMapColumnsPool = typedpool.NewPool(newLogAttrMapColumns)
 )
 
 type logColumns struct {
