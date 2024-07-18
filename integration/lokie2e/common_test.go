@@ -102,7 +102,7 @@ func runTest(
 	engineQuerier logqlengine.Querier,
 ) {
 	now := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
-	set, err := generateLogs(now)
+	set, err := generateLogs(now, 1)
 	require.NoError(t, err)
 	require.NotEmpty(t, set.Batches)
 	require.NotEmpty(t, set.Labels)
