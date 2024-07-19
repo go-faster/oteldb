@@ -1,6 +1,7 @@
 package otelstorage
 
 import (
+	"slices"
 	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -8,13 +9,6 @@ import (
 
 // KeyToLabel converts key to label name.
 func KeyToLabel(key string) string {
-	isDigit := func(r rune) bool {
-		return r >= '0' && r <= '9'
-	}
-	isAlpha := func(r rune) bool {
-		return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
-	}
-
 	var label strings.Builder
 	for i, r := range key {
 		switch {
@@ -44,6 +38,46 @@ slow:
 		label.WriteByte('_')
 	}
 	return label.String()
+}
+
+// AppendKeyToLabel converts key to label name and appends it to given buffer.
+func AppendKeyToLabel(buf []byte, key string) []byte {
+	for i, r := range key {
+		switch {
+		case isDigit(r):
+			// Label could not start with digit.
+			if i == 0 {
+				buf = slices.Grow(buf, len(key)+1)
+				buf = append(buf, '_')
+				goto slow
+			}
+		case r >= 0x80 && r == '_' || isAlpha(r):
+		default:
+			buf = slices.Grow(buf, len(key))
+			buf = append(buf, key[:i]...)
+			key = key[i:]
+			goto slow
+		}
+	}
+	return append(buf, key...)
+slow:
+	for _, r := range key {
+		if r == '_' || isDigit(r) || isAlpha(r) {
+			buf = append(buf, byte(r))
+			continue
+		}
+		// Replace rune with '_'.
+		buf = append(buf, '_')
+	}
+	return buf
+}
+
+func isDigit(r rune) bool {
+	return r >= '0' && r <= '9'
+}
+
+func isAlpha(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
 }
 
 // Attrs wraps attributes.

@@ -232,13 +232,14 @@ func (c *logAttrMapColumns) ForEach(f func(name, key string)) {
 }
 
 func (c *logAttrMapColumns) AddAttrs(attrs otelstorage.Attrs) {
+	buf := make([]byte, 0, 128)
 	attrs.AsMap().Range(func(k string, _ pcommon.Value) bool {
-		c.AddRow(otelstorage.KeyToLabel(k), k)
+		c.AddRow(otelstorage.AppendKeyToLabel(buf, k), k)
 		return true
 	})
 }
 
-func (c *logAttrMapColumns) AddRow(name, key string) {
-	c.name.Append(name)
+func (c *logAttrMapColumns) AddRow(name []byte, key string) {
+	c.name.AppendBytes(name)
 	c.key.Append(key)
 }
