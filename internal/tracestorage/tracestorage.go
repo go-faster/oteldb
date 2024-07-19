@@ -90,12 +90,18 @@ type TagName struct {
 
 // Inserter is a trace storage insert interface.
 type Inserter interface {
-	// InsertSpans inserts given spans.
+	// SpanWriter creates a new batch.
+	SpanWriter(ctx context.Context) (SpanWriter, error)
+}
+
+// SpanWriter represents a log record batch.
+type SpanWriter interface {
+	// Add adds record to the batch.
+	Add(span Span) error
+	// Submit sends batch.
+	Submit(ctx context.Context) error
+	// Close frees resources.
 	//
-	// FIXME(tdakkota): probably, it's better to return some kind of batch writer.
-	InsertSpans(ctx context.Context, spans []Span) error
-	// InsertTags insert given set of tags to the storage.
-	//
-	// FIXME(tdakkota): probably, storage should do tag extraction by itself.
-	InsertTags(ctx context.Context, tags map[Tag]struct{}) error
+	// Callers should call [SpanWriter.Close] regardless if they called [SpanWriter.Submit] or not.
+	Close() error
 }

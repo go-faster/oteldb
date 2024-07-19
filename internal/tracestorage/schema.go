@@ -2,6 +2,7 @@ package tracestorage
 
 import (
 	"github.com/google/uuid"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/traceql"
@@ -66,4 +67,14 @@ type Tag struct {
 	Value string                 `json:"value"`
 	Type  traceql.StaticType     `json:"type"`
 	Scope traceql.AttributeScope `json:"scope"`
+}
+
+// TagFromAttribute creates a [Tag] from given [pcommon.Value].
+func TagFromAttribute(scope traceql.AttributeScope, name string, value pcommon.Value) Tag {
+	return Tag{
+		name,
+		value.AsString(),
+		traceql.StaticTypeFromValueType(value.Type()),
+		scope,
+	}
 }
