@@ -74,8 +74,10 @@ func encodeMap(e *jx.Encoder, m pcommon.Map, additional ...[2]string) {
 		value value
 	}
 	var pairs []pair
-	if l := m.Len(); l < 16 {
-		pairs = make([]pair, 0, 16)
+
+	const stackThreshold = otelstorage.MapStackThreshold
+	if l := m.Len(); l < stackThreshold {
+		pairs = make([]pair, 0, stackThreshold)
 	} else {
 		pairs = make([]pair, 0, m.Len()+len(additional))
 	}
