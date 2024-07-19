@@ -1,15 +1,24 @@
 package chstorage
 
 import (
+	"sync"
 	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/otelstorage"
+	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
+	"github.com/go-faster/oteldb/internal/xsync"
+)
+
+var (
+	spanColumnsPool      = xsync.NewPool(newSpanColumns)
+	spanAttrsColumnsPool = xsync.NewPool(newSpanAttrsColumns)
 )
 
 type spanColumns struct {
@@ -38,10 +47,14 @@ type spanColumns struct {
 
 	events eventsColumns
 	links  linksColumns
+
+	columns func() Columns
+	Input   func() proto.Input
+	Body    func(table string) string
 }
 
 func newSpanColumns() *spanColumns {
-	return &spanColumns{
+	c := &spanColumns{
 		name:          new(proto.ColStr).LowCardinality(),
 		start:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		end:           new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
@@ -58,47 +71,53 @@ func newSpanColumns() *spanColumns {
 		scopeVersion:      new(proto.ColStr).LowCardinality(),
 		scopeAttributes:   NewAttributes(colScope),
 	}
+	c.columns = sync.OnceValue(func() Columns {
+		return MergeColumns(Columns{
+			{Name: "service_instance_id", Data: c.serviceInstanceID},
+			{Name: "service_name", Data: c.serviceName},
+			{Name: "service_namespace", Data: c.serviceNamespace},
+
+			{Name: "trace_id", Data: &c.traceID},
+			{Name: "span_id", Data: &c.spanID},
+			{Name: "trace_state", Data: &c.traceState},
+			{Name: "parent_span_id", Data: &c.parentSpanID},
+			{Name: "name", Data: c.name},
+			{Name: "kind", Data: proto.Wrap(&c.kind, kindDDL)},
+			{Name: "start", Data: c.start},
+			{Name: "end", Data: c.end},
+			{Name: "status_code", Data: &c.statusCode},
+			{Name: "status_message", Data: c.statusMessage},
+			{Name: "batch_id", Data: &c.batchID},
+
+			{Name: "scope_name", Data: c.scopeName},
+			{Name: "scope_version", Data: c.scopeVersion},
+
+			{Name: "events_timestamps", Data: c.events.timestamps},
+			{Name: "events_names", Data: c.events.names},
+			{Name: "events_attributes", Data: c.events.attributes},
+
+			{Name: "links_trace_ids", Data: c.links.traceIDs},
+			{Name: "links_span_ids", Data: c.links.spanIDs},
+			{Name: "links_tracestates", Data: c.links.tracestates},
+			{Name: "links_attributes", Data: c.links.attributes},
+		},
+			c.attributes.Columns(),
+			c.resource.Columns(),
+			c.scopeAttributes.Columns(),
+		)
+	})
+	c.Input = sync.OnceValue(func() proto.Input {
+		return c.columns().Input()
+	})
+	c.Body = xsync.KeyOnce(func(table string) string {
+		return c.Input().Into(table)
+	})
+	return c
 }
 
-func (c *spanColumns) columns() Columns {
-	return MergeColumns(Columns{
-		{Name: "service_instance_id", Data: c.serviceInstanceID},
-		{Name: "service_name", Data: c.serviceName},
-		{Name: "service_namespace", Data: c.serviceNamespace},
-
-		{Name: "trace_id", Data: &c.traceID},
-		{Name: "span_id", Data: &c.spanID},
-		{Name: "trace_state", Data: &c.traceState},
-		{Name: "parent_span_id", Data: &c.parentSpanID},
-		{Name: "name", Data: c.name},
-		{Name: "kind", Data: proto.Wrap(&c.kind, kindDDL)},
-		{Name: "start", Data: c.start},
-		{Name: "end", Data: c.end},
-		{Name: "status_code", Data: &c.statusCode},
-		{Name: "status_message", Data: c.statusMessage},
-		{Name: "batch_id", Data: &c.batchID},
-
-		{Name: "scope_name", Data: c.scopeName},
-		{Name: "scope_version", Data: c.scopeVersion},
-
-		{Name: "events_timestamps", Data: c.events.timestamps},
-		{Name: "events_names", Data: c.events.names},
-		{Name: "events_attributes", Data: c.events.attributes},
-
-		{Name: "links_trace_ids", Data: c.links.traceIDs},
-		{Name: "links_span_ids", Data: c.links.spanIDs},
-		{Name: "links_tracestates", Data: c.links.tracestates},
-		{Name: "links_attributes", Data: c.links.attributes},
-	},
-		c.attributes.Columns(),
-		c.resource.Columns(),
-		c.scopeAttributes.Columns(),
-	)
-}
-
-func (c *spanColumns) Input() proto.Input                { return c.columns().Input() }
 func (c *spanColumns) Result() proto.Results             { return c.columns().Result() }
 func (c *spanColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
+func (c *spanColumns) Reset()                            { c.columns().Reset() }
 
 func (c *spanColumns) AddRow(s tracestorage.Span) {
 	c.traceID.Append(s.TraceID)
@@ -310,4 +329,57 @@ func (c *linksColumns) Row(row int) (links []tracestorage.Link, _ error) {
 		})
 	}
 	return links, nil
+}
+
+type spanAttrsColumns struct {
+	name      *proto.ColLowCardinality[string]
+	value     proto.ColStr
+	valueType proto.ColEnum8
+	scope     proto.ColEnum8
+
+	columns func() Columns
+	Input   func() proto.Input
+	Body    func(table string) string
+}
+
+func newSpanAttrsColumns() *spanAttrsColumns {
+	c := &spanAttrsColumns{
+		name:      new(proto.ColStr).LowCardinality(),
+		value:     proto.ColStr{},
+		valueType: proto.ColEnum8{},
+		scope:     proto.ColEnum8{},
+	}
+	c.columns = sync.OnceValue(func() Columns {
+		return Columns{
+			{Name: "name", Data: c.name},
+			{Name: "value", Data: &c.value},
+			{Name: "value_type", Data: proto.Wrap(&c.valueType, valueTypeDDL)},
+			{Name: "scope", Data: proto.Wrap(&c.scope, scopeTypeDDL)},
+		}
+	})
+	c.Input = sync.OnceValue(func() proto.Input {
+		return c.columns().Input()
+	})
+	c.Body = xsync.KeyOnce(func(table string) string {
+		return c.Input().Into(table)
+	})
+	return c
+}
+
+func (c *spanAttrsColumns) Result() proto.Results             { return c.columns().Result() }
+func (c *spanAttrsColumns) ChsqlResult() []chsql.ResultColumn { return c.columns().ChsqlResult() }
+func (c *spanAttrsColumns) Reset()                            { c.columns().Reset() }
+
+func (c *spanAttrsColumns) AddAttrs(scope traceql.AttributeScope, attrs otelstorage.Attrs) {
+	attrs.AsMap().Range(func(k string, v pcommon.Value) bool {
+		c.AddRow(tracestorage.TagFromAttribute(scope, k, v))
+		return true
+	})
+}
+
+func (c *spanAttrsColumns) AddRow(tag tracestorage.Tag) {
+	c.name.Append(tag.Name)
+	c.value.Append(tag.Value)
+	c.valueType.Append(proto.Enum8(tag.Type))
+	c.scope.Append(proto.Enum8(tag.Scope))
 }

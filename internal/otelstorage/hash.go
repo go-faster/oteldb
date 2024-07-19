@@ -18,6 +18,9 @@ func (h Hash) String() string {
 	return hex.EncodeToString(h[:])
 }
 
+// MapStackThreshold defines common constant for on-stack [Attrs] sorting.
+const MapStackThreshold = 32
+
 // AttrHash computes attributes hash.
 func AttrHash(m pcommon.Map) Hash {
 	h := xxh3.New()
@@ -74,8 +77,8 @@ func hashMap(h *xxh3.Hasher, m pcommon.Map) {
 		value pcommon.Value
 	}
 	var pairs []pair
-	if l := m.Len(); l < 16 {
-		pairs = make([]pair, 0, 16)
+	if l := m.Len(); l < MapStackThreshold {
+		pairs = make([]pair, 0, MapStackThreshold)
 	} else {
 		pairs = make([]pair, 0, m.Len())
 	}

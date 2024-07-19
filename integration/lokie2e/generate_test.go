@@ -91,7 +91,7 @@ func (l httpLog) Append(s *lokie2e.BatchSet) error {
 	return nil
 }
 
-func generateLogs(now time.Time) (*lokie2e.BatchSet, error) {
+func generateLogs(now time.Time, mul int) (*lokie2e.BatchSet, error) {
 	type httpLogBatch struct {
 		Method   string
 		Status   int
@@ -101,16 +101,16 @@ func generateLogs(now time.Time) (*lokie2e.BatchSet, error) {
 	}
 	var lines []httpLog
 	for j, b := range []httpLogBatch{
-		{Method: "GET", Status: 200, Count: 11, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
-		{Method: "GET", Status: 200, Count: 10, IP: "200.1.1.1", Protocol: "HTTP/1.1"},
-		{Method: "DELETE", Status: 200, Count: 20, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
-		{Method: "POST", Status: 200, Count: 21, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
-		{Method: "PATCH", Status: 200, Count: 19, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
-		{Method: "HEAD", Status: 200, Count: 15, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
-		{Method: "HEAD", Status: 200, Count: 4, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
-		{Method: "HEAD", Status: 200, Count: 1, IP: "236.7.233.166", Protocol: "HTTP/2.0"},
-		{Method: "HEAD", Status: 500, Count: 2, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
-		{Method: "PUT", Status: 200, Count: 20, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
+		{Method: "GET", Status: 200, Count: 11 * mul, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
+		{Method: "GET", Status: 200, Count: 10 * mul, IP: "200.1.1.1", Protocol: "HTTP/1.1"},
+		{Method: "DELETE", Status: 200, Count: 20 * mul, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
+		{Method: "POST", Status: 200, Count: 21 * mul, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
+		{Method: "PATCH", Status: 200, Count: 19 * mul, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
+		{Method: "HEAD", Status: 200, Count: 15 * mul, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
+		{Method: "HEAD", Status: 200, Count: 4 * mul, IP: "200.1.1.1", Protocol: "HTTP/1.0"},
+		{Method: "HEAD", Status: 200, Count: 1 * mul, IP: "236.7.233.166", Protocol: "HTTP/2.0"},
+		{Method: "HEAD", Status: 500, Count: 2 * mul, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
+		{Method: "PUT", Status: 200, Count: 20 * mul, IP: "200.1.1.1", Protocol: "HTTP/2.0"},
 	} {
 		for i := 0; i < b.Count; i++ {
 			var (
@@ -167,7 +167,7 @@ func generateLogs(now time.Time) (*lokie2e.BatchSet, error) {
 
 func TestGenerateLogs(t *testing.T) {
 	now := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
-	set, err := generateLogs(now)
+	set, err := generateLogs(now, 1)
 	require.NoError(t, err)
 	logEncoder := plog.JSONMarshaler{}
 	var out bytes.Buffer
