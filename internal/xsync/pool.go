@@ -1,5 +1,4 @@
-// Package typepool contains generic wrapper around [sync.Pool].
-package typedpool
+package xsync
 
 import "sync"
 
