@@ -11,12 +11,12 @@ import (
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
-	"github.com/go-faster/oteldb/internal/typedpool"
+	"github.com/go-faster/oteldb/internal/xsync"
 )
 
 var (
-	logColumnsPool        = typedpool.NewPool(newLogColumns)
-	logAttrMapColumnsPool = typedpool.NewPool(newLogAttrMapColumns)
+	logColumnsPool        = xsync.NewPool(newLogColumns)
+	logAttrMapColumnsPool = xsync.NewPool(newLogAttrMapColumns)
 )
 
 type logColumns struct {
@@ -43,6 +43,7 @@ type logColumns struct {
 
 	columns func() Columns
 	Input   func() proto.Input
+	Body    func(table string) string
 }
 
 func newLogColumns() *logColumns {
@@ -85,6 +86,9 @@ func newLogColumns() *logColumns {
 	})
 	c.Input = sync.OnceValue(func() proto.Input {
 		return c.columns().Input()
+	})
+	c.Body = xsync.KeyOnce(func(table string) string {
+		return c.Input().Into(table)
 	})
 	return c
 }
@@ -197,6 +201,7 @@ type logAttrMapColumns struct {
 
 	columns func() Columns
 	Input   func() proto.Input
+	Body    func(table string) string
 }
 
 func newLogAttrMapColumns() *logAttrMapColumns {
@@ -209,6 +214,9 @@ func newLogAttrMapColumns() *logAttrMapColumns {
 	})
 	c.Input = sync.OnceValue(func() proto.Input {
 		return c.columns().Input()
+	})
+	c.Body = xsync.KeyOnce(func(table string) string {
+		return c.Input().Into(table)
 	})
 	return c
 }

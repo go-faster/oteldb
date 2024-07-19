@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/logstorage"
-	"github.com/go-faster/oteldb/internal/typedpool"
+	"github.com/go-faster/oteldb/internal/xsync"
 )
 
 type recordWriter struct {
@@ -48,8 +48,8 @@ var _ logstorage.Inserter = (*Inserter)(nil)
 
 // RecordWriter returns a new [logstorage.RecordWriter]
 func (i *Inserter) RecordWriter(ctx context.Context) (logstorage.RecordWriter, error) {
-	logs := typedpool.GetReset(logColumnsPool)
-	attrs := typedpool.GetReset(logAttrMapColumnsPool)
+	logs := xsync.GetReset(logColumnsPool)
+	attrs := xsync.GetReset(logAttrMapColumnsPool)
 
 	return &recordWriter{
 		logs:     logs,
@@ -59,7 +59,6 @@ func (i *Inserter) RecordWriter(ctx context.Context) (logstorage.RecordWriter, e
 }
 
 func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logAttrMapColumns) (rerr error) {
-	table := i.tables.Logs
 	ctx, span := i.tracer.Start(ctx, "chstorage.logs.submitLogs", trace.WithAttributes(
 		attribute.Int("chstorage.records_count", logs.body.Rows()),
 		attribute.Int("chstorage.attrs_count", attrs.name.Rows()),
@@ -84,11 +83,11 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 	grp.Go(func() error {
 		ctx := grpCtx
 
-		input := logs.Input()
+		table := i.tables.Logs
 		if err := i.ch.Do(ctx, ch.Query{
 			Logger: zctx.From(ctx).Named("ch"),
-			Body:   input.Into(table),
-			Input:  input,
+			Body:   logs.Body(table),
+			Input:  logs.Input(),
 		}); err != nil {
 			return errors.Wrap(err, "insert records")
 		}
@@ -97,11 +96,11 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 	grp.Go(func() error {
 		ctx := grpCtx
 
-		input := attrs.Input()
+		table := i.tables.LogAttrs
 		if err := i.ch.Do(ctx, ch.Query{
 			Logger: zctx.From(ctx).Named("ch"),
-			Body:   input.Into(i.tables.LogAttrs),
-			Input:  input,
+			Body:   attrs.Body(table),
+			Input:  attrs.Input(),
 		}); err != nil {
 			return errors.Wrap(err, "insert labels")
 		}
