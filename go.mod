@@ -3,7 +3,7 @@ module github.com/go-faster/oteldb
 go 1.21.0
 
 require (
-	entgo.io/ent v0.13.1
+	entgo.io/ent v0.14.0
 	github.com/ClickHouse/ch-go v0.62.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/VictoriaMetrics/easyproto v0.1.4
