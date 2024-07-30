@@ -21,7 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/config/configauth"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
@@ -47,7 +46,7 @@ func TestLoadConfig(t *testing.T) {
 					Endpoint:           "0.0.0.0:19291",
 					TLSSetting:         (*configtls.ServerConfig)(nil),
 					CORS:               (*confighttp.CORSConfig)(nil),
-					Auth:               (*configauth.Authentication)(nil),
+					Auth:               (*confighttp.AuthConfig)(nil),
 					MaxRequestBodySize: 0,
 					IncludeMetadata:    false,
 				},
