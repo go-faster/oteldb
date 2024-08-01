@@ -29,10 +29,10 @@ require (
 	github.com/klauspost/compress v1.17.9
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/ogen-go/ogen v1.2.2
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.106.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.106.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.106.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.106.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.106.1
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.106.1
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.106.1
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.106.1
 	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/prometheus v0.53.1
@@ -162,9 +162,9 @@ require (
 	github.com/mostynb/go-grpc-compression v1.2.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.106.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.106.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.106.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.106.1 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.106.1 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.106.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
