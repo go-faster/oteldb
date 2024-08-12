@@ -374,190 +374,85 @@ components:
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/Data"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Data"
     QueryExemplarsResponse:
       description: Query response
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/Exemplars"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Exemplars"
     SeriesResponse:
       description: Series list
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/Series"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Series"
     LabelsResponse:
       description: Labels list
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/Labels"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Labels"
     LabelValuesResponse:
       description: Label values list
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/LabelValues"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LabelValues"
     RulesResponse:
       description: Rule list
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/Rules"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Rules"
     MetadataResponse:
       description: Label list
       content:
         "application/json":
           schema:
-            type: object
-            required: [status, data]
-            properties:
-              status:
-                type: string
-                default: "success"
-                description: Always 'success'
-              warnings:
-                description: >-
-                  Only if there were warnings while executing the request.
-                  There will still be data in the data field.
-                type: array
-                items:
-                  type: string
-              infos:
-                description: >-
-                  Only set if there were info-level annnotations while executing the request.
-                type: array
-                items:
-                  type: string
-              data:
-                $ref: "#/components/schemas/Metadata"
+            allOf:
+              - $ref: "#/components/schemas/ResponseMixin"
+              - type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Metadata"
     Fail:
       description: Error while processing request
       content:
@@ -628,6 +523,28 @@ components:
           $ref: "#/components/schemas/PrometheusTimestamp"
         end:
           $ref: "#/components/schemas/PrometheusTimestamp"
+
+    ResponseMixin:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          default: "success"
+          description: Always 'success'
+        warnings:
+          description: >-
+            Only if there were warnings while executing the request.
+            There will still be data in the data field.
+          type: array
+          items:
+            type: string
+        infos:
+          description: >-
+            Only set if there were info-level annnotations while executing the request.
+          type: array
+          items:
+            type: string
 
     Scalar:
       type: object
