@@ -88,22 +88,24 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 			matchers = sets[0]
 		}
 
-		values, warnings, err := q.LabelValues(ctx, params.Label, matchers...)
+		values, annots, err := q.LabelValues(ctx, params.Label, matchers...)
 		if err != nil {
 			return nil, executionErr("get label values", err)
 		}
 
+		warnings, infos := annots.AsStrings("", 0, 0)
 		return &promapi.LabelValuesResponse{
 			Status:   "success",
-			Warnings: warnings.AsStrings("", 0),
+			Warnings: warnings,
+			Infos:    infos,
 			Data:     values,
 		}, nil
 	}
 
 	var (
-		dedup    = map[string]struct{}{}
-		warnings annotations.Annotations
-		mux      sync.Mutex
+		dedup  = map[string]struct{}{}
+		annots annotations.Annotations
+		mux    sync.Mutex
 	)
 	grp, grpCtx := errgroup.WithContext(ctx)
 	for _, set := range sets {
@@ -123,7 +125,7 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 			for _, val := range vals {
 				dedup[val] = struct{}{}
 			}
-			warnings = warnings.Merge(w)
+			annots = annots.Merge(w)
 			return nil
 		})
 	}
@@ -134,9 +136,11 @@ func (h *PromAPI) GetLabelValues(ctx context.Context, params promapi.GetLabelVal
 	data := maps.Keys(dedup)
 	slices.Sort(data)
 
+	warnings, infos := annots.AsStrings("", 0, 0)
 	return &promapi.LabelValuesResponse{
 		Status:   "success",
-		Warnings: warnings.AsStrings("", 0),
+		Warnings: warnings,
+		Infos:    infos,
 		Data:     data,
 	}, nil
 }
@@ -173,22 +177,24 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 			matchers = sets[0]
 		}
 
-		values, warnings, err := q.LabelNames(ctx, matchers...)
+		values, annots, err := q.LabelNames(ctx, matchers...)
 		if err != nil {
 			return nil, executionErr("label names", err)
 		}
 
+		warnings, infos := annots.AsStrings("", 0, 0)
 		return &promapi.LabelsResponse{
 			Status:   "success",
-			Warnings: warnings.AsStrings("", 0),
+			Warnings: warnings,
+			Infos:    infos,
 			Data:     values,
 		}, nil
 	}
 
 	var (
-		dedup    = map[string]struct{}{}
-		warnings annotations.Annotations
-		mux      sync.Mutex
+		dedup  = map[string]struct{}{}
+		annots annotations.Annotations
+		mux    sync.Mutex
 	)
 	grp, grpCtx := errgroup.WithContext(ctx)
 	for _, set := range sets {
@@ -208,7 +214,7 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 			for _, val := range vals {
 				dedup[val] = struct{}{}
 			}
-			warnings = warnings.Merge(w)
+			annots = annots.Merge(w)
 			return nil
 		})
 	}
@@ -219,9 +225,11 @@ func (h *PromAPI) GetLabels(ctx context.Context, params promapi.GetLabelsParams)
 	data := maps.Keys(dedup)
 	slices.Sort(data)
 
+	warnings, infos := annots.AsStrings("", 0, 0)
 	return &promapi.LabelsResponse{
 		Status:   "success",
-		Warnings: warnings.AsStrings("", 0),
+		Warnings: warnings,
+		Infos:    infos,
 		Data:     data,
 	}, nil
 }
@@ -469,9 +477,11 @@ func (h *PromAPI) GetSeries(ctx context.Context, params promapi.GetSeriesParams)
 		return nil, executionErr("select", err)
 	}
 
+	warnings, infos := result.Warnings().AsStrings("", 0, 0)
 	return &promapi.SeriesResponse{
 		Status:   "success",
-		Warnings: result.Warnings().AsStrings("", 0),
+		Warnings: warnings,
+		Infos:    infos,
 		Data:     data,
 	}, nil
 }
