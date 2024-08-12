@@ -882,6 +882,7 @@ func (s *LabelSet) init() LabelSet {
 
 type LabelValues []string
 
+// Merged schema.
 type LabelValuesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -972,6 +973,7 @@ func (s *LabelsForm) SetMatch(val []string) {
 	s.Match = val
 }
 
+// Merged schema.
 type LabelsResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -1097,6 +1099,7 @@ func (s *Metadata) init() Metadata {
 	return m
 }
 
+// Merged schema.
 type MetadataResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -1730,6 +1733,7 @@ func (o OptString) Or(d string) string {
 
 type PrometheusTimestamp string
 
+// Merged schema.
 type QueryExemplarsResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -1901,6 +1905,7 @@ func (s *QueryRangeForm) SetStats(val OptString) {
 	s.Stats = val
 }
 
+// Merged schema.
 type QueryResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -2257,6 +2262,7 @@ func (s *Rules) SetGroups(val []RuleGroup) {
 	s.Groups = val
 }
 
+// Merged schema.
 type RulesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
@@ -2388,6 +2394,7 @@ func (s *SeriesForm) SetMatch(val []string) {
 	s.Match = val
 }
 
+// Merged schema.
 type SeriesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
