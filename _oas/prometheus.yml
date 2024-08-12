@@ -373,6 +373,12 @@ components:
                 type: array
                 items:
                   type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
+                type: array
+                items:
+                  type: string
               data:
                 $ref: "#/components/schemas/Data"
     QueryExemplarsResponse:
@@ -391,6 +397,12 @@ components:
                 description: >-
                   Only if there were warnings while executing the request.
                   There will still be data in the data field.
+                type: array
+                items:
+                  type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
                 type: array
                 items:
                   type: string
@@ -415,6 +427,12 @@ components:
                 type: array
                 items:
                   type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
+                type: array
+                items:
+                  type: string
               data:
                 $ref: "#/components/schemas/Series"
     LabelsResponse:
@@ -433,6 +451,12 @@ components:
                 description: >-
                   Only if there were warnings while executing the request.
                   There will still be data in the data field.
+                type: array
+                items:
+                  type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
                 type: array
                 items:
                   type: string
@@ -457,6 +481,12 @@ components:
                 type: array
                 items:
                   type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
+                type: array
+                items:
+                  type: string
               data:
                 $ref: "#/components/schemas/LabelValues"
     RulesResponse:
@@ -478,6 +508,12 @@ components:
                 type: array
                 items:
                   type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
+                type: array
+                items:
+                  type: string
               data:
                 $ref: "#/components/schemas/Rules"
     MetadataResponse:
@@ -496,6 +532,12 @@ components:
                 description: >-
                   Only if there were warnings while executing the request.
                   There will still be data in the data field.
+                type: array
+                items:
+                  type: string
+              infos:
+                description: >-
+                  Only set if there were info-level annnotations while executing the request.
                 type: array
                 items:
                   type: string
