@@ -102,6 +102,10 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 					Name: "match[]",
 					In:   "query",
 				}: params.Match,
+				{
+					Name: "limit",
+					In:   "query",
+				}: params.Limit,
 			},
 			Raw: r,
 		}
@@ -231,6 +235,10 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 					Name: "match[]",
 					In:   "query",
 				}: params.Match,
+				{
+					Name: "limit",
+					In:   "query",
+				}: params.Limit,
 			},
 			Raw: r,
 		}
@@ -1033,6 +1041,10 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 					Name: "match[]",
 					In:   "query",
 				}: params.Match,
+				{
+					Name: "limit",
+					In:   "query",
+				}: params.Limit,
 			},
 			Raw: r,
 		}
