@@ -102,10 +102,14 @@ func (p *promQuerier) getEnd(t time.Time) time.Time {
 // It is not safe to use the strings beyond the lifetime of the querier.
 // If matchers are specified the returned result set is reduced
 // to label values of metrics matching the matchers.
-func (p *promQuerier) LabelValues(ctx context.Context, labelName string, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+func (p *promQuerier) LabelValues(ctx context.Context, labelName string, hints *storage.LabelHints, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+	if hints == nil {
+		hints = &storage.LabelHints{}
+	}
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelValues",
 		trace.WithAttributes(
 			attribute.String("chstorage.label", labelName),
+			attribute.Int("chstorage.hints.limits", hints.Limit),
 			xattribute.StringerSlice("chstorage.matchers", matchers),
 			xattribute.UnixNano("chstorage.mint", p.mint),
 			xattribute.UnixNano("chstorage.maxt", p.maxt),
@@ -332,10 +336,14 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 // LabelNames returns all the unique label names present in the block in sorted order.
 // If matchers are specified the returned result set is reduced
 // to label names of metrics matching the matchers.
-func (p *promQuerier) LabelNames(ctx context.Context, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+func (p *promQuerier) LabelNames(ctx context.Context, hints *storage.LabelHints, matchers ...*labels.Matcher) (result []string, _ annotations.Annotations, rerr error) {
+	if hints == nil {
+		hints = &storage.LabelHints{}
+	}
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelNames",
 		trace.WithAttributes(
 			xattribute.StringerSlice("chstorage.matchers", matchers),
+			attribute.Int("chstorage.hints.limit", hints.Limit),
 			xattribute.UnixNano("chstorage.mint", p.mint),
 			xattribute.UnixNano("chstorage.maxt", p.maxt),
 		),
