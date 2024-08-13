@@ -13,9 +13,11 @@ func mapResult(query string, r *promql.Result) (*promapi.QueryResponse, error) {
 		return nil, executionErr("query", err)
 	}
 
+	warnings, infos := r.Warnings.AsStrings(query, 0, 0)
 	resp := &promapi.QueryResponse{
 		Status:   "success",
-		Warnings: r.Warnings.AsStrings(query, 0),
+		Warnings: warnings,
+		Infos:    infos,
 	}
 	switch r := r.Value.(type) {
 	case promql.Matrix:

@@ -882,13 +882,16 @@ func (s *LabelSet) init() LabelSet {
 
 type LabelValues []string
 
+// Merged schema.
 type LabelValuesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
-	Warnings []string    `json:"warnings"`
-	Data     LabelValues `json:"data"`
+	Warnings []string `json:"warnings"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string    `json:"infos"`
+	Data  LabelValues `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -899,6 +902,11 @@ func (s *LabelValuesResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *LabelValuesResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *LabelValuesResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -914,6 +922,11 @@ func (s *LabelValuesResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *LabelValuesResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *LabelValuesResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
@@ -960,13 +973,16 @@ func (s *LabelsForm) SetMatch(val []string) {
 	s.Match = val
 }
 
+// Merged schema.
 type LabelsResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
 	Warnings []string `json:"warnings"`
-	Data     Labels   `json:"data"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string `json:"infos"`
+	Data  Labels   `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -977,6 +993,11 @@ func (s *LabelsResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *LabelsResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *LabelsResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -992,6 +1013,11 @@ func (s *LabelsResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *LabelsResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *LabelsResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
@@ -1073,13 +1099,16 @@ func (s *Metadata) init() Metadata {
 	return m
 }
 
+// Merged schema.
 type MetadataResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
 	Warnings []string `json:"warnings"`
-	Data     Metadata `json:"data"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string `json:"infos"`
+	Data  Metadata `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -1090,6 +1119,11 @@ func (s *MetadataResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *MetadataResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *MetadataResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -1105,6 +1139,11 @@ func (s *MetadataResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *MetadataResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *MetadataResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
@@ -1694,13 +1733,16 @@ func (o OptString) Or(d string) string {
 
 type PrometheusTimestamp string
 
+// Merged schema.
 type QueryExemplarsResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
-	Warnings []string  `json:"warnings"`
-	Data     Exemplars `json:"data"`
+	Warnings []string `json:"warnings"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string  `json:"infos"`
+	Data  Exemplars `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -1711,6 +1753,11 @@ func (s *QueryExemplarsResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *QueryExemplarsResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *QueryExemplarsResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -1726,6 +1773,11 @@ func (s *QueryExemplarsResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *QueryExemplarsResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *QueryExemplarsResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
@@ -1853,13 +1905,16 @@ func (s *QueryRangeForm) SetStats(val OptString) {
 	s.Stats = val
 }
 
+// Merged schema.
 type QueryResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
 	Warnings []string `json:"warnings"`
-	Data     Data     `json:"data"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string `json:"infos"`
+	Data  Data     `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -1870,6 +1925,11 @@ func (s *QueryResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *QueryResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *QueryResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -1885,6 +1945,11 @@ func (s *QueryResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *QueryResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *QueryResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
@@ -2197,13 +2262,16 @@ func (s *Rules) SetGroups(val []RuleGroup) {
 	s.Groups = val
 }
 
+// Merged schema.
 type RulesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
 	Warnings []string `json:"warnings"`
-	Data     Rules    `json:"data"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string `json:"infos"`
+	Data  Rules    `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -2214,6 +2282,11 @@ func (s *RulesResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *RulesResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *RulesResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -2229,6 +2302,11 @@ func (s *RulesResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *RulesResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *RulesResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
@@ -2316,13 +2394,16 @@ func (s *SeriesForm) SetMatch(val []string) {
 	s.Match = val
 }
 
+// Merged schema.
 type SeriesResponse struct {
 	// Always 'success'.
 	Status string `json:"status"`
 	// Only if there were warnings while executing the request. There will still be data in the data
 	// field.
 	Warnings []string `json:"warnings"`
-	Data     Series   `json:"data"`
+	// Only set if there were info-level annnotations while executing the request.
+	Infos []string `json:"infos"`
+	Data  Series   `json:"data"`
 }
 
 // GetStatus returns the value of Status.
@@ -2333,6 +2414,11 @@ func (s *SeriesResponse) GetStatus() string {
 // GetWarnings returns the value of Warnings.
 func (s *SeriesResponse) GetWarnings() []string {
 	return s.Warnings
+}
+
+// GetInfos returns the value of Infos.
+func (s *SeriesResponse) GetInfos() []string {
+	return s.Infos
 }
 
 // GetData returns the value of Data.
@@ -2348,6 +2434,11 @@ func (s *SeriesResponse) SetStatus(val string) {
 // SetWarnings sets the value of Warnings.
 func (s *SeriesResponse) SetWarnings(val []string) {
 	s.Warnings = val
+}
+
+// SetInfos sets the value of Infos.
+func (s *SeriesResponse) SetInfos(val []string) {
+	s.Infos = val
 }
 
 // SetData sets the value of Data.
