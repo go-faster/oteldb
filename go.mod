@@ -47,7 +47,7 @@ require (
 	go.opentelemetry.io/collector/config/confighttp v0.107.0
 	go.opentelemetry.io/collector/config/configtls v1.13.0
 	go.opentelemetry.io/collector/confmap v0.107.0
-	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.107.0
+	go.opentelemetry.io/collector/confmap/provider/envprovider v0.107.0
 	go.opentelemetry.io/collector/consumer v0.107.0
 	go.opentelemetry.io/collector/consumer/consumertest v0.107.0
 	go.opentelemetry.io/collector/exporter v0.107.0
