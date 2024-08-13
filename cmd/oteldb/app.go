@@ -15,7 +15,7 @@ import (
 	"github.com/prometheus/prometheus/promql"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap"
-	"go.opentelemetry.io/collector/confmap/converter/expandconverter"
+	"go.opentelemetry.io/collector/confmap/provider/envprovider"
 	"go.opentelemetry.io/collector/otelcol"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -304,9 +304,7 @@ func (app *App) setupCollector() error {
 					confmap.NewProviderFactory(func(s confmap.ProviderSettings) confmap.Provider {
 						return otelreceiver.NewMapProvider("oteldb", app.cfg.Collector)
 					}),
-				},
-				ConverterFactories: []confmap.ConverterFactory{
-					expandconverter.NewFactory(),
+					envprovider.NewFactory(),
 				},
 			},
 		},
