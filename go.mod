@@ -29,10 +29,10 @@ require (
 	github.com/klauspost/compress v1.17.9
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
 	github.com/ogen-go/ogen v1.2.2
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.106.1
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.106.1
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.106.1
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.106.1
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.107.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.107.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.107.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.107.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/prometheus v0.54.0
@@ -108,6 +108,7 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
+	github.com/elastic/go-grok v0.3.1 // indirect
 	github.com/expr-lang/expr v1.16.9 // indirect
 	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -141,6 +142,7 @@ require (
 	github.com/knadh/koanf v1.5.0 // indirect
 	github.com/knadh/koanf/v2 v2.1.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
+	github.com/magefile/mage v1.15.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -160,9 +162,9 @@ require (
 	github.com/mostynb/go-grpc-compression v1.2.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.106.1 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.106.1 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.106.1 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.107.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.107.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.107.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
