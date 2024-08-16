@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ogen-go/ogen/conv"
@@ -133,7 +133,7 @@ func (c *Client) IndexStats(ctx context.Context, params IndexStatsParams) (*Inde
 func (c *Client) sendIndexStats(ctx context.Context, params IndexStatsParams) (res *IndexStats, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("indexStats"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/index/stats"),
 	}
 
@@ -263,7 +263,7 @@ func (c *Client) LabelValues(ctx context.Context, params LabelValuesParams) (*Va
 func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) (res *Values, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labelValues"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/label/{name}/values"),
 	}
 
@@ -436,7 +436,7 @@ func (c *Client) Labels(ctx context.Context, params LabelsParams) (*Labels, erro
 func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labels, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labels"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/labels"),
 	}
 
@@ -572,7 +572,7 @@ func (c *Client) Push(ctx context.Context, request PushReq) error {
 func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoContent, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("push"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/push"),
 	}
 
@@ -647,7 +647,7 @@ func (c *Client) Query(ctx context.Context, params QueryParams) (*QueryResponse,
 func (c *Client) sendQuery(ctx context.Context, params QueryParams) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("query"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/query"),
 	}
 
@@ -791,7 +791,7 @@ func (c *Client) QueryRange(ctx context.Context, params QueryRangeParams) (*Quer
 func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (res *QueryResponse, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("queryRange"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/query_range"),
 	}
 
@@ -995,7 +995,7 @@ func (c *Client) Series(ctx context.Context, params SeriesParams) (*Maps, error)
 func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("series"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/loki/api/v1/series"),
 	}
 

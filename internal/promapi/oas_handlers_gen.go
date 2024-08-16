@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
 	ht "github.com/ogen-go/ogen/http"
@@ -26,7 +26,7 @@ import (
 func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getLabelValues"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/label/{label}/values"),
 	}
 
@@ -163,7 +163,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getLabels"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/labels"),
 	}
 
@@ -296,7 +296,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getMetadata"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/metadata"),
 	}
 
@@ -427,7 +427,7 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQuery"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/query"),
 	}
 
@@ -562,7 +562,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryExemplars"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
 	}
 
@@ -693,7 +693,7 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryRange"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/query_range"),
 	}
 
@@ -834,7 +834,7 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getRules"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/rules"),
 	}
 
@@ -969,7 +969,7 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getSeries"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v1/series"),
 	}
 
@@ -1102,7 +1102,7 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postLabels"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/labels"),
 	}
 
@@ -1225,7 +1225,7 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQuery"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/query"),
 	}
 
@@ -1348,7 +1348,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryExemplars"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
 	}
 
@@ -1471,7 +1471,7 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryRange"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/query_range"),
 	}
 
@@ -1594,7 +1594,7 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postSeries"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/api/v1/series"),
 	}
 

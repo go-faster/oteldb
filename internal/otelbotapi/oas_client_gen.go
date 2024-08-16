@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
 	ht "github.com/ogen-go/ogen/http"
@@ -108,7 +108,7 @@ func (c *Client) GetStatus(ctx context.Context) (*GetStatusOK, error) {
 func (c *Client) sendGetStatus(ctx context.Context) (res *GetStatusOK, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getStatus"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/status"),
 	}
 
@@ -211,7 +211,7 @@ func (c *Client) Ping(ctx context.Context) error {
 func (c *Client) sendPing(ctx context.Context) (res *PingNoContent, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("ping"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/ping"),
 	}
 
@@ -283,7 +283,7 @@ func (c *Client) SubmitReport(ctx context.Context, request *SubmitReportReq) err
 func (c *Client) sendSubmitReport(ctx context.Context, request *SubmitReportReq) (res *SubmitReportCreated, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("submitReport"),
-		semconv.HTTPMethodKey.String("POST"),
+		semconv.HTTPRequestMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/report/submit"),
 	}
 
