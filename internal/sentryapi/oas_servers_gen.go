@@ -51,11 +51,6 @@ func (s SentryURLServer) Build() (string, error) {
 		return s
 	}
 	s.ProjectID = zeroOr(s.ProjectID, "unknown")
-	// Validate "projectID"
-	switch s.ProjectID {
-	default:
-		return "", errors.Errorf("param %q: unexpected value %q", "projectID", s.ProjectID)
-	}
 	return fmt.Sprintf("http://localhost:8000/api/%s",
 		s.ProjectID,
 	), nil

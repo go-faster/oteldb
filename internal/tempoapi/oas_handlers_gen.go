@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
-	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
 	ht "github.com/ogen-go/ogen/http"
@@ -29,7 +29,7 @@ import (
 func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("buildInfo"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/status/buildinfo"),
 	}
 
@@ -133,7 +133,7 @@ func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http
 func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("echo"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/echo"),
 	}
 
@@ -237,7 +237,7 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("search"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/search"),
 	}
 
@@ -388,7 +388,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagValues"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/search/tag/{tag_name}/values"),
 	}
 
@@ -524,7 +524,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagValuesV2"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v2/search/tag/{attribute_selector}/values"),
 	}
 
@@ -659,7 +659,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTags"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/search/tags"),
 	}
 
@@ -790,7 +790,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagsV2"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/v2/search/tags"),
 	}
 
@@ -921,7 +921,7 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("traceByID"),
-		semconv.HTTPMethodKey.String("GET"),
+		semconv.HTTPRequestMethodKey.String("GET"),
 		semconv.HTTPRouteKey.String("/api/traces/{traceID}"),
 	}
 
