@@ -5,12 +5,15 @@ go 1.21.0
 require (
 	entgo.io/ent v0.14.0
 	github.com/ClickHouse/ch-go v0.62.0
+	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/VictoriaMetrics/easyproto v0.1.4
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/dmarkham/enumer v1.5.10
+	github.com/docker/cli v27.1.2+incompatible
+	github.com/docker/docker v27.1.2+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.17.0
 	github.com/go-faster/errors v0.7.1
@@ -28,6 +31,7 @@ require (
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/klauspost/compress v1.17.9
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
+	github.com/mattn/go-isatty v0.0.20
 	github.com/ogen-go/ogen v1.3.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.107.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.107.0
@@ -104,8 +108,11 @@ require (
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.11.4 // indirect
-	github.com/docker/docker v27.1.1+incompatible // indirect
+	github.com/docker/distribution v2.8.3+incompatible // indirect
+	github.com/docker/docker-credential-helpers v0.7.0 // indirect
+	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
+	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/elastic/go-grok v0.3.1 // indirect
@@ -113,6 +120,7 @@ require (
 	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -124,6 +132,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.8 // indirect
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
@@ -145,8 +154,8 @@ require (
 	github.com/magefile/mage v1.15.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
@@ -155,6 +164,7 @@ require (
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
+	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -183,6 +193,7 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
