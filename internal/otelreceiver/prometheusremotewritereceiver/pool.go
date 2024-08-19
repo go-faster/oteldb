@@ -2,25 +2,14 @@ package prometheusremotewritereceiver
 
 import (
 	"bytes"
-	"sync"
 
 	"github.com/go-faster/oteldb/internal/prompb"
+	"github.com/go-faster/oteldb/internal/xsync"
 )
 
-var writeRequestPool sync.Pool
-
-func putWriteRequest(wr *prompb.WriteRequest) {
-	wr.Reset()
-	writeRequestPool.Put(wr)
-}
-
-func getWriteRequest() *prompb.WriteRequest {
-	v := writeRequestPool.Get()
-	if v == nil {
-		return &prompb.WriteRequest{}
-	}
-	return v.(*prompb.WriteRequest)
-}
+var writeRequestPool = xsync.NewPool(func() *prompb.WriteRequest {
+	return &prompb.WriteRequest{}
+})
 
 type closerReader struct {
 	data []byte

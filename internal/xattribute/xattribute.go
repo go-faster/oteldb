@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/go-faster/oteldb/internal/xsync"
 )
 
 // StringerSlice creates a string slice attribute from slice of [fmt.Stringer] implementations.
@@ -16,8 +18,8 @@ func StringerSlice[S ~[]E, E fmt.Stringer](k string, v S) attribute.KeyValue {
 	}
 
 	// Using pooled string slice is fine, since attribute package copies slice.
-	ss := getStringSlice()
-	defer putStringSlice(ss)
+	ss := xsync.GetReset(stringSlicePool)
+	defer stringSlicePool.Put(ss)
 
 	ss.val = append(ss.val, make([]string, len(v))...)
 	for i, f := range v {
@@ -42,8 +44,8 @@ func StringMap(k string, m map[string]string) attribute.KeyValue {
 	}
 
 	// Using pooled string slice is fine, since attribute package copies slice.
-	ss := getStringSlice()
-	defer putStringSlice(ss)
+	ss := xsync.GetReset(stringSlicePool)
+	defer stringSlicePool.Put(ss)
 
 	for k, v := range m {
 		ss.val = append(ss.val, k+"="+v)

@@ -35,6 +35,7 @@ import (
 
 	"github.com/go-faster/oteldb/internal/otelreceiver/prometheusremotewrite"
 	"github.com/go-faster/oteldb/internal/prompb"
+	"github.com/go-faster/oteldb/internal/xsync"
 )
 
 const receiverFormat = "protobuf"
@@ -148,8 +149,8 @@ func (rec *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	bb := bytebufferpool.Get()
 	defer bytebufferpool.Put(bb)
 
-	wr := getWriteRequest()
-	defer putWriteRequest(wr)
+	wr := xsync.GetReset(writeRequestPool)
+	defer writeRequestPool.Put(wr)
 
 	if err := decodeRequest(r.Body, bb, wr); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

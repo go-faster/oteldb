@@ -1,6 +1,6 @@
 package xattribute
 
-import "sync"
+import "github.com/go-faster/oteldb/internal/xsync"
 
 type stringSlice struct {
 	val []string
@@ -10,20 +10,8 @@ func (s *stringSlice) Reset() {
 	s.val = s.val[:0]
 }
 
-var stringSlicePool = &sync.Pool{
-	New: func() any {
-		return &stringSlice{
-			val: make([]string, 0, 16),
-		}
-	},
-}
-
-func getStringSlice() *stringSlice {
-	ss := stringSlicePool.Get().(*stringSlice)
-	ss.Reset()
-	return ss
-}
-
-func putStringSlice(ss *stringSlice) {
-	stringSlicePool.Put(ss)
-}
+var stringSlicePool = xsync.NewPool(func() *stringSlice {
+	return &stringSlice{
+		val: make([]string, 0, 16),
+	}
+})
