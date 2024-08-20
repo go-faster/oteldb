@@ -34,6 +34,10 @@ func TestParseLog(t *testing.T) {
 	for iter.Next(&r) {
 		require.Equal(t, expected[i].Timestamp, r.Timestamp)
 		require.Equal(t, expected[i].Line, r.Line)
+		v, ok := r.Set.GetString("stream")
+		require.True(t, ok)
+		require.Equal(t, stderr.String(), v)
+
 		i++
 	}
 	require.NoError(t, iter.Err())

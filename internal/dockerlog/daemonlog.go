@@ -3,11 +3,13 @@ package dockerlog
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/go-faster/errors"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine/logqlabels"
@@ -61,6 +63,21 @@ const (
 	systemerr
 )
 
+func (t stdType) String() string {
+	switch t {
+	case stdin:
+		return "stdin"
+	case stdout:
+		return "stdout"
+	case stderr:
+		return "stderr"
+	case systemerr:
+		return "<system error>"
+	default:
+		return fmt.Sprintf("unknown type %d", byte(t))
+	}
+}
+
 func (i *streamIter) parseNext(r *logqlengine.Entry) (bool, error) {
 	if _, err := io.ReadFull(i.rd, i.header[:]); err != nil {
 		switch err {
@@ -92,7 +109,7 @@ func (i *streamIter) parseNext(r *logqlengine.Entry) (bool, error) {
 	return true, nil
 }
 
-func parseDockerLine(_ stdType, input string, r *logqlengine.Entry) error {
+func parseDockerLine(typ stdType, input string, r *logqlengine.Entry) error {
 	const dockerTimestampFormat = time.RFC3339Nano
 
 	rawTimestamp, line, ok := strings.Cut(input, " ")
@@ -106,6 +123,8 @@ func parseDockerLine(_ stdType, input string, r *logqlengine.Entry) error {
 		return errors.Wrap(err, "parse timestamp")
 	}
 	r.Timestamp = otelstorage.NewTimestampFromTime(ts)
+
+	r.Set.Set("stream", pcommon.NewValueStr(typ.String()))
 	return nil
 }
 
