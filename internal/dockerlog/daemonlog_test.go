@@ -1,6 +1,8 @@
 package dockerlog
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"testing"
 
@@ -41,4 +43,30 @@ func TestParseLog(t *testing.T) {
 		i++
 	}
 	require.NoError(t, iter.Err())
+}
+
+func BenchmarkParseLog(b *testing.B) {
+	data, err := os.ReadFile("_testdata/dockerlog.bin")
+	require.NoError(b, err)
+
+	var (
+		rd = bytes.NewReader(data)
+		rc = io.NopCloser(rd)
+
+		attrs = otelstorage.Attrs(pcommon.NewMap())
+		e     logqlengine.Entry
+	)
+
+	b.SetBytes(int64(len(data)))
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		rd.Reset(data)
+
+		iter := ParseLog(rc, attrs)
+		for iter.Next(&e) {
+			continue
+		}
+		iter.Close()
+	}
 }
