@@ -3,6 +3,7 @@ package otelbench
 import (
 	"encoding/binary"
 	"io"
+	"math"
 	"sync"
 
 	"github.com/go-faster/errors"
@@ -60,6 +61,12 @@ type Writer struct {
 func (w *Writer) Encode(data []byte) error {
 	w.mux.Lock()
 	defer w.mux.Unlock()
+
+	const maxSize = uint64(math.MaxUint32)
+	if l := uint64(len(data)); l > maxSize {
+		return errors.Errorf("packet is too big (%d bytes)", l)
+	}
+
 	var length [protocolLengthBytes]byte
 	binary.BigEndian.PutUint32(length[:], uint32(len(data)))
 	if _, err := w.writer.Write(length[:]); err != nil {
