@@ -8,6 +8,9 @@ linters-settings:
     check-shadowing: true
   gocyclo:
     min-complexity: 15
+  gosec:
+    excludes:
+      - G115 # Annoying and have a lot of false-positive results.
   maligned:
     suggest-new: true
   dupl:
