@@ -26,25 +26,25 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v58 v58.0.0
 	github.com/google/uuid v1.6.0
-	github.com/grafana/loki/pkg/push v0.0.0-20240415130356-945a0f516ad2
+	github.com/grafana/loki/pkg/push v0.0.0-20240822152437-246a1dfbe24a
 	github.com/grafana/pyroscope-go v1.1.2
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/klauspost/compress v1.17.9
-	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
+	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6
 	github.com/mattn/go-isatty v0.0.20
 	github.com/ogen-go/ogen v1.3.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.107.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.107.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.107.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.107.0
-	github.com/prometheus/client_golang v1.20.0
+	github.com/prometheus/client_golang v1.20.1
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/prometheus v0.54.0
 	github.com/schollz/progressbar/v3 v3.14.6
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	github.com/testcontainers/testcontainers-go v0.32.0
+	github.com/testcontainers/testcontainers-go v0.33.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/zeebo/xxh3 v1.0.2
 	go.opentelemetry.io/collector/component v0.107.0
@@ -75,10 +75,10 @@ require (
 	go.uber.org/atomic v1.11.0
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
-	go4.org/netipx v0.0.0-20230303233057-f1b76eb4bb35
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 	golang.org/x/oauth2 v0.22.0
-	golang.org/x/perf v0.0.0-20240604174448-3b48cf0e0164
+	golang.org/x/perf v0.0.0-20240806191124-3f62151e343c
 	golang.org/x/sync v0.8.0
 	golang.org/x/tools v0.24.0
 	google.golang.org/grpc v1.65.0
@@ -89,20 +89,19 @@ require (
 require (
 	ariga.io/atlas v0.19.1-0.20240203083654-5948b60a8e43 // indirect
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/Microsoft/hcsshim v0.11.5 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/alecthomas/participle/v2 v2.1.1 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/containerd/containerd v1.7.18 // indirect
-	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
+	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
