@@ -27,6 +27,7 @@ import (
 	"github.com/golang/snappy"
 	"github.com/valyala/bytebufferpool"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/component/componentstatus"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
@@ -104,7 +105,7 @@ func (rec *Receiver) Start(ctx context.Context, host component.Host) (err error)
 		go func() {
 			defer rec.shutdownWG.Done()
 			if errHTTP := rec.server.Serve(listener); !errors.Is(errHTTP, http.ErrServerClosed) {
-				rec.params.TelemetrySettings.ReportStatus(component.NewFatalErrorEvent(errHTTP))
+				componentstatus.ReportStatus(rec.host, componentstatus.NewFatalErrorEvent(errHTTP))
 			}
 		}()
 	})
