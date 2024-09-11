@@ -27,7 +27,7 @@ require (
 	github.com/google/go-github/v58 v58.0.0
 	github.com/google/uuid v1.6.0
 	github.com/grafana/loki/pkg/push v0.0.0-20240822152437-246a1dfbe24a
-	github.com/grafana/pyroscope-go v1.1.2
+	github.com/grafana/pyroscope-go v1.2.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/klauspost/compress v1.17.9
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6
