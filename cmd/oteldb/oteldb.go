@@ -3,25 +3,17 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
-	"go.opentelemetry.io/collector/featuregate"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/autopyro"
 	"github.com/go-faster/oteldb/internal/autozpages"
 )
 
-var gateRegistry = featuregate.GlobalRegistry()
-
 func main() {
-	if err := gateRegistry.Set("component.UseLocalHostAsDefaultHost", false); err != nil {
-		panic(fmt.Sprintf("enable feature: %+v", err))
-	}
-
 	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
 		shutdown, err := autozpages.Setup(m.TracerProvider())
 		if err != nil {
