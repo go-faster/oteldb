@@ -57,8 +57,12 @@ func (cfg *Config) setDefaults() {
 			"receivers": map[string]any{
 				"otlp": map[string]any{
 					"protocols": map[string]any{
-						"grpc": nil,
-						"http": nil,
+						"grpc": map[string]any{
+							"endpoint": "0.0.0.0:4317",
+						},
+						"http": map[string]any{
+							"endpoint": "0.0.0.0:4318",
+						},
 					},
 				},
 				"prometheusremotewrite": map[string]any{},
