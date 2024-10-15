@@ -63,9 +63,9 @@ require (
 	go.opentelemetry.io/collector/processor/batchprocessor v0.111.0
 	go.opentelemetry.io/collector/receiver v0.111.0
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.111.0
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.55.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.55.0
-	go.opentelemetry.io/contrib/zpages v0.55.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.56.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.56.0
+	go.opentelemetry.io/contrib/zpages v0.56.0
 	go.opentelemetry.io/otel v1.31.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.31.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.31.0
