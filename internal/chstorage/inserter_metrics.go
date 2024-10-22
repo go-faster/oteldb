@@ -85,7 +85,7 @@ type labelScope uint8
 
 const (
 	labelScopeNone     labelScope = 0
-	labelScopeResource labelScope = 1 << iota
+	labelScopeResource labelScope = 1 << (iota - 1)
 	labelScopeInstrumentation
 	labelScopeAttribute
 )

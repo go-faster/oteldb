@@ -61,6 +61,10 @@ func (a *attributeCol) EncodeColumn(b *proto.Buffer) {
 	a.col.EncodeColumn(b)
 }
 
+func (a *attributeCol) WriteColumn(w *proto.Writer) {
+	a.col.WriteColumn(w)
+}
+
 func (a *attributeCol) Append(v otelstorage.Attrs) {
 	a.col.Key = proto.KeyUInt64
 	h := v.Hash()
