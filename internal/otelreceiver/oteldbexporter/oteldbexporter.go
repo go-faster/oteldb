@@ -44,7 +44,7 @@ func createTracesExporter(
 	if err != nil {
 		return nil, err
 	}
-	return exporterhelper.NewTracesExporter(ctx, settings, cfg, tracestorage.NewConsumer(inserter).ConsumeTraces)
+	return exporterhelper.NewTraces(ctx, settings, cfg, tracestorage.NewConsumer(inserter).ConsumeTraces)
 }
 
 func createMetricsExporter(
@@ -57,7 +57,7 @@ func createMetricsExporter(
 	if err != nil {
 		return nil, err
 	}
-	return exporterhelper.NewMetricsExporter(ctx, settings, cfg, inserter.ConsumeMetrics)
+	return exporterhelper.NewMetrics(ctx, settings, cfg, inserter.ConsumeMetrics)
 }
 
 func createLogsExporter(
@@ -70,5 +70,5 @@ func createLogsExporter(
 	if err != nil {
 		return nil, err
 	}
-	return exporterhelper.NewLogsExporter(ctx, settings, cfg, logstorage.NewConsumer(inserter).ConsumeLogs)
+	return exporterhelper.NewLogs(ctx, settings, cfg, logstorage.NewConsumer(inserter).ConsumeLogs)
 }
