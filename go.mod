@@ -39,7 +39,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.111.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.0
-	github.com/prometheus/prometheus v0.54.1
+	github.com/prometheus/prometheus v0.55.0
 	github.com/schollz/progressbar/v3 v3.16.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -266,10 +266,3 @@ require (
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// https://github.com/aws-observability/aws-otel-collector/issues/926
-//
-// cloud.google.com/go/compute/metadata: ambiguous import: found package cloud.google.com/go/compute/metadata in multiple modules
-//  cloud.google.com/go v0.65.0 (/go/pkg/mod/cloud.google.com/go@v0.65.0/compute/metadata)
-//  cloud.google.com/go/compute/metadata v0.2.4-0.20230617002413-005d2dfb6b68 (/go/pkg/mod/cloud.google.com/go/compute/metadata@v0.2.4-0.20230617002413-005d2dfb6b68
-replace cloud.google.com/go => cloud.google.com/go v0.100.2
