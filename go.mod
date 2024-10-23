@@ -264,10 +264,3 @@ require (
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// https://github.com/aws-observability/aws-otel-collector/issues/926
-//
-// cloud.google.com/go/compute/metadata: ambiguous import: found package cloud.google.com/go/compute/metadata in multiple modules
-//  cloud.google.com/go v0.65.0 (/go/pkg/mod/cloud.google.com/go@v0.65.0/compute/metadata)
-//  cloud.google.com/go/compute/metadata v0.2.4-0.20230617002413-005d2dfb6b68 (/go/pkg/mod/cloud.google.com/go/compute/metadata@v0.2.4-0.20230617002413-005d2dfb6b68
-replace cloud.google.com/go => cloud.google.com/go v0.100.2
