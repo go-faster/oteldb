@@ -33,10 +33,10 @@ require (
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6
 	github.com/mattn/go-isatty v0.0.20
 	github.com/ogen-go/ogen v1.5.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.111.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.111.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.111.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.111.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.112.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.112.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.112.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.112.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.0
 	github.com/prometheus/prometheus v0.55.0
@@ -99,8 +99,8 @@ require (
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
 	github.com/agext/levenshtein v1.2.1 // indirect
 	github.com/alecthomas/participle/v2 v2.1.1 // indirect
-	github.com/antchfx/xmlquery v1.4.1 // indirect
-	github.com/antchfx/xpath v1.3.1 // indirect
+	github.com/antchfx/xmlquery v1.4.2 // indirect
+	github.com/antchfx/xpath v1.3.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -178,9 +178,9 @@ require (
 	github.com/mostynb/go-grpc-compression v1.2.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.111.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.111.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.111.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.112.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.112.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.112.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
