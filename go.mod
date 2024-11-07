@@ -39,7 +39,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.112.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
-	github.com/prometheus/prometheus v0.55.0
+	github.com/prometheus/prometheus v0.55.1
 	github.com/schollz/progressbar/v3 v3.17.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
