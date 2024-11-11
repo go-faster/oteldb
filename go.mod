@@ -40,7 +40,7 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
 	github.com/prometheus/prometheus v0.55.1
-	github.com/schollz/progressbar/v3 v3.17.0
+	github.com/schollz/progressbar/v3 v3.17.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
@@ -261,7 +261,7 @@ require (
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/term v0.26.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	gonum.org/v1/gonum v0.15.1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28 // indirect
