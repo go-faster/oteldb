@@ -39,7 +39,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.114.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
-	github.com/prometheus/prometheus v0.55.1
+	github.com/prometheus/prometheus v0.300.0
 	github.com/schollz/progressbar/v3 v3.17.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -128,7 +128,6 @@ require (
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
-	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
@@ -258,7 +257,7 @@ require (
 	go.opentelemetry.io/otel/log v0.8.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.7.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
-	go.uber.org/automaxprocs v1.5.3 // indirect
+	go.uber.org/automaxprocs v1.6.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.31.0 // indirect
