@@ -36,6 +36,8 @@ services:
     image: "prom/prometheus:v3.0.0"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--enable-feature=promql-experimental-functions"
+      - "--enable-feature=native-histograms"
     volumes:
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
     ports:
