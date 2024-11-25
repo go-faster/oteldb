@@ -12,7 +12,7 @@ env:
   COMPOSE_FILE: docker-compose.ci.yml
   OTEL_EXPORTER_OTLP_INSECURE: "true"
   CGO_ENABLED: 0
-  CHECK_BENCH_BROKEN: "true"
+  CHECK_BENCH_BROKEN: "false"
 
 jobs:
   PromQL:
