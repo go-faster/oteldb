@@ -9,7 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_TAG: ghcr.io/${{ github.repository }}
   KUBECTL_VERSION: v1.27.6
-  DEPLOY_BROKEN: true
+  DEPLOY_BROKEN: false
 
 jobs:
   oteldb:
