@@ -173,7 +173,7 @@ spec:
       component: otel-collector
   minReadySeconds: 5
   progressDeadlineSeconds: 120
-  replicas: 2
+  replicas: 3
   template:
     metadata:
       labels:
@@ -191,10 +191,10 @@ spec:
         resources:
           limits:
             cpu: "2"
-            memory: 4G
+            memory: 2G
           requests:
             cpu: "2"
-            memory: 4G
+            memory: 1G
         livenessProbe:
           httpGet:
             path: /
