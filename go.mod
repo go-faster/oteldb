@@ -18,7 +18,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/go-faster/sdk v0.15.1
+	github.com/go-faster/sdk v0.15.2
 	github.com/go-faster/yaml v0.4.6
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/gogo/protobuf v1.3.2
@@ -241,24 +241,24 @@ require (
 	go.opentelemetry.io/collector/service v0.114.0 // indirect
 	go.opentelemetry.io/contrib/bridges/otelzap v0.6.0 // indirect
 	go.opentelemetry.io/contrib/config v0.10.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.51.0 // indirect
-	go.opentelemetry.io/contrib/propagators/autoprop v0.51.0 // indirect
-	go.opentelemetry.io/contrib/propagators/aws v1.26.0 // indirect
-	go.opentelemetry.io/contrib/propagators/b3 v1.31.0 // indirect
-	go.opentelemetry.io/contrib/propagators/jaeger v1.26.0 // indirect
-	go.opentelemetry.io/contrib/propagators/ot v1.26.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.57.0 // indirect
+	go.opentelemetry.io/contrib/propagators/autoprop v0.57.0 // indirect
+	go.opentelemetry.io/contrib/propagators/aws v1.32.0 // indirect
+	go.opentelemetry.io/contrib/propagators/b3 v1.32.0 // indirect
+	go.opentelemetry.io/contrib/propagators/jaeger v1.32.0 // indirect
+	go.opentelemetry.io/contrib/propagators/ot v1.32.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.32.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.32.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.31.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.32.0 // indirect
 	go.opentelemetry.io/otel/exporters/prometheus v0.54.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.7.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.32.0 // indirect
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.31.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.32.0 // indirect
 	go.opentelemetry.io/otel/log v0.8.0 // indirect
 	go.opentelemetry.io/otel/sdk/log v0.7.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
-	go.uber.org/automaxprocs v1.5.3 // indirect
+	go.uber.org/automaxprocs v1.6.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.31.0 // indirect
