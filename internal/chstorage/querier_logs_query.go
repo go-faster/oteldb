@@ -480,6 +480,7 @@ func (q *Querier) logQLLabelMatcher(
 	}
 
 	labelName := string(m.Label)
+	unmappedLabel := labelName
 	if key, ok := mapping[labelName]; ok {
 		labelName = key
 	}
@@ -529,7 +530,7 @@ func (q *Querier) logQLLabelMatcher(
 	case logstorage.LabelTraceID:
 		return matchHex(chsql.Ident("trace_id"), m)
 	default:
-		expr, ok := q.getMaterializedLabelColumn(labelName)
+		expr, ok := q.getMaterializedLabelColumn(unmappedLabel)
 		if ok {
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
