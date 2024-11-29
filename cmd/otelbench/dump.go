@@ -117,6 +117,7 @@ func newDumpCreateCommand() *cobra.Command {
 			})
 			g.Go(func() error {
 				// Wait for port-forward to be ready.
+				defer close(done)
 				for {
 					if err := checkConnection(ctx); err == nil {
 						break
@@ -241,6 +242,7 @@ func newDumpRestoreCommand() *cobra.Command {
 			}
 
 			tables := dumpTables()
+			var found bool
 			for _, table := range tables {
 				file := filepath.Join(arg.Input, fmt.Sprintf("%s.bin.%s", table, arg.Compression))
 				if _, err := os.Stat(file); err != nil {
@@ -256,6 +258,7 @@ func newDumpRestoreCommand() *cobra.Command {
 					}
 				}
 
+				found = true
 				if err := func() error {
 					q := fmt.Sprintf("INSERT INTO %s.%s FROM INFILE '%s' COMPRESSION '%s' FORMAT Native",
 						arg.Database, table, file, arg.Compression,
@@ -280,6 +283,9 @@ func newDumpRestoreCommand() *cobra.Command {
 					return errors.Wrapf(err, "restore %s", file)
 				}
 			}
+			if !found {
+				return errors.New("no tables found")
+			}
 			return nil
 		},
 	}
@@ -290,6 +296,7 @@ func newDumpRestoreCommand() *cobra.Command {
 	f.IntVar(&arg.Port, "port", 9000, "Clickhouse port")
 	f.StringVar(&arg.Host, "host", "localhost", "Clickhouse host")
 	f.BoolVar(&arg.Truncate, "truncate", false, "Truncate tables before restore")
+	f.StringVar(&arg.Compression, "compression", "zstd", "Compression algorithm")
 
 	return rootCmd
 }
