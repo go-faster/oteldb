@@ -42,7 +42,6 @@ func newDumpCreateCommand() *cobra.Command {
 		RunE: func(cobraCommand *cobra.Command, _ []string) error {
 			g, ctx := errgroup.WithContext(cobraCommand.Context())
 			done := make(chan struct{})
-			localPort := 9000
 
 			if err := os.MkdirAll(arg.Output, 0755); err != nil {
 				return errors.Wrap(err, "create output directory")
@@ -52,7 +51,7 @@ func newDumpCreateCommand() *cobra.Command {
 				ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 				defer cancel()
 				client, err := ch.Dial(ctx, ch.Options{
-					Address: fmt.Sprintf("localhost:%d", localPort),
+					Address: fmt.Sprintf("localhost:%d", arg.LocalPort),
 				})
 				if err != nil {
 					return errors.Wrap(err, "dial")
