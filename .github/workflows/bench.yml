@@ -61,7 +61,7 @@ jobs:
 
       - name: Reset compose
         working-directory: ${{ env.WORKDIR }}
-        run: docker compose down --remove-orphans --volumes --timeout 10
+        run: docker compose down --volumes --timeout 10
 
       - name: Start compose
         working-directory: ${{ env.WORKDIR }}
@@ -95,7 +95,7 @@ jobs:
       - name: Cleanup
         working-directory: ${{ env.WORKDIR }}
         if: ${{ ! cancelled() }}
-        run: docker compose down --remove-orphans --volumes --timeout 10
+        run: docker compose down --volumes --timeout 10
 
   CheckBenchAPI:
     runs-on: [Linux, bench]

@@ -11,7 +11,7 @@ trap clean_up EXIT
 set -e
 
 echo ">> Setup oteldb locally"
-docker compose up -d --remove-orphans --build --force-recreate
+docker compose up -d --build --force-recreate
 
 start_time="2024-01-01T00:01:10Z"
 end_time="2024-01-01T00:05:10Z"
