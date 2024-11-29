@@ -25,7 +25,7 @@ env:
         name: oteldb
         key: CH_DSN
   - name: PYROSCOPE_ENABLE
-    value: "true"
+    value: "false"
   - name: PYROSCOPE_URL
     value: http://pyroscope.pyroscope.svc.cluster.local:4040
   - name: PYROSCOPE_APP_NAME
