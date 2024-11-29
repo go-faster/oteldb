@@ -11,7 +11,7 @@ trap clean_up EXIT
 set -e
 
 echo ">> Setup oteldb locally"
-docker compose up -d --build --force-recreate
+docker compose up -d --remove-orphans --build --force-recreate
 
 echo ">> Upload benchmark data"
 wget -N https://storage.yandexcloud.net/faster-public/oteldb/req.rwq

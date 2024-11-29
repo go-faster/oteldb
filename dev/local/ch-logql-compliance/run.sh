@@ -10,7 +10,7 @@ trap clean_up EXIT
 
 set -e
 
-docker compose up -d --build --force-recreate
+docker compose up -d --remove-orphans --build --force-recreate
 
 echo ">> Testing oteldb implementation"
 RANGE="1m"
