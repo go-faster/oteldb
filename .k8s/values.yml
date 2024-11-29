@@ -42,4 +42,4 @@ resources:
     memory: 4Gi
 
 config:
-  ttl: 72h
+  ttl: 2h
