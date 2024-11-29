@@ -114,15 +114,15 @@ func newDumpCreateCommand() *cobra.Command {
 				}
 				fmt.Println("Clickhouse connection is ready")
 				tables := []string{
-					"logs",
-					"logs_attrs",
+					"migration",
 					"metrics_exemplars",
 					"metrics_exp_histograms",
 					"metrics_labels",
 					"metrics_points",
 					"traces_spans",
 					"traces_tags",
-					"migration",
+					"logs_attrs",
+					"logs",
 				}
 				var files []os.FileInfo
 				for _, table := range tables {
@@ -130,8 +130,12 @@ func newDumpCreateCommand() *cobra.Command {
 					query += " WHERE true"
 					switch table {
 					case "logs", "metrics_points", "traces_spans":
+						tsField := "timestamp"
+						if table == "traces_spans" {
+							tsField = "start"
+						}
 						if arg.LimitTime > 0 {
-							query += fmt.Sprintf(" AND timestamp > (now() - toIntervalSecond(%d))", int(arg.LimitTime.Seconds()))
+							query += fmt.Sprintf(" AND %s > (now() - toIntervalSecond(%d))", tsField, int(arg.LimitTime.Seconds()))
 						}
 					}
 					if arg.LimitCount > 0 {
@@ -153,10 +157,7 @@ func newDumpCreateCommand() *cobra.Command {
 					cmd.Stdout = os.Stdout
 					cmd.Stdin = os.Stdin
 
-					fmt.Println("Dumping table", table)
-					fmt.Println(" Query:", query)
-					fmt.Println(" Command:", cmd.String())
-
+					fmt.Println(">", table)
 					if err := cmd.Run(); err != nil {
 						return errors.Wrapf(err, "dump table %s", table)
 					}
@@ -169,7 +170,6 @@ func newDumpCreateCommand() *cobra.Command {
 					files = append(files, stat)
 				}
 
-				fmt.Println("Dumps:")
 				var totalBytes int64
 				for _, file := range files {
 					totalBytes += file.Size()
@@ -177,7 +177,7 @@ func newDumpCreateCommand() *cobra.Command {
 					fmt.Printf(" %35s %s\n", file.Name(), humanize.Bytes(uint64(file.Size())))
 				}
 
-				fmt.Println("--------")
+				fmt.Printf(" %35s \n", "--------")
 				fmt.Printf(" %35s %s\n", "Total", humanize.Bytes(uint64(totalBytes)))
 
 				return nil
