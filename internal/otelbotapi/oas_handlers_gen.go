@@ -33,7 +33,7 @@ func (s *Server) handleGetStatusRequest(args [0]string, argsEscaped bool, w http
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetStatus",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetStatusOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -64,7 +64,7 @@ func (s *Server) handleGetStatusRequest(args [0]string, argsEscaped bool, w http
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetStatus",
+			Name: GetStatusOperation,
 			ID:   "getStatus",
 		}
 	)
@@ -72,7 +72,7 @@ func (s *Server) handleGetStatusRequest(args [0]string, argsEscaped bool, w http
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-			sctx, ok, err := s.securityTokenAuth(ctx, "GetStatus", r)
+			sctx, ok, err := s.securityTokenAuth(ctx, GetStatusOperation, r)
 			if err != nil {
 				err = &ogenerrors.SecurityError{
 					OperationContext: opErrContext,
@@ -119,7 +119,7 @@ func (s *Server) handleGetStatusRequest(args [0]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetStatus",
+			OperationName:    GetStatusOperation,
 			OperationSummary: "",
 			OperationID:      "getStatus",
 			Body:             nil,
@@ -185,7 +185,7 @@ func (s *Server) handlePingRequest(args [0]string, argsEscaped bool, w http.Resp
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Ping",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PingOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -221,7 +221,7 @@ func (s *Server) handlePingRequest(args [0]string, argsEscaped bool, w http.Resp
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Ping",
+			OperationName:    PingOperation,
 			OperationSummary: "",
 			OperationID:      "ping",
 			Body:             nil,
@@ -289,7 +289,7 @@ func (s *Server) handleSubmitReportRequest(args [0]string, argsEscaped bool, w h
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SubmitReport",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SubmitReportOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -320,7 +320,7 @@ func (s *Server) handleSubmitReportRequest(args [0]string, argsEscaped bool, w h
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SubmitReport",
+			Name: SubmitReportOperation,
 			ID:   "submitReport",
 		}
 	)
@@ -328,7 +328,7 @@ func (s *Server) handleSubmitReportRequest(args [0]string, argsEscaped bool, w h
 		type bitset = [1]uint8
 		var satisfied bitset
 		{
-			sctx, ok, err := s.securityTokenAuth(ctx, "SubmitReport", r)
+			sctx, ok, err := s.securityTokenAuth(ctx, SubmitReportOperation, r)
 			if err != nil {
 				err = &ogenerrors.SecurityError{
 					OperationContext: opErrContext,
@@ -390,7 +390,7 @@ func (s *Server) handleSubmitReportRequest(args [0]string, argsEscaped bool, w h
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SubmitReport",
+			OperationName:    SubmitReportOperation,
 			OperationSummary: "",
 			OperationID:      "submitReport",
 			Body:             request,

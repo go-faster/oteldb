@@ -33,7 +33,7 @@ func (s *Server) handleDummyRequest(args [0]string, argsEscaped bool, w http.Res
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Dummy",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), DummyOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -69,7 +69,7 @@ func (s *Server) handleDummyRequest(args [0]string, argsEscaped bool, w http.Res
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Dummy",
+			OperationName:    DummyOperation,
 			OperationSummary: "",
 			OperationID:      "dummy",
 			Body:             nil,
@@ -137,7 +137,7 @@ func (s *Server) handleEnvelopeRequest(args [0]string, argsEscaped bool, w http.
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Envelope",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), EnvelopeOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -168,7 +168,7 @@ func (s *Server) handleEnvelopeRequest(args [0]string, argsEscaped bool, w http.
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Envelope",
+			Name: EnvelopeOperation,
 			ID:   "envelope",
 		}
 	)
@@ -192,7 +192,7 @@ func (s *Server) handleEnvelopeRequest(args [0]string, argsEscaped bool, w http.
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Envelope",
+			OperationName:    EnvelopeOperation,
 			OperationSummary: "",
 			OperationID:      "envelope",
 			Body:             request,

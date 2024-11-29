@@ -436,7 +436,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "GetLabelValues"
+								r.name = GetLabelValuesOperation
 								r.summary = ""
 								r.operationID = "getLabelValues"
 								r.pathPattern = "/api/v1/label/{label}/values"
@@ -464,7 +464,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "GetLabels"
+							r.name = GetLabelsOperation
 							r.summary = ""
 							r.operationID = "getLabels"
 							r.pathPattern = "/api/v1/labels"
@@ -472,7 +472,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.count = 0
 							return r, true
 						case "POST":
-							r.name = "PostLabels"
+							r.name = PostLabelsOperation
 							r.summary = ""
 							r.operationID = "postLabels"
 							r.pathPattern = "/api/v1/labels"
@@ -500,7 +500,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetMetadata"
+						r.name = GetMetadataOperation
 						r.summary = ""
 						r.operationID = "getMetadata"
 						r.pathPattern = "/api/v1/metadata"
@@ -524,7 +524,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				if len(elem) == 0 {
 					switch method {
 					case "GET":
-						r.name = "GetQuery"
+						r.name = GetQueryOperation
 						r.summary = ""
 						r.operationID = "getQuery"
 						r.pathPattern = "/api/v1/query"
@@ -532,7 +532,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.count = 0
 						return r, true
 					case "POST":
-						r.name = "PostQuery"
+						r.name = PostQueryOperation
 						r.summary = ""
 						r.operationID = "postQuery"
 						r.pathPattern = "/api/v1/query"
@@ -568,7 +568,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "GetQueryExemplars"
+								r.name = GetQueryExemplarsOperation
 								r.summary = ""
 								r.operationID = "getQueryExemplars"
 								r.pathPattern = "/api/v1/query_exemplars"
@@ -576,7 +576,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 0
 								return r, true
 							case "POST":
-								r.name = "PostQueryExemplars"
+								r.name = PostQueryExemplarsOperation
 								r.summary = ""
 								r.operationID = "postQueryExemplars"
 								r.pathPattern = "/api/v1/query_exemplars"
@@ -601,7 +601,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "GetQueryRange"
+								r.name = GetQueryRangeOperation
 								r.summary = ""
 								r.operationID = "getQueryRange"
 								r.pathPattern = "/api/v1/query_range"
@@ -609,7 +609,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 0
 								return r, true
 							case "POST":
-								r.name = "PostQueryRange"
+								r.name = PostQueryRangeOperation
 								r.summary = ""
 								r.operationID = "postQueryRange"
 								r.pathPattern = "/api/v1/query_range"
@@ -640,7 +640,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetRules"
+						r.name = GetRulesOperation
 						r.summary = ""
 						r.operationID = "getRules"
 						r.pathPattern = "/api/v1/rules"
@@ -665,7 +665,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetSeries"
+						r.name = GetSeriesOperation
 						r.summary = ""
 						r.operationID = "getSeries"
 						r.pathPattern = "/api/v1/series"
@@ -673,7 +673,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.count = 0
 						return r, true
 					case "POST":
-						r.name = "PostSeries"
+						r.name = PostSeriesOperation
 						r.summary = ""
 						r.operationID = "postSeries"
 						r.pathPattern = "/api/v1/series"

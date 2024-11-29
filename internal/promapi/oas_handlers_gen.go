@@ -31,7 +31,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetLabelValues",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetLabelValuesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -62,7 +62,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetLabelValues",
+			Name: GetLabelValuesOperation,
 			ID:   "getLabelValues",
 		}
 	)
@@ -81,7 +81,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetLabelValues",
+			OperationName:    GetLabelValuesOperation,
 			OperationSummary: "",
 			OperationID:      "getLabelValues",
 			Body:             nil,
@@ -168,7 +168,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetLabels",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetLabelsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -199,7 +199,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetLabels",
+			Name: GetLabelsOperation,
 			ID:   "getLabels",
 		}
 	)
@@ -218,7 +218,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetLabels",
+			OperationName:    GetLabelsOperation,
 			OperationSummary: "",
 			OperationID:      "getLabels",
 			Body:             nil,
@@ -301,7 +301,7 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetMetadata",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetMetadataOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -332,7 +332,7 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetMetadata",
+			Name: GetMetadataOperation,
 			ID:   "getMetadata",
 		}
 	)
@@ -351,7 +351,7 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetMetadata",
+			OperationName:    GetMetadataOperation,
 			OperationSummary: "",
 			OperationID:      "getMetadata",
 			Body:             nil,
@@ -432,7 +432,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetQuery",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetQueryOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -463,7 +463,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetQuery",
+			Name: GetQueryOperation,
 			ID:   "getQuery",
 		}
 	)
@@ -482,7 +482,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetQuery",
+			OperationName:    GetQueryOperation,
 			OperationSummary: "",
 			OperationID:      "getQuery",
 			Body:             nil,
@@ -567,7 +567,7 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetQueryExemplars",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetQueryExemplarsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -598,7 +598,7 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetQueryExemplars",
+			Name: GetQueryExemplarsOperation,
 			ID:   "getQueryExemplars",
 		}
 	)
@@ -617,7 +617,7 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetQueryExemplars",
+			OperationName:    GetQueryExemplarsOperation,
 			OperationSummary: "",
 			OperationID:      "getQueryExemplars",
 			Body:             nil,
@@ -698,7 +698,7 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetQueryRange",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetQueryRangeOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -729,7 +729,7 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetQueryRange",
+			Name: GetQueryRangeOperation,
 			ID:   "getQueryRange",
 		}
 	)
@@ -748,7 +748,7 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetQueryRange",
+			OperationName:    GetQueryRangeOperation,
 			OperationSummary: "",
 			OperationID:      "getQueryRange",
 			Body:             nil,
@@ -839,7 +839,7 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetRules",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetRulesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -870,7 +870,7 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetRules",
+			Name: GetRulesOperation,
 			ID:   "getRules",
 		}
 	)
@@ -889,7 +889,7 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetRules",
+			OperationName:    GetRulesOperation,
 			OperationSummary: "",
 			OperationID:      "getRules",
 			Body:             nil,
@@ -974,7 +974,7 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetSeries",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetSeriesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1005,7 +1005,7 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "GetSeries",
+			Name: GetSeriesOperation,
 			ID:   "getSeries",
 		}
 	)
@@ -1024,7 +1024,7 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetSeries",
+			OperationName:    GetSeriesOperation,
 			OperationSummary: "",
 			OperationID:      "getSeries",
 			Body:             nil,
@@ -1107,7 +1107,7 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "PostLabels",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PostLabelsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1138,7 +1138,7 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "PostLabels",
+			Name: PostLabelsOperation,
 			ID:   "postLabels",
 		}
 	)
@@ -1162,7 +1162,7 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "PostLabels",
+			OperationName:    PostLabelsOperation,
 			OperationSummary: "",
 			OperationID:      "postLabels",
 			Body:             request,
@@ -1230,7 +1230,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "PostQuery",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PostQueryOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1261,7 +1261,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "PostQuery",
+			Name: PostQueryOperation,
 			ID:   "postQuery",
 		}
 	)
@@ -1285,7 +1285,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "PostQuery",
+			OperationName:    PostQueryOperation,
 			OperationSummary: "",
 			OperationID:      "postQuery",
 			Body:             request,
@@ -1353,7 +1353,7 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "PostQueryExemplars",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PostQueryExemplarsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1384,7 +1384,7 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "PostQueryExemplars",
+			Name: PostQueryExemplarsOperation,
 			ID:   "postQueryExemplars",
 		}
 	)
@@ -1408,7 +1408,7 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "PostQueryExemplars",
+			OperationName:    PostQueryExemplarsOperation,
 			OperationSummary: "",
 			OperationID:      "postQueryExemplars",
 			Body:             request,
@@ -1476,7 +1476,7 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "PostQueryRange",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PostQueryRangeOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1507,7 +1507,7 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "PostQueryRange",
+			Name: PostQueryRangeOperation,
 			ID:   "postQueryRange",
 		}
 	)
@@ -1531,7 +1531,7 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "PostQueryRange",
+			OperationName:    PostQueryRangeOperation,
 			OperationSummary: "",
 			OperationID:      "postQueryRange",
 			Body:             request,
@@ -1599,7 +1599,7 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "PostSeries",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PostSeriesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -1630,7 +1630,7 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "PostSeries",
+			Name: PostSeriesOperation,
 			ID:   "postSeries",
 		}
 	)
@@ -1654,7 +1654,7 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "PostSeries",
+			OperationName:    PostSeriesOperation,
 			OperationSummary: "",
 			OperationID:      "postSeries",
 			Body:             request,

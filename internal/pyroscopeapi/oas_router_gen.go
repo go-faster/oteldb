@@ -287,7 +287,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetApps"
+						r.name = GetAppsOperation
 						r.summary = ""
 						r.operationID = "getApps"
 						r.pathPattern = "/api/apps"
@@ -312,7 +312,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "POST":
-						r.name = "Ingest"
+						r.name = IngestOperation
 						r.summary = ""
 						r.operationID = "ingest"
 						r.pathPattern = "/ingest"
@@ -349,7 +349,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "LabelValues"
+							r.name = LabelValuesOperation
 							r.summary = ""
 							r.operationID = "labelValues"
 							r.pathPattern = "/label-values"
@@ -374,7 +374,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "Labels"
+							r.name = LabelsOperation
 							r.summary = ""
 							r.operationID = "labels"
 							r.pathPattern = "/labels"
@@ -402,7 +402,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "Render"
+						r.name = RenderOperation
 						r.summary = ""
 						r.operationID = "render"
 						r.pathPattern = "/render"

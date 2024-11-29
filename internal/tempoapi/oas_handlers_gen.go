@@ -34,7 +34,7 @@ func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "BuildInfo",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), BuildInfoOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -70,7 +70,7 @@ func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "BuildInfo",
+			OperationName:    BuildInfoOperation,
 			OperationSummary: "",
 			OperationID:      "buildInfo",
 			Body:             nil,
@@ -138,7 +138,7 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Echo",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), EchoOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -174,7 +174,7 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Echo",
+			OperationName:    EchoOperation,
 			OperationSummary: "",
 			OperationID:      "echo",
 			Body:             nil,
@@ -242,7 +242,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Search",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -273,7 +273,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Search",
+			Name: SearchOperation,
 			ID:   "search",
 		}
 	)
@@ -292,7 +292,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Search",
+			OperationName:    SearchOperation,
 			OperationSummary: "",
 			OperationID:      "search",
 			Body:             nil,
@@ -393,7 +393,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SearchTagValues",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchTagValuesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -424,7 +424,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SearchTagValues",
+			Name: SearchTagValuesOperation,
 			ID:   "searchTagValues",
 		}
 	)
@@ -443,7 +443,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SearchTagValues",
+			OperationName:    SearchTagValuesOperation,
 			OperationSummary: "",
 			OperationID:      "searchTagValues",
 			Body:             nil,
@@ -529,7 +529,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SearchTagValuesV2",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchTagValuesV2Operation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -560,7 +560,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SearchTagValuesV2",
+			Name: SearchTagValuesV2Operation,
 			ID:   "searchTagValuesV2",
 		}
 	)
@@ -579,7 +579,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SearchTagValuesV2",
+			OperationName:    SearchTagValuesV2Operation,
 			OperationSummary: "",
 			OperationID:      "searchTagValuesV2",
 			Body:             nil,
@@ -664,7 +664,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SearchTags",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchTagsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -695,7 +695,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SearchTags",
+			Name: SearchTagsOperation,
 			ID:   "searchTags",
 		}
 	)
@@ -714,7 +714,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SearchTags",
+			OperationName:    SearchTagsOperation,
 			OperationSummary: "",
 			OperationID:      "searchTags",
 			Body:             nil,
@@ -795,7 +795,7 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "SearchTagsV2",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SearchTagsV2Operation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -826,7 +826,7 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "SearchTagsV2",
+			Name: SearchTagsV2Operation,
 			ID:   "searchTagsV2",
 		}
 	)
@@ -845,7 +845,7 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "SearchTagsV2",
+			OperationName:    SearchTagsV2Operation,
 			OperationSummary: "",
 			OperationID:      "searchTagsV2",
 			Body:             nil,
@@ -926,7 +926,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "TraceByID",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), TraceByIDOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -957,7 +957,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "TraceByID",
+			Name: TraceByIDOperation,
 			ID:   "traceByID",
 		}
 	)
@@ -976,7 +976,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "TraceByID",
+			OperationName:    TraceByIDOperation,
 			OperationSummary: "",
 			OperationID:      "traceByID",
 			Body:             nil,
