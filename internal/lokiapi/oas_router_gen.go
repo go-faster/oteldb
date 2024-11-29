@@ -357,7 +357,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "IndexStats"
+						r.name = IndexStatsOperation
 						r.summary = ""
 						r.operationID = "indexStats"
 						r.pathPattern = "/loki/api/v1/index/stats"
@@ -415,7 +415,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "LabelValues"
+								r.name = LabelValuesOperation
 								r.summary = ""
 								r.operationID = "labelValues"
 								r.pathPattern = "/loki/api/v1/label/{name}/values"
@@ -443,7 +443,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "Labels"
+							r.name = LabelsOperation
 							r.summary = ""
 							r.operationID = "labels"
 							r.pathPattern = "/loki/api/v1/labels"
@@ -471,7 +471,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "POST":
-						r.name = "Push"
+						r.name = PushOperation
 						r.summary = ""
 						r.operationID = "push"
 						r.pathPattern = "/loki/api/v1/push"
@@ -495,7 +495,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				if len(elem) == 0 {
 					switch method {
 					case "GET":
-						r.name = "Query"
+						r.name = QueryOperation
 						r.summary = ""
 						r.operationID = "query"
 						r.pathPattern = "/loki/api/v1/query"
@@ -519,7 +519,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "QueryRange"
+							r.name = QueryRangeOperation
 							r.summary = ""
 							r.operationID = "queryRange"
 							r.pathPattern = "/loki/api/v1/query_range"
@@ -547,7 +547,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "Series"
+						r.name = SeriesOperation
 						r.summary = ""
 						r.operationID = "series"
 						r.pathPattern = "/loki/api/v1/series"

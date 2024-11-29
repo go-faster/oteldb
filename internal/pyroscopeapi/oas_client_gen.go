@@ -139,7 +139,7 @@ func (c *Client) sendGetApps(ctx context.Context) (res []ApplicationMetadata, er
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetApps",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetAppsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -211,7 +211,7 @@ func (c *Client) sendIngest(ctx context.Context, request *IngestReqWithContentTy
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Ingest",
+	ctx, span := c.cfg.Tracer.Start(ctx, IngestOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -432,7 +432,7 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "LabelValues",
+	ctx, span := c.cfg.Tracer.Start(ctx, LabelValuesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -579,7 +579,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Label
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Labels",
+	ctx, span := c.cfg.Tracer.Start(ctx, LabelsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -713,7 +713,7 @@ func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *Flam
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Render",
+	ctx, span := c.cfg.Tracer.Start(ctx, RenderOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)

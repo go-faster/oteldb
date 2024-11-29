@@ -34,7 +34,7 @@ func (s *Server) handleGetAppsRequest(args [0]string, argsEscaped bool, w http.R
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "GetApps",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), GetAppsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -70,7 +70,7 @@ func (s *Server) handleGetAppsRequest(args [0]string, argsEscaped bool, w http.R
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "GetApps",
+			OperationName:    GetAppsOperation,
 			OperationSummary: "",
 			OperationID:      "getApps",
 			Body:             nil,
@@ -138,7 +138,7 @@ func (s *Server) handleIngestRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Ingest",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), IngestOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -169,7 +169,7 @@ func (s *Server) handleIngestRequest(args [0]string, argsEscaped bool, w http.Re
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Ingest",
+			Name: IngestOperation,
 			ID:   "ingest",
 		}
 	)
@@ -203,7 +203,7 @@ func (s *Server) handleIngestRequest(args [0]string, argsEscaped bool, w http.Re
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Ingest",
+			OperationName:    IngestOperation,
 			OperationSummary: "",
 			OperationID:      "ingest",
 			Body:             request,
@@ -304,7 +304,7 @@ func (s *Server) handleLabelValuesRequest(args [0]string, argsEscaped bool, w ht
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "LabelValues",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), LabelValuesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -335,7 +335,7 @@ func (s *Server) handleLabelValuesRequest(args [0]string, argsEscaped bool, w ht
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "LabelValues",
+			Name: LabelValuesOperation,
 			ID:   "labelValues",
 		}
 	)
@@ -354,7 +354,7 @@ func (s *Server) handleLabelValuesRequest(args [0]string, argsEscaped bool, w ht
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "LabelValues",
+			OperationName:    LabelValuesOperation,
 			OperationSummary: "",
 			OperationID:      "labelValues",
 			Body:             nil,
@@ -439,7 +439,7 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Labels",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), LabelsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -470,7 +470,7 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Labels",
+			Name: LabelsOperation,
 			ID:   "labels",
 		}
 	)
@@ -489,7 +489,7 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Labels",
+			OperationName:    LabelsOperation,
 			OperationSummary: "",
 			OperationID:      "labels",
 			Body:             nil,
@@ -571,7 +571,7 @@ func (s *Server) handleRenderRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Render",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), RenderOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -602,7 +602,7 @@ func (s *Server) handleRenderRequest(args [0]string, argsEscaped bool, w http.Re
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Render",
+			Name: RenderOperation,
 			ID:   "render",
 		}
 	)
@@ -621,7 +621,7 @@ func (s *Server) handleRenderRequest(args [0]string, argsEscaped bool, w http.Re
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Render",
+			OperationName:    RenderOperation,
 			OperationSummary: "",
 			OperationID:      "render",
 			Body:             nil,

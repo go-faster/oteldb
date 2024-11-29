@@ -149,7 +149,7 @@ func (c *Client) sendIndexStats(ctx context.Context, params IndexStatsParams) (r
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "IndexStats",
+	ctx, span := c.cfg.Tracer.Start(ctx, IndexStatsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -279,7 +279,7 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "LabelValues",
+	ctx, span := c.cfg.Tracer.Start(ctx, LabelValuesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -452,7 +452,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Labels",
+	ctx, span := c.cfg.Tracer.Start(ctx, LabelsOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -588,7 +588,7 @@ func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoCont
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Push",
+	ctx, span := c.cfg.Tracer.Start(ctx, PushOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -663,7 +663,7 @@ func (c *Client) sendQuery(ctx context.Context, params QueryParams) (res *QueryR
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Query",
+	ctx, span := c.cfg.Tracer.Start(ctx, QueryOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -807,7 +807,7 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "QueryRange",
+	ctx, span := c.cfg.Tracer.Start(ctx, QueryRangeOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -1011,7 +1011,7 @@ func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Series",
+	ctx, span := c.cfg.Tracer.Start(ctx, SeriesOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)

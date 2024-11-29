@@ -117,7 +117,7 @@ func (c *Client) sendDummy(ctx context.Context) (res *Event, err error) {
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Dummy",
+	ctx, span := c.cfg.Tracer.Start(ctx, DummyOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -189,7 +189,7 @@ func (c *Client) sendEnvelope(ctx context.Context, request *EnvelopeReqWithConte
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Envelope",
+	ctx, span := c.cfg.Tracer.Start(ctx, EnvelopeOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)

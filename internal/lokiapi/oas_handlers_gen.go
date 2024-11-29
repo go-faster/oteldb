@@ -33,7 +33,7 @@ func (s *Server) handleIndexStatsRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "IndexStats",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), IndexStatsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -64,7 +64,7 @@ func (s *Server) handleIndexStatsRequest(args [0]string, argsEscaped bool, w htt
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "IndexStats",
+			Name: IndexStatsOperation,
 			ID:   "indexStats",
 		}
 	)
@@ -83,7 +83,7 @@ func (s *Server) handleIndexStatsRequest(args [0]string, argsEscaped bool, w htt
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "IndexStats",
+			OperationName:    IndexStatsOperation,
 			OperationSummary: "",
 			OperationID:      "indexStats",
 			Body:             nil,
@@ -164,7 +164,7 @@ func (s *Server) handleLabelValuesRequest(args [1]string, argsEscaped bool, w ht
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "LabelValues",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), LabelValuesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -195,7 +195,7 @@ func (s *Server) handleLabelValuesRequest(args [1]string, argsEscaped bool, w ht
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "LabelValues",
+			Name: LabelValuesOperation,
 			ID:   "labelValues",
 		}
 	)
@@ -214,7 +214,7 @@ func (s *Server) handleLabelValuesRequest(args [1]string, argsEscaped bool, w ht
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "LabelValues",
+			OperationName:    LabelValuesOperation,
 			OperationSummary: "",
 			OperationID:      "labelValues",
 			Body:             nil,
@@ -304,7 +304,7 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Labels",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), LabelsOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -335,7 +335,7 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Labels",
+			Name: LabelsOperation,
 			ID:   "labels",
 		}
 	)
@@ -354,7 +354,7 @@ func (s *Server) handleLabelsRequest(args [0]string, argsEscaped bool, w http.Re
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Labels",
+			OperationName:    LabelsOperation,
 			OperationSummary: "",
 			OperationID:      "labels",
 			Body:             nil,
@@ -435,7 +435,7 @@ func (s *Server) handlePushRequest(args [0]string, argsEscaped bool, w http.Resp
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Push",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), PushOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -466,7 +466,7 @@ func (s *Server) handlePushRequest(args [0]string, argsEscaped bool, w http.Resp
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Push",
+			Name: PushOperation,
 			ID:   "push",
 		}
 	)
@@ -490,7 +490,7 @@ func (s *Server) handlePushRequest(args [0]string, argsEscaped bool, w http.Resp
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Push",
+			OperationName:    PushOperation,
 			OperationSummary: "",
 			OperationID:      "push",
 			Body:             request,
@@ -558,7 +558,7 @@ func (s *Server) handleQueryRequest(args [0]string, argsEscaped bool, w http.Res
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Query",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), QueryOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -589,7 +589,7 @@ func (s *Server) handleQueryRequest(args [0]string, argsEscaped bool, w http.Res
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Query",
+			Name: QueryOperation,
 			ID:   "query",
 		}
 	)
@@ -608,7 +608,7 @@ func (s *Server) handleQueryRequest(args [0]string, argsEscaped bool, w http.Res
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Query",
+			OperationName:    QueryOperation,
 			OperationSummary: "",
 			OperationID:      "query",
 			Body:             nil,
@@ -693,7 +693,7 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "QueryRange",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), QueryRangeOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -724,7 +724,7 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "QueryRange",
+			Name: QueryRangeOperation,
 			ID:   "queryRange",
 		}
 	)
@@ -743,7 +743,7 @@ func (s *Server) handleQueryRangeRequest(args [0]string, argsEscaped bool, w htt
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "QueryRange",
+			OperationName:    QueryRangeOperation,
 			OperationSummary: "",
 			OperationID:      "queryRange",
 			Body:             nil,
@@ -840,7 +840,7 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 	}
 
 	// Start a span for this request.
-	ctx, span := s.cfg.Tracer.Start(r.Context(), "Series",
+	ctx, span := s.cfg.Tracer.Start(r.Context(), SeriesOperation,
 		trace.WithAttributes(otelAttrs...),
 		serverSpanKind,
 	)
@@ -871,7 +871,7 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 		}
 		err          error
 		opErrContext = ogenerrors.OperationContext{
-			Name: "Series",
+			Name: SeriesOperation,
 			ID:   "series",
 		}
 	)
@@ -890,7 +890,7 @@ func (s *Server) handleSeriesRequest(args [0]string, argsEscaped bool, w http.Re
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
 			Context:          ctx,
-			OperationName:    "Series",
+			OperationName:    SeriesOperation,
 			OperationSummary: "",
 			OperationID:      "series",
 			Body:             nil,

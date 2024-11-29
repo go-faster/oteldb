@@ -230,7 +230,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "Ping"
+						r.name = PingOperation
 						r.summary = ""
 						r.operationID = "ping"
 						r.pathPattern = "/ping"
@@ -255,7 +255,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "POST":
-						r.name = "SubmitReport"
+						r.name = SubmitReportOperation
 						r.summary = ""
 						r.operationID = "submitReport"
 						r.pathPattern = "/report/submit"
@@ -280,7 +280,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "GetStatus"
+						r.name = GetStatusOperation
 						r.summary = ""
 						r.operationID = "getStatus"
 						r.pathPattern = "/status"
