@@ -30,6 +30,8 @@ env:
     value: http://pyroscope.pyroscope.svc.cluster.local:4040
   - name: PYROSCOPE_APP_NAME
     value: oteldb
+  - name: PPROF_ADDR
+    value: :9010
 
 resources:
   requests:
