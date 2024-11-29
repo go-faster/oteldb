@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/ClickHouse/ch-go"
@@ -64,7 +66,7 @@ func newDumpCreateCommand() *cobra.Command {
 			done := make(chan struct{})
 
 			fmt.Println("Dumping tables to", arg.Output)
-			if err := os.MkdirAll(arg.Output, 0755); err != nil {
+			if err := os.MkdirAll(arg.Output, 0o755); err != nil {
 				return errors.Wrap(err, "create output directory")
 			}
 
@@ -222,7 +224,7 @@ func newDumpRestoreCommand() *cobra.Command {
 		RunE: func(cobraCommand *cobra.Command, _ []string) error {
 			ctx := cobraCommand.Context()
 			client, err := ch.Dial(ctx, ch.Options{
-				Address:  fmt.Sprintf("%s:%d", arg.Host, arg.Port),
+				Address:  net.JoinHostPort(arg.Host, strconv.Itoa(arg.Port)),
 				Database: arg.Database,
 			})
 			if err != nil {
