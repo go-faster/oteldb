@@ -249,7 +249,7 @@ func newDumpRestoreCommand() *cobra.Command {
 				file := filepath.Join(arg.Input, fmt.Sprintf("%s.bin.%s", table, arg.Compression))
 				if _, err := os.Stat(file); err != nil {
 					if os.IsNotExist(err) {
-						fmt.Printf("Table %s not found\n", table)
+						fmt.Printf("Load table %q dump (%s): file not found\n", table, file)
 						continue
 					}
 					return errors.Wrap(err, "stat")
