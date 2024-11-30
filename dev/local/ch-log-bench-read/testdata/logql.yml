@@ -1,7 +1,7 @@
 range:
-  - title: Failed POST requests
+  - title: Lookup by materialzied attribute
     query: |-
-      {http_method="POST"} |= "Error"
-series:
-  - title: All POST series
-    match: ['{http_method="POST"}']
+      {level!="DEBUG", service_name="go-faster.oteldb"}
+  - title: Lookup by regular attribute
+    query: |-
+      {operationName="SearchTagValuesV2"}
