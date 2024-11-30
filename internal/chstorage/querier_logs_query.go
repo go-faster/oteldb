@@ -530,8 +530,7 @@ func (q *Querier) logQLLabelMatcher(
 	case logstorage.LabelTraceID:
 		return matchHex(chsql.Ident("trace_id"), m)
 	default:
-		expr, ok := q.getMaterializedLabelColumn(unmappedLabel)
-		if ok {
+		if expr, ok := q.getMaterializedLabelColumn(unmappedLabel); ok {
 			switch m.Op {
 			case logql.OpEq, logql.OpNotEq:
 				return chsql.Eq(expr, chsql.String(m.Value))
@@ -543,11 +542,12 @@ func (q *Querier) logQLLabelMatcher(
 		}
 
 		exprs := make([]chsql.Expr, 0, 3)
+		keysExprs := make([]chsql.Expr, 0, cap(exprs))
 		// Search in all attributes.
 		for _, column := range []string{
 			colAttrs,
-			colResource,
 			colScope,
+			colResource,
 		} {
 			// TODO: how to match integers, booleans, floats, arrays?
 			var (
@@ -563,8 +563,16 @@ func (q *Querier) logQLLabelMatcher(
 				panic(fmt.Sprintf("unexpected label matcher op %v", m.Op))
 			}
 			exprs = append(exprs, sub)
+			keysExprs = append(keysExprs, chsql.JSONExtractKeys(chsql.Ident(column)))
 		}
-		return chsql.JoinOr(exprs...)
+		// Force Clickhouse to use index.
+		return chsql.And(
+			chsql.Has(
+				chsql.ArrayConcat(keysExprs...),
+				chsql.String(labelName),
+			),
+			chsql.JoinOr(exprs...),
+		)
 	}
 }
 
