@@ -23,7 +23,7 @@ const (
 
 	body               String CODEC(ZSTD(1)), -- string or json object
 
-	attribute LowCardinality(String) CODEC(ZSTD(1)),
+	attribute String CODEC(ZSTD(1)),
 	resource  LowCardinality(String) CODEC(ZSTD(1)),
 	scope     LowCardinality(String) CODEC(ZSTD(1)),
 

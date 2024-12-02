@@ -53,7 +53,7 @@ func newLogColumns() *logColumns {
 		serviceNamespace:  new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		severityText:      new(proto.ColStr).LowCardinality(),
-		attributes:        NewAttributes(colAttrs),
+		attributes:        NewAttributes(colAttrs, WithLowCardinality(false)),
 		resource:          NewAttributes(colResource),
 		scopeName:         new(proto.ColStr).LowCardinality(),
 		scopeVersion:      new(proto.ColStr).LowCardinality(),
