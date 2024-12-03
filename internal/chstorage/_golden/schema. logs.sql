@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `table`
+CREATE TABLE IF NOT EXISTS `logs`
 (
 	`service_instance_id` LowCardinality(String) COMMENT 'service.instance.id',
 	`service_name`        LowCardinality(String) COMMENT 'service.name',

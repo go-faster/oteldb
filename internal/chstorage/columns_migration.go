@@ -2,6 +2,8 @@ package chstorage
 
 import (
 	"github.com/ClickHouse/ch-go/proto"
+
+	"github.com/go-faster/oteldb/internal/ddl"
 )
 
 type migrationColumns struct {
@@ -35,5 +37,18 @@ func (c *migrationColumns) Save(m map[string]string) {
 	for k, v := range m {
 		c.table.Append(k)
 		c.ddl.Append(v)
+	}
+}
+
+func (c *migrationColumns) DDL() ddl.Table {
+	return ddl.Table{
+		Name:    "migration",
+		Engine:  "ReplacingMergeTree(ts)",
+		OrderBy: []string{"table"},
+		Columns: []ddl.Column{
+			{Name: "table", Type: "String"},
+			{Name: "ddl", Type: "String"},
+			{Name: "ts", Type: "DateTime", Default: "now()"},
+		},
 	}
 }

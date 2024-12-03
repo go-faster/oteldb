@@ -5,27 +5,37 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
 )
 
 // Column of [Table].
 type Column struct {
-	Name    string
-	Comment string
-	Type    proto.ColumnType
-	Codec   proto.ColumnType
+	Name         string
+	Comment      string
+	Default      string
+	Type         proto.ColumnType
+	Codec        proto.ColumnType
+	Materialized string
 }
 
 // Table description.
 type Table struct {
 	Name        string
+	Cluster     string
 	Columns     []Column
 	Indexes     []Index
 	OrderBy     []string
 	PrimaryKey  []string
 	PartitionBy string
 	Engine      string
+	TTL         TTL
+}
+
+type TTL struct {
+	Field string
+	Delta time.Duration
 }
 
 type Index struct {
@@ -70,28 +80,33 @@ func backticks(ss []string) []string {
 }
 
 // Generate DDL without CREATE TABLE statement.
-func Generate(table Table) (string, error) {
+func Generate(t Table) (string, error) {
 	var b strings.Builder
 	b.WriteString(`CREATE TABLE IF NOT EXISTS `)
-	if table.Name == "" {
-		b.WriteString("table")
+	if t.Name == "" {
+		b.WriteString(Backtick("table"))
 	} else {
-		b.WriteString(Backtick(table.Name))
+		b.WriteString(Backtick(t.Name))
+	}
+	if t.Cluster != "" {
+		b.WriteString(" ON CLUSTER ")
+		b.WriteString(Backtick(t.Cluster))
 	}
 	b.WriteString("\n(")
 	var (
 		maxColumnLen     int
 		maxColumnTypeLen int
 	)
-	for _, c := range table.Columns {
+	for _, c := range t.Columns {
 		if len(c.Name) > maxColumnLen {
 			maxColumnLen = len(c.Name)
 		}
-		if len(c.Type.String()) > maxColumnTypeLen {
+		if len(c.Type.String()) > maxColumnTypeLen && !strings.HasPrefix(c.Type.String(), "Enum") {
 			maxColumnTypeLen = len(c.Type.String())
 		}
 	}
-	for _, c := range table.Columns {
+	hasIndexes := len(t.Indexes) > 0
+	for i, c := range t.Columns {
 		b.WriteString("\n")
 		var col strings.Builder
 		col.WriteString("\t")
@@ -103,6 +118,14 @@ func Generate(table Table) (string, error) {
 			typeFormat = "%s"
 		}
 		col.WriteString(fmt.Sprintf(typeFormat, c.Type.String()))
+		if c.Materialized != "" {
+			col.WriteString(" MATERIALIZED ")
+			col.WriteString(c.Materialized)
+		}
+		if c.Default != "" {
+			col.WriteString(" DEFAULT ")
+			col.WriteString(c.Default)
+		}
 		if c.Comment != "" {
 			col.WriteString(" COMMENT ")
 			col.WriteString("'")
@@ -114,46 +137,55 @@ func Generate(table Table) (string, error) {
 			col.WriteString(c.Codec.String())
 			col.WriteRune(')')
 		}
-		col.WriteString(",")
 		b.WriteString(col.String())
+		if hasIndexes || i < len(t.Columns)-1 {
+			b.WriteString(",")
+		}
 	}
 	var maxIndexLen int
-	for _, c := range table.Indexes {
+	for _, c := range t.Indexes {
 		if len(c.Name) > maxIndexLen {
 			maxIndexLen = len(c.Name)
 		}
 	}
-	for i, c := range table.Indexes {
+	for i, c := range t.Indexes {
 		if i == 0 {
 			b.WriteString("\n")
 		}
 		b.WriteString("\n\t")
 		nameFormat := "%-" + strconv.Itoa(maxIndexLen+2) + "s"
 		b.WriteString(c.string(nameFormat))
-		b.WriteString(",")
+		if i < len(t.Indexes)-1 {
+			b.WriteString(",")
+		}
 	}
 	b.WriteString("\n)\n")
 	b.WriteString("ENGINE = ")
-	if table.Engine == "" {
-		table.Engine = "Null"
+	if t.Engine == "" {
+		t.Engine = "Null"
 	} else {
-		b.WriteString(table.Engine)
+		b.WriteString(t.Engine)
 	}
 	b.WriteString("\n")
-	if table.PartitionBy != "" {
+	if t.PartitionBy != "" {
 		b.WriteString("PARTITION BY ")
-		b.WriteString(table.PartitionBy)
+		b.WriteString(t.PartitionBy)
 		b.WriteString("\n")
 	}
-	if len(table.OrderBy) > 0 {
+	if len(t.OrderBy) > 0 {
 		b.WriteString("ORDER BY (")
-		b.WriteString(strings.Join(backticks(table.OrderBy), ", "))
+		b.WriteString(strings.Join(backticks(t.OrderBy), ", "))
 		b.WriteString(")\n")
 	}
-	if len(table.PrimaryKey) > 0 {
+	if len(t.PrimaryKey) > 0 {
 		b.WriteString("PRIMARY KEY (")
-		b.WriteString(strings.Join(backticks(table.PrimaryKey), ", "))
+		b.WriteString(strings.Join(backticks(t.PrimaryKey), ", "))
 		b.WriteString(")\n")
+	}
+	if t.TTL.Delta > 0 && t.TTL.Field != "" {
+		b.WriteString(fmt.Sprintf("TTL toDateTime(%s) + toIntervalSecond(%d)",
+			Backtick(t.TTL.Field), t.TTL.Delta/time.Second,
+		))
 	}
 	return b.String(), nil
 }

@@ -72,8 +72,9 @@ func (c *logColumns) DDL() ddl.Table {
 				Comment: "service.namespace",
 			},
 			{
-				Name: "timestamp",
-				Type: c.timestamp.Type(),
+				Name:  "timestamp",
+				Type:  c.timestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
 			},
 			{
 				Name: "severity_number",
@@ -343,4 +344,23 @@ func (c *logAttrMapColumns) AddAttrs(attrs otelstorage.Attrs) {
 func (c *logAttrMapColumns) AddRow(name []byte, key string) {
 	c.name.AppendBytes(name)
 	c.key.Append(key)
+}
+
+func (c *logAttrMapColumns) DDL() ddl.Table {
+	return ddl.Table{
+		OrderBy: []string{"name"},
+		Engine:  "ReplacingMergeTree",
+		Columns: []ddl.Column{
+			{
+				Name:    "name",
+				Type:    c.name.Type(),
+				Comment: "foo_bar",
+			},
+			{
+				Name:    "key",
+				Type:    c.key.Type(),
+				Comment: "foo.bar",
+			},
+		},
+	}
 }
