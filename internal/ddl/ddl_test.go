@@ -18,12 +18,46 @@ func TestGenerate(t *testing.T) {
 				Type: "Int32",
 			},
 			{
-				Name:  "b",
+				Name:  "bar",
 				Type:  proto.ColumnType("LowCardinality").Sub(proto.ColumnTypeString),
 				Codec: "ZSTD(1)",
+			},
+			{
+				Name:    "c",
+				Type:    "String",
+				Codec:   "ZSTD(1)",
+				Comment: "foo.bar",
+			},
+		},
+		Indexes: []Index{
+			{
+				Name:        "idx_trace_id",
+				Target:      "trace_id",
+				Type:        "bloom_filter",
+				Params:      []string{"0.001"},
+				Granularity: 1,
+			},
+			{
+				Name:        "idx_body",
+				Target:      "body",
+				Type:        "tokenbf_v1",
+				Params:      []string{"32768", "3", "0"},
+				Granularity: 1,
+			},
+			{
+				Name:        "idx_ts",
+				Target:      "timestamp",
+				Type:        "minmax",
+				Granularity: 8192,
+			},
+			{
+				Name:   "attribute_keys",
+				Target: "arrayConcat(JSONExtractKeys(attribute), JSONExtractKeys(scope), JSONExtractKeys(resource))",
+				Type:   "set",
+				Params: []string{"100"},
 			},
 		},
 	})
 	require.NoError(t, err)
-	gold.Str(t, s, "ddl.txt")
+	gold.Str(t, s, "ddl.sql")
 }

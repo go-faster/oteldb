@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
+	"github.com/go-faster/oteldb/internal/ddl"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -271,6 +272,16 @@ func (a *Attributes) Append(kv otelstorage.Attrs) {
 // Row returns a new map of attributes for a given row.
 func (a *Attributes) Row(idx int) otelstorage.Attrs {
 	return a.Value.Row(idx)
+}
+
+// DDL applies the schema changes to the table.
+func (a *Attributes) DDL(table *ddl.Table) {
+	table.Columns = append(table.Columns,
+		ddl.Column{
+			Name: a.Name,
+			Type: a.Value.Type(),
+		},
+	)
 }
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
