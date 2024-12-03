@@ -7,11 +7,17 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
+	promodel "github.com/prometheus/common/model"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/autopyro"
 	"github.com/go-faster/oteldb/internal/autozpages"
 )
+
+func init() {
+	// Match v3.0.0.
+	promodel.NameValidationScheme = promodel.UTF8Validation
+}
 
 func main() {
 	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
