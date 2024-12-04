@@ -65,9 +65,7 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 				Name: "name",
 				Expr: chsql.ArrayJoin(
 					chsql.ArrayConcat(
-						attrKeys(colAttrs),
 						attrKeys(colResource),
-						attrKeys(colScope),
 					),
 				),
 				Data: &name,
@@ -173,9 +171,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			query = chsql.Select(table, chsql.ResultColumn{
 				Name: "value",
 				Expr: chsql.ArrayJoin(chsql.Array(
-					attrSelector(colAttrs, labelName),
 					attrSelector(colResource, labelName),
-					attrSelector(colScope, labelName),
 				)),
 				Data: &value,
 			}).
@@ -341,9 +337,7 @@ func (q *Querier) Series(ctx context.Context, opts logstorage.SeriesOptions) (re
 			Name: "series",
 			Expr: chsql.MapConcat(
 				materializedMap,
-				attrStringMap(colAttrs),
 				attrStringMap(colResource),
-				attrStringMap(colScope),
 			),
 			Data: series,
 		}).
