@@ -21,8 +21,9 @@ type SelectQuery struct {
 	// prewhere is a set of expression joined by AND
 	prewhere []Expr
 	// where is a set of expression joined by AND
-	where []Expr
-	order []orderExpr
+	where   []Expr
+	groupBy []Expr
+	order   []orderExpr
 
 	limit int
 }
@@ -65,6 +66,12 @@ func (q *SelectQuery) Prewhere(filters ...Expr) *SelectQuery {
 // Where adds filters to query.
 func (q *SelectQuery) Where(filters ...Expr) *SelectQuery {
 	q.where = append(q.where, filters...)
+	return q
+}
+
+// GroupBy adds grouping to query.
+func (q *SelectQuery) GroupBy(groups ...Expr) *SelectQuery {
+	q.groupBy = append(q.groupBy, groups...)
 	return q
 }
 
@@ -172,6 +179,19 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			}
 			if err := p.WriteExpr(filter); err != nil {
 				return errors.Wrapf(err, "where %d", i)
+			}
+		}
+	}
+	if len(q.groupBy) > 0 {
+		p.Group()
+		p.By()
+
+		for i, e := range q.groupBy {
+			if i != 0 {
+				p.Comma()
+			}
+			if err := p.WriteExpr(e); err != nil {
+				return errors.Wrapf(err, "group by %d", i)
 			}
 		}
 	}
