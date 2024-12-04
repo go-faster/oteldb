@@ -10,6 +10,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
+	"github.com/go-faster/oteldb/internal/ddl"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
@@ -205,6 +206,137 @@ func (c *spanColumns) ReadRowsTo(spans []tracestorage.Span) ([]tracestorage.Span
 	}
 
 	return spans, nil
+}
+
+func (c *spanColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:     "MergeTree",
+		PrimaryKey: []string{"service_namespace", "service_name", "resource"},
+		OrderBy:    []string{"service_namespace", "service_name", "resource", "start"},
+		Indexes: []ddl.Index{
+			{
+				Name:        "idx_trace_id",
+				Target:      "trace_id",
+				Type:        "bloom_filter",
+				Params:      []string{"0.001"},
+				Granularity: 1,
+			},
+		},
+		Columns: []ddl.Column{
+			{
+				Name:    "service_instance_id",
+				Type:    c.serviceInstanceID.Type(),
+				Comment: "service.instance.id",
+			},
+			{
+				Name:    "service_name",
+				Type:    c.serviceName.Type(),
+				Comment: "service.name",
+			},
+			{
+				Name:    "service_namespace",
+				Type:    c.serviceNamespace.Type(),
+				Comment: "service.namespace",
+			},
+			{
+				Name: "trace_id",
+				Type: c.traceID.Type(),
+			},
+			{
+				Name: "span_id",
+				Type: c.spanID.Type(),
+			},
+			{
+				Name: "trace_state",
+				Type: c.traceState.Type(),
+			},
+			{
+				Name: "parent_span_id",
+				Type: c.parentSpanID.Type(),
+			},
+			{
+				Name: "name",
+				Type: c.name.Type(),
+			},
+			{
+				Name: "kind",
+				Type: c.kind.Type().Sub(kindDDL),
+			},
+			{
+				Name:  "start",
+				Type:  c.start.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name:  "end",
+				Type:  c.end.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name:         "duration_ns",
+				Type:         proto.ColumnTypeUInt64,
+				Materialized: "toUnixTimestamp64Nano(end)-toUnixTimestamp64Nano(start)",
+				Codec:        "T64, ZSTD(1)",
+			},
+			{
+				Name: "status_code",
+				Type: c.statusCode.Type(),
+			},
+			{
+				Name: "status_message",
+				Type: c.statusMessage.Type(),
+			},
+			{
+				Name: "batch_id",
+				Type: c.batchID.Type(),
+			},
+		},
+	}
+
+	c.attributes.DDL(&table)
+	c.resource.DDL(&table)
+	c.scopeAttributes.DDL(&table)
+
+	table.Columns = append(table.Columns, []ddl.Column{
+		{
+			Name: "scope_name",
+			Type: c.scopeName.Type(),
+		},
+		{
+			Name: "scope_version",
+			Type: c.scopeVersion.Type(),
+		},
+		{
+			Name: "events_timestamps",
+			Type: c.events.timestamps.Type(),
+		},
+		{
+			Name: "events_names",
+			Type: c.events.names.Type(),
+		},
+		{
+			Name: "events_attributes",
+			Type: c.events.attributes.Type(),
+		},
+		{
+			Name: "links_trace_ids",
+			Type: c.links.traceIDs.Type(),
+		},
+		{
+			Name: "links_span_ids",
+			Type: c.links.spanIDs.Type(),
+		},
+		{
+			Name: "links_tracestates",
+			Type: c.links.tracestates.Type(),
+		},
+		{
+			Name: "links_attributes",
+			Type: c.links.attributes.Type(),
+		},
+	}...)
+
+	return table
 }
 
 type eventsColumns struct {

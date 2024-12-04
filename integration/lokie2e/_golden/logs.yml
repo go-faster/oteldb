@@ -4,13 +4,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -96,13 +96,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -188,13 +188,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -280,13 +280,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -372,13 +372,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -464,13 +464,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -510,13 +510,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -602,13 +602,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -694,13 +694,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -786,13 +786,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -878,13 +878,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -970,13 +970,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1062,13 +1062,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1154,13 +1154,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1246,13 +1246,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1338,13 +1338,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1430,13 +1430,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1522,13 +1522,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1614,13 +1614,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1706,13 +1706,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1798,13 +1798,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1890,13 +1890,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -1982,13 +1982,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2074,13 +2074,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2166,13 +2166,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2258,13 +2258,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2350,13 +2350,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2442,13 +2442,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2534,13 +2534,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2626,13 +2626,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2718,13 +2718,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2810,13 +2810,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2856,13 +2856,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -2948,13 +2948,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3040,13 +3040,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3132,13 +3132,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3224,13 +3224,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3316,13 +3316,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3408,13 +3408,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3500,13 +3500,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3592,13 +3592,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3684,13 +3684,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3730,13 +3730,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3822,13 +3822,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -3914,13 +3914,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4006,13 +4006,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4098,13 +4098,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4190,13 +4190,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4282,13 +4282,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4374,13 +4374,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4420,13 +4420,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4512,13 +4512,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4604,13 +4604,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4650,13 +4650,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4742,13 +4742,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4834,13 +4834,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -4926,13 +4926,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5018,13 +5018,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5110,13 +5110,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5202,13 +5202,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5294,13 +5294,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5386,13 +5386,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5478,13 +5478,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:
@@ -5570,13 +5570,13 @@ resourceLogs:
     attributes:
     - key: service.name
       value:
-        stringValue: testService
+        stringValue: fooService
     - key: service.version
       value:
         stringValue: testVersion
     - key: service.namespace
       value:
-        stringValue: testNamespace
+        stringValue: fooNamespace
   schemaUrl: https://opentelemetry.io/schemas/1.21.0
   scopeLogs:
   - logRecords:

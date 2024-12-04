@@ -67,16 +67,12 @@ func (s *BatchSet) Append(raw plog.Logs) error {
 		scopeLogs := resLog.ScopeLogs()
 		for i := 0; i < scopeLogs.Len(); i++ {
 			scopeLog := scopeLogs.At(i)
-			scope := scopeLog.Scope()
-			s.addLabels(scope.Attributes())
-
 			records := scopeLog.LogRecords()
 			for i := 0; i < records.Len(); i++ {
 				record := records.At(i)
 				if err := s.addRecord(record); err != nil {
 					return errors.Wrap(err, "add record")
 				}
-				s.addLabels(record.Attributes())
 			}
 		}
 	}

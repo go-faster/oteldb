@@ -14,4 +14,5 @@ type LogQLReportQuery struct {
 	DurationNanos int64                   `yaml:"duration_nanos,omitempty"`
 	Matchers      []string                `yaml:"matchers,omitempty"`
 	Queries       []chtracker.QueryReport `yaml:"queries,omitempty"`
+	Timeout       bool                    `yaml:"timeout,omitempty"`
 }

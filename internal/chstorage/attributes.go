@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
+	"github.com/go-faster/oteldb/internal/ddl"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
@@ -16,7 +17,69 @@ type Attributes struct {
 	Value proto.ColumnOf[otelstorage.Attrs]
 }
 
-type attributeCol struct {
+type jsonAttrCol struct {
+	col *proto.ColStr
+
+	// values are filled up only when decoding.
+	values []otelstorage.Attrs
+}
+
+func (a jsonAttrCol) Type() proto.ColumnType {
+	return proto.ColumnTypeString
+}
+
+func (a jsonAttrCol) Rows() int {
+	return a.col.Rows()
+}
+
+func (a *jsonAttrCol) DecodeColumn(r *proto.Reader, rows int) error {
+	if err := a.col.DecodeColumn(r, rows); err != nil {
+		return errors.Wrap(err, "col")
+	}
+	for i := 0; i < a.col.Rows(); i++ {
+		v := a.col.RowBytes(i)
+		m, err := decodeAttributes(v)
+		if err != nil {
+			return errors.Wrapf(err, "index value %d", i)
+		}
+		a.values = append(a.values, m)
+	}
+	return nil
+}
+
+func (a *jsonAttrCol) Reset() {
+	a.col.Reset()
+	a.values = a.values[:0]
+}
+
+func (a *jsonAttrCol) EncodeColumn(b *proto.Buffer) {
+	a.col.EncodeColumn(b)
+}
+
+func (a *jsonAttrCol) WriteColumn(w *proto.Writer) {
+	a.col.WriteColumn(w)
+}
+
+func (a *jsonAttrCol) Append(v otelstorage.Attrs) {
+	e := jx.GetEncoder()
+	defer jx.PutEncoder(e)
+	encodeMap(e, v.AsMap())
+
+	// Append will copy passed bytes.
+	a.col.AppendBytes(e.Bytes())
+}
+
+func (a *jsonAttrCol) AppendArr(v []otelstorage.Attrs) {
+	for _, m := range v {
+		a.Append(m)
+	}
+}
+
+func (a jsonAttrCol) Row(i int) otelstorage.Attrs {
+	return a.values[i]
+}
+
+type jsonLowCardinalityAttrCol struct {
 	index  *proto.ColBytes
 	col    *proto.ColLowCardinalityRaw
 	hashes map[otelstorage.Hash]int
@@ -25,15 +88,15 @@ type attributeCol struct {
 	values []otelstorage.Attrs
 }
 
-func (a attributeCol) Type() proto.ColumnType {
+func (a jsonLowCardinalityAttrCol) Type() proto.ColumnType {
 	return proto.ColumnTypeLowCardinality.Sub(proto.ColumnTypeString)
 }
 
-func (a attributeCol) Rows() int {
+func (a jsonLowCardinalityAttrCol) Rows() int {
 	return a.col.Rows()
 }
 
-func (a *attributeCol) DecodeColumn(r *proto.Reader, rows int) error {
+func (a *jsonLowCardinalityAttrCol) DecodeColumn(r *proto.Reader, rows int) error {
 	if err := a.col.DecodeColumn(r, rows); err != nil {
 		return errors.Wrap(err, "col")
 	}
@@ -49,7 +112,7 @@ func (a *attributeCol) DecodeColumn(r *proto.Reader, rows int) error {
 	return nil
 }
 
-func (a *attributeCol) Reset() {
+func (a *jsonLowCardinalityAttrCol) Reset() {
 	a.col.Reset()
 	a.index.Reset()
 	a.values = a.values[:0]
@@ -57,15 +120,15 @@ func (a *attributeCol) Reset() {
 	a.col.Key = proto.KeyUInt64
 }
 
-func (a *attributeCol) EncodeColumn(b *proto.Buffer) {
+func (a *jsonLowCardinalityAttrCol) EncodeColumn(b *proto.Buffer) {
 	a.col.EncodeColumn(b)
 }
 
-func (a *attributeCol) WriteColumn(w *proto.Writer) {
+func (a *jsonLowCardinalityAttrCol) WriteColumn(w *proto.Writer) {
 	a.col.WriteColumn(w)
 }
 
-func (a *attributeCol) Append(v otelstorage.Attrs) {
+func (a *jsonLowCardinalityAttrCol) Append(v otelstorage.Attrs) {
 	a.col.Key = proto.KeyUInt64
 	h := v.Hash()
 	idx, ok := a.hashes[h]
@@ -83,21 +146,21 @@ func (a *attributeCol) Append(v otelstorage.Attrs) {
 	a.col.AppendKey(idx)
 }
 
-func (a *attributeCol) AppendArr(v []otelstorage.Attrs) {
+func (a *jsonLowCardinalityAttrCol) AppendArr(v []otelstorage.Attrs) {
 	for _, m := range v {
 		a.Append(m)
 	}
 }
 
-func (a *attributeCol) DecodeState(r *proto.Reader) error {
+func (a *jsonLowCardinalityAttrCol) DecodeState(r *proto.Reader) error {
 	return a.col.DecodeState(r)
 }
 
-func (a *attributeCol) EncodeState(b *proto.Buffer) {
+func (a *jsonLowCardinalityAttrCol) EncodeState(b *proto.Buffer) {
 	a.col.EncodeState(b)
 }
 
-func (a attributeCol) rowIdx(i int) int {
+func (a jsonLowCardinalityAttrCol) rowIdx(i int) int {
 	switch a.col.Key {
 	case proto.KeyUInt8:
 		return int(a.col.Keys8[i])
@@ -112,12 +175,17 @@ func (a attributeCol) rowIdx(i int) int {
 	}
 }
 
-func (a attributeCol) Row(i int) otelstorage.Attrs {
+func (a jsonLowCardinalityAttrCol) Row(i int) otelstorage.Attrs {
 	return a.values[a.rowIdx(i)]
 }
 
-func newAttributesColumn() proto.ColumnOf[otelstorage.Attrs] {
-	ac := &attributeCol{
+func newAttributesColumn(opt attributesOptions) proto.ColumnOf[otelstorage.Attrs] {
+	if !opt.LowCardinality {
+		return &jsonAttrCol{
+			col: new(proto.ColStr),
+		}
+	}
+	ac := &jsonLowCardinalityAttrCol{
 		index:  new(proto.ColBytes),
 		hashes: map[otelstorage.Hash]int{},
 	}
@@ -128,11 +196,29 @@ func newAttributesColumn() proto.ColumnOf[otelstorage.Attrs] {
 	return ac
 }
 
+type attributesOptions struct {
+	LowCardinality bool
+}
+
+type AttributesOption func(*attributesOptions)
+
+func WithLowCardinality(v bool) AttributesOption {
+	return func(o *attributesOptions) {
+		o.LowCardinality = v
+	}
+}
+
 // NewAttributes constructs a new Attributes storage representation.
-func NewAttributes(name string) *Attributes {
+func NewAttributes(name string, opts ...AttributesOption) *Attributes {
+	o := attributesOptions{
+		LowCardinality: true,
+	}
+	for _, opt := range opts {
+		opt(&o)
+	}
 	return &Attributes{
 		Name:  name,
-		Value: newAttributesColumn(),
+		Value: newAttributesColumn(o),
 	}
 }
 
@@ -186,6 +272,16 @@ func (a *Attributes) Append(kv otelstorage.Attrs) {
 // Row returns a new map of attributes for a given row.
 func (a *Attributes) Row(idx int) otelstorage.Attrs {
 	return a.Value.Row(idx)
+}
+
+// DDL applies the schema changes to the table.
+func (a *Attributes) DDL(table *ddl.Table) {
+	table.Columns = append(table.Columns,
+		ddl.Column{
+			Name: a.Name,
+			Type: a.Value.Type(),
+		},
+	)
 }
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {

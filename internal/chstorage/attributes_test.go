@@ -15,9 +15,9 @@ import (
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
-func Test_attributeCol(t *testing.T) {
+func Test_jsonLowCardinalityAttrCol(t *testing.T) {
 	var hashes []otelstorage.Hash
-	col := newAttributesColumn()
+	col := newAttributesColumn(attributesOptions{LowCardinality: true})
 
 	for _, s := range []string{
 		"foo",
@@ -44,12 +44,12 @@ func Test_attributeCol(t *testing.T) {
 	var buf proto.Buffer
 	col.EncodeColumn(&buf)
 	t.Run("Golden", func(t *testing.T) {
-		gold.Bytes(t, buf.Buf, "col_attr")
+		gold.Bytes(t, buf.Buf, "col_json_lc_attr")
 	})
 	t.Run("Ok", func(t *testing.T) {
 		br := bytes.NewReader(buf.Buf)
 		r := proto.NewReader(br)
-		dec := newAttributesColumn()
+		dec := newAttributesColumn(attributesOptions{LowCardinality: true})
 		require.NoError(t, dec.DecodeColumn(r, rows))
 
 		var gotHashes []otelstorage.Hash
@@ -61,6 +61,55 @@ func Test_attributeCol(t *testing.T) {
 		dec.Reset()
 		require.Equal(t, 0, dec.Rows())
 		require.Equal(t, proto.ColumnTypeLowCardinality.Sub(proto.ColumnTypeString), dec.Type())
+	})
+}
+
+func Test_jsonAttrCol(t *testing.T) {
+	var hashes []otelstorage.Hash
+	col := newAttributesColumn(attributesOptions{LowCardinality: false})
+
+	for _, s := range []string{
+		"foo",
+		"foo",
+		"bar",
+		"foo",
+		"baz",
+	} {
+		m := pcommon.NewMap()
+		m.PutStr("v", s)
+		v := otelstorage.Attrs(m)
+		col.Append(v)
+		hashes = append(hashes, v.Hash())
+	}
+	for j := 0; j < 3; j++ {
+		m := pcommon.NewMap()
+		v := otelstorage.Attrs(m)
+		col.Append(v)
+		hashes = append(hashes, v.Hash())
+	}
+
+	rows := col.Rows()
+
+	var buf proto.Buffer
+	col.EncodeColumn(&buf)
+	t.Run("Golden", func(t *testing.T) {
+		gold.Bytes(t, buf.Buf, "col_attr_json")
+	})
+	t.Run("Ok", func(t *testing.T) {
+		br := bytes.NewReader(buf.Buf)
+		r := proto.NewReader(br)
+		dec := newAttributesColumn(attributesOptions{LowCardinality: false})
+		require.NoError(t, dec.DecodeColumn(r, rows))
+
+		var gotHashes []otelstorage.Hash
+		for i := 0; i < dec.Rows(); i++ {
+			gotHashes = append(gotHashes, dec.Row(i).Hash())
+		}
+		require.Equal(t, hashes, gotHashes)
+		require.Equal(t, rows, dec.Rows())
+		dec.Reset()
+		require.Equal(t, 0, dec.Rows())
+		require.Equal(t, proto.ColumnTypeString, dec.Type())
 	})
 }
 

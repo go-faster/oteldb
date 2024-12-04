@@ -94,7 +94,7 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 		// Warmup.
 		for i := 0; i < p.Warmup; i++ {
 			if err := p.send(ctx, q); err != nil {
-				return errors.Wrap(err, "send")
+				return errors.Wrap(err, "send (warmup)")
 			}
 			if err := pb.Add(1); err != nil {
 				return errors.Wrap(err, "update progress bar")
@@ -139,6 +139,7 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 				Matchers:      tq.Meta.Match,
 				DurationNanos: tq.Duration.Nanoseconds(),
 				Queries:       queries,
+				Timeout:       tq.Timeout,
 			})
 			return nil
 		},

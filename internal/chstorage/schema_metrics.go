@@ -22,27 +22,6 @@ const (
 )
 
 const (
-	pointsSchema = `
-	(
-		name LowCardinality(String) CODEC(ZSTD(1)),
-		name_normalized LowCardinality(String),
-		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
-
-		mapping Enum8(` + metricMappingDDL + `) CODEC(T64, ZSTD(1)),
-		value Float64 CODEC(Gorilla, ZSTD(1)),
-
-		flags	    UInt8  CODEC(T64, ZSTD(1)),
-
-		attribute LowCardinality(String) CODEC(ZSTD(1)),
-		resource  LowCardinality(String) CODEC(ZSTD(1)),
-		scope     LowCardinality(String) CODEC(ZSTD(1)),
-
-		INDEX idx_ts timestamp TYPE minmax GRANULARITY 8192,
-	)
-	ENGINE = MergeTree()
-	PARTITION BY toYYYYMMDD(timestamp)
-	PRIMARY KEY (name_normalized, mapping, resource, attribute)
-	ORDER BY (name_normalized, mapping, resource, attribute, timestamp)`
 	metricMappingDDL = `
 		'NO_MAPPING' = 0,
 		'HISTOGRAM_COUNT' = 1,
@@ -54,62 +33,6 @@ const (
 		'SUMMARY_SUM' = 7,
 		'SUMMARY_QUANTILE' = 8
 		`
-	expHistogramsSchema = `
-	(
-		name LowCardinality(String),
-		name_normalized LowCardinality(String),
-		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
-
-		exp_histogram_count UInt64,
-		exp_histogram_sum Nullable(Float64),
-		exp_histogram_min Nullable(Float64),
-		exp_histogram_max Nullable(Float64),
-		exp_histogram_scale Int32,
-		exp_histogram_zerocount UInt64,
-		exp_histogram_positive_offset Int32,
-		exp_histogram_positive_bucket_counts Array(UInt64),
-		exp_histogram_negative_offset Int32,
-		exp_histogram_negative_bucket_counts Array(UInt64),
-
-		flags	    UInt8  CODEC(T64, ZSTD(1)),
-
-		attribute LowCardinality(String) CODEC(ZSTD(1)),
-		resource  LowCardinality(String) CODEC(ZSTD(1)),
-		scope     LowCardinality(String) CODEC(ZSTD(1)),
-	)
-	ENGINE = MergeTree()
-	ORDER BY timestamp`
-	exemplarsSchema = `
-	(
-		name LowCardinality(String),
-		name_normalized LowCardinality(String),
-		timestamp DateTime64(9) CODEC(Delta, ZSTD(1)),
-
-		filtered_attributes String,
-		exemplar_timestamp DateTime(9) CODEC(Delta, ZSTD(1)),
-		value Float64,
-		span_id FixedString(8),
-		trace_id FixedString(16),
-
-		attribute LowCardinality(String) CODEC(ZSTD(1)),
-		resource  LowCardinality(String) CODEC(ZSTD(1)),
-		scope     LowCardinality(String) CODEC(ZSTD(1)),
-	)
-	ENGINE = MergeTree()
-	ORDER BY (name_normalized, resource, attribute, timestamp)`
-
-	labelsSchema = `
-	(
-		name            LowCardinality(String), -- original name, i.e. 'foo.bar'
-		name_normalized LowCardinality(String), -- normalized name, 'foo_bar'
-
-		value            String, -- original value, 'foo.bar'
-		value_normalized String,  -- normalized value, 'foo_bar' or empty, if original already normalized
-
-		scope Enum8(` + metricLabelScopeDDL + `)
-	)
-	ENGINE = ReplacingMergeTree
-	ORDER BY (name_normalized, value, scope)`
 	metricLabelScopeDDL = `'NONE' = 0, 'RESOURCE' = 1, 'INSTRUMENTATION' = 2, 'ATTRIBUTE' = 4`
 )
 

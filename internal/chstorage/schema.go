@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/ClickHouse/ch-go"
@@ -114,29 +113,24 @@ func (t Tables) saveHashes(ctx context.Context, c ClickhouseClient, m map[string
 }
 
 type generateOptions struct {
-	Name     string
-	DDL      string
-	TTLField string
+	Name string
+	DDL  ddl.Table
 }
 
-func (t Tables) generateQuery(opts generateOptions) string {
-	var s strings.Builder
-	s.WriteString("CREATE TABLE IF NOT EXISTS ")
-	s.WriteString(ddl.Backtick(opts.Name))
+func (t Tables) generateQuery(opts generateOptions) (string, error) {
+	d := opts.DDL
+	d.Name = opts.Name
 	if t.Cluster != "" {
-		s.WriteString(" ON CLUSTER ")
-		s.WriteString(ddl.Backtick(t.Cluster))
+		d.Cluster = t.Cluster
 	}
-	s.WriteString("\n")
-	s.WriteString(strings.TrimSpace(opts.DDL))
-	if t.TTL > 0 && opts.TTLField != "" {
-		s.WriteString(fmt.Sprintf("\nTTL toDateTime(%s) + toIntervalSecond(%d)",
-			ddl.Backtick(opts.TTLField), t.TTL/time.Second,
-		))
+	if t.TTL > 0 && d.TTL.Field != "" {
+		d.TTL.Delta = t.TTL
 	}
-	s.WriteString("\n")
-
-	return s.String()
+	s, err := ddl.Generate(d)
+	if err != nil {
+		return "", errors.Wrap(err, "generate")
+	}
+	return s, nil
 }
 
 // Create creates tables.
@@ -144,12 +138,28 @@ func (t Tables) Create(ctx context.Context, c ClickhouseClient) error {
 	if err := t.Validate(); err != nil {
 		return errors.Wrap(err, "validate")
 	}
-
-	if err := c.Do(ctx, ch.Query{
-		Logger: zctx.From(ctx).Named("ch"),
-		Body:   t.generateQuery(generateOptions{Name: t.Migration, DDL: schemaMigration}),
-	}); err != nil {
-		return errors.Wrapf(err, "create %q", t.Migration)
+	{
+		q, err := t.generateQuery(generateOptions{
+			Name: t.Migration,
+			DDL: ddl.Table{
+				Engine:  "ReplacingMergeTree(ts)",
+				OrderBy: []string{"table"},
+				Columns: []ddl.Column{
+					{Name: "table", Type: "String"},
+					{Name: "ddl", Type: "String"},
+					{Name: "ts", Type: "DateTime", Default: "now()"},
+				},
+			},
+		})
+		if err != nil {
+			return errors.Wrap(err, "generate migration table ddl")
+		}
+		if err := c.Do(ctx, ch.Query{
+			Logger: zctx.From(ctx).Named("ch"),
+			Body:   q,
+		}); err != nil {
+			return errors.Wrapf(err, "create %q", t.Migration)
+		}
 	}
 
 	hashes, err := t.getHashes(ctx, c)
@@ -158,16 +168,19 @@ func (t Tables) Create(ctx context.Context, c ClickhouseClient) error {
 	}
 
 	for _, s := range []generateOptions{
-		{Name: t.Spans, DDL: spansSchema, TTLField: "start"},
-		{Name: t.Tags, DDL: tagsSchema},
-		{Name: t.Points, DDL: pointsSchema, TTLField: "timestamp"},
-		{Name: t.ExpHistograms, DDL: expHistogramsSchema, TTLField: "timestamp"},
-		{Name: t.Exemplars, DDL: exemplarsSchema, TTLField: "timestamp"},
-		{Name: t.Labels, DDL: labelsSchema},
-		{Name: t.Logs, DDL: logsSchema, TTLField: "timestamp"},
-		{Name: t.LogAttrs, DDL: logAttrsSchema},
+		{Name: t.Spans, DDL: newSpanColumns().DDL()},
+		{Name: t.Tags, DDL: newTracesTagsDDL()},
+		{Name: t.Points, DDL: newPointColumns().DDL()},
+		{Name: t.ExpHistograms, DDL: newExpHistogramColumns().DDL()},
+		{Name: t.Exemplars, DDL: newExemplarColumns().DDL()},
+		{Name: t.Labels, DDL: newLabelsColumns().DDL()},
+		{Name: t.Logs, DDL: newLogColumns().DDL()},
+		{Name: t.LogAttrs, DDL: newLogAttrMapColumns().DDL()},
 	} {
-		query := t.generateQuery(s)
+		query, err := t.generateQuery(s)
+		if err != nil {
+			return errors.Wrapf(err, "generate %q", s.Name)
+		}
 		name := s.Name
 		target := fmt.Sprintf("%x", sha256.Sum256([]byte(query)))
 		if current, ok := hashes[s.Name]; ok && current != target {

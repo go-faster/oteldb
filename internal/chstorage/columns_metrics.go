@@ -4,6 +4,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
+	"github.com/go-faster/oteldb/internal/ddl"
 )
 
 type pointColumns struct {
@@ -53,6 +54,60 @@ func (c *pointColumns) Columns() Columns {
 func (c *pointColumns) Input() proto.Input                { return c.Columns().Input() }
 func (c *pointColumns) Result() proto.Results             { return c.Columns().Result() }
 func (c *pointColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
+
+func (c *pointColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:      "MergeTree",
+		PartitionBy: "toYYYYMMDD(timestamp)",
+		PrimaryKey:  []string{"name_normalized", "mapping", "resource", "attribute"},
+		OrderBy:     []string{"name_normalized", "mapping", "resource", "attribute", "timestamp"},
+		Indexes: []ddl.Index{
+			{
+				Name:        "idx_ts",
+				Target:      "timestamp",
+				Type:        "minmax",
+				Granularity: 8192,
+			},
+		},
+		Columns: []ddl.Column{
+			{
+				Name:  "name",
+				Type:  c.name.Type(),
+				Codec: "ZSTD(1)",
+			},
+			{
+				Name: "name_normalized",
+				Type: c.nameNormalized.Type(),
+			},
+			{
+				Name:  "timestamp",
+				Type:  c.timestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name:  "mapping",
+				Type:  c.mapping.Type().Sub(metricMappingDDL),
+				Codec: "T64, ZSTD(1)",
+			},
+			{
+				Name:  "value",
+				Type:  c.value.Type(),
+				Codec: "Gorilla, ZSTD(1)",
+			},
+			{
+				Name:  "flags",
+				Type:  c.flags.Type(),
+				Codec: "T64, ZSTD(1)",
+			},
+		},
+	}
+
+	c.attributes.DDL(&table)
+	c.resource.DDL(&table)
+	c.scope.DDL(&table)
+
+	return table
+}
 
 type expHistogramColumns struct {
 	name           *proto.ColLowCardinality[string]
@@ -124,6 +179,81 @@ func (c *expHistogramColumns) Input() proto.Input                { return c.Colu
 func (c *expHistogramColumns) Result() proto.Results             { return c.Columns().Result() }
 func (c *expHistogramColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
 
+func (c *expHistogramColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:      "MergeTree",
+		PartitionBy: "toYYYYMMDD(timestamp)",
+		OrderBy:     []string{"timestamp"},
+		Columns: []ddl.Column{
+			{
+				Name:  "name",
+				Type:  c.name.Type(),
+				Codec: "ZSTD(1)",
+			},
+			{
+				Name: "name_normalized",
+				Type: c.nameNormalized.Type(),
+			},
+			{
+				Name:  "timestamp",
+				Type:  c.timestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name: "exp_histogram_count",
+				Type: c.count.Type(),
+			},
+			{
+				Name: "exp_histogram_sum",
+				Type: c.sum.Type(),
+			},
+			{
+				Name: "exp_histogram_min",
+				Type: c.min.Type(),
+			},
+			{
+				Name: "exp_histogram_max",
+				Type: c.max.Type(),
+			},
+			{
+				Name: "exp_histogram_scale",
+				Type: c.scale.Type(),
+			},
+			{
+				Name: "exp_histogram_zerocount",
+				Type: c.zerocount.Type(),
+			},
+			{
+				Name: "exp_histogram_positive_offset",
+				Type: c.positiveOffset.Type(),
+			},
+			{
+				Name: "exp_histogram_positive_bucket_counts",
+				Type: c.positiveBucketCounts.Type(),
+			},
+			{
+				Name: "exp_histogram_negative_offset",
+				Type: c.negativeOffset.Type(),
+			},
+			{
+				Name: "exp_histogram_negative_bucket_counts",
+				Type: c.negativeBucketCounts.Type(),
+			},
+			{
+				Name:  "flags",
+				Type:  c.flags.Type(),
+				Codec: "T64, ZSTD(1)",
+			},
+		},
+	}
+
+	c.attributes.DDL(&table)
+	c.resource.DDL(&table)
+	c.scope.DDL(&table)
+
+	return table
+}
+
 type labelsColumns struct {
 	name           *proto.ColLowCardinality[string]
 	nameNormalized *proto.ColLowCardinality[string]
@@ -154,6 +284,37 @@ func (c *labelsColumns) Columns() Columns {
 func (c *labelsColumns) Input() proto.Input                { return c.Columns().Input() }
 func (c *labelsColumns) Result() proto.Results             { return c.Columns().Result() }
 func (c *labelsColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
+
+func (c *labelsColumns) DDL() ddl.Table {
+	return ddl.Table{
+		Engine:  "ReplacingMergeTree",
+		OrderBy: []string{"name_normalized", "value", "scope"},
+		Columns: []ddl.Column{
+			{
+				Name:    "name",
+				Type:    c.name.Type(),
+				Comment: "original name, i.e. foo.bar",
+			},
+			{
+				Name:    "name_normalized",
+				Type:    c.nameNormalized.Type(),
+				Comment: "normalized name, foo_bar",
+			},
+			{
+				Name: "value",
+				Type: c.value.Type(),
+			},
+			{
+				Name: "value_normalized",
+				Type: c.valueNormalized.Type(),
+			},
+			{
+				Name: "scope",
+				Type: c.scope.Type().Sub(metricLabelScopeDDL),
+			},
+		},
+	}
+}
 
 type exemplarColumns struct {
 	name           *proto.ColLowCardinality[string]
@@ -205,3 +366,53 @@ func (c *exemplarColumns) Columns() Columns {
 func (c *exemplarColumns) Input() proto.Input                { return c.Columns().Input() }
 func (c *exemplarColumns) Result() proto.Results             { return c.Columns().Result() }
 func (c *exemplarColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
+
+func (c *exemplarColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:      "MergeTree",
+		PartitionBy: "toYYYYMMDD(timestamp)",
+		OrderBy:     []string{"name_normalized", "resource", "attribute", "timestamp"},
+		Columns: []ddl.Column{
+			{
+				Name: "name",
+				Type: c.name.Type(),
+			},
+			{
+				Name: "name_normalized",
+				Type: c.nameNormalized.Type(),
+			},
+			{
+				Name:  "timestamp",
+				Type:  c.timestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name: "filtered_attributes",
+				Type: c.filteredAttributes.Type(),
+			},
+			{
+				Name:  "exemplar_timestamp",
+				Type:  c.exemplarTimestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name: "value",
+				Type: c.value.Type(),
+			},
+			{
+				Name: "trace_id",
+				Type: c.traceID.Type(),
+			},
+			{
+				Name: "span_id",
+				Type: c.spanID.Type(),
+			},
+		},
+	}
+
+	c.attributes.DDL(&table)
+	c.resource.DDL(&table)
+	c.scope.DDL(&table)
+
+	return table
+}

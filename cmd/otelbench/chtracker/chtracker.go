@@ -39,6 +39,7 @@ type Tracker[Q any] struct {
 type TrackedQuery[Q any] struct {
 	TraceID  string
 	Duration time.Duration
+	Timeout  bool
 	Meta     Q
 }
 
@@ -65,8 +66,16 @@ func (t *Tracker[Q]) Track(ctx context.Context, meta Q, cb func(context.Context,
 		}()
 	}
 
-	if err := cb(ctx, meta); err != nil {
-		return errors.Wrap(err, "send tracked")
+	var (
+		timeout bool
+		sendErr = cb(ctx, meta)
+	)
+	switch {
+	case sendErr == nil:
+	case errors.Is(sendErr, context.DeadlineExceeded):
+		timeout = true
+	default:
+		return errors.Wrap(sendErr, "send tracked")
 	}
 	duration := time.Since(start)
 
@@ -74,6 +83,7 @@ func (t *Tracker[Q]) Track(ctx context.Context, meta Q, cb func(context.Context,
 	t.queries = append(t.queries, TrackedQuery[Q]{
 		TraceID:  traceID,
 		Duration: duration,
+		Timeout:  timeout,
 		Meta:     meta,
 	})
 	t.queriesMux.Unlock()
