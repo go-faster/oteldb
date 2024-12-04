@@ -63,11 +63,7 @@ func (q *Querier) LabelNames(ctx context.Context, opts logstorage.LabelsOptions)
 		Query: chsql.Select(table,
 			chsql.ResultColumn{
 				Name: "name",
-				Expr: chsql.ArrayJoin(
-					chsql.ArrayConcat(
-						attrKeys(colResource),
-					),
-				),
+				Expr: chsql.ArrayJoin(attrKeys(colResource)),
 				Data: &name,
 			},
 		).
@@ -170,9 +166,7 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			value proto.ColStr
 			query = chsql.Select(table, chsql.ResultColumn{
 				Name: "value",
-				Expr: chsql.ArrayJoin(chsql.Array(
-					attrSelector(colResource, labelName),
-				)),
+				Expr: attrSelector(colResource, labelName),
 				Data: &value,
 			}).
 				Distinct(true).
