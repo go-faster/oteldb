@@ -34,7 +34,7 @@ func TestGenerateDDL(t *testing.T) {
 				DDL:  tt.ddl,
 			})
 			require.NoError(t, err)
-			gold.Str(t, out, "schema. "+tt.name+".sql")
+			gold.Str(t, out, "schema."+tt.name+".sql")
 		})
 	}
 }
