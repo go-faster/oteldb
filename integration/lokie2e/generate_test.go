@@ -37,6 +37,9 @@ func appendAttributes(target pcommon.Map, attrs []attribute.KeyValue) {
 }
 
 type httpLog struct {
+	ServiceName      string
+	ServiceNamespace string
+
 	Severity plog.SeverityNumber
 	Time     time.Time
 	Method   string
@@ -57,9 +60,9 @@ func (l httpLog) Append(s *lokie2e.BatchSet) error {
 		rl = ld.ResourceLogs().AppendEmpty()
 	)
 	appendAttributes(rl.Resource().Attributes(), []attribute.KeyValue{
-		semconv.ServiceName("testService"),
+		semconv.ServiceName(l.ServiceName),
 		semconv.ServiceVersion("testVersion"),
-		semconv.ServiceNamespace("testNamespace"),
+		semconv.ServiceNamespace(l.ServiceNamespace),
 	})
 	rl.SetSchemaUrl(semconv.SchemaURL)
 	il := rl.ScopeLogs().AppendEmpty()
@@ -139,18 +142,26 @@ func generateLogs(now time.Time, mul int) (*lokie2e.BatchSet, error) {
 			case 5:
 				severity = plog.SeverityNumberFatal
 			}
+			serviceName := "testService"
+			serviceNamespace := "testNamespace"
+			if i%2 == 0 {
+				serviceName = "fooService"
+				serviceNamespace = "fooNamespace"
+			}
 			lines = append(lines, httpLog{
-				Severity: severity,
-				SpanID:   spanID,
-				TraceID:  traceID,
-				Time:     now,
-				Method:   b.Method,
-				Status:   b.Status,
-				Bytes:    250,
-				Protocol: b.Protocol,
-				IP:       b.IP,
-				URL:      "/api/v1/series",
-				Ref:      "https://api.go-faster.org",
+				ServiceName:      serviceName,
+				ServiceNamespace: serviceNamespace,
+				Severity:         severity,
+				SpanID:           spanID,
+				TraceID:          traceID,
+				Time:             now,
+				Method:           b.Method,
+				Status:           b.Status,
+				Bytes:            250,
+				Protocol:         b.Protocol,
+				IP:               b.IP,
+				URL:              "/api/v1/series",
+				Ref:              "https://api.go-faster.org",
 			})
 		}
 	}

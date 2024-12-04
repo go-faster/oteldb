@@ -168,23 +168,23 @@ func runTest(
 			{
 				"OneMatcher",
 				lokiapi.LabelValuesParams{
-					Name:  "http_method",
-					Query: lokiapi.NewOptString(`{http_method="GET"}`),
+					Name:  "service_name",
+					Query: lokiapi.NewOptString(`{service_name="testService"}`),
 					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 				},
-				[]string{"GET"},
+				[]string{"testService"},
 				false,
 			},
 			{
 				"AnotherLabel",
 				lokiapi.LabelValuesParams{
-					Name:  "http_method",
-					Query: lokiapi.NewOptString(`{http_method="HEAD",http_status_code="500"}`),
+					Name:  "service_name",
+					Query: lokiapi.NewOptString(`{service_name="testService",service_namespace="testNamespace"}`),
 					Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 					End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
 				},
-				[]string{"HEAD"},
+				[]string{"testService"},
 				false,
 			},
 			{
@@ -317,12 +317,12 @@ func runTest(
 				// Always sending time range because default is current time.
 				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
-				Match: []string{`{http_method="GET"}`},
+				Match: []string{`{service_name="fooService"}`},
 			})
 			a.NoError(err)
 
 			for _, series := range r.Data {
-				a.Equal("GET", series["http_method"])
+				a.Equal("fooService", series["service_name"])
 			}
 		})
 		t.Run("Matchers", func(t *testing.T) {
@@ -332,12 +332,12 @@ func runTest(
 				// Always sending time range because default is current time.
 				Start: lokiapi.NewOptLokiTime(asLokiTime(set.Start)),
 				End:   lokiapi.NewOptLokiTime(asLokiTime(set.End)),
-				Match: []string{`{http_method="GET"}`, `{http_method="POST"}`},
+				Match: []string{`{service_name="testService"}`, `{service_name="fooService"}`},
 			})
 			a.NoError(err)
 
 			for _, series := range r.Data {
-				a.Contains([]string{"GET", "POST"}, series["http_method"])
+				a.Contains([]string{"testService", "fooService"}, series["service_name"])
 			}
 		})
 	})
@@ -366,8 +366,8 @@ func runTest(
 			{`{level!~"(WARN|DEBUG)"}`, 123},
 			{`{level=~"(WARN|DEBUG)"}`, 0},
 			// All by service name.
-			{`{service_name="testService"}`, len(set.Records)},
-			{`{service_name=~"test.+"}`, len(set.Records)},
+			{`{service_name="testService"}`, 59},
+			{`{service_name=~"test.+"}`, 59},
 			// Effectively match GET.
 			{`{http_method="GET"}`, 21},
 			{`{http_method=~".*GET.*"}`, 21},
