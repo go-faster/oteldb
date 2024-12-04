@@ -282,20 +282,6 @@ func (a *Attributes) DDL(table *ddl.Table) {
 			Type: a.Value.Type(),
 		},
 	)
-	table.Indexes = append(table.Indexes,
-		ddl.Index{
-			Name:   "idx_arr_join_" + a.Name,
-			Target: "arrayJoin(JSONExtractKeys(" + a.Name + "))",
-			Type:   "set",
-			Params: []string{"100"},
-		},
-		ddl.Index{
-			Name:   "idx_keys_" + a.Name,
-			Target: "JSONExtractKeys(" + a.Name + ")",
-			Type:   "set",
-			Params: []string{"100"},
-		},
-	)
 }
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
