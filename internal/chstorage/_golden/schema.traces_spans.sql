@@ -28,7 +28,13 @@ CREATE TABLE IF NOT EXISTS `traces_spans`
 	`links_tracestates`   Array(String),
 	`links_attributes`    Array(String),
 
-	INDEX `idx_trace_id` trace_id TYPE bloom_filter(0.001) GRANULARITY 1
+	INDEX `idx_trace_id`           trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
+	INDEX `idx_arr_join_attribute` arrayJoin(JSONExtractKeys(attribute)) TYPE set(100),
+	INDEX `idx_keys_attribute`     JSONExtractKeys(attribute) TYPE set(100),
+	INDEX `idx_arr_join_resource`  arrayJoin(JSONExtractKeys(resource)) TYPE set(100),
+	INDEX `idx_keys_resource`      JSONExtractKeys(resource) TYPE set(100),
+	INDEX `idx_arr_join_scope`     arrayJoin(JSONExtractKeys(scope)) TYPE set(100),
+	INDEX `idx_keys_scope`         JSONExtractKeys(scope) TYPE set(100)
 )
 ENGINE = MergeTree
 ORDER BY (`service_namespace`, `service_name`, `resource`, `start`)

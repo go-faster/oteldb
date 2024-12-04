@@ -20,7 +20,13 @@ CREATE TABLE IF NOT EXISTS `metrics_points`
 	`resource`        LowCardinality(String),
 	`scope`           LowCardinality(String),
 
-	INDEX `idx_ts` timestamp TYPE minmax GRANULARITY 8192
+	INDEX `idx_ts`                 timestamp TYPE minmax GRANULARITY 8192,
+	INDEX `idx_arr_join_attribute` arrayJoin(JSONExtractKeys(attribute)) TYPE set(100),
+	INDEX `idx_keys_attribute`     JSONExtractKeys(attribute) TYPE set(100),
+	INDEX `idx_arr_join_resource`  arrayJoin(JSONExtractKeys(resource)) TYPE set(100),
+	INDEX `idx_keys_resource`      JSONExtractKeys(resource) TYPE set(100),
+	INDEX `idx_arr_join_scope`     arrayJoin(JSONExtractKeys(scope)) TYPE set(100),
+	INDEX `idx_keys_scope`         JSONExtractKeys(scope) TYPE set(100)
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)

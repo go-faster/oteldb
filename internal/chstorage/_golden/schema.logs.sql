@@ -16,10 +16,15 @@ CREATE TABLE IF NOT EXISTS `logs`
 	`scope_version`       LowCardinality(String),
 	`scope`               LowCardinality(String),
 
-	INDEX `idx_trace_id`   trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
-	INDEX `idx_body`       body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,
-	INDEX `idx_ts`         timestamp TYPE minmax GRANULARITY 8192,
-	INDEX `attribute_keys` arrayConcat(JSONExtractKeys(attribute), JSONExtractKeys(scope), JSONExtractKeys(resource)) TYPE set(100)
+	INDEX `idx_trace_id`           trace_id TYPE bloom_filter(0.001) GRANULARITY 1,
+	INDEX `idx_body`               body TYPE tokenbf_v1(32768, 3, 0) GRANULARITY 1,
+	INDEX `idx_ts`                 timestamp TYPE minmax GRANULARITY 8192,
+	INDEX `idx_arr_join_attribute` arrayJoin(JSONExtractKeys(attribute)) TYPE set(100),
+	INDEX `idx_keys_attribute`     JSONExtractKeys(attribute) TYPE set(100),
+	INDEX `idx_arr_join_resource`  arrayJoin(JSONExtractKeys(resource)) TYPE set(100),
+	INDEX `idx_keys_resource`      JSONExtractKeys(resource) TYPE set(100),
+	INDEX `idx_arr_join_scope`     arrayJoin(JSONExtractKeys(scope)) TYPE set(100),
+	INDEX `idx_keys_scope`         JSONExtractKeys(scope) TYPE set(100)
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
