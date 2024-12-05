@@ -262,7 +262,10 @@ func (q *Querier) spanNames(ctx context.Context, tag traceql.Attribute, opts tra
 	var (
 		name  = new(proto.ColStr).LowCardinality()
 		query = chsql.Select(table, chsql.Column("name", name)).
-			Distinct(true).
+			// Select deduplicated column by using GROUP BY, since DISTINCT is not optimized by Clickhouse.
+			//
+			// See https://github.com/ClickHouse/ClickHouse/issues/4670
+			Distinct(true).GroupBy(chsql.Ident("name")).
 			Where(traceInTimeRange(opts.Start, opts.End))
 	)
 	{
