@@ -136,6 +136,7 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 			header := tq.Meta.Header()
 			reports = append(reports, LogQLReportQuery{
 				ID:            header.ID,
+				Type:          string(tq.Meta.Type()),
 				Title:         header.Title,
 				Description:   header.Description,
 				Query:         tq.Meta.Query(),

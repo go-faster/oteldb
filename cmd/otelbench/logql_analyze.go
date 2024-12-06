@@ -89,6 +89,7 @@ func (a LogQLAnalyze) renderBenchstat(report logqlbench.LogQLReport, w io.Writer
 			Name: bytes.Join(
 				[][]byte{
 					[]byte(`LogQL`),
+					[]byte(q.Type),
 					name,
 				},
 				[]byte{'/'},

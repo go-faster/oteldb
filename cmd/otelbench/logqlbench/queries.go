@@ -14,11 +14,23 @@ import (
 
 // Query is a benchmarked query.
 type Query interface {
+	Type() QueryType
 	Header() QueryHeader
 	Query() string
 	Matchers() []string
 	Execute(ctx context.Context, client *lokiapi.Client, p *LogQLBenchmark) error
 }
+
+// QueryType is a type of query.
+type QueryType string
+
+const (
+	InstantQueryType     QueryType = "instant"
+	RangeQueryType       QueryType = "range"
+	SeriesQueryType      QueryType = "series"
+	LabelsQueryType      QueryType = "labels"
+	LabelValuesQueryType QueryType = "label_values"
+)
 
 var _ = []Query{
 	&InstantQuery{},
@@ -42,6 +54,11 @@ type InstantQuery struct {
 
 	Start string `yaml:"start,omitempty"`
 	LogQL string `yaml:"query,omitempty"`
+}
+
+// Type returns the query type.
+func (q *InstantQuery) Type() QueryType {
+	return InstantQueryType
 }
 
 // Header returns the query header.
@@ -89,6 +106,11 @@ type RangeQuery struct {
 	End   string        `yaml:"end,omitempty"`
 	Step  time.Duration `yaml:"step,omitempty"`
 	LogQL string        `yaml:"query,omitempty"`
+}
+
+// Type returns the query type.
+func (q *RangeQuery) Type() QueryType {
+	return RangeQueryType
 }
 
 // Header returns the query header.
@@ -161,6 +183,11 @@ type SeriesQuery struct {
 	Match []string `yaml:"match,omitempty"`
 }
 
+// Type returns the query type.
+func (q *SeriesQuery) Type() QueryType {
+	return SeriesQueryType
+}
+
 // Header returns the query header.
 func (q *SeriesQuery) Header() QueryHeader {
 	return q.QueryHeader
@@ -208,6 +235,11 @@ type LabelsQuery struct {
 
 	Start string `yaml:"start,omitempty"`
 	End   string `yaml:"end,omitempty"`
+}
+
+// Type returns the query type.
+func (q *LabelsQuery) Type() QueryType {
+	return LabelsQueryType
 }
 
 // Header returns the query header.
@@ -258,6 +290,11 @@ type LabelValuesQuery struct {
 	Start string `yaml:"start,omitempty"`
 	End   string `yaml:"end,omitempty"`
 	Match string `yaml:"match,omitempty"`
+}
+
+// Type returns the query type.
+func (q *LabelValuesQuery) Type() QueryType {
+	return LabelValuesQueryType
 }
 
 // Header returns the query header.

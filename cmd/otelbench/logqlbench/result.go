@@ -8,6 +8,7 @@ type LogQLReport struct {
 
 type LogQLReportQuery struct {
 	ID            int                     `yaml:"id,omitempty"`
+	Type          string                  `yaml:"type,omitempty"`
 	Query         string                  `yaml:"query,omitempty"`
 	Title         string                  `yaml:"title,omitempty"`
 	Description   string                  `yaml:"description,omitempty"`
