@@ -1,7 +1,21 @@
 range:
-  - title: Lookup by materialzied attribute
+  - title: Lookup by materialized attribute
     query: |-
       {level!="DEBUG", service_name="go-faster.oteldb"}
   - title: Lookup by regular attribute
     query: |-
       {operationName="SearchTagValuesV2"}
+series:
+  - title: Lookup by materialized attribute
+    match:
+      - |-
+        { level!="DEBUG", service_name="go-faster.oteldb" }
+  - title: Lookup by regular attribute
+    match:
+      - |-
+        { operationName="SearchTagValuesV2" }
+labels:
+  - title: Lookup labels
+label_values:
+  - title: Lookup by materialized attribute
+    name: service_name
