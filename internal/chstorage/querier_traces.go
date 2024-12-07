@@ -3,6 +3,7 @@ package chstorage
 import (
 	"context"
 	"encoding/hex"
+	"iter"
 	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -579,7 +580,7 @@ func getTraceQLMatcher(matcher traceql.SpanMatcher) (e chsql.Expr, _ bool) {
 			attr  = matcher.Attribute
 			exprs = make([]chsql.Expr, 0, 3)
 		)
-		for _, column := range getTraceQLAttributeColumns(attr) {
+		for column := range getTraceQLAttributeColumns(attr) {
 			exprs = append(exprs, chsql.SimpleJSONHas(
 				chsql.Ident(column),
 				attr.Name,
@@ -662,7 +663,7 @@ func getTraceQLMatcher(matcher traceql.SpanMatcher) (e chsql.Expr, _ bool) {
 			), true
 		default:
 			exprs := make([]chsql.Expr, 0, 3)
-			for _, column := range getTraceQLAttributeColumns(attr) {
+			for column := range getTraceQLAttributeColumns(attr) {
 				exprs = append(exprs, op(
 					attrSelector(column, attr.Name),
 					chsql.ToString(value),
@@ -694,27 +695,30 @@ func getTraceQLLiteral(s traceql.Static) (value chsql.Expr, _ bool) {
 	}
 }
 
-func getTraceQLAttributeColumns(attr traceql.Attribute) []string {
+func getTraceQLAttributeColumns(attr traceql.Attribute) iter.Seq[string] {
 	if attr.Prop != traceql.SpanAttribute || attr.Parent {
-		return nil
+		return emptySeq[string]
 	}
 	switch attr.Scope {
 	case traceql.ScopeNone:
-		return []string{
-			colAttrs,
-			colResource,
-			colScope,
+		return func(yield func(string) bool) {
+			yield(colAttrs)
+			yield(colResource)
+			yield(colScope)
 		}
 	case traceql.ScopeResource:
-		return []string{
-			colScope,
-			colResource,
+		return func(yield func(string) bool) {
+			yield(colScope)
+			yield(colResource)
 		}
 	case traceql.ScopeSpan:
-		return []string{
-			colAttrs,
+		return func(yield func(string) bool) {
+			yield(colAttrs)
 		}
 	default:
-		return nil
+		return emptySeq[string]
 	}
+}
+
+func emptySeq[V any](yield func(V) bool) {
 }
