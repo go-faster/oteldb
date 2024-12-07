@@ -702,14 +702,14 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) iter.Seq[string] {
 	switch attr.Scope {
 	case traceql.ScopeNone:
 		return func(yield func(string) bool) {
-			yield(colAttrs)
-			yield(colResource)
-			yield(colScope)
+			_ = yield(colAttrs) &&
+				yield(colResource) &&
+				yield(colScope)
 		}
 	case traceql.ScopeResource:
 		return func(yield func(string) bool) {
-			yield(colScope)
-			yield(colResource)
+			_ = yield(colScope) &&
+				yield(colResource)
 		}
 	case traceql.ScopeSpan:
 		return func(yield func(string) bool) {

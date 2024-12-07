@@ -237,7 +237,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			exported.TraceID = append(exported.TraceID, t.TraceID...)
 			exported.SpanID = append(exported.SpanID, t.SpanID...)
-			for _, r := range t.Rows() {
+			for r := range t.Rows() {
 				exported.ExportedAt.Append(now)
 				stub := tracetest.SpanStub{
 					SpanKind:  r.Kind,
