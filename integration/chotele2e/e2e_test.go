@@ -107,7 +107,9 @@ func TestIntegrationTrace(t *testing.T) {
 		Body:   fmt.Sprintf("SELECT %s FROM system.opentelemetry_span_log", strings.Join(table.Columns(), ", ")),
 		Result: table.Result(),
 		OnResult: func(ctx context.Context, block proto.Block) error {
-			traces = append(traces, table.Rows()...)
+			for row := range table.Rows() {
+				traces = append(traces, row)
+			}
 			return nil
 		},
 	}))
