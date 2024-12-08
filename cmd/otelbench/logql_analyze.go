@@ -57,7 +57,11 @@ func (a LogQLAnalyze) renderPretty(report logqlbench.LogQLReport, w io.Writer) e
 			d := time.Duration(nanos) * time.Nanosecond
 			return d.Round(time.Millisecond / 20).String()
 		}
-		fmt.Fprintln(&buf, " duration:", formatNanos(q.DurationNanos))
+		fmt.Fprint(&buf, " duration:", formatNanos(q.DurationNanos))
+		if q.Timeout {
+			fmt.Fprint(&buf, " (timeout)")
+		}
+		fmt.Fprintln(&buf)
 
 		if len(q.Queries) > 0 {
 			fmt.Fprintln(&buf, " sql queries:", len(q.Queries))
@@ -81,6 +85,10 @@ func (a LogQLAnalyze) renderPretty(report logqlbench.LogQLReport, w io.Writer) e
 func (a LogQLAnalyze) renderBenchstat(report logqlbench.LogQLReport, w io.Writer) error {
 	var recs []benchfmt.Result
 	for _, q := range report.Queries {
+		if q.ReportError != "" {
+			continue
+		}
+
 		name := normalizeBenchName(q.Title)
 		if len(name) == 0 {
 			name = fmt.Appendf(name, "Query%d", q.ID)
