@@ -3,7 +3,6 @@ package chtracker
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -93,7 +92,7 @@ func (t *Tracker[Q]) Track(ctx context.Context, meta Q, cb func(context.Context,
 }
 
 // Report iterates over tracked queries.
-func (t *Tracker[Q]) Report(ctx context.Context, cb func(context.Context, TrackedQuery[Q], []QueryReport) error) error {
+func (t *Tracker[Q]) Report(ctx context.Context, cb func(context.Context, TrackedQuery[Q], []QueryReport, error) error) error {
 	if err := t.Flush(ctx); err != nil {
 		return err
 	}
@@ -125,11 +124,7 @@ func (t *Tracker[Q]) Report(ctx context.Context, cb func(context.Context, Tracke
 	for i, result := range queries {
 		tq := t.queries[i]
 
-		if result.Err != nil {
-			fmt.Printf("Failed to retrieve reports for %q: %s\n", tq.TraceID, result.Err)
-		}
-
-		if err := cb(ctx, tq, result.Reports); err != nil {
+		if err := cb(ctx, tq, result.Reports, result.Err); err != nil {
 			return errors.Wrap(err, "report callback")
 		}
 	}

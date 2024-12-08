@@ -132,7 +132,16 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 
 	var reports []LogQLReportQuery
 	if err := p.tracker.Report(ctx,
-		func(ctx context.Context, tq chtracker.TrackedQuery[Query], queries []chtracker.QueryReport) error {
+		func(ctx context.Context, tq chtracker.TrackedQuery[Query], queries []chtracker.QueryReport, retriveErr error) error {
+			var errMsg string
+			if retriveErr != nil {
+				if errors.Is(retriveErr, context.DeadlineExceeded) {
+					errMsg = "no queries"
+				} else {
+					errMsg = retriveErr.Error()
+				}
+			}
+
 			header := tq.Meta.Header()
 			reports = append(reports, LogQLReportQuery{
 				ID:            header.ID,
@@ -144,6 +153,7 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 				DurationNanos: tq.Duration.Nanoseconds(),
 				Queries:       queries,
 				Timeout:       tq.Timeout,
+				ReportError:   errMsg,
 			})
 			return nil
 		},

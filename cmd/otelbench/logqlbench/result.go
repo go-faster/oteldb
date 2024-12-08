@@ -16,4 +16,5 @@ type LogQLReportQuery struct {
 	Matchers      []string                `yaml:"matchers,omitempty"`
 	Queries       []chtracker.QueryReport `yaml:"queries,omitempty"`
 	Timeout       bool                    `yaml:"timeout,omitempty"`
+	ReportError   string                  `yaml:"report_error,omitempty"`
 }
