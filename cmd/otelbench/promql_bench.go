@@ -419,7 +419,11 @@ func (p *PromQL) Run(ctx context.Context) error {
 
 	var reports []PromQLReportQuery
 	if err := p.tracker.Report(ctx,
-		func(ctx context.Context, tq chtracker.TrackedQuery[promQLQuery], queries []chtracker.QueryReport) error {
+		func(ctx context.Context, tq chtracker.TrackedQuery[promQLQuery], queries []chtracker.QueryReport, retriveErr error) error {
+			if retriveErr != nil {
+				return retriveErr
+			}
+
 			entry := PromQLReportQuery{
 				ID:            tq.Meta.ID,
 				DurationNanos: tq.Duration.Nanoseconds(),
