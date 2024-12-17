@@ -25,3 +25,4 @@ ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
 ORDER BY (`severity_number`, `service_namespace`, `service_name`, `resource`, `timestamp`)
 PRIMARY KEY (`severity_number`, `service_namespace`, `service_name`, `resource`)
+TTL toDateTime(`timestamp`) + toIntervalSecond(259200)

@@ -61,6 +61,7 @@ func (c *pointColumns) DDL() ddl.Table {
 		PartitionBy: "toYYYYMMDD(timestamp)",
 		PrimaryKey:  []string{"name_normalized", "mapping", "resource", "attribute"},
 		OrderBy:     []string{"name_normalized", "mapping", "resource", "attribute", "timestamp"},
+		TTL:         ddl.TTL{Field: "timestamp"},
 		Indexes: []ddl.Index{
 			{
 				Name:        "idx_ts",

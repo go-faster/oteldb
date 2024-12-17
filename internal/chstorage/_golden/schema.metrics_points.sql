@@ -26,3 +26,4 @@ ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
 ORDER BY (`name_normalized`, `mapping`, `resource`, `attribute`, `timestamp`)
 PRIMARY KEY (`name_normalized`, `mapping`, `resource`, `attribute`)
+TTL toDateTime(`timestamp`) + toIntervalSecond(259200)

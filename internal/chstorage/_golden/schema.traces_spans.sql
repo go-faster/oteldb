@@ -33,3 +33,4 @@ CREATE TABLE IF NOT EXISTS `traces_spans`
 ENGINE = MergeTree
 ORDER BY (`service_namespace`, `service_name`, `resource`, `start`)
 PRIMARY KEY (`service_namespace`, `service_name`, `resource`)
+TTL toDateTime(`start`) + toIntervalSecond(259200)

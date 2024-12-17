@@ -27,6 +27,7 @@ func (c *logColumns) DDL() ddl.Table {
 		PartitionBy: "toYYYYMMDD(timestamp)",
 		PrimaryKey:  []string{"severity_number", "service_namespace", "service_name", "resource"},
 		OrderBy:     []string{"severity_number", "service_namespace", "service_name", "resource", "timestamp"},
+		TTL:         ddl.TTL{Field: "timestamp"},
 		Indexes: []ddl.Index{
 			{
 				Name:        "idx_trace_id",

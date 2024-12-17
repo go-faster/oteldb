@@ -213,6 +213,7 @@ func (c *spanColumns) DDL() ddl.Table {
 		Engine:     "MergeTree",
 		PrimaryKey: []string{"service_namespace", "service_name", "resource"},
 		OrderBy:    []string{"service_namespace", "service_name", "resource", "start"},
+		TTL:        ddl.TTL{Field: "start"},
 		Indexes: []ddl.Index{
 			{
 				Name:        "idx_trace_id",
