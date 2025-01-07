@@ -35,7 +35,7 @@ import (
 )
 
 func main() {
-	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) (err error) {
+	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Telemetry) (err error) {
 		a, err := NewApp(lg, m)
 		if err != nil {
 			return errors.Wrap(err, "init")
@@ -47,7 +47,7 @@ func main() {
 // App is the trace exporter application.
 type App struct {
 	log     *zap.Logger
-	metrics *app.Metrics
+	metrics *app.Telemetry
 
 	clickHouseAddr     string
 	clickHousePassword string
@@ -75,7 +75,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS opentelemetry_span_export
 `
 
 // NewApp initializes the trace exporter application.
-func NewApp(lg *zap.Logger, metrics *app.Metrics) (*App, error) {
+func NewApp(lg *zap.Logger, metrics *app.Telemetry) (*App, error) {
 	a := &App{
 		log:                lg,
 		metrics:            metrics,

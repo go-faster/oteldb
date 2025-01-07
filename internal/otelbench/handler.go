@@ -20,7 +20,7 @@ import (
 )
 
 // NewHandler initializes and returns a new Handler.
-func NewHandler(db *ent.Client, m *app.Metrics) *Handler {
+func NewHandler(db *ent.Client, m *app.Telemetry) *Handler {
 	httpClient := &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport,
 			otelhttp.WithTracerProvider(m.TracerProvider()),

@@ -33,7 +33,7 @@ type service struct {
 	cleanup   func() error
 }
 
-func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
 	if s.cleanup != nil {
 		defer func() {
 			if err := s.cleanup(); err != nil {
@@ -74,7 +74,7 @@ func (s service) Run(ctx context.Context, lg *zap.Logger, m *app.Metrics) error 
 }
 
 // ServiceMiddleware is a generic middleware for any service.
-func ServiceMiddleware(s service, lg *zap.Logger, m *app.Metrics) http.Handler {
+func ServiceMiddleware(s service, lg *zap.Logger, m *app.Telemetry) http.Handler {
 	return httpmiddleware.Wrap(s.handler,
 		httpmiddleware.InjectLogger(lg),
 		httpmiddleware.Instrument(s.name, s.findRoute, m),
@@ -98,7 +98,7 @@ func (s *services) addService(addr string, srv service) error {
 	return nil
 }
 
-func (s *services) Prometheus(m *app.Metrics) error {
+func (s *services) Prometheus(m *app.Telemetry) error {
 	const (
 		prefix      = "PROMETHEUS"
 		defaultPort = ":9090"
@@ -156,7 +156,7 @@ func (s *services) Prometheus(m *app.Metrics) error {
 	})
 }
 
-func (s *services) Loki(m *app.Metrics) error {
+func (s *services) Loki(m *app.Telemetry) error {
 	const (
 		prefix      = "LOKI"
 		defaultPort = ":3100"
@@ -196,7 +196,7 @@ func (s *services) Loki(m *app.Metrics) error {
 	})
 }
 
-func (s *services) Pyroscope(m *app.Metrics) error {
+func (s *services) Pyroscope(m *app.Telemetry) error {
 	const (
 		prefix      = "PYROSCOPE"
 		defaultPort = ":4040"
@@ -236,7 +236,7 @@ func (s *services) Pyroscope(m *app.Metrics) error {
 	})
 }
 
-func (s *services) Tempo(m *app.Metrics) error {
+func (s *services) Tempo(m *app.Telemetry) error {
 	const (
 		prefix      = "TEMPO"
 		defaultPort = ":3200"
@@ -276,7 +276,7 @@ func (s *services) Tempo(m *app.Metrics) error {
 	})
 }
 
-func (s *services) httpClient(wrap TransportMiddleware, m *app.Metrics) *http.Client {
+func (s *services) httpClient(wrap TransportMiddleware, m *app.Telemetry) *http.Client {
 	transport := http.DefaultTransport
 	if wrap != nil {
 		transport = wrap(transport)
@@ -290,7 +290,7 @@ func (s *services) httpClient(wrap TransportMiddleware, m *app.Metrics) *http.Cl
 }
 
 func main() {
-	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
 		s := services{}
 		if err := s.Prometheus(m); err != nil {
 			return errors.Wrapf(err, "setup Prometheus proxy")

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
 		shutdown, err := autozpages.Setup(m.TracerProvider())
 		if err != nil {
 			return errors.Wrap(err, "setup zPages")
