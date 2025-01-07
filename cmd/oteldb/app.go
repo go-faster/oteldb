@@ -43,10 +43,10 @@ type App struct {
 	otelStorage
 
 	lg      *zap.Logger
-	metrics *sdkapp.Metrics
+	metrics *sdkapp.Telemetry
 }
 
-func newApp(ctx context.Context, cfg Config, m *sdkapp.Metrics) (_ *App, err error) {
+func newApp(ctx context.Context, cfg Config, m *sdkapp.Telemetry) (_ *App, err error) {
 	cfg.setDefaults()
 
 	app := &App{

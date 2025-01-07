@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func client(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+func client(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
 	httpTransport := otelhttp.NewTransport(http.DefaultTransport,
 		otelhttp.WithTracerProvider(m.TracerProvider()),
 		otelhttp.WithMeterProvider(m.MeterProvider()),
