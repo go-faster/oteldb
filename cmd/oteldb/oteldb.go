@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
+	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/autopyro"
@@ -15,6 +16,7 @@ import (
 
 func main() {
 	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
+		ctx = zctx.WithOpenTelemetryZap(ctx)
 		shutdown, err := autozpages.Setup(m.TracerProvider())
 		if err != nil {
 			return errors.Wrap(err, "setup zPages")
