@@ -1,6 +1,8 @@
 package chstorage
 
 import (
+	"strings"
+
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
@@ -230,23 +232,53 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 		Integers: make(map[string]proto.ColumnOf[int64]),
 	}
 
-	if name == "attribute" || name == "resource" {
+	appendEntry := func(e otelschema.Entry) {
+		s := e.Name
+		switch e.Type {
+		case "string":
+			if strings.HasPrefix(e.Column.String(), "Enum") {
+				v := new(proto.ColEnum)
+				if err := v.Infer(e.Column); err != nil {
+					panic(err)
+				}
+				attr.Strings[s] = v
+				return
+			}
+			if e.Column != proto.ColumnTypeString {
+				// TODO: support other columns:
+				//  * UUID
+				return
+			}
+			attr.Strings[s] = new(proto.ColStr)
+		case "int":
+			if e.Column != proto.ColumnTypeInt64 {
+				// TODO: support other columns?
+				return
+			}
+			attr.Integers[s] = new(proto.ColInt64)
+		}
+	}
+
+	switch name {
+	case "attribute":
 		for _, e := range otelschema.Data.Entries {
-			switch e.Type {
-			case "string":
-				if e.Column != proto.ColumnTypeString {
-					// TODO: support other columns:
-					//  * UUID
-					//  * Enum
-					continue
-				}
-				attr.Strings[e.Name] = new(proto.ColStr)
-			case "int":
-				if e.Column != proto.ColumnTypeInt64 {
-					// TODO: support other columns?
-					continue
-				}
-				attr.Integers[e.Name] = new(proto.ColInt64)
+			switch e.Where {
+			case "attribute", "":
+				appendEntry(e)
+			}
+		}
+	case "resource":
+		for _, e := range otelschema.Data.Entries {
+			switch e.Where {
+			case "resource":
+				appendEntry(e)
+			}
+		}
+	case "scope":
+		for _, e := range otelschema.Data.Entries {
+			switch e.Where {
+			case "scope":
+				appendEntry(e)
 			}
 		}
 	}

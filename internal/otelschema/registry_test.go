@@ -131,6 +131,9 @@ func columnType(name, brief, t string, enum []any) proto.ColumnType {
 
 func TestParseAllAttributes(t *testing.T) {
 	var parsed []TypeGroupsItem
+
+	groupsToWhere := map[string]string{}
+
 	require.NoError(t, filepath.Walk(modelPath(), func(path string, info fs.FileInfo, err error) error {
 		require.NoError(t, err)
 		if info.IsDir() {
@@ -146,6 +149,16 @@ func TestParseAllAttributes(t *testing.T) {
 		jsonData, err := yaml.YAMLToJSON(data)
 		require.NoError(t, err)
 		require.NoError(t, schema.UnmarshalJSON(jsonData))
+		for _, group := range schema.Groups {
+			groupName := group.Prefix.Value
+			dir := filepath.Dir(path)
+			switch {
+			case strings.Contains(dir, "resource"):
+				groupsToWhere[groupName] = "resource"
+			case strings.Contains(dir, "scope"):
+				groupsToWhere[groupName] = "scope"
+			}
+		}
 		parsed = append(parsed, schema.Groups...)
 		return nil
 	}))
@@ -226,6 +239,7 @@ func TestParseAllAttributes(t *testing.T) {
 				Examples: examples,
 				Brief:    v.Brief.Value,
 				Name:     strings.ReplaceAll(name, ".", "_"),
+				Where:    groupsToWhere[groupName],
 			}
 		}
 	}

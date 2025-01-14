@@ -30,6 +30,7 @@ type Entry struct {
 	Examples []any            `json:"examples,omitempty"`
 	Brief    string           `json:"brief,omitempty"`
 	Name     string           `json:"name,omitempty"`
+	Where    string           `json:"where,omitempty"`
 }
 
 // Data is loaded otel schema registry.

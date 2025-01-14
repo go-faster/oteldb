@@ -10,6 +10,7 @@ entries:
     group: android
     name: android_os_api_level
     type: string
+    where: resource
   android.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
@@ -22,6 +23,7 @@ entries:
     group: android
     name: android_state
     type: string
+    where: resource
   aws.ecs.cluster.arn:
     brief: |
       The ARN of an [ECS cluster](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/clusters.html).
@@ -156,6 +158,7 @@ entries:
     group: browser
     name: browser_brands
     type: string[]
+    where: resource
   browser.language:
     brief: Preferred language of the user using the browser
     column: String
@@ -168,6 +171,7 @@ entries:
     group: browser
     name: browser_language
     type: string
+    where: resource
   browser.mobile:
     brief: A boolean that is true if the browser is running on a mobile device
     column: Bool
@@ -175,6 +179,7 @@ entries:
     group: browser
     name: browser_mobile
     type: boolean
+    where: resource
   browser.platform:
     brief: The platform on which the browser is running
     column: String
@@ -186,6 +191,7 @@ entries:
     group: browser
     name: browser_platform
     type: string
+    where: resource
   client.address:
     brief: Client address - domain name if available without reverse DNS lookup; otherwise,
       IP address or Unix domain socket name.
@@ -218,6 +224,7 @@ entries:
     group: cloud
     name: cloud_account_id
     type: string
+    where: resource
   cloud.availability_zone:
     brief: |
       Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
@@ -228,6 +235,7 @@ entries:
     group: cloud
     name: cloud_availability_zone
     type: string
+    where: resource
   cloud.platform:
     brief: |
       The cloud platform in use.
@@ -236,6 +244,7 @@ entries:
     group: cloud
     name: cloud_platform
     type: string
+    where: resource
   cloud.provider:
     brief: |
       Name of the cloud provider.
@@ -244,6 +253,7 @@ entries:
     group: cloud
     name: cloud_provider
     type: string
+    where: resource
   cloud.region:
     brief: |
       The geographical region the resource is running.
@@ -255,6 +265,7 @@ entries:
     group: cloud
     name: cloud_region
     type: string
+    where: resource
   cloud.resource_id:
     brief: |
       Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP)
@@ -267,6 +278,7 @@ entries:
     group: cloud
     name: cloud_resource_id
     type: string
+    where: resource
   cloudevents.event_id:
     brief: |
       The [event_id](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#id) uniquely identifies the event.
@@ -392,6 +404,7 @@ entries:
     group: container
     name: container_command
     type: string
+    where: resource
   container.command_args:
     brief: |
       All the command arguments (including the command/executable itself) run by the container. [2]
@@ -402,6 +415,7 @@ entries:
     group: container
     name: container_command_args
     type: string[]
+    where: resource
   container.command_line:
     brief: |
       The full command run by the container as a single string representing the full command. [2]
@@ -412,6 +426,7 @@ entries:
     group: container
     name: container_command_line
     type: string
+    where: resource
   container.id:
     brief: |
       Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/reference/run/#container-identification). The UUID might be abbreviated.
@@ -422,6 +437,7 @@ entries:
     group: container
     name: container_id
     type: string
+    where: resource
   container.image.id:
     brief: |
       Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
@@ -432,6 +448,7 @@ entries:
     group: container
     name: container_image_id
     type: string
+    where: resource
   container.image.name:
     brief: |
       Name of the image the container was built on.
@@ -442,6 +459,7 @@ entries:
     group: container
     name: container_image_name
     type: string
+    where: resource
   container.image.repo_digests:
     brief: |
       Repo digests of the container image as provided by the container runtime.
@@ -453,6 +471,7 @@ entries:
     group: container
     name: container_image_repo_digests
     type: string[]
+    where: resource
   container.image.tags:
     brief: |
       Container image tags. An example can be found in [Docker Image Inspect](https://docs.docker.com/engine/api/v1.43/#tag/Image/operation/ImageInspect). Should be only the `<tag>` section of the full name for example from `registry.example.com/my-org/my-image:<tag>`.
@@ -464,6 +483,7 @@ entries:
     group: container
     name: container_image_tags
     type: string[]
+    where: resource
   container.labels:
     brief: |
       Container labels, `<key>` being the label name, the value being the label value.
@@ -474,6 +494,7 @@ entries:
     group: container
     name: container_labels
     type: template[string]
+    where: resource
   container.name:
     brief: |
       Container name used by container runtime.
@@ -484,6 +505,7 @@ entries:
     group: container
     name: container_name
     type: string
+    where: resource
   container.runtime:
     brief: |
       The container runtime managing this container.
@@ -496,6 +518,7 @@ entries:
     group: container
     name: container_runtime
     type: string
+    where: resource
   db.cassandra.consistency_level:
     brief: |
       The consistency level of the query. Based on consistency values from [CQL](https://docs.datastax.com/en/cassandra-oss/3.0/cassandra/dml/dmlConfigConsistency.html).
@@ -819,6 +842,7 @@ entries:
     group: deployment
     name: deployment_environment
     type: string
+    where: resource
   destination.address:
     brief: Destination address - domain name if available without reverse DNS lookup;
       otherwise, IP address or Unix domain socket name.
@@ -851,6 +875,7 @@ entries:
     group: device
     name: device_id
     type: string
+    where: resource
   device.manufacturer:
     brief: |
       The name of the device manufacturer
@@ -862,6 +887,7 @@ entries:
     group: device
     name: device_manufacturer
     type: string
+    where: resource
   device.model.identifier:
     brief: |
       The model identifier for the device
@@ -873,6 +899,7 @@ entries:
     group: device
     name: device_model_identifier
     type: string
+    where: resource
   device.model.name:
     brief: |
       The marketing name for the device model
@@ -884,6 +911,7 @@ entries:
     group: device
     name: device_model_name
     type: string
+    where: resource
   disk.io.direction:
     brief: The disk IO operation direction.
     column: Enum8('read' = 0, 'write' = 1)
@@ -997,6 +1025,7 @@ entries:
     group: faas
     name: faas_coldstart
     type: boolean
+    where: resource
   faas.cron:
     brief: |
       A string containing the schedule period as [Cron Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm).
@@ -1007,6 +1036,7 @@ entries:
     group: faas
     name: faas_cron
     type: string
+    where: resource
   faas.document.collection:
     brief: |
       The name of the source on which the triggering operation was performed. For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB to the database name.
@@ -1018,6 +1048,7 @@ entries:
     group: faas
     name: faas_document_collection
     type: string
+    where: resource
   faas.document.name:
     brief: |
       The document name/table subjected to the operation. For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table name.
@@ -1029,6 +1060,7 @@ entries:
     group: faas
     name: faas_document_name
     type: string
+    where: resource
   faas.document.operation:
     brief: Describes the type of the operation that was performed on the data.
     column: String
@@ -1036,6 +1068,7 @@ entries:
     group: faas
     name: faas_document_operation
     type: string
+    where: resource
   faas.document.time:
     brief: |
       A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
@@ -1046,6 +1079,7 @@ entries:
     group: faas
     name: faas_document_time
     type: string
+    where: resource
   faas.instance:
     brief: |
       The execution environment ID as a string, that will be potentially reused for other invocations to the same function/function version.
@@ -1056,6 +1090,7 @@ entries:
     group: faas
     name: faas_instance
     type: string
+    where: resource
   faas.invocation_id:
     brief: The invocation ID of the current function invocation.
     column: String
@@ -1065,6 +1100,7 @@ entries:
     group: faas
     name: faas_invocation_id
     type: string
+    where: resource
   faas.invoked_name:
     brief: |
       The name of the invoked function.
@@ -1075,6 +1111,7 @@ entries:
     group: faas
     name: faas_invoked_name
     type: string
+    where: resource
   faas.invoked_provider:
     brief: |
       The cloud provider of the invoked function.
@@ -1083,6 +1120,7 @@ entries:
     group: faas
     name: faas_invoked_provider
     type: string
+    where: resource
   faas.invoked_region:
     brief: |
       The cloud region of the invoked function.
@@ -1093,6 +1131,7 @@ entries:
     group: faas
     name: faas_invoked_region
     type: string
+    where: resource
   faas.max_memory:
     brief: |
       The amount of memory available to the serverless function converted to Bytes.
@@ -1103,6 +1142,7 @@ entries:
     group: faas
     name: faas_max_memory
     type: int
+    where: resource
   faas.name:
     brief: |
       The name of the single function that this runtime instance executes.
@@ -1114,6 +1154,7 @@ entries:
     group: faas
     name: faas_name
     type: string
+    where: resource
   faas.time:
     brief: |
       A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
@@ -1124,6 +1165,7 @@ entries:
     group: faas
     name: faas_time
     type: string
+    where: resource
   faas.trigger:
     brief: Type of the trigger which caused this function invocation.
     column: Enum8('datasource' = 0, 'http' = 1, 'pubsub' = 2, 'timer' = 3, 'other'
@@ -1138,6 +1180,7 @@ entries:
     group: faas
     name: faas_trigger
     type: string
+    where: resource
   faas.version:
     brief: The immutable version of the function being executed.
     column: String
@@ -1148,6 +1191,7 @@ entries:
     group: faas
     name: faas_version
     type: string
+    where: resource
   feature_flag.key:
     brief: The unique identifier of the feature flag.
     column: String
@@ -1232,6 +1276,7 @@ entries:
     group: heroku
     name: heroku_app_id
     type: string
+    where: resource
   heroku.release.commit:
     brief: |
       Commit hash for the current release
@@ -1242,6 +1287,7 @@ entries:
     group: heroku
     name: heroku_release_commit
     type: string
+    where: resource
   heroku.release.creation_timestamp:
     brief: |
       Time and date the release was created
@@ -1252,6 +1298,7 @@ entries:
     group: heroku
     name: heroku_release_creation_timestamp
     type: string
+    where: resource
   host.arch:
     brief: |
       The CPU architecture the host system is running on.
@@ -1260,6 +1307,7 @@ entries:
     group: host
     name: host_arch
     type: string
+    where: resource
   host.cpu.cache.l2.size:
     brief: |
       The amount of level 2 memory cache available to the processor (in Bytes).
@@ -1270,6 +1318,7 @@ entries:
     group: host
     name: host_cpu_cache_l2_size
     type: int
+    where: resource
   host.cpu.family:
     brief: |
       Family or generation of the CPU.
@@ -1281,6 +1330,7 @@ entries:
     group: host
     name: host_cpu_family
     type: string
+    where: resource
   host.cpu.model.id:
     brief: |
       Model identifier. It provides more granular information about the CPU, distinguishing it from other CPUs within the same family.
@@ -1292,6 +1342,7 @@ entries:
     group: host
     name: host_cpu_model_id
     type: string
+    where: resource
   host.cpu.model.name:
     brief: |
       Model designation of the processor.
@@ -1302,6 +1353,7 @@ entries:
     group: host
     name: host_cpu_model_name
     type: string
+    where: resource
   host.cpu.stepping:
     brief: |
       Stepping or core revisions.
@@ -1312,6 +1364,7 @@ entries:
     group: host
     name: host_cpu_stepping
     type: int
+    where: resource
   host.cpu.vendor.id:
     brief: |
       Processor manufacturer identifier. A maximum 12-character string.
@@ -1322,6 +1375,7 @@ entries:
     group: host
     name: host_cpu_vendor_id
     type: string
+    where: resource
   host.id:
     brief: |
       Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider. For non-containerized systems, this should be the `machine-id`. See the table below for the sources to use to determine the `machine-id` based on operating system.
@@ -1332,6 +1386,7 @@ entries:
     group: host
     name: host_id
     type: string
+    where: resource
   host.image.id:
     brief: |
       VM image ID or host OS image ID. For Cloud, this value is from the provider.
@@ -1342,6 +1397,7 @@ entries:
     group: host
     name: host_image_id
     type: string
+    where: resource
   host.image.name:
     brief: |
       Name of the VM image or OS install the host was instantiated from.
@@ -1353,6 +1409,7 @@ entries:
     group: host
     name: host_image_name
     type: string
+    where: resource
   host.image.version:
     brief: |
       The version string of the VM image or host OS as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
@@ -1363,6 +1420,7 @@ entries:
     group: host
     name: host_image_version
     type: string
+    where: resource
   host.ip:
     brief: |
       Available IP addresses of the host, excluding loopback interfaces.
@@ -1374,6 +1432,7 @@ entries:
     group: host
     name: host_ip
     type: string[]
+    where: resource
   host.mac:
     brief: |
       Available MAC addresses of the host, excluding loopback interfaces.
@@ -1385,6 +1444,7 @@ entries:
     group: host
     name: host_mac
     type: string[]
+    where: resource
   host.name:
     brief: |
       Name of the host. On Unix systems, it may contain what the hostname command returns, or the fully qualified hostname, or another name specified by the user.
@@ -1395,6 +1455,7 @@ entries:
     group: host
     name: host_name
     type: string
+    where: resource
   host.type:
     brief: |
       Type of host. For Cloud, this must be the machine type.
@@ -1405,6 +1466,7 @@ entries:
     group: host
     name: host_type
     type: string
+    where: resource
   http.request.body.size:
     brief: |
       The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
@@ -2378,6 +2440,7 @@ entries:
     group: os
     name: os_build_id
     type: string
+    where: resource
   os.description:
     brief: |
       Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
@@ -2389,6 +2452,7 @@ entries:
     group: os
     name: os_description
     type: string
+    where: resource
   os.name:
     brief: Human readable operating system name.
     column: String
@@ -2400,6 +2464,7 @@ entries:
     group: os
     name: os_name
     type: string
+    where: resource
   os.type:
     brief: |
       The operating system type.
@@ -2408,6 +2473,7 @@ entries:
     group: os
     name: os_type
     type: string
+    where: resource
   os.version:
     brief: |
       The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
@@ -2419,6 +2485,7 @@ entries:
     group: os
     name: os_version
     type: string
+    where: resource
   otel.scope.name:
     brief: The name of the instrumentation scope - (`InstrumentationScope.Name` in
       OTLP).
@@ -2489,6 +2556,7 @@ entries:
     group: process
     name: process_command
     type: string
+    where: resource
   process.command_args:
     brief: |
       All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`.
@@ -2500,6 +2568,7 @@ entries:
     group: process
     name: process_command_args
     type: string[]
+    where: resource
   process.command_line:
     brief: |
       The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead.
@@ -2510,6 +2579,7 @@ entries:
     group: process
     name: process_command_line
     type: string
+    where: resource
   process.executable.name:
     brief: |
       The name of the process executable. On Linux based systems, can be set to the `Name` in `proc/[pid]/status`. On Windows, can be set to the base name of `GetProcessImageFileNameW`.
@@ -2520,6 +2590,7 @@ entries:
     group: process
     name: process_executable_name
     type: string
+    where: resource
   process.executable.path:
     brief: |
       The full path to the process executable. On Linux based systems, can be set to the target of `proc/[pid]/exe`. On Windows, can be set to the result of `GetProcessImageFileNameW`.
@@ -2530,6 +2601,7 @@ entries:
     group: process
     name: process_executable_path
     type: string
+    where: resource
   process.owner:
     brief: |
       The username of the user that owns the process.
@@ -2540,6 +2612,7 @@ entries:
     group: process
     name: process_owner
     type: string
+    where: resource
   process.parent_pid:
     brief: |
       Parent Process identifier (PID).
@@ -2550,6 +2623,7 @@ entries:
     group: process
     name: process_parent_pid
     type: int
+    where: resource
   process.pid:
     brief: |
       Process identifier (PID).
@@ -2560,6 +2634,7 @@ entries:
     group: process
     name: process_pid
     type: int
+    where: resource
   process.runtime.description:
     brief: |
       An additional description about the runtime of the process, for example a specific vendor customization of the runtime environment.
@@ -2570,6 +2645,7 @@ entries:
     group: process
     name: process_runtime_description
     type: string
+    where: resource
   process.runtime.name:
     brief: |
       The name of the runtime of this process. For compiled native binaries, this SHOULD be the name of the compiler.
@@ -2580,6 +2656,7 @@ entries:
     group: process
     name: process_runtime_name
     type: string
+    where: resource
   process.runtime.version:
     brief: |
       The version of the runtime of this process, as returned by the runtime without modification.
@@ -2590,6 +2667,7 @@ entries:
     group: process
     name: process_runtime_version
     type: string
+    where: resource
   rpc.connect_rpc.error_code:
     brief: The [error codes](https://connect.build/docs/protocol/#error-codes) of
       the Connect request. Error codes are always string values.
@@ -2790,6 +2868,7 @@ entries:
     group: service
     name: service_instance_id
     type: string
+    where: resource
   service.name:
     brief: |
       Logical name of the service.
@@ -2800,6 +2879,7 @@ entries:
     group: service
     name: service_name
     type: string
+    where: resource
   service.namespace:
     brief: |
       A namespace for `service.name`.
@@ -2810,6 +2890,7 @@ entries:
     group: service
     name: service_namespace
     type: string
+    where: resource
   service.version:
     brief: |
       The version string of the service API or implementation. The format is not defined by these conventions.
@@ -2821,6 +2902,7 @@ entries:
     group: service
     name: service_version
     type: string
+    where: resource
   session.id:
     brief: A unique id to identify a session.
     column: String
@@ -3018,6 +3100,7 @@ entries:
     group: telemetry
     name: telemetry_distro_name
     type: string
+    where: resource
   telemetry.distro.version:
     brief: |
       The version string of the auto instrumentation agent or distribution, if used.
@@ -3028,6 +3111,7 @@ entries:
     group: telemetry
     name: telemetry_distro_version
     type: string
+    where: resource
   telemetry.sdk.language:
     brief: |
       The language of the telemetry SDK.
@@ -3036,6 +3120,7 @@ entries:
     group: telemetry
     name: telemetry_sdk_language
     type: string
+    where: resource
   telemetry.sdk.name:
     brief: |
       The name of the telemetry SDK as defined above.
@@ -3046,6 +3131,7 @@ entries:
     group: telemetry
     name: telemetry_sdk_name
     type: string
+    where: resource
   telemetry.sdk.version:
     brief: |
       The version string of the telemetry SDK.
@@ -3056,6 +3142,7 @@ entries:
     group: telemetry
     name: telemetry_sdk_version
     type: string
+    where: resource
   thread.id:
     brief: |
       Current "managed" thread ID (as opposed to OS thread ID).
@@ -3433,6 +3520,7 @@ entries:
     group: webengine
     name: webengine_description
     type: string
+    where: resource
   webengine.name:
     brief: |
       The name of the web engine.
@@ -3443,6 +3531,7 @@ entries:
     group: webengine
     name: webengine_name
     type: string
+    where: resource
   webengine.version:
     brief: |
       The version of the web engine.
@@ -3453,6 +3542,7 @@ entries:
     group: webengine
     name: webengine_version
     type: string
+    where: resource
 statistics:
   deprecated: 24
   enum: 23
