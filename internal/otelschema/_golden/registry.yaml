@@ -14,7 +14,7 @@ entries:
   android.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
-    column: Enum8('created' = 0, 'background' = 1, 'foreground' = 2)
+    column: Enum8('' = 0, 'created' = 1, 'background' = 2, 'foreground' = 3)
     enum:
     - created
     - background
@@ -47,7 +47,7 @@ entries:
   aws.ecs.launchtype:
     brief: |
       The [launch type](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html) for an ECS task.
-    column: Enum8('ec2' = 0, 'fargate' = 1)
+    column: Enum8('' = 0, 'ec2' = 1, 'fargate' = 2)
     enum:
     - ec2
     - fargate
@@ -522,9 +522,9 @@ entries:
   db.cassandra.consistency_level:
     brief: |
       The consistency level of the query. Based on consistency values from [CQL](https://docs.datastax.com/en/cassandra-oss/3.0/cassandra/dml/dmlConfigConsistency.html).
-    column: Enum8('all' = 0, 'each_quorum' = 1, 'quorum' = 2, 'local_quorum' = 3,
-      'one' = 4, 'two' = 5, 'three' = 6, 'local_one' = 7, 'any' = 8, 'serial' = 9,
-      'local_serial' = 10)
+    column: Enum8('' = 0, 'all' = 1, 'each_quorum' = 2, 'quorum' = 3, 'local_quorum'
+      = 4, 'one' = 5, 'two' = 6, 'three' = 7, 'local_one' = 8, 'any' = 9, 'serial'
+      = 10, 'local_serial' = 11)
     enum:
     - all
     - each_quorum
@@ -621,7 +621,7 @@ entries:
     type: string
   db.cosmosdb.connection_mode:
     brief: Cosmos client connection mode.
-    column: Enum8('gateway' = 0, 'direct' = 1)
+    column: Enum8('' = 0, 'gateway' = 1, 'direct' = 2)
     enum:
     - gateway
     - direct
@@ -914,7 +914,7 @@ entries:
     where: resource
   disk.io.direction:
     brief: The disk IO operation direction.
-    column: Enum8('read' = 0, 'write' = 1)
+    column: Enum8('' = 0, 'read' = 1, 'write' = 2)
     enum:
     - read
     - write
@@ -1168,8 +1168,8 @@ entries:
     where: resource
   faas.trigger:
     brief: Type of the trigger which caused this function invocation.
-    column: Enum8('datasource' = 0, 'http' = 1, 'pubsub' = 2, 'timer' = 3, 'other'
-      = 4)
+    column: Enum8('' = 0, 'datasource' = 1, 'http' = 2, 'pubsub' = 3, 'timer' = 4,
+      'other' = 5)
     enum:
     - datasource
     - http
@@ -1564,8 +1564,8 @@ entries:
   ios.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
-    column: Enum8('active' = 0, 'inactive' = 1, 'background' = 2, 'foreground' = 3,
-      'terminate' = 4)
+    column: Enum8('' = 0, 'active' = 1, 'inactive' = 2, 'background' = 3, 'foreground'
+      = 4, 'terminate' = 5)
     enum:
     - active
     - inactive
@@ -1619,7 +1619,7 @@ entries:
     type: string
   jvm.memory.type:
     brief: The type of memory.
-    column: Enum8('heap' = 0, 'non_heap' = 1)
+    column: Enum8('' = 0, 'heap' = 1, 'non_heap' = 2)
     enum:
     - heap
     - non_heap
@@ -1636,8 +1636,8 @@ entries:
     type: boolean
   jvm.thread.state:
     brief: State of the thread.
-    column: Enum8('new' = 0, 'runnable' = 1, 'blocked' = 2, 'waiting' = 3, 'timed_waiting'
-      = 4, 'terminated' = 5)
+    column: Enum8('' = 0, 'new' = 1, 'runnable' = 2, 'blocked' = 3, 'waiting' = 4,
+      'timed_waiting' = 5, 'terminated' = 6)
     enum:
     - new
     - runnable
@@ -1915,7 +1915,7 @@ entries:
   log.iostream:
     brief: |
       The stream associated with the log. See below for a list of well-known values.
-    column: Enum8('stdout' = 0, 'stderr' = 1)
+    column: Enum8('' = 0, 'stdout' = 1, 'stderr' = 2)
     enum:
     - stdout
     - stderr
@@ -1950,7 +1950,7 @@ entries:
     type: int
   message.type:
     brief: Whether this is a received or sent message.
-    column: Enum8('SENT' = 0, 'RECEIVED' = 1)
+    column: Enum8('' = 0, 'SENT' = 1, 'RECEIVED' = 2)
     enum:
     - SENT
     - RECEIVED
@@ -2169,7 +2169,7 @@ entries:
   messaging.rocketmq.consumption_model:
     brief: |
       Model of message consumption. This only applies to consumer spans.
-    column: Enum8('clustering' = 0, 'broadcasting' = 1)
+    column: Enum8('' = 0, 'clustering' = 1, 'broadcasting' = 2)
     enum:
     - clustering
     - broadcasting
@@ -2231,7 +2231,7 @@ entries:
   messaging.rocketmq.message.type:
     brief: |
       Type of message.
-    column: Enum8('normal' = 0, 'fifo' = 1, 'delay' = 2, 'transaction' = 3)
+    column: Enum8('' = 0, 'normal' = 1, 'fifo' = 2, 'delay' = 3, 'transaction' = 4)
     enum:
     - normal
     - fifo
@@ -2318,7 +2318,7 @@ entries:
     type: string
   network.io.direction:
     brief: The network IO operation direction.
-    column: Enum8('transmit' = 0, 'receive' = 1)
+    column: Enum8('' = 0, 'transmit' = 1, 'receive' = 2)
     enum:
     - transmit
     - receive
@@ -2420,7 +2420,7 @@ entries:
     type: string
   opentracing.ref_type:
     brief: Parent-child Reference type
-    column: Enum8('child_of' = 0, 'follows_from' = 1)
+    column: Enum8('' = 0, 'child_of' = 1, 'follows_from' = 2)
     enum:
     - child_of
     - follows_from
@@ -2509,7 +2509,7 @@ entries:
   otel.status_code:
     brief: Name of the code, either "OK" or "ERROR". MUST NOT be set if the status
       code is UNSET.
-    column: Enum8('OK' = 0, 'ERROR' = 1)
+    column: Enum8('' = 0, 'OK' = 1, 'ERROR' = 2)
     enum:
     - OK
     - ERROR
@@ -2671,11 +2671,11 @@ entries:
   rpc.connect_rpc.error_code:
     brief: The [error codes](https://connect.build/docs/protocol/#error-codes) of
       the Connect request. Error codes are always string values.
-    column: Enum8('cancelled' = 0, 'unknown' = 1, 'invalid_argument' = 2, 'deadline_exceeded'
-      = 3, 'not_found' = 4, 'already_exists' = 5, 'permission_denied' = 6, 'resource_exhausted'
-      = 7, 'failed_precondition' = 8, 'aborted' = 9, 'out_of_range' = 10, 'unimplemented'
-      = 11, 'internal' = 12, 'unavailable' = 13, 'data_loss' = 14, 'unauthenticated'
-      = 15)
+    column: Enum8('' = 0, 'cancelled' = 1, 'unknown' = 2, 'invalid_argument' = 3,
+      'deadline_exceeded' = 4, 'not_found' = 5, 'already_exists' = 6, 'permission_denied'
+      = 7, 'resource_exhausted' = 8, 'failed_precondition' = 9, 'aborted' = 10, 'out_of_range'
+      = 11, 'unimplemented' = 12, 'internal' = 13, 'unavailable' = 14, 'data_loss'
+      = 15, 'unauthenticated' = 16)
     enum:
     - cancelled
     - unknown
@@ -2945,7 +2945,7 @@ entries:
     type: int
   state:
     brief: The state of a connection in the pool
-    column: Enum8('idle' = 0, 'used' = 1)
+    column: Enum8('' = 0, 'idle' = 1, 'used' = 2)
     enum:
     - idle
     - used
@@ -3000,7 +3000,7 @@ entries:
     type: string
   system.filesystem.state:
     brief: The filesystem state
-    column: Enum8('used' = 0, 'free' = 1, 'reserved' = 2)
+    column: Enum8('' = 0, 'used' = 1, 'free' = 2, 'reserved' = 3)
     enum:
     - used
     - free
@@ -3030,9 +3030,9 @@ entries:
     type: string
   system.network.state:
     brief: A stateless protocol MUST NOT set this attribute
-    column: Enum8('close' = 0, 'close_wait' = 1, 'closing' = 2, 'delete' = 3, 'established'
-      = 4, 'fin_wait_1' = 5, 'fin_wait_2' = 6, 'last_ack' = 7, 'listen' = 8, 'syn_recv'
-      = 9, 'syn_sent' = 10, 'time_wait' = 11)
+    column: Enum8('' = 0, 'close' = 1, 'close_wait' = 2, 'closing' = 3, 'delete' =
+      4, 'established' = 5, 'fin_wait_1' = 6, 'fin_wait_2' = 7, 'last_ack' = 8, 'listen'
+      = 9, 'syn_recv' = 10, 'syn_sent' = 11, 'time_wait' = 12)
     enum:
     - close
     - close_wait
@@ -3052,7 +3052,7 @@ entries:
     type: string
   system.paging.direction:
     brief: The paging access direction
-    column: Enum8('in' = 0, 'out' = 1)
+    column: Enum8('' = 0, 'in' = 1, 'out' = 2)
     enum:
     - in
     - out
@@ -3062,7 +3062,7 @@ entries:
     type: string
   system.paging.state:
     brief: The memory paging state
-    column: Enum8('used' = 0, 'free' = 1)
+    column: Enum8('' = 0, 'used' = 1, 'free' = 2)
     enum:
     - used
     - free
@@ -3072,7 +3072,7 @@ entries:
     type: string
   system.paging.type:
     brief: The memory paging type
-    column: Enum8('major' = 0, 'minor' = 1)
+    column: Enum8('' = 0, 'major' = 1, 'minor' = 2)
     enum:
     - major
     - minor

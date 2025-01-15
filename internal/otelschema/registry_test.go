@@ -122,9 +122,10 @@ func columnType(name, brief, t string, enum []any) proto.ColumnType {
 		colType = proto.ColumnTypeEnum16
 	}
 	var params []string
+	params = append(params, "'' = 0")
 	for i, v := range anyTo[string](enum) {
 		// Should we escape?
-		params = append(params, fmt.Sprintf("'%s' = %d", v, i))
+		params = append(params, fmt.Sprintf("'%s' = %d", v, i+1))
 	}
 	return colType.With(params...)
 }
