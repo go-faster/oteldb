@@ -110,6 +110,13 @@ func Generate(t Table) (string, error) {
 		b.WriteString("\n")
 		var col strings.Builder
 		col.WriteString("\t")
+		if c.Name == "" {
+			// Comment row.
+			col.WriteString("-- ")
+			col.WriteString(c.Comment)
+			b.WriteString(col.String())
+			continue
+		}
 		nameFormat := "%-" + strconv.Itoa(maxColumnLen+2) + "s"
 		col.WriteString(fmt.Sprintf(nameFormat, Backtick(c.Name)))
 		col.WriteString(" ")

@@ -1,6 +1,9 @@
 package chstorage
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
@@ -9,12 +12,18 @@ import (
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/ddl"
+	"github.com/go-faster/oteldb/internal/otelschema"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 type Attributes struct {
 	Name  string
 	Value proto.ColumnOf[otelstorage.Attrs]
+
+	// Materialized columns.
+
+	Strings  map[string]proto.ColumnOf[string]
+	Integers map[string]proto.ColumnOf[int64]
 }
 
 type jsonAttrCol struct {
@@ -216,10 +225,68 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 	for _, opt := range opts {
 		opt(&o)
 	}
-	return &Attributes{
+	attr := &Attributes{
 		Name:  name,
 		Value: newAttributesColumn(o),
+
+		Strings:  make(map[string]proto.ColumnOf[string]),
+		Integers: make(map[string]proto.ColumnOf[int64]),
 	}
+
+	appendEntry := func(e otelschema.Entry, prefix string) {
+		s := prefix + e.Name
+		switch e.Type {
+		case "string":
+			if strings.HasPrefix(e.Column.String(), "Enum") {
+				v := new(proto.ColEnum)
+				if err := v.Infer(e.Column); err != nil {
+					panic(err)
+				}
+				attr.Strings[s] = v
+				return
+			}
+			if e.Column != proto.ColumnTypeString {
+				// TODO: support other columns:
+				//  * UUID
+				return
+			}
+			attr.Strings[s] = new(proto.ColStr)
+		case "int":
+			if e.Column != proto.ColumnTypeInt64 {
+				// TODO: support other columns?
+				return
+			}
+			attr.Integers[s] = new(proto.ColInt64)
+		}
+	}
+
+	entries := otelschema.Data.All()
+
+	switch name {
+	case colAttrs:
+		for _, e := range entries {
+			switch e.Where {
+			case colAttrs, "":
+				appendEntry(e, "attr_")
+			}
+		}
+	case colResource:
+		for _, e := range entries {
+			switch e.Where {
+			case colResource:
+				appendEntry(e, "res_")
+			}
+		}
+	case colScope:
+		for _, e := range entries {
+			switch e.Where {
+			case colScope:
+				appendEntry(e, "scp_")
+			}
+		}
+	}
+
+	return attr
 }
 
 func attrKeys(name string) chsql.Expr {
@@ -232,9 +299,24 @@ func attrStringMap(name string) chsql.Expr {
 
 // Columns returns a slice of Columns for this attribute set.
 func (a *Attributes) Columns() Columns {
-	return Columns{
+	col := Columns{
 		{Name: a.Name, Data: a.Value},
 	}
+	col = appendColumns(col, a.Strings)
+	col = appendColumns(col, a.Integers)
+	return col
+}
+
+func appendColumns[T any](col Columns, m map[string]proto.ColumnOf[T]) Columns {
+	keys := maps.Keys(m)
+	sort.Strings(keys)
+	for _, k := range keys {
+		col = append(col, Column{
+			Name: k,
+			Data: m[k],
+		})
+	}
+	return col
 }
 
 const (
@@ -267,6 +349,12 @@ func firstAttrSelector(label string) chsql.Expr {
 // Append adds a new map of attributes.
 func (a *Attributes) Append(kv otelstorage.Attrs) {
 	a.Value.Append(kv)
+	for _, v := range a.Strings {
+		v.Append("")
+	}
+	for _, v := range a.Integers {
+		v.Append(0)
+	}
 }
 
 // Row returns a new map of attributes for a given row.
@@ -278,10 +366,30 @@ func (a *Attributes) Row(idx int) otelstorage.Attrs {
 func (a *Attributes) DDL(table *ddl.Table) {
 	table.Columns = append(table.Columns,
 		ddl.Column{
+			Comment: a.Name + " attributes",
+		},
+		ddl.Column{
 			Name: a.Name,
 			Type: a.Value.Type(),
 		},
 	)
+	table.Columns = appendDDL(table.Columns, a.Integers)
+	table.Columns = appendDDL(table.Columns, a.Strings)
+	table.Columns = append(table.Columns, ddl.Column{
+		Comment: "end",
+	})
+}
+
+func appendDDL[T any](col []ddl.Column, m map[string]proto.ColumnOf[T]) []ddl.Column {
+	keys := maps.Keys(m)
+	sort.Strings(keys)
+	for _, k := range keys {
+		col = append(col, ddl.Column{
+			Name: k,
+			Type: m[k].Type(),
+		})
+	}
+	return col
 }
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {

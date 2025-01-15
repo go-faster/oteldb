@@ -6,26 +6,31 @@ entries:
     examples:
     - "33"
     - "32"
+    full_name: android.os.api_level
     group: android
     name: android_os_api_level
     type: string
+    where: resource
   android.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
-    column: Enum8('created' = 0, 'background' = 1, 'foreground' = 2)
+    column: Enum8('' = 0, 'created' = 1, 'background' = 2, 'foreground' = 3)
     enum:
     - created
     - background
     - foreground
+    full_name: android.state
     group: android
     name: android_state
     type: string
+    where: resource
   aws.ecs.cluster.arn:
     brief: |
       The ARN of an [ECS cluster](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/clusters.html).
     column: String
     examples:
     - arn:aws:ecs:us-west-2:123456789123:cluster/my-cluster
+    full_name: aws.ecs.cluster.arn
     group: aws
     name: aws_ecs_cluster_arn
     type: string
@@ -35,16 +40,18 @@ entries:
     column: String
     examples:
     - arn:aws:ecs:us-west-1:123456789123:container/32624152-9086-4f0e-acae-1a75b14fe4d9
+    full_name: aws.ecs.container.arn
     group: aws
     name: aws_ecs_container_arn
     type: string
   aws.ecs.launchtype:
     brief: |
       The [launch type](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html) for an ECS task.
-    column: Enum8('ec2' = 0, 'fargate' = 1)
+    column: Enum8('' = 0, 'ec2' = 1, 'fargate' = 2)
     enum:
     - ec2
     - fargate
+    full_name: aws.ecs.launchtype
     group: aws
     name: aws_ecs_launchtype
     type: string
@@ -54,6 +61,7 @@ entries:
     column: String
     examples:
     - arn:aws:ecs:us-west-1:123456789123:task/10838bed-421f-43ef-870a-f43feacbbb5b
+    full_name: aws.ecs.task.arn
     group: aws
     name: aws_ecs_task_arn
     type: string
@@ -63,6 +71,7 @@ entries:
     column: String
     examples:
     - opentelemetry-family
+    full_name: aws.ecs.task.family
     group: aws
     name: aws_ecs_task_family
     type: string
@@ -73,6 +82,7 @@ entries:
     examples:
     - "8"
     - "26"
+    full_name: aws.ecs.task.revision
     group: aws
     name: aws_ecs_task_revision
     type: string
@@ -82,6 +92,7 @@ entries:
     column: String
     examples:
     - arn:aws:ecs:us-west-2:123456789123:cluster/my-cluster
+    full_name: aws.eks.cluster.arn
     group: aws
     name: aws_eks_cluster_arn
     type: string
@@ -91,6 +102,7 @@ entries:
     column: String
     examples:
     - arn:aws:lambda:us-east-1:123456:function:myfunction:myalias
+    full_name: aws.lambda.invoked_arn
     group: aws
     name: aws_lambda_invoked_arn
     type: string
@@ -100,6 +112,7 @@ entries:
     column: Array(String)
     examples:
     - arn:aws:logs:us-west-1:123456789012:log-group:/aws/my/group:*
+    full_name: aws.log.group.arns
     group: aws
     name: aws_log_group_arns
     type: string[]
@@ -110,6 +123,7 @@ entries:
     examples:
     - /aws/lambda/my-function
     - opentelemetry-service
+    full_name: aws.log.group.names
     group: aws
     name: aws_log_group_names
     type: string[]
@@ -119,6 +133,7 @@ entries:
     column: Array(String)
     examples:
     - arn:aws:logs:us-west-1:123456789012:log-group:/aws/my/group:log-stream:logs/main/10838bed-421f-43ef-870a-f43feacbbb5b
+    full_name: aws.log.stream.arns
     group: aws
     name: aws_log_stream_arns
     type: string[]
@@ -128,6 +143,7 @@ entries:
     column: Array(String)
     examples:
     - logs/main/10838bed-421f-43ef-870a-f43feacbbb5b
+    full_name: aws.log.stream.names
     group: aws
     name: aws_log_stream_names
     type: string[]
@@ -138,9 +154,11 @@ entries:
     - ' Not A;Brand 99'
     - Chromium 99
     - Chrome 99
+    full_name: browser.brands
     group: browser
     name: browser_brands
     type: string[]
+    where: resource
   browser.language:
     brief: Preferred language of the user using the browser
     column: String
@@ -149,15 +167,19 @@ entries:
     - en-US
     - fr
     - fr-FR
+    full_name: browser.language
     group: browser
     name: browser_language
     type: string
+    where: resource
   browser.mobile:
     brief: A boolean that is true if the browser is running on a mobile device
     column: Bool
+    full_name: browser.mobile
     group: browser
     name: browser_mobile
     type: boolean
+    where: resource
   browser.platform:
     brief: The platform on which the browser is running
     column: String
@@ -165,9 +187,11 @@ entries:
     - Windows
     - macOS
     - Android
+    full_name: browser.platform
     group: browser
     name: browser_platform
     type: string
+    where: resource
   client.address:
     brief: Client address - domain name if available without reverse DNS lookup; otherwise,
       IP address or Unix domain socket name.
@@ -176,6 +200,7 @@ entries:
     - client.example.com
     - 10.1.2.80
     - /tmp/my.sock
+    full_name: client.address
     group: client
     name: client_address
     type: string
@@ -184,6 +209,7 @@ entries:
     column: UInt16
     examples:
     - 65123
+    full_name: client.port
     group: client
     name: client_port
     type: int
@@ -194,32 +220,40 @@ entries:
     examples:
     - "111111111111"
     - opentelemetry
+    full_name: cloud.account.id
     group: cloud
     name: cloud_account_id
     type: string
+    where: resource
   cloud.availability_zone:
     brief: |
       Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
     column: String
     examples:
     - us-east-1c
+    full_name: cloud.availability_zone
     group: cloud
     name: cloud_availability_zone
     type: string
+    where: resource
   cloud.platform:
     brief: |
       The cloud platform in use.
     column: String
+    full_name: cloud.platform
     group: cloud
     name: cloud_platform
     type: string
+    where: resource
   cloud.provider:
     brief: |
       Name of the cloud provider.
     column: String
+    full_name: cloud.provider
     group: cloud
     name: cloud_provider
     type: string
+    where: resource
   cloud.region:
     brief: |
       The geographical region the resource is running.
@@ -227,9 +261,11 @@ entries:
     examples:
     - us-central1
     - us-east-1
+    full_name: cloud.region
     group: cloud
     name: cloud_region
     type: string
+    where: resource
   cloud.resource_id:
     brief: |
       Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP)
@@ -238,9 +274,11 @@ entries:
     - arn:aws:lambda:REGION:ACCOUNT_ID:function:my-function
     - //run.googleapis.com/projects/PROJECT_ID/locations/LOCATION_ID/services/SERVICE_ID
     - /subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>
+    full_name: cloud.resource_id
     group: cloud
     name: cloud_resource_id
     type: string
+    where: resource
   cloudevents.event_id:
     brief: |
       The [event_id](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#id) uniquely identifies the event.
@@ -248,6 +286,7 @@ entries:
     examples:
     - 123e4567-e89b-12d3-a456-426614174000
     - "0001"
+    full_name: cloudevents.event_id
     group: cloudevents
     name: cloudevents_event_id
     type: string
@@ -259,6 +298,7 @@ entries:
     - https://github.com/cloudevents
     - /cloudevents/spec/pull/123
     - my-service
+    full_name: cloudevents.event_source
     group: cloudevents
     name: cloudevents_event_source
     type: string
@@ -268,6 +308,7 @@ entries:
     column: String
     examples:
     - "1.0"
+    full_name: cloudevents.event_spec_version
     group: cloudevents
     name: cloudevents_event_spec_version
     type: string
@@ -277,6 +318,7 @@ entries:
     column: String
     examples:
     - mynewfile.jpg
+    full_name: cloudevents.event_subject
     group: cloudevents
     name: cloudevents_event_subject
     type: string
@@ -287,6 +329,7 @@ entries:
     examples:
     - com.github.pull_request.opened
     - com.example.object.deleted.v2
+    full_name: cloudevents.event_type
     group: cloudevents
     name: cloudevents_event_type
     type: string
@@ -296,6 +339,7 @@ entries:
     column: Int64
     examples:
     - 16
+    full_name: code.column
     group: code
     name: code_column
     type: int
@@ -305,6 +349,7 @@ entries:
     column: String
     examples:
     - /usr/local/MyApplication/content_root/app/index.php
+    full_name: code.filepath
     group: code
     name: code_filepath
     type: string
@@ -314,6 +359,7 @@ entries:
     column: String
     examples:
     - serveRequest
+    full_name: code.function
     group: code
     name: code_function
     type: string
@@ -323,6 +369,7 @@ entries:
     column: Int64
     examples:
     - 42
+    full_name: code.lineno
     group: code
     name: code_lineno
     type: int
@@ -332,6 +379,7 @@ entries:
     column: String
     examples:
     - com.example.MyHttpService
+    full_name: code.namespace
     group: code
     name: code_namespace
     type: string
@@ -342,6 +390,7 @@ entries:
     examples:
     - at com.example.GenerateTrace.methodB(GenerateTrace.java:13)\n at com.example.GenerateTrace.methodA(GenerateTrace.java:9)\n
       at com.example.GenerateTrace.main(GenerateTrace.java:5)
+    full_name: code.stacktrace
     group: code
     name: code_stacktrace
     type: string
@@ -351,54 +400,66 @@ entries:
     column: String
     examples:
     - otelcontribcol
+    full_name: container.command
     group: container
     name: container_command
     type: string
+    where: resource
   container.command_args:
     brief: |
       All the command arguments (including the command/executable itself) run by the container. [2]
     column: Array(String)
     examples:
     - otelcontribcol, --config, config.yaml
+    full_name: container.command_args
     group: container
     name: container_command_args
     type: string[]
+    where: resource
   container.command_line:
     brief: |
       The full command run by the container as a single string representing the full command. [2]
     column: String
     examples:
     - otelcontribcol --config config.yaml
+    full_name: container.command_line
     group: container
     name: container_command_line
     type: string
+    where: resource
   container.id:
     brief: |
       Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/reference/run/#container-identification). The UUID might be abbreviated.
     column: String
     examples:
     - a3bf90e006b2
+    full_name: container.id
     group: container
     name: container_id
     type: string
+    where: resource
   container.image.id:
     brief: |
       Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
     column: String
     examples:
     - sha256:19c92d0a00d1b66d897bceaa7319bee0dd38a10a851c60bcec9474aa3f01e50f
+    full_name: container.image.id
     group: container
     name: container_image_id
     type: string
+    where: resource
   container.image.name:
     brief: |
       Name of the image the container was built on.
     column: String
     examples:
     - gcr.io/opentelemetry/operator
+    full_name: container.image.name
     group: container
     name: container_image_name
     type: string
+    where: resource
   container.image.repo_digests:
     brief: |
       Repo digests of the container image as provided by the container runtime.
@@ -406,9 +467,11 @@ entries:
     examples:
     - example@sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb
     - internal.registry.example.com:5000/example@sha256:b69959407d21e8a062e0416bf13405bb2b71ed7a84dde4158ebafacfa06f5578
+    full_name: container.image.repo_digests
     group: container
     name: container_image_repo_digests
     type: string[]
+    where: resource
   container.image.tags:
     brief: |
       Container image tags. An example can be found in [Docker Image Inspect](https://docs.docker.com/engine/api/v1.43/#tag/Image/operation/ImageInspect). Should be only the `<tag>` section of the full name for example from `registry.example.com/my-org/my-image:<tag>`.
@@ -416,27 +479,33 @@ entries:
     examples:
     - v1.27.1
     - 3.5.7-0
+    full_name: container.image.tags
     group: container
     name: container_image_tags
     type: string[]
+    where: resource
   container.labels:
     brief: |
       Container labels, `<key>` being the label name, the value being the label value.
     column: String
     examples:
     - container.labels.app=nginx
+    full_name: container.labels
     group: container
     name: container_labels
     type: template[string]
+    where: resource
   container.name:
     brief: |
       Container name used by container runtime.
     column: String
     examples:
     - opentelemetry-autoconf
+    full_name: container.name
     group: container
     name: container_name
     type: string
+    where: resource
   container.runtime:
     brief: |
       The container runtime managing this container.
@@ -445,15 +514,17 @@ entries:
     - docker
     - containerd
     - rkt
+    full_name: container.runtime
     group: container
     name: container_runtime
     type: string
+    where: resource
   db.cassandra.consistency_level:
     brief: |
       The consistency level of the query. Based on consistency values from [CQL](https://docs.datastax.com/en/cassandra-oss/3.0/cassandra/dml/dmlConfigConsistency.html).
-    column: Enum8('all' = 0, 'each_quorum' = 1, 'quorum' = 2, 'local_quorum' = 3,
-      'one' = 4, 'two' = 5, 'three' = 6, 'local_one' = 7, 'any' = 8, 'serial' = 9,
-      'local_serial' = 10)
+    column: Enum8('' = 0, 'all' = 1, 'each_quorum' = 2, 'quorum' = 3, 'local_quorum'
+      = 4, 'one' = 5, 'two' = 6, 'three' = 7, 'local_one' = 8, 'any' = 9, 'serial'
+      = 10, 'local_serial' = 11)
     enum:
     - all
     - each_quorum
@@ -466,6 +537,7 @@ entries:
     - any
     - serial
     - local_serial
+    full_name: db.cassandra.consistency_level
     group: db
     name: db_cassandra_consistency_level
     type: string
@@ -475,6 +547,7 @@ entries:
     column: String
     examples:
     - us-west-2
+    full_name: db.cassandra.coordinator.dc
     group: db
     name: db_cassandra_coordinator_dc
     type: string
@@ -484,6 +557,7 @@ entries:
     column: String
     examples:
     - be13faa2-8574-4d71-926d-27f16cf8a7af
+    full_name: db.cassandra.coordinator.id
     group: db
     name: db_cassandra_coordinator_id
     type: string
@@ -491,6 +565,7 @@ entries:
     brief: |
       Whether or not the query is idempotent.
     column: Bool
+    full_name: db.cassandra.idempotence
     group: db
     name: db_cassandra_idempotence
     type: boolean
@@ -500,6 +575,7 @@ entries:
     column: Int64
     examples:
     - 5000
+    full_name: db.cassandra.page_size
     group: db
     name: db_cassandra_page_size
     type: int
@@ -510,6 +586,7 @@ entries:
     examples:
     - 0
     - 2
+    full_name: db.cassandra.speculative_execution_count
     group: db
     name: db_cassandra_speculative_execution_count
     type: int
@@ -519,6 +596,7 @@ entries:
     column: String
     examples:
     - mytable
+    full_name: db.cassandra.table
     group: db
     name: db_cassandra_table
     type: string
@@ -528,6 +606,7 @@ entries:
     column: String
     examples:
     - Server=(localdb)\v11.0;Integrated Security=true;
+    full_name: db.connection_string
     group: db
     name: db_connection_string
     type: string
@@ -536,15 +615,17 @@ entries:
     column: String
     examples:
     - 3ba4827d-4422-483f-b59f-85b74211c11d
+    full_name: db.cosmosdb.client_id
     group: db
     name: db_cosmosdb_client_id
     type: string
   db.cosmosdb.connection_mode:
     brief: Cosmos client connection mode.
-    column: Enum8('gateway' = 0, 'direct' = 1)
+    column: Enum8('' = 0, 'gateway' = 1, 'direct' = 2)
     enum:
     - gateway
     - direct
+    full_name: db.cosmosdb.connection_mode
     group: db
     name: db_cosmosdb_connection_mode
     type: string
@@ -553,12 +634,14 @@ entries:
     column: String
     examples:
     - anystring
+    full_name: db.cosmosdb.container
     group: db
     name: db_cosmosdb_container
     type: string
   db.cosmosdb.operation_type:
     brief: CosmosDB Operation Type.
     column: String
+    full_name: db.cosmosdb.operation_type
     group: db
     name: db_cosmosdb_operation_type
     type: string
@@ -568,12 +651,14 @@ entries:
     examples:
     - 46.18
     - 1
+    full_name: db.cosmosdb.request_charge
     group: db
     name: db_cosmosdb_request_charge
     type: double
   db.cosmosdb.request_content_length:
     brief: Request payload size in bytes
     column: Int64
+    full_name: db.cosmosdb.request_content_length
     group: db
     name: db_cosmosdb_request_content_length
     type: int
@@ -583,6 +668,7 @@ entries:
     examples:
     - 200
     - 201
+    full_name: db.cosmosdb.status_code
     group: db
     name: db_cosmosdb_status_code
     type: int
@@ -592,6 +678,7 @@ entries:
     examples:
     - 1000
     - 1002
+    full_name: db.cosmosdb.sub_status_code
     group: db
     name: db_cosmosdb_sub_status_code
     type: int
@@ -601,6 +688,7 @@ entries:
     column: String
     examples:
     - e9106fc68e3044f0b1475b04bf4ffd5f
+    full_name: db.elasticsearch.cluster.name
     group: db
     name: db_elasticsearch_cluster_name
     type: string
@@ -610,6 +698,7 @@ entries:
     column: String
     examples:
     - instance-0000000001
+    full_name: db.elasticsearch.node.name
     group: db
     name: db_elasticsearch_node_name
     type: string
@@ -620,6 +709,7 @@ entries:
     examples:
     - db.elasticsearch.path_parts.index=test-index
     - db.elasticsearch.path_parts.doc_id=123
+    full_name: db.elasticsearch.path_parts
     group: db
     name: db_elasticsearch_path_parts
     type: template[string]
@@ -629,6 +719,7 @@ entries:
     column: String
     examples:
     - mysql-e26b99z.example.com
+    full_name: db.instance.id
     group: db
     name: db_instance_id
     type: string
@@ -639,6 +730,7 @@ entries:
     examples:
     - org.postgresql.Driver
     - com.microsoft.sqlserver.jdbc.SQLServerDriver
+    full_name: db.jdbc.driver_classname
     group: db
     name: db_jdbc_driver_classname
     type: string
@@ -649,6 +741,7 @@ entries:
     examples:
     - customers
     - products
+    full_name: db.mongodb.collection
     group: db
     name: db_mongodb_collection
     type: string
@@ -658,6 +751,7 @@ entries:
     column: String
     examples:
     - MSSQLSERVER
+    full_name: db.mssql.instance_name
     group: db
     name: db_mssql_instance_name
     type: string
@@ -668,6 +762,7 @@ entries:
     examples:
     - customers
     - main
+    full_name: db.name
     group: db
     name: db_name
     type: string
@@ -679,6 +774,7 @@ entries:
     - findAndModify
     - HMSET
     - SELECT
+    full_name: db.operation
     group: db
     name: db_operation
     type: string
@@ -690,6 +786,7 @@ entries:
     - 0
     - 1
     - 15
+    full_name: db.redis.database_index
     group: db
     name: db_redis_database_index
     type: int
@@ -700,6 +797,7 @@ entries:
     examples:
     - public.users
     - customers
+    full_name: db.sql.table
     group: db
     name: db_sql_table
     type: string
@@ -710,6 +808,7 @@ entries:
     examples:
     - SELECT * FROM wuser_table
     - SET mykey "WuValue"
+    full_name: db.statement
     group: db
     name: db_statement
     type: string
@@ -717,6 +816,7 @@ entries:
     brief: An identifier for the database management system (DBMS) product being used.
       See below for a list of well-known identifiers.
     column: String
+    full_name: db.system
     group: db
     name: db_system
     type: string
@@ -727,6 +827,7 @@ entries:
     examples:
     - readonly_user
     - reporting_user
+    full_name: db.user
     group: db
     name: db_user
     type: string
@@ -737,9 +838,11 @@ entries:
     examples:
     - staging
     - production
+    full_name: deployment.environment
     group: deployment
     name: deployment_environment
     type: string
+    where: resource
   destination.address:
     brief: Destination address - domain name if available without reverse DNS lookup;
       otherwise, IP address or Unix domain socket name.
@@ -748,6 +851,7 @@ entries:
     - destination.example.com
     - 10.1.2.80
     - /tmp/my.sock
+    full_name: destination.address
     group: destination
     name: destination_address
     type: string
@@ -757,6 +861,7 @@ entries:
     examples:
     - 3389
     - 2888
+    full_name: destination.port
     group: destination
     name: destination_port
     type: int
@@ -766,9 +871,11 @@ entries:
     column: String
     examples:
     - 2ab2916d-a51f-4ac8-80ee-45ac31a28092
+    full_name: device.id
     group: device
     name: device_id
     type: string
+    where: resource
   device.manufacturer:
     brief: |
       The name of the device manufacturer
@@ -776,9 +883,11 @@ entries:
     examples:
     - Apple
     - Samsung
+    full_name: device.manufacturer
     group: device
     name: device_manufacturer
     type: string
+    where: resource
   device.model.identifier:
     brief: |
       The model identifier for the device
@@ -786,9 +895,11 @@ entries:
     examples:
     - iPhone3,4
     - SM-G920F
+    full_name: device.model.identifier
     group: device
     name: device_model_identifier
     type: string
+    where: resource
   device.model.name:
     brief: |
       The marketing name for the device model
@@ -796,15 +907,18 @@ entries:
     examples:
     - iPhone 6s Plus
     - Samsung Galaxy S6
+    full_name: device.model.name
     group: device
     name: device_model_name
     type: string
+    where: resource
   disk.io.direction:
     brief: The disk IO operation direction.
-    column: Enum8('read' = 0, 'write' = 1)
+    column: Enum8('' = 0, 'read' = 1, 'write' = 2)
     enum:
     - read
     - write
+    full_name: disk.io.direction
     group: disk
     name: disk_io_direction
     type: string
@@ -814,6 +928,7 @@ entries:
     column: String
     examples:
     - username
+    full_name: enduser.id
     group: enduser
     name: enduser_id
     type: string
@@ -823,6 +938,7 @@ entries:
     column: String
     examples:
     - admin
+    full_name: enduser.role
     group: enduser
     name: enduser_role
     type: string
@@ -832,6 +948,7 @@ entries:
     column: String
     examples:
     - read:message, write:files
+    full_name: enduser.scope
     group: enduser
     name: enduser_scope
     type: string
@@ -844,6 +961,7 @@ entries:
     - java.net.UnknownHostException
     - server_certificate_invalid
     - "500"
+    full_name: error.type
     group: error
     name: error_type
     type: string
@@ -854,6 +972,7 @@ entries:
     examples:
     - browser.mouse.click
     - device.app.lifecycle
+    full_name: event.name
     group: event
     name: event_name
     type: string
@@ -861,6 +980,7 @@ entries:
     brief: |
       SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
     column: Bool
+    full_name: exception.escaped
     group: exception
     name: exception_escaped
     type: boolean
@@ -870,6 +990,7 @@ entries:
     examples:
     - Division by zero
     - Can't convert 'int' object to str implicitly
+    full_name: exception.message
     group: exception
     name: exception_message
     type: string
@@ -881,6 +1002,7 @@ entries:
     - 'Exception in thread "main" java.lang.RuntimeException: Test exception\n at
       com.example.GenerateTrace.methodB(GenerateTrace.java:13)\n at com.example.GenerateTrace.methodA(GenerateTrace.java:9)\n
       at com.example.GenerateTrace.main(GenerateTrace.java:5)'
+    full_name: exception.stacktrace
     group: exception
     name: exception_stacktrace
     type: string
@@ -891,6 +1013,7 @@ entries:
     examples:
     - java.net.ConnectException
     - OSError
+    full_name: exception.type
     group: exception
     name: exception_type
     type: string
@@ -898,18 +1021,22 @@ entries:
     brief: |
       A boolean that is true if the serverless function is executed for the first time (aka cold-start).
     column: Bool
+    full_name: faas.coldstart
     group: faas
     name: faas_coldstart
     type: boolean
+    where: resource
   faas.cron:
     brief: |
       A string containing the schedule period as [Cron Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm).
     column: String
     examples:
     - 0/5 * * * ? *
+    full_name: faas.cron
     group: faas
     name: faas_cron
     type: string
+    where: resource
   faas.document.collection:
     brief: |
       The name of the source on which the triggering operation was performed. For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB to the database name.
@@ -917,9 +1044,11 @@ entries:
     examples:
     - myBucketName
     - myDbName
+    full_name: faas.document.collection
     group: faas
     name: faas_document_collection
     type: string
+    where: resource
   faas.document.name:
     brief: |
       The document name/table subjected to the operation. For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table name.
@@ -927,75 +1056,93 @@ entries:
     examples:
     - myFile.txt
     - myTableName
+    full_name: faas.document.name
     group: faas
     name: faas_document_name
     type: string
+    where: resource
   faas.document.operation:
     brief: Describes the type of the operation that was performed on the data.
     column: String
+    full_name: faas.document.operation
     group: faas
     name: faas_document_operation
     type: string
+    where: resource
   faas.document.time:
     brief: |
       A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
     column: DateTime
     examples:
     - "2020-01-23T13:47:06Z"
+    full_name: faas.document.time
     group: faas
     name: faas_document_time
     type: string
+    where: resource
   faas.instance:
     brief: |
       The execution environment ID as a string, that will be potentially reused for other invocations to the same function/function version.
     column: String
     examples:
     - 2021/06/28/[$LATEST]2f399eb14537447da05ab2a2e39309de
+    full_name: faas.instance
     group: faas
     name: faas_instance
     type: string
+    where: resource
   faas.invocation_id:
     brief: The invocation ID of the current function invocation.
     column: String
     examples:
     - af9d5aa4-a685-4c5f-a22b-444f80b3cc28
+    full_name: faas.invocation_id
     group: faas
     name: faas_invocation_id
     type: string
+    where: resource
   faas.invoked_name:
     brief: |
       The name of the invoked function.
     column: String
     examples:
     - my-function
+    full_name: faas.invoked_name
     group: faas
     name: faas_invoked_name
     type: string
+    where: resource
   faas.invoked_provider:
     brief: |
       The cloud provider of the invoked function.
     column: String
+    full_name: faas.invoked_provider
     group: faas
     name: faas_invoked_provider
     type: string
+    where: resource
   faas.invoked_region:
     brief: |
       The cloud region of the invoked function.
     column: String
     examples:
     - eu-central-1
+    full_name: faas.invoked_region
     group: faas
     name: faas_invoked_region
     type: string
+    where: resource
   faas.max_memory:
     brief: |
       The amount of memory available to the serverless function converted to Bytes.
     column: Int64
     examples:
     - 134217728
+    full_name: faas.max_memory
     group: faas
     name: faas_max_memory
     type: int
+    where: resource
   faas.name:
     brief: |
       The name of the single function that this runtime instance executes.
@@ -1003,45 +1150,54 @@ entries:
     examples:
     - my-function
     - myazurefunctionapp/some-function-name
+    full_name: faas.name
     group: faas
     name: faas_name
     type: string
+    where: resource
   faas.time:
     brief: |
       A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
     column: DateTime
     examples:
     - "2020-01-23T13:47:06Z"
+    full_name: faas.time
     group: faas
     name: faas_time
     type: string
+    where: resource
   faas.trigger:
     brief: Type of the trigger which caused this function invocation.
-    column: Enum8('datasource' = 0, 'http' = 1, 'pubsub' = 2, 'timer' = 3, 'other'
-      = 4)
+    column: Enum8('' = 0, 'datasource' = 1, 'http' = 2, 'pubsub' = 3, 'timer' = 4,
+      'other' = 5)
     enum:
     - datasource
     - http
     - pubsub
     - timer
     - other
+    full_name: faas.trigger
     group: faas
     name: faas_trigger
     type: string
+    where: resource
   faas.version:
     brief: The immutable version of the function being executed.
     column: String
     examples:
     - "26"
     - pinkfroid-00002
+    full_name: faas.version
     group: faas
     name: faas_version
     type: string
+    where: resource
   feature_flag.key:
     brief: The unique identifier of the feature flag.
     column: String
     examples:
     - logo-color
+    full_name: feature_flag.key
     group: feature_flag
     name: feature_flag_key
     type: string
@@ -1050,6 +1206,7 @@ entries:
     column: String
     examples:
     - Flag Manager
+    full_name: feature_flag.provider_name
     group: feature_flag
     name: feature_flag_provider_name
     type: string
@@ -1061,6 +1218,7 @@ entries:
     - red
     - "true"
     - "on"
+    full_name: feature_flag.variant
     group: feature_flag
     name: feature_flag_variant
     type: string
@@ -1071,6 +1229,7 @@ entries:
     examples:
     - job-name-xxxx
     - sample-job-mdw84
+    full_name: gcp.cloud_run.job.execution
     group: gcp
     name: gcp_cloud_run_job_execution
     type: string
@@ -1081,6 +1240,7 @@ entries:
     examples:
     - 0
     - 1
+    full_name: gcp.cloud_run.job.task_index
     group: gcp
     name: gcp_cloud_run_job_task_index
     type: int
@@ -1091,6 +1251,7 @@ entries:
     examples:
     - my-host1234.example.com
     - sample-vm.us-west1-b.c.my-project.internal
+    full_name: gcp.gce.instance.hostname
     group: gcp
     name: gcp_gce_instance_hostname
     type: string
@@ -1101,6 +1262,7 @@ entries:
     examples:
     - instance-1
     - my-vm-name
+    full_name: gcp.gce.instance.name
     group: gcp
     name: gcp_gce_instance_name
     type: string
@@ -1110,43 +1272,53 @@ entries:
     column: String
     examples:
     - 2daa2797-e42b-4624-9322-ec3f968df4da
+    full_name: heroku.app.id
     group: heroku
     name: heroku_app_id
     type: string
+    where: resource
   heroku.release.commit:
     brief: |
       Commit hash for the current release
     column: String
     examples:
     - e6134959463efd8966b20e75b913cafe3f5ec
+    full_name: heroku.release.commit
     group: heroku
     name: heroku_release_commit
     type: string
+    where: resource
   heroku.release.creation_timestamp:
     brief: |
       Time and date the release was created
     column: String
     examples:
     - "2022-10-23T18:00:42Z"
+    full_name: heroku.release.creation_timestamp
     group: heroku
     name: heroku_release_creation_timestamp
     type: string
+    where: resource
   host.arch:
     brief: |
       The CPU architecture the host system is running on.
     column: String
+    full_name: host.arch
     group: host
     name: host_arch
     type: string
+    where: resource
   host.cpu.cache.l2.size:
     brief: |
       The amount of level 2 memory cache available to the processor (in Bytes).
     column: Int64
     examples:
     - 12288000
+    full_name: host.cpu.cache.l2.size
     group: host
     name: host_cpu_cache_l2_size
     type: int
+    where: resource
   host.cpu.family:
     brief: |
       Family or generation of the CPU.
@@ -1154,9 +1326,11 @@ entries:
     examples:
     - "6"
     - PA-RISC 1.1e
+    full_name: host.cpu.family
     group: host
     name: host_cpu_family
     type: string
+    where: resource
   host.cpu.model.id:
     brief: |
       Model identifier. It provides more granular information about the CPU, distinguishing it from other CPUs within the same family.
@@ -1164,54 +1338,66 @@ entries:
     examples:
     - "6"
     - 9000/778/B180L
+    full_name: host.cpu.model.id
     group: host
     name: host_cpu_model_id
     type: string
+    where: resource
   host.cpu.model.name:
     brief: |
       Model designation of the processor.
     column: String
     examples:
     - 11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz
+    full_name: host.cpu.model.name
     group: host
     name: host_cpu_model_name
     type: string
+    where: resource
   host.cpu.stepping:
     brief: |
       Stepping or core revisions.
     column: Int64
     examples:
     - 1
+    full_name: host.cpu.stepping
     group: host
     name: host_cpu_stepping
     type: int
+    where: resource
   host.cpu.vendor.id:
     brief: |
       Processor manufacturer identifier. A maximum 12-character string.
     column: String
     examples:
     - GenuineIntel
+    full_name: host.cpu.vendor.id
     group: host
     name: host_cpu_vendor_id
     type: string
+    where: resource
   host.id:
     brief: |
       Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider. For non-containerized systems, this should be the `machine-id`. See the table below for the sources to use to determine the `machine-id` based on operating system.
     column: String
     examples:
     - fdbf79e8af94cb7f9e8df36789187052
+    full_name: host.id
     group: host
     name: host_id
     type: string
+    where: resource
   host.image.id:
     brief: |
       VM image ID or host OS image ID. For Cloud, this value is from the provider.
     column: String
     examples:
     - ami-07b06b442921831e5
+    full_name: host.image.id
     group: host
     name: host_image_id
     type: string
+    where: resource
   host.image.name:
     brief: |
       Name of the VM image or OS install the host was instantiated from.
@@ -1219,18 +1405,22 @@ entries:
     examples:
     - infra-ami-eks-worker-node-7d4ec78312
     - CentOS-8-x86_64-1905
+    full_name: host.image.name
     group: host
     name: host_image_name
     type: string
+    where: resource
   host.image.version:
     brief: |
       The version string of the VM image or host OS as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
     column: String
     examples:
     - "0.1"
+    full_name: host.image.version
     group: host
     name: host_image_version
     type: string
+    where: resource
   host.ip:
     brief: |
       Available IP addresses of the host, excluding loopback interfaces.
@@ -1238,9 +1428,11 @@ entries:
     examples:
     - 192.168.1.140
     - fe80::abc2:4a28:737a:609e
+    full_name: host.ip
     group: host
     name: host_ip
     type: string[]
+    where: resource
   host.mac:
     brief: |
       Available MAC addresses of the host, excluding loopback interfaces.
@@ -1248,33 +1440,40 @@ entries:
     examples:
     - AC-DE-48-23-45-67
     - AC-DE-48-23-45-67-01-9F
+    full_name: host.mac
     group: host
     name: host_mac
     type: string[]
+    where: resource
   host.name:
     brief: |
       Name of the host. On Unix systems, it may contain what the hostname command returns, or the fully qualified hostname, or another name specified by the user.
     column: String
     examples:
     - opentelemetry-test
+    full_name: host.name
     group: host
     name: host_name
     type: string
+    where: resource
   host.type:
     brief: |
       Type of host. For Cloud, this must be the machine type.
     column: String
     examples:
     - n1-standard-1
+    full_name: host.type
     group: host
     name: host_type
     type: string
+    where: resource
   http.request.body.size:
     brief: |
       The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
     column: Int64
     examples:
     - 3495
+    full_name: http.request.body.size
     group: http
     name: http_request_body_size
     type: int
@@ -1285,6 +1484,7 @@ entries:
     examples:
     - http.request.header.content-type=["application/json"]
     - http.request.header.x-forwarded-for=["1.2.3.4", "1.2.3.5"]
+    full_name: http.request.header
     group: http
     name: http_request_header
     type: template[string[]]
@@ -1295,6 +1495,7 @@ entries:
     - GET
     - POST
     - HEAD
+    full_name: http.request.method
     group: http
     name: http_request_method
     type: string
@@ -1305,6 +1506,7 @@ entries:
     - GeT
     - ACL
     - foo
+    full_name: http.request.method_original
     group: http
     name: http_request_method_original
     type: string
@@ -1314,6 +1516,7 @@ entries:
     column: Int64
     examples:
     - 3
+    full_name: http.request.resend_count
     group: http
     name: http_request_resend_count
     type: int
@@ -1323,6 +1526,7 @@ entries:
     column: Int64
     examples:
     - 3495
+    full_name: http.response.body.size
     group: http
     name: http_response_body_size
     type: int
@@ -1333,6 +1537,7 @@ entries:
     examples:
     - http.response.header.content-type=["application/json"]
     - http.response.header.my-custom-header=["abc", "def"]
+    full_name: http.response.header
     group: http
     name: http_response_header
     type: template[string[]]
@@ -1341,6 +1546,7 @@ entries:
     column: Int64
     examples:
     - 200
+    full_name: http.response.status_code
     group: http
     name: http_response_status_code
     type: int
@@ -1351,20 +1557,22 @@ entries:
     examples:
     - /users/:userID?
     - '{controller}/{action}/{id?}'
+    full_name: http.route
     group: http
     name: http_route
     type: string
   ios.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
-    column: Enum8('active' = 0, 'inactive' = 1, 'background' = 2, 'foreground' = 3,
-      'terminate' = 4)
+    column: Enum8('' = 0, 'active' = 1, 'inactive' = 2, 'background' = 3, 'foreground'
+      = 4, 'terminate' = 5)
     enum:
     - active
     - inactive
     - background
     - foreground
     - terminate
+    full_name: ios.state
     group: ios
     name: ios_state
     type: string
@@ -1374,6 +1582,7 @@ entries:
     examples:
     - mapped
     - direct
+    full_name: jvm.buffer.pool.name
     group: jvm
     name: jvm_buffer_pool_name
     type: string
@@ -1383,6 +1592,7 @@ entries:
     examples:
     - end of minor GC
     - end of major GC
+    full_name: jvm.gc.action
     group: jvm
     name: jvm_gc_action
     type: string
@@ -1392,6 +1602,7 @@ entries:
     examples:
     - G1 Young Generation
     - G1 Old Generation
+    full_name: jvm.gc.name
     group: jvm
     name: jvm_gc_name
     type: string
@@ -1402,28 +1613,31 @@ entries:
     - G1 Old Gen
     - G1 Eden space
     - G1 Survivor Space
+    full_name: jvm.memory.pool.name
     group: jvm
     name: jvm_memory_pool_name
     type: string
   jvm.memory.type:
     brief: The type of memory.
-    column: Enum8('heap' = 0, 'non_heap' = 1)
+    column: Enum8('' = 0, 'heap' = 1, 'non_heap' = 2)
     enum:
     - heap
     - non_heap
+    full_name: jvm.memory.type
     group: jvm
     name: jvm_memory_type
     type: string
   jvm.thread.daemon:
     brief: Whether the thread is daemon or not.
     column: Bool
+    full_name: jvm.thread.daemon
     group: jvm
     name: jvm_thread_daemon
     type: boolean
   jvm.thread.state:
     brief: State of the thread.
-    column: Enum8('new' = 0, 'runnable' = 1, 'blocked' = 2, 'waiting' = 3, 'timed_waiting'
-      = 4, 'terminated' = 5)
+    column: Enum8('' = 0, 'new' = 1, 'runnable' = 2, 'blocked' = 3, 'waiting' = 4,
+      'timed_waiting' = 5, 'terminated' = 6)
     enum:
     - new
     - runnable
@@ -1431,6 +1645,7 @@ entries:
     - waiting
     - timed_waiting
     - terminated
+    full_name: jvm.thread.state
     group: jvm
     name: jvm_thread_state
     type: string
@@ -1440,6 +1655,7 @@ entries:
     column: String
     examples:
     - opentelemetry-cluster
+    full_name: k8s.cluster.name
     group: k8s
     name: k8s_cluster_name
     type: string
@@ -1449,6 +1665,7 @@ entries:
     column: UUID
     examples:
     - 218fc5a9-a5f1-4b54-aa05-46717d0ab26d
+    full_name: k8s.cluster.uid
     group: k8s
     name: k8s_cluster_uid
     type: string
@@ -1458,6 +1675,7 @@ entries:
     column: String
     examples:
     - redis
+    full_name: k8s.container.name
     group: k8s
     name: k8s_container_name
     type: string
@@ -1468,6 +1686,7 @@ entries:
     examples:
     - 0
     - 2
+    full_name: k8s.container.restart_count
     group: k8s
     name: k8s_container_restart_count
     type: int
@@ -1477,6 +1696,7 @@ entries:
     column: String
     examples:
     - opentelemetry
+    full_name: k8s.cronjob.name
     group: k8s
     name: k8s_cronjob_name
     type: string
@@ -1486,6 +1706,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.cronjob.uid
     group: k8s
     name: k8s_cronjob_uid
     type: string
@@ -1495,6 +1716,7 @@ entries:
     column: String
     examples:
     - opentelemetry
+    full_name: k8s.daemonset.name
     group: k8s
     name: k8s_daemonset_name
     type: string
@@ -1504,6 +1726,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.daemonset.uid
     group: k8s
     name: k8s_daemonset_uid
     type: string
@@ -1513,6 +1736,7 @@ entries:
     column: String
     examples:
     - opentelemetry
+    full_name: k8s.deployment.name
     group: k8s
     name: k8s_deployment_name
     type: string
@@ -1522,6 +1746,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.deployment.uid
     group: k8s
     name: k8s_deployment_uid
     type: string
@@ -1531,6 +1756,7 @@ entries:
     column: String
     examples:
     - opentelemetry
+    full_name: k8s.job.name
     group: k8s
     name: k8s_job_name
     type: string
@@ -1540,6 +1766,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.job.uid
     group: k8s
     name: k8s_job_uid
     type: string
@@ -1549,6 +1776,7 @@ entries:
     column: String
     examples:
     - default
+    full_name: k8s.namespace.name
     group: k8s
     name: k8s_namespace_name
     type: string
@@ -1558,6 +1786,7 @@ entries:
     column: String
     examples:
     - node-1
+    full_name: k8s.node.name
     group: k8s
     name: k8s_node_name
     type: string
@@ -1567,6 +1796,7 @@ entries:
     column: UUID
     examples:
     - 1eb3a0c6-0477-4080-a9cb-0cb7db65c6a2
+    full_name: k8s.node.uid
     group: k8s
     name: k8s_node_uid
     type: string
@@ -1578,6 +1808,7 @@ entries:
     - k8s.pod.labels.app=my-app
     - k8s.pod.labels.mycompany.io/arch=x64
     - k8s.pod.labels.data=
+    full_name: k8s.pod.labels
     group: k8s
     name: k8s_pod_labels
     type: template[string]
@@ -1587,6 +1818,7 @@ entries:
     column: String
     examples:
     - opentelemetry-pod-autoconf
+    full_name: k8s.pod.name
     group: k8s
     name: k8s_pod_name
     type: string
@@ -1596,6 +1828,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.pod.uid
     group: k8s
     name: k8s_pod_uid
     type: string
@@ -1605,6 +1838,7 @@ entries:
     column: String
     examples:
     - opentelemetry
+    full_name: k8s.replicaset.name
     group: k8s
     name: k8s_replicaset_name
     type: string
@@ -1614,6 +1848,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.replicaset.uid
     group: k8s
     name: k8s_replicaset_uid
     type: string
@@ -1623,6 +1858,7 @@ entries:
     column: String
     examples:
     - opentelemetry
+    full_name: k8s.statefulset.name
     group: k8s
     name: k8s_statefulset_name
     type: string
@@ -1632,6 +1868,7 @@ entries:
     column: UUID
     examples:
     - 275ecb36-5aa8-4c2a-9c47-d8bb681b9aff
+    full_name: k8s.statefulset.uid
     group: k8s
     name: k8s_statefulset_uid
     type: string
@@ -1641,6 +1878,7 @@ entries:
     column: String
     examples:
     - audit.log
+    full_name: log.file.name
     group: log
     name: log_file_name
     type: string
@@ -1650,6 +1888,7 @@ entries:
     column: String
     examples:
     - uuid.log
+    full_name: log.file.name_resolved
     group: log
     name: log_file_name_resolved
     type: string
@@ -1659,6 +1898,7 @@ entries:
     column: String
     examples:
     - /var/log/mysql/audit.log
+    full_name: log.file.path
     group: log
     name: log_file_path
     type: string
@@ -1668,16 +1908,18 @@ entries:
     column: String
     examples:
     - /var/lib/docker/uuid.log
+    full_name: log.file.path_resolved
     group: log
     name: log_file_path_resolved
     type: string
   log.iostream:
     brief: |
       The stream associated with the log. See below for a list of well-known values.
-    column: Enum8('stdout' = 0, 'stderr' = 1)
+    column: Enum8('' = 0, 'stdout' = 1, 'stderr' = 2)
     enum:
     - stdout
     - stderr
+    full_name: log.iostream
     group: log
     name: log_iostream
     type: string
@@ -1687,12 +1929,14 @@ entries:
     column: String
     examples:
     - 01ARZ3NDEKTSV4RRFFQ69G5FAV
+    full_name: log.record.uid
     group: log
     name: log_record_uid
     type: string
   message.compressed_size:
     brief: Compressed size of the message in bytes.
     column: Int64
+    full_name: message.compressed_size
     group: message
     name: message_compressed_size
     type: int
@@ -1700,21 +1944,24 @@ entries:
     brief: MUST be calculated as two different counters starting from `1` one for
       sent messages and one for received message.
     column: Int64
+    full_name: message.id
     group: message
     name: message_id
     type: int
   message.type:
     brief: Whether this is a received or sent message.
-    column: Enum8('SENT' = 0, 'RECEIVED' = 1)
+    column: Enum8('' = 0, 'SENT' = 1, 'RECEIVED' = 2)
     enum:
     - SENT
     - RECEIVED
+    full_name: message.type
     group: message
     name: message_type
     type: string
   message.uncompressed_size:
     brief: Uncompressed size of the message in bytes.
     column: Int64
+    full_name: message.uncompressed_size
     group: message
     name: message_uncompressed_size
     type: int
@@ -1726,6 +1973,7 @@ entries:
     - 0
     - 1
     - 2
+    full_name: messaging.batch.message_count
     group: messaging
     name: messaging_batch_message_count
     type: int
@@ -1736,6 +1984,7 @@ entries:
     examples:
     - client-5
     - myhost@8742@s8083jm
+    full_name: messaging.client_id
     group: messaging
     name: messaging_client_id
     type: string
@@ -1743,6 +1992,7 @@ entries:
     brief: A boolean that is true if the message destination is anonymous (could be
       unnamed or have auto-generated name).
     column: Bool
+    full_name: messaging.destination.anonymous
     group: messaging
     name: messaging_destination_anonymous
     type: boolean
@@ -1752,6 +2002,7 @@ entries:
     examples:
     - MyQueue
     - MyTopic
+    full_name: messaging.destination.name
     group: messaging
     name: messaging_destination_name
     type: string
@@ -1760,6 +2011,7 @@ entries:
     column: String
     examples:
     - /customers/{customerId}
+    full_name: messaging.destination.template
     group: messaging
     name: messaging_destination_template
     type: string
@@ -1767,6 +2019,7 @@ entries:
     brief: A boolean that is true if the message destination is temporary and might
       not exist anymore after messages are processed.
     column: Bool
+    full_name: messaging.destination.temporary
     group: messaging
     name: messaging_destination_temporary
     type: boolean
@@ -1774,6 +2027,7 @@ entries:
     brief: A boolean that is true if the publish message destination is anonymous
       (could be unnamed or have auto-generated name).
     column: Bool
+    full_name: messaging.destination_publish.anonymous
     group: messaging
     name: messaging_destination_publish_anonymous
     type: boolean
@@ -1783,6 +2037,7 @@ entries:
     examples:
     - MyQueue
     - MyTopic
+    full_name: messaging.destination_publish.name
     group: messaging
     name: messaging_destination_publish_name
     type: string
@@ -1792,6 +2047,7 @@ entries:
     column: String
     examples:
     - ordering_key
+    full_name: messaging.gcp_pubsub.message.ordering_key
     group: messaging
     name: messaging_gcp_pubsub_message_ordering_key
     type: string
@@ -1801,6 +2057,7 @@ entries:
     column: String
     examples:
     - my-group
+    full_name: messaging.kafka.consumer.group
     group: messaging
     name: messaging_kafka_consumer_group
     type: string
@@ -1810,6 +2067,7 @@ entries:
     column: Int64
     examples:
     - 2
+    full_name: messaging.kafka.destination.partition
     group: messaging
     name: messaging_kafka_destination_partition
     type: int
@@ -1819,6 +2077,7 @@ entries:
     column: String
     examples:
     - myKey
+    full_name: messaging.kafka.message.key
     group: messaging
     name: messaging_kafka_message_key
     type: string
@@ -1828,12 +2087,14 @@ entries:
     column: Int64
     examples:
     - 42
+    full_name: messaging.kafka.message.offset
     group: messaging
     name: messaging_kafka_message_offset
     type: int
   messaging.kafka.message.tombstone:
     brief: A boolean that is true if the message is a tombstone.
     column: Bool
+    full_name: messaging.kafka.message.tombstone
     group: messaging
     name: messaging_kafka_message_tombstone
     type: boolean
@@ -1843,6 +2104,7 @@ entries:
     column: Int64
     examples:
     - 1439
+    full_name: messaging.message.body.size
     group: messaging
     name: messaging_message_body_size
     type: int
@@ -1852,6 +2114,7 @@ entries:
     column: String
     examples:
     - MyConversationId
+    full_name: messaging.message.conversation_id
     group: messaging
     name: messaging_message_conversation_id
     type: string
@@ -1861,6 +2124,7 @@ entries:
     column: Int64
     examples:
     - 2738
+    full_name: messaging.message.envelope.size
     group: messaging
     name: messaging_message_envelope_size
     type: int
@@ -1870,6 +2134,7 @@ entries:
     column: String
     examples:
     - 452a7c7c7c7048c2f887f61572b18fc2
+    full_name: messaging.message.id
     group: messaging
     name: messaging_message_id
     type: string
@@ -1877,6 +2142,7 @@ entries:
     brief: |
       A string identifying the kind of messaging operation.
     column: String
+    full_name: messaging.operation
     group: messaging
     name: messaging_operation
     type: string
@@ -1886,6 +2152,7 @@ entries:
     column: String
     examples:
     - myKey
+    full_name: messaging.rabbitmq.destination.routing_key
     group: messaging
     name: messaging_rabbitmq_destination_routing_key
     type: string
@@ -1895,16 +2162,18 @@ entries:
     column: String
     examples:
     - myConsumerGroup
+    full_name: messaging.rocketmq.client_group
     group: messaging
     name: messaging_rocketmq_client_group
     type: string
   messaging.rocketmq.consumption_model:
     brief: |
       Model of message consumption. This only applies to consumer spans.
-    column: Enum8('clustering' = 0, 'broadcasting' = 1)
+    column: Enum8('' = 0, 'clustering' = 1, 'broadcasting' = 2)
     enum:
     - clustering
     - broadcasting
+    full_name: messaging.rocketmq.consumption_model
     group: messaging
     name: messaging_rocketmq_consumption_model
     type: string
@@ -1914,6 +2183,7 @@ entries:
     column: Int64
     examples:
     - 3
+    full_name: messaging.rocketmq.message.delay_time_level
     group: messaging
     name: messaging_rocketmq_message_delay_time_level
     type: int
@@ -1923,6 +2193,7 @@ entries:
     column: Int64
     examples:
     - 1665987217045
+    full_name: messaging.rocketmq.message.delivery_timestamp
     group: messaging
     name: messaging_rocketmq_message_delivery_timestamp
     type: int
@@ -1932,6 +2203,7 @@ entries:
     column: String
     examples:
     - myMessageGroup
+    full_name: messaging.rocketmq.message.group
     group: messaging
     name: messaging_rocketmq_message_group
     type: string
@@ -1942,6 +2214,7 @@ entries:
     examples:
     - keyA
     - keyB
+    full_name: messaging.rocketmq.message.keys
     group: messaging
     name: messaging_rocketmq_message_keys
     type: string[]
@@ -1951,18 +2224,20 @@ entries:
     column: String
     examples:
     - tagA
+    full_name: messaging.rocketmq.message.tag
     group: messaging
     name: messaging_rocketmq_message_tag
     type: string
   messaging.rocketmq.message.type:
     brief: |
       Type of message.
-    column: Enum8('normal' = 0, 'fifo' = 1, 'delay' = 2, 'transaction' = 3)
+    column: Enum8('' = 0, 'normal' = 1, 'fifo' = 2, 'delay' = 3, 'transaction' = 4)
     enum:
     - normal
     - fifo
     - delay
     - transaction
+    full_name: messaging.rocketmq.message.type
     group: messaging
     name: messaging_rocketmq_message_type
     type: string
@@ -1972,6 +2247,7 @@ entries:
     column: String
     examples:
     - myNamespace
+    full_name: messaging.rocketmq.namespace
     group: messaging
     name: messaging_rocketmq_namespace
     type: string
@@ -1979,6 +2255,7 @@ entries:
     brief: |
       An identifier for the messaging system being used. See below for a list of well-known identifiers.
     column: String
+    full_name: messaging.system
     group: messaging
     name: messaging_system
     type: string
@@ -1988,6 +2265,7 @@ entries:
     column: String
     examples:
     - DE
+    full_name: network.carrier.icc
     group: network
     name: network_carrier_icc
     type: string
@@ -1996,6 +2274,7 @@ entries:
     column: String
     examples:
     - "310"
+    full_name: network.carrier.mcc
     group: network
     name: network_carrier_mcc
     type: string
@@ -2004,6 +2283,7 @@ entries:
     column: String
     examples:
     - "001"
+    full_name: network.carrier.mnc
     group: network
     name: network_carrier_mnc
     type: string
@@ -2012,6 +2292,7 @@ entries:
     column: String
     examples:
     - sprint
+    full_name: network.carrier.name
     group: network
     name: network_carrier_name
     type: string
@@ -2022,6 +2303,7 @@ entries:
     column: String
     examples:
     - LTE
+    full_name: network.connection.subtype
     group: network
     name: network_connection_subtype
     type: string
@@ -2030,15 +2312,17 @@ entries:
     column: String
     examples:
     - wifi
+    full_name: network.connection.type
     group: network
     name: network_connection_type
     type: string
   network.io.direction:
     brief: The network IO operation direction.
-    column: Enum8('transmit' = 0, 'receive' = 1)
+    column: Enum8('' = 0, 'transmit' = 1, 'receive' = 2)
     enum:
     - transmit
     - receive
+    full_name: network.io.direction
     group: network
     name: network_io_direction
     type: string
@@ -2049,6 +2333,7 @@ entries:
     examples:
     - 10.1.2.80
     - /tmp/my.sock
+    full_name: network.local.address
     group: network
     name: network_local_address
     type: string
@@ -2057,6 +2342,7 @@ entries:
     column: UInt16
     examples:
     - 65123
+    full_name: network.local.port
     group: network
     name: network_local_port
     type: int
@@ -2067,6 +2353,7 @@ entries:
     examples:
     - 10.1.2.80
     - /tmp/my.sock
+    full_name: network.peer.address
     group: network
     name: network_peer_address
     type: string
@@ -2075,6 +2362,7 @@ entries:
     column: UInt16
     examples:
     - 65123
+    full_name: network.peer.port
     group: network
     name: network_peer_port
     type: int
@@ -2086,6 +2374,7 @@ entries:
     - amqp
     - http
     - mqtt
+    full_name: network.protocol.name
     group: network
     name: network_protocol_name
     type: string
@@ -2094,6 +2383,7 @@ entries:
     column: String
     examples:
     - 3.1.1
+    full_name: network.protocol.version
     group: network
     name: network_protocol_version
     type: string
@@ -2104,6 +2394,7 @@ entries:
     examples:
     - tcp
     - udp
+    full_name: network.transport
     group: network
     name: network_transport
     type: string
@@ -2113,6 +2404,7 @@ entries:
     examples:
     - ipv4
     - ipv6
+    full_name: network.type
     group: network
     name: network_type
     type: string
@@ -2122,15 +2414,17 @@ entries:
     column: String
     examples:
     - sha256:e4ca62c0d62f3e886e684806dfe9d4e0cda60d54986898173c1083856cfda0f4
+    full_name: oci.manifest.digest
     group: oci
     name: oci_manifest_digest
     type: string
   opentracing.ref_type:
     brief: Parent-child Reference type
-    column: Enum8('child_of' = 0, 'follows_from' = 1)
+    column: Enum8('' = 0, 'child_of' = 1, 'follows_from' = 2)
     enum:
     - child_of
     - follows_from
+    full_name: opentracing.ref_type
     group: opentracing
     name: opentracing_ref_type
     type: string
@@ -2142,9 +2436,11 @@ entries:
     - TQ3C.230805.001.B2
     - "20E247"
     - "22621"
+    full_name: os.build_id
     group: os
     name: os_build_id
     type: string
+    where: resource
   os.description:
     brief: |
       Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
@@ -2152,9 +2448,11 @@ entries:
     examples:
     - Microsoft Windows [Version 10.0.18363.778]
     - Ubuntu 18.04.1 LTS
+    full_name: os.description
     group: os
     name: os_description
     type: string
+    where: resource
   os.name:
     brief: Human readable operating system name.
     column: String
@@ -2162,16 +2460,20 @@ entries:
     - iOS
     - Android
     - Ubuntu
+    full_name: os.name
     group: os
     name: os_name
     type: string
+    where: resource
   os.type:
     brief: |
       The operating system type.
     column: String
+    full_name: os.type
     group: os
     name: os_type
     type: string
+    where: resource
   os.version:
     brief: |
       The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
@@ -2179,15 +2481,18 @@ entries:
     examples:
     - 14.2.1
     - 18.04.1
+    full_name: os.version
     group: os
     name: os_version
     type: string
+    where: resource
   otel.scope.name:
     brief: The name of the instrumentation scope - (`InstrumentationScope.Name` in
       OTLP).
     column: String
     examples:
     - io.opentelemetry.contrib.mongodb
+    full_name: otel.scope.name
     group: otel
     name: otel_scope_name
     type: string
@@ -2197,16 +2502,18 @@ entries:
     column: String
     examples:
     - 1.0.0
+    full_name: otel.scope.version
     group: otel
     name: otel_scope_version
     type: string
   otel.status_code:
     brief: Name of the code, either "OK" or "ERROR". MUST NOT be set if the status
       code is UNSET.
-    column: Enum8('OK' = 0, 'ERROR' = 1)
+    column: Enum8('' = 0, 'OK' = 1, 'ERROR' = 2)
     enum:
     - OK
     - ERROR
+    full_name: otel.status_code
     group: otel
     name: otel_status_code
     type: string
@@ -2215,6 +2522,7 @@ entries:
     column: String
     examples:
     - resource not found
+    full_name: otel.status_description
     group: otel
     name: otel_status_description
     type: string
@@ -2224,6 +2532,7 @@ entries:
     column: String
     examples:
     - AuthTokenCache
+    full_name: peer.service
     group: peer
     name: peer_service
     type: string
@@ -2233,6 +2542,7 @@ entries:
     column: String
     examples:
     - myDataSource
+    full_name: pool.name
     group: pool
     name: pool_name
     type: string
@@ -2242,9 +2552,11 @@ entries:
     column: String
     examples:
     - cmd/otelcol
+    full_name: process.command
     group: process
     name: process_command
     type: string
+    where: resource
   process.command_args:
     brief: |
       All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`.
@@ -2252,98 +2564,118 @@ entries:
     examples:
     - cmd/otecol
     - --config=config.yaml
+    full_name: process.command_args
     group: process
     name: process_command_args
     type: string[]
+    where: resource
   process.command_line:
     brief: |
       The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead.
     column: String
     examples:
     - C:\cmd\otecol --config="my directory\config.yaml"
+    full_name: process.command_line
     group: process
     name: process_command_line
     type: string
+    where: resource
   process.executable.name:
     brief: |
       The name of the process executable. On Linux based systems, can be set to the `Name` in `proc/[pid]/status`. On Windows, can be set to the base name of `GetProcessImageFileNameW`.
     column: String
     examples:
     - otelcol
+    full_name: process.executable.name
     group: process
     name: process_executable_name
     type: string
+    where: resource
   process.executable.path:
     brief: |
       The full path to the process executable. On Linux based systems, can be set to the target of `proc/[pid]/exe`. On Windows, can be set to the result of `GetProcessImageFileNameW`.
     column: String
     examples:
     - /usr/bin/cmd/otelcol
+    full_name: process.executable.path
     group: process
     name: process_executable_path
     type: string
+    where: resource
   process.owner:
     brief: |
       The username of the user that owns the process.
     column: String
     examples:
     - root
+    full_name: process.owner
     group: process
     name: process_owner
     type: string
+    where: resource
   process.parent_pid:
     brief: |
       Parent Process identifier (PID).
     column: Int64
     examples:
     - 111
+    full_name: process.parent_pid
     group: process
     name: process_parent_pid
     type: int
+    where: resource
   process.pid:
     brief: |
       Process identifier (PID).
     column: Int64
     examples:
     - 1234
+    full_name: process.pid
     group: process
     name: process_pid
     type: int
+    where: resource
   process.runtime.description:
     brief: |
       An additional description about the runtime of the process, for example a specific vendor customization of the runtime environment.
     column: String
     examples:
     - Eclipse OpenJ9 Eclipse OpenJ9 VM openj9-0.21.0
+    full_name: process.runtime.description
     group: process
     name: process_runtime_description
     type: string
+    where: resource
   process.runtime.name:
     brief: |
       The name of the runtime of this process. For compiled native binaries, this SHOULD be the name of the compiler.
     column: String
     examples:
     - OpenJDK Runtime Environment
+    full_name: process.runtime.name
     group: process
     name: process_runtime_name
     type: string
+    where: resource
   process.runtime.version:
     brief: |
       The version of the runtime of this process, as returned by the runtime without modification.
     column: String
     examples:
     - 14.0.2
+    full_name: process.runtime.version
     group: process
     name: process_runtime_version
     type: string
+    where: resource
   rpc.connect_rpc.error_code:
     brief: The [error codes](https://connect.build/docs/protocol/#error-codes) of
       the Connect request. Error codes are always string values.
-    column: Enum8('cancelled' = 0, 'unknown' = 1, 'invalid_argument' = 2, 'deadline_exceeded'
-      = 3, 'not_found' = 4, 'already_exists' = 5, 'permission_denied' = 6, 'resource_exhausted'
-      = 7, 'failed_precondition' = 8, 'aborted' = 9, 'out_of_range' = 10, 'unimplemented'
-      = 11, 'internal' = 12, 'unavailable' = 13, 'data_loss' = 14, 'unauthenticated'
-      = 15)
+    column: Enum8('' = 0, 'cancelled' = 1, 'unknown' = 2, 'invalid_argument' = 3,
+      'deadline_exceeded' = 4, 'not_found' = 5, 'already_exists' = 6, 'permission_denied'
+      = 7, 'resource_exhausted' = 8, 'failed_precondition' = 9, 'aborted' = 10, 'out_of_range'
+      = 11, 'unimplemented' = 12, 'internal' = 13, 'unavailable' = 14, 'data_loss'
+      = 15, 'unauthenticated' = 16)
     enum:
     - cancelled
     - unknown
@@ -2361,6 +2693,7 @@ entries:
     - unavailable
     - data_loss
     - unauthenticated
+    full_name: rpc.connect_rpc.error_code
     group: rpc
     name: rpc_connect_rpc_error_code
     type: string
@@ -2370,6 +2703,7 @@ entries:
     column: Array(String)
     examples:
     - rpc.request.metadata.my-custom-metadata-attribute=["1.2.3.4", "1.2.3.5"]
+    full_name: rpc.connect_rpc.request.metadata
     group: rpc
     name: rpc_connect_rpc_request_metadata
     type: template[string[]]
@@ -2379,6 +2713,7 @@ entries:
     column: Array(String)
     examples:
     - rpc.response.metadata.my-custom-metadata-attribute=["attribute_value"]
+    full_name: rpc.connect_rpc.response.metadata
     group: rpc
     name: rpc_connect_rpc_response_metadata
     type: template[string[]]
@@ -2388,6 +2723,7 @@ entries:
     column: Array(String)
     examples:
     - rpc.grpc.request.metadata.my-custom-metadata-attribute=["1.2.3.4", "1.2.3.5"]
+    full_name: rpc.grpc.request.metadata
     group: rpc
     name: rpc_grpc_request_metadata
     type: template[string[]]
@@ -2397,6 +2733,7 @@ entries:
     column: Array(String)
     examples:
     - rpc.grpc.response.metadata.my-custom-metadata-attribute=["attribute_value"]
+    full_name: rpc.grpc.response.metadata
     group: rpc
     name: rpc_grpc_response_metadata
     type: template[string[]]
@@ -2422,6 +2759,7 @@ entries:
     - 14
     - 15
     - 16
+    full_name: rpc.grpc.status_code
     group: rpc
     name: rpc_grpc_status_code
     type: int
@@ -2431,6 +2769,7 @@ entries:
     examples:
     - -32700
     - 100
+    full_name: rpc.jsonrpc.error_code
     group: rpc
     name: rpc_jsonrpc_error_code
     type: int
@@ -2440,6 +2779,7 @@ entries:
     examples:
     - Parse error
     - User already exists
+    full_name: rpc.jsonrpc.error_message
     group: rpc
     name: rpc_jsonrpc_error_message
     type: string
@@ -2451,6 +2791,7 @@ entries:
     - "10"
     - request-7
     - ""
+    full_name: rpc.jsonrpc.request_id
     group: rpc
     name: rpc_jsonrpc_request_id
     type: string
@@ -2461,6 +2802,7 @@ entries:
     examples:
     - "2.0"
     - "1.0"
+    full_name: rpc.jsonrpc.version
     group: rpc
     name: rpc_jsonrpc_version
     type: string
@@ -2470,6 +2812,7 @@ entries:
     column: String
     examples:
     - exampleMethod
+    full_name: rpc.method
     group: rpc
     name: rpc_method
     type: string
@@ -2479,6 +2822,7 @@ entries:
     column: String
     examples:
     - myservice.EchoService
+    full_name: rpc.service
     group: rpc
     name: rpc_service
     type: string
@@ -2486,6 +2830,7 @@ entries:
     brief: A string identifying the remoting system. See below for a list of well-known
       identifiers.
     column: String
+    full_name: rpc.system
     group: rpc
     name: rpc_system
     type: string
@@ -2497,6 +2842,7 @@ entries:
     - example.com
     - 10.1.2.80
     - /tmp/my.sock
+    full_name: server.address
     group: server
     name: server_address
     type: string
@@ -2507,6 +2853,7 @@ entries:
     - 80
     - 8080
     - 443
+    full_name: server.port
     group: server
     name: server_port
     type: int
@@ -2517,27 +2864,33 @@ entries:
     examples:
     - my-k8s-pod-deployment-1
     - 627cc493-f310-47de-96bd-71410b7dec09
+    full_name: service.instance.id
     group: service
     name: service_instance_id
     type: string
+    where: resource
   service.name:
     brief: |
       Logical name of the service.
     column: String
     examples:
     - shoppingcart
+    full_name: service.name
     group: service
     name: service_name
     type: string
+    where: resource
   service.namespace:
     brief: |
       A namespace for `service.name`.
     column: String
     examples:
     - Shop
+    full_name: service.namespace
     group: service
     name: service_namespace
     type: string
+    where: resource
   service.version:
     brief: |
       The version string of the service API or implementation. The format is not defined by these conventions.
@@ -2545,14 +2898,17 @@ entries:
     examples:
     - 2.0.0
     - a01dbef8a
+    full_name: service.version
     group: service
     name: service_version
     type: string
+    where: resource
   session.id:
     brief: A unique id to identify a session.
     column: String
     examples:
     - 00112233-4455-6677-8899-aabbccddeeff
+    full_name: session.id
     group: session
     name: session_id
     type: string
@@ -2561,6 +2917,7 @@ entries:
     column: String
     examples:
     - 00112233-4455-6677-8899-aabbccddeeff
+    full_name: session.previous_id
     group: session
     name: session_previous_id
     type: string
@@ -2572,6 +2929,7 @@ entries:
     - source.example.com
     - 10.1.2.80
     - /tmp/my.sock
+    full_name: source.address
     group: source
     name: source_address
     type: string
@@ -2581,15 +2939,17 @@ entries:
     examples:
     - 3389
     - 2888
+    full_name: source.port
     group: source
     name: source_port
     type: int
   state:
     brief: The state of a connection in the pool
-    column: Enum8('idle' = 0, 'used' = 1)
+    column: Enum8('' = 0, 'idle' = 1, 'used' = 2)
     enum:
     - idle
     - used
+    full_name: state
     name: state
     type: string
   system.cpu.logical_number:
@@ -2597,6 +2957,7 @@ entries:
     column: Int64
     examples:
     - 1
+    full_name: system.cpu.logical_number
     group: system
     name: system_cpu_logical_number
     type: int
@@ -2606,6 +2967,7 @@ entries:
     examples:
     - idle
     - interrupt
+    full_name: system.cpu.state
     group: system
     name: system_cpu_state
     type: string
@@ -2614,6 +2976,7 @@ entries:
     column: String
     examples:
     - (identifier)
+    full_name: system.device
     group: system
     name: system_device
     type: string
@@ -2622,6 +2985,7 @@ entries:
     column: String
     examples:
     - rw, ro
+    full_name: system.filesystem.mode
     group: system
     name: system_filesystem_mode
     type: string
@@ -2630,16 +2994,18 @@ entries:
     column: String
     examples:
     - /mnt/data
+    full_name: system.filesystem.mountpoint
     group: system
     name: system_filesystem_mountpoint
     type: string
   system.filesystem.state:
     brief: The filesystem state
-    column: Enum8('used' = 0, 'free' = 1, 'reserved' = 2)
+    column: Enum8('' = 0, 'used' = 1, 'free' = 2, 'reserved' = 3)
     enum:
     - used
     - free
     - reserved
+    full_name: system.filesystem.state
     group: system
     name: system_filesystem_state
     type: string
@@ -2648,6 +3014,7 @@ entries:
     column: String
     examples:
     - ext4
+    full_name: system.filesystem.type
     group: system
     name: system_filesystem_type
     type: string
@@ -2657,14 +3024,15 @@ entries:
     examples:
     - free
     - cached
+    full_name: system.memory.state
     group: system
     name: system_memory_state
     type: string
   system.network.state:
     brief: A stateless protocol MUST NOT set this attribute
-    column: Enum8('close' = 0, 'close_wait' = 1, 'closing' = 2, 'delete' = 3, 'established'
-      = 4, 'fin_wait_1' = 5, 'fin_wait_2' = 6, 'last_ack' = 7, 'listen' = 8, 'syn_recv'
-      = 9, 'syn_sent' = 10, 'time_wait' = 11)
+    column: Enum8('' = 0, 'close' = 1, 'close_wait' = 2, 'closing' = 3, 'delete' =
+      4, 'established' = 5, 'fin_wait_1' = 6, 'fin_wait_2' = 7, 'last_ack' = 8, 'listen'
+      = 9, 'syn_recv' = 10, 'syn_sent' = 11, 'time_wait' = 12)
     enum:
     - close
     - close_wait
@@ -2678,33 +3046,37 @@ entries:
     - syn_recv
     - syn_sent
     - time_wait
+    full_name: system.network.state
     group: system
     name: system_network_state
     type: string
   system.paging.direction:
     brief: The paging access direction
-    column: Enum8('in' = 0, 'out' = 1)
+    column: Enum8('' = 0, 'in' = 1, 'out' = 2)
     enum:
     - in
     - out
+    full_name: system.paging.direction
     group: system
     name: system_paging_direction
     type: string
   system.paging.state:
     brief: The memory paging state
-    column: Enum8('used' = 0, 'free' = 1)
+    column: Enum8('' = 0, 'used' = 1, 'free' = 2)
     enum:
     - used
     - free
+    full_name: system.paging.state
     group: system
     name: system_paging_state
     type: string
   system.paging.type:
     brief: The memory paging type
-    column: Enum8('major' = 0, 'minor' = 1)
+    column: Enum8('' = 0, 'major' = 1, 'minor' = 2)
     enum:
     - major
     - minor
+    full_name: system.paging.type
     group: system
     name: system_paging_type
     type: string
@@ -2714,6 +3086,7 @@ entries:
     column: String
     examples:
     - running
+    full_name: system.processes.status
     group: system
     name: system_processes_status
     type: string
@@ -2723,49 +3096,60 @@ entries:
     column: String
     examples:
     - parts-unlimited-java
+    full_name: telemetry.distro.name
     group: telemetry
     name: telemetry_distro_name
     type: string
+    where: resource
   telemetry.distro.version:
     brief: |
       The version string of the auto instrumentation agent or distribution, if used.
     column: String
     examples:
     - 1.2.3
+    full_name: telemetry.distro.version
     group: telemetry
     name: telemetry_distro_version
     type: string
+    where: resource
   telemetry.sdk.language:
     brief: |
       The language of the telemetry SDK.
     column: String
+    full_name: telemetry.sdk.language
     group: telemetry
     name: telemetry_sdk_language
     type: string
+    where: resource
   telemetry.sdk.name:
     brief: |
       The name of the telemetry SDK as defined above.
     column: String
     examples:
     - opentelemetry
+    full_name: telemetry.sdk.name
     group: telemetry
     name: telemetry_sdk_name
     type: string
+    where: resource
   telemetry.sdk.version:
     brief: |
       The version string of the telemetry SDK.
     column: String
     examples:
     - 1.2.3
+    full_name: telemetry.sdk.version
     group: telemetry
     name: telemetry_sdk_version
     type: string
+    where: resource
   thread.id:
     brief: |
       Current "managed" thread ID (as opposed to OS thread ID).
     column: Int64
     examples:
     - 42
+    full_name: thread.id
     group: thread
     name: thread_id
     type: int
@@ -2775,6 +3159,7 @@ entries:
     column: String
     examples:
     - main
+    full_name: thread.name
     group: thread
     name: thread_name
     type: string
@@ -2785,6 +3170,7 @@ entries:
     examples:
     - TLS_RSA_WITH_3DES_EDE_CBC_SHA
     - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+    full_name: tls.cipher
     group: tls
     name: tls_cipher
     type: string
@@ -2794,6 +3180,7 @@ entries:
     column: String
     examples:
     - MII...
+    full_name: tls.client.certificate
     group: tls
     name: tls_client_certificate
     type: string
@@ -2804,6 +3191,7 @@ entries:
     examples:
     - MII...
     - MI...
+    full_name: tls.client.certificate_chain
     group: tls
     name: tls_client_certificate_chain
     type: string[]
@@ -2813,6 +3201,7 @@ entries:
     column: String
     examples:
     - 0F76C7F2C55BFD7D8E8B8F4BFBF0C9EC
+    full_name: tls.client.hash.md5
     group: tls
     name: tls_client_hash_md5
     type: string
@@ -2822,6 +3211,7 @@ entries:
     column: String
     examples:
     - 9E393D93138888D288266C2D915214D1D1CCEB2A
+    full_name: tls.client.hash.sha1
     group: tls
     name: tls_client_hash_sha1
     type: string
@@ -2831,6 +3221,7 @@ entries:
     column: String
     examples:
     - 0687F666A054EF17A08E2F2162EAB4CBC0D265E1D7875BE74BF3C712CA92DAF0
+    full_name: tls.client.hash.sha256
     group: tls
     name: tls_client_hash_sha256
     type: string
@@ -2840,6 +3231,7 @@ entries:
     column: String
     examples:
     - CN=Example Root CA, OU=Infrastructure Team, DC=example, DC=com
+    full_name: tls.client.issuer
     group: tls
     name: tls_client_issuer
     type: string
@@ -2848,6 +3240,7 @@ entries:
     column: String
     examples:
     - d4e5b18d6b55c71272893221c96ba240
+    full_name: tls.client.ja3
     group: tls
     name: tls_client_ja3
     type: string
@@ -2856,6 +3249,7 @@ entries:
     column: String
     examples:
     - "2021-01-01T00:00:00.000Z"
+    full_name: tls.client.not_after
     group: tls
     name: tls_client_not_after
     type: string
@@ -2864,6 +3258,7 @@ entries:
     column: String
     examples:
     - "1970-01-01T00:00:00.000Z"
+    full_name: tls.client.not_before
     group: tls
     name: tls_client_not_before
     type: string
@@ -2873,6 +3268,7 @@ entries:
     column: String
     examples:
     - opentelemetry.io
+    full_name: tls.client.server_name
     group: tls
     name: tls_client_server_name
     type: string
@@ -2882,6 +3278,7 @@ entries:
     column: String
     examples:
     - CN=myclient, OU=Documentation Team, DC=example, DC=com
+    full_name: tls.client.subject
     group: tls
     name: tls_client_subject
     type: string
@@ -2891,6 +3288,7 @@ entries:
     examples:
     - '"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
       "..."'
+    full_name: tls.client.supported_ciphers
     group: tls
     name: tls_client_supported_ciphers
     type: string[]
@@ -2899,6 +3297,7 @@ entries:
     column: String
     examples:
     - secp256r1
+    full_name: tls.curve
     group: tls
     name: tls_curve
     type: string
@@ -2908,6 +3307,7 @@ entries:
     column: Bool
     examples:
     - true
+    full_name: tls.established
     group: tls
     name: tls_established
     type: boolean
@@ -2917,6 +3317,7 @@ entries:
     column: String
     examples:
     - http/1.1
+    full_name: tls.next_protocol
     group: tls
     name: tls_next_protocol
     type: string
@@ -2924,6 +3325,7 @@ entries:
     brief: |
       Normalized lowercase protocol name parsed from original string of the negotiated [SSL/TLS protocol version](https://www.openssl.org/docs/man1.1.1/man3/SSL_get_version.html#RETURN-VALUES)
     column: String
+    full_name: tls.protocol.name
     group: tls
     name: tls_protocol_name
     type: string
@@ -2934,6 +3336,7 @@ entries:
     examples:
     - "1.2"
     - "3"
+    full_name: tls.protocol.version
     group: tls
     name: tls_protocol_version
     type: string
@@ -2943,6 +3346,7 @@ entries:
     column: Bool
     examples:
     - true
+    full_name: tls.resumed
     group: tls
     name: tls_resumed
     type: boolean
@@ -2952,6 +3356,7 @@ entries:
     column: String
     examples:
     - MII...
+    full_name: tls.server.certificate
     group: tls
     name: tls_server_certificate
     type: string
@@ -2962,6 +3367,7 @@ entries:
     examples:
     - MII...
     - MI...
+    full_name: tls.server.certificate_chain
     group: tls
     name: tls_server_certificate_chain
     type: string[]
@@ -2971,6 +3377,7 @@ entries:
     column: String
     examples:
     - 0F76C7F2C55BFD7D8E8B8F4BFBF0C9EC
+    full_name: tls.server.hash.md5
     group: tls
     name: tls_server_hash_md5
     type: string
@@ -2980,6 +3387,7 @@ entries:
     column: String
     examples:
     - 9E393D93138888D288266C2D915214D1D1CCEB2A
+    full_name: tls.server.hash.sha1
     group: tls
     name: tls_server_hash_sha1
     type: string
@@ -2989,6 +3397,7 @@ entries:
     column: String
     examples:
     - 0687F666A054EF17A08E2F2162EAB4CBC0D265E1D7875BE74BF3C712CA92DAF0
+    full_name: tls.server.hash.sha256
     group: tls
     name: tls_server_hash_sha256
     type: string
@@ -2998,6 +3407,7 @@ entries:
     column: String
     examples:
     - CN=Example Root CA, OU=Infrastructure Team, DC=example, DC=com
+    full_name: tls.server.issuer
     group: tls
     name: tls_server_issuer
     type: string
@@ -3006,6 +3416,7 @@ entries:
     column: String
     examples:
     - d4e5b18d6b55c71272893221c96ba240
+    full_name: tls.server.ja3s
     group: tls
     name: tls_server_ja3s
     type: string
@@ -3014,6 +3425,7 @@ entries:
     column: String
     examples:
     - "2021-01-01T00:00:00.000Z"
+    full_name: tls.server.not_after
     group: tls
     name: tls_server_not_after
     type: string
@@ -3022,6 +3434,7 @@ entries:
     column: String
     examples:
     - "1970-01-01T00:00:00.000Z"
+    full_name: tls.server.not_before
     group: tls
     name: tls_server_not_before
     type: string
@@ -3031,6 +3444,7 @@ entries:
     column: String
     examples:
     - CN=myserver, OU=Documentation Team, DC=example, DC=com
+    full_name: tls.server.subject
     group: tls
     name: tls_server_subject
     type: string
@@ -3040,6 +3454,7 @@ entries:
     column: String
     examples:
     - SemConv
+    full_name: url.fragment
     group: url
     name: url_fragment
     type: string
@@ -3049,6 +3464,7 @@ entries:
     examples:
     - https://www.foo.bar/search?q=OpenTelemetry#SemConv
     - //localhost
+    full_name: url.full
     group: url
     name: url_full
     type: string
@@ -3057,6 +3473,7 @@ entries:
     column: String
     examples:
     - /search
+    full_name: url.path
     group: url
     name: url_path
     type: string
@@ -3065,6 +3482,7 @@ entries:
     column: String
     examples:
     - q=OpenTelemetry
+    full_name: url.query
     group: url
     name: url_query
     type: string
@@ -3076,6 +3494,7 @@ entries:
     - https
     - ftp
     - telnet
+    full_name: url.scheme
     group: url
     name: url_scheme
     type: string
@@ -3087,6 +3506,7 @@ entries:
     - CERN-LineMode/2.15 libwww/2.17b3
     - Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15
       (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1
+    full_name: user_agent.original
     group: user_agent
     name: user_agent_original
     type: string
@@ -3096,27 +3516,33 @@ entries:
     column: String
     examples:
     - WildFly Full 21.0.0.Final (WildFly Core 13.0.1.Final) - 2.2.2.Final
+    full_name: webengine.description
     group: webengine
     name: webengine_description
     type: string
+    where: resource
   webengine.name:
     brief: |
       The name of the web engine.
     column: String
     examples:
     - WildFly
+    full_name: webengine.name
     group: webengine
     name: webengine_name
     type: string
+    where: resource
   webengine.version:
     brief: |
       The version of the web engine.
     column: String
     examples:
     - 21.0.0
+    full_name: webengine.version
     group: webengine
     name: webengine_version
     type: string
+    where: resource
 statistics:
   deprecated: 24
   enum: 23
