@@ -349,6 +349,12 @@ func firstAttrSelector(label string) chsql.Expr {
 // Append adds a new map of attributes.
 func (a *Attributes) Append(kv otelstorage.Attrs) {
 	a.Value.Append(kv)
+	for _, v := range a.Strings {
+		v.Append("")
+	}
+	for _, v := range a.Integers {
+		v.Append(0)
+	}
 }
 
 // Row returns a new map of attributes for a given row.
