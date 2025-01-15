@@ -263,24 +263,24 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 	entries := otelschema.Data.All()
 
 	switch name {
-	case "attribute":
+	case colAttrs:
 		for _, e := range entries {
 			switch e.Where {
-			case "attribute", "":
+			case colAttrs, "":
 				appendEntry(e)
 			}
 		}
-	case "resource":
+	case colResource:
 		for _, e := range entries {
 			switch e.Where {
-			case "resource":
+			case colResource:
 				appendEntry(e)
 			}
 		}
-	case "scope":
+	case colScope:
 		for _, e := range entries {
 			switch e.Where {
-			case "scope":
+			case colScope:
 				appendEntry(e)
 			}
 		}

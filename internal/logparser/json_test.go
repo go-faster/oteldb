@@ -105,6 +105,7 @@ func FuzzGenericJSONParser(f *testing.F) {
 		}
 		if line == nil {
 			t.Fatal("line is nil")
+			return
 		}
 		e := &jx.Encoder{}
 		line.Encode(e)
