@@ -1,6 +1,7 @@
 package chstorage
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -259,23 +260,25 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 		}
 	}
 
+	entries := otelschema.Data.All()
+
 	switch name {
 	case "attribute":
-		for _, e := range otelschema.Data.Entries {
+		for _, e := range entries {
 			switch e.Where {
 			case "attribute", "":
 				appendEntry(e)
 			}
 		}
 	case "resource":
-		for _, e := range otelschema.Data.Entries {
+		for _, e := range entries {
 			switch e.Where {
 			case "resource":
 				appendEntry(e)
 			}
 		}
 	case "scope":
-		for _, e := range otelschema.Data.Entries {
+		for _, e := range entries {
 			switch e.Where {
 			case "scope":
 				appendEntry(e)
@@ -305,10 +308,12 @@ func (a *Attributes) Columns() Columns {
 }
 
 func appendColumns[T any](col Columns, m map[string]proto.ColumnOf[T]) Columns {
-	for k, v := range m {
+	keys := maps.Keys(m)
+	sort.Strings(keys)
+	for _, k := range keys {
 		col = append(col, Column{
 			Name: k,
-			Data: v,
+			Data: m[k],
 		})
 	}
 	return col
@@ -379,10 +384,12 @@ func (a *Attributes) DDL(table *ddl.Table) {
 }
 
 func appendDDL[T any](col []ddl.Column, prefix string, m map[string]proto.ColumnOf[T]) []ddl.Column {
-	for k, v := range m {
+	keys := maps.Keys(m)
+	sort.Strings(keys)
+	for _, k := range keys {
 		col = append(col, ddl.Column{
 			Name: prefix + k,
-			Type: v.Type(),
+			Type: m[k].Type(),
 		})
 	}
 	return col

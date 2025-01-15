@@ -2,8 +2,10 @@ package otelschema
 
 import (
 	_ "embed"
+	"sort"
 
 	"github.com/ClickHouse/ch-go/proto"
+	"golang.org/x/exp/maps"
 	"sigs.k8s.io/yaml"
 )
 
@@ -19,6 +21,16 @@ type Statistics struct {
 type Registry struct {
 	Statistics Statistics       `json:"statistics"`
 	Entries    map[string]Entry `json:"entries"`
+}
+
+func (r *Registry) All() []Entry {
+	keys := maps.Keys(r.Entries)
+	sort.Strings(keys)
+	out := make([]Entry, 0, len(keys))
+	for _, k := range keys {
+		out = append(out, r.Entries[k])
+	}
+	return out
 }
 
 type Entry struct {
