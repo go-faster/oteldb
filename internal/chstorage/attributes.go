@@ -233,8 +233,8 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 		Integers: make(map[string]proto.ColumnOf[int64]),
 	}
 
-	appendEntry := func(e otelschema.Entry) {
-		s := e.Name
+	appendEntry := func(e otelschema.Entry, prefix string) {
+		s := prefix + e.Name
 		switch e.Type {
 		case "string":
 			if strings.HasPrefix(e.Column.String(), "Enum") {
@@ -267,21 +267,21 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 		for _, e := range entries {
 			switch e.Where {
 			case colAttrs, "":
-				appendEntry(e)
+				appendEntry(e, "attr_")
 			}
 		}
 	case colResource:
 		for _, e := range entries {
 			switch e.Where {
 			case colResource:
-				appendEntry(e)
+				appendEntry(e, "res_")
 			}
 		}
 	case colScope:
 		for _, e := range entries {
 			switch e.Where {
 			case colScope:
-				appendEntry(e)
+				appendEntry(e, "scp_")
 			}
 		}
 	}
@@ -367,28 +367,19 @@ func (a *Attributes) DDL(table *ddl.Table) {
 			Type: a.Value.Type(),
 		},
 	)
-	var prefix string
-	switch a.Name {
-	case "attribute":
-		prefix = "attr_"
-	case "resource":
-		prefix = "res_"
-	case "scope":
-		prefix = "scp_"
-	}
-	table.Columns = appendDDL(table.Columns, prefix, a.Integers)
-	table.Columns = appendDDL(table.Columns, prefix, a.Strings)
+	table.Columns = appendDDL(table.Columns, a.Integers)
+	table.Columns = appendDDL(table.Columns, a.Strings)
 	table.Columns = append(table.Columns, ddl.Column{
 		Comment: "end",
 	})
 }
 
-func appendDDL[T any](col []ddl.Column, prefix string, m map[string]proto.ColumnOf[T]) []ddl.Column {
+func appendDDL[T any](col []ddl.Column, m map[string]proto.ColumnOf[T]) []ddl.Column {
 	keys := maps.Keys(m)
 	sort.Strings(keys)
 	for _, k := range keys {
 		col = append(col, ddl.Column{
-			Name: prefix + k,
+			Name: k,
 			Type: m[k].Type(),
 		})
 	}
