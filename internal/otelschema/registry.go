@@ -33,6 +33,16 @@ func (r *Registry) All() []Entry {
 	return out
 }
 
+type Where string
+
+// Values for "Where" field.
+const (
+	WhereResource  Where = "resource"
+	WhereAttribute Where = "attribute"
+	WhereScope     Where = "scope"
+	WhereAny       Where = "any"
+)
+
 type Entry struct {
 	FullName string           `json:"full_name,omitempty"`
 	Group    string           `json:"group,omitempty"`
@@ -42,7 +52,18 @@ type Entry struct {
 	Examples []any            `json:"examples,omitempty"`
 	Brief    string           `json:"brief,omitempty"`
 	Name     string           `json:"name,omitempty"`
-	Where    string           `json:"where,omitempty"`
+	Where    []Where          `json:"where,omitempty"`
+}
+
+func (e Entry) WhereIn(where ...Where) bool {
+	for _, w := range where {
+		for _, we := range e.Where {
+			if we == w {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Data is loaded otel schema registry.
@@ -50,8 +71,7 @@ var Data = loadRegistry()
 
 func loadRegistry() *Registry {
 	var out Registry
-	err := yaml.Unmarshal(_registryData, &out)
-	if err != nil {
+	if err := yaml.Unmarshal(_registryData, &out); err != nil {
 		panic(err)
 	}
 	return &out

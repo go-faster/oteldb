@@ -10,7 +10,8 @@ entries:
     group: android
     name: android_os_api_level
     type: string
-    where: resource
+    where:
+    - resource
   android.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
@@ -23,7 +24,8 @@ entries:
     group: android
     name: android_state
     type: string
-    where: resource
+    where:
+    - resource
   aws.ecs.cluster.arn:
     brief: |
       The ARN of an [ECS cluster](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/clusters.html).
@@ -34,6 +36,8 @@ entries:
     group: aws
     name: aws_ecs_cluster_arn
     type: string
+    where:
+    - attribute
   aws.ecs.container.arn:
     brief: |
       The Amazon Resource Name (ARN) of an [ECS container instance](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html).
@@ -44,6 +48,8 @@ entries:
     group: aws
     name: aws_ecs_container_arn
     type: string
+    where:
+    - attribute
   aws.ecs.launchtype:
     brief: |
       The [launch type](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html) for an ECS task.
@@ -55,6 +61,8 @@ entries:
     group: aws
     name: aws_ecs_launchtype
     type: string
+    where:
+    - attribute
   aws.ecs.task.arn:
     brief: |
       The ARN of an [ECS task definition](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html).
@@ -65,6 +73,8 @@ entries:
     group: aws
     name: aws_ecs_task_arn
     type: string
+    where:
+    - attribute
   aws.ecs.task.family:
     brief: |
       The task definition family this task definition is a member of.
@@ -75,6 +85,8 @@ entries:
     group: aws
     name: aws_ecs_task_family
     type: string
+    where:
+    - attribute
   aws.ecs.task.revision:
     brief: |
       The revision for this task definition.
@@ -86,6 +98,8 @@ entries:
     group: aws
     name: aws_ecs_task_revision
     type: string
+    where:
+    - attribute
   aws.eks.cluster.arn:
     brief: |
       The ARN of an EKS cluster.
@@ -96,6 +110,8 @@ entries:
     group: aws
     name: aws_eks_cluster_arn
     type: string
+    where:
+    - attribute
   aws.lambda.invoked_arn:
     brief: |
       The full invoked ARN as provided on the `Context` passed to the function (`Lambda-Runtime-Invoked-Function-Arn` header on the `/runtime/invocation/next` applicable).
@@ -106,6 +122,8 @@ entries:
     group: aws
     name: aws_lambda_invoked_arn
     type: string
+    where:
+    - attribute
   aws.log.group.arns:
     brief: |
       The Amazon Resource Name(s) (ARN) of the AWS log group(s).
@@ -116,6 +134,8 @@ entries:
     group: aws
     name: aws_log_group_arns
     type: string[]
+    where:
+    - attribute
   aws.log.group.names:
     brief: |
       The name(s) of the AWS log group(s) an application is writing to.
@@ -127,6 +147,8 @@ entries:
     group: aws
     name: aws_log_group_names
     type: string[]
+    where:
+    - attribute
   aws.log.stream.arns:
     brief: |
       The ARN(s) of the AWS log stream(s).
@@ -137,6 +159,8 @@ entries:
     group: aws
     name: aws_log_stream_arns
     type: string[]
+    where:
+    - attribute
   aws.log.stream.names:
     brief: |
       The name(s) of the AWS log stream(s) an application is writing to.
@@ -147,6 +171,8 @@ entries:
     group: aws
     name: aws_log_stream_names
     type: string[]
+    where:
+    - attribute
   browser.brands:
     brief: Array of brand name and version separated by a space
     column: Array(String)
@@ -158,7 +184,8 @@ entries:
     group: browser
     name: browser_brands
     type: string[]
-    where: resource
+    where:
+    - resource
   browser.language:
     brief: Preferred language of the user using the browser
     column: String
@@ -171,7 +198,8 @@ entries:
     group: browser
     name: browser_language
     type: string
-    where: resource
+    where:
+    - resource
   browser.mobile:
     brief: A boolean that is true if the browser is running on a mobile device
     column: Bool
@@ -179,7 +207,8 @@ entries:
     group: browser
     name: browser_mobile
     type: boolean
-    where: resource
+    where:
+    - resource
   browser.platform:
     brief: The platform on which the browser is running
     column: String
@@ -191,7 +220,8 @@ entries:
     group: browser
     name: browser_platform
     type: string
-    where: resource
+    where:
+    - resource
   client.address:
     brief: Client address - domain name if available without reverse DNS lookup; otherwise,
       IP address or Unix domain socket name.
@@ -204,6 +234,8 @@ entries:
     group: client
     name: client_address
     type: string
+    where:
+    - attribute
   client.port:
     brief: Client port number.
     column: UInt16
@@ -213,6 +245,8 @@ entries:
     group: client
     name: client_port
     type: int
+    where:
+    - attribute
   cloud.account.id:
     brief: |
       The cloud account ID the resource is assigned to.
@@ -224,7 +258,8 @@ entries:
     group: cloud
     name: cloud_account_id
     type: string
-    where: resource
+    where:
+    - resource
   cloud.availability_zone:
     brief: |
       Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
@@ -235,7 +270,8 @@ entries:
     group: cloud
     name: cloud_availability_zone
     type: string
-    where: resource
+    where:
+    - resource
   cloud.platform:
     brief: |
       The cloud platform in use.
@@ -244,7 +280,8 @@ entries:
     group: cloud
     name: cloud_platform
     type: string
-    where: resource
+    where:
+    - resource
   cloud.provider:
     brief: |
       Name of the cloud provider.
@@ -253,7 +290,8 @@ entries:
     group: cloud
     name: cloud_provider
     type: string
-    where: resource
+    where:
+    - resource
   cloud.region:
     brief: |
       The geographical region the resource is running.
@@ -265,7 +303,8 @@ entries:
     group: cloud
     name: cloud_region
     type: string
-    where: resource
+    where:
+    - resource
   cloud.resource_id:
     brief: |
       Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP)
@@ -278,7 +317,8 @@ entries:
     group: cloud
     name: cloud_resource_id
     type: string
-    where: resource
+    where:
+    - resource
   cloudevents.event_id:
     brief: |
       The [event_id](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#id) uniquely identifies the event.
@@ -290,6 +330,8 @@ entries:
     group: cloudevents
     name: cloudevents_event_id
     type: string
+    where:
+    - attribute
   cloudevents.event_source:
     brief: |
       The [source](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#source-1) identifies the context in which an event happened.
@@ -302,6 +344,8 @@ entries:
     group: cloudevents
     name: cloudevents_event_source
     type: string
+    where:
+    - attribute
   cloudevents.event_spec_version:
     brief: |
       The [version of the CloudEvents specification](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#specversion) which the event uses.
@@ -312,6 +356,8 @@ entries:
     group: cloudevents
     name: cloudevents_event_spec_version
     type: string
+    where:
+    - attribute
   cloudevents.event_subject:
     brief: |
       The [subject](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#subject) of the event in the context of the event producer (identified by source).
@@ -322,6 +368,8 @@ entries:
     group: cloudevents
     name: cloudevents_event_subject
     type: string
+    where:
+    - attribute
   cloudevents.event_type:
     brief: |
       The [event_type](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#type) contains a value describing the type of event related to the originating occurrence.
@@ -333,6 +381,8 @@ entries:
     group: cloudevents
     name: cloudevents_event_type
     type: string
+    where:
+    - attribute
   code.column:
     brief: |
       The column number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
@@ -343,6 +393,8 @@ entries:
     group: code
     name: code_column
     type: int
+    where:
+    - attribute
   code.filepath:
     brief: |
       The source code file name that identifies the code unit as uniquely as possible (preferably an absolute file path).
@@ -353,6 +405,8 @@ entries:
     group: code
     name: code_filepath
     type: string
+    where:
+    - attribute
   code.function:
     brief: |
       The method or function name, or equivalent (usually rightmost part of the code unit's name).
@@ -363,6 +417,8 @@ entries:
     group: code
     name: code_function
     type: string
+    where:
+    - attribute
   code.lineno:
     brief: |
       The line number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
@@ -373,6 +429,8 @@ entries:
     group: code
     name: code_lineno
     type: int
+    where:
+    - attribute
   code.namespace:
     brief: |
       The "namespace" within which `code.function` is defined. Usually the qualified class or module name, such that `code.namespace` + some separator + `code.function` form a unique identifier for the code unit.
@@ -383,6 +441,8 @@ entries:
     group: code
     name: code_namespace
     type: string
+    where:
+    - attribute
   code.stacktrace:
     brief: |
       A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
@@ -394,6 +454,8 @@ entries:
     group: code
     name: code_stacktrace
     type: string
+    where:
+    - attribute
   container.command:
     brief: |
       The command used to run the container (i.e. the command name).
@@ -404,7 +466,8 @@ entries:
     group: container
     name: container_command
     type: string
-    where: resource
+    where:
+    - resource
   container.command_args:
     brief: |
       All the command arguments (including the command/executable itself) run by the container. [2]
@@ -415,7 +478,8 @@ entries:
     group: container
     name: container_command_args
     type: string[]
-    where: resource
+    where:
+    - resource
   container.command_line:
     brief: |
       The full command run by the container as a single string representing the full command. [2]
@@ -426,7 +490,8 @@ entries:
     group: container
     name: container_command_line
     type: string
-    where: resource
+    where:
+    - resource
   container.id:
     brief: |
       Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/reference/run/#container-identification). The UUID might be abbreviated.
@@ -437,7 +502,8 @@ entries:
     group: container
     name: container_id
     type: string
-    where: resource
+    where:
+    - resource
   container.image.id:
     brief: |
       Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
@@ -448,7 +514,8 @@ entries:
     group: container
     name: container_image_id
     type: string
-    where: resource
+    where:
+    - resource
   container.image.name:
     brief: |
       Name of the image the container was built on.
@@ -459,7 +526,8 @@ entries:
     group: container
     name: container_image_name
     type: string
-    where: resource
+    where:
+    - resource
   container.image.repo_digests:
     brief: |
       Repo digests of the container image as provided by the container runtime.
@@ -471,7 +539,8 @@ entries:
     group: container
     name: container_image_repo_digests
     type: string[]
-    where: resource
+    where:
+    - resource
   container.image.tags:
     brief: |
       Container image tags. An example can be found in [Docker Image Inspect](https://docs.docker.com/engine/api/v1.43/#tag/Image/operation/ImageInspect). Should be only the `<tag>` section of the full name for example from `registry.example.com/my-org/my-image:<tag>`.
@@ -483,7 +552,8 @@ entries:
     group: container
     name: container_image_tags
     type: string[]
-    where: resource
+    where:
+    - resource
   container.labels:
     brief: |
       Container labels, `<key>` being the label name, the value being the label value.
@@ -494,7 +564,8 @@ entries:
     group: container
     name: container_labels
     type: template[string]
-    where: resource
+    where:
+    - resource
   container.name:
     brief: |
       Container name used by container runtime.
@@ -505,7 +576,8 @@ entries:
     group: container
     name: container_name
     type: string
-    where: resource
+    where:
+    - resource
   container.runtime:
     brief: |
       The container runtime managing this container.
@@ -518,7 +590,8 @@ entries:
     group: container
     name: container_runtime
     type: string
-    where: resource
+    where:
+    - resource
   db.cassandra.consistency_level:
     brief: |
       The consistency level of the query. Based on consistency values from [CQL](https://docs.datastax.com/en/cassandra-oss/3.0/cassandra/dml/dmlConfigConsistency.html).
@@ -541,6 +614,8 @@ entries:
     group: db
     name: db_cassandra_consistency_level
     type: string
+    where:
+    - attribute
   db.cassandra.coordinator.dc:
     brief: |
       The data center of the coordinating node for a query.
@@ -551,6 +626,8 @@ entries:
     group: db
     name: db_cassandra_coordinator_dc
     type: string
+    where:
+    - attribute
   db.cassandra.coordinator.id:
     brief: |
       The ID of the coordinating node for a query.
@@ -561,6 +638,8 @@ entries:
     group: db
     name: db_cassandra_coordinator_id
     type: string
+    where:
+    - attribute
   db.cassandra.idempotence:
     brief: |
       Whether or not the query is idempotent.
@@ -569,6 +648,8 @@ entries:
     group: db
     name: db_cassandra_idempotence
     type: boolean
+    where:
+    - attribute
   db.cassandra.page_size:
     brief: |
       The fetch size used for paging, i.e. how many rows will be returned at once.
@@ -579,6 +660,8 @@ entries:
     group: db
     name: db_cassandra_page_size
     type: int
+    where:
+    - attribute
   db.cassandra.speculative_execution_count:
     brief: |
       The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
@@ -590,6 +673,8 @@ entries:
     group: db
     name: db_cassandra_speculative_execution_count
     type: int
+    where:
+    - attribute
   db.cassandra.table:
     brief: The name of the primary Cassandra table that the operation is acting upon,
       including the keyspace name (if applicable).
@@ -600,6 +685,8 @@ entries:
     group: db
     name: db_cassandra_table
     type: string
+    where:
+    - attribute
   db.connection_string:
     brief: |
       The connection string used to connect to the database. It is recommended to remove embedded credentials.
@@ -610,6 +697,8 @@ entries:
     group: db
     name: db_connection_string
     type: string
+    where:
+    - attribute
   db.cosmosdb.client_id:
     brief: Unique Cosmos client instance id.
     column: String
@@ -619,6 +708,8 @@ entries:
     group: db
     name: db_cosmosdb_client_id
     type: string
+    where:
+    - attribute
   db.cosmosdb.connection_mode:
     brief: Cosmos client connection mode.
     column: Enum8('' = 0, 'gateway' = 1, 'direct' = 2)
@@ -629,6 +720,8 @@ entries:
     group: db
     name: db_cosmosdb_connection_mode
     type: string
+    where:
+    - attribute
   db.cosmosdb.container:
     brief: Cosmos DB container name.
     column: String
@@ -638,6 +731,8 @@ entries:
     group: db
     name: db_cosmosdb_container
     type: string
+    where:
+    - attribute
   db.cosmosdb.operation_type:
     brief: CosmosDB Operation Type.
     column: String
@@ -645,6 +740,8 @@ entries:
     group: db
     name: db_cosmosdb_operation_type
     type: string
+    where:
+    - attribute
   db.cosmosdb.request_charge:
     brief: RU consumed for that operation
     column: Float64
@@ -655,6 +752,8 @@ entries:
     group: db
     name: db_cosmosdb_request_charge
     type: double
+    where:
+    - attribute
   db.cosmosdb.request_content_length:
     brief: Request payload size in bytes
     column: Int64
@@ -662,6 +761,8 @@ entries:
     group: db
     name: db_cosmosdb_request_content_length
     type: int
+    where:
+    - attribute
   db.cosmosdb.status_code:
     brief: Cosmos DB status code.
     column: Int64
@@ -672,6 +773,8 @@ entries:
     group: db
     name: db_cosmosdb_status_code
     type: int
+    where:
+    - attribute
   db.cosmosdb.sub_status_code:
     brief: Cosmos DB sub status code.
     column: Int64
@@ -682,6 +785,8 @@ entries:
     group: db
     name: db_cosmosdb_sub_status_code
     type: int
+    where:
+    - attribute
   db.elasticsearch.cluster.name:
     brief: |
       Represents the identifier of an Elasticsearch cluster.
@@ -692,6 +797,8 @@ entries:
     group: db
     name: db_elasticsearch_cluster_name
     type: string
+    where:
+    - attribute
   db.elasticsearch.node.name:
     brief: |
       Represents the human-readable identifier of the node/instance to which a request was routed.
@@ -702,6 +809,8 @@ entries:
     group: db
     name: db_elasticsearch_node_name
     type: string
+    where:
+    - attribute
   db.elasticsearch.path_parts:
     brief: |
       A dynamic value in the url path.
@@ -713,6 +822,8 @@ entries:
     group: db
     name: db_elasticsearch_path_parts
     type: template[string]
+    where:
+    - attribute
   db.instance.id:
     brief: |
       An identifier (address, unique name, or any other identifier) of the database instance that is executing queries or mutations on the current connection. This is useful in cases where the database is running in a clustered environment and the instrumentation is able to record the node executing the query. The client may obtain this value in databases like MySQL using queries like `select @@hostname`.
@@ -723,6 +834,8 @@ entries:
     group: db
     name: db_instance_id
     type: string
+    where:
+    - attribute
   db.jdbc.driver_classname:
     brief: |
       The fully-qualified class name of the [Java Database Connectivity (JDBC)](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) driver used to connect.
@@ -734,6 +847,8 @@ entries:
     group: db
     name: db_jdbc_driver_classname
     type: string
+    where:
+    - attribute
   db.mongodb.collection:
     brief: |
       The MongoDB collection being accessed within the database stated in `db.name`.
@@ -745,6 +860,8 @@ entries:
     group: db
     name: db_mongodb_collection
     type: string
+    where:
+    - attribute
   db.mssql.instance_name:
     brief: |
       The Microsoft SQL Server [instance name](https://docs.microsoft.com/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15) connecting to. This name is used to determine the port of a named instance.
@@ -755,6 +872,8 @@ entries:
     group: db
     name: db_mssql_instance_name
     type: string
+    where:
+    - attribute
   db.name:
     brief: |
       This attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
@@ -766,6 +885,8 @@ entries:
     group: db
     name: db_name
     type: string
+    where:
+    - attribute
   db.operation:
     brief: |
       The name of the operation being executed, e.g. the [MongoDB command name](https://docs.mongodb.com/manual/reference/command/#database-operations) such as `findAndModify`, or the SQL keyword.
@@ -778,6 +899,8 @@ entries:
     group: db
     name: db_operation
     type: string
+    where:
+    - attribute
   db.redis.database_index:
     brief: |
       The index of the database being accessed as used in the [`SELECT` command](https://redis.io/commands/select), provided as an integer. To be used instead of the generic `db.name` attribute.
@@ -790,6 +913,8 @@ entries:
     group: db
     name: db_redis_database_index
     type: int
+    where:
+    - attribute
   db.sql.table:
     brief: The name of the primary table that the operation is acting upon, including
       the database name (if applicable).
@@ -801,6 +926,8 @@ entries:
     group: db
     name: db_sql_table
     type: string
+    where:
+    - attribute
   db.statement:
     brief: |
       The database statement being executed.
@@ -812,6 +939,8 @@ entries:
     group: db
     name: db_statement
     type: string
+    where:
+    - attribute
   db.system:
     brief: An identifier for the database management system (DBMS) product being used.
       See below for a list of well-known identifiers.
@@ -820,6 +949,8 @@ entries:
     group: db
     name: db_system
     type: string
+    where:
+    - attribute
   db.user:
     brief: |
       Username for accessing the database.
@@ -831,6 +962,8 @@ entries:
     group: db
     name: db_user
     type: string
+    where:
+    - attribute
   deployment.environment:
     brief: |
       Name of the [deployment environment](https://wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
@@ -842,7 +975,8 @@ entries:
     group: deployment
     name: deployment_environment
     type: string
-    where: resource
+    where:
+    - resource
   destination.address:
     brief: Destination address - domain name if available without reverse DNS lookup;
       otherwise, IP address or Unix domain socket name.
@@ -855,6 +989,8 @@ entries:
     group: destination
     name: destination_address
     type: string
+    where:
+    - attribute
   destination.port:
     brief: Destination port number
     column: UInt16
@@ -865,6 +1001,8 @@ entries:
     group: destination
     name: destination_port
     type: int
+    where:
+    - attribute
   device.id:
     brief: |
       A unique identifier representing the device
@@ -875,7 +1013,8 @@ entries:
     group: device
     name: device_id
     type: string
-    where: resource
+    where:
+    - resource
   device.manufacturer:
     brief: |
       The name of the device manufacturer
@@ -887,7 +1026,8 @@ entries:
     group: device
     name: device_manufacturer
     type: string
-    where: resource
+    where:
+    - resource
   device.model.identifier:
     brief: |
       The model identifier for the device
@@ -899,7 +1039,8 @@ entries:
     group: device
     name: device_model_identifier
     type: string
-    where: resource
+    where:
+    - resource
   device.model.name:
     brief: |
       The marketing name for the device model
@@ -911,7 +1052,8 @@ entries:
     group: device
     name: device_model_name
     type: string
-    where: resource
+    where:
+    - resource
   disk.io.direction:
     brief: The disk IO operation direction.
     column: Enum8('' = 0, 'read' = 1, 'write' = 2)
@@ -922,6 +1064,8 @@ entries:
     group: disk
     name: disk_io_direction
     type: string
+    where:
+    - attribute
   enduser.id:
     brief: |
       Username or client_id extracted from the access token or [Authorization](https://tools.ietf.org/html/rfc7235#section-4.2) header in the inbound request from outside the system.
@@ -932,6 +1076,8 @@ entries:
     group: enduser
     name: enduser_id
     type: string
+    where:
+    - attribute
   enduser.role:
     brief: Actual/assumed role the client is making the request under extracted from
       token or application security context.
@@ -942,6 +1088,8 @@ entries:
     group: enduser
     name: enduser_role
     type: string
+    where:
+    - attribute
   enduser.scope:
     brief: |
       Scopes or granted authorities the client currently possesses extracted from token or application security context. The value would come from the scope associated with an [OAuth 2.0 Access Token](https://tools.ietf.org/html/rfc6749#section-3.3) or an attribute value in a [SAML 2.0 Assertion](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html).
@@ -952,6 +1100,8 @@ entries:
     group: enduser
     name: enduser_scope
     type: string
+    where:
+    - attribute
   error.type:
     brief: |
       Describes a class of error the operation ended with.
@@ -965,6 +1115,8 @@ entries:
     group: error
     name: error_type
     type: string
+    where:
+    - attribute
   event.name:
     brief: |
       Identifies the class / type of event.
@@ -976,6 +1128,8 @@ entries:
     group: event
     name: event_name
     type: string
+    where:
+    - attribute
   exception.escaped:
     brief: |
       SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
@@ -984,6 +1138,8 @@ entries:
     group: exception
     name: exception_escaped
     type: boolean
+    where:
+    - attribute
   exception.message:
     brief: The exception message.
     column: String
@@ -994,6 +1150,8 @@ entries:
     group: exception
     name: exception_message
     type: string
+    where:
+    - attribute
   exception.stacktrace:
     brief: |
       A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
@@ -1006,6 +1164,8 @@ entries:
     group: exception
     name: exception_stacktrace
     type: string
+    where:
+    - attribute
   exception.type:
     brief: |
       The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
@@ -1017,6 +1177,8 @@ entries:
     group: exception
     name: exception_type
     type: string
+    where:
+    - attribute
   faas.coldstart:
     brief: |
       A boolean that is true if the serverless function is executed for the first time (aka cold-start).
@@ -1025,7 +1187,8 @@ entries:
     group: faas
     name: faas_coldstart
     type: boolean
-    where: resource
+    where:
+    - resource
   faas.cron:
     brief: |
       A string containing the schedule period as [Cron Expression](https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm).
@@ -1036,7 +1199,8 @@ entries:
     group: faas
     name: faas_cron
     type: string
-    where: resource
+    where:
+    - resource
   faas.document.collection:
     brief: |
       The name of the source on which the triggering operation was performed. For example, in Cloud Storage or S3 corresponds to the bucket name, and in Cosmos DB to the database name.
@@ -1048,7 +1212,8 @@ entries:
     group: faas
     name: faas_document_collection
     type: string
-    where: resource
+    where:
+    - resource
   faas.document.name:
     brief: |
       The document name/table subjected to the operation. For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table name.
@@ -1060,7 +1225,8 @@ entries:
     group: faas
     name: faas_document_name
     type: string
-    where: resource
+    where:
+    - resource
   faas.document.operation:
     brief: Describes the type of the operation that was performed on the data.
     column: String
@@ -1068,7 +1234,8 @@ entries:
     group: faas
     name: faas_document_operation
     type: string
-    where: resource
+    where:
+    - resource
   faas.document.time:
     brief: |
       A string containing the time when the data was accessed in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
@@ -1079,7 +1246,8 @@ entries:
     group: faas
     name: faas_document_time
     type: string
-    where: resource
+    where:
+    - resource
   faas.instance:
     brief: |
       The execution environment ID as a string, that will be potentially reused for other invocations to the same function/function version.
@@ -1090,7 +1258,8 @@ entries:
     group: faas
     name: faas_instance
     type: string
-    where: resource
+    where:
+    - resource
   faas.invocation_id:
     brief: The invocation ID of the current function invocation.
     column: String
@@ -1100,7 +1269,8 @@ entries:
     group: faas
     name: faas_invocation_id
     type: string
-    where: resource
+    where:
+    - resource
   faas.invoked_name:
     brief: |
       The name of the invoked function.
@@ -1111,7 +1281,8 @@ entries:
     group: faas
     name: faas_invoked_name
     type: string
-    where: resource
+    where:
+    - resource
   faas.invoked_provider:
     brief: |
       The cloud provider of the invoked function.
@@ -1120,7 +1291,8 @@ entries:
     group: faas
     name: faas_invoked_provider
     type: string
-    where: resource
+    where:
+    - resource
   faas.invoked_region:
     brief: |
       The cloud region of the invoked function.
@@ -1131,7 +1303,8 @@ entries:
     group: faas
     name: faas_invoked_region
     type: string
-    where: resource
+    where:
+    - resource
   faas.max_memory:
     brief: |
       The amount of memory available to the serverless function converted to Bytes.
@@ -1142,7 +1315,8 @@ entries:
     group: faas
     name: faas_max_memory
     type: int
-    where: resource
+    where:
+    - resource
   faas.name:
     brief: |
       The name of the single function that this runtime instance executes.
@@ -1154,7 +1328,8 @@ entries:
     group: faas
     name: faas_name
     type: string
-    where: resource
+    where:
+    - resource
   faas.time:
     brief: |
       A string containing the function invocation time in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format expressed in [UTC](https://www.w3.org/TR/NOTE-datetime).
@@ -1165,7 +1340,8 @@ entries:
     group: faas
     name: faas_time
     type: string
-    where: resource
+    where:
+    - resource
   faas.trigger:
     brief: Type of the trigger which caused this function invocation.
     column: Enum8('' = 0, 'datasource' = 1, 'http' = 2, 'pubsub' = 3, 'timer' = 4,
@@ -1180,7 +1356,8 @@ entries:
     group: faas
     name: faas_trigger
     type: string
-    where: resource
+    where:
+    - resource
   faas.version:
     brief: The immutable version of the function being executed.
     column: String
@@ -1191,7 +1368,8 @@ entries:
     group: faas
     name: faas_version
     type: string
-    where: resource
+    where:
+    - resource
   feature_flag.key:
     brief: The unique identifier of the feature flag.
     column: String
@@ -1201,6 +1379,8 @@ entries:
     group: feature_flag
     name: feature_flag_key
     type: string
+    where:
+    - attribute
   feature_flag.provider_name:
     brief: The name of the service provider that performs the flag evaluation.
     column: String
@@ -1210,6 +1390,8 @@ entries:
     group: feature_flag
     name: feature_flag_provider_name
     type: string
+    where:
+    - attribute
   feature_flag.variant:
     brief: |
       SHOULD be a semantic identifier for a value. If one is unavailable, a stringified version of the value can be used.
@@ -1222,6 +1404,8 @@ entries:
     group: feature_flag
     name: feature_flag_variant
     type: string
+    where:
+    - attribute
   gcp.cloud_run.job.execution:
     brief: |
       The name of the Cloud Run [execution](https://cloud.google.com/run/docs/managing/job-executions) being run for the Job, as set by the [`CLOUD_RUN_EXECUTION`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
@@ -1233,6 +1417,8 @@ entries:
     group: gcp
     name: gcp_cloud_run_job_execution
     type: string
+    where:
+    - attribute
   gcp.cloud_run.job.task_index:
     brief: |
       The index for a task within an execution as provided by the [`CLOUD_RUN_TASK_INDEX`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
@@ -1244,6 +1430,8 @@ entries:
     group: gcp
     name: gcp_cloud_run_job_task_index
     type: int
+    where:
+    - attribute
   gcp.gce.instance.hostname:
     brief: |
       The hostname of a GCE instance. This is the full value of the default or [custom hostname](https://cloud.google.com/compute/docs/instances/custom-hostname-vm).
@@ -1255,6 +1443,8 @@ entries:
     group: gcp
     name: gcp_gce_instance_hostname
     type: string
+    where:
+    - attribute
   gcp.gce.instance.name:
     brief: |
       The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
@@ -1266,6 +1456,8 @@ entries:
     group: gcp
     name: gcp_gce_instance_name
     type: string
+    where:
+    - attribute
   heroku.app.id:
     brief: |
       Unique identifier for the application
@@ -1276,7 +1468,8 @@ entries:
     group: heroku
     name: heroku_app_id
     type: string
-    where: resource
+    where:
+    - resource
   heroku.release.commit:
     brief: |
       Commit hash for the current release
@@ -1287,7 +1480,8 @@ entries:
     group: heroku
     name: heroku_release_commit
     type: string
-    where: resource
+    where:
+    - resource
   heroku.release.creation_timestamp:
     brief: |
       Time and date the release was created
@@ -1298,7 +1492,8 @@ entries:
     group: heroku
     name: heroku_release_creation_timestamp
     type: string
-    where: resource
+    where:
+    - resource
   host.arch:
     brief: |
       The CPU architecture the host system is running on.
@@ -1307,7 +1502,8 @@ entries:
     group: host
     name: host_arch
     type: string
-    where: resource
+    where:
+    - resource
   host.cpu.cache.l2.size:
     brief: |
       The amount of level 2 memory cache available to the processor (in Bytes).
@@ -1318,7 +1514,8 @@ entries:
     group: host
     name: host_cpu_cache_l2_size
     type: int
-    where: resource
+    where:
+    - resource
   host.cpu.family:
     brief: |
       Family or generation of the CPU.
@@ -1330,7 +1527,8 @@ entries:
     group: host
     name: host_cpu_family
     type: string
-    where: resource
+    where:
+    - resource
   host.cpu.model.id:
     brief: |
       Model identifier. It provides more granular information about the CPU, distinguishing it from other CPUs within the same family.
@@ -1342,7 +1540,8 @@ entries:
     group: host
     name: host_cpu_model_id
     type: string
-    where: resource
+    where:
+    - resource
   host.cpu.model.name:
     brief: |
       Model designation of the processor.
@@ -1353,7 +1552,8 @@ entries:
     group: host
     name: host_cpu_model_name
     type: string
-    where: resource
+    where:
+    - resource
   host.cpu.stepping:
     brief: |
       Stepping or core revisions.
@@ -1364,7 +1564,8 @@ entries:
     group: host
     name: host_cpu_stepping
     type: int
-    where: resource
+    where:
+    - resource
   host.cpu.vendor.id:
     brief: |
       Processor manufacturer identifier. A maximum 12-character string.
@@ -1375,7 +1576,8 @@ entries:
     group: host
     name: host_cpu_vendor_id
     type: string
-    where: resource
+    where:
+    - resource
   host.id:
     brief: |
       Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider. For non-containerized systems, this should be the `machine-id`. See the table below for the sources to use to determine the `machine-id` based on operating system.
@@ -1386,7 +1588,8 @@ entries:
     group: host
     name: host_id
     type: string
-    where: resource
+    where:
+    - resource
   host.image.id:
     brief: |
       VM image ID or host OS image ID. For Cloud, this value is from the provider.
@@ -1397,7 +1600,8 @@ entries:
     group: host
     name: host_image_id
     type: string
-    where: resource
+    where:
+    - resource
   host.image.name:
     brief: |
       Name of the VM image or OS install the host was instantiated from.
@@ -1409,7 +1613,8 @@ entries:
     group: host
     name: host_image_name
     type: string
-    where: resource
+    where:
+    - resource
   host.image.version:
     brief: |
       The version string of the VM image or host OS as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
@@ -1420,7 +1625,8 @@ entries:
     group: host
     name: host_image_version
     type: string
-    where: resource
+    where:
+    - resource
   host.ip:
     brief: |
       Available IP addresses of the host, excluding loopback interfaces.
@@ -1432,7 +1638,8 @@ entries:
     group: host
     name: host_ip
     type: string[]
-    where: resource
+    where:
+    - resource
   host.mac:
     brief: |
       Available MAC addresses of the host, excluding loopback interfaces.
@@ -1444,7 +1651,8 @@ entries:
     group: host
     name: host_mac
     type: string[]
-    where: resource
+    where:
+    - resource
   host.name:
     brief: |
       Name of the host. On Unix systems, it may contain what the hostname command returns, or the fully qualified hostname, or another name specified by the user.
@@ -1455,7 +1663,8 @@ entries:
     group: host
     name: host_name
     type: string
-    where: resource
+    where:
+    - resource
   host.type:
     brief: |
       Type of host. For Cloud, this must be the machine type.
@@ -1466,7 +1675,8 @@ entries:
     group: host
     name: host_type
     type: string
-    where: resource
+    where:
+    - resource
   http.request.body.size:
     brief: |
       The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
@@ -1477,6 +1687,8 @@ entries:
     group: http
     name: http_request_body_size
     type: int
+    where:
+    - attribute
   http.request.header:
     brief: |
       HTTP request headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
@@ -1488,6 +1700,8 @@ entries:
     group: http
     name: http_request_header
     type: template[string[]]
+    where:
+    - attribute
   http.request.method:
     brief: HTTP request method.
     column: String
@@ -1499,6 +1713,8 @@ entries:
     group: http
     name: http_request_method
     type: string
+    where:
+    - attribute
   http.request.method_original:
     brief: Original HTTP method sent by the client in the request line.
     column: String
@@ -1510,6 +1726,8 @@ entries:
     group: http
     name: http_request_method_original
     type: string
+    where:
+    - attribute
   http.request.resend_count:
     brief: |
       The ordinal number of request resending attempt (for any reason, including redirects).
@@ -1520,6 +1738,8 @@ entries:
     group: http
     name: http_request_resend_count
     type: int
+    where:
+    - attribute
   http.response.body.size:
     brief: |
       The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
@@ -1530,6 +1750,8 @@ entries:
     group: http
     name: http_response_body_size
     type: int
+    where:
+    - attribute
   http.response.header:
     brief: |
       HTTP response headers, `<key>` being the normalized HTTP Header name (lowercase), the value being the header values.
@@ -1541,6 +1763,8 @@ entries:
     group: http
     name: http_response_header
     type: template[string[]]
+    where:
+    - attribute
   http.response.status_code:
     brief: '[HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).'
     column: Int64
@@ -1550,6 +1774,8 @@ entries:
     group: http
     name: http_response_status_code
     type: int
+    where:
+    - attribute
   http.route:
     brief: |
       The matched route, that is, the path template in the format used by the respective server framework.
@@ -1561,6 +1787,8 @@ entries:
     group: http
     name: http_route
     type: string
+    where:
+    - attribute
   ios.state:
     brief: |
       This attribute represents the state the application has transitioned into at the occurrence of the event.
@@ -1576,6 +1804,8 @@ entries:
     group: ios
     name: ios_state
     type: string
+    where:
+    - attribute
   jvm.buffer.pool.name:
     brief: Name of the buffer pool.
     column: String
@@ -1586,6 +1816,8 @@ entries:
     group: jvm
     name: jvm_buffer_pool_name
     type: string
+    where:
+    - attribute
   jvm.gc.action:
     brief: Name of the garbage collector action.
     column: String
@@ -1596,6 +1828,8 @@ entries:
     group: jvm
     name: jvm_gc_action
     type: string
+    where:
+    - attribute
   jvm.gc.name:
     brief: Name of the garbage collector.
     column: String
@@ -1606,6 +1840,8 @@ entries:
     group: jvm
     name: jvm_gc_name
     type: string
+    where:
+    - attribute
   jvm.memory.pool.name:
     brief: Name of the memory pool.
     column: String
@@ -1617,6 +1853,8 @@ entries:
     group: jvm
     name: jvm_memory_pool_name
     type: string
+    where:
+    - attribute
   jvm.memory.type:
     brief: The type of memory.
     column: Enum8('' = 0, 'heap' = 1, 'non_heap' = 2)
@@ -1627,6 +1865,8 @@ entries:
     group: jvm
     name: jvm_memory_type
     type: string
+    where:
+    - attribute
   jvm.thread.daemon:
     brief: Whether the thread is daemon or not.
     column: Bool
@@ -1634,6 +1874,8 @@ entries:
     group: jvm
     name: jvm_thread_daemon
     type: boolean
+    where:
+    - attribute
   jvm.thread.state:
     brief: State of the thread.
     column: Enum8('' = 0, 'new' = 1, 'runnable' = 2, 'blocked' = 3, 'waiting' = 4,
@@ -1649,6 +1891,8 @@ entries:
     group: jvm
     name: jvm_thread_state
     type: string
+    where:
+    - attribute
   k8s.cluster.name:
     brief: |
       The name of the cluster.
@@ -1659,6 +1903,9 @@ entries:
     group: k8s
     name: k8s_cluster_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.cluster.uid:
     brief: |
       A pseudo-ID for the cluster, set to the UID of the `kube-system` namespace.
@@ -1669,6 +1916,9 @@ entries:
     group: k8s
     name: k8s_cluster_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.container.name:
     brief: |
       The name of the Container from Pod specification, must be unique within a Pod. Container runtime usually uses different globally unique name (`container.name`).
@@ -1679,6 +1929,9 @@ entries:
     group: k8s
     name: k8s_container_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.container.restart_count:
     brief: |
       Number of times the container was restarted. This attribute can be used to identify a particular container (running or stopped) within a container spec.
@@ -1690,6 +1943,9 @@ entries:
     group: k8s
     name: k8s_container_restart_count
     type: int
+    where:
+    - resource
+    - attribute
   k8s.cronjob.name:
     brief: |
       The name of the CronJob.
@@ -1700,6 +1956,9 @@ entries:
     group: k8s
     name: k8s_cronjob_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.cronjob.uid:
     brief: |
       The UID of the CronJob.
@@ -1710,6 +1969,9 @@ entries:
     group: k8s
     name: k8s_cronjob_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.daemonset.name:
     brief: |
       The name of the DaemonSet.
@@ -1720,6 +1982,9 @@ entries:
     group: k8s
     name: k8s_daemonset_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.daemonset.uid:
     brief: |
       The UID of the DaemonSet.
@@ -1730,6 +1995,9 @@ entries:
     group: k8s
     name: k8s_daemonset_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.deployment.name:
     brief: |
       The name of the Deployment.
@@ -1740,6 +2008,9 @@ entries:
     group: k8s
     name: k8s_deployment_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.deployment.uid:
     brief: |
       The UID of the Deployment.
@@ -1750,6 +2021,9 @@ entries:
     group: k8s
     name: k8s_deployment_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.job.name:
     brief: |
       The name of the Job.
@@ -1760,6 +2034,9 @@ entries:
     group: k8s
     name: k8s_job_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.job.uid:
     brief: |
       The UID of the Job.
@@ -1770,6 +2047,9 @@ entries:
     group: k8s
     name: k8s_job_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.namespace.name:
     brief: |
       The name of the namespace that the pod is running in.
@@ -1780,6 +2060,9 @@ entries:
     group: k8s
     name: k8s_namespace_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.node.name:
     brief: |
       The name of the Node.
@@ -1790,6 +2073,9 @@ entries:
     group: k8s
     name: k8s_node_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.node.uid:
     brief: |
       The UID of the Node.
@@ -1800,6 +2086,9 @@ entries:
     group: k8s
     name: k8s_node_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.pod.labels:
     brief: |
       The labels placed on the Pod, the `<key>` being the label name, the value being the label value.
@@ -1812,6 +2101,9 @@ entries:
     group: k8s
     name: k8s_pod_labels
     type: template[string]
+    where:
+    - resource
+    - attribute
   k8s.pod.name:
     brief: |
       The name of the Pod.
@@ -1822,6 +2114,9 @@ entries:
     group: k8s
     name: k8s_pod_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.pod.uid:
     brief: |
       The UID of the Pod.
@@ -1832,6 +2127,9 @@ entries:
     group: k8s
     name: k8s_pod_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.replicaset.name:
     brief: |
       The name of the ReplicaSet.
@@ -1842,6 +2140,9 @@ entries:
     group: k8s
     name: k8s_replicaset_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.replicaset.uid:
     brief: |
       The UID of the ReplicaSet.
@@ -1852,6 +2153,9 @@ entries:
     group: k8s
     name: k8s_replicaset_uid
     type: string
+    where:
+    - resource
+    - attribute
   k8s.statefulset.name:
     brief: |
       The name of the StatefulSet.
@@ -1862,6 +2166,9 @@ entries:
     group: k8s
     name: k8s_statefulset_name
     type: string
+    where:
+    - resource
+    - attribute
   k8s.statefulset.uid:
     brief: |
       The UID of the StatefulSet.
@@ -1872,6 +2179,9 @@ entries:
     group: k8s
     name: k8s_statefulset_uid
     type: string
+    where:
+    - resource
+    - attribute
   log.file.name:
     brief: |
       The basename of the file.
@@ -1882,6 +2192,8 @@ entries:
     group: log
     name: log_file_name
     type: string
+    where:
+    - attribute
   log.file.name_resolved:
     brief: |
       The basename of the file, with symlinks resolved.
@@ -1892,6 +2204,8 @@ entries:
     group: log
     name: log_file_name_resolved
     type: string
+    where:
+    - attribute
   log.file.path:
     brief: |
       The full path to the file.
@@ -1902,6 +2216,8 @@ entries:
     group: log
     name: log_file_path
     type: string
+    where:
+    - attribute
   log.file.path_resolved:
     brief: |
       The full path to the file, with symlinks resolved.
@@ -1912,6 +2228,8 @@ entries:
     group: log
     name: log_file_path_resolved
     type: string
+    where:
+    - attribute
   log.iostream:
     brief: |
       The stream associated with the log. See below for a list of well-known values.
@@ -1923,6 +2241,8 @@ entries:
     group: log
     name: log_iostream
     type: string
+    where:
+    - attribute
   log.record.uid:
     brief: |
       A unique identifier for the Log Record.
@@ -1933,6 +2253,8 @@ entries:
     group: log
     name: log_record_uid
     type: string
+    where:
+    - attribute
   message.compressed_size:
     brief: Compressed size of the message in bytes.
     column: Int64
@@ -1940,6 +2262,8 @@ entries:
     group: message
     name: message_compressed_size
     type: int
+    where:
+    - attribute
   message.id:
     brief: MUST be calculated as two different counters starting from `1` one for
       sent messages and one for received message.
@@ -1948,6 +2272,8 @@ entries:
     group: message
     name: message_id
     type: int
+    where:
+    - attribute
   message.type:
     brief: Whether this is a received or sent message.
     column: Enum8('' = 0, 'SENT' = 1, 'RECEIVED' = 2)
@@ -1958,6 +2284,8 @@ entries:
     group: message
     name: message_type
     type: string
+    where:
+    - attribute
   message.uncompressed_size:
     brief: Uncompressed size of the message in bytes.
     column: Int64
@@ -1965,6 +2293,8 @@ entries:
     group: message
     name: message_uncompressed_size
     type: int
+    where:
+    - attribute
   messaging.batch.message_count:
     brief: The number of messages sent, received, or processed in the scope of the
       batching operation.
@@ -1977,6 +2307,8 @@ entries:
     group: messaging
     name: messaging_batch_message_count
     type: int
+    where:
+    - attribute
   messaging.client_id:
     brief: |
       A unique identifier for the client that consumes or produces a message.
@@ -1988,6 +2320,8 @@ entries:
     group: messaging
     name: messaging_client_id
     type: string
+    where:
+    - attribute
   messaging.destination.anonymous:
     brief: A boolean that is true if the message destination is anonymous (could be
       unnamed or have auto-generated name).
@@ -1996,6 +2330,8 @@ entries:
     group: messaging
     name: messaging_destination_anonymous
     type: boolean
+    where:
+    - attribute
   messaging.destination.name:
     brief: The message destination name
     column: String
@@ -2006,6 +2342,8 @@ entries:
     group: messaging
     name: messaging_destination_name
     type: string
+    where:
+    - attribute
   messaging.destination.template:
     brief: Low cardinality representation of the messaging destination name
     column: String
@@ -2015,6 +2353,8 @@ entries:
     group: messaging
     name: messaging_destination_template
     type: string
+    where:
+    - attribute
   messaging.destination.temporary:
     brief: A boolean that is true if the message destination is temporary and might
       not exist anymore after messages are processed.
@@ -2023,6 +2363,8 @@ entries:
     group: messaging
     name: messaging_destination_temporary
     type: boolean
+    where:
+    - attribute
   messaging.destination_publish.anonymous:
     brief: A boolean that is true if the publish message destination is anonymous
       (could be unnamed or have auto-generated name).
@@ -2031,6 +2373,8 @@ entries:
     group: messaging
     name: messaging_destination_publish_anonymous
     type: boolean
+    where:
+    - attribute
   messaging.destination_publish.name:
     brief: The name of the original destination the message was published to
     column: String
@@ -2041,6 +2385,8 @@ entries:
     group: messaging
     name: messaging_destination_publish_name
     type: string
+    where:
+    - attribute
   messaging.gcp_pubsub.message.ordering_key:
     brief: |
       The ordering key for a given message. If the attribute is not present, the message does not have an ordering key.
@@ -2051,6 +2397,8 @@ entries:
     group: messaging
     name: messaging_gcp_pubsub_message_ordering_key
     type: string
+    where:
+    - attribute
   messaging.kafka.consumer.group:
     brief: |
       Name of the Kafka Consumer Group that is handling the message. Only applies to consumers, not producers.
@@ -2061,6 +2409,8 @@ entries:
     group: messaging
     name: messaging_kafka_consumer_group
     type: string
+    where:
+    - attribute
   messaging.kafka.destination.partition:
     brief: |
       Partition the message is sent to.
@@ -2071,6 +2421,8 @@ entries:
     group: messaging
     name: messaging_kafka_destination_partition
     type: int
+    where:
+    - attribute
   messaging.kafka.message.key:
     brief: |
       Message keys in Kafka are used for grouping alike messages to ensure they're processed on the same partition. They differ from `messaging.message.id` in that they're not unique. If the key is `null`, the attribute MUST NOT be set.
@@ -2081,6 +2433,8 @@ entries:
     group: messaging
     name: messaging_kafka_message_key
     type: string
+    where:
+    - attribute
   messaging.kafka.message.offset:
     brief: |
       The offset of a record in the corresponding Kafka partition.
@@ -2091,6 +2445,8 @@ entries:
     group: messaging
     name: messaging_kafka_message_offset
     type: int
+    where:
+    - attribute
   messaging.kafka.message.tombstone:
     brief: A boolean that is true if the message is a tombstone.
     column: Bool
@@ -2098,6 +2454,8 @@ entries:
     group: messaging
     name: messaging_kafka_message_tombstone
     type: boolean
+    where:
+    - attribute
   messaging.message.body.size:
     brief: |
       The size of the message body in bytes.
@@ -2108,6 +2466,8 @@ entries:
     group: messaging
     name: messaging_message_body_size
     type: int
+    where:
+    - attribute
   messaging.message.conversation_id:
     brief: |
       The conversation ID identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
@@ -2118,6 +2478,8 @@ entries:
     group: messaging
     name: messaging_message_conversation_id
     type: string
+    where:
+    - attribute
   messaging.message.envelope.size:
     brief: |
       The size of the message body and metadata in bytes.
@@ -2128,6 +2490,8 @@ entries:
     group: messaging
     name: messaging_message_envelope_size
     type: int
+    where:
+    - attribute
   messaging.message.id:
     brief: A value used by the messaging system as an identifier for the message,
       represented as a string.
@@ -2138,6 +2502,8 @@ entries:
     group: messaging
     name: messaging_message_id
     type: string
+    where:
+    - attribute
   messaging.operation:
     brief: |
       A string identifying the kind of messaging operation.
@@ -2146,6 +2512,8 @@ entries:
     group: messaging
     name: messaging_operation
     type: string
+    where:
+    - attribute
   messaging.rabbitmq.destination.routing_key:
     brief: |
       RabbitMQ message routing key.
@@ -2156,6 +2524,8 @@ entries:
     group: messaging
     name: messaging_rabbitmq_destination_routing_key
     type: string
+    where:
+    - attribute
   messaging.rocketmq.client_group:
     brief: |
       Name of the RocketMQ producer/consumer group that is handling the message. The client type is identified by the SpanKind.
@@ -2166,6 +2536,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_client_group
     type: string
+    where:
+    - attribute
   messaging.rocketmq.consumption_model:
     brief: |
       Model of message consumption. This only applies to consumer spans.
@@ -2177,6 +2549,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_consumption_model
     type: string
+    where:
+    - attribute
   messaging.rocketmq.message.delay_time_level:
     brief: |
       The delay time level for delay message, which determines the message delay time.
@@ -2187,6 +2561,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_message_delay_time_level
     type: int
+    where:
+    - attribute
   messaging.rocketmq.message.delivery_timestamp:
     brief: |
       The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
@@ -2197,6 +2573,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_message_delivery_timestamp
     type: int
+    where:
+    - attribute
   messaging.rocketmq.message.group:
     brief: |
       It is essential for FIFO message. Messages that belong to the same message group are always processed one by one within the same consumer group.
@@ -2207,6 +2585,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_message_group
     type: string
+    where:
+    - attribute
   messaging.rocketmq.message.keys:
     brief: |
       Key(s) of message, another way to mark message besides message id.
@@ -2218,6 +2598,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_message_keys
     type: string[]
+    where:
+    - attribute
   messaging.rocketmq.message.tag:
     brief: |
       The secondary classifier of message besides topic.
@@ -2228,6 +2610,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_message_tag
     type: string
+    where:
+    - attribute
   messaging.rocketmq.message.type:
     brief: |
       Type of message.
@@ -2241,6 +2625,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_message_type
     type: string
+    where:
+    - attribute
   messaging.rocketmq.namespace:
     brief: |
       Namespace of RocketMQ resources, resources in different namespaces are individual.
@@ -2251,6 +2637,8 @@ entries:
     group: messaging
     name: messaging_rocketmq_namespace
     type: string
+    where:
+    - attribute
   messaging.system:
     brief: |
       An identifier for the messaging system being used. See below for a list of well-known identifiers.
@@ -2259,6 +2647,8 @@ entries:
     group: messaging
     name: messaging_system
     type: string
+    where:
+    - attribute
   network.carrier.icc:
     brief: The ISO 3166-1 alpha-2 2-character country code associated with the mobile
       carrier network.
@@ -2269,6 +2659,8 @@ entries:
     group: network
     name: network_carrier_icc
     type: string
+    where:
+    - attribute
   network.carrier.mcc:
     brief: The mobile carrier country code.
     column: String
@@ -2278,6 +2670,8 @@ entries:
     group: network
     name: network_carrier_mcc
     type: string
+    where:
+    - attribute
   network.carrier.mnc:
     brief: The mobile carrier network code.
     column: String
@@ -2287,6 +2681,8 @@ entries:
     group: network
     name: network_carrier_mnc
     type: string
+    where:
+    - attribute
   network.carrier.name:
     brief: The name of the mobile carrier.
     column: String
@@ -2296,6 +2692,8 @@ entries:
     group: network
     name: network_carrier_name
     type: string
+    where:
+    - attribute
   network.connection.subtype:
     brief: This describes more details regarding the connection.type. It may be the
       type of cell technology connection, but it could be used for describing details
@@ -2307,6 +2705,8 @@ entries:
     group: network
     name: network_connection_subtype
     type: string
+    where:
+    - attribute
   network.connection.type:
     brief: The internet connection type.
     column: String
@@ -2316,6 +2716,8 @@ entries:
     group: network
     name: network_connection_type
     type: string
+    where:
+    - attribute
   network.io.direction:
     brief: The network IO operation direction.
     column: Enum8('' = 0, 'transmit' = 1, 'receive' = 2)
@@ -2326,6 +2728,8 @@ entries:
     group: network
     name: network_io_direction
     type: string
+    where:
+    - attribute
   network.local.address:
     brief: Local address of the network connection - IP address or Unix domain socket
       name.
@@ -2337,6 +2741,8 @@ entries:
     group: network
     name: network_local_address
     type: string
+    where:
+    - attribute
   network.local.port:
     brief: Local port number of the network connection.
     column: UInt16
@@ -2346,6 +2752,8 @@ entries:
     group: network
     name: network_local_port
     type: int
+    where:
+    - attribute
   network.peer.address:
     brief: Peer address of the network connection - IP address or Unix domain socket
       name.
@@ -2357,6 +2765,8 @@ entries:
     group: network
     name: network_peer_address
     type: string
+    where:
+    - attribute
   network.peer.port:
     brief: Peer port number of the network connection.
     column: UInt16
@@ -2366,6 +2776,8 @@ entries:
     group: network
     name: network_peer_port
     type: int
+    where:
+    - attribute
   network.protocol.name:
     brief: '[OSI application layer](https://osi-model.com/application-layer/) or non-OSI
       equivalent.'
@@ -2378,6 +2790,8 @@ entries:
     group: network
     name: network_protocol_name
     type: string
+    where:
+    - attribute
   network.protocol.version:
     brief: Version of the protocol specified in `network.protocol.name`.
     column: String
@@ -2387,6 +2801,8 @@ entries:
     group: network
     name: network_protocol_version
     type: string
+    where:
+    - attribute
   network.transport:
     brief: |
       [OSI transport layer](https://osi-model.com/transport-layer/) or [inter-process communication method](https://wikipedia.org/wiki/Inter-process_communication).
@@ -2398,6 +2814,8 @@ entries:
     group: network
     name: network_transport
     type: string
+    where:
+    - attribute
   network.type:
     brief: '[OSI network layer](https://osi-model.com/network-layer/) or non-OSI equivalent.'
     column: String
@@ -2408,6 +2826,8 @@ entries:
     group: network
     name: network_type
     type: string
+    where:
+    - attribute
   oci.manifest.digest:
     brief: |
       The digest of the OCI image manifest. For container images specifically is the digest by which the container image is known.
@@ -2418,6 +2838,8 @@ entries:
     group: oci
     name: oci_manifest_digest
     type: string
+    where:
+    - attribute
   opentracing.ref_type:
     brief: Parent-child Reference type
     column: Enum8('' = 0, 'child_of' = 1, 'follows_from' = 2)
@@ -2428,6 +2850,8 @@ entries:
     group: opentracing
     name: opentracing_ref_type
     type: string
+    where:
+    - attribute
   os.build_id:
     brief: Unique identifier for a particular build or compilation of the operating
       system.
@@ -2440,7 +2864,8 @@ entries:
     group: os
     name: os_build_id
     type: string
-    where: resource
+    where:
+    - resource
   os.description:
     brief: |
       Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
@@ -2452,7 +2877,8 @@ entries:
     group: os
     name: os_description
     type: string
-    where: resource
+    where:
+    - resource
   os.name:
     brief: Human readable operating system name.
     column: String
@@ -2464,7 +2890,8 @@ entries:
     group: os
     name: os_name
     type: string
-    where: resource
+    where:
+    - resource
   os.type:
     brief: |
       The operating system type.
@@ -2473,7 +2900,8 @@ entries:
     group: os
     name: os_type
     type: string
-    where: resource
+    where:
+    - resource
   os.version:
     brief: |
       The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
@@ -2485,7 +2913,8 @@ entries:
     group: os
     name: os_version
     type: string
-    where: resource
+    where:
+    - resource
   otel.scope.name:
     brief: The name of the instrumentation scope - (`InstrumentationScope.Name` in
       OTLP).
@@ -2496,6 +2925,8 @@ entries:
     group: otel
     name: otel_scope_name
     type: string
+    where:
+    - attribute
   otel.scope.version:
     brief: The version of the instrumentation scope - (`InstrumentationScope.Version`
       in OTLP).
@@ -2506,6 +2937,8 @@ entries:
     group: otel
     name: otel_scope_version
     type: string
+    where:
+    - attribute
   otel.status_code:
     brief: Name of the code, either "OK" or "ERROR". MUST NOT be set if the status
       code is UNSET.
@@ -2517,6 +2950,8 @@ entries:
     group: otel
     name: otel_status_code
     type: string
+    where:
+    - attribute
   otel.status_description:
     brief: Description of the Status if it has a value, otherwise not set.
     column: String
@@ -2526,6 +2961,8 @@ entries:
     group: otel
     name: otel_status_description
     type: string
+    where:
+    - attribute
   peer.service:
     brief: |
       The [`service.name`](/docs/resource/README.md#service) of the remote service. SHOULD be equal to the actual `service.name` resource attribute of the remote service if any.
@@ -2536,6 +2973,8 @@ entries:
     group: peer
     name: peer_service
     type: string
+    where:
+    - attribute
   pool.name:
     brief: |
       The name of the connection pool; unique within the instrumented application. In case the connection pool implementation doesn't provide a name, then the [db.connection_string](/docs/database/database-spans.md#connection-level-attributes) should be used
@@ -2546,6 +2985,8 @@ entries:
     group: pool
     name: pool_name
     type: string
+    where:
+    - attribute
   process.command:
     brief: |
       The command used to launch the process (i.e. the command name). On Linux based systems, can be set to the zeroth string in `proc/[pid]/cmdline`. On Windows, can be set to the first parameter extracted from `GetCommandLineW`.
@@ -2556,7 +2997,8 @@ entries:
     group: process
     name: process_command
     type: string
-    where: resource
+    where:
+    - resource
   process.command_args:
     brief: |
       All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`.
@@ -2568,7 +3010,8 @@ entries:
     group: process
     name: process_command_args
     type: string[]
-    where: resource
+    where:
+    - resource
   process.command_line:
     brief: |
       The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead.
@@ -2579,7 +3022,8 @@ entries:
     group: process
     name: process_command_line
     type: string
-    where: resource
+    where:
+    - resource
   process.executable.name:
     brief: |
       The name of the process executable. On Linux based systems, can be set to the `Name` in `proc/[pid]/status`. On Windows, can be set to the base name of `GetProcessImageFileNameW`.
@@ -2590,7 +3034,8 @@ entries:
     group: process
     name: process_executable_name
     type: string
-    where: resource
+    where:
+    - resource
   process.executable.path:
     brief: |
       The full path to the process executable. On Linux based systems, can be set to the target of `proc/[pid]/exe`. On Windows, can be set to the result of `GetProcessImageFileNameW`.
@@ -2601,7 +3046,8 @@ entries:
     group: process
     name: process_executable_path
     type: string
-    where: resource
+    where:
+    - resource
   process.owner:
     brief: |
       The username of the user that owns the process.
@@ -2612,7 +3058,8 @@ entries:
     group: process
     name: process_owner
     type: string
-    where: resource
+    where:
+    - resource
   process.parent_pid:
     brief: |
       Parent Process identifier (PID).
@@ -2623,7 +3070,8 @@ entries:
     group: process
     name: process_parent_pid
     type: int
-    where: resource
+    where:
+    - resource
   process.pid:
     brief: |
       Process identifier (PID).
@@ -2634,7 +3082,8 @@ entries:
     group: process
     name: process_pid
     type: int
-    where: resource
+    where:
+    - resource
   process.runtime.description:
     brief: |
       An additional description about the runtime of the process, for example a specific vendor customization of the runtime environment.
@@ -2645,7 +3094,8 @@ entries:
     group: process
     name: process_runtime_description
     type: string
-    where: resource
+    where:
+    - resource
   process.runtime.name:
     brief: |
       The name of the runtime of this process. For compiled native binaries, this SHOULD be the name of the compiler.
@@ -2656,7 +3106,8 @@ entries:
     group: process
     name: process_runtime_name
     type: string
-    where: resource
+    where:
+    - resource
   process.runtime.version:
     brief: |
       The version of the runtime of this process, as returned by the runtime without modification.
@@ -2667,7 +3118,8 @@ entries:
     group: process
     name: process_runtime_version
     type: string
-    where: resource
+    where:
+    - resource
   rpc.connect_rpc.error_code:
     brief: The [error codes](https://connect.build/docs/protocol/#error-codes) of
       the Connect request. Error codes are always string values.
@@ -2697,6 +3149,8 @@ entries:
     group: rpc
     name: rpc_connect_rpc_error_code
     type: string
+    where:
+    - attribute
   rpc.connect_rpc.request.metadata:
     brief: |
       Connect request metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
@@ -2707,6 +3161,8 @@ entries:
     group: rpc
     name: rpc_connect_rpc_request_metadata
     type: template[string[]]
+    where:
+    - attribute
   rpc.connect_rpc.response.metadata:
     brief: |
       Connect response metadata, `<key>` being the normalized Connect Metadata key (lowercase), the value being the metadata values.
@@ -2717,6 +3173,8 @@ entries:
     group: rpc
     name: rpc_connect_rpc_response_metadata
     type: template[string[]]
+    where:
+    - attribute
   rpc.grpc.request.metadata:
     brief: |
       gRPC request metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
@@ -2727,6 +3185,8 @@ entries:
     group: rpc
     name: rpc_grpc_request_metadata
     type: template[string[]]
+    where:
+    - attribute
   rpc.grpc.response.metadata:
     brief: |
       gRPC response metadata, `<key>` being the normalized gRPC Metadata key (lowercase), the value being the metadata values.
@@ -2737,6 +3197,8 @@ entries:
     group: rpc
     name: rpc_grpc_response_metadata
     type: template[string[]]
+    where:
+    - attribute
   rpc.grpc.status_code:
     brief: The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md)
       of the gRPC request.
@@ -2763,6 +3225,8 @@ entries:
     group: rpc
     name: rpc_grpc_status_code
     type: int
+    where:
+    - attribute
   rpc.jsonrpc.error_code:
     brief: '`error.code` property of response if it is an error response.'
     column: Int64
@@ -2773,6 +3237,8 @@ entries:
     group: rpc
     name: rpc_jsonrpc_error_code
     type: int
+    where:
+    - attribute
   rpc.jsonrpc.error_message:
     brief: '`error.message` property of response if it is an error response.'
     column: String
@@ -2783,6 +3249,8 @@ entries:
     group: rpc
     name: rpc_jsonrpc_error_message
     type: string
+    where:
+    - attribute
   rpc.jsonrpc.request_id:
     brief: |
       `id` property of request or response. Since protocol allows id to be int, string, `null` or missing (for notifications), value is expected to be cast to string for simplicity. Use empty string in case of `null` value. Omit entirely if this is a notification.
@@ -2795,6 +3263,8 @@ entries:
     group: rpc
     name: rpc_jsonrpc_request_id
     type: string
+    where:
+    - attribute
   rpc.jsonrpc.version:
     brief: Protocol version as in `jsonrpc` property of request/response. Since JSON-RPC
       1.0 doesn't specify this, the value can be omitted.
@@ -2806,6 +3276,8 @@ entries:
     group: rpc
     name: rpc_jsonrpc_version
     type: string
+    where:
+    - attribute
   rpc.method:
     brief: The name of the (logical) method being called, must be equal to the $method
       part in the span name.
@@ -2816,6 +3288,8 @@ entries:
     group: rpc
     name: rpc_method
     type: string
+    where:
+    - attribute
   rpc.service:
     brief: The full (logical) name of the service being called, including its package
       name, if applicable.
@@ -2826,6 +3300,8 @@ entries:
     group: rpc
     name: rpc_service
     type: string
+    where:
+    - attribute
   rpc.system:
     brief: A string identifying the remoting system. See below for a list of well-known
       identifiers.
@@ -2834,6 +3310,8 @@ entries:
     group: rpc
     name: rpc_system
     type: string
+    where:
+    - attribute
   server.address:
     brief: Server domain name if available without reverse DNS lookup; otherwise,
       IP address or Unix domain socket name.
@@ -2846,6 +3324,8 @@ entries:
     group: server
     name: server_address
     type: string
+    where:
+    - attribute
   server.port:
     brief: Server port number.
     column: UInt16
@@ -2857,6 +3337,8 @@ entries:
     group: server
     name: server_port
     type: int
+    where:
+    - attribute
   service.instance.id:
     brief: |
       The string ID of the service instance.
@@ -2868,7 +3350,8 @@ entries:
     group: service
     name: service_instance_id
     type: string
-    where: resource
+    where:
+    - resource
   service.name:
     brief: |
       Logical name of the service.
@@ -2879,7 +3362,8 @@ entries:
     group: service
     name: service_name
     type: string
-    where: resource
+    where:
+    - resource
   service.namespace:
     brief: |
       A namespace for `service.name`.
@@ -2890,7 +3374,8 @@ entries:
     group: service
     name: service_namespace
     type: string
-    where: resource
+    where:
+    - resource
   service.version:
     brief: |
       The version string of the service API or implementation. The format is not defined by these conventions.
@@ -2902,7 +3387,8 @@ entries:
     group: service
     name: service_version
     type: string
-    where: resource
+    where:
+    - resource
   session.id:
     brief: A unique id to identify a session.
     column: String
@@ -2912,6 +3398,8 @@ entries:
     group: session
     name: session_id
     type: string
+    where:
+    - attribute
   session.previous_id:
     brief: The previous `session.id` for this user, when known.
     column: String
@@ -2921,6 +3409,8 @@ entries:
     group: session
     name: session_previous_id
     type: string
+    where:
+    - attribute
   source.address:
     brief: Source address - domain name if available without reverse DNS lookup; otherwise,
       IP address or Unix domain socket name.
@@ -2933,6 +3423,8 @@ entries:
     group: source
     name: source_address
     type: string
+    where:
+    - attribute
   source.port:
     brief: Source port number
     column: UInt16
@@ -2943,6 +3435,8 @@ entries:
     group: source
     name: source_port
     type: int
+    where:
+    - attribute
   state:
     brief: The state of a connection in the pool
     column: Enum8('' = 0, 'idle' = 1, 'used' = 2)
@@ -2952,6 +3446,8 @@ entries:
     full_name: state
     name: state
     type: string
+    where:
+    - attribute
   system.cpu.logical_number:
     brief: The logical CPU number [0..n-1]
     column: Int64
@@ -2961,6 +3457,8 @@ entries:
     group: system
     name: system_cpu_logical_number
     type: int
+    where:
+    - attribute
   system.cpu.state:
     brief: The state of the CPU
     column: String
@@ -2971,6 +3469,8 @@ entries:
     group: system
     name: system_cpu_state
     type: string
+    where:
+    - attribute
   system.device:
     brief: The device identifier
     column: String
@@ -2980,6 +3480,8 @@ entries:
     group: system
     name: system_device
     type: string
+    where:
+    - attribute
   system.filesystem.mode:
     brief: The filesystem mode
     column: String
@@ -2989,6 +3491,8 @@ entries:
     group: system
     name: system_filesystem_mode
     type: string
+    where:
+    - attribute
   system.filesystem.mountpoint:
     brief: The filesystem mount path
     column: String
@@ -2998,6 +3502,8 @@ entries:
     group: system
     name: system_filesystem_mountpoint
     type: string
+    where:
+    - attribute
   system.filesystem.state:
     brief: The filesystem state
     column: Enum8('' = 0, 'used' = 1, 'free' = 2, 'reserved' = 3)
@@ -3009,6 +3515,8 @@ entries:
     group: system
     name: system_filesystem_state
     type: string
+    where:
+    - attribute
   system.filesystem.type:
     brief: The filesystem type
     column: String
@@ -3018,6 +3526,8 @@ entries:
     group: system
     name: system_filesystem_type
     type: string
+    where:
+    - attribute
   system.memory.state:
     brief: The memory state
     column: String
@@ -3028,6 +3538,8 @@ entries:
     group: system
     name: system_memory_state
     type: string
+    where:
+    - attribute
   system.network.state:
     brief: A stateless protocol MUST NOT set this attribute
     column: Enum8('' = 0, 'close' = 1, 'close_wait' = 2, 'closing' = 3, 'delete' =
@@ -3050,6 +3562,8 @@ entries:
     group: system
     name: system_network_state
     type: string
+    where:
+    - attribute
   system.paging.direction:
     brief: The paging access direction
     column: Enum8('' = 0, 'in' = 1, 'out' = 2)
@@ -3060,6 +3574,8 @@ entries:
     group: system
     name: system_paging_direction
     type: string
+    where:
+    - attribute
   system.paging.state:
     brief: The memory paging state
     column: Enum8('' = 0, 'used' = 1, 'free' = 2)
@@ -3070,6 +3586,8 @@ entries:
     group: system
     name: system_paging_state
     type: string
+    where:
+    - attribute
   system.paging.type:
     brief: The memory paging type
     column: Enum8('' = 0, 'major' = 1, 'minor' = 2)
@@ -3080,6 +3598,8 @@ entries:
     group: system
     name: system_paging_type
     type: string
+    where:
+    - attribute
   system.processes.status:
     brief: |
       The process state, e.g., [Linux Process State Codes](https://man7.org/linux/man-pages/man1/ps.1.html#PROCESS_STATE_CODES)
@@ -3090,6 +3610,8 @@ entries:
     group: system
     name: system_processes_status
     type: string
+    where:
+    - attribute
   telemetry.distro.name:
     brief: |
       The name of the auto instrumentation agent or distribution, if used.
@@ -3100,7 +3622,8 @@ entries:
     group: telemetry
     name: telemetry_distro_name
     type: string
-    where: resource
+    where:
+    - resource
   telemetry.distro.version:
     brief: |
       The version string of the auto instrumentation agent or distribution, if used.
@@ -3111,7 +3634,8 @@ entries:
     group: telemetry
     name: telemetry_distro_version
     type: string
-    where: resource
+    where:
+    - resource
   telemetry.sdk.language:
     brief: |
       The language of the telemetry SDK.
@@ -3120,7 +3644,8 @@ entries:
     group: telemetry
     name: telemetry_sdk_language
     type: string
-    where: resource
+    where:
+    - resource
   telemetry.sdk.name:
     brief: |
       The name of the telemetry SDK as defined above.
@@ -3131,7 +3656,8 @@ entries:
     group: telemetry
     name: telemetry_sdk_name
     type: string
-    where: resource
+    where:
+    - resource
   telemetry.sdk.version:
     brief: |
       The version string of the telemetry SDK.
@@ -3142,7 +3668,8 @@ entries:
     group: telemetry
     name: telemetry_sdk_version
     type: string
-    where: resource
+    where:
+    - resource
   thread.id:
     brief: |
       Current "managed" thread ID (as opposed to OS thread ID).
@@ -3153,6 +3680,8 @@ entries:
     group: thread
     name: thread_id
     type: int
+    where:
+    - attribute
   thread.name:
     brief: |
       Current thread name.
@@ -3163,6 +3692,8 @@ entries:
     group: thread
     name: thread_name
     type: string
+    where:
+    - attribute
   tls.cipher:
     brief: |
       String indicating the [cipher](https://datatracker.ietf.org/doc/html/rfc5246#appendix-A.5) used during the current connection.
@@ -3174,6 +3705,8 @@ entries:
     group: tls
     name: tls_cipher
     type: string
+    where:
+    - attribute
   tls.client.certificate:
     brief: |
       PEM-encoded stand-alone certificate offered by the client. This is usually mutually-exclusive of `client.certificate_chain` since this value also exists in that list.
@@ -3184,6 +3717,8 @@ entries:
     group: tls
     name: tls_client_certificate
     type: string
+    where:
+    - attribute
   tls.client.certificate_chain:
     brief: |
       Array of PEM-encoded certificates that make up the certificate chain offered by the client. This is usually mutually-exclusive of `client.certificate` since that value should be the first certificate in the chain.
@@ -3195,6 +3730,8 @@ entries:
     group: tls
     name: tls_client_certificate_chain
     type: string[]
+    where:
+    - attribute
   tls.client.hash.md5:
     brief: |
       Certificate fingerprint using the MD5 digest of DER-encoded version of certificate offered by the client. For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -3205,6 +3742,8 @@ entries:
     group: tls
     name: tls_client_hash_md5
     type: string
+    where:
+    - attribute
   tls.client.hash.sha1:
     brief: |
       Certificate fingerprint using the SHA1 digest of DER-encoded version of certificate offered by the client. For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -3215,6 +3754,8 @@ entries:
     group: tls
     name: tls_client_hash_sha1
     type: string
+    where:
+    - attribute
   tls.client.hash.sha256:
     brief: |
       Certificate fingerprint using the SHA256 digest of DER-encoded version of certificate offered by the client. For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -3225,6 +3766,8 @@ entries:
     group: tls
     name: tls_client_hash_sha256
     type: string
+    where:
+    - attribute
   tls.client.issuer:
     brief: Distinguished name of [subject](https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.6)
       of the issuer of the x.509 certificate presented by the client.
@@ -3235,6 +3778,8 @@ entries:
     group: tls
     name: tls_client_issuer
     type: string
+    where:
+    - attribute
   tls.client.ja3:
     brief: A hash that identifies clients based on how they perform an SSL/TLS handshake.
     column: String
@@ -3244,6 +3789,8 @@ entries:
     group: tls
     name: tls_client_ja3
     type: string
+    where:
+    - attribute
   tls.client.not_after:
     brief: Date/Time indicating when client certificate is no longer considered valid.
     column: String
@@ -3253,6 +3800,8 @@ entries:
     group: tls
     name: tls_client_not_after
     type: string
+    where:
+    - attribute
   tls.client.not_before:
     brief: Date/Time indicating when client certificate is first considered valid.
     column: String
@@ -3262,6 +3811,8 @@ entries:
     group: tls
     name: tls_client_not_before
     type: string
+    where:
+    - attribute
   tls.client.server_name:
     brief: Also called an SNI, this tells the server which hostname to which the client
       is attempting to connect to.
@@ -3272,6 +3823,8 @@ entries:
     group: tls
     name: tls_client_server_name
     type: string
+    where:
+    - attribute
   tls.client.subject:
     brief: Distinguished name of subject of the x.509 certificate presented by the
       client.
@@ -3282,6 +3835,8 @@ entries:
     group: tls
     name: tls_client_subject
     type: string
+    where:
+    - attribute
   tls.client.supported_ciphers:
     brief: Array of ciphers offered by the client during the client hello.
     column: Array(String)
@@ -3292,6 +3847,8 @@ entries:
     group: tls
     name: tls_client_supported_ciphers
     type: string[]
+    where:
+    - attribute
   tls.curve:
     brief: String indicating the curve used for the given cipher, when applicable
     column: String
@@ -3301,6 +3858,8 @@ entries:
     group: tls
     name: tls_curve
     type: string
+    where:
+    - attribute
   tls.established:
     brief: Boolean flag indicating if the TLS negotiation was successful and transitioned
       to an encrypted tunnel.
@@ -3311,6 +3870,8 @@ entries:
     group: tls
     name: tls_established
     type: boolean
+    where:
+    - attribute
   tls.next_protocol:
     brief: |
       String indicating the protocol being tunneled. Per the values in the [IANA registry](https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids), this string should be lower case.
@@ -3321,6 +3882,8 @@ entries:
     group: tls
     name: tls_next_protocol
     type: string
+    where:
+    - attribute
   tls.protocol.name:
     brief: |
       Normalized lowercase protocol name parsed from original string of the negotiated [SSL/TLS protocol version](https://www.openssl.org/docs/man1.1.1/man3/SSL_get_version.html#RETURN-VALUES)
@@ -3329,6 +3892,8 @@ entries:
     group: tls
     name: tls_protocol_name
     type: string
+    where:
+    - attribute
   tls.protocol.version:
     brief: |
       Numeric part of the version parsed from the original string of the negotiated [SSL/TLS protocol version](https://www.openssl.org/docs/man1.1.1/man3/SSL_get_version.html#RETURN-VALUES)
@@ -3340,6 +3905,8 @@ entries:
     group: tls
     name: tls_protocol_version
     type: string
+    where:
+    - attribute
   tls.resumed:
     brief: Boolean flag indicating if this TLS connection was resumed from an existing
       TLS negotiation.
@@ -3350,6 +3917,8 @@ entries:
     group: tls
     name: tls_resumed
     type: boolean
+    where:
+    - attribute
   tls.server.certificate:
     brief: |
       PEM-encoded stand-alone certificate offered by the server. This is usually mutually-exclusive of `server.certificate_chain` since this value also exists in that list.
@@ -3360,6 +3929,8 @@ entries:
     group: tls
     name: tls_server_certificate
     type: string
+    where:
+    - attribute
   tls.server.certificate_chain:
     brief: |
       Array of PEM-encoded certificates that make up the certificate chain offered by the server. This is usually mutually-exclusive of `server.certificate` since that value should be the first certificate in the chain.
@@ -3371,6 +3942,8 @@ entries:
     group: tls
     name: tls_server_certificate_chain
     type: string[]
+    where:
+    - attribute
   tls.server.hash.md5:
     brief: |
       Certificate fingerprint using the MD5 digest of DER-encoded version of certificate offered by the server. For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -3381,6 +3954,8 @@ entries:
     group: tls
     name: tls_server_hash_md5
     type: string
+    where:
+    - attribute
   tls.server.hash.sha1:
     brief: |
       Certificate fingerprint using the SHA1 digest of DER-encoded version of certificate offered by the server. For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -3391,6 +3966,8 @@ entries:
     group: tls
     name: tls_server_hash_sha1
     type: string
+    where:
+    - attribute
   tls.server.hash.sha256:
     brief: |
       Certificate fingerprint using the SHA256 digest of DER-encoded version of certificate offered by the server. For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -3401,6 +3978,8 @@ entries:
     group: tls
     name: tls_server_hash_sha256
     type: string
+    where:
+    - attribute
   tls.server.issuer:
     brief: Distinguished name of [subject](https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.6)
       of the issuer of the x.509 certificate presented by the client.
@@ -3411,6 +3990,8 @@ entries:
     group: tls
     name: tls_server_issuer
     type: string
+    where:
+    - attribute
   tls.server.ja3s:
     brief: A hash that identifies servers based on how they perform an SSL/TLS handshake.
     column: String
@@ -3420,6 +4001,8 @@ entries:
     group: tls
     name: tls_server_ja3s
     type: string
+    where:
+    - attribute
   tls.server.not_after:
     brief: Date/Time indicating when server certificate is no longer considered valid.
     column: String
@@ -3429,6 +4012,8 @@ entries:
     group: tls
     name: tls_server_not_after
     type: string
+    where:
+    - attribute
   tls.server.not_before:
     brief: Date/Time indicating when server certificate is first considered valid.
     column: String
@@ -3438,6 +4023,8 @@ entries:
     group: tls
     name: tls_server_not_before
     type: string
+    where:
+    - attribute
   tls.server.subject:
     brief: Distinguished name of subject of the x.509 certificate presented by the
       server.
@@ -3448,6 +4035,8 @@ entries:
     group: tls
     name: tls_server_subject
     type: string
+    where:
+    - attribute
   url.fragment:
     brief: The [URI fragment](https://www.rfc-editor.org/rfc/rfc3986#section-3.5)
       component
@@ -3458,6 +4047,8 @@ entries:
     group: url
     name: url_fragment
     type: string
+    where:
+    - attribute
   url.full:
     brief: Absolute URL describing a network resource according to [RFC3986](https://www.rfc-editor.org/rfc/rfc3986)
     column: String
@@ -3468,6 +4059,8 @@ entries:
     group: url
     name: url_full
     type: string
+    where:
+    - attribute
   url.path:
     brief: The [URI path](https://www.rfc-editor.org/rfc/rfc3986#section-3.3) component
     column: String
@@ -3477,6 +4070,8 @@ entries:
     group: url
     name: url_path
     type: string
+    where:
+    - attribute
   url.query:
     brief: The [URI query](https://www.rfc-editor.org/rfc/rfc3986#section-3.4) component
     column: String
@@ -3486,6 +4081,8 @@ entries:
     group: url
     name: url_query
     type: string
+    where:
+    - attribute
   url.scheme:
     brief: The [URI scheme](https://www.rfc-editor.org/rfc/rfc3986#section-3.1) component
       identifying the used protocol.
@@ -3498,6 +4095,8 @@ entries:
     group: url
     name: url_scheme
     type: string
+    where:
+    - attribute
   user_agent.original:
     brief: |
       Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
@@ -3510,6 +4109,8 @@ entries:
     group: user_agent
     name: user_agent_original
     type: string
+    where:
+    - attribute
   webengine.description:
     brief: |
       Additional description of the web engine (e.g. detailed version and edition information).
@@ -3520,7 +4121,8 @@ entries:
     group: webengine
     name: webengine_description
     type: string
-    where: resource
+    where:
+    - resource
   webengine.name:
     brief: |
       The name of the web engine.
@@ -3531,7 +4133,8 @@ entries:
     group: webengine
     name: webengine_name
     type: string
-    where: resource
+    where:
+    - resource
   webengine.version:
     brief: |
       The version of the web engine.
@@ -3542,7 +4145,8 @@ entries:
     group: webengine
     name: webengine_version
     type: string
-    where: resource
+    where:
+    - resource
 statistics:
   deprecated: 24
   enum: 23

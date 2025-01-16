@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/maps"
 
@@ -24,6 +25,7 @@ type Attributes struct {
 
 	Strings  map[string]proto.ColumnOf[string]
 	Integers map[string]proto.ColumnOf[int64]
+	UUIDs    map[string]proto.ColumnOf[uuid.UUID]
 
 	columnToAttr map[string]string
 	attrToColumn map[string]string
@@ -234,12 +236,18 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 
 		Strings:  make(map[string]proto.ColumnOf[string]),
 		Integers: make(map[string]proto.ColumnOf[int64]),
+		UUIDs:    make(map[string]proto.ColumnOf[uuid.UUID]),
 
 		columnToAttr: make(map[string]string),
 		attrToColumn: make(map[string]string),
 	}
 
 	appendEntry := func(e otelschema.Entry, prefix string) {
+		switch e.Name {
+		case "service_name", "service_namespace", "service_instance_id":
+			// Already materialized by hand.
+			return
+		}
 		s := prefix + e.Name
 		attr.columnToAttr[s] = e.FullName
 		attr.attrToColumn[e.FullName] = s
@@ -253,12 +261,16 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 				attr.Strings[s] = v
 				return
 			}
-			if e.Column != proto.ColumnTypeString {
-				// TODO: support other columns:
-				//  * UUID
-				return
+			if e.Column == proto.ColumnTypeString {
+				attr.Strings[s] = new(proto.ColStr)
+				if name == colResource {
+					attr.Strings[s] = new(proto.ColStr).LowCardinality()
+				}
 			}
-			attr.Strings[s] = new(proto.ColStr)
+			if e.Column == proto.ColumnTypeUUID {
+				attr.UUIDs[s] = new(proto.ColUUID)
+			}
+			return
 		case "int":
 			if e.Column != proto.ColumnTypeInt64 {
 				// TODO: support other columns?
@@ -268,28 +280,22 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 		}
 	}
 
-	entries := otelschema.Data.All()
-
-	switch name {
-	case colAttrs:
-		for _, e := range entries {
-			switch e.Where {
-			case colAttrs, "":
-				appendEntry(e, "attr_")
-			}
-		}
-	case colResource:
-		for _, e := range entries {
-			switch e.Where {
-			case colResource:
-				appendEntry(e, "res_")
-			}
-		}
-	case colScope:
-		for _, e := range entries {
-			switch e.Where {
-			case colScope:
-				appendEntry(e, "scp_")
+	type variant struct {
+		Prefix string
+		Where  otelschema.Where
+	}
+	if v, ok := map[string]variant{
+		colAttrs:    {"attr_", otelschema.WhereAttribute},
+		colResource: {"res_", otelschema.WhereResource},
+		colScope:    {"scp_", otelschema.WhereScope},
+	}[name]; ok {
+		for _, e := range otelschema.Data.All() {
+			if e.WhereIn(v.Where) {
+				prefix := v.Prefix
+				if len(e.Where) == 1 {
+					prefix = ""
+				}
+				appendEntry(e, prefix)
 			}
 		}
 	}
@@ -375,12 +381,21 @@ func (a *Attributes) Append(kv otelstorage.Attrs) {
 			materializedFieldSet[name] = struct{}{}
 			return true
 		}
+		if c, found := a.UUIDs[name]; found {
+			s, err := uuid.Parse(v.Str())
+			if err != nil {
+				s = uuid.Nil
+			}
+			c.Append(s)
+			materializedFieldSet[name] = struct{}{}
+		}
 
 		return true
 	})
 
 	appendZeroValuesIfNotSet(a.Strings, materializedFieldSet)
 	appendZeroValuesIfNotSet(a.Integers, materializedFieldSet)
+	appendZeroValuesIfNotSet(a.UUIDs, materializedFieldSet)
 }
 
 func appendZeroValuesIfNotSet[T any](m map[string]proto.ColumnOf[T], set map[string]struct{}) {
@@ -410,6 +425,7 @@ func (a *Attributes) DDL(table *ddl.Table) {
 	)
 	table.Columns = appendDDL(table.Columns, a.Integers)
 	table.Columns = appendDDL(table.Columns, a.Strings)
+	table.Columns = appendDDL(table.Columns, a.UUIDs)
 	table.Columns = append(table.Columns, ddl.Column{
 		Comment: "end",
 	})
