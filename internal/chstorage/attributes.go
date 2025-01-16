@@ -24,6 +24,9 @@ type Attributes struct {
 
 	Strings  map[string]proto.ColumnOf[string]
 	Integers map[string]proto.ColumnOf[int64]
+
+	columnToAttr map[string]string
+	attrToColumn map[string]string
 }
 
 type jsonAttrCol struct {
@@ -231,10 +234,15 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 
 		Strings:  make(map[string]proto.ColumnOf[string]),
 		Integers: make(map[string]proto.ColumnOf[int64]),
+
+		columnToAttr: make(map[string]string),
+		attrToColumn: make(map[string]string),
 	}
 
 	appendEntry := func(e otelschema.Entry, prefix string) {
 		s := prefix + e.Name
+		attr.columnToAttr[s] = e.FullName
+		attr.attrToColumn[e.FullName] = s
 		switch e.Type {
 		case "string":
 			if strings.HasPrefix(e.Column.String(), "Enum") {
@@ -349,11 +357,38 @@ func firstAttrSelector(label string) chsql.Expr {
 // Append adds a new map of attributes.
 func (a *Attributes) Append(kv otelstorage.Attrs) {
 	a.Value.Append(kv)
-	for _, v := range a.Strings {
-		v.Append("")
-	}
-	for _, v := range a.Integers {
-		v.Append(0)
+
+	materializedFieldSet := map[string]struct{}{}
+	kv.AsMap().Range(func(k string, v pcommon.Value) bool {
+		name, ok := a.attrToColumn[k]
+		if !ok {
+			return true
+		}
+
+		if c, found := a.Strings[name]; found {
+			c.Append(v.Str())
+			materializedFieldSet[name] = struct{}{}
+			return true
+		}
+		if c, found := a.Integers[name]; found {
+			c.Append(v.Int())
+			materializedFieldSet[name] = struct{}{}
+			return true
+		}
+
+		return true
+	})
+
+	appendZeroValuesIfNotSet(a.Strings, materializedFieldSet)
+	appendZeroValuesIfNotSet(a.Integers, materializedFieldSet)
+}
+
+func appendZeroValuesIfNotSet[T any](m map[string]proto.ColumnOf[T], set map[string]struct{}) {
+	for k, v := range m {
+		if _, ok := set[k]; !ok {
+			var zero T
+			v.Append(zero)
+		}
 	}
 }
 
