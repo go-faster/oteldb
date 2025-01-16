@@ -289,7 +289,7 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 		colResource: {"res_", otelschema.WhereResource},
 		colScope:    {"scp_", otelschema.WhereScope},
 	}[name]; ok {
-		for _, e := range otelschema.Data.All() {
+		for _, e := range otelschema.Data.All()[:0] {
 			if e.WhereIn(v.Where) {
 				prefix := v.Prefix
 				if len(e.Where) == 1 {
