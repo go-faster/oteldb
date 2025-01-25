@@ -96,7 +96,7 @@ func Dial(ctx context.Context, dsn string, opts DialOptions) (ClickhouseClient, 
 			}
 			return client, nil
 		},
-		connectBackoff,
+		backoff.WithContext(connectBackoff, ctx),
 		func(err error, d time.Duration) {
 			lg.Warn("Clickhouse dial failed",
 				zap.Error(err),
