@@ -42,6 +42,7 @@ type App struct {
 	cfg Config
 
 	services map[string]func(context.Context) error
+	shutdown func()
 	otelStorage
 
 	lg      *zap.Logger
@@ -271,9 +272,18 @@ func (app *App) setupHealthCheck() {
 	app.services["healthcheck"] = func(ctx context.Context) error {
 		go func() {
 			<-ctx.Done()
-			_ = srv.Shutdown(context.Background())
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_ = srv.Shutdown(ctx)
 		}()
-		return srv.ListenAndServe()
+		if err := srv.ListenAndServe(); err != nil {
+			if errors.Is(err, http.ErrServerClosed) && ctx.Err() != nil {
+				zctx.From(ctx).Info("Healthcheck HTTP server closed gracefully")
+				return nil
+			}
+			return errors.Wrap(err, "healthcheck http server")
+		}
+		return nil
 	}
 }
 
@@ -317,6 +327,12 @@ func (app *App) setupCollector() error {
 	}
 
 	app.services["otelcol"] = func(ctx context.Context) error {
+		// Collector is listening for os.Interrupt, syscall.SIGTERM itself,
+		// and will return nil error on shutdown. See Collector.Run.
+		//
+		// So, we should shut down other services.
+		defer app.shutdown()
+
 		return col.Run(ctx)
 	}
 	return nil
@@ -324,6 +340,7 @@ func (app *App) setupCollector() error {
 
 // Run runs application.
 func (app *App) Run(ctx context.Context) error {
+	ctx, app.shutdown = context.WithCancel(ctx)
 	g, ctx := errgroup.WithContext(ctx)
 
 	runningServices := make(map[string]struct{})
