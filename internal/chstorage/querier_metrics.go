@@ -8,6 +8,7 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
@@ -15,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
@@ -223,13 +225,25 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 		span.End()
 	}()
 
-	mlabels := make([]string, 0, len(matchers))
+	mlabels := make([]string, 0, len(matchers)+1)
 	for _, m := range matchers {
 		mlabels = append(mlabels, m.Name)
 	}
+	mlabels = append(mlabels, labelName)
+	zctx.From(ctx).Debug("Getting label mapping",
+		zap.String("label", labelName),
+		zap.Strings("labels", mlabels),
+	)
 	mapping, err := p.getLabelMapping(ctx, mlabels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
+	}
+	if v, ok := mapping.normalized[labelName]; ok {
+		zctx.From(ctx).Debug("Normalized label name",
+			zap.String("label", labelName),
+			zap.String("normalized", v),
+		)
+		labelName = v
 	}
 
 	query := func(ctx context.Context, table string) (result []string, rerr error) {
