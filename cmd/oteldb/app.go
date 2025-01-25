@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -19,6 +20,7 @@ import (
 	"go.opentelemetry.io/collector/otelcol"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/chstorage"
@@ -323,11 +325,45 @@ func (app *App) setupCollector() error {
 // Run runs application.
 func (app *App) Run(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
-	for _, s := range app.services {
+
+	runningServices := make(map[string]struct{})
+	var runningServicesMux sync.Mutex
+	for k := range app.services {
+		runningServices[k] = struct{}{}
+	}
+
+	for k, s := range app.services {
 		s := s
-		g.Go(func() error {
+		g.Go(func() (rerr error) {
+			defer func() {
+				zctx.From(ctx).Debug("Service shut down",
+					zap.Error(rerr),
+					zap.String("service_key", k),
+				)
+				runningServicesMux.Lock()
+				delete(runningServices, k)
+				runningServicesMux.Unlock()
+			}()
 			return s(ctx)
 		})
 	}
+	g.Go(func() error {
+		<-ctx.Done()
+		zctx.From(ctx).Debug("Application is shutting down")
+		ticker := time.NewTicker(time.Second * 5)
+		go func() {
+			defer ticker.Stop()
+			for range ticker.C {
+				runningServicesMux.Lock()
+				running := maps.Keys(runningServices)
+				runningServicesMux.Unlock()
+
+				zctx.From(ctx).Debug("Still shutting down",
+					zap.Strings("running_services", running),
+				)
+			}
+		}()
+		return nil
+	})
 	return g.Wait()
 }
