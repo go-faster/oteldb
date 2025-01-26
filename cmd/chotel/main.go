@@ -128,6 +128,7 @@ func NewApp(lg *zap.Logger, metrics *app.Telemetry) (*App, error) {
 
 // Run starts and runs the application.
 func (a *App) Run(ctx context.Context) error {
+	ctx = zctx.WithOpenTelemetryZap(ctx)
 	ctx = zctx.Base(ctx, a.log)
 	if err := a.setup(ctx); err != nil {
 		return errors.Wrap(err, "setup")
