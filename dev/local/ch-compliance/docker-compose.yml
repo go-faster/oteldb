@@ -33,7 +33,7 @@ services:
       - clickhouse
 
   prometheus:
-    image: "prom/prometheus"
+    image: "ghcr.io/go-faster/prom/prometheus:v2.55.1"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
