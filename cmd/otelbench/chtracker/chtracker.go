@@ -16,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/tempoapi"
 )
@@ -39,6 +40,7 @@ type Tracker[Q any] struct {
 type TrackedQuery[Q any] struct {
 	TraceID  string
 	Duration time.Duration
+	Timeout  bool
 	Meta     Q
 }
 
@@ -65,8 +67,16 @@ func (t *Tracker[Q]) Track(ctx context.Context, meta Q, cb func(context.Context,
 		}()
 	}
 
-	if err := cb(ctx, meta); err != nil {
-		return errors.Wrap(err, "send tracked")
+	var (
+		timeout bool
+		sendErr = cb(ctx, meta)
+	)
+	switch {
+	case sendErr == nil:
+	case errors.Is(sendErr, context.DeadlineExceeded):
+		timeout = true
+	default:
+		return errors.Wrap(sendErr, "send tracked")
 	}
 	duration := time.Since(start)
 
@@ -74,6 +84,7 @@ func (t *Tracker[Q]) Track(ctx context.Context, meta Q, cb func(context.Context,
 	t.queries = append(t.queries, TrackedQuery[Q]{
 		TraceID:  traceID,
 		Duration: duration,
+		Timeout:  timeout,
 		Meta:     meta,
 	})
 	t.queriesMux.Unlock()
@@ -81,7 +92,7 @@ func (t *Tracker[Q]) Track(ctx context.Context, meta Q, cb func(context.Context,
 }
 
 // Report iterates over tracked queries.
-func (t *Tracker[Q]) Report(ctx context.Context, cb func(context.Context, TrackedQuery[Q], []QueryReport) error) error {
+func (t *Tracker[Q]) Report(ctx context.Context, cb func(context.Context, TrackedQuery[Q], []QueryReport, error) error) error {
 	if err := t.Flush(ctx); err != nil {
 		return err
 	}
@@ -89,13 +100,31 @@ func (t *Tracker[Q]) Report(ctx context.Context, cb func(context.Context, Tracke
 	t.queriesMux.Lock()
 	defer t.queriesMux.Unlock()
 
-	for _, tq := range t.queries {
-		reports, err := t.retrieveReports(ctx, tq)
-		if err != nil {
-			return errors.Wrapf(err, "retrieve reports for %q", tq.TraceID)
-		}
+	grp, grpCtx := errgroup.WithContext(ctx)
+	type retrivalResult struct {
+		Reports []QueryReport
+		Err     error
+	}
+	queries := make([]retrivalResult, len(t.queries))
+	for i, tq := range t.queries {
+		i, tq := i, tq
+		grp.Go(func() error {
+			r, err := t.retrieveReports(grpCtx, tq)
+			if err != nil {
+				err = errors.Wrapf(err, "retrieve reports for %q", tq.TraceID)
+			}
+			queries[i] = retrivalResult{Reports: r, Err: err}
+			return nil
+		})
+	}
+	if err := grp.Wait(); err != nil {
+		return errors.Wrap(err, "retrieve reports")
+	}
 
-		if err := cb(ctx, tq, reports); err != nil {
+	for i, result := range queries {
+		tq := t.queries[i]
+
+		if err := cb(ctx, tq, result.Reports, result.Err); err != nil {
 			return errors.Wrap(err, "report callback")
 		}
 	}

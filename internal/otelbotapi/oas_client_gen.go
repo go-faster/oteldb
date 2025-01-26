@@ -117,14 +117,14 @@ func (c *Client) sendGetStatus(ctx context.Context) (res *GetStatusOK, err error
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "GetStatus",
+	ctx, span := c.cfg.Tracer.Start(ctx, GetStatusOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -156,7 +156,7 @@ func (c *Client) sendGetStatus(ctx context.Context) (res *GetStatusOK, err error
 		var satisfied bitset
 		{
 			stage = "Security:TokenAuth"
-			switch err := c.securityTokenAuth(ctx, "GetStatus", r); {
+			switch err := c.securityTokenAuth(ctx, GetStatusOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
@@ -220,14 +220,14 @@ func (c *Client) sendPing(ctx context.Context) (res *PingNoContent, err error) {
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "Ping",
+	ctx, span := c.cfg.Tracer.Start(ctx, PingOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -292,14 +292,14 @@ func (c *Client) sendSubmitReport(ctx context.Context, request *SubmitReportReq)
 	defer func() {
 		// Use floating point division here for higher precision (instead of Millisecond method).
 		elapsedDuration := time.Since(startTime)
-		c.duration.Record(ctx, float64(float64(elapsedDuration)/float64(time.Millisecond)), metric.WithAttributes(otelAttrs...))
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
 	}()
 
 	// Increment request counter.
 	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
 
 	// Start a span for this request.
-	ctx, span := c.cfg.Tracer.Start(ctx, "SubmitReport",
+	ctx, span := c.cfg.Tracer.Start(ctx, SubmitReportOperation,
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
@@ -334,7 +334,7 @@ func (c *Client) sendSubmitReport(ctx context.Context, request *SubmitReportReq)
 		var satisfied bitset
 		{
 			stage = "Security:TokenAuth"
-			switch err := c.securityTokenAuth(ctx, "SubmitReport", r); {
+			switch err := c.securityTokenAuth(ctx, SubmitReportOperation, r); {
 			case err == nil: // if NO error
 				satisfied[0] |= 1 << 0
 			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):

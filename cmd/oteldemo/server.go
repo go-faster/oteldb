@@ -18,7 +18,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func server(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+func server(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
 	g, ctx := errgroup.WithContext(ctx)
 	mux := http.NewServeMux()
 

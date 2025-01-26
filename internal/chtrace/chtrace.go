@@ -3,6 +3,7 @@ package chtrace
 
 import (
 	"encoding/binary"
+	"iter"
 	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -23,37 +24,38 @@ type Table struct {
 }
 
 // Rows returns Trace per row.
-func (t Table) Rows() []Trace {
-	var out []Trace
-	for i := 0; i < t.TraceID.Rows(); i++ {
-		tt := Trace{
-			TraceID:       trace.TraceID(t.TraceID.Row(i)),
-			StartTime:     time.UnixMicro(int64(t.StartTimeMicro.Row(i))),
-			FinishTime:    time.UnixMicro(int64(t.FinishTimeMicro.Row(i))),
-			Attributes:    t.Attributes.Row(i),
-			OperationName: t.OperationName.Row(i),
-		}
-		switch t.SpanKind.Row(i) {
-		case "SERVER":
-			tt.Kind = trace.SpanKindServer
-		case "CLIENT":
-			tt.Kind = trace.SpanKindClient
-		case "INTERNAL":
-			tt.Kind = trace.SpanKindInternal
-		case "PRODUCER":
-			tt.Kind = trace.SpanKindProducer
-		case "CONSUMER":
-			tt.Kind = trace.SpanKindConsumer
-		default:
-			tt.Kind = trace.SpanKindInternal
-		}
-		binary.BigEndian.PutUint64(tt.SpanID[:], t.SpanID.Row(i))
-		binary.BigEndian.PutUint64(tt.ParentSpanID[:], t.ParentSpanID.Row(i))
+func (t Table) Rows() iter.Seq[Trace] {
+	return func(yield func(Trace) bool) {
+		for i := range t.TraceID.Rows() {
+			tt := Trace{
+				TraceID:       trace.TraceID(t.TraceID.Row(i)),
+				StartTime:     time.UnixMicro(int64(t.StartTimeMicro.Row(i))),
+				FinishTime:    time.UnixMicro(int64(t.FinishTimeMicro.Row(i))),
+				Attributes:    t.Attributes.Row(i),
+				OperationName: t.OperationName.Row(i),
+			}
+			switch t.SpanKind.Row(i) {
+			case "SERVER":
+				tt.Kind = trace.SpanKindServer
+			case "CLIENT":
+				tt.Kind = trace.SpanKindClient
+			case "INTERNAL":
+				tt.Kind = trace.SpanKindInternal
+			case "PRODUCER":
+				tt.Kind = trace.SpanKindProducer
+			case "CONSUMER":
+				tt.Kind = trace.SpanKindConsumer
+			default:
+				tt.Kind = trace.SpanKindInternal
+			}
+			binary.BigEndian.PutUint64(tt.SpanID[:], t.SpanID.Row(i))
+			binary.BigEndian.PutUint64(tt.ParentSpanID[:], t.ParentSpanID.Row(i))
 
-		out = append(out, tt)
+			if !yield(tt) {
+				return
+			}
+		}
 	}
-
-	return out
 }
 
 // Trace is a single trace span.

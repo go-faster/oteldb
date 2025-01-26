@@ -42,7 +42,7 @@ func setupCH(
 	dsn string,
 	ttl time.Duration,
 	lg *zap.Logger,
-	m *app.Metrics,
+	m *app.Telemetry,
 ) (store otelStorage, _ error) {
 	c, err := chstorage.Dial(ctx, dsn, chstorage.DialOptions{
 		MeterProvider:  m.MeterProvider(),

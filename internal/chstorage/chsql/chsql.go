@@ -214,6 +214,11 @@ func (p *Printer) Where() {
 	p.Ident("WHERE")
 }
 
+// Group writes `GROUP` ident.
+func (p *Printer) Group() {
+	p.Ident("GROUP")
+}
+
 // Order writes `ORDER` ident.
 func (p *Printer) Order() {
 	p.Ident("ORDER")

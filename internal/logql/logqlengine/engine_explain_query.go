@@ -45,6 +45,7 @@ func (e *explainLogs) InjectLogger(ctx context.Context) context.Context {
 			return zapcore.NewTee(c, e.Core())
 		}),
 	)
+	ctx = zctx.WithOpenTelemetryZap(ctx)
 	return zctx.Base(ctx, lg.Named("explain"))
 }
 

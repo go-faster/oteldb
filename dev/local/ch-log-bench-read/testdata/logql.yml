@@ -1,7 +1,21 @@
 range:
-  - title: Failed POST requests
+  - title: Lookup by materialized attribute
     query: |-
-      {http_method="POST"} |= "Error"
+      {level!="DEBUG", service_name="go-faster.oteldb"}
+  - title: Lookup by regular attribute
+    query: |-
+      {operationName="SearchTagValuesV2"}
 series:
-  - title: All POST series
-    match: ['{http_method="POST"}']
+  - title: Lookup by materialized attribute
+    match:
+      - |-
+        { level!="DEBUG", service_name="go-faster.oteldb" }
+  - title: Lookup by regular attribute
+    match:
+      - |-
+        { operationName="SearchTagValuesV2" }
+labels:
+  - title: Lookup labels
+label_values:
+  - title: Lookup by materialized attribute
+    name: service_name

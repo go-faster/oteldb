@@ -55,7 +55,7 @@ services:
   # to scrape node-exporter
   # also can remote-write to otelcol
   prometheus:
-    image: "ghcr.io/go-faster/prom/prometheus"
+    image: "ghcr.io/go-faster/prom/prometheus:v3.1.0"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.enable-remote-write-receiver"
@@ -111,7 +111,7 @@ services:
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
   grafana:
-    image: "ghcr.io/go-faster/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:11.5.0-pre"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

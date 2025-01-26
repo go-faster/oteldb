@@ -1,5 +1,7 @@
 # Architecture
 
+This document describes planned architecture.
+
 ## Multi-tenancy
 
 ### Tenant

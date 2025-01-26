@@ -1,14 +1,14 @@
 CREATE TABLE columns (
-  state      Enum8('idle' = 0, 'used' = 1) COMMENT 'state',
+  state      Enum8('' = 0, 'idle' = 1, 'used' = 2) COMMENT 'state',
 
   -- android
   android_os_api_level String COMMENT 'android.os.api_level',
-  android_state        Enum8('created' = 0, 'background' = 1, 'foreground' = 2) COMMENT 'android.state',
+  android_state        Enum8('' = 0, 'created' = 1, 'background' = 2, 'foreground' = 3) COMMENT 'android.state',
 
   -- aws
   aws_ecs_cluster_arn    String COMMENT 'aws.ecs.cluster.arn',
   aws_ecs_container_arn  String COMMENT 'aws.ecs.container.arn',
-  aws_ecs_launchtype     Enum8('ec2' = 0, 'fargate' = 1) COMMENT 'aws.ecs.launchtype',
+  aws_ecs_launchtype     Enum8('' = 0, 'ec2' = 1, 'fargate' = 2) COMMENT 'aws.ecs.launchtype',
   aws_ecs_task_arn       String COMMENT 'aws.ecs.task.arn',
   aws_ecs_task_family    String COMMENT 'aws.ecs.task.family',
   aws_ecs_task_revision  String COMMENT 'aws.ecs.task.revision',
@@ -66,7 +66,7 @@ CREATE TABLE columns (
   container_runtime            String COMMENT 'container.runtime',
 
   -- db
-  db_cassandra_consistency_level           Enum8('all' = 0, 'each_quorum' = 1, 'quorum' = 2, 'local_quorum' = 3, 'one' = 4, 'two' = 5, 'three' = 6, 'local_one' = 7, 'any' = 8, 'serial' = 9, 'local_serial' = 10) COMMENT 'db.cassandra.consistency_level',
+  db_cassandra_consistency_level           Enum8('' = 0, 'all' = 1, 'each_quorum' = 2, 'quorum' = 3, 'local_quorum' = 4, 'one' = 5, 'two' = 6, 'three' = 7, 'local_one' = 8, 'any' = 9, 'serial' = 10, 'local_serial' = 11) COMMENT 'db.cassandra.consistency_level',
   db_cassandra_coordinator_dc              String COMMENT 'db.cassandra.coordinator.dc',
   db_cassandra_coordinator_id              String COMMENT 'db.cassandra.coordinator.id',
   db_cassandra_idempotence                 Bool COMMENT 'db.cassandra.idempotence',
@@ -75,7 +75,7 @@ CREATE TABLE columns (
   db_cassandra_table                       String COMMENT 'db.cassandra.table',
   db_connection_string                     String COMMENT 'db.connection_string',
   db_cosmosdb_client_id                    String COMMENT 'db.cosmosdb.client_id',
-  db_cosmosdb_connection_mode              Enum8('gateway' = 0, 'direct' = 1) COMMENT 'db.cosmosdb.connection_mode',
+  db_cosmosdb_connection_mode              Enum8('' = 0, 'gateway' = 1, 'direct' = 2) COMMENT 'db.cosmosdb.connection_mode',
   db_cosmosdb_container                    String COMMENT 'db.cosmosdb.container',
   db_cosmosdb_operation_type               String COMMENT 'db.cosmosdb.operation_type',
   db_cosmosdb_request_charge               Float64 COMMENT 'db.cosmosdb.request_charge',
@@ -111,7 +111,7 @@ CREATE TABLE columns (
   device_model_name       String COMMENT 'device.model.name',
 
   -- disk
-  disk_io_direction Enum8('read' = 0, 'write' = 1) COMMENT 'disk.io.direction',
+  disk_io_direction Enum8('' = 0, 'read' = 1, 'write' = 2) COMMENT 'disk.io.direction',
 
   -- enduser
   enduser_id    String COMMENT 'enduser.id',
@@ -145,7 +145,7 @@ CREATE TABLE columns (
   faas_max_memory          Int64 COMMENT 'faas.max_memory',
   faas_name                String COMMENT 'faas.name',
   faas_time                DateTime COMMENT 'faas.time',
-  faas_trigger             Enum8('datasource' = 0, 'http' = 1, 'pubsub' = 2, 'timer' = 3, 'other' = 4) COMMENT 'faas.trigger',
+  faas_trigger             Enum8('' = 0, 'datasource' = 1, 'http' = 2, 'pubsub' = 3, 'timer' = 4, 'other' = 5) COMMENT 'faas.trigger',
   faas_version             String COMMENT 'faas.version',
 
   -- feature_flag
@@ -193,16 +193,16 @@ CREATE TABLE columns (
   http_route                   String COMMENT 'http.route',
 
   -- ios
-  ios_state  Enum8('active' = 0, 'inactive' = 1, 'background' = 2, 'foreground' = 3, 'terminate' = 4) COMMENT 'ios.state',
+  ios_state  Enum8('' = 0, 'active' = 1, 'inactive' = 2, 'background' = 3, 'foreground' = 4, 'terminate' = 5) COMMENT 'ios.state',
 
   -- jvm
   jvm_buffer_pool_name String COMMENT 'jvm.buffer.pool.name',
   jvm_gc_action        String COMMENT 'jvm.gc.action',
   jvm_gc_name          String COMMENT 'jvm.gc.name',
   jvm_memory_pool_name String COMMENT 'jvm.memory.pool.name',
-  jvm_memory_type      Enum8('heap' = 0, 'non_heap' = 1) COMMENT 'jvm.memory.type',
+  jvm_memory_type      Enum8('' = 0, 'heap' = 1, 'non_heap' = 2) COMMENT 'jvm.memory.type',
   jvm_thread_daemon    Bool COMMENT 'jvm.thread.daemon',
-  jvm_thread_state     Enum8('new' = 0, 'runnable' = 1, 'blocked' = 2, 'waiting' = 3, 'timed_waiting' = 4, 'terminated' = 5) COMMENT 'jvm.thread.state',
+  jvm_thread_state     Enum8('' = 0, 'new' = 1, 'runnable' = 2, 'blocked' = 3, 'waiting' = 4, 'timed_waiting' = 5, 'terminated' = 6) COMMENT 'jvm.thread.state',
 
   -- k8s
   k8s_cluster_name            String COMMENT 'k8s.cluster.name',
@@ -233,13 +233,13 @@ CREATE TABLE columns (
   log_file_name_resolved String COMMENT 'log.file.name_resolved',
   log_file_path          String COMMENT 'log.file.path',
   log_file_path_resolved String COMMENT 'log.file.path_resolved',
-  log_iostream           Enum8('stdout' = 0, 'stderr' = 1) COMMENT 'log.iostream',
+  log_iostream           Enum8('' = 0, 'stdout' = 1, 'stderr' = 2) COMMENT 'log.iostream',
   log_record_uid         String COMMENT 'log.record.uid',
 
   -- message
   message_compressed_size   Int64 COMMENT 'message.compressed_size',
   message_id                Int64 COMMENT 'message.id',
-  message_type              Enum8('SENT' = 0, 'RECEIVED' = 1) COMMENT 'message.type',
+  message_type              Enum8('' = 0, 'SENT' = 1, 'RECEIVED' = 2) COMMENT 'message.type',
   message_uncompressed_size Int64 COMMENT 'message.uncompressed_size',
 
   -- messaging
@@ -264,13 +264,13 @@ CREATE TABLE columns (
   messaging_operation                           String COMMENT 'messaging.operation',
   messaging_rabbitmq_destination_routing_key    String COMMENT 'messaging.rabbitmq.destination.routing_key',
   messaging_rocketmq_client_group               String COMMENT 'messaging.rocketmq.client_group',
-  messaging_rocketmq_consumption_model          Enum8('clustering' = 0, 'broadcasting' = 1) COMMENT 'messaging.rocketmq.consumption_model',
+  messaging_rocketmq_consumption_model          Enum8('' = 0, 'clustering' = 1, 'broadcasting' = 2) COMMENT 'messaging.rocketmq.consumption_model',
   messaging_rocketmq_message_delay_time_level   Int64 COMMENT 'messaging.rocketmq.message.delay_time_level',
   messaging_rocketmq_message_delivery_timestamp Int64 COMMENT 'messaging.rocketmq.message.delivery_timestamp',
   messaging_rocketmq_message_group              String COMMENT 'messaging.rocketmq.message.group',
   messaging_rocketmq_message_keys               Array(String) COMMENT 'messaging.rocketmq.message.keys',
   messaging_rocketmq_message_tag                String COMMENT 'messaging.rocketmq.message.tag',
-  messaging_rocketmq_message_type               Enum8('normal' = 0, 'fifo' = 1, 'delay' = 2, 'transaction' = 3) COMMENT 'messaging.rocketmq.message.type',
+  messaging_rocketmq_message_type               Enum8('' = 0, 'normal' = 1, 'fifo' = 2, 'delay' = 3, 'transaction' = 4) COMMENT 'messaging.rocketmq.message.type',
   messaging_rocketmq_namespace                  String COMMENT 'messaging.rocketmq.namespace',
   messaging_system                              String COMMENT 'messaging.system',
 
@@ -281,7 +281,7 @@ CREATE TABLE columns (
   network_carrier_name       String COMMENT 'network.carrier.name',
   network_connection_subtype String COMMENT 'network.connection.subtype',
   network_connection_type    String COMMENT 'network.connection.type',
-  network_io_direction       Enum8('transmit' = 0, 'receive' = 1) COMMENT 'network.io.direction',
+  network_io_direction       Enum8('' = 0, 'transmit' = 1, 'receive' = 2) COMMENT 'network.io.direction',
   network_local_address      String COMMENT 'network.local.address',
   network_local_port         UInt16 COMMENT 'network.local.port',
   network_peer_address       String COMMENT 'network.peer.address',
@@ -295,7 +295,7 @@ CREATE TABLE columns (
   oci_manifest_digest String COMMENT 'oci.manifest.digest',
 
   -- opentracing
-  opentracing_ref_type Enum8('child_of' = 0, 'follows_from' = 1) COMMENT 'opentracing.ref_type',
+  opentracing_ref_type Enum8('' = 0, 'child_of' = 1, 'follows_from' = 2) COMMENT 'opentracing.ref_type',
 
   -- os
   os_build_id    String COMMENT 'os.build_id',
@@ -307,7 +307,7 @@ CREATE TABLE columns (
   -- otel
   otel_scope_name         String COMMENT 'otel.scope.name',
   otel_scope_version      String COMMENT 'otel.scope.version',
-  otel_status_code        Enum8('OK' = 0, 'ERROR' = 1) COMMENT 'otel.status_code',
+  otel_status_code        Enum8('' = 0, 'OK' = 1, 'ERROR' = 2) COMMENT 'otel.status_code',
   otel_status_description String COMMENT 'otel.status_description',
 
   -- peer
@@ -330,7 +330,7 @@ CREATE TABLE columns (
   process_runtime_version     String COMMENT 'process.runtime.version',
 
   -- rpc
-  rpc_connect_rpc_error_code        Enum8('cancelled' = 0, 'unknown' = 1, 'invalid_argument' = 2, 'deadline_exceeded' = 3, 'not_found' = 4, 'already_exists' = 5, 'permission_denied' = 6, 'resource_exhausted' = 7, 'failed_precondition' = 8, 'aborted' = 9, 'out_of_range' = 10, 'unimplemented' = 11, 'internal' = 12, 'unavailable' = 13, 'data_loss' = 14, 'unauthenticated' = 15) COMMENT 'rpc.connect_rpc.error_code',
+  rpc_connect_rpc_error_code        Enum8('' = 0, 'cancelled' = 1, 'unknown' = 2, 'invalid_argument' = 3, 'deadline_exceeded' = 4, 'not_found' = 5, 'already_exists' = 6, 'permission_denied' = 7, 'resource_exhausted' = 8, 'failed_precondition' = 9, 'aborted' = 10, 'out_of_range' = 11, 'unimplemented' = 12, 'internal' = 13, 'unavailable' = 14, 'data_loss' = 15, 'unauthenticated' = 16) COMMENT 'rpc.connect_rpc.error_code',
   rpc_connect_rpc_request_metadata  Array(String) COMMENT 'rpc.connect_rpc.request.metadata',
   rpc_connect_rpc_response_metadata Array(String) COMMENT 'rpc.connect_rpc.response.metadata',
   rpc_grpc_request_metadata         Array(String) COMMENT 'rpc.grpc.request.metadata',
@@ -368,13 +368,13 @@ CREATE TABLE columns (
   system_device                String COMMENT 'system.device',
   system_filesystem_mode       String COMMENT 'system.filesystem.mode',
   system_filesystem_mountpoint String COMMENT 'system.filesystem.mountpoint',
-  system_filesystem_state      Enum8('used' = 0, 'free' = 1, 'reserved' = 2) COMMENT 'system.filesystem.state',
+  system_filesystem_state      Enum8('' = 0, 'used' = 1, 'free' = 2, 'reserved' = 3) COMMENT 'system.filesystem.state',
   system_filesystem_type       String COMMENT 'system.filesystem.type',
   system_memory_state          String COMMENT 'system.memory.state',
-  system_network_state         Enum8('close' = 0, 'close_wait' = 1, 'closing' = 2, 'delete' = 3, 'established' = 4, 'fin_wait_1' = 5, 'fin_wait_2' = 6, 'last_ack' = 7, 'listen' = 8, 'syn_recv' = 9, 'syn_sent' = 10, 'time_wait' = 11) COMMENT 'system.network.state',
-  system_paging_direction      Enum8('in' = 0, 'out' = 1) COMMENT 'system.paging.direction',
-  system_paging_state          Enum8('used' = 0, 'free' = 1) COMMENT 'system.paging.state',
-  system_paging_type           Enum8('major' = 0, 'minor' = 1) COMMENT 'system.paging.type',
+  system_network_state         Enum8('' = 0, 'close' = 1, 'close_wait' = 2, 'closing' = 3, 'delete' = 4, 'established' = 5, 'fin_wait_1' = 6, 'fin_wait_2' = 7, 'last_ack' = 8, 'listen' = 9, 'syn_recv' = 10, 'syn_sent' = 11, 'time_wait' = 12) COMMENT 'system.network.state',
+  system_paging_direction      Enum8('' = 0, 'in' = 1, 'out' = 2) COMMENT 'system.paging.direction',
+  system_paging_state          Enum8('' = 0, 'used' = 1, 'free' = 2) COMMENT 'system.paging.state',
+  system_paging_type           Enum8('' = 0, 'major' = 1, 'minor' = 2) COMMENT 'system.paging.type',
   system_processes_status      String COMMENT 'system.processes.status',
 
   -- telemetry

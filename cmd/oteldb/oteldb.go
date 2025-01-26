@@ -8,9 +8,9 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
 	promodel "github.com/prometheus/common/model"
+	"github.com/go-faster/sdk/zctx"
 	"go.uber.org/zap"
 
-	"github.com/go-faster/oteldb/internal/autopyro"
 	"github.com/go-faster/oteldb/internal/autozpages"
 )
 
@@ -20,7 +20,8 @@ func init() {
 }
 
 func main() {
-	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) error {
+	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Telemetry) error {
+		ctx = zctx.WithOpenTelemetryZap(ctx)
 		shutdown, err := autozpages.Setup(m.TracerProvider())
 		if err != nil {
 			return errors.Wrap(err, "setup zPages")
@@ -37,15 +38,6 @@ func main() {
 		cfg, err := loadConfig(*cfgPath)
 		if err != nil {
 			return errors.Wrap(err, "load config")
-		}
-		{
-			stop, err := autopyro.Setup(ctx)
-			if err != nil {
-				return errors.Wrap(err, "setup pyroscope")
-			}
-			defer func() {
-				_ = stop(context.Background())
-			}()
 		}
 
 		root, err := newApp(ctx, cfg, m)

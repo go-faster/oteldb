@@ -9,6 +9,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
+	"github.com/go-faster/oteldb/internal/ddl"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/xsync"
@@ -18,6 +19,108 @@ var (
 	logColumnsPool        = xsync.NewPool(newLogColumns)
 	logAttrMapColumnsPool = xsync.NewPool(newLogAttrMapColumns)
 )
+
+// DDL of the log table.
+func (c *logColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:      "MergeTree",
+		PartitionBy: "toYYYYMMDD(timestamp)",
+		PrimaryKey:  []string{"severity_number", "service_namespace", "service_name", "resource"},
+		OrderBy:     []string{"severity_number", "service_namespace", "service_name", "resource", "timestamp"},
+		TTL:         ddl.TTL{Field: "timestamp"},
+		Indexes: []ddl.Index{
+			{
+				Name:        "idx_trace_id",
+				Target:      "trace_id",
+				Type:        "bloom_filter",
+				Params:      []string{"0.001"},
+				Granularity: 1,
+			},
+			{
+				Name:        "idx_body",
+				Target:      "body",
+				Type:        "tokenbf_v1",
+				Params:      []string{"32768", "3", "0"},
+				Granularity: 1,
+			},
+			{
+				Name:        "idx_ts",
+				Target:      "timestamp",
+				Type:        "minmax",
+				Granularity: 8192,
+			},
+			{
+				Name:   "attribute_keys",
+				Target: "arrayConcat(JSONExtractKeys(attribute), JSONExtractKeys(scope), JSONExtractKeys(resource))",
+				Type:   "set",
+				Params: []string{"100"},
+			},
+		},
+		Columns: []ddl.Column{
+			{
+				Name:    "service_instance_id",
+				Type:    c.serviceInstanceID.Type(),
+				Comment: "service.instance.id",
+			},
+			{
+				Name:    "service_name",
+				Type:    c.serviceName.Type(),
+				Comment: "service.name",
+			},
+			{
+				Name:    "service_namespace",
+				Type:    c.serviceNamespace.Type(),
+				Comment: "service.namespace",
+			},
+			{
+				Name:  "timestamp",
+				Type:  c.timestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name: "severity_number",
+				Type: c.severityNumber.Type(),
+			},
+			{
+				Name: "severity_text",
+				Type: c.severityText.Type(),
+			},
+			{
+				Name: "trace_id",
+				Type: c.traceID.Type(),
+			},
+			{
+				Name: "span_id",
+				Type: c.spanID.Type(),
+			},
+			{
+				Name: "trace_flags",
+				Type: c.traceFlags.Type(),
+			},
+			{
+				Name: "body",
+				Type: c.body.Type(),
+			},
+		},
+	}
+
+	c.attributes.DDL(&table)
+	c.resource.DDL(&table)
+
+	table.Columns = append(table.Columns,
+		ddl.Column{
+			Name: "scope_name",
+			Type: c.scopeName.Type(),
+		},
+		ddl.Column{
+			Name: "scope_version",
+			Type: c.scopeVersion.Type(),
+		},
+	)
+	c.scopeAttributes.DDL(&table)
+
+	return table
+}
 
 type logColumns struct {
 	serviceInstanceID *proto.ColLowCardinality[string]
@@ -53,7 +156,7 @@ func newLogColumns() *logColumns {
 		serviceNamespace:  new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		severityText:      new(proto.ColStr).LowCardinality(),
-		attributes:        NewAttributes(colAttrs),
+		attributes:        NewAttributes(colAttrs, WithLowCardinality(false)),
 		resource:          NewAttributes(colResource),
 		scopeName:         new(proto.ColStr).LowCardinality(),
 		scopeVersion:      new(proto.ColStr).LowCardinality(),
@@ -242,4 +345,23 @@ func (c *logAttrMapColumns) AddAttrs(attrs otelstorage.Attrs) {
 func (c *logAttrMapColumns) AddRow(name []byte, key string) {
 	c.name.AppendBytes(name)
 	c.key.Append(key)
+}
+
+func (c *logAttrMapColumns) DDL() ddl.Table {
+	return ddl.Table{
+		OrderBy: []string{"name"},
+		Engine:  "ReplacingMergeTree",
+		Columns: []ddl.Column{
+			{
+				Name:    "name",
+				Type:    c.name.Type(),
+				Comment: "foo_bar",
+			},
+			{
+				Name:    "key",
+				Type:    c.key.Type(),
+				Comment: "foo.bar",
+			},
+		},
+	}
 }

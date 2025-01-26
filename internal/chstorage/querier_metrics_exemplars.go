@@ -14,7 +14,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/xattribute"
 )
@@ -134,7 +133,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					HasTs:  true,
 				})
 
-				s.labels[labels.MetricName] = otelstorage.KeyToLabel(name)
+				s.labels[labels.MetricName] = name
 				attrsToLabels(attributes, s.labels)
 				attrsToLabels(scope, s.labels)
 				attrsToLabels(resource, s.labels)

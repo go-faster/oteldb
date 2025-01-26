@@ -16,7 +16,7 @@ import (
 type SecurityHandler interface {
 	// HandleTokenAuth handles tokenAuth security.
 	// Contains GITHUB_TOKEN, like `${{ secrets.GITHUB_TOKEN }}`.
-	HandleTokenAuth(ctx context.Context, operationName string, t TokenAuth) (context.Context, error)
+	HandleTokenAuth(ctx context.Context, operationName OperationName, t TokenAuth) (context.Context, error)
 }
 
 func findAuthorization(h http.Header, prefix string) (string, bool) {
@@ -34,7 +34,7 @@ func findAuthorization(h http.Header, prefix string) (string, bool) {
 	return "", false
 }
 
-func (s *Server) securityTokenAuth(ctx context.Context, operationName string, req *http.Request) (context.Context, bool, error) {
+func (s *Server) securityTokenAuth(ctx context.Context, operationName OperationName, req *http.Request) (context.Context, bool, error) {
 	var t TokenAuth
 	const parameterName = "token"
 	value := req.Header.Get(parameterName)
@@ -55,10 +55,10 @@ func (s *Server) securityTokenAuth(ctx context.Context, operationName string, re
 type SecuritySource interface {
 	// TokenAuth provides tokenAuth security value.
 	// Contains GITHUB_TOKEN, like `${{ secrets.GITHUB_TOKEN }}`.
-	TokenAuth(ctx context.Context, operationName string) (TokenAuth, error)
+	TokenAuth(ctx context.Context, operationName OperationName) (TokenAuth, error)
 }
 
-func (s *Client) securityTokenAuth(ctx context.Context, operationName string, req *http.Request) error {
+func (s *Client) securityTokenAuth(ctx context.Context, operationName OperationName, req *http.Request) error {
 	t, err := s.sec.TokenAuth(ctx, operationName)
 	if err != nil {
 		return errors.Wrap(err, "security source \"TokenAuth\"")

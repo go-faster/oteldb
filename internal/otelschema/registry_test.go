@@ -17,11 +17,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func generateDDL(columns map[string]registryEntry) string {
+func generateDDL(columns map[string]Entry) string {
 	var sb strings.Builder
 	sb.WriteString("CREATE TABLE columns (\n")
 
-	groups := make(map[string][]registryEntry)
+	groups := make(map[string][]Entry)
 	for _, c := range columns {
 		prefix := c.Group
 		groups[prefix] = append(groups[prefix], c)
@@ -40,7 +40,7 @@ func generateDDL(columns map[string]registryEntry) string {
 				maxFieldLen = len(c.Name)
 			}
 		}
-		slices.SortFunc(groups[groupName], func(a, b registryEntry) int {
+		slices.SortFunc(groups[groupName], func(a, b Entry) int {
 			return strings.Compare(a.Name, b.Name)
 		})
 		lastGroup := i == len(orderedGroups)-1
@@ -56,17 +56,6 @@ func generateDDL(columns map[string]registryEntry) string {
 	}
 	sb.WriteString(") ENGINE Null;")
 	return sb.String()
-}
-
-type registryEntry struct {
-	FullName string           `json:"-"`
-	Group    string           `json:"group,omitempty"`
-	Type     string           `json:"type"`
-	Enum     []any            `json:"enum,omitempty"`
-	Column   proto.ColumnType `json:"column"`
-	Examples []any            `json:"examples,omitempty"`
-	Brief    string           `json:"brief,omitempty"`
-	Name     string           `json:"name,omitempty"`
 }
 
 func anyTo[T any](s []any) (result []T) {
@@ -133,15 +122,28 @@ func columnType(name, brief, t string, enum []any) proto.ColumnType {
 		colType = proto.ColumnTypeEnum16
 	}
 	var params []string
+	params = append(params, "'' = 0")
 	for i, v := range anyTo[string](enum) {
 		// Should we escape?
-		params = append(params, fmt.Sprintf("'%s' = %d", v, i))
+		params = append(params, fmt.Sprintf("'%s' = %d", v, i+1))
 	}
 	return colType.With(params...)
 }
 
+func appendSet[T comparable](s []T, v T) []T {
+	for _, e := range s {
+		if e == v {
+			return s
+		}
+	}
+	return append(s, v)
+}
+
 func TestParseAllAttributes(t *testing.T) {
 	var parsed []TypeGroupsItem
+
+	groupsToWhere := map[string][]Where{}
+
 	require.NoError(t, filepath.Walk(modelPath(), func(path string, info fs.FileInfo, err error) error {
 		require.NoError(t, err)
 		if info.IsDir() {
@@ -157,22 +159,22 @@ func TestParseAllAttributes(t *testing.T) {
 		jsonData, err := yaml.YAMLToJSON(data)
 		require.NoError(t, err)
 		require.NoError(t, schema.UnmarshalJSON(jsonData))
+		for _, group := range schema.Groups {
+			groupName := group.Prefix.Value
+			dir := filepath.Dir(path)
+			switch {
+			case strings.Contains(dir, "resource"):
+				groupsToWhere[groupName] = appendSet(groupsToWhere[groupName], WhereResource)
+			case strings.Contains(dir, "scope"):
+				groupsToWhere[groupName] = appendSet(groupsToWhere[groupName], WhereScope)
+			}
+		}
 		parsed = append(parsed, schema.Groups...)
 		return nil
 	}))
 
-	type Statistics struct {
-		Total      int `json:"total"`
-		Enum       int `json:"enum"`
-		Unknown    int `json:"unknown"`
-		Deprecated int `json:"deprecated"`
-	}
-	type Registry struct {
-		Statistics Statistics               `json:"statistics"`
-		Entries    map[string]registryEntry `json:"entries"`
-	}
 	out := Registry{
-		Entries: map[string]registryEntry{},
+		Entries: map[string]Entry{},
 	}
 	for _, group := range parsed {
 		for _, attr := range group.Attributes {
@@ -238,7 +240,15 @@ func TestParseAllAttributes(t *testing.T) {
 			if i := strings.Index(name, "."); i != -1 {
 				groupName = name[:i]
 			}
-			out.Entries[name] = registryEntry{
+			where := groupsToWhere[groupName]
+			if groupName == "k8s" {
+				where = appendSet(where, WhereResource)
+				where = appendSet(where, WhereAttribute)
+			}
+			if len(where) == 0 {
+				where = append(where, WhereAttribute)
+			}
+			out.Entries[name] = Entry{
 				FullName: name,
 				Group:    groupName,
 				Type:     typ,
@@ -247,6 +257,7 @@ func TestParseAllAttributes(t *testing.T) {
 				Examples: examples,
 				Brief:    v.Brief.Value,
 				Name:     strings.ReplaceAll(name, ".", "_"),
+				Where:    where,
 			}
 		}
 	}
@@ -269,4 +280,9 @@ func TestParseAllAttributes(t *testing.T) {
 	gold.Str(t, generateDDL(out.Entries), "ddl.sql")
 
 	assert.Zero(t, out.Statistics.Unknown, "Should be no unknown types")
+}
+
+func TestData(t *testing.T) {
+	require.NotNil(t, Data)
+	require.NotEmpty(t, Data.Entries)
 }

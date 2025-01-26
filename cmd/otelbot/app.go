@@ -8,7 +8,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func newApp(cfg Config, m *app.Metrics) (*App, error) {
+func newApp(cfg Config, m *app.Telemetry) (*App, error) {
 	cfg.setDefaults()
 	a := &App{
 		cfg:      cfg,
@@ -24,7 +24,7 @@ func newApp(cfg Config, m *app.Metrics) (*App, error) {
 
 type App struct {
 	cfg      Config
-	metrics  *app.Metrics
+	metrics  *app.Telemetry
 	services map[string]func(context.Context) error
 }
 

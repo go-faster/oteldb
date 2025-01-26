@@ -33,7 +33,7 @@ services:
       - clickhouse
 
   prometheus:
-    image: "prom/prometheus:v3.0.0"
+    image: "ghcr.io/go-faster/prom/prometheus:v2.55.1"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--enable-feature=promql-experimental-functions"
@@ -52,7 +52,7 @@ services:
     image: "ghcr.io/go-faster/prometheus-demo-service"
 
   grafana:
-    image: "ghcr.io/go-faster/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:11.5.0-pre"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin

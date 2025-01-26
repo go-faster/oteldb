@@ -16,7 +16,7 @@ env:
 
 jobs:
   PromQL:
-    runs-on: ubuntu-latest
+    runs-on: [Linux, bench]
     steps:
       - name: Install Go
         uses: actions/setup-go@v5
@@ -98,7 +98,7 @@ jobs:
         run: docker compose down --remove-orphans --volumes --timeout 10
 
   CheckBenchAPI:
-    runs-on: ubuntu-latest
+    runs-on: [Linux, bench]
     steps:
       - name: Install Go
         uses: actions/setup-go@v5

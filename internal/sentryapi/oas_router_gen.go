@@ -209,7 +209,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "Dummy"
+						r.name = DummyOperation
 						r.summary = ""
 						r.operationID = "dummy"
 						r.pathPattern = "/dummy"
@@ -234,7 +234,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "POST":
-						r.name = "Envelope"
+						r.name = EnvelopeOperation
 						r.summary = ""
 						r.operationID = "envelope"
 						r.pathPattern = "/envelope"

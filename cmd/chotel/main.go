@@ -35,11 +35,12 @@ import (
 )
 
 func main() {
-	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Metrics) (err error) {
+	app.Run(func(ctx context.Context, lg *zap.Logger, m *app.Telemetry) (err error) {
 		a, err := NewApp(lg, m)
 		if err != nil {
 			return errors.Wrap(err, "init")
 		}
+		ctx = zctx.WithOpenTelemetryZap(ctx)
 		return a.Run(ctx)
 	})
 }
@@ -47,7 +48,7 @@ func main() {
 // App is the trace exporter application.
 type App struct {
 	log     *zap.Logger
-	metrics *app.Metrics
+	metrics *app.Telemetry
 
 	clickHouseAddr     string
 	clickHousePassword string
@@ -75,7 +76,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS opentelemetry_span_export
 `
 
 // NewApp initializes the trace exporter application.
-func NewApp(lg *zap.Logger, metrics *app.Metrics) (*App, error) {
+func NewApp(lg *zap.Logger, metrics *app.Telemetry) (*App, error) {
 	a := &App{
 		log:                lg,
 		metrics:            metrics,
@@ -127,6 +128,7 @@ func NewApp(lg *zap.Logger, metrics *app.Metrics) (*App, error) {
 
 // Run starts and runs the application.
 func (a *App) Run(ctx context.Context) error {
+	ctx = zctx.WithOpenTelemetryZap(ctx)
 	ctx = zctx.Base(ctx, a.log)
 	if err := a.setup(ctx); err != nil {
 		return errors.Wrap(err, "setup")
@@ -237,7 +239,7 @@ func (a *App) send(ctx context.Context, now time.Time) error {
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			exported.TraceID = append(exported.TraceID, t.TraceID...)
 			exported.SpanID = append(exported.SpanID, t.SpanID...)
-			for _, r := range t.Rows() {
+			for r := range t.Rows() {
 				exported.ExportedAt.Append(now)
 				stub := tracetest.SpanStub{
 					SpanKind:  r.Kind,

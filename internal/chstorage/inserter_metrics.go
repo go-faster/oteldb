@@ -22,8 +22,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error) {
@@ -95,28 +93,19 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 
 	labelColumns := newLabelsColumns()
 	insertLabel := func(
-		key, keyNormalized string,
-		value, valueNormalized string,
+		key string,
+		value string,
 		scope labelScope,
 	) {
 		labelColumns.name.Append(key)
-		labelColumns.nameNormalized.Append(keyNormalized)
 		labelColumns.value.Append(value)
-		if key == labels.MetricName {
-			labelColumns.valueNormalized.Append(valueNormalized)
-		} else {
-			labelColumns.valueNormalized.Append("")
-		}
 		labelColumns.scope.Append(proto.Enum8(scope))
 	}
 	for pair, scopes := range b.labels {
-		key := pair[0]
-		keyNormalized := otelstorage.KeyToLabel(key)
-		value := pair[1]
-		valueNormalized := otelstorage.KeyToLabel(value)
+		key, value := pair[0], pair[1]
 
 		if scopes == 0 {
-			insertLabel(key, keyNormalized, value, valueNormalized, labelScopeNone)
+			insertLabel(key, value, labelScopeNone)
 		} else {
 			for _, scope := range [3]labelScope{
 				labelScopeResource,
@@ -126,7 +115,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 				if scopes&scope == 0 {
 					continue
 				}
-				insertLabel(key, keyNormalized, value, valueNormalized, scope)
+				insertLabel(key, value, scope)
 			}
 		}
 	}
@@ -237,7 +226,6 @@ func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice p
 			return errors.Wrap(err, "map exemplars")
 		}
 		c.name.Append(name)
-		c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
@@ -461,7 +449,6 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttribu
 			return errors.Wrap(err, "map exemplars")
 		}
 		c.name.Append(name)
-		c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
@@ -548,7 +535,6 @@ func (b *metricsBatch) addMappedSample(
 	c := b.points
 	b.addName(name)
 	c.name.Append(name)
-	c.nameNormalized.Append(otelstorage.KeyToLabel(name))
 	c.timestamp.Append(series.Timestamp)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
@@ -593,7 +579,6 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	}
 
 	c.name.Append(p.Name)
-	c.nameNormalized.Append(p.Name)
 	c.timestamp.Append(p.Timestamp)
 
 	c.filteredAttributes.Append(encodeAttributes(e.FilteredAttributes()))

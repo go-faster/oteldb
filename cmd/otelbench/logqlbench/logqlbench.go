@@ -40,6 +40,7 @@ type LogQLBenchmark struct {
 	client *lokiapi.Client
 	start  time.Time
 	end    time.Time
+	limit  int
 }
 
 // Setup setups benchmark using given flags.
@@ -53,6 +54,7 @@ func (p *LogQLBenchmark) Setup(cmd *cobra.Command) error {
 	if p.end, err = lokihandler.ParseTimestamp(p.EndTime, time.Time{}); err != nil {
 		return errors.Wrap(err, "parse end time")
 	}
+	p.limit = 1000
 
 	p.tracker, err = chtracker.Setup[Query](ctx, "logql", p.TrackerOptions)
 	if err != nil {
@@ -94,7 +96,7 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 		// Warmup.
 		for i := 0; i < p.Warmup; i++ {
 			if err := p.send(ctx, q); err != nil {
-				return errors.Wrap(err, "send")
+				return errors.Wrap(err, "send (warmup)")
 			}
 			if err := pb.Add(1); err != nil {
 				return errors.Wrap(err, "update progress bar")
@@ -130,15 +132,28 @@ func (p *LogQLBenchmark) Run(ctx context.Context) error {
 
 	var reports []LogQLReportQuery
 	if err := p.tracker.Report(ctx,
-		func(ctx context.Context, tq chtracker.TrackedQuery[Query], queries []chtracker.QueryReport) error {
+		func(ctx context.Context, tq chtracker.TrackedQuery[Query], queries []chtracker.QueryReport, retriveErr error) error {
+			var errMsg string
+			if retriveErr != nil {
+				if errors.Is(retriveErr, context.DeadlineExceeded) {
+					errMsg = "no queries"
+				} else {
+					errMsg = retriveErr.Error()
+				}
+			}
+
+			header := tq.Meta.Header()
 			reports = append(reports, LogQLReportQuery{
-				ID:            tq.Meta.ID,
-				Title:         tq.Meta.Title,
-				Description:   tq.Meta.Description,
-				Query:         tq.Meta.Query,
-				Matchers:      tq.Meta.Match,
+				ID:            header.ID,
+				Type:          string(tq.Meta.Type()),
+				Title:         header.Title,
+				Description:   header.Description,
+				Query:         tq.Meta.Query(),
+				Matchers:      tq.Meta.Matchers(),
 				DurationNanos: tq.Duration.Nanoseconds(),
 				Queries:       queries,
+				Timeout:       tq.Timeout,
+				ReportError:   errMsg,
 			})
 			return nil
 		},

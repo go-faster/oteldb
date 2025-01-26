@@ -441,7 +441,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "Echo"
+						r.name = EchoOperation
 						r.summary = ""
 						r.operationID = "echo"
 						r.pathPattern = "/api/echo"
@@ -477,7 +477,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					if len(elem) == 0 {
 						switch method {
 						case "GET":
-							r.name = "Search"
+							r.name = SearchOperation
 							r.summary = ""
 							r.operationID = "search"
 							r.pathPattern = "/api/search"
@@ -534,7 +534,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									// Leaf node.
 									switch method {
 									case "GET":
-										r.name = "SearchTagValues"
+										r.name = SearchTagValuesOperation
 										r.summary = ""
 										r.operationID = "searchTagValues"
 										r.pathPattern = "/api/search/tag/{tag_name}/values"
@@ -562,7 +562,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								// Leaf node.
 								switch method {
 								case "GET":
-									r.name = "SearchTags"
+									r.name = SearchTagsOperation
 									r.summary = ""
 									r.operationID = "searchTags"
 									r.pathPattern = "/api/search/tags"
@@ -593,7 +593,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "BuildInfo"
+							r.name = BuildInfoOperation
 							r.summary = ""
 							r.operationID = "buildInfo"
 							r.pathPattern = "/api/status/buildinfo"
@@ -626,7 +626,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					// Leaf node.
 					switch method {
 					case "GET":
-						r.name = "TraceByID"
+						r.name = TraceByIDOperation
 						r.summary = ""
 						r.operationID = "traceByID"
 						r.pathPattern = "/api/traces/{traceID}"
@@ -684,7 +684,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							// Leaf node.
 							switch method {
 							case "GET":
-								r.name = "SearchTagValuesV2"
+								r.name = SearchTagValuesV2Operation
 								r.summary = ""
 								r.operationID = "searchTagValuesV2"
 								r.pathPattern = "/api/v2/search/tag/{attribute_selector}/values"
@@ -712,7 +712,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						// Leaf node.
 						switch method {
 						case "GET":
-							r.name = "SearchTagsV2"
+							r.name = SearchTagsV2Operation
 							r.summary = ""
 							r.operationID = "searchTagsV2"
 							r.pathPattern = "/api/v2/search/tags"

@@ -25,6 +25,7 @@ func main() {
 		newPrometheusRemoteWriteCommand(),
 		newOtelCommand(),
 		newAPICommand(),
+		newDumpCommand(),
 	)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()

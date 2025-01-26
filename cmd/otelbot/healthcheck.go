@@ -4,6 +4,9 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 )
 
 func (a *App) setupHealthCheck() {
@@ -19,9 +22,18 @@ func (a *App) setupHealthCheck() {
 	a.services["healthcheck"] = func(ctx context.Context) error {
 		go func() {
 			<-ctx.Done()
-			_ = srv.Shutdown(context.Background())
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_ = srv.Shutdown(ctx)
 		}()
-		return srv.ListenAndServe()
+		if err := srv.ListenAndServe(); err != nil {
+			if errors.Is(err, http.ErrServerClosed) && ctx.Err() != nil {
+				zctx.From(ctx).Info("Healthcheck HTTP server closed gracefully")
+				return nil
+			}
+			return errors.Wrap(err, "healthcheck http server")
+		}
+		return nil
 	}
 }
 
