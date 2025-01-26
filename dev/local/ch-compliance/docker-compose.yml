@@ -36,6 +36,8 @@ services:
     image: "ghcr.io/go-faster/prom/prometheus:v2.55.1"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--enable-feature=promql-experimental-functions"
+      - "--enable-feature=native-histograms"
     volumes:
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
     ports:

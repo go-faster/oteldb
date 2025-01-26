@@ -39,7 +39,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.118.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.61.0
-	github.com/prometheus/prometheus v0.55.1
+	github.com/prometheus/prometheus v0.300.0
 	github.com/schollz/progressbar/v3 v3.18.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -128,7 +128,6 @@ require (
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
-	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
