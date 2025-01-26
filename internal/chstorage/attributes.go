@@ -445,7 +445,7 @@ func appendDDL[T any](col []ddl.Column, m map[string]proto.ColumnOf[T]) []ddl.Co
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
 	m.AsMap().Range(func(k string, v pcommon.Value) bool {
-		to[otelstorage.KeyToLabel(k)] = v.Str()
+		to[k] = v.Str()
 		return true
 	})
 }

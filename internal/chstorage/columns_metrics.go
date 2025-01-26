@@ -8,9 +8,8 @@ import (
 )
 
 type pointColumns struct {
-	name           *proto.ColLowCardinality[string]
-	nameNormalized *proto.ColLowCardinality[string]
-	timestamp      *proto.ColDateTime64
+	name      *proto.ColLowCardinality[string]
+	timestamp *proto.ColDateTime64
 
 	mapping proto.ColEnum8
 	value   proto.ColFloat64
@@ -23,9 +22,8 @@ type pointColumns struct {
 
 func newPointColumns() *pointColumns {
 	return &pointColumns{
-		name:           new(proto.ColStr).LowCardinality(),
-		nameNormalized: new(proto.ColStr).LowCardinality(),
-		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		name:      new(proto.ColStr).LowCardinality(),
+		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
 		attributes: NewAttributes(colAttrs),
 		scope:      NewAttributes(colScope),
@@ -37,7 +35,6 @@ func (c *pointColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
 			{Name: "name", Data: c.name},
-			{Name: "name_normalized", Data: c.nameNormalized},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
@@ -59,8 +56,8 @@ func (c *pointColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		PrimaryKey:  []string{"name_normalized", "mapping", "resource", "attribute"},
-		OrderBy:     []string{"name_normalized", "mapping", "resource", "attribute", "timestamp"},
+		PrimaryKey:  []string{"name", "mapping", "resource", "attribute"},
+		OrderBy:     []string{"name", "mapping", "resource", "attribute", "timestamp"},
 		TTL:         ddl.TTL{Field: "timestamp"},
 		Indexes: []ddl.Index{
 			{
@@ -75,10 +72,6 @@ func (c *pointColumns) DDL() ddl.Table {
 				Name:  "name",
 				Type:  c.name.Type(),
 				Codec: "ZSTD(1)",
-			},
-			{
-				Name: "name_normalized",
-				Type: c.nameNormalized.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -111,9 +104,8 @@ func (c *pointColumns) DDL() ddl.Table {
 }
 
 type expHistogramColumns struct {
-	name           *proto.ColLowCardinality[string]
-	nameNormalized *proto.ColLowCardinality[string]
-	timestamp      *proto.ColDateTime64
+	name      *proto.ColLowCardinality[string]
+	timestamp *proto.ColDateTime64
 
 	count                proto.ColUInt64
 	sum                  *proto.ColNullable[float64]
@@ -134,9 +126,8 @@ type expHistogramColumns struct {
 
 func newExpHistogramColumns() *expHistogramColumns {
 	return &expHistogramColumns{
-		name:           new(proto.ColStr).LowCardinality(),
-		nameNormalized: new(proto.ColStr).LowCardinality(),
-		timestamp:      new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		name:      new(proto.ColStr).LowCardinality(),
+		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
 		sum:                  new(proto.ColFloat64).Nullable(),
 		min:                  new(proto.ColFloat64).Nullable(),
@@ -154,7 +145,6 @@ func (c *expHistogramColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
 			{Name: "name", Data: c.name},
-			{Name: "name_normalized", Data: c.nameNormalized},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "exp_histogram_count", Data: &c.count},
@@ -190,10 +180,6 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 				Name:  "name",
 				Type:  c.name.Type(),
 				Codec: "ZSTD(1)",
-			},
-			{
-				Name: "name_normalized",
-				Type: c.nameNormalized.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -256,29 +242,21 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 }
 
 type labelsColumns struct {
-	name           *proto.ColLowCardinality[string]
-	nameNormalized *proto.ColLowCardinality[string]
-
-	value           proto.ColStr
-	valueNormalized proto.ColStr
-
+	name  *proto.ColLowCardinality[string]
+	value proto.ColStr
 	scope proto.ColEnum8
 }
 
 func newLabelsColumns() *labelsColumns {
 	return &labelsColumns{
-		name:           new(proto.ColStr).LowCardinality(),
-		nameNormalized: new(proto.ColStr).LowCardinality(),
+		name: new(proto.ColStr).LowCardinality(),
 	}
 }
 
 func (c *labelsColumns) Columns() Columns {
 	return Columns{
 		{Name: "name", Data: c.name},
-		{Name: "name_normalized", Data: c.nameNormalized},
 		{Name: "value", Data: &c.value},
-		{Name: "value_normalized", Data: &c.valueNormalized},
-
 		{Name: "scope", Data: proto.Wrap(&c.scope, metricLabelScopeDDL)},
 	}
 }
@@ -289,25 +267,15 @@ func (c *labelsColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().
 func (c *labelsColumns) DDL() ddl.Table {
 	return ddl.Table{
 		Engine:  "ReplacingMergeTree",
-		OrderBy: []string{"name_normalized", "value", "scope"},
+		OrderBy: []string{"name", "value", "scope"},
 		Columns: []ddl.Column{
 			{
-				Name:    "name",
-				Type:    c.name.Type(),
-				Comment: "original name, i.e. foo.bar",
-			},
-			{
-				Name:    "name_normalized",
-				Type:    c.nameNormalized.Type(),
-				Comment: "normalized name, foo_bar",
+				Name: "name",
+				Type: c.name.Type(),
 			},
 			{
 				Name: "value",
 				Type: c.value.Type(),
-			},
-			{
-				Name: "value_normalized",
-				Type: c.valueNormalized.Type(),
 			},
 			{
 				Name: "scope",
@@ -318,9 +286,8 @@ func (c *labelsColumns) DDL() ddl.Table {
 }
 
 type exemplarColumns struct {
-	name           *proto.ColLowCardinality[string]
-	nameNormalized *proto.ColLowCardinality[string]
-	timestamp      *proto.ColDateTime64
+	name      *proto.ColLowCardinality[string]
+	timestamp *proto.ColDateTime64
 
 	filteredAttributes proto.ColBytes
 	exemplarTimestamp  *proto.ColDateTime64
@@ -336,7 +303,6 @@ type exemplarColumns struct {
 func newExemplarColumns() *exemplarColumns {
 	return &exemplarColumns{
 		name:              new(proto.ColStr).LowCardinality(),
-		nameNormalized:    new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		attributes:        NewAttributes(colAttrs),
@@ -349,7 +315,6 @@ func (c *exemplarColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
 			{Name: "name", Data: c.name},
-			{Name: "name_normalized", Data: c.nameNormalized},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "filtered_attributes", Data: &c.filteredAttributes},
@@ -372,15 +337,11 @@ func (c *exemplarColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"name_normalized", "resource", "attribute", "timestamp"},
+		OrderBy:     []string{"name", "resource", "attribute", "timestamp"},
 		Columns: []ddl.Column{
 			{
 				Name: "name",
 				Type: c.name.Type(),
-			},
-			{
-				Name: "name_normalized",
-				Type: c.nameNormalized.Type(),
 			},
 			{
 				Name:  "timestamp",

@@ -10,8 +10,6 @@ import (
 	"github.com/prometheus/prometheus/promql/parser"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
-
-	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 // BatchSet is a set of batches.
@@ -218,11 +216,10 @@ func (s *BatchSet) addSeries(name string, res, scope, attrs pcommon.Map) {
 			switch t := v.Type(); t {
 			case pcommon.ValueTypeMap, pcommon.ValueTypeSlice:
 			default:
-				key := otelstorage.KeyToLabel(k)
 				val := v.AsString()
 
-				s.addLabel(key, val)
-				lb[key] = val
+				s.addLabel(k, val)
+				lb[k] = val
 			}
 			return true
 		})
@@ -244,14 +241,10 @@ func (s *BatchSet) addLabel(label, val string) {
 	if s.Labels == nil {
 		s.Labels = map[string]map[string]struct{}{}
 	}
-	label = otelstorage.KeyToLabel(label)
 	m := s.Labels[label]
 	if m == nil {
 		m = map[string]struct{}{}
 		s.Labels[label] = m
-	}
-	if label == labels.MetricName {
-		val = otelstorage.KeyToLabel(val)
 	}
 	m[val] = struct{}{}
 }
