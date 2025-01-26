@@ -63,7 +63,7 @@ services:
       - clickhouse
 
   grafana:
-    image: "ghcr.io/go-faster/grafana:10.0.0"
+    image: "ghcr.io/go-faster/grafana:11.5.0-pre"
     profiles:
       - grafana
     environment:
