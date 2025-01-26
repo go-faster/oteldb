@@ -2,11 +2,11 @@ package chstorage
 
 import (
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/autometric"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/go-faster/oteldb/internal/autometric"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
