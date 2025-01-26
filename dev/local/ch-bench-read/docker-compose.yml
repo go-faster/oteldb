@@ -18,7 +18,7 @@ services:
       retries: 30
 
   prometheus:
-    image: "ghcr.io/go-faster/prom/prometheus"
+    image: "ghcr.io/go-faster/prom/prometheus:v3.1.0"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:

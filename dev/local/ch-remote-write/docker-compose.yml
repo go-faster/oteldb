@@ -55,7 +55,7 @@ services:
   # to scrape node-exporter
   # also can remote-write to otelcol
   prometheus:
-    image: "ghcr.io/go-faster/prom/prometheus"
+    image: "ghcr.io/go-faster/prom/prometheus:v3.1.0"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.enable-remote-write-receiver"
