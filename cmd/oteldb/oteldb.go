@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/app"
-	promodel "github.com/prometheus/common/model"
 	"github.com/go-faster/sdk/zctx"
+	promodel "github.com/prometheus/common/model"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/autozpages"
