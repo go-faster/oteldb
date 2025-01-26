@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS `metrics_exp_histograms`
 (
 	`name`                                 LowCardinality(String) CODEC(ZSTD(1)),
-	`name_normalized`                      LowCardinality(String),
 	`timestamp`                            DateTime64(9)          CODEC(Delta, ZSTD(1)),
 	`exp_histogram_count`                  UInt64,
 	`exp_histogram_sum`                    Nullable(Float64),

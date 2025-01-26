@@ -16,7 +16,6 @@ import (
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/metricstorage"
-	"github.com/go-faster/oteldb/internal/otelstorage"
 	"github.com/go-faster/oteldb/internal/promapi"
 	"github.com/go-faster/oteldb/internal/xattribute"
 )
@@ -85,7 +84,7 @@ func (p *promQuerier) selectOnlySeries(
 			chsql.ResultColumn{
 				Name: "series",
 				Expr: chsql.MapConcat(
-					chsql.Map(chsql.String("__name__"), chsql.Ident("name_normalized")),
+					chsql.Map(chsql.String("__name__"), chsql.Ident("name")),
 					attrStringMap(colAttrs),
 					attrStringMap(colResource),
 					attrStringMap(colScope),
@@ -110,7 +109,7 @@ func (p *promQuerier) selectOnlySeries(
 				for i := 0; i < series.Rows(); i++ {
 					clear(dedup)
 					forEachColMap(&series, i, func(k, v string) {
-						dedup[otelstorage.KeyToLabel(k)] = v
+						dedup[k] = v
 					})
 
 					lb.Reset()
@@ -195,7 +194,7 @@ func (p *promQuerier) buildSeriesQuery(
 		matchers := make([]chsql.Expr, 0, len(set))
 		for _, m := range set {
 			selectors := []chsql.Expr{
-				chsql.Ident("name_normalized"),
+				chsql.Ident("name"),
 			}
 			if name := m.Name; name != labels.MetricName {
 				selectors = mapping.Selectors(name)
