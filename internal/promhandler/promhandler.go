@@ -564,7 +564,7 @@ func (h *PromAPI) querySeries(
 			return nil, executionErr("select", err)
 		}
 
-		result = storage.NewMergeSeriesSet(sets, storage.ChainedSeriesMerge)
+		result = storage.NewMergeSeriesSet(sets, 0, storage.ChainedSeriesMerge)
 	} else {
 		result = q.Select(ctx, false, hints, matchers[0]...)
 	}
