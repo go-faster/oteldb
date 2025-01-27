@@ -41,7 +41,7 @@ Ingestion is possible with [OpenTelemetry collector][otelcol], supporting [over 
 
 ## Demo
 
-https://github.com/go-faster/oteldb/blob/main/oteldb.mp4
+https://github.com/go-faster/oteldb/raw/refs/heads/main/oteldb.mp4
 
 ## Prometheus Compatibility
 
