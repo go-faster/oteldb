@@ -217,7 +217,7 @@ func match(m logql.LabelMatcher, s string) bool {
 	case logql.OpEq:
 		return s == m.Value
 	case logql.OpNotEq:
-		return s == m.Value
+		return s != m.Value
 	case logql.OpRe:
 		return m.Re.MatchString(s)
 	case logql.OpNotRe:
