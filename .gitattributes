@@ -3,3 +3,4 @@
 *.raw binary
 *.rwq binary
 *.hex text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
