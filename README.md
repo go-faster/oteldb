@@ -39,6 +39,10 @@ Ingestion is possible with [OpenTelemetry collector][otelcol], supporting [over 
 [otelcol-contrib]: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver
 [exemplars]: https://grafana.com/docs/grafana/latest/fundamentals/exemplars/
 
+## Demo
+
+<video src="oteldb.mp4"></video>
+
 ## Prometheus Compatibility
 
 See [ch-compliance][compliance] for Prometheus compatibility tests.
