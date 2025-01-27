@@ -15,15 +15,9 @@ CREATE TABLE IF NOT EXISTS `metrics_points`
 		) CODEC(T64, ZSTD(1)),
 	`value`     Float64                CODEC(Gorilla, ZSTD(1)),
 	`flags`     UInt8                  CODEC(T64, ZSTD(1)),
-	-- attribute attributes
 	`attribute` LowCardinality(String),
-	-- end
-	-- resource attributes
 	`resource`  LowCardinality(String),
-	-- end
-	-- scope attributes
 	`scope`     LowCardinality(String),
-	-- end
 
 	INDEX `idx_ts` timestamp TYPE minmax GRANULARITY 8192
 )
