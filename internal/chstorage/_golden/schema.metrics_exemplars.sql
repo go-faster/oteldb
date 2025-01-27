@@ -7,15 +7,9 @@ CREATE TABLE IF NOT EXISTS `metrics_exemplars`
 	`value`               Float64,
 	`trace_id`            FixedString(16),
 	`span_id`             FixedString(8),
-	-- attribute attributes
 	`attribute`           LowCardinality(String),
-	-- end
-	-- resource attributes
 	`resource`            LowCardinality(String),
-	-- end
-	-- scope attributes
-	`scope`               LowCardinality(String),
-	-- end
+	`scope`               LowCardinality(String)
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)

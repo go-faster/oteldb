@@ -15,15 +15,9 @@ CREATE TABLE IF NOT EXISTS `traces_spans`
 	`status_code`         UInt8,
 	`status_message`      LowCardinality(String),
 	`batch_id`            UUID,
-	-- attribute attributes
 	`attribute`           LowCardinality(String),
-	-- end
-	-- resource attributes
 	`resource`            LowCardinality(String),
-	-- end
-	-- scope attributes
 	`scope`               LowCardinality(String),
-	-- end
 	`scope_name`          LowCardinality(String),
 	`scope_version`       LowCardinality(String),
 	`events_timestamps`   Array(DateTime64(9)),

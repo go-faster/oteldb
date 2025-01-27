@@ -1,34 +1,20 @@
 package chstorage
 
 import (
-	"sort"
-	"strings"
-
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
-	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/ddl"
-	"github.com/go-faster/oteldb/internal/otelschema"
 	"github.com/go-faster/oteldb/internal/otelstorage"
 )
 
 type Attributes struct {
 	Name  string
 	Value proto.ColumnOf[otelstorage.Attrs]
-
-	// Materialized columns.
-
-	Strings  map[string]proto.ColumnOf[string]
-	Integers map[string]proto.ColumnOf[int64]
-	UUIDs    map[string]proto.ColumnOf[uuid.UUID]
-
-	columnToAttr map[string]string
-	attrToColumn map[string]string
 }
 
 type jsonAttrCol struct {
@@ -233,71 +219,6 @@ func NewAttributes(name string, opts ...AttributesOption) *Attributes {
 	attr := &Attributes{
 		Name:  name,
 		Value: newAttributesColumn(o),
-
-		Strings:  make(map[string]proto.ColumnOf[string]),
-		Integers: make(map[string]proto.ColumnOf[int64]),
-		UUIDs:    make(map[string]proto.ColumnOf[uuid.UUID]),
-
-		columnToAttr: make(map[string]string),
-		attrToColumn: make(map[string]string),
-	}
-
-	appendEntry := func(e otelschema.Entry, prefix string) {
-		switch e.Name {
-		case "service_name", "service_namespace", "service_instance_id":
-			// Already materialized by hand.
-			return
-		}
-		s := prefix + e.Name
-		attr.columnToAttr[s] = e.FullName
-		attr.attrToColumn[e.FullName] = s
-		switch e.Type {
-		case "string":
-			if strings.HasPrefix(e.Column.String(), "Enum") {
-				v := new(proto.ColEnum)
-				if err := v.Infer(e.Column); err != nil {
-					panic(err)
-				}
-				attr.Strings[s] = v
-				return
-			}
-			if e.Column == proto.ColumnTypeString {
-				attr.Strings[s] = new(proto.ColStr)
-				if name == colResource {
-					attr.Strings[s] = new(proto.ColStr).LowCardinality()
-				}
-			}
-			if e.Column == proto.ColumnTypeUUID {
-				attr.UUIDs[s] = new(proto.ColUUID)
-			}
-			return
-		case "int":
-			if e.Column != proto.ColumnTypeInt64 {
-				// TODO: support other columns?
-				return
-			}
-			attr.Integers[s] = new(proto.ColInt64)
-		}
-	}
-
-	type variant struct {
-		Prefix string
-		Where  otelschema.Where
-	}
-	if v, ok := map[string]variant{
-		colAttrs:    {"attr_", otelschema.WhereAttribute},
-		colResource: {"res_", otelschema.WhereResource},
-		colScope:    {"scp_", otelschema.WhereScope},
-	}[name]; ok {
-		for _, e := range otelschema.Data.All()[:0] {
-			if e.WhereIn(v.Where) {
-				prefix := v.Prefix
-				if len(e.Where) == 1 {
-					prefix = ""
-				}
-				appendEntry(e, prefix)
-			}
-		}
 	}
 
 	return attr
@@ -315,20 +236,6 @@ func attrStringMap(name string) chsql.Expr {
 func (a *Attributes) Columns() Columns {
 	col := Columns{
 		{Name: a.Name, Data: a.Value},
-	}
-	col = appendColumns(col, a.Strings)
-	col = appendColumns(col, a.Integers)
-	return col
-}
-
-func appendColumns[T any](col Columns, m map[string]proto.ColumnOf[T]) Columns {
-	keys := maps.Keys(m)
-	sort.Strings(keys)
-	for _, k := range keys {
-		col = append(col, Column{
-			Name: k,
-			Data: m[k],
-		})
 	}
 	return col
 }
@@ -363,48 +270,6 @@ func firstAttrSelector(label string) chsql.Expr {
 // Append adds a new map of attributes.
 func (a *Attributes) Append(kv otelstorage.Attrs) {
 	a.Value.Append(kv)
-
-	materializedFieldSet := map[string]struct{}{}
-	kv.AsMap().Range(func(k string, v pcommon.Value) bool {
-		name, ok := a.attrToColumn[k]
-		if !ok {
-			return true
-		}
-
-		if c, found := a.Strings[name]; found {
-			c.Append(v.Str())
-			materializedFieldSet[name] = struct{}{}
-			return true
-		}
-		if c, found := a.Integers[name]; found {
-			c.Append(v.Int())
-			materializedFieldSet[name] = struct{}{}
-			return true
-		}
-		if c, found := a.UUIDs[name]; found {
-			s, err := uuid.Parse(v.Str())
-			if err != nil {
-				s = uuid.Nil
-			}
-			c.Append(s)
-			materializedFieldSet[name] = struct{}{}
-		}
-
-		return true
-	})
-
-	appendZeroValuesIfNotSet(a.Strings, materializedFieldSet)
-	appendZeroValuesIfNotSet(a.Integers, materializedFieldSet)
-	appendZeroValuesIfNotSet(a.UUIDs, materializedFieldSet)
-}
-
-func appendZeroValuesIfNotSet[T any](m map[string]proto.ColumnOf[T], set map[string]struct{}) {
-	for k, v := range m {
-		if _, ok := set[k]; !ok {
-			var zero T
-			v.Append(zero)
-		}
-	}
 }
 
 // Row returns a new map of attributes for a given row.
@@ -416,31 +281,10 @@ func (a *Attributes) Row(idx int) otelstorage.Attrs {
 func (a *Attributes) DDL(table *ddl.Table) {
 	table.Columns = append(table.Columns,
 		ddl.Column{
-			Comment: a.Name + " attributes",
-		},
-		ddl.Column{
 			Name: a.Name,
 			Type: a.Value.Type(),
 		},
 	)
-	table.Columns = appendDDL(table.Columns, a.Integers)
-	table.Columns = appendDDL(table.Columns, a.Strings)
-	table.Columns = appendDDL(table.Columns, a.UUIDs)
-	table.Columns = append(table.Columns, ddl.Column{
-		Comment: "end",
-	})
-}
-
-func appendDDL[T any](col []ddl.Column, m map[string]proto.ColumnOf[T]) []ddl.Column {
-	keys := maps.Keys(m)
-	sort.Strings(keys)
-	for _, k := range keys {
-		col = append(col, ddl.Column{
-			Name: k,
-			Type: m[k].Type(),
-		})
-	}
-	return col
 }
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {

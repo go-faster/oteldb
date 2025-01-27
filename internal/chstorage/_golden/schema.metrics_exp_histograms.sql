@@ -13,15 +13,9 @@ CREATE TABLE IF NOT EXISTS `metrics_exp_histograms`
 	`exp_histogram_negative_offset`        Int32,
 	`exp_histogram_negative_bucket_counts` Array(UInt64),
 	`flags`                                UInt8                  CODEC(T64, ZSTD(1)),
-	-- attribute attributes
 	`attribute`                            LowCardinality(String),
-	-- end
-	-- resource attributes
 	`resource`                             LowCardinality(String),
-	-- end
-	-- scope attributes
-	`scope`                                LowCardinality(String),
-	-- end
+	`scope`                                LowCardinality(String)
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
