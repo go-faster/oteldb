@@ -41,7 +41,7 @@ Ingestion is possible with [OpenTelemetry collector][otelcol], supporting [over 
 
 ## Demo
 
-https://github.com/go-faster/oteldb/raw/refs/heads/main/oteldb.mp4
+https://github.com/user-attachments/assets/647d220c-052a-40d4-9358-7d6039a0f198
 
 ## Prometheus Compatibility
 
@@ -61,6 +61,10 @@ Setup oteldb, ClickHouse, Grafana, and telemetry generators:
 ```shell
 docker compose -f dev/local/ch/docker-compose.yml up -d
 ```
+
+
+
+
 
 You can open Grafana dashboard at http://localhost:3000/d/oteldb/oteldb
 
