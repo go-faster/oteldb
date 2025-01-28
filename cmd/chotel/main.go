@@ -42,7 +42,9 @@ func main() {
 		}
 		ctx = zctx.WithOpenTelemetryZap(ctx)
 		return a.Run(ctx)
-	})
+	},
+		app.WithServiceName("oteldb.chotel"),
+	)
 }
 
 // App is the trace exporter application.

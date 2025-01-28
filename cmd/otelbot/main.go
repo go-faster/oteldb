@@ -33,5 +33,7 @@ func main() {
 			return errors.Wrap(err, "setup")
 		}
 		return root.Run(ctx)
-	})
+	},
+		app.WithServiceName("oteldb.bot"),
+	)
 }
