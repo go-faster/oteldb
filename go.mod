@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	entgo.io/ent v0.14.1
-	github.com/ClickHouse/ch-go v0.64.0
+	github.com/ClickHouse/ch-go v0.64.1
 	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/VictoriaMetrics/easyproto v0.1.4
