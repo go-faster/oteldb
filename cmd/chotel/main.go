@@ -41,7 +41,7 @@ func main() {
 			return errors.Wrap(err, "init")
 		}
 		ctx = zctx.WithOpenTelemetryZap(ctx)
-		return a.Run(ctx)
+		return a.Run(m.ShutdownContext())
 	},
 		app.WithServiceName("oteldb.chotel"),
 	)

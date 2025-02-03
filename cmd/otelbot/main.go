@@ -32,7 +32,7 @@ func main() {
 		if err != nil {
 			return errors.Wrap(err, "setup")
 		}
-		return root.Run(ctx)
+		return root.Run(m.ShutdownContext())
 	},
 		app.WithServiceName("oteldb.bot"),
 	)
