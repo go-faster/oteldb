@@ -35,11 +35,11 @@ env:
 
 resources:
   requests:
-    cpu: "3"
-    memory: 512Mi
+    cpu: "500m"
+    memory: 256Mi
   limits:
-    cpu: "6"
-    memory: 4Gi
+    cpu: "2"
+    memory: 2Gi
 
 config:
   ttl: 2h
