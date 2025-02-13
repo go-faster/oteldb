@@ -12,16 +12,15 @@ env:
   COMPOSE_FILE: docker-compose.ci.yml
   OTEL_EXPORTER_OTLP_INSECURE: "true"
   CGO_ENABLED: 0
-  CHECK_BENCH_BROKEN: "false"
 
 jobs:
   PromQL:
-    runs-on: [Linux, bench]
+    runs-on: ubuntu-latest
     steps:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.x"
+          go-version: "1.23.x"
           cache: false
 
       - uses: docker/setup-buildx-action@v3
@@ -96,44 +95,3 @@ jobs:
         working-directory: ${{ env.WORKDIR }}
         if: ${{ ! cancelled() }}
         run: docker compose down --remove-orphans --volumes --timeout 10
-
-  CheckBenchAPI:
-    runs-on: [Linux, bench]
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.21.x"
-          cache: false
-
-      - uses: actions/checkout@v4
-
-      - name: Get Go environment
-        id: go-env
-        run: |
-          echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
-          echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
-          echo "goversion=$(go env GOVERSION)" >> $GITHUB_ENV
-
-      - name: Set up cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.cache }}
-            ${{ env.modcache }}
-          key: Benchmark-API-${{ runner.os }}-go-${{ env.goversion }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            Benchmark-API-${{ runner.os }}-go-${{ env.goversion }}
-
-      - name: Go build
-        run: go build -trimpath -buildvcs=false -v ./cmd/otelbench
-
-      - name: Ping
-        if: ${{ env.CHECK_BENCH_BROKEN != 'true' }}
-        run: ./otelbench api ping
-
-      - name: Status
-        if: ${{ env.CHECK_BENCH_BROKEN != 'true' }}
-        run: ./otelbench api status
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

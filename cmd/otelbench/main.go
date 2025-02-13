@@ -24,7 +24,6 @@ func main() {
 		newLogQLCommand(),
 		newPrometheusRemoteWriteCommand(),
 		newOtelCommand(),
-		newAPICommand(),
 		newDumpCommand(),
 	)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
