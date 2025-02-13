@@ -139,7 +139,7 @@ jobs:
         if: ${{ env.DEPLOY_BROKEN != 'true' }}
         run: |
           /tmp/kubectl apply -f .k8s/deployment.deploy.yml
-          /tmp/kubectl -n faster rollout status deployment otelproxy chotel --timeout=5m
+#          /tmp/kubectl -n faster rollout status deployment otelproxy chotel --timeout=5m
       - name: Deploy (Helm)
         if: ${{ env.DEPLOY_BROKEN != 'true' }}
         run: |
