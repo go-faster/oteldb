@@ -11,8 +11,6 @@ linters-settings:
   gosec:
     excludes:
       - G115 # Annoying and have a lot of false-positive results.
-  maligned:
-    suggest-new: true
   dupl:
     threshold: 120
   goconst:
