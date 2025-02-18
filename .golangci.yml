@@ -4,8 +4,6 @@ linters-settings:
       - name: unused-parameter
         severity: warning
         disabled: true
-  govet:
-    check-shadowing: true
   gocyclo:
     min-complexity: 15
   gosec:
