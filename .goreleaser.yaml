@@ -1,6 +1,9 @@
+version: 2
 project_name: oteldb
 builds:
-  - env:
+  - id: oteldb
+    binary: "oteldb{{ .Ext }}"
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -9,7 +12,21 @@ builds:
       - arm64
       - riscv64
     main: ./cmd/oteldb
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+  - id: docker-logql
+    binary: "docker-logql{{ .Ext }}"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - riscv64
+    main: ./cmd/docker-logql
+    mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
 
@@ -20,7 +37,7 @@ archives:
       {{- .Arch  }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ["zip"]
     builds_info:
       group: root
       owner: root
@@ -55,6 +72,8 @@ release:
 dockers:
   # https://goreleaser.com/customization/docker/
   - use: buildx
+    ids:
+      - oteldb
     goos: linux
     dockerfile: release.Dockerfile
     goarch: amd64
@@ -67,7 +86,7 @@ dockers:
       - "--pull"
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
       - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Aleksandr Razumov\",\"email\":\"ernado@go-faster.org\"}]"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
       - "--label=io.artifacthub.package.license=Apache 2.0"
       - "--label=org.opencontainers.image.description=OpenTelemetry signal storage"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -76,6 +95,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
   - use: buildx
+    ids:
+      - oteldb
     goos: linux
     goarch: arm64
     dockerfile: release.Dockerfile
@@ -88,7 +109,7 @@ dockers:
       - "--pull"
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
       - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Aleksandr Razumov\",\"email\":\"ernado@go-faster.org\"}]"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
       - "--label=io.artifacthub.package.license=Apache 2.0"
       - "--label=org.opencontainers.image.description=OpenTelemetry signal storage"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -97,6 +118,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
   - use: buildx
+    ids:
+      - oteldb
     goos: linux
     goarch: riscv64
     dockerfile: release.Dockerfile
@@ -114,7 +137,7 @@ dockers:
       - "IMG=ghcr.io/go-riscv/distroless/static-unstable"
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
       - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
-      - "--label=io.artifacthub.package.maintainers=[{\"name\":\"Aleksandr Razumov\",\"email\":\"ernado@go-faster.org\"}]"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
       - "--label=io.artifacthub.package.license=Apache 2.0"
       - "--label=org.opencontainers.image.description=OpenTelemetry signal storage"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -144,7 +167,7 @@ signs:
   - cmd: cosign
     id: cosign
     signature: "${artifact}.sig"
-    certificate: '${artifact}.pem'
+    certificate: "${artifact}.pem"
     output: true
     artifacts: archive
     args:
@@ -159,7 +182,7 @@ signs:
   - cmd: cosign
     id: keyless
     signature: "${artifact}.keyless.sig"
-    certificate: '${artifact}.keyless.pem'
+    certificate: "${artifact}.keyless.pem"
     output: true
     artifacts: archive
     args:
@@ -176,14 +199,14 @@ docker_signs:
     artifacts: manifests
     output: true
     args:
-      - '--key'
-      - 'env://COSIGN_PRIVATE_KEY'
-      - 'sign'
-      - '${artifact}@${digest}'
+      - "--key"
+      - "env://COSIGN_PRIVATE_KEY"
+      - "sign"
+      - "${artifact}@${digest}"
       - --yes
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
 
@@ -192,45 +215,45 @@ changelog:
   use: github
   filters:
     exclude:
-      - '^test:'
-      - '^chore'
-      - 'merge conflict'
+      - "^test:"
+      - "^chore"
+      - "merge conflict"
       - Merge pull request
       - Merge remote-tracking branch
       - Merge branch
       - go mod tidy
   groups:
-    - title: 'Helm chart updates'
+    - title: "Helm chart updates"
       order: 700
       regexp: '^.*?(feat|fix|chore)\(helm\)!?:.+$'
-    - title: 'Dependency updates'
+    - title: "Dependency updates"
       regexp: '^.*?(feat|fix|chore)\(deps\)!?:.+$'
       order: 300
-    - title: 'New Features'
+    - title: "New Features"
       regexp: '^.*?feat(\(\S+\))??!?:.+$'
       order: 100
-    - title: 'Security updates'
+    - title: "Security updates"
       regexp: '^.*?sec(\(\S+\))??!?:.+$'
       order: 150
-    - title: 'Performance updates'
+    - title: "Performance updates"
       regexp: '^.*?perf(\(\S+\))??!?:.+$'
       order: 250
-    - title: 'Bug fixes'
+    - title: "Bug fixes"
       regexp: '^.*?fix(\(\S+\))??!?:.+$'
       order: 200
-    - title: 'Documentation updates'
+    - title: "Documentation updates"
       regexp: '^.*?docs(\(\S+\))??!?:.+$'
       order: 400
-    - title: 'Benchmarking tooling changes'
+    - title: "Benchmarking tooling changes"
       regexp: '^.*?(\(\S*bench\S*\))!?:.+$'
       order: 450
-    - title: 'Build process updates'
+    - title: "Build process updates"
       regexp: '^.*?build(\(\S+\))??!?:.+$'
       order: 500
-    - title: 'CI/CD updates'
+    - title: "CI/CD updates"
       regexp: '^.*?ci(\(\S+\))??!?:.+$'
       order: 600
-    - title: 'Updates to tests'
+    - title: "Updates to tests"
       regexp: '^.*?test(\(\S+\))??!?:.+$'
       order: 600
 
@@ -241,11 +264,29 @@ sboms:
   - artifacts: archive
 
 nfpms:
-  - package_name: oteldb
+  - id: oteldb
+    package_name: oteldb
     homepage: https://github.com/go-faster/oteldb
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
     description: OpenTelemetry signal storage
     license: Apache 2.0
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
+        - changelog-file-missing-in-native-package
+  - id: docker-logql
+    package_name: docker-logql
+    homepage: https://github.com/go-faster/oteldb/tree/main/cmd/docker-logql
+    maintainer: Aleksandr Razumov <ernado@go-faster.org>
+    description: A simple Docker CLI plugin to run LogQL queries over container logs.
+    license: Apache 2.0
+    # Install to /usr/lib/docker/cli-plugins, as it would be expected by Docker CLI.
+    bindir: /usr/lib/docker/cli-plugins
     formats:
       - apk
       - deb
