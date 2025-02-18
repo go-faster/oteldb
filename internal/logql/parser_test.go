@@ -482,13 +482,13 @@ var tests = []TestCase{
 			Pipeline: []PipelineStage{
 				&LabelFilter{
 					Pred: &LabelPredicateBinOp{
-						Left: &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
-						Op:   OpOr,
-						Right: &LabelPredicateBinOp{
-							Left:  &BytesFilter{"size", OpEq, 20 * 1000}, // 20kb
-							Op:    OpAnd,
-							Right: &LabelMatcher{"method", OpNotRe, "2..", regexp.MustCompile(`^(?:2..)$`)},
+						Left: &LabelPredicateBinOp{
+							Left:  &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
+							Op:    OpOr,
+							Right: &BytesFilter{"size", OpEq, 20 * 1000}, // 20kb
 						},
+						Op:    OpAnd,
+						Right: &LabelMatcher{"method", OpNotRe, "2..", regexp.MustCompile(`^(?:2..)$`)},
 					},
 				},
 				&LabelFilter{
@@ -513,12 +513,65 @@ var tests = []TestCase{
 			Pipeline: []PipelineStage{
 				&LabelFilter{
 					Pred: &LabelPredicateBinOp{
+						Left: &LabelPredicateBinOp{
+							Left:  &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
+							Op:    OpOr,
+							Right: &BytesFilter{"size", OpLt, 20 * 1000 * 1000}, // 20MB
+						},
+						Op:    OpOr,
+						Right: &BytesFilter{"size", OpLte, 20 * 1024 * 1024}, // 20MiB
+					},
+				},
+			},
+		},
+		false,
+	},
+	// See https://grafana.com/docs/loki/latest/query/log_queries/#label-filter-expression.
+	{
+		`{name="kafka"}
+				| duration >= 20ms or method="GET" and size <= 20KB`,
+		&LogExpr{
+			Sel: Selector{
+				Matchers: []LabelMatcher{
+					{"name", OpEq, "kafka", nil},
+				},
+			},
+			Pipeline: []PipelineStage{
+				&LabelFilter{
+					Pred: &LabelPredicateBinOp{
+						Left: &LabelPredicateBinOp{
+							Left:  &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
+							Op:    OpOr,
+							Right: &LabelMatcher{"method", OpEq, "GET", nil},
+						},
+						Op:    OpAnd,
+						Right: &BytesFilter{"size", OpLte, 20 * 1000}, // 20KB
+					},
+				},
+			},
+		},
+		false,
+	},
+	{
+		`{name="kafka"}
+				| duration >= 20ms or (method="GET" and size <= 20KB)`,
+		&LogExpr{
+			Sel: Selector{
+				Matchers: []LabelMatcher{
+					{"name", OpEq, "kafka", nil},
+				},
+			},
+			Pipeline: []PipelineStage{
+				&LabelFilter{
+					Pred: &LabelPredicateBinOp{
 						Left: &DurationFilter{"duration", OpGte, 20 * time.Millisecond},
 						Op:   OpOr,
-						Right: &LabelPredicateBinOp{
-							Left:  &BytesFilter{"size", OpLt, 20 * 1000 * 1000}, // 20MB
-							Op:    OpOr,
-							Right: &BytesFilter{"size", OpLte, 20 * 1024 * 1024}, // 20MiB
+						Right: &LabelPredicateParen{
+							X: &LabelPredicateBinOp{
+								Left:  &LabelMatcher{"method", OpEq, "GET", nil},
+								Op:    OpAnd,
+								Right: &BytesFilter{"size", OpLte, 20 * 1000}, // 20KB
+							},
 						},
 					},
 				},

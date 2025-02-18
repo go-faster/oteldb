@@ -341,6 +341,14 @@ func (p *parser) parseRegexpLabelParser() (*RegexpLabelParser, error) {
 }
 
 func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
+	expr, err := p.parseLabelPredicate1()
+	if err != nil {
+		return nil, err
+	}
+	return p.parseLabelPredicateBinOp(expr)
+}
+
+func (p *parser) parseLabelPredicate1() (LabelPredicate, error) {
 	switch t := p.next(); t.Type {
 	case lexer.OpenParen:
 		lp, err := p.parseLabelPredicate()
@@ -351,7 +359,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			return nil, err
 		}
 
-		pred = &LabelPredicateParen{X: lp}
+		return &LabelPredicateParen{X: lp}, nil
 	case lexer.Ident:
 		var op BinOp
 
@@ -406,7 +414,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 					}
 				}
 			}
-			pred = &LabelMatcher{Label: Label(t.Text), Op: op, Value: v, Re: re}
+			return &LabelMatcher{Label: Label(t.Text), Op: op, Value: v, Re: re}, nil
 		case lexer.Number:
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:
@@ -421,7 +429,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			if err != nil {
 				return nil, err
 			}
-			pred = &NumberFilter{Label: Label(t.Text), Op: op, Value: v}
+			return &NumberFilter{Label: Label(t.Text), Op: op, Value: v}, nil
 		case lexer.Duration:
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:
@@ -436,7 +444,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			if err != nil {
 				return nil, err
 			}
-			pred = &DurationFilter{Label: Label(t.Text), Op: op, Value: d}
+			return &DurationFilter{Label: Label(t.Text), Op: op, Value: d}, nil
 		case lexer.Bytes:
 			switch opTok.Type {
 			case lexer.CmpEq, lexer.NotEq, lexer.Lt, lexer.Lte, lexer.Gt, lexer.Gte:
@@ -451,7 +459,7 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 			if err != nil {
 				return nil, err
 			}
-			pred = &BytesFilter{Label: Label(t.Text), Op: op, Value: b}
+			return &BytesFilter{Label: Label(t.Text), Op: op, Value: b}, nil
 		case lexer.IP:
 			switch opTok.Type {
 			case lexer.Eq, lexer.NotEq:
@@ -477,36 +485,42 @@ func (p *parser) parseLabelPredicate() (pred LabelPredicate, _ error) {
 				return nil, err
 			}
 
-			pred = &IPFilter{Label: Label(t.Text), Op: op, Value: ipPattern}
+			return &IPFilter{Label: Label(t.Text), Op: op, Value: ipPattern}, nil
 		default:
 			return nil, p.unexpectedToken(literalTok)
 		}
-
 	default:
 		return nil, p.unexpectedToken(t)
 	}
+}
 
-	var binOp BinOp
-	switch nextTok := p.next(); nextTok.Type {
-	case lexer.Ident:
-		p.unread()
-		binOp = OpAnd
-	case lexer.Comma, lexer.And:
-		binOp = OpAnd
-	case lexer.Or:
-		binOp = OpOr
-	case lexer.EOF:
-		return pred, nil
-	default:
-		p.unread()
-		return pred, nil
-	}
+func (p *parser) parseLabelPredicateBinOp(left LabelPredicate) (LabelPredicate, error) {
+	for {
+		var op BinOp
+		switch tok := p.peek(); tok.Type {
+		case lexer.Ident:
+			op = OpAnd
+		case lexer.Comma, lexer.And:
+			p.next()
+			op = OpAnd
+		case lexer.Or:
+			p.next()
+			op = OpOr
+		case lexer.EOF:
+			p.next()
+			return left, nil
+		default:
+			return left, nil
+		}
+		// Note: OpAnd and OpOr have equal precedence, unlike metric binary operations.
 
-	right, err := p.parseLabelPredicate()
-	if err != nil {
-		return nil, err
+		right, err := p.parseLabelPredicate1()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &LabelPredicateBinOp{Left: left, Op: op, Right: right}
 	}
-	return &LabelPredicateBinOp{Left: pred, Op: binOp, Right: right}, nil
 }
 
 func (p *parser) parseLabelFormatExpr() (lf *LabelFormatExpr, err error) {
