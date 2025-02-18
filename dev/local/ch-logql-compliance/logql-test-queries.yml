@@ -82,6 +82,15 @@ test_cases:
   - query: '{job="varlogs"} | json | took >= 1ms size >= 1KB'
   - query: '{job="varlogs"} | json status | status > 0 and status < 0'
     should_be_empty: true
+  # Ensure precedence.
+  #
+  # (false AND false) OR true => false OR true => true
+  - query: '{job="varlogs"} | json | status > 1000 and status < 0 or method != "HEAD"'
+  - query: '{job="varlogs"} | json | (status > 1000, status < 0) or method != "HEAD"'
+  - query: '{job="varlogs"} | json | (status > 1000 status < 0) or method != "HEAD"'
+  # false AND (false OR true) => false AND true => false
+  - query: '{job="varlogs"} | json | status > 1000 and (status < 0 or method != "HEAD")'
+    should_be_empty: true
   # Decolorize.
   #
   - query: '{job="varlogs"} | decolorize'
