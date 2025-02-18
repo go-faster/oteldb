@@ -19,14 +19,14 @@ import (
 )
 
 func receiverFactoryMap() (map[component.Type]receiver.Factory, error) {
-	return receiver.MakeFactoryMap(
+	return otelcol.MakeFactoryMap(
 		otlpreceiver.NewFactory(),
 		prometheusremotewritereceiver.NewFactory(),
 	)
 }
 
 func processorFactoryMap() (map[component.Type]processor.Factory, error) {
-	return processor.MakeFactoryMap(
+	return otelcol.MakeFactoryMap(
 		batchprocessor.NewFactory(),
 		attributesprocessor.NewFactory(),
 		resourceprocessor.NewFactory(),
@@ -35,7 +35,7 @@ func processorFactoryMap() (map[component.Type]processor.Factory, error) {
 }
 
 func exporterFactoryMap() (map[component.Type]exporter.Factory, error) {
-	return exporter.MakeFactoryMap(
+	return otelcol.MakeFactoryMap(
 		oteldbexporter.NewFactory(),
 	)
 }
