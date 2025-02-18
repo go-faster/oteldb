@@ -163,37 +163,6 @@ docker_manifests:
       - "{{ .Env.IMAGE }}:latest-arm64"
       - "{{ .Env.IMAGE }}:latest-riscv64"
 
-signs:
-  - cmd: cosign
-    id: cosign
-    signature: "${artifact}.sig"
-    certificate: "${artifact}.pem"
-    output: true
-    artifacts: archive
-    args:
-      - sign-blob
-      - "--key"
-      - "env://COSIGN_PRIVATE_KEY"
-      - "--output-signature"
-      - "${artifact}.sig"
-      - "${artifact}"
-      - --yes
-
-  - cmd: cosign
-    id: keyless
-    signature: "${artifact}.keyless.sig"
-    certificate: "${artifact}.keyless.pem"
-    output: true
-    artifacts: archive
-    args:
-      - sign-blob
-      - "--output-certificate"
-      - "${artifact}.keyless.pem"
-      - "--output-signature"
-      - "${artifact}.keyless.sig"
-      - "${artifact}"
-      - --yes
-
 docker_signs:
   - cmd: cosign
     artifacts: manifests
