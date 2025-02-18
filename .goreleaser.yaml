@@ -1,7 +1,9 @@
 version: 2
 project_name: oteldb
 builds:
-  - env:
+  - id: oteldb
+    binary: "oteldb{{ .Ext }}"
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -10,6 +12,20 @@ builds:
       - arm64
       - riscv64
     main: ./cmd/oteldb
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+  - id: docker-logql
+    binary: "docker-logql{{ .Ext }}"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - riscv64
+    main: ./cmd/docker-logql
     mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
@@ -56,6 +72,8 @@ release:
 dockers:
   # https://goreleaser.com/customization/docker/
   - use: buildx
+    ids:
+      - oteldb
     goos: linux
     dockerfile: release.Dockerfile
     goarch: amd64
@@ -77,6 +95,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
   - use: buildx
+    ids:
+      - oteldb
     goos: linux
     goarch: arm64
     dockerfile: release.Dockerfile
@@ -98,6 +118,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
   - use: buildx
+    ids:
+      - oteldb
     goos: linux
     goarch: riscv64
     dockerfile: release.Dockerfile
@@ -242,11 +264,29 @@ sboms:
   - artifacts: archive
 
 nfpms:
-  - package_name: oteldb
+  - id: oteldb
+    package_name: oteldb
     homepage: https://github.com/go-faster/oteldb
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
     description: OpenTelemetry signal storage
     license: Apache 2.0
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
+        - changelog-file-missing-in-native-package
+  - id: docker-logql
+    package_name: docker-logql
+    homepage: https://github.com/go-faster/oteldb/tree/main/cmd/docker-logql
+    maintainer: Aleksandr Razumov <ernado@go-faster.org>
+    description: A simple Docker CLI plugin to run LogQL queries over container logs.
+    license: Apache 2.0
+    # Install to /usr/lib/docker/cli-plugins, as it would be expected by Docker CLI.
+    bindir: /usr/lib/docker/cli-plugins
     formats:
       - apk
       - deb
