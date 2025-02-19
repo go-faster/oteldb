@@ -33,12 +33,15 @@ func (t *Tracker[Q]) retrieveReports(ctx context.Context, tq TrackedQuery[Q]) (r
 
 	bo := backoff.NewConstantBackOff(2 * time.Second)
 	res, err := backoff.RetryWithData(func() (v ptrace.Traces, err error) {
-		res, err := t.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{
+		reqCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+
+		res, err := t.tempo.TraceByID(reqCtx, tempoapi.TraceByIDParams{
 			TraceID: tq.TraceID,
 			Accept:  "application/protobuf",
 		})
 		if err != nil {
-			return v, backoff.Permanent(err)
+			return v, errors.Wrap(err, "query Tempo API")
 		}
 		switch r := res.(type) {
 		case *tempoapi.TraceByIDNotFound:
