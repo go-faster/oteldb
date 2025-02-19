@@ -28,10 +28,10 @@ func (t *Tracker[Q]) retrieveReports(ctx context.Context, tq TrackedQuery[Q]) (r
 		return reports, nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, time.Minute*5)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
-	bo := backoff.NewConstantBackOff(time.Millisecond * 100)
+	bo := backoff.NewConstantBackOff(2 * time.Second)
 	res, err := backoff.RetryWithData(func() (v ptrace.Traces, err error) {
 		res, err := t.tempo.TraceByID(ctx, tempoapi.TraceByIDParams{
 			TraceID: tq.TraceID,
