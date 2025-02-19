@@ -28,7 +28,7 @@ func (t *Tracker[Q]) retrieveReports(ctx context.Context, tq TrackedQuery[Q]) (r
 		return reports, nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*5)
 	defer cancel()
 
 	bo := backoff.NewConstantBackOff(time.Millisecond * 100)
