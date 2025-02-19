@@ -235,6 +235,8 @@ sboms:
 nfpms:
   - id: oteldb
     package_name: oteldb
+    builds:
+      - oteldb
     homepage: https://github.com/go-faster/oteldb
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
     description: OpenTelemetry signal storage
@@ -250,6 +252,8 @@ nfpms:
         - changelog-file-missing-in-native-package
   - id: docker-logql
     package_name: docker-logql
+    builds:
+      - docker-logql
     homepage: https://github.com/go-faster/oteldb/tree/main/cmd/docker-logql
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
     description: A simple Docker CLI plugin to run LogQL queries over container logs.
