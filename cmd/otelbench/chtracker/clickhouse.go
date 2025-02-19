@@ -69,7 +69,7 @@ func (t *Tracker[Q]) retrieveReports(ctx context.Context, tq TrackedQuery[Q]) (r
 			}
 			for _, svc := range []string{
 				"otelbench." + t.senderName,
-				"go-faster.oteldb",
+				"oteldb",
 				"clickhouse",
 			} {
 				if _, ok := services[svc]; !ok {
