@@ -124,7 +124,6 @@ func NewApp(lg *zap.Logger, metrics *app.Telemetry) (*App, error) {
 			return nil, err
 		}
 	}
-	lg.Info("Initialized")
 	return a, nil
 }
 
@@ -184,7 +183,7 @@ func (a *App) setup(ctx context.Context) error {
 		return errors.Wrap(err, "setup trace exporter")
 	}
 	a.traceExporter = traceExporter
-	a.log.Info("Initialized")
+	a.log.Info("Ready to export traces")
 	return nil
 }
 
