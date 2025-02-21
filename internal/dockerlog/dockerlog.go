@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types"
 	apicontainer "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/go-faster/errors"
@@ -167,7 +166,7 @@ type containerLabels struct {
 	labels map[string]string
 }
 
-func getLabels(ctr types.Container) containerLabels {
+func getLabels(ctr apicontainer.Summary) containerLabels {
 	var name string
 	if len(ctr.Names) > 0 {
 		name = strings.TrimPrefix(ctr.Names[0], "/")
