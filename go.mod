@@ -10,7 +10,7 @@ require (
 	github.com/VictoriaMetrics/easyproto v0.1.4
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cespare/xxhash/v2 v2.3.0
-	github.com/cheggaaa/pb/v3 v3.1.6
+	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/dmarkham/enumer v1.5.11
 	github.com/docker/cli v28.0.1+incompatible
 	github.com/docker/docker v28.0.1+incompatible
