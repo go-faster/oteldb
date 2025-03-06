@@ -30,10 +30,12 @@ const (
 	defaultTimeThreshold = 24
 )
 
+var typ = component.MustNewType(typeStr)
+
 // NewFactory creates new factory of [Receiver].
 func NewFactory() receiver.Factory {
 	return receiver.NewFactory(
-		component.MustNewType(typeStr),
+		typ,
 		createDefaultConfig,
 		receiver.WithMetrics(createMetricsReceiver, stability))
 }

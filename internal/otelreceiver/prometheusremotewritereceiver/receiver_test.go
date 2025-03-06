@@ -111,7 +111,7 @@ func TestPrometheusRemoteWriteReceiver(t *testing.T) {
 	config := createDefaultConfig().(*Config)
 
 	receiver, _ := NewReceiver(
-		receivertest.NewNopSettings(),
+		receivertest.NewNopSettings(typ),
 		config,
 		cms)
 
