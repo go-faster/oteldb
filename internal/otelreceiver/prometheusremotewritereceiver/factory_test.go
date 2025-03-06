@@ -38,7 +38,7 @@ func TestCreateReceiver(t *testing.T) {
 	factory := NewFactory()
 	config := factory.CreateDefaultConfig()
 
-	params := receivertest.NewNopSettings()
+	params := receivertest.NewNopSettings(typ)
 	traceReceiver, err := factory.CreateTraces(context.Background(), params, config, consumertest.NewNop())
 	assert.ErrorIs(t, err, pipeline.ErrSignalNotSupported)
 	assert.Nil(t, traceReceiver)

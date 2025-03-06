@@ -17,10 +17,12 @@ const (
 	stability = component.StabilityLevelDevelopment
 )
 
+var typ = component.MustNewType(typeStr)
+
 // NewFactory creates new factory of [Exporter].
 func NewFactory() exporter.Factory {
 	return exporter.NewFactory(
-		component.MustNewType(typeStr),
+		typ,
 		createDefaultConfig,
 		exporter.WithTraces(createTracesExporter, stability),
 		exporter.WithMetrics(createMetricsExporter, stability),
