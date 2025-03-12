@@ -30,7 +30,7 @@ require (
 	github.com/klauspost/compress v1.18.0
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6
 	github.com/mattn/go-isatty v0.0.20
-	github.com/ogen-go/ogen v1.10.0
+	github.com/ogen-go/ogen v1.10.1
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.121.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.121.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.121.0
@@ -110,7 +110,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/dlclark/regexp2 v1.11.4 // indirect
+	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect

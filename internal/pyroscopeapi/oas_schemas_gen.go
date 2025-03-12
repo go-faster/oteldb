@@ -1071,10 +1071,10 @@ func (o *OptNilHeatmap) SetTo(v Heatmap) {
 	o.Value = v
 }
 
-// IsSet returns true if value is Null.
+// IsNull returns true if value is Null.
 func (o OptNilHeatmap) IsNull() bool { return o.Null }
 
-// SetNull sets value to null.
+// SetToNull sets value to null.
 func (o *OptNilHeatmap) SetToNull() {
 	o.Set = true
 	o.Null = true
