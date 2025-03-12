@@ -9,7 +9,6 @@ import (
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/uri"
-	"github.com/ogen-go/ogen/validate"
 )
 
 // IngestParams is parameters of ingest operation.
@@ -153,7 +152,7 @@ func decodeIngestParams(args [0]string, argsEscaped bool, r *http.Request) (para
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -547,7 +546,7 @@ func decodeLabelValuesParams(args [0]string, argsEscaped bool, r *http.Request) 
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -1265,7 +1264,7 @@ func decodeRenderParams(args [0]string, argsEscaped bool, r *http.Request) (para
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
