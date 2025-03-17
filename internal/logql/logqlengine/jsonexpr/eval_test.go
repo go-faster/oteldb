@@ -86,6 +86,33 @@ func TestExtract(t *testing.T) {
 			},
 			false,
 		},
+		{
+			`{
+				"a": {"b": "correct"},
+				"a.b": "wrong"
+			}`,
+			parseExprs(t,
+				"a.b",
+			),
+			map[logql.Label]string{
+				"a.b": "correct",
+			},
+			false,
+		},
+		{
+			`{
+				"a": ["correct", "wrong"],
+				"a.0": "wrong",
+				"a[0]": "wrong"
+			}`,
+			parseExprs(t,
+				"a[0]",
+			),
+			map[logql.Label]string{
+				"a[0]": "correct",
+			},
+			false,
+		},
 
 		// Invalid JSON.
 		{
@@ -151,7 +178,7 @@ func TestExtract(t *testing.T) {
 
 			err := Extract(
 				d,
-				tt.paths,
+				MakeSelectorTree(tt.paths),
 				func(l logql.Label, s string) {
 					got[l] = s
 				},
@@ -192,9 +219,9 @@ func FuzzExtract(f *testing.F) {
 
 		_ = Extract(
 			jx.DecodeBytes(input),
-			map[logql.Label]Path{
+			MakeSelectorTree(map[logql.Label]Path{
 				"fuzz": sel,
-			},
+			}),
 			func(l logql.Label, s string) {},
 		)
 	})
