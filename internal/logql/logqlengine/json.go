@@ -13,7 +13,7 @@ import (
 
 // JSONExtractor is a JSON label extractor.
 type JSONExtractor struct {
-	paths  map[logql.Label]jsonexpr.Path
+	paths  jsonexpr.SelectorTree
 	labels map[logql.Label]struct{}
 }
 
@@ -26,20 +26,21 @@ func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
 	e := &JSONExtractor{}
 	switch {
 	case len(exprs) > 0:
-		e.paths = make(map[logql.Label]jsonexpr.Path, len(labels)+len(exprs))
+		paths := make(map[logql.Label]jsonexpr.Path, len(labels)+len(exprs))
 		for _, p := range exprs {
 			sel, err := jsonexpr.Parse(p.Expr)
 			if err != nil {
 				return nil, errors.Wrapf(err, "parse selector %q", p.Expr)
 			}
-			e.paths[p.Label] = sel
+			paths[p.Label] = sel
 		}
 		// Convert labels into selectors.
 		for _, label := range labels {
-			e.paths[label] = jsonexpr.Path{
+			paths[label] = jsonexpr.Path{
 				jsonexpr.KeySel(string(label)),
 			}
 		}
+		e.paths = jsonexpr.MakeSelectorTree(paths)
 		return e, nil
 	case len(labels) > 0:
 		e.labels = make(map[logql.Label]struct{}, len(labels))
@@ -56,7 +57,7 @@ func buildJSONExtractor(stage *logql.JSONExpressionParser) (Processor, error) {
 func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set logqlabels.LabelSet) (string, bool) {
 	var err error
 	switch {
-	case len(e.paths) != 0:
+	case !e.paths.IsEmpty():
 		err = extractExprs(e.paths, line, set)
 	case len(e.labels) != 0:
 		err = extractSome(e.labels, line, set)
@@ -69,7 +70,7 @@ func (e *JSONExtractor) Process(_ otelstorage.Timestamp, line string, set logqla
 	return line, true
 }
 
-func extractExprs(paths map[logql.Label]jsonexpr.Path, line string, set logqlabels.LabelSet) error {
+func extractExprs(paths jsonexpr.SelectorTree, line string, set logqlabels.LabelSet) error {
 	// TODO(tdakkota): allocates buffer for each line.
 	d := decodeStr(line)
 	return jsonexpr.Extract(
