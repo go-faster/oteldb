@@ -1,6 +1,7 @@
 package jsonexpr
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/go-faster/oteldb/internal/logql"
@@ -13,12 +14,13 @@ type SelectorTree struct {
 
 // IsEmpty returns true if the tree is empty.
 func (p SelectorTree) IsEmpty() bool {
-	return p.root == nil || len(p.root.sub) == 0
+	return p.root == nil || len(p.root.key) == 0
 }
 
 type selectorNode struct {
 	labels []logql.Label
-	sub    map[Selector]*selectorNode
+	key    map[string]*selectorNode
+	index  map[int]*selectorNode
 }
 
 // MakeSelectorTree creates a new SelectorTree from the given paths.
@@ -31,9 +33,33 @@ func MakeSelectorTree(paths map[logql.Label]Path) SelectorTree {
 	for label, p := range paths {
 		n := root
 		for i, s := range p {
-			nn, ok := n.sub[s]
-			if !ok {
-				nn = &selectorNode{}
+			var (
+				nn *selectorNode
+				ok bool
+			)
+			switch typ := s.Type; typ {
+			case Index:
+				nn, ok = n.index[s.Index]
+				if !ok {
+					nn = &selectorNode{}
+				}
+
+				if n.index == nil {
+					n.index = map[int]*selectorNode{}
+				}
+				n.index[s.Index] = nn
+			case Key:
+				nn, ok = n.key[s.Key]
+				if !ok {
+					nn = &selectorNode{}
+				}
+
+				if n.key == nil {
+					n.key = map[string]*selectorNode{}
+				}
+				n.key[s.Key] = nn
+			default:
+				panic(fmt.Sprintf("unexpected selector type: %v", typ))
 			}
 
 			if i == len(p)-1 {
@@ -41,11 +67,6 @@ func MakeSelectorTree(paths map[logql.Label]Path) SelectorTree {
 					nn.labels = append(nn.labels, label)
 				}
 			}
-
-			if n.sub == nil {
-				n.sub = map[Selector]*selectorNode{}
-			}
-			n.sub[s] = nn
 			n = nn
 		}
 	}

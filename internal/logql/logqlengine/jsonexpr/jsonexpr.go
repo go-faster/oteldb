@@ -3,7 +3,6 @@ package jsonexpr
 
 import (
 	"io"
-	"slices"
 	"strconv"
 	"text/scanner"
 	"unicode/utf8"
@@ -15,11 +14,6 @@ import (
 
 // Path is a list of selectors.
 type Path []Selector
-
-// Equal compares p to other.
-func (p Path) Equal(other Path) bool {
-	return slices.Equal(p, other)
-}
 
 // SelectorType is a [Selector] type.
 type SelectorType int

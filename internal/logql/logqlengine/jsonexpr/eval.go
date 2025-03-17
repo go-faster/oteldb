@@ -70,8 +70,8 @@ func (e *extractor) walkObj(n *selectorNode, d *jx.Decoder) error {
 		return err
 	}
 
-	return d.Obj(func(d *jx.Decoder, key string) error {
-		child, ok := n.sub[KeySel(key)]
+	return d.ObjBytes(func(d *jx.Decoder, key []byte) error {
+		child, ok := n.key[string(key)]
 		if !ok {
 			return d.Skip()
 		}
@@ -90,7 +90,7 @@ func (e *extractor) walkArr(n *selectorNode, d *jx.Decoder) error {
 
 	c := 0
 	return d.Arr(func(d *jx.Decoder) error {
-		child, ok := n.sub[IndexSel(c)]
+		child, ok := n.index[c]
 		if !ok {
 			return d.Skip()
 		}
