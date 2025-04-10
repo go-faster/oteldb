@@ -250,7 +250,7 @@ func (b *LogsBench) prepareTarget(ctx context.Context, target string) (plogotlp.
 			return nil
 		},
 		eb,
-		func(err error, d time.Duration) {
+		func(err error, _ time.Duration) {
 			log.Debug("Retry ping request",
 				zap.Error(err),
 			)

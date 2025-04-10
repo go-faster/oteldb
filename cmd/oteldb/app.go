@@ -313,7 +313,7 @@ func (app *App) setupCollector() error {
 			ResolverSettings: confmap.ResolverSettings{
 				URIs: []string{"oteldb:/"},
 				ProviderFactories: []confmap.ProviderFactory{
-					confmap.NewProviderFactory(func(s confmap.ProviderSettings) confmap.Provider {
+					confmap.NewProviderFactory(func(confmap.ProviderSettings) confmap.Provider {
 						return otelreceiver.NewMapProvider("oteldb", app.cfg.Collector)
 					}),
 					envprovider.NewFactory(),

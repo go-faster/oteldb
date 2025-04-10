@@ -720,5 +720,4 @@ func getTraceQLAttributeColumns(attr traceql.Attribute) iter.Seq[string] {
 	}
 }
 
-func emptySeq[V any](yield func(V) bool) {
-}
+func emptySeq[V any](func(V) bool) {}

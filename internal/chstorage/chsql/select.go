@@ -53,7 +53,7 @@ func SelectFrom(sub *SelectQuery, columns ...ResultColumn) *SelectQuery {
 
 // Distinct sets if query is `DISTINCT`.
 func (q *SelectQuery) Distinct(b bool) *SelectQuery {
-	q.distinct = true
+	q.distinct = b
 	return q
 }
 
