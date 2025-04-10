@@ -1,6 +1,6 @@
 version: "2"
 linters:
-  default: none
+  default: standard
   enable:
     - dogsled
     - errcheck
@@ -88,27 +88,10 @@ linters:
         text: unused-parameter
         source: .+\s+context.Context
 
-      - linters:
-          - gocritic
-        path: _test\.go
-        text: Combine
-
-      # Check that equal to self is true
-      - linters:
-          - gocritic
-        path: _test\.go
-        text: dupArg
-        source: (assert|require).+Equal
-
       # Ignore shadowing of err.
       - linters:
           - govet
         text: declaration of "(err|ctx|log|lg|c)"
-
-      # Probably some broken linter for generics?
-      - linters:
-          - revive
-        text: 'receiver-naming: receiver name \S+ should be consistent with previous receiver name \S+ for invalid-type'
 
       # Ignore linters in main packages.
       - linters:
@@ -118,11 +101,6 @@ linters:
           - gocyclo
         path: main\.go
 
-      - linters:
-          - staticcheck
-        text: ST1003 # underscores lol
-        source: func Fuzz.+\(f \*testing\.F\)
-
       # Do not need comments in internal/binary packages.
       - linters:
           - revive
@@ -130,7 +108,7 @@ linters:
         path: (internal|cmd)
         text: comment
 
-      # Ignore linters in third-party code.
+      # Ignore some linters in third-party code.
       - linters:
           - revive
         path: internal/promcompliance
@@ -139,13 +117,9 @@ linters:
           - gocritic
         path: internal/promcompliance
         text: "ifElseChain:"
-
       - linters:
-          - revive
-        text: comment on exported const .+ should be of the form
-      - linters:
-          - revive
-        text: exported const .+ should have comment
+          - unused
+        path: internal/otelreceiver/prometheusremotewrite
 
       # It's okay for commands to write files and exec binaries.
       - linters:
