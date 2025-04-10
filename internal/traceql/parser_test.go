@@ -10,10 +10,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
-func ptrTo[T any](v T) *T {
-	return &v
-}
-
 type TestCase struct {
 	input   string
 	want    Expr

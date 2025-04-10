@@ -15,14 +15,11 @@
 package prometheusremotewrite
 
 import (
-	"encoding/hex"
 	"math"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/prometheus/prometheus/prompb"
-	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 )
@@ -181,7 +178,7 @@ func getPromLabels(lbs ...string) []prompb.Label {
 	return pbLbs.Labels
 }
 
-func getLabel(name string, value string) prompb.Label {
+func getLabel(name, value string) prompb.Label {
 	return prompb.Label{
 		Name:  name,
 		Value: value,
@@ -218,33 +215,7 @@ func getTimeSeriesWithSamplesAndExemplars(labels []prompb.Label, samples []promp
 	}
 }
 
-func getHistogramDataPointWithExemplars(t *testing.T, ts time.Time, value float64, traceID string, spanID string, attributeKey string, attributeValue string) pmetric.HistogramDataPoint {
-	h := pmetric.NewHistogramDataPoint()
-
-	e := h.Exemplars().AppendEmpty()
-	e.SetDoubleValue(value)
-	e.SetTimestamp(pcommon.NewTimestampFromTime(ts))
-	e.FilteredAttributes().PutStr(attributeKey, attributeValue)
-
-	if traceID != "" {
-		var traceIDBytes [16]byte
-		traceIDBytesSlice, err := hex.DecodeString(traceID)
-		require.NoErrorf(t, err, "error decoding trace id: %v", err)
-		copy(traceIDBytes[:], traceIDBytesSlice)
-		e.SetTraceID(traceIDBytes)
-	}
-	if spanID != "" {
-		var spanIDBytes [8]byte
-		spanIDBytesSlice, err := hex.DecodeString(spanID)
-		require.NoErrorf(t, err, "error decoding span id: %v", err)
-		copy(spanIDBytes[:], spanIDBytesSlice)
-		e.SetSpanID(spanIDBytes)
-	}
-
-	return h
-}
-
-func getQuantiles(bounds []float64, values []float64) pmetric.SummaryDataPointValueAtQuantileSlice {
+func getQuantiles(bounds, values []float64) pmetric.SummaryDataPointValueAtQuantileSlice {
 	quantiles := pmetric.NewSummaryDataPointValueAtQuantileSlice()
 	quantiles.EnsureCapacity(len(bounds))
 
@@ -279,7 +250,7 @@ func getIntGaugeMetric(name string, attributes pcommon.Map, value int64, ts uint
 	return metric
 }
 
-func getDoubleGaugeMetric(name string, unit string, attributes pcommon.Map, value float64, ts uint64) pmetric.Metric {
+func getDoubleGaugeMetric(name, unit string, attributes pcommon.Map, value float64, ts uint64) pmetric.Metric {
 	metric := pmetric.NewMetric()
 	metric.SetName(name)
 	metric.SetUnit(unit)
@@ -330,7 +301,7 @@ type numberPoint struct {
 	ts    uint64
 }
 
-func getSumMetric(name string, unit string, monotonic bool, attributes pcommon.Map, points ...numberPoint) pmetric.Metric {
+func getSumMetric(name, unit string, monotonic bool, attributes pcommon.Map, points ...numberPoint) pmetric.Metric {
 	metric := pmetric.NewMetric()
 	metric.SetName(name)
 	metric.SetUnit(unit)

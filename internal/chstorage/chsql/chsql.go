@@ -59,13 +59,6 @@ func (p *Printer) maybeSpace() {
 	}
 }
 
-func (p *Printer) maybeNewline() {
-	if p.needSpace {
-		p.sb.WriteByte('\n')
-		p.needSpace = false
-	}
-}
-
 // Comma writes a comma.
 func (p *Printer) Comma() {
 	p.needSpace = false

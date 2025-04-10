@@ -15,7 +15,4 @@ var (
 	// MaxTime is the default timestamp used for the end of optional time ranges.
 	// Exposed to let downstream projects to reference it.
 	MaxTime = time.Unix(math.MaxInt64/1000-62135596801, 999999999).UTC()
-
-	minTimeFormatted = MinTime.Format(time.RFC3339Nano)
-	maxTimeFormatted = MaxTime.Format(time.RFC3339Nano)
 )
