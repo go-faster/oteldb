@@ -11,7 +11,7 @@ import (
 	"github.com/go-faster/oteldb/internal/lokiapi"
 )
 
-func evalErr(err error) error {
+func evalErr(err error, msg string) error {
 	_, isLexerErr := errors.Into[*lexer.Error](err)
 	_, isParseErr := errors.Into[*logql.ParseError](err)
 	if isLexerErr || isParseErr {
@@ -23,7 +23,7 @@ func evalErr(err error) error {
 
 	return &lokiapi.ErrorStatusCode{
 		StatusCode: http.StatusInternalServerError,
-		Response:   lokiapi.Error(fmt.Sprintf("eval: %s", err)),
+		Response:   lokiapi.Error(fmt.Sprintf("%s: %s", msg, err)),
 	}
 }
 

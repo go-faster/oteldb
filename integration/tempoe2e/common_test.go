@@ -925,7 +925,7 @@ func selectSpans(set tempoe2e.BatchSet, sel selector) (result selectedSpans) {
 	return selectSpansets(set, false, sel)
 }
 
-func selectSpansets(set tempoe2e.BatchSet, any bool, sel selector) (result selectedSpans) {
+func selectSpansets(set tempoe2e.BatchSet, matchByTrace bool, sel selector) (result selectedSpans) {
 	addSpan := func(traceID pcommon.TraceID, spanID pcommon.SpanID) {
 		m, ok := result[traceID]
 		if !ok {
@@ -945,7 +945,7 @@ func selectSpansets(set tempoe2e.BatchSet, any bool, sel selector) (result selec
 			}
 		}
 		// Add all spans to expected set.
-		if any && anyMatch {
+		if matchByTrace && anyMatch {
 			for _, span := range trace.Spanset {
 				addSpan(traceID, span.SpanID())
 			}

@@ -23,7 +23,7 @@ func TestCH(t *testing.T) {
 	t.Parallel()
 	integration.Skip(t)
 	ctx := context.Background()
-	provider := integration.IntegrationProvider(t)
+	provider := integration.TraceProvider(t)
 
 	req := testcontainers.ContainerRequest{
 		Name:         "oteldb-prome2e-clickhouse",

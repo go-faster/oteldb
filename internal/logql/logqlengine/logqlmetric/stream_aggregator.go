@@ -116,7 +116,10 @@ func (a *AvgAggregator) Apply(v float64) {
 			// unless new point is NaN
 		}
 	}
-	// CA(n+1) = CA(n) + (x(n+1) - CA(n))/(n+1)
+	// Cumulative average, see https://en.wikipedia.org/wiki/Moving_average#Cumulative_average.
+	//
+	// 	CA(n+1) = CA(n) + (x(n+1) - CA(n))/(n+1)
+	//
 	a.count++
 	a.avg += (v - a.avg) / a.count
 }

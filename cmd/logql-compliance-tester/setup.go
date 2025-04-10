@@ -107,7 +107,7 @@ func waitForIngest(ctx context.Context, target string, client *http.Client) erro
 			return check(ctx)
 		},
 		b,
-		func(err error, d time.Duration) {
+		func(err error, _ time.Duration) {
 			log.Debug("Retry ping request",
 				zap.Error(err),
 			)
@@ -179,7 +179,7 @@ func waitForAPI(ctx context.Context, c *lokiapi.Client, start, end time.Time, ta
 			return check(ctx)
 		},
 		b,
-		func(err error, d time.Duration) {
+		func(err error, _ time.Duration) {
 			log.Debug("Retry ping request", zap.Error(err))
 		},
 	); err != nil {

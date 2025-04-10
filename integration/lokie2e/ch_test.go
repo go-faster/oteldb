@@ -28,7 +28,7 @@ func randomPrefix() string {
 func TestCH(t *testing.T) {
 	integration.Skip(t)
 	ctx := context.Background()
-	provider := integration.IntegrationProvider(t)
+	provider := integration.TraceProvider(t)
 
 	req := testcontainers.ContainerRequest{
 		Name:         "oteldb-lokie2e-clickhouse",

@@ -117,10 +117,13 @@ func (r *Replay) Run(ctx context.Context) error {
 		if len(out) == 0 {
 			out = []byte("empty")
 		}
-		if !(res.StatusCode == http.StatusAccepted || res.StatusCode == http.StatusNoContent || res.StatusCode == http.StatusOK) {
+
+		switch code := res.StatusCode; code {
+		case http.StatusAccepted, http.StatusNoContent, http.StatusOK:
+			return nil
+		default:
 			return errors.Errorf("%s: %s", res.Status, out)
 		}
-		return nil
 	}
 
 	g, ctx := errgroup.WithContext(ctx)

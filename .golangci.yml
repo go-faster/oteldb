@@ -1,164 +1,128 @@
-linters-settings:
-  revive:
-    rules:
-      - name: unused-parameter
-        severity: warning
-        disabled: true
-  gocyclo:
-    min-complexity: 15
-  gosec:
-    excludes:
-      - G115 # Annoying and have a lot of false-positive results.
-  dupl:
-    threshold: 120
-  goconst:
-    min-len: 2
-    min-occurrences: 3
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-  goimports:
-    local-prefixes: github.com/go-faster/oteldb
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - hugeParam
-      - rangeValCopy
-      - exitAfterDefer
-      - whyNoLint
-      - singleCaseSwitch
-      - commentedOutCode
-      - appendAssign
-      - unnecessaryBlock
-      - redundantSprint
-      - octalLiteral
-      - typeDefFirst
-      - unnamedResult
-      - ptrToRefParam
-
+version: "2"
 linters:
-  disable-all: true
+  default: standard
   enable:
     - dogsled
     - errcheck
     - goconst
-    - gocritic # go1.18
-    - gofmt
-    - goimports
-    - revive
+    - gocritic
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
+    - revive
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - whitespace
+  settings:
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    gocritic:
+      disabled-checks:
+        - hugeParam # We don't care about huge parameters much. Too many false positives.
+        - rangeValCopy # We don't care about range copies much. Too many false positives.
+        - unnecessaryBlock # Sometimes we need to use blocks for readability.
+        - ptrToRefParam # Too many false positives.
+        - exitAfterDefer # Too many false positives.
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    gosec:
+      excludes:
+        - G115 # Annoying and have a lot of false-positive results.
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+    staticcheck:
+      checks:
+        - "*"
+        - "-QF1001" # Suggested simplification via De Morgan's law is not always better.
+        - "-QF1008" # Too much false positives, embedding is fine.
+  exclusions:
+    generated: lax
+    rules:
+      # Disable linters that are annoying in tests.
+      - linters:
+          - dupl
+          - errcheck
+          - funlen
+          - gocognit
+          - goconst
+          - gocyclo
+          - gosec
+          - lll
+          - scopelint
+        path: _test\.go
+      - linters:
+          - revive
+        path: _test\.go
+        text: unused-parameter
 
-  # Do not enable:
-  # - wsl       (too opinionated about newlines)
-  # - godox     (todos are OK)
-  # - bodyclose (false positives on helper functions)
-  # - prealloc  (not worth it in scope of this project)
-  # - maligned  (same as prealloc)
-  # - funlen    (gocyclo is enough)
-  # - gochecknoglobals (we know when it is ok to use globals)
+      # Allow unused context.Context
+      - linters:
+          - revive
+        text: unused-parameter
+        source: .+\s+context.Context
 
-issues:
-  exclude-use-default: false
-  exclude-rules:
-    # Disable linters that are annoying in tests.
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - dupl
-        - gosec
-        - funlen
-        - goconst
-        - gocognit
-        - scopelint
-        - lll
-    - path: _test\.go
-      linters:
-        - revive
-      text: unused-parameter
+      # Do not need comments in internal/binary packages.
+      - linters:
+          - revive
+          - staticcheck
+        path: (internal|cmd)
+        text: comment
 
-    # Allow unused context.Context
-    - linters:
-        - revive
-      text: unused-parameter
-      source: .+\s+context.Context
+      # Ignore some linters in third-party code.
+      - linters:
+          - gocritic
+        path: internal/promcompliance
+        text: "ifElseChain:"
+      - linters:
+          - unused
+        path: internal/otelreceiver/prometheusremotewrite
+      - linters:
+          - staticcheck
+        path: internal/prompb
 
-    - path: _test\.go
-      text: "Combine"
-      linters: [gocritic]
+      # It's okay for commands to write files and exec binaries.
+      - linters:
+          - gosec
+        path: cmd
+        text: G(307|306|301|204)
 
-    # Check that equal to self is true
-    - linters: [gocritic]
-      source: "(assert|require).+Equal"
-      text: "dupArg"
-      path: _test\.go
+      # False positive.
+      - linters:
+          - govet
+        text: method Seek
+        source: func.+Seek\(.+int64\).+chunkenc\.ValueType
 
-    # Ignore shadowing of err.
-    - linters: [govet]
-      text: 'declaration of "(err|ctx|log|lg|c)"'
+      # Not gonna use const, does not make any sense.
+      - linters:
+          - goconst
+        path: internal/logparser
+        text: (trace|span)_?[Ii][Dd]
 
-    # Probably some broken linter for generics?
-    - linters: [revive]
-      text: 'receiver-naming: receiver name \S+ should be consistent with previous receiver name \S+ for invalid-type'
-
-    # Ignore linters in main packages.
-    - path: main\.go
-      linters: [goconst, funlen, gocognit, gocyclo]
-
-    - source: 'func Fuzz.+\(f \*testing\.F\)'
-      linters: [stylecheck]
-      text: "ST1003" # underscores lol
-
-    - path: (internal|cmd)
-      linters: [revive, stylecheck]
-      text: "comment"
-
-    - path: "internal/promcompliance"
-      linters: [revive]
-      text: "exported:"
-
-    - path: "internal/promcompliance"
-      linters: [gocritic]
-      text: "ifElseChain:"
-
-    - linters: [revive]
-      text: "comment on exported const .+ should be of the form"
-    - linters: [revive]
-      text: "exported const .+ should have comment"
-
-    # It's okay for commands to write files and exec binaries.
-    - path: cmd
-      linters: [gosec]
-      text: "G(307|306|301|204)"
-
-    # False positive.
-    - linters: [govet]
-      source: func.+Seek\(.+int64\).+chunkenc\.ValueType
-      text: "method Seek"
-
-    # Not gonna use const, does not make any sense.
-    - linters: [goconst]
-      text: "(Int64|int)"
-    - path: "internal/logparser"
-      linters: [goconst]
-      text: "(trace|span)_?[Ii][Dd]"
-
-    - path: "internal/prompb"
-      linters: [stylecheck]
+      # Our AST packages contain a lot of interface-based sum types.
+      # Defining methods in one place next to the interface is better for readability.
+      - linters:
+          - gocritic
+        path: internal/(logql|traceql)/[^/]+\.go$
+        text: "typeDefFirst:"
+formatters:
+  enable:
+    - goimports
+    - gofumpt
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/go-faster/oteldb
+  exclusions:
+    generated: lax
+    paths:
+      - dev/local/ch-full/opentelemetry-collector-contrib

@@ -20,6 +20,80 @@ var (
 	logAttrMapColumnsPool = xsync.NewPool(newLogAttrMapColumns)
 )
 
+type logColumns struct {
+	serviceInstanceID *proto.ColLowCardinality[string]
+	serviceName       *proto.ColLowCardinality[string]
+	serviceNamespace  *proto.ColLowCardinality[string]
+
+	timestamp *proto.ColDateTime64
+
+	severityText   *proto.ColLowCardinality[string]
+	severityNumber proto.ColUInt8
+
+	traceFlags proto.ColUInt8
+	traceID    proto.ColRawOf[otelstorage.TraceID]
+	spanID     proto.ColRawOf[otelstorage.SpanID]
+
+	body       proto.ColStr
+	attributes *Attributes
+	resource   *Attributes
+
+	scopeName       *proto.ColLowCardinality[string]
+	scopeVersion    *proto.ColLowCardinality[string]
+	scopeAttributes *Attributes
+
+	columns func() Columns
+	Input   func() proto.Input
+	Body    func(table string) string
+}
+
+func newLogColumns() *logColumns {
+	c := &logColumns{
+		serviceName:       new(proto.ColStr).LowCardinality(),
+		serviceInstanceID: new(proto.ColStr).LowCardinality(),
+		serviceNamespace:  new(proto.ColStr).LowCardinality(),
+		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+		severityText:      new(proto.ColStr).LowCardinality(),
+		attributes:        NewAttributes(colAttrs, WithLowCardinality(false)),
+		resource:          NewAttributes(colResource),
+		scopeName:         new(proto.ColStr).LowCardinality(),
+		scopeVersion:      new(proto.ColStr).LowCardinality(),
+		scopeAttributes:   NewAttributes(colScope),
+	}
+	c.columns = sync.OnceValue(func() Columns {
+		return MergeColumns(Columns{
+			{Name: "service_instance_id", Data: c.serviceInstanceID},
+			{Name: "service_name", Data: c.serviceName},
+			{Name: "service_namespace", Data: c.serviceNamespace},
+
+			{Name: "timestamp", Data: c.timestamp},
+
+			{Name: "severity_number", Data: &c.severityNumber},
+			{Name: "severity_text", Data: c.severityText},
+
+			{Name: "trace_id", Data: &c.traceID},
+			{Name: "span_id", Data: &c.spanID},
+			{Name: "trace_flags", Data: &c.traceFlags},
+
+			{Name: "body", Data: &c.body},
+
+			{Name: "scope_name", Data: c.scopeName},
+			{Name: "scope_version", Data: c.scopeVersion},
+		},
+			c.attributes.Columns(),
+			c.scopeAttributes.Columns(),
+			c.resource.Columns(),
+		)
+	})
+	c.Input = sync.OnceValue(func() proto.Input {
+		return c.columns().Input()
+	})
+	c.Body = xsync.KeyOnce(func(table string) string {
+		return c.Input().Into(table)
+	})
+	return c
+}
+
 // DDL of the log table.
 func (c *logColumns) DDL() ddl.Table {
 	table := ddl.Table{
@@ -120,80 +194,6 @@ func (c *logColumns) DDL() ddl.Table {
 	c.scopeAttributes.DDL(&table)
 
 	return table
-}
-
-type logColumns struct {
-	serviceInstanceID *proto.ColLowCardinality[string]
-	serviceName       *proto.ColLowCardinality[string]
-	serviceNamespace  *proto.ColLowCardinality[string]
-
-	timestamp *proto.ColDateTime64
-
-	severityText   *proto.ColLowCardinality[string]
-	severityNumber proto.ColUInt8
-
-	traceFlags proto.ColUInt8
-	traceID    proto.ColRawOf[otelstorage.TraceID]
-	spanID     proto.ColRawOf[otelstorage.SpanID]
-
-	body       proto.ColStr
-	attributes *Attributes
-	resource   *Attributes
-
-	scopeName       *proto.ColLowCardinality[string]
-	scopeVersion    *proto.ColLowCardinality[string]
-	scopeAttributes *Attributes
-
-	columns func() Columns
-	Input   func() proto.Input
-	Body    func(table string) string
-}
-
-func newLogColumns() *logColumns {
-	c := &logColumns{
-		serviceName:       new(proto.ColStr).LowCardinality(),
-		serviceInstanceID: new(proto.ColStr).LowCardinality(),
-		serviceNamespace:  new(proto.ColStr).LowCardinality(),
-		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		severityText:      new(proto.ColStr).LowCardinality(),
-		attributes:        NewAttributes(colAttrs, WithLowCardinality(false)),
-		resource:          NewAttributes(colResource),
-		scopeName:         new(proto.ColStr).LowCardinality(),
-		scopeVersion:      new(proto.ColStr).LowCardinality(),
-		scopeAttributes:   NewAttributes(colScope),
-	}
-	c.columns = sync.OnceValue(func() Columns {
-		return MergeColumns(Columns{
-			{Name: "service_instance_id", Data: c.serviceInstanceID},
-			{Name: "service_name", Data: c.serviceName},
-			{Name: "service_namespace", Data: c.serviceNamespace},
-
-			{Name: "timestamp", Data: c.timestamp},
-
-			{Name: "severity_number", Data: &c.severityNumber},
-			{Name: "severity_text", Data: c.severityText},
-
-			{Name: "trace_id", Data: &c.traceID},
-			{Name: "span_id", Data: &c.spanID},
-			{Name: "trace_flags", Data: &c.traceFlags},
-
-			{Name: "body", Data: &c.body},
-
-			{Name: "scope_name", Data: c.scopeName},
-			{Name: "scope_version", Data: c.scopeVersion},
-		},
-			c.attributes.Columns(),
-			c.scopeAttributes.Columns(),
-			c.resource.Columns(),
-		)
-	})
-	c.Input = sync.OnceValue(func() proto.Input {
-		return c.columns().Input()
-	})
-	c.Body = xsync.KeyOnce(func(table string) string {
-		return c.Input().Into(table)
-	})
-	return c
 }
 
 func (c *logColumns) StaticColumns() []string {

@@ -23,16 +23,12 @@ type Step struct {
 type StepIterator = iterators.Iterator[Step]
 
 // ReadStepResponse reads aggregation result into API structure.
-func ReadStepResponse(iter iterators.Iterator[Step], instant bool) (s lokiapi.QueryResponseData, _ error) {
+func ReadStepResponse(iter StepIterator, instant bool) (s lokiapi.QueryResponseData, _ error) {
 	var (
 		agg          Step
 		matrixSeries map[logqlabels.GroupingKey]lokiapi.Series
 	)
-	for {
-		if !iter.Next(&agg) {
-			break
-		}
-
+	for iter.Next(&agg) {
 		if instant {
 			if err := iter.Err(); err != nil {
 				return s, err
