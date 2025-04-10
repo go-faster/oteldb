@@ -24,19 +24,11 @@ linters:
       min-occurrences: 3
     gocritic:
       disabled-checks:
-        - hugeParam
-        - rangeValCopy
-        - exitAfterDefer
-        - whyNoLint
-        - singleCaseSwitch
-        - commentedOutCode
-        - appendAssign
-        - unnecessaryBlock
-        - redundantSprint
-        - octalLiteral
-        - typeDefFirst
-        - unnamedResult
-        - ptrToRefParam
+        - hugeParam # We don't care about huge parameters much. Too many false positives.
+        - rangeValCopy # We don't care about range copies much. Too many false positives.
+        - unnecessaryBlock # Sometimes we need to use blocks for readability.
+        - ptrToRefParam # Too many false positives.
+        - exitAfterDefer # Too many false positives.
       enabled-tags:
         - diagnostic
         - experimental
@@ -146,6 +138,12 @@ linters:
           - staticcheck
         path: internal/prompb
 
+      # Our AST packages contain a lot of interface-based sum types.
+      # Defining methods in one place next to the interface is better for readability.
+      - linters:
+          - gocritic
+        path: internal/(logql|traceql)/[^/]+\.go$
+        text: "typeDefFirst:"
 formatters:
   enable:
     - goimports
