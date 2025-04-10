@@ -117,10 +117,12 @@ linters:
 formatters:
   enable:
     - goimports
-    - gofmt
+    - gofumpt
   settings:
     goimports:
       local-prefixes:
         - github.com/go-faster/oteldb
   exclusions:
     generated: lax
+    paths:
+      - dev/local/ch-full/opentelemetry-collector-contrib
