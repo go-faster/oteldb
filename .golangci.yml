@@ -17,8 +17,6 @@ linters:
     - unparam
     - whitespace
   settings:
-    dupl:
-      threshold: 120
     goconst:
       min-len: 2
       min-occurrences: 3
@@ -35,8 +33,6 @@ linters:
         - opinionated
         - performance
         - style
-    gocyclo:
-      min-complexity: 15
     gosec:
       excludes:
         - G115 # Annoying and have a lot of false-positive results.
@@ -44,11 +40,6 @@ linters:
       line-length: 140
     misspell:
       locale: US
-    revive:
-      rules:
-        - name: unused-parameter
-          severity: warning
-          disabled: true
     staticcheck:
       checks:
         - "*"
@@ -80,19 +71,6 @@ linters:
         text: unused-parameter
         source: .+\s+context.Context
 
-      # Ignore shadowing of err.
-      - linters:
-          - govet
-        text: declaration of "(err|ctx|log|lg|c)"
-
-      # Ignore linters in main packages.
-      - linters:
-          - funlen
-          - gocognit
-          - goconst
-          - gocyclo
-        path: main\.go
-
       # Do not need comments in internal/binary packages.
       - linters:
           - revive
@@ -102,16 +80,15 @@ linters:
 
       # Ignore some linters in third-party code.
       - linters:
-          - revive
-        path: internal/promcompliance
-        text: "exported:"
-      - linters:
           - gocritic
         path: internal/promcompliance
         text: "ifElseChain:"
       - linters:
           - unused
         path: internal/otelreceiver/prometheusremotewrite
+      - linters:
+          - staticcheck
+        path: internal/prompb
 
       # It's okay for commands to write files and exec binaries.
       - linters:
@@ -128,15 +105,8 @@ linters:
       # Not gonna use const, does not make any sense.
       - linters:
           - goconst
-        text: (Int64|int)
-      - linters:
-          - goconst
         path: internal/logparser
         text: (trace|span)_?[Ii][Dd]
-
-      - linters:
-          - staticcheck
-        path: internal/prompb
 
       # Our AST packages contain a lot of interface-based sum types.
       # Defining methods in one place next to the interface is better for readability.
