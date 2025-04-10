@@ -57,11 +57,11 @@ func (p *Provider) Flush() {
 	}
 }
 
-// IntegrationProvider returns trace exporter for debugging.
+// TraceProvider returns trace exporter for debugging.
 //
 // E2E_TRACES_EXPORTER enironment variable sets gRPC OTLP receiver address
 // to export traces.
-func IntegrationProvider(t *testing.T) trace.TracerProvider {
+func TraceProvider(t *testing.T) trace.TracerProvider {
 	if addr := os.Getenv("E2E_TRACES_EXPORTER"); addr != "" {
 		ctx := context.Background()
 
