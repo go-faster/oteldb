@@ -57,6 +57,11 @@ linters:
         - name: unused-parameter
           severity: warning
           disabled: true
+    staticcheck:
+      checks:
+        - "*"
+        - "-QF1001" # Suggested simplification via De Morgan's law is not always better.
+        - "-QF1008" # Too much false positives, embedding is fine.
   exclusions:
     generated: lax
     rules:
