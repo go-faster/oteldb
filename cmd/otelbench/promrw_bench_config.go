@@ -7,14 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (c *config) marshalYAML() []byte {
-	data, err := yaml.Marshal(c)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
 func newConfig(targetsCount int, scrapeInterval time.Duration, targetAddr string) *config {
 	// https://github.com/VictoriaMetrics/prometheus-benchmark/blob/50c5891/services/vmagent-config-updater/main.go#L72-L94
 	scs := make([]*staticConfig, 0, targetsCount)
@@ -46,6 +38,14 @@ type config struct {
 	Global        globalConfig         `yaml:"global"`
 	ScrapeConfigs []*scrapeConfig      `yaml:"scrape_configs,omitempty"`
 	RemoteWrites  []*remoteWriteConfig `yaml:"remote_write,omitempty"`
+}
+
+func (c *config) marshalYAML() []byte {
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
 // globalConfig represents essential parts for `global` section of Prometheus config.

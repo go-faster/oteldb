@@ -24,7 +24,7 @@ func (req *WriteRequest) Unmarshal(src []byte) (err error) {
 		if err != nil {
 			return err
 		}
-		switch fc.FieldNum {
+		switch fc.FieldNum { //nolint:gocritic
 		case 1:
 			data, ok := fc.MessageData()
 			if !ok {
