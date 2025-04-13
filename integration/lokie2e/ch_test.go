@@ -14,6 +14,7 @@ import (
 	"github.com/go-faster/sdk/zctx"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	testcontainerslog "github.com/testcontainers/testcontainers-go/log"
 
 	"github.com/go-faster/oteldb/integration"
 	"github.com/go-faster/oteldb/internal/chstorage"
@@ -38,7 +39,7 @@ func TestCH(t *testing.T) {
 	chContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
-		Logger:           testcontainers.TestLogger(t),
+		Logger:           testcontainerslog.TestLogger(t),
 		Reuse:            true,
 	})
 	require.NoError(t, err, "container start")
