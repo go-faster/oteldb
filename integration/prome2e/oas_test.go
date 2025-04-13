@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	testcontainerslog "github.com/testcontainers/testcontainers-go/log"
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/go-faster/oteldb/integration"
@@ -70,7 +71,7 @@ func TestPrometheusOAS(t *testing.T) {
 	promContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
-		Logger:           testcontainers.TestLogger(t),
+		Logger:           testcontainerslog.TestLogger(t),
 		Reuse:            true,
 	})
 	require.NoError(t, err, "container start")

@@ -13,6 +13,7 @@ import (
 	"github.com/go-faster/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	testcontainerslog "github.com/testcontainers/testcontainers-go/log"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
@@ -37,7 +38,7 @@ func ConnectOpt(t *testing.T, connOpt ch.Options) *ch.Client {
 	chContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
-		Logger:           testcontainers.TestLogger(t),
+		Logger:           testcontainerslog.TestLogger(t),
 		Reuse:            true,
 	})
 	require.NoError(t, err, "container start")
