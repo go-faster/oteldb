@@ -13,7 +13,7 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/dmarkham/enumer v1.5.11
 	github.com/docker/cli v28.1.0+incompatible
-	github.com/docker/docker v28.1.0+incompatible
+	github.com/docker/docker v28.1.1+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.18.0
 	github.com/go-faster/errors v0.7.1
