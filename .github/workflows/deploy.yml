@@ -9,12 +9,12 @@ env:
   REGISTRY: ghcr.io
   IMAGE_TAG: ghcr.io/${{ github.repository }}
   KUBECTL_VERSION: v1.29.7
-  DEPLOY_BROKEN: true
+  DEPLOY_BROKEN: false
 
 jobs:
   oteldb:
     environment: prod
-    runs-on: ubuntu-latest
+    runs-on: [deploy]
     permissions:
       contents: read
       packages: write
