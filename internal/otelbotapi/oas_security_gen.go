@@ -34,6 +34,11 @@ func findAuthorization(h http.Header, prefix string) (string, bool) {
 	return "", false
 }
 
+var operationRolesTokenAuth = map[string][]string{
+	GetStatusOperation:    []string{},
+	SubmitReportOperation: []string{},
+}
+
 func (s *Server) securityTokenAuth(ctx context.Context, operationName OperationName, req *http.Request) (context.Context, bool, error) {
 	var t TokenAuth
 	const parameterName = "token"
@@ -42,6 +47,7 @@ func (s *Server) securityTokenAuth(ctx context.Context, operationName OperationN
 		return ctx, false, nil
 	}
 	t.APIKey = value
+	t.Roles = operationRolesTokenAuth[operationName]
 	rctx, err := s.sec.HandleTokenAuth(ctx, operationName, t)
 	if errors.Is(err, ogenerrors.ErrSkipServerSecurity) {
 		return nil, false, nil
