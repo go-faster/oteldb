@@ -219,6 +219,7 @@ func (s *SubmitReportReq) SetMeasurement(val float64) {
 
 type TokenAuth struct {
 	APIKey string
+	Roles  []string
 }
 
 // GetAPIKey returns the value of APIKey.
@@ -226,9 +227,19 @@ func (s *TokenAuth) GetAPIKey() string {
 	return s.APIKey
 }
 
+// GetRoles returns the value of Roles.
+func (s *TokenAuth) GetRoles() []string {
+	return s.Roles
+}
+
 // SetAPIKey sets the value of APIKey.
 func (s *TokenAuth) SetAPIKey(val string) {
 	s.APIKey = val
+}
+
+// SetRoles sets the value of Roles.
+func (s *TokenAuth) SetRoles(val []string) {
+	s.Roles = val
 }
 
 type TraceID string
