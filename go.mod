@@ -80,8 +80,8 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	golang.org/x/perf v0.0.0-20241204221936-711ff2ab7231
-	golang.org/x/sync v0.14.0
-	golang.org/x/tools v0.33.0
+	golang.org/x/sync v0.15.0
+	golang.org/x/tools v0.34.0
 	google.golang.org/grpc v1.72.2
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.4.0
@@ -274,12 +274,12 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.11.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.6.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/crypto v0.39.0 // indirect
+	golang.org/x/mod v0.25.0 // indirect
+	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250519155744-55703ea1f237 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250519155744-55703ea1f237 // indirect
