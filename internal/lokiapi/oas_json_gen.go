@@ -1090,11 +1090,11 @@ func (s QueryResponseData) Encode(e *jx.Encoder) {
 
 func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 	switch s.Type {
-	case MatrixResultQueryResponseData:
+	case StreamsResultQueryResponseData:
 		e.FieldStart("resultType")
-		e.Str("matrix")
+		e.Str("streams")
 		{
-			s := s.MatrixResult
+			s := s.StreamsResult
 			{
 				e.FieldStart("result")
 				s.Result.Encode(e)
@@ -1122,11 +1122,11 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 				}
 			}
 		}
-	case StreamsResultQueryResponseData:
+	case VectorResultQueryResponseData:
 		e.FieldStart("resultType")
-		e.Str("streams")
+		e.Str("vector")
 		{
-			s := s.StreamsResult
+			s := s.VectorResult
 			{
 				e.FieldStart("result")
 				s.Result.Encode(e)
@@ -1138,11 +1138,11 @@ func (s QueryResponseData) encodeFields(e *jx.Encoder) {
 				}
 			}
 		}
-	case VectorResultQueryResponseData:
+	case MatrixResultQueryResponseData:
 		e.FieldStart("resultType")
-		e.Str("vector")
+		e.Str("matrix")
 		{
-			s := s.VectorResult
+			s := s.MatrixResult
 			{
 				e.FieldStart("result")
 				s.Result.Encode(e)
@@ -1180,17 +1180,17 @@ func (s *QueryResponseData) Decode(d *jx.Decoder) error {
 					return err
 				}
 				switch typ {
-				case "matrix":
-					s.Type = MatrixResultQueryResponseData
+				case "streams":
+					s.Type = StreamsResultQueryResponseData
 					found = true
 				case "scalar":
 					s.Type = ScalarResultQueryResponseData
 					found = true
-				case "streams":
-					s.Type = StreamsResultQueryResponseData
-					found = true
 				case "vector":
 					s.Type = VectorResultQueryResponseData
+					found = true
+				case "matrix":
+					s.Type = MatrixResultQueryResponseData
 					found = true
 				default:
 					return errors.Errorf("unknown type %s", typ)
