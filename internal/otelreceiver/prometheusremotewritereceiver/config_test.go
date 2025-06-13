@@ -44,7 +44,7 @@ func TestLoadConfig(t *testing.T) {
 			expected: &Config{
 				ServerConfig: confighttp.ServerConfig{
 					Endpoint:           "0.0.0.0:19291",
-					TLSSetting:         (*configtls.ServerConfig)(nil),
+					TLS:                (*configtls.ServerConfig)(nil),
 					CORS:               (*confighttp.CORSConfig)(nil),
 					Auth:               (*confighttp.AuthConfig)(nil),
 					MaxRequestBodySize: 0,
