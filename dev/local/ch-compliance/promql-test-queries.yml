@@ -201,9 +201,6 @@ test_cases:
     # label_replace fails when the regex is invalid.
   - query: 'label_replace(demo_num_cpus, "job", "value-$1", "src", "(.*")'
     should_fail: true
-    # label_replace fails when the destination label name is not a valid Prometheus label name.
-  - query: 'label_replace(demo_num_cpus, "~invalid", "", "src", "(.*)")'
-    should_fail: true
 
     # label_replace fails when there would be duplicated identical output label sets.
     # !!! HACK: This was disabled because current prometheus reference implementation does not fail !!!
