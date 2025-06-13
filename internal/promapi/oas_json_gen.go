@@ -619,6 +619,20 @@ func (s Data) encodeFields(e *jx.Encoder) {
 				e.ArrEnd()
 			}
 		}
+	case VectorData:
+		e.FieldStart("resultType")
+		e.Str("vector")
+		{
+			s := s.Vector
+			{
+				e.FieldStart("result")
+				e.ArrStart()
+				for _, elem := range s.Result {
+					elem.Encode(e)
+				}
+				e.ArrEnd()
+			}
+		}
 	case ScalarData:
 		e.FieldStart("resultType")
 		e.Str("scalar")
@@ -637,20 +651,6 @@ func (s Data) encodeFields(e *jx.Encoder) {
 			{
 				e.FieldStart("result")
 				s.Result.Encode(e)
-			}
-		}
-	case VectorData:
-		e.FieldStart("resultType")
-		e.Str("vector")
-		{
-			s := s.Vector
-			{
-				e.FieldStart("result")
-				e.ArrStart()
-				for _, elem := range s.Result {
-					elem.Encode(e)
-				}
-				e.ArrEnd()
 			}
 		}
 	}
@@ -682,14 +682,14 @@ func (s *Data) Decode(d *jx.Decoder) error {
 				case "matrix":
 					s.Type = MatrixData
 					found = true
+				case "vector":
+					s.Type = VectorData
+					found = true
 				case "scalar":
 					s.Type = ScalarData
 					found = true
 				case "string":
 					s.Type = StringData
-					found = true
-				case "vector":
-					s.Type = VectorData
 					found = true
 				default:
 					return errors.Errorf("unknown type %s", typ)
