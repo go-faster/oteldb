@@ -18,7 +18,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/go-faster/sdk v0.27.0
+	github.com/go-faster/sdk v0.28.0
 	github.com/go-faster/yaml v0.4.6
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/gogo/protobuf v1.3.2
@@ -92,7 +92,7 @@ require (
 	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
-	github.com/KimMachineGun/automemlimit v0.7.3 // indirect
+	github.com/KimMachineGun/automemlimit v0.7.4 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -256,13 +256,13 @@ require (
 	go.opentelemetry.io/collector/service v0.130.0 // indirect
 	go.opentelemetry.io/collector/service/hostcapabilities v0.130.0 // indirect
 	go.opentelemetry.io/contrib/bridges/otelzap v0.12.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.59.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.62.0 // indirect
 	go.opentelemetry.io/contrib/otelconf v0.17.0 // indirect
-	go.opentelemetry.io/contrib/propagators/autoprop v0.59.0 // indirect
-	go.opentelemetry.io/contrib/propagators/aws v1.34.0 // indirect
+	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0 // indirect
+	go.opentelemetry.io/contrib/propagators/aws v1.37.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.37.0 // indirect
-	go.opentelemetry.io/contrib/propagators/jaeger v1.34.0 // indirect
-	go.opentelemetry.io/contrib/propagators/ot v1.34.0 // indirect
+	go.opentelemetry.io/contrib/propagators/jaeger v1.37.0 // indirect
+	go.opentelemetry.io/contrib/propagators/ot v1.37.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.13.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.13.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.37.0 // indirect
