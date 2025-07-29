@@ -38,7 +38,7 @@ spec:
               name: tempo
           resources:
             requests:
-              cpu: 500m
+              cpu: 100m
               memory: 128M
             limits:
               cpu: 1500m
