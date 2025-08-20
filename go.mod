@@ -83,7 +83,7 @@ require (
 	golang.org/x/perf v0.0.0-20241204221936-711ff2ab7231
 	golang.org/x/sync v0.16.0
 	golang.org/x/tools v0.36.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.75.0
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -287,8 +287,8 @@ require (
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	gonum.org/v1/gonum v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
