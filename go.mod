@@ -35,7 +35,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.130.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.130.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.130.0
-	github.com/prometheus/client_golang v1.23.0
+	github.com/prometheus/client_golang v1.23.1
 	github.com/prometheus/common v0.66.0
 	github.com/prometheus/prometheus v0.305.0
 	github.com/schollz/progressbar/v3 v3.18.0
