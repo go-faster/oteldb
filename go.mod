@@ -1,6 +1,6 @@
 module github.com/go-faster/oteldb
 
-go 1.23.0
+go 1.24.0
 
 require (
 	entgo.io/ent v0.14.5
@@ -81,7 +81,7 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
 	golang.org/x/perf v0.0.0-20241204221936-711ff2ab7231
-	golang.org/x/sync v0.16.0
+	golang.org/x/sync v0.17.0
 	golang.org/x/tools v0.36.0
 	google.golang.org/grpc v1.75.0
 	gopkg.in/yaml.v2 v2.4.0
