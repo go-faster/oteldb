@@ -4,7 +4,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/docker/cli/cli-plugins/manager"
+	"github.com/docker/cli/cli-plugins/metadata"
 	"github.com/docker/cli/cli-plugins/plugin"
 	"github.com/docker/cli/cli/command"
 	"github.com/spf13/cobra"
@@ -41,7 +41,7 @@ func getVersion() string {
 }
 
 func main() {
-	meta := manager.Metadata{
+	meta := metadata.Metadata{
 		SchemaVersion:    "0.1.0",
 		Vendor:           "go-faster",
 		Version:          getVersion(),
