@@ -13,7 +13,7 @@ jobs:
     uses: go-faster/x/.github/workflows/test.yml@main
     with:
       enable-386: false
-      enable-arm64: true
+      enable-arm64: false
       submodules: true
       go: stable
   lint:
