@@ -5,7 +5,7 @@ import "strings"
 func metricSuffixes(input string) (s1, s2 string) {
 	switch strings.Count(input, "_") {
 	case 0, 1:
-		return
+		return s1, s2
 	default:
 		input, s2 = lastCutByte(input, '_')
 		_, s1 = lastCutByte(input, '_')

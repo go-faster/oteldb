@@ -62,37 +62,37 @@ func buildSampleBinOp(expr *logql.BinOpExpr) (SampleOp, error) {
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
 			result.Data, keep = boolOp(left.Data, left.Data == right.Data, filter)
-			return
+			return result, keep
 		}, nil
 	case logql.OpNotEq:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
 			result.Data, keep = boolOp(left.Data, left.Data != right.Data, filter)
-			return
+			return result, keep
 		}, nil
 	case logql.OpGt:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
 			result.Data, keep = boolOp(left.Data, left.Data > right.Data, filter)
-			return
+			return result, keep
 		}, nil
 	case logql.OpGte:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
 			result.Data, keep = boolOp(left.Data, left.Data >= right.Data, filter)
-			return
+			return result, keep
 		}, nil
 	case logql.OpLt:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
 			result.Data, keep = boolOp(left.Data, left.Data < right.Data, filter)
-			return
+			return result, keep
 		}, nil
 	case logql.OpLte:
 		return func(left, right Sample) (result Sample, keep bool) {
 			result = left
 			result.Data, keep = boolOp(left.Data, left.Data <= right.Data, filter)
-			return
+			return result, keep
 		}, nil
 	default:
 		return nil, errors.Errorf("unexpected operation %q", expr.Op)

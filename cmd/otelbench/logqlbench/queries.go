@@ -368,7 +368,7 @@ func (p *LogQLBenchmark) each(ctx context.Context, fn func(ctx context.Context, 
 		nextID = func() (r int) {
 			r = id
 			id++
-			return
+			return r
 		}
 	)
 
