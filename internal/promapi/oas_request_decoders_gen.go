@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/go-faster/errors"
-
 	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/uri"
@@ -16,6 +15,7 @@ import (
 
 func (s *Server) decodePostLabelsRequest(r *http.Request) (
 	req *LabelsForm,
+	rawBody []byte,
 	close func() error,
 	rerr error,
 ) {
@@ -36,16 +36,16 @@ func (s *Server) decodePostLabelsRequest(r *http.Request) (
 	}()
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return req, close, errors.Wrap(err, "parse media type")
+		return req, rawBody, close, errors.Wrap(err, "parse media type")
 	}
 	switch {
 	case ct == "application/x-www-form-urlencoded":
 		if r.ContentLength == 0 {
-			return req, close, validate.ErrBodyRequired
+			return req, rawBody, close, validate.ErrBodyRequired
 		}
 		form, err := ht.ParseForm(r)
 		if err != nil {
-			return req, close, errors.Wrap(err, "parse form")
+			return req, rawBody, close, errors.Wrap(err, "parse form")
 		}
 
 		var request LabelsForm
@@ -85,7 +85,7 @@ func (s *Server) decodePostLabelsRequest(r *http.Request) (
 					request.Start.SetTo(requestDotStartVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"start\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"start\"")
 				}
 			}
 		}
@@ -124,7 +124,7 @@ func (s *Server) decodePostLabelsRequest(r *http.Request) (
 					request.End.SetTo(requestDotEndVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"end\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"end\"")
 				}
 			}
 		}
@@ -158,18 +158,19 @@ func (s *Server) decodePostLabelsRequest(r *http.Request) (
 						return nil
 					})
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"match[]\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"match[]\"")
 				}
 			}
 		}
-		return &request, close, nil
+		return &request, rawBody, close, nil
 	default:
-		return req, close, validate.InvalidContentType(ct)
+		return req, rawBody, close, validate.InvalidContentType(ct)
 	}
 }
 
 func (s *Server) decodePostQueryRequest(r *http.Request) (
 	req *QueryForm,
+	rawBody []byte,
 	close func() error,
 	rerr error,
 ) {
@@ -190,16 +191,16 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 	}()
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return req, close, errors.Wrap(err, "parse media type")
+		return req, rawBody, close, errors.Wrap(err, "parse media type")
 	}
 	switch {
 	case ct == "application/x-www-form-urlencoded":
 		if r.ContentLength == 0 {
-			return req, close, validate.ErrBodyRequired
+			return req, rawBody, close, validate.ErrBodyRequired
 		}
 		form, err := ht.ParseForm(r)
 		if err != nil {
-			return req, close, errors.Wrap(err, "parse form")
+			return req, rawBody, close, errors.Wrap(err, "parse form")
 		}
 
 		var request QueryForm
@@ -225,10 +226,10 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 					request.Query = c
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"query\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"query\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -266,7 +267,7 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 					request.Time.SetTo(requestDotTimeVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"time\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"time\"")
 				}
 			}
 		}
@@ -298,7 +299,7 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 					request.LookbackDelta.SetTo(requestDotLookbackDeltaVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"lookback_delta\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"lookback_delta\"")
 				}
 			}
 		}
@@ -330,18 +331,19 @@ func (s *Server) decodePostQueryRequest(r *http.Request) (
 					request.Stats.SetTo(requestDotStatsVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"stats\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"stats\"")
 				}
 			}
 		}
-		return &request, close, nil
+		return &request, rawBody, close, nil
 	default:
-		return req, close, validate.InvalidContentType(ct)
+		return req, rawBody, close, validate.InvalidContentType(ct)
 	}
 }
 
 func (s *Server) decodePostQueryExemplarsRequest(r *http.Request) (
 	req *ExemplarsForm,
+	rawBody []byte,
 	close func() error,
 	rerr error,
 ) {
@@ -362,16 +364,16 @@ func (s *Server) decodePostQueryExemplarsRequest(r *http.Request) (
 	}()
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return req, close, errors.Wrap(err, "parse media type")
+		return req, rawBody, close, errors.Wrap(err, "parse media type")
 	}
 	switch {
 	case ct == "application/x-www-form-urlencoded":
 		if r.ContentLength == 0 {
-			return req, close, validate.ErrBodyRequired
+			return req, rawBody, close, validate.ErrBodyRequired
 		}
 		form, err := ht.ParseForm(r)
 		if err != nil {
-			return req, close, errors.Wrap(err, "parse form")
+			return req, rawBody, close, errors.Wrap(err, "parse form")
 		}
 
 		var request ExemplarsForm
@@ -397,10 +399,10 @@ func (s *Server) decodePostQueryExemplarsRequest(r *http.Request) (
 					request.Query = c
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"query\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"query\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -431,10 +433,10 @@ func (s *Server) decodePostQueryExemplarsRequest(r *http.Request) (
 					request.Start = PrometheusTimestamp(requestDotStartVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"start\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"start\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -465,20 +467,21 @@ func (s *Server) decodePostQueryExemplarsRequest(r *http.Request) (
 					request.End = PrometheusTimestamp(requestDotEndVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"end\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"end\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
-		return &request, close, nil
+		return &request, rawBody, close, nil
 	default:
-		return req, close, validate.InvalidContentType(ct)
+		return req, rawBody, close, validate.InvalidContentType(ct)
 	}
 }
 
 func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 	req *QueryRangeForm,
+	rawBody []byte,
 	close func() error,
 	rerr error,
 ) {
@@ -499,16 +502,16 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 	}()
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return req, close, errors.Wrap(err, "parse media type")
+		return req, rawBody, close, errors.Wrap(err, "parse media type")
 	}
 	switch {
 	case ct == "application/x-www-form-urlencoded":
 		if r.ContentLength == 0 {
-			return req, close, validate.ErrBodyRequired
+			return req, rawBody, close, validate.ErrBodyRequired
 		}
 		form, err := ht.ParseForm(r)
 		if err != nil {
-			return req, close, errors.Wrap(err, "parse form")
+			return req, rawBody, close, errors.Wrap(err, "parse form")
 		}
 
 		var request QueryRangeForm
@@ -534,10 +537,10 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 					request.Query = c
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"query\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"query\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -568,10 +571,10 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 					request.Start = PrometheusTimestamp(requestDotStartVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"start\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"start\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -602,10 +605,10 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 					request.End = PrometheusTimestamp(requestDotEndVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"end\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"end\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -629,10 +632,10 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 					request.Step = c
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"step\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"step\"")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
 		{
@@ -663,7 +666,7 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 					request.LookbackDelta.SetTo(requestDotLookbackDeltaVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"lookback_delta\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"lookback_delta\"")
 				}
 			}
 		}
@@ -695,18 +698,19 @@ func (s *Server) decodePostQueryRangeRequest(r *http.Request) (
 					request.Stats.SetTo(requestDotStatsVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"stats\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"stats\"")
 				}
 			}
 		}
-		return &request, close, nil
+		return &request, rawBody, close, nil
 	default:
-		return req, close, validate.InvalidContentType(ct)
+		return req, rawBody, close, validate.InvalidContentType(ct)
 	}
 }
 
 func (s *Server) decodePostSeriesRequest(r *http.Request) (
 	req *SeriesForm,
+	rawBody []byte,
 	close func() error,
 	rerr error,
 ) {
@@ -727,16 +731,16 @@ func (s *Server) decodePostSeriesRequest(r *http.Request) (
 	}()
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return req, close, errors.Wrap(err, "parse media type")
+		return req, rawBody, close, errors.Wrap(err, "parse media type")
 	}
 	switch {
 	case ct == "application/x-www-form-urlencoded":
 		if r.ContentLength == 0 {
-			return req, close, validate.ErrBodyRequired
+			return req, rawBody, close, validate.ErrBodyRequired
 		}
 		form, err := ht.ParseForm(r)
 		if err != nil {
-			return req, close, errors.Wrap(err, "parse form")
+			return req, rawBody, close, errors.Wrap(err, "parse form")
 		}
 
 		var request SeriesForm
@@ -776,7 +780,7 @@ func (s *Server) decodePostSeriesRequest(r *http.Request) (
 					request.Start.SetTo(requestDotStartVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"start\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"start\"")
 				}
 			}
 		}
@@ -815,7 +819,7 @@ func (s *Server) decodePostSeriesRequest(r *http.Request) (
 					request.End.SetTo(requestDotEndVal)
 					return nil
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"end\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"end\"")
 				}
 			}
 		}
@@ -849,7 +853,7 @@ func (s *Server) decodePostSeriesRequest(r *http.Request) (
 						return nil
 					})
 				}); err != nil {
-					return req, close, errors.Wrap(err, "decode \"match[]\"")
+					return req, rawBody, close, errors.Wrap(err, "decode \"match[]\"")
 				}
 				if err := func() error {
 					if request.Match == nil {
@@ -857,14 +861,14 @@ func (s *Server) decodePostSeriesRequest(r *http.Request) (
 					}
 					return nil
 				}(); err != nil {
-					return req, close, errors.Wrap(err, "validate")
+					return req, rawBody, close, errors.Wrap(err, "validate")
 				}
 			} else {
-				return req, close, errors.Wrap(err, "query")
+				return req, rawBody, close, errors.Wrap(err, "query")
 			}
 		}
-		return &request, close, nil
+		return &request, rawBody, close, nil
 	default:
-		return req, close, validate.InvalidContentType(ct)
+		return req, rawBody, close, validate.InvalidContentType(ct)
 	}
 }

@@ -8,16 +8,15 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
-	"go.opentelemetry.io/otel/trace"
-
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/otelogen"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.34.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type codeRecorder struct {
@@ -84,7 +83,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -113,6 +112,8 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 		return
 	}
 
+	var rawBody []byte
+
 	var response *LabelValuesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -121,6 +122,7 @@ func (s *Server) handleGetLabelValuesRequest(args [1]string, argsEscaped bool, w
 			OperationSummary: "",
 			OperationID:      "getLabelValues",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "label",
@@ -247,7 +249,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -276,6 +278,8 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 		return
 	}
 
+	var rawBody []byte
+
 	var response *LabelsResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -284,6 +288,7 @@ func (s *Server) handleGetLabelsRequest(args [0]string, argsEscaped bool, w http
 			OperationSummary: "",
 			OperationID:      "getLabels",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "start",
@@ -406,7 +411,7 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -435,6 +440,8 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 		return
 	}
 
+	var rawBody []byte
+
 	var response *MetadataResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -443,6 +450,7 @@ func (s *Server) handleGetMetadataRequest(args [0]string, argsEscaped bool, w ht
 			OperationSummary: "",
 			OperationID:      "getMetadata",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "limit",
@@ -563,7 +571,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -592,6 +600,8 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 		return
 	}
 
+	var rawBody []byte
+
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -600,6 +610,7 @@ func (s *Server) handleGetQueryRequest(args [0]string, argsEscaped bool, w http.
 			OperationSummary: "",
 			OperationID:      "getQuery",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
@@ -724,7 +735,7 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -753,6 +764,8 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 		return
 	}
 
+	var rawBody []byte
+
 	var response *QueryExemplarsResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -761,6 +774,7 @@ func (s *Server) handleGetQueryExemplarsRequest(args [0]string, argsEscaped bool
 			OperationSummary: "",
 			OperationID:      "getQueryExemplars",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
@@ -881,7 +895,7 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -910,6 +924,8 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 		return
 	}
 
+	var rawBody []byte
+
 	var response *QueryResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -918,6 +934,7 @@ func (s *Server) handleGetQueryRangeRequest(args [0]string, argsEscaped bool, w 
 			OperationSummary: "",
 			OperationID:      "getQueryRange",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "query",
@@ -1048,7 +1065,7 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1077,6 +1094,8 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 		return
 	}
 
+	var rawBody []byte
+
 	var response *RulesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -1085,6 +1104,7 @@ func (s *Server) handleGetRulesRequest(args [0]string, argsEscaped bool, w http.
 			OperationSummary: "",
 			OperationID:      "getRules",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "type",
@@ -1209,7 +1229,7 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1238,6 +1258,8 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 		return
 	}
 
+	var rawBody []byte
+
 	var response *SeriesResponse
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -1246,6 +1268,7 @@ func (s *Server) handleGetSeriesRequest(args [0]string, argsEscaped bool, w http
 			OperationSummary: "",
 			OperationID:      "getSeries",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "start",
@@ -1368,7 +1391,7 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1386,7 +1409,9 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 			ID:   "postLabels",
 		}
 	)
-	request, close, err := s.decodePostLabelsRequest(r)
+
+	var rawBody []byte
+	request, rawBody, close, err := s.decodePostLabelsRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
 			OperationContext: opErrContext,
@@ -1410,6 +1435,7 @@ func (s *Server) handlePostLabelsRequest(args [0]string, argsEscaped bool, w htt
 			OperationSummary: "",
 			OperationID:      "postLabels",
 			Body:             request,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
@@ -1517,7 +1543,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1535,7 +1561,9 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 			ID:   "postQuery",
 		}
 	)
-	request, close, err := s.decodePostQueryRequest(r)
+
+	var rawBody []byte
+	request, rawBody, close, err := s.decodePostQueryRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
 			OperationContext: opErrContext,
@@ -1559,6 +1587,7 @@ func (s *Server) handlePostQueryRequest(args [0]string, argsEscaped bool, w http
 			OperationSummary: "",
 			OperationID:      "postQuery",
 			Body:             request,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
@@ -1666,7 +1695,7 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1684,7 +1713,9 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 			ID:   "postQueryExemplars",
 		}
 	)
-	request, close, err := s.decodePostQueryExemplarsRequest(r)
+
+	var rawBody []byte
+	request, rawBody, close, err := s.decodePostQueryExemplarsRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
 			OperationContext: opErrContext,
@@ -1708,6 +1739,7 @@ func (s *Server) handlePostQueryExemplarsRequest(args [0]string, argsEscaped boo
 			OperationSummary: "",
 			OperationID:      "postQueryExemplars",
 			Body:             request,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
@@ -1815,7 +1847,7 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1833,7 +1865,9 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 			ID:   "postQueryRange",
 		}
 	)
-	request, close, err := s.decodePostQueryRangeRequest(r)
+
+	var rawBody []byte
+	request, rawBody, close, err := s.decodePostQueryRangeRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
 			OperationContext: opErrContext,
@@ -1857,6 +1891,7 @@ func (s *Server) handlePostQueryRangeRequest(args [0]string, argsEscaped bool, w
 			OperationSummary: "",
 			OperationID:      "postQueryRange",
 			Body:             request,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
@@ -1964,7 +1999,7 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1982,7 +2017,9 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 			ID:   "postSeries",
 		}
 	)
-	request, close, err := s.decodePostSeriesRequest(r)
+
+	var rawBody []byte
+	request, rawBody, close, err := s.decodePostSeriesRequest(r)
 	if err != nil {
 		err = &ogenerrors.DecodeRequestError{
 			OperationContext: opErrContext,
@@ -2006,6 +2043,7 @@ func (s *Server) handlePostSeriesRequest(args [0]string, argsEscaped bool, w htt
 			OperationSummary: "",
 			OperationID:      "postSeries",
 			Body:             request,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}

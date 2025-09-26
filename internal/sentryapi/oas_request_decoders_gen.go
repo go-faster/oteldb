@@ -7,13 +7,13 @@ import (
 	"net/http"
 
 	"github.com/go-faster/errors"
-
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/validate"
 )
 
 func (s *Server) decodeEnvelopeRequest(r *http.Request) (
 	req *EnvelopeReqWithContentType,
+	rawBody []byte,
 	close func() error,
 	rerr error,
 ) {
@@ -34,7 +34,7 @@ func (s *Server) decodeEnvelopeRequest(r *http.Request) (
 	}()
 	ct, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return req, close, errors.Wrap(err, "parse media type")
+		return req, rawBody, close, errors.Wrap(err, "parse media type")
 	}
 	switch {
 	case ht.MatchContentType("*/*", ct):
@@ -44,8 +44,8 @@ func (s *Server) decodeEnvelopeRequest(r *http.Request) (
 			ContentType: ct,
 			Content:     request,
 		}
-		return &wrapped, close, nil
+		return &wrapped, rawBody, close, nil
 	default:
-		return req, close, validate.InvalidContentType(ct)
+		return req, rawBody, close, validate.InvalidContentType(ct)
 	}
 }
