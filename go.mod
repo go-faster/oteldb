@@ -30,7 +30,7 @@ require (
 	github.com/klauspost/compress v1.18.0
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6
 	github.com/mattn/go-isatty v0.0.20
-	github.com/ogen-go/ogen v1.14.0
+	github.com/ogen-go/ogen v1.15.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.136.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.136.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.136.0
