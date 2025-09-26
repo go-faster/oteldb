@@ -8,16 +8,15 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
-	"go.opentelemetry.io/otel/trace"
-
 	ht "github.com/ogen-go/ogen/http"
 	"github.com/ogen-go/ogen/middleware"
 	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/otelogen"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.34.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type codeRecorder struct {
@@ -87,7 +86,7 @@ func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -102,6 +101,8 @@ func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http
 		err error
 	)
 
+	var rawBody []byte
+
 	var response *PrometheusVersion
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -110,6 +111,7 @@ func (s *Server) handleBuildInfoRequest(args [0]string, argsEscaped bool, w http
 			OperationSummary: "",
 			OperationID:      "buildInfo",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
@@ -217,7 +219,7 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -232,6 +234,8 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 		err error
 	)
 
+	var rawBody []byte
+
 	var response EchoOK
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -240,6 +244,7 @@ func (s *Server) handleEchoRequest(args [0]string, argsEscaped bool, w http.Resp
 			OperationSummary: "",
 			OperationID:      "echo",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params:           middleware.Parameters{},
 			Raw:              r,
 		}
@@ -347,7 +352,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -376,6 +381,8 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 		return
 	}
 
+	var rawBody []byte
+
 	var response *Traces
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -384,6 +391,7 @@ func (s *Server) handleSearchRequest(args [0]string, argsEscaped bool, w http.Re
 			OperationSummary: "",
 			OperationID:      "search",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "q",
@@ -524,7 +532,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -553,6 +561,8 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 		return
 	}
 
+	var rawBody []byte
+
 	var response *TagValues
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -561,6 +571,7 @@ func (s *Server) handleSearchTagValuesRequest(args [1]string, argsEscaped bool, 
 			OperationSummary: "",
 			OperationID:      "searchTagValues",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "tag_name",
@@ -686,7 +697,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -715,6 +726,8 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 		return
 	}
 
+	var rawBody []byte
+
 	var response *TagValuesV2
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -723,6 +736,7 @@ func (s *Server) handleSearchTagValuesV2Request(args [1]string, argsEscaped bool
 			OperationSummary: "",
 			OperationID:      "searchTagValuesV2",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "attribute_selector",
@@ -847,7 +861,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -876,6 +890,8 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 		return
 	}
 
+	var rawBody []byte
+
 	var response *TagNames
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -884,6 +900,7 @@ func (s *Server) handleSearchTagsRequest(args [0]string, argsEscaped bool, w htt
 			OperationSummary: "",
 			OperationID:      "searchTags",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "scope",
@@ -1004,7 +1021,7 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1033,6 +1050,8 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 		return
 	}
 
+	var rawBody []byte
+
 	var response *TagNamesV2
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -1041,6 +1060,7 @@ func (s *Server) handleSearchTagsV2Request(args [0]string, argsEscaped bool, w h
 			OperationSummary: "",
 			OperationID:      "searchTagsV2",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "scope",
@@ -1161,7 +1181,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 			// unless there was another error (e.g., network error receiving the response body; or 3xx codes with
 			// max redirects exceeded), in which case status MUST be set to Error.
 			code := statusWriter.status
-			if code >= 100 && code < 500 {
+			if code < 100 || code >= 500 {
 				span.SetStatus(codes.Error, stage)
 			}
 
@@ -1190,6 +1210,8 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 		return
 	}
 
+	var rawBody []byte
+
 	var response TraceByIDRes
 	if m := s.cfg.Middleware; m != nil {
 		mreq := middleware.Request{
@@ -1198,6 +1220,7 @@ func (s *Server) handleTraceByIDRequest(args [1]string, argsEscaped bool, w http
 			OperationSummary: "",
 			OperationID:      "traceByID",
 			Body:             nil,
+			RawBody:          rawBody,
 			Params: middleware.Parameters{
 				{
 					Name: "traceID",
