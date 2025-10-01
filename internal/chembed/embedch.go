@@ -1,7 +1,7 @@
 // Package embedch implements embedded clickhouse.
 //
 // Parts of https://github.com/ClickHouse/ch-go/tree/main/cht were used.
-package embedch
+package chembed
 
 import (
 	"bytes"

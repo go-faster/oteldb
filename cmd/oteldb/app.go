@@ -23,8 +23,8 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/go-faster/oteldb/internal/chembed"
 	"github.com/go-faster/oteldb/internal/chstorage"
-	"github.com/go-faster/oteldb/internal/embedch"
 	"github.com/go-faster/oteldb/internal/httpmiddleware"
 	"github.com/go-faster/oteldb/internal/logql"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
@@ -69,7 +69,7 @@ func newApp(ctx context.Context, cfg Config, m *sdkapp.Telemetry) (_ *App, err e
 			// Embedded ClickHouse mode.
 			app.lg.Info("Starting embedded ClickHouse")
 			dsn = "clickhouse://default:@localhost:9000/default?debug=true"
-			err := embedch.New(ctx, app.lg.Named("clickhouse"))
+			err := chembed.New(ctx, app.lg.Named("clickhouse"))
 			if err != nil {
 				return nil, errors.Wrap(err, "start embedded clickhouse")
 			}
