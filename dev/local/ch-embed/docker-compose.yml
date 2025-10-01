@@ -1,0 +1,20 @@
+version: "3"
+
+volumes:
+  clickhouse:
+
+services:
+  oteldb:
+    image: ghcr.io/go-faster/oteldb
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    volumes:
+      - clickhouse:/clickhouse
+    environment:
+      - OTELDB_STORAGE=ch
+      - OTEL_LOG_LEVEL=info
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=none
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=go-faster.oteldb

@@ -49,9 +49,6 @@ type Config struct {
 }
 
 func (cfg *Config) setDefaults() {
-	if cfg.DSN == "" {
-		cfg.DSN = "clickhouse://localhost:9000"
-	}
 	if cfg.Collector == nil {
 		cfg.Collector = map[string]any{
 			"receivers": map[string]any{
