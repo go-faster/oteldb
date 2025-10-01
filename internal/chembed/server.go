@@ -23,6 +23,11 @@ func New(ctx context.Context, lg *zap.Logger) error {
 		return errors.Wrap(err, "lookup")
 	}
 
+	host := "127.0.0.1"
+	if s := os.Getenv("EMBEDDED_CLICKHOUSE_HOST"); s != "" {
+		host = s
+	}
+
 	dir := "/clickhouse"
 	cfgPath := filepath.Join(dir, "config.xml")
 	userCfgPath := filepath.Join(dir, "users.xml")
@@ -35,7 +40,7 @@ func New(ctx context.Context, lg *zap.Logger) error {
 		HTTP: 8123,
 		TCP:  9000,
 
-		Host: "127.0.0.1",
+		Host: host,
 
 		Path:          filepath.Join(dir, "data"),
 		TempPath:      filepath.Join(dir, "tmp"),

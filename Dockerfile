@@ -14,5 +14,6 @@ WORKDIR /app
 COPY --from=builder /app/oteldb /oteldb
 
 VOLUME /clickhouse
+ENV EMBEDDED_CLICKHOUSE_HOST=0.0.0.0
 
 ENTRYPOINT ["/oteldb"]
