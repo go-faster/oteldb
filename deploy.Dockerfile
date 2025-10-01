@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/static
+FROM clickhouse/clickhouse-server
 
 ADD oteldb /usr/local/bin/oteldb
 

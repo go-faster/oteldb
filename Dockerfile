@@ -8,10 +8,11 @@ RUN go mod download
 COPY . ./
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -o /app/oteldb ./cmd/oteldb
 
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
+FROM clickhouse/clickhouse-server
 
 WORKDIR /app
 COPY --from=builder /app/oteldb /oteldb
+
+VOLUME /clickhouse
 
 ENTRYPOINT ["/oteldb"]

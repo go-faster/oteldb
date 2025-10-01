@@ -5,6 +5,8 @@
 /dev
 *.md
 *.Dockerfile
+docker-compose.yml
+Dockerfile
 
 # remore write queries
 *.rwq
