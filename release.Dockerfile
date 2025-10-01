@@ -1,5 +1,5 @@
-ARG IMG=clickhouse/clickhouse-server
-FROM $IMG:nonroot
+ARG IMG=clickhouse/clickhouse-server:latest
+FROM $IMG
 
 COPY oteldb /usr/bin/local/oteldb
 

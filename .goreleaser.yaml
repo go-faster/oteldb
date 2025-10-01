@@ -134,7 +134,7 @@ dockers:
       # https://github.com/go-riscv/distroless
       # https://github.com/GoogleContainerTools/distroless/issues/1269
       - "--build-arg"
-      - "IMG=ghcr.io/go-riscv/distroless/static-unstable"
+      - "IMG=ghcr.io/go-riscv/distroless/static-unstable:nonroot"
       - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
       - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
       - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
