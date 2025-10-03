@@ -108,7 +108,7 @@ func (c *Client) sendGetStatus(ctx context.Context) (res *GetStatusOK, err error
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getStatus"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/status"),
+		semconv.URLTemplateKey.String("/status"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -212,7 +212,7 @@ func (c *Client) sendPing(ctx context.Context) (res *PingNoContent, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("ping"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/ping"),
+		semconv.URLTemplateKey.String("/ping"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -285,7 +285,7 @@ func (c *Client) sendSubmitReport(ctx context.Context, request *SubmitReportReq)
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("submitReport"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/report/submit"),
+		semconv.URLTemplateKey.String("/report/submit"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 

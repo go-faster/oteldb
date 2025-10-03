@@ -133,7 +133,7 @@ func (c *Client) sendIndexStats(ctx context.Context, params IndexStatsParams) (r
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("indexStats"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/index/stats"),
+		semconv.URLTemplateKey.String("/loki/api/v1/index/stats"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -264,7 +264,7 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labelValues"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/label/{name}/values"),
+		semconv.URLTemplateKey.String("/loki/api/v1/label/{name}/values"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -438,7 +438,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labels"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/labels"),
+		semconv.URLTemplateKey.String("/loki/api/v1/labels"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -575,7 +575,7 @@ func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoCont
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("push"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/push"),
+		semconv.URLTemplateKey.String("/loki/api/v1/push"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -651,7 +651,7 @@ func (c *Client) sendQuery(ctx context.Context, params QueryParams) (res *QueryR
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("query"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/query"),
+		semconv.URLTemplateKey.String("/loki/api/v1/query"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -796,7 +796,7 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("queryRange"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/query_range"),
+		semconv.URLTemplateKey.String("/loki/api/v1/query_range"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1001,7 +1001,7 @@ func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("series"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/loki/api/v1/series"),
+		semconv.URLTemplateKey.String("/loki/api/v1/series"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
