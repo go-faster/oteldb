@@ -123,7 +123,7 @@ func (c *Client) sendGetApps(ctx context.Context) (res []ApplicationMetadata, er
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getApps"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/apps"),
+		semconv.URLTemplateKey.String("/api/apps"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -196,7 +196,7 @@ func (c *Client) sendIngest(ctx context.Context, request *IngestReqWithContentTy
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("ingest"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/ingest"),
+		semconv.URLTemplateKey.String("/ingest"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -418,7 +418,7 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labelValues"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/label-values"),
+		semconv.URLTemplateKey.String("/label-values"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -566,7 +566,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Label
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("labels"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/labels"),
+		semconv.URLTemplateKey.String("/labels"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -701,7 +701,7 @@ func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *Flam
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("render"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/render"),
+		semconv.URLTemplateKey.String("/render"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 

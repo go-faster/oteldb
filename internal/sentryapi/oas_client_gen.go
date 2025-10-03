@@ -101,7 +101,7 @@ func (c *Client) sendDummy(ctx context.Context) (res *Event, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("dummy"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/dummy"),
+		semconv.URLTemplateKey.String("/dummy"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -174,7 +174,7 @@ func (c *Client) sendEnvelope(ctx context.Context, request *EnvelopeReqWithConte
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("envelope"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/envelope"),
+		semconv.URLTemplateKey.String("/envelope"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 

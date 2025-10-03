@@ -141,7 +141,7 @@ func (c *Client) sendBuildInfo(ctx context.Context) (res *PrometheusVersion, err
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("buildInfo"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/status/buildinfo"),
+		semconv.URLTemplateKey.String("/api/status/buildinfo"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -214,7 +214,7 @@ func (c *Client) sendEcho(ctx context.Context) (res EchoOK, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("echo"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/echo"),
+		semconv.URLTemplateKey.String("/api/echo"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -287,7 +287,7 @@ func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Trac
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("search"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/search"),
+		semconv.URLTemplateKey.String("/api/search"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -500,7 +500,7 @@ func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValues
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagValues"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/search/tag/{tag_name}/values"),
+		semconv.URLTemplateKey.String("/api/search/tag/{tag_name}/values"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -648,7 +648,7 @@ func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValu
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagValuesV2"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v2/search/tag/{attribute_selector}/values"),
+		semconv.URLTemplateKey.String("/api/v2/search/tag/{attribute_selector}/values"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -795,7 +795,7 @@ func (c *Client) sendSearchTags(ctx context.Context, params SearchTagsParams) (r
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTags"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/search/tags"),
+		semconv.URLTemplateKey.String("/api/search/tags"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -923,7 +923,7 @@ func (c *Client) sendSearchTagsV2(ctx context.Context, params SearchTagsV2Params
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("searchTagsV2"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v2/search/tags"),
+		semconv.URLTemplateKey.String("/api/v2/search/tags"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1051,7 +1051,7 @@ func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("traceByID"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/traces/{traceID}"),
+		semconv.URLTemplateKey.String("/api/traces/{traceID}"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 

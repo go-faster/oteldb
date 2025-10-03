@@ -156,7 +156,7 @@ func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesPa
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getLabelValues"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/label/{label}/values"),
+		semconv.URLTemplateKey.String("/api/v1/label/{label}/values"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -333,7 +333,7 @@ func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getLabels"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/labels"),
+		semconv.URLTemplateKey.String("/api/v1/labels"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -491,7 +491,7 @@ func (c *Client) sendGetMetadata(ctx context.Context, params GetMetadataParams) 
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getMetadata"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/metadata"),
+		semconv.URLTemplateKey.String("/api/v1/metadata"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -619,7 +619,7 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQuery"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/query"),
+		semconv.URLTemplateKey.String("/api/v1/query"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -764,7 +764,7 @@ func (c *Client) sendGetQueryExemplars(ctx context.Context, params GetQueryExemp
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryExemplars"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
+		semconv.URLTemplateKey.String("/api/v1/query_exemplars"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -889,7 +889,7 @@ func (c *Client) sendGetQueryRange(ctx context.Context, params GetQueryRangePara
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getQueryRange"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/query_range"),
+		semconv.URLTemplateKey.String("/api/v1/query_range"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1060,7 +1060,7 @@ func (c *Client) sendGetRules(ctx context.Context, params GetRulesParams) (res *
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getRules"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/rules"),
+		semconv.URLTemplateKey.String("/api/v1/rules"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1232,7 +1232,7 @@ func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("getSeries"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/api/v1/series"),
+		semconv.URLTemplateKey.String("/api/v1/series"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1387,7 +1387,7 @@ func (c *Client) sendPostLabels(ctx context.Context, request *LabelsForm) (res *
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postLabels"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/api/v1/labels"),
+		semconv.URLTemplateKey.String("/api/v1/labels"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1463,7 +1463,7 @@ func (c *Client) sendPostQuery(ctx context.Context, request *QueryForm) (res *Qu
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQuery"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/api/v1/query"),
+		semconv.URLTemplateKey.String("/api/v1/query"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1539,7 +1539,7 @@ func (c *Client) sendPostQueryExemplars(ctx context.Context, request *ExemplarsF
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryExemplars"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/api/v1/query_exemplars"),
+		semconv.URLTemplateKey.String("/api/v1/query_exemplars"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1615,7 +1615,7 @@ func (c *Client) sendPostQueryRange(ctx context.Context, request *QueryRangeForm
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postQueryRange"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/api/v1/query_range"),
+		semconv.URLTemplateKey.String("/api/v1/query_range"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
@@ -1691,7 +1691,7 @@ func (c *Client) sendPostSeries(ctx context.Context, request *SeriesForm) (res *
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("postSeries"),
 		semconv.HTTPRequestMethodKey.String("POST"),
-		semconv.HTTPRouteKey.String("/api/v1/series"),
+		semconv.URLTemplateKey.String("/api/v1/series"),
 	}
 	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
 
