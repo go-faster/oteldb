@@ -108,8 +108,9 @@ const _TokenType_name = "InvalidEOFIdentStringNumberDurationBytesCommaDotOpenBra
 var _TokenType_index = [...]uint16{0, 7, 10, 15, 21, 27, 35, 40, 45, 48, 57, 67, 69, 74, 76, 81, 90, 99, 110, 124, 128, 134, 143, 153, 155, 162, 166, 177, 189, 195, 197, 205, 214, 224, 226, 229, 235, 238, 241, 244, 247, 250, 253, 258, 260, 263, 265, 268, 272, 278, 284, 290, 297, 308, 318, 320, 330, 338, 342, 346, 351, 355, 366, 379, 388, 401, 412, 423, 434, 445, 459, 473, 489, 502, 514, 528, 534, 537, 540, 543, 546, 551, 557, 563, 570, 574, 578, 586, 598, 607, 619, 638, 648, 655}
 
 func (i TokenType) String() string {
-	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_TokenType_index)-1 {
 		return "TokenType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _TokenType_name[_TokenType_index[i]:_TokenType_index[i+1]]
+	return _TokenType_name[_TokenType_index[idx]:_TokenType_index[idx+1]]
 }
