@@ -100,11 +100,11 @@ func newApp(ctx context.Context, cfg Config, m *sdkapp.Telemetry) (_ *App, err e
 }
 
 func addOgen[
-	R httpmiddleware.OgenRoute,
-	Server interface {
-		httpmiddleware.OgenServer[R]
-		http.Handler
-	},
+R httpmiddleware.OgenRoute,
+Server interface {
+	httpmiddleware.OgenServer[R]
+	http.Handler
+},
 ](
 	app *App,
 	name string,
@@ -363,6 +363,12 @@ func (app *App) Run(ctx context.Context) error {
 	for k, s := range app.services {
 		s := s
 		g.Go(func() (rerr error) {
+			defer func() {
+				if r := recover(); r != nil {
+					rerr = errors.New("panic recovered")
+					zctx.From(ctx).Error("panic", zap.Any("panic", r))
+				}
+			}()
 			defer func() {
 				zctx.From(ctx).Debug("Service shut down",
 					zap.Error(rerr),
