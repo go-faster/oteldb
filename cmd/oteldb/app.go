@@ -100,11 +100,11 @@ func newApp(ctx context.Context, cfg Config, m *sdkapp.Telemetry) (_ *App, err e
 }
 
 func addOgen[
-R httpmiddleware.OgenRoute,
-Server interface {
-	httpmiddleware.OgenServer[R]
-	http.Handler
-},
+	R httpmiddleware.OgenRoute,
+	Server interface {
+		httpmiddleware.OgenServer[R]
+		http.Handler
+	},
 ](
 	app *App,
 	name string,
