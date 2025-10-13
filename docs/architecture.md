@@ -352,17 +352,17 @@ doesn't, the textual descriptions above and the file pointers still apply.
 ```mermaid
 flowchart LR
   subgraph Ingest
-    A[Telemetry sources<br/>OTLP / Prometheus RW] --> B[cmd/oteldb / receivers]
-    B --> C[internal/otelreceiver]
-    C --> D[internal/otelstorage<br/>normalize & ids]
-    D --> E[internal/chstorage/inserter(s)]
-    E --> F[(ClickHouse)]
+    A["Telemetry sources\nOTLP / Prometheus RW"] --> B["cmd/oteldb\nreceivers"]
+    B --> C["internal/otelreceiver"]
+    C --> D["internal/otelstorage\nnormalize & ids"]
+    D --> E["internal/chstorage\ninserters"]
+    E --> F["ClickHouse"]
   end
 
   subgraph Query
-    G[Client / Grafana / Prometheus UI] --> H[cmd/oteldb API]
-    H --> I[internal/logql<br/>internal/traceql<br/>internal/promapi]
-    I --> J[internal/chstorage/querier(s)]
+    G["Client / Grafana / Prometheus UI"] --> H["cmd/oteldb API"]
+    H --> I["internal/logql\ninternal/traceql\ninternal/promapi"]
+    I --> J["internal/chstorage\nqueriers"]
     J --> F
   end
 
@@ -378,26 +378,26 @@ query translators that call chstorage queriers which read from ClickHouse.
 ```mermaid
 graph TD
   subgraph Commands
-    CMD[cmd/*]
+    CMD["cmd/*"]
   end
 
   subgraph Receivers
-    OR[internal/otelreceiver]
+    OR["internal/otelreceiver"]
   end
 
   subgraph Storage
-    CH[internal/chstorage]
-    DDL[internal/ddl]
-    OS[internal/otelstorage]
-    LS[internal/logstorage]
-    TS[internal/tracestorage]
-    MS[internal/metricstorage]
+    CH["internal/chstorage"]
+    DDL["internal/ddl"]
+    OS["internal/otelstorage"]
+    LS["internal/logstorage"]
+    TS["internal/tracestorage"]
+    MS["internal/metricstorage"]
   end
 
   subgraph Query
-    LQ[internal/logql]
-    TQ[internal/traceql]
-    PQ[internal/promapi]
+    LQ["internal/logql"]
+    TQ["internal/traceql"]
+    PQ["internal/promapi"]
   end
 
   CMD --> OR
@@ -418,4 +418,3 @@ graph TD
 Caption: simplified package-level import/dependency relationships. Arrows
 point from consumer to provider (e.g., `internal/otelreceiver` uses
 `internal/otelstorage` and `internal/chstorage`).
-
