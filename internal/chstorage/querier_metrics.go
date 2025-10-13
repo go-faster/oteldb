@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ClickHouse/ch-go/proto"
@@ -100,6 +101,33 @@ func (p *promQuerier) getEnd(t time.Time) time.Time {
 	}
 }
 
+// DecodeUnicodeLabel tries to decode U__k8s_2e_node_2e_name into k8s.node.name.
+// It decodes any hex-encoded character in the format _XX_ where XX is a two-digit hex value.
+func DecodeUnicodeLabel(v string) string {
+	if !strings.HasPrefix(v, "U__") {
+		return v
+	}
+	var (
+		sb    strings.Builder
+		runes = []rune(v[3:]) // Skip U__
+	)
+	for i := 0; i < len(runes); i++ {
+		if runes[i] == '_' && i+3 < len(runes) && runes[i+3] == '_' {
+			// Try to decode _XX_ where XX is hex
+			hex := string([]rune{runes[i+1], runes[i+2]})
+			if b, err := strconv.ParseUint(hex, 16, 8); err == nil {
+				sb.WriteByte(byte(b))
+				i += 3 // Skip _XX_
+			} else {
+				sb.WriteRune(runes[i])
+			}
+		} else {
+			sb.WriteRune(runes[i])
+		}
+	}
+	return sb.String()
+}
+
 // LabelValues returns all potential values for a label name.
 // It is not safe to use the strings beyond the lifetime of the querier.
 // If matchers are specified the returned result set is reduced
@@ -108,6 +136,7 @@ func (p *promQuerier) LabelValues(ctx context.Context, labelName string, hints *
 	if hints == nil {
 		hints = &storage.LabelHints{}
 	}
+	labelName = DecodeUnicodeLabel(labelName)
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.LabelValues",
 		trace.WithAttributes(
 			attribute.String("chstorage.label", labelName),
