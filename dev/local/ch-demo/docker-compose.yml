@@ -122,7 +122,7 @@ services:
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
   grafana:
-    image: "ghcr.io/go-faster/grafana:11.5.0-pre"
+    image: "grafana/grafana-oss:12.1.1"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
