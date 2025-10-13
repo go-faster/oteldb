@@ -339,3 +339,38 @@ Quick contributor checklist
 - Make your changes, update `_golden` SQL and columns mapping if schema
   is affected, and update inserter/querier implementations.
 - Run repo-wide tests if needed (`go test ./...`).
+
+### ASCII ingestion flow
+
+Below is a compact ASCII-art diagram showing the main ingestion path and
+where to look in the code for each step.
+
++----------------------+     +--------------------+     +-------------------------+
+| Telemetry sources    | --> |  cmd/oteldb / cmd  | --> | internal/otelreceiver   |
+| (OTLP / Prom RW)     |     | (bootstrap/wiring) |     | (translate & batch)     |
++----------------------+     +--------------------+     +-----------+-------------+
+                                                                            |
+                                                                            v
+                                                                    +--------------------+
+                                                                    | internal/otelstorage|
+                                                                    | (normalize, ids)    |
+                                                                    +--------------------+
+                                                                            |
+                                                                            v
+                                                                    +--------------------+
+                                                                    | internal/chstorage |
+                                                                    | (inserters -> SQL) |
+                                                                    +--------------------+
+                                                                            |
+                                                                            v
+                                                                    +--------------------+
+                                                                    |   ClickHouse DB    |
+                                                                    | (logs/traces/metrics)
+                                                                    +--------------------+
+
+Legend / file pointers
+
+- `cmd/oteldb/` — bootstrap and wiring where receivers and storage backends are registered.
+- `internal/otelreceiver/` — protocol receivers and translation logic (e.g. `receiver.go`, `prometheusremotewritereceiver/`).
+- `internal/otelstorage/` — helpers for id/hash/timestamp normalization (`id.go`, `hash.go`, `attrs.go`).
+- `internal/chstorage/` — schema, inserters and ClickHouse client (`_golden/*.sql`, `inserter_*.go`, `clickhouse.go`).
