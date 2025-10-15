@@ -579,6 +579,33 @@ var tests = []TestCase{
 		},
 		false,
 	},
+	{
+		"{service_name=\"clickhouse\"}" +
+			" | label_format log_line_contains_trace_id=`{{ contains \"a3bb0696568ee5069bf8fdc682631ddc\" __line__  }}`" +
+			" | log_line_contains_trace_id=\"true\" OR trace_id=\"a3bb0696568ee5069bf8fdc682631ddc\"",
+		&LogExpr{
+			Sel: Selector{
+				Matchers: []LabelMatcher{
+					{"service_name", OpEq, "clickhouse", nil},
+				},
+			},
+			Pipeline: []PipelineStage{
+				&LabelFormatExpr{
+					Values: []LabelTemplate{
+						{Label: "log_line_contains_trace_id", Template: `{{ contains "a3bb0696568ee5069bf8fdc682631ddc" __line__  }}`},
+					},
+				},
+				&LabelFilter{
+					Pred: &LabelPredicateBinOp{
+						Left:  &LabelMatcher{"log_line_contains_trace_id", OpEq, "true", nil},
+						Op:    OpOr,
+						Right: &LabelMatcher{"trace_id", OpEq, "a3bb0696568ee5069bf8fdc682631ddc", nil},
+					},
+				},
+			},
+		},
+		false,
+	},
 
 	// Metric queries.
 	// Range aggregation.
