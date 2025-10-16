@@ -126,12 +126,18 @@ func (l *lexer) nextToken(r rune, text string) (tok Token, _ bool) {
 	}
 
 	tt, ok = tokens[text]
+	if !ok {
+		// LogQL supports case-insensitive keywords.
+		//
+		// See https://github.com/grafana/loki/pull/10733.
+		tt, ok = tokens[strings.ToLower(text)]
+	}
 	if ok {
 		tok.Type = tt
 		// FIXME(tdakkota): does it work in all cases?
 		if tt.IsFunction() {
 			scanSpace(&l.scanner)
-			switch l.scanner.Peek() {
+			switch unicode.ToLower(l.scanner.Peek()) {
 			case '(', 'b', 'w': // "(", "by", "without"
 			default:
 				// Identifier can also have name 'duration', 'ip', etc.

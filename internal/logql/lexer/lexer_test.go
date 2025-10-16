@@ -235,6 +235,27 @@ var tests = []TestCase{
 		},
 		false,
 	},
+	{
+		`sUm By ({}) AnD MaX wIthout ({})`,
+		[]Token{
+			{Type: Sum, Text: "sUm"},
+			{Type: By, Text: "By"},
+			{Type: OpenParen, Text: "("},
+			{Type: OpenBrace, Text: "{"},
+			{Type: CloseBrace, Text: "}"},
+			{Type: CloseParen, Text: ")"},
+
+			{Type: And, Text: "AnD"},
+
+			{Type: Max, Text: "MaX"},
+			{Type: Without, Text: "wIthout"},
+			{Type: OpenParen, Text: "("},
+			{Type: OpenBrace, Text: "{"},
+			{Type: CloseBrace, Text: "}"},
+			{Type: CloseParen, Text: ")"},
+		},
+		false,
+	},
 
 	// Comments.
 	{
