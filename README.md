@@ -3,7 +3,6 @@
 </p>
 
 # oteldb [![codecov](https://img.shields.io/codecov/c/github/go-faster/oteldb?label=cover)](https://codecov.io/gh/go-faster/oteldb) [![experimental](https://img.shields.io/badge/-experimental-blueviolet)](https://go-faster.org/docs/projects/status#experimental)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foteldb%2Foteldb.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Foteldb%2Foteldb?ref=badge_shield)
 
 The next generation, [OpenTelemetry-first][otel] aggregation system for metrics, traces and logs.
 
@@ -72,6 +71,3 @@ You can open Grafana dashboard at http://localhost:3000/d/oteldb/oteldb
 ## License
 
 Apache License 2.0, see [LICENSE](./LICENSE).
-
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foteldb%2Foteldb.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Foteldb%2Foteldb?ref=badge_large)
