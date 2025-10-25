@@ -62,10 +62,6 @@ Setup oteldb, ClickHouse, Grafana, and telemetry generators:
 docker compose -f dev/local/ch/docker-compose.yml up -d
 ```
 
-
-
-
-
 You can open Grafana dashboard at http://localhost:3000/d/oteldb/oteldb
 
 ## License
