@@ -2,7 +2,7 @@
 <img height="256" src="logo.svg" alt="oteldb svg logo">
 </p>
 
-# oteldb [![codecov](https://img.shields.io/codecov/c/github/go-faster/oteldb?label=cover)](https://codecov.io/gh/go-faster/oteldb) [![experimental](https://img.shields.io/badge/-experimental-blueviolet)](https://go-faster.org/docs/projects/status#experimental)
+# oteldb [![codecov](https://img.shields.io/codecov/c/github/oteldb/oteldb?label=cover)](https://codecov.io/gh/oteldb/oteldb) [![experimental](https://img.shields.io/badge/-experimental-blueviolet)](https://go-faster.org/docs/projects/status#experimental)
 
 The next generation, [OpenTelemetry-first][otel] aggregation system for metrics, traces and logs.
 
