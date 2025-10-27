@@ -13,9 +13,6 @@ Based on [ClickHouse][clickhouse], fastest open-source (Apache 2.0) column-orien
 [clickhouse]: https://clickhouse.com/
 [otel]: https://opentelemetry.io/
 
-> [!WARNING]
-> Work in progress. Not ready for production use.
-
 Supported query languages:
 - [PromQL][promql] ([Prometheus][prometheus]) for metrics, [>99% compatibility][compliance]
 - [TraceQL][traceql] ([Grafana Tempo][tempo]) for traces
