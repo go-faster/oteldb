@@ -65,119 +65,25 @@ release:
     {{ .Env.IMAGE }}:v{{ .Version }}
     ```
 
-  extra_files:
-    # cosign key
-    - glob: "cosign.pub"
-
-dockers:
-  # https://goreleaser.com/customization/docker/
-  - use: buildx
-    ids:
-      - oteldb
-    goos: linux
-    dockerfile: release.Dockerfile
-    goarch: amd64
-    image_templates:
-      - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
-      - "{{ .Env.IMAGE }}:v{{ .Version }}-amd64"
-      - "{{ .Env.IMAGE }}:latest-amd64"
-    build_flag_templates:
-      - "--platform=linux/amd64"
-      - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
-      - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
-      - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
-      - "--label=io.artifacthub.package.license=Apache 2.0"
-      - "--label=org.opencontainers.image.description=OpenTelemetry signal storage"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-  - use: buildx
-    ids:
-      - oteldb
-    goos: linux
-    goarch: arm64
-    dockerfile: release.Dockerfile
-    image_templates:
-      - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
-      - "{{ .Env.IMAGE }}:v{{ .Version }}-arm64"
-      - "{{ .Env.IMAGE }}:latest-arm64"
-    build_flag_templates:
-      - "--platform=linux/arm64/v8"
-      - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
-      - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
-      - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
-      - "--label=io.artifacthub.package.license=Apache 2.0"
-      - "--label=org.opencontainers.image.description=OpenTelemetry signal storage"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-  - use: buildx
-    ids:
-      - oteldb
-    goos: linux
-    goarch: riscv64
-    dockerfile: release.Dockerfile
-    image_templates:
-      - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
-      - "{{ .Env.IMAGE }}:v{{ .Version }}-riscv64"
-      - "{{ .Env.IMAGE }}:latest-riscv64"
-    build_flag_templates:
-      - "--platform=linux/riscv64"
-      - "--pull"
-      # riscv64 architecture support for static images
-      # https://github.com/go-riscv/distroless
-      # https://github.com/GoogleContainerTools/distroless/issues/1269
-      - "--build-arg"
-      - "IMG=ghcr.io/go-riscv/distroless/static-unstable:nonroot"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/go-faster/oteldb/main/README.md"
-      - "--label=io.artifacthub.package.logo-url=https://avatars.githubusercontent.com/u/93744681?"
-      - '--label=io.artifacthub.package.maintainers=[{"name":"Aleksandr Razumov","email":"ernado@go-faster.org"}]'
-      - "--label=io.artifacthub.package.license=Apache 2.0"
-      - "--label=org.opencontainers.image.description=OpenTelemetry signal storage"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-docker_manifests:
-  # https://goreleaser.com/customization/docker_manifest/
-  - name_template: "{{ .Env.IMAGE }}:{{ .Version }}"
-    image_templates:
-      - "{{ .Env.IMAGE }}:{{ .Version }}-amd64"
-      - "{{ .Env.IMAGE }}:{{ .Version }}-arm64"
-      - "{{ .Env.IMAGE }}:{{ .Version }}-riscv64"
-  - name_template: "{{ .Env.IMAGE }}:v{{ .Version }}"
-    image_templates:
-      - "{{ .Env.IMAGE }}:v{{ .Version }}-amd64"
-      - "{{ .Env.IMAGE }}:v{{ .Version }}-arm64"
-      - "{{ .Env.IMAGE }}:v{{ .Version }}-riscv64"
-  - name_template: "{{ .Env.IMAGE }}:latest"
-    image_templates:
-      - "{{ .Env.IMAGE }}:latest-amd64"
-      - "{{ .Env.IMAGE }}:latest-arm64"
-      - "{{ .Env.IMAGE }}:latest-riscv64"
-
-#docker_signs:
-#  - cmd: cosign
-#    artifacts: manifests
-#    output: true
-#    args:
-#      - "--key"
-#      - "env://COSIGN_PRIVATE_KEY"
-#      - "sign"
-#      - "${artifact}@${digest}"
-#      - --yes
+dockers_v2:
+  - images:
+      - "ghcr.io/go-faster/oteldb"
+    tags:
+      - "v{{ .Version }}"
+      - "{{ if .IsNightly }}nightly{{ end }}"
+      - "{{ if not .IsNightly }}latest{{ end }}"
+    labels:
+      "org.opencontainers.image.description": "OpenTelemetry signal storage"
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
 
 checksum:
   name_template: "checksums.txt"
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc
@@ -235,7 +141,7 @@ sboms:
 nfpms:
   - id: oteldb
     package_name: oteldb
-    builds:
+    ids:
       - oteldb
     homepage: https://github.com/go-faster/oteldb
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
@@ -252,7 +158,7 @@ nfpms:
         - changelog-file-missing-in-native-package
   - id: docker-logql
     package_name: docker-logql
-    builds:
+    ids:
       - docker-logql
     homepage: https://github.com/go-faster/oteldb/tree/main/cmd/docker-logql
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
