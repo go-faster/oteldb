@@ -1,4 +1,5 @@
-FROM gcr.io/distroless/static
+ARG IMG=gcr.io/distroless/static
+FROM $IMG
 
 ARG TARGETPLATFORM
 COPY $TARGETPLATFORM/oteldb /usr/bin/local/oteldb
