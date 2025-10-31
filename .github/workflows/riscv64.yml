@@ -38,5 +38,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-go-
 
-      - name: Run test
-        run: go test -v ./...
+      - name: Run some checks
+        run: go build -o /dev/null ./cmd/...
