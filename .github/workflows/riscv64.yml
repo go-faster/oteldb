@@ -21,22 +21,5 @@ jobs:
           go-version: stable
           cache: false
 
-      - name: Get Go environment
-        id: go-env
-        shell: bash
-        run: |
-          echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
-          echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
-
-      - name: Set up cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.cache }}
-            ${{ env.modcache }}
-          key: ${{ runner.os }}-${{ runner.arch }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-go-
-
       - name: Run some checks
         run: go build -o /dev/null ./cmd/...
