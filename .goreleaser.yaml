@@ -49,7 +49,7 @@ release:
   # prerelease: allow # remove this when we start publishing non-prerelease or set to auto
   # draft: true # allow for manual edits
   github:
-    owner: go-faster
+    owner: oteldb
     name: oteldb
 
   mode: replace
