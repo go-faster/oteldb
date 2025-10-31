@@ -189,7 +189,7 @@ nfpms:
     package_name: oteldb
     ids:
       - oteldb
-    homepage: https://github.com/go-faster/oteldb
+    homepage: https://github.com/oteldb/oteldb
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
     description: OpenTelemetry signal storage
     license: Apache 2.0
@@ -206,7 +206,7 @@ nfpms:
     package_name: docker-logql
     ids:
       - docker-logql
-    homepage: https://github.com/go-faster/oteldb/tree/main/cmd/docker-logql
+    homepage: https://github.com/oteldb/oteldb/tree/main/cmd/docker-logql
     maintainer: Aleksandr Razumov <ernado@go-faster.org>
     description: A simple Docker CLI plugin to run LogQL queries over container logs.
     license: Apache 2.0
