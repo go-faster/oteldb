@@ -11,7 +11,7 @@ jobs:
     runs-on: [RISCV64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           submodules: true
 
