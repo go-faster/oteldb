@@ -1,7 +1,7 @@
-ARG IMG=clickhouse/clickhouse-server:latest
-FROM $IMG
+FROM gcr.io/distroless/static
 
-COPY oteldb /usr/bin/local/oteldb
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/oteldb /usr/bin/local/oteldb
 
 VOLUME /clickhouse
 ENV EMBEDDED_CLICKHOUSE_HOST=0.0.0.0
