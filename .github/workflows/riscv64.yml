@@ -15,5 +15,14 @@ jobs:
         with:
           submodules: true
 
-      - name: Run some checks
-        run: go build -o /dev/null ./cmd/...
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Run build check
+        run: go build -o /dev/null ./cmd/oteldb
+
+      - name: Run some tests
+        run: go test -v ./internal/logparser
