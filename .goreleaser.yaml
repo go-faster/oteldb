@@ -163,16 +163,16 @@ docker_manifests:
       - "{{ .Env.IMAGE }}:latest-arm64"
       - "{{ .Env.IMAGE }}:latest-riscv64"
 
-docker_signs:
-  - cmd: cosign
-    artifacts: manifests
-    output: true
-    args:
-      - "--key"
-      - "env://COSIGN_PRIVATE_KEY"
-      - "sign"
-      - "${artifact}@${digest}"
-      - --yes
+#docker_signs:
+#  - cmd: cosign
+#    artifacts: manifests
+#    output: true
+#    args:
+#      - "--key"
+#      - "env://COSIGN_PRIVATE_KEY"
+#      - "sign"
+#      - "${artifact}@${digest}"
+#      - --yes
 
 checksum:
   name_template: "checksums.txt"
