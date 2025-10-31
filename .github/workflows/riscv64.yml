@@ -15,11 +15,5 @@ jobs:
         with:
           submodules: true
 
-      - name: Install Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: stable
-          cache: false
-
       - name: Run some checks
         run: go build -o /dev/null ./cmd/...
