@@ -67,7 +67,7 @@ release:
 dockers_v2:
   - id: distroless
     images:
-      - "ghcr.io/go-faster/oteldb"
+      - "ghcr.io/oteldb/oteldb"
 
     dockerfile: release.Dockerfile
 
@@ -98,7 +98,7 @@ dockers_v2:
 
   - id: clickhouse
     images:
-      - "ghcr.io/go-faster/oteldb"
+      - "ghcr.io/oteldb/oteldb"
 
     dockerfile: release.Dockerfile
 
