@@ -24,7 +24,7 @@ var _ tracestorage.Querier = (*Querier)(nil)
 
 // Querier implements tracestorage.Querier using Clickhouse.
 type Querier struct {
-	ch         ClickhouseClient
+	ch         ClickHouseClient
 	tables     Tables
 	labelLimit int
 
@@ -66,7 +66,7 @@ func (opts *QuerierOptions) setDefaults() {
 }
 
 // NewQuerier creates new Querier.
-func NewQuerier(c ClickhouseClient, opts QuerierOptions) (*Querier, error) {
+func NewQuerier(c ClickHouseClient, opts QuerierOptions) (*Querier, error) {
 	opts.setDefaults()
 
 	meter := opts.MeterProvider.Meter("chstorage.Querier")

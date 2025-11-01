@@ -14,7 +14,7 @@ var _ tracestorage.Inserter = (*Inserter)(nil)
 
 // Inserter implements tracestorage.Inserter using Clickhouse.
 type Inserter struct {
-	ch     ClickhouseClient
+	ch     ClickHouseClient
 	tables Tables
 
 	stats struct {
@@ -58,7 +58,7 @@ func (opts *InserterOptions) setDefaults() {
 }
 
 // NewInserter creates new Inserter.
-func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
+func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 	// HACK(ernado): for some reason, we are getting no-op here.
 	opts.TracerProvider = otel.GetTracerProvider()
 	opts.MeterProvider = otel.GetMeterProvider()
