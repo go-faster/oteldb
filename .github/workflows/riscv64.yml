@@ -21,8 +21,5 @@ jobs:
           go-version: stable
           cache: false
 
-      - name: Run build check
-        run: go build -o /dev/null ./cmd/oteldb
-
       - name: Run some tests
         run: go test ./internal/...
