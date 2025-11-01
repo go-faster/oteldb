@@ -43,6 +43,10 @@ jobs:
 
       - name: Set up cache
         uses: actions/cache@v4
+
+        # NOTE(ernado): don't run on self-hosted runners
+        if: ${{ ! contains(runner.labels, 'self-hosted') }}
+
         with:
           path: |
             ${{ env.cache }}
