@@ -84,7 +84,7 @@ func WithAttributes(attrs ...attribute.KeyValue) TrackOption {
 	}
 }
 
-// Track creates a new [track] with given options.
+// Start creates a new [track] with given options.
 func (t *tracker) Start(ctx context.Context, options ...TrackOption) (context.Context, Track) {
 	trk := &track{
 		tracker: t,
