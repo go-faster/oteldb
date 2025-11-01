@@ -5,6 +5,7 @@ import (
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -72,7 +73,7 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 
 			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
-					attribute.String("chstorage.signal", "logs"),
+					semconv.Signal(semconv.SignalLogs),
 				),
 			)
 		}

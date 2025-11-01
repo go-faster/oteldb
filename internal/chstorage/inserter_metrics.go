@@ -12,12 +12,12 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/google/uuid"
 	"github.com/prometheus/prometheus/model/labels"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
@@ -35,9 +35,11 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 			i.stats.InsertedExemplars.Add(ctx, int64(b.exemplars.value.Rows()))
 			i.stats.InsertedMetricLabels.Add(ctx, int64(len(b.labels)))
 
-			i.stats.Inserts.Add(ctx, 1, metric.WithAttributes(
-				attribute.String("chstorage.signal", "metrics"),
-			))
+			i.stats.Inserts.Add(ctx, 1,
+				metric.WithAttributes(
+					semconv.Signal(semconv.SignalMetrics),
+				),
+			)
 		}
 		span.End()
 	}()

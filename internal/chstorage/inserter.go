@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/autometric"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -82,46 +82,34 @@ func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 		return nil, errors.Wrap(err, "init stats")
 	}
 
-	totalLogs, err := meter.Int64ObservableGauge("chstorage.logs.total_records",
+	totalSignals, err := meter.Int64ObservableGauge("chstorage.logs.total_signals",
 		metric.WithDescription("Total number of inserted log records"),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create total inserted log records counter")
 	}
-	totalMetrics, err := meter.Int64ObservableGauge("chstorage.metrics.total_points",
-		metric.WithDescription("Total number of inserted metric points"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create total inserted metric points counter")
-	}
-	totalTraces, err := meter.Int64ObservableGauge("chstorage.traces.total_spans",
-		metric.WithDescription("Total number of inserted spans"),
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "create total inserted spans counter")
-	}
 
 	_, err = meter.RegisterCallback(func(ctx context.Context, o metric.Observer) error {
 		type total struct {
 			Table    string
-			Signal   string
+			Signal   semconv.SignalType
 			Observed metric.Int64Observable
 		}
 		for _, t := range []total{
 			{
 				Table:    inserter.tables.Logs,
-				Signal:   "logs",
-				Observed: totalLogs,
+				Signal:   semconv.SignalLogs,
+				Observed: totalSignals,
 			},
 			{
 				Table:    inserter.tables.Points,
-				Signal:   "metrics",
-				Observed: totalMetrics,
+				Signal:   semconv.SignalMetrics,
+				Observed: totalSignals,
 			},
 			{
 				Table:    inserter.tables.Spans,
-				Signal:   "traces",
-				Observed: totalTraces,
+				Signal:   semconv.SignalTraces,
+				Observed: totalSignals,
 			},
 		} {
 			v, err := inserter.totals(ctx, t.Table)
@@ -133,15 +121,13 @@ func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 				return errors.Wrapf(err, "get totals for table %q", t.Table)
 			}
 			o.ObserveInt64(t.Observed, v, metric.WithAttributes(
-				attribute.String("chstorage.signal", t.Signal),
+				semconv.Signal(t.Signal),
 			))
 		}
 
 		return nil
 	},
-		totalLogs,
-		totalMetrics,
-		totalTraces,
+		totalSignals,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "register totals callback")
