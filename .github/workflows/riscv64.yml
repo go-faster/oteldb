@@ -25,4 +25,4 @@ jobs:
         run: go build -o /dev/null ./cmd/oteldb
 
       - name: Run some tests
-        run: go test -v ./internal/logparser
+        run: go test ./internal/...
