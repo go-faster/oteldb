@@ -9,7 +9,7 @@ import (
 )
 
 func (i *Inserter) totals(ctx context.Context, tableName string) (int64, error) {
-	var totals proto.ColInt64
+	var totals proto.ColUInt64
 	q := ch.Query{
 		Body: fmt.Sprintf("SELECT count() as count FROM `%s`", tableName),
 		Result: proto.Results{
@@ -26,5 +26,5 @@ func (i *Inserter) totals(ctx context.Context, tableName string) (int64, error) 
 		return 0, nil
 	}
 
-	return totals.Row(0), nil
+	return int64(totals.Row(0)), nil
 }

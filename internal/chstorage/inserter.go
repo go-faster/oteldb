@@ -5,10 +5,12 @@ import (
 
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/autometric"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
@@ -80,19 +82,19 @@ func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 		return nil, errors.Wrap(err, "init stats")
 	}
 
-	totalLogs, err := meter.Int64ObservableGauge("chstorage.logs.inserted_records_total",
+	totalLogs, err := meter.Int64ObservableGauge("chstorage.logs.total_records",
 		metric.WithDescription("Total number of inserted log records"),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create total inserted log records counter")
 	}
-	totalMetrics, err := meter.Int64ObservableGauge("chstorage.metrics.inserted_points_total",
+	totalMetrics, err := meter.Int64ObservableGauge("chstorage.metrics.total_points",
 		metric.WithDescription("Total number of inserted metric points"),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "create total inserted metric points counter")
 	}
-	totalTraces, err := meter.Int64ObservableGauge("chstorage.traces.inserted_spans_total",
+	totalTraces, err := meter.Int64ObservableGauge("chstorage.traces.total_spans",
 		metric.WithDescription("Total number of inserted spans"),
 	)
 	if err != nil {
@@ -124,6 +126,10 @@ func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 		} {
 			v, err := inserter.totals(ctx, t.Table)
 			if err != nil {
+				zctx.From(ctx).Error("Failed to get totals",
+					zap.String("table", t.Table),
+					zap.Error(err),
+				)
 				return errors.Wrapf(err, "get totals for table %q", t.Table)
 			}
 			o.ObserveInt64(t.Observed, v, metric.WithAttributes(
