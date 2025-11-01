@@ -128,7 +128,7 @@ func (c *Client) sendGetStatus(ctx context.Context) (res *GetStatusOK, err error
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -232,7 +232,7 @@ func (c *Client) sendPing(ctx context.Context) (res *PingNoContent, err error) {
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -305,7 +305,7 @@ func (c *Client) sendSubmitReport(ctx context.Context, request *SubmitReportReq)
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {

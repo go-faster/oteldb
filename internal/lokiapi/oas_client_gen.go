@@ -153,7 +153,7 @@ func (c *Client) sendIndexStats(ctx context.Context, params IndexStatsParams) (r
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -284,7 +284,7 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -458,7 +458,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res *Labe
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -595,7 +595,7 @@ func (c *Client) sendPush(ctx context.Context, request PushReq) (res *PushNoCont
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -671,7 +671,7 @@ func (c *Client) sendQuery(ctx context.Context, params QueryParams) (res *QueryR
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -816,7 +816,7 @@ func (c *Client) sendQueryRange(ctx context.Context, params QueryRangeParams) (r
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1021,7 +1021,7 @@ func (c *Client) sendSeries(ctx context.Context, params SeriesParams) (res *Maps
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {

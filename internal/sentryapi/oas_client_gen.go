@@ -121,7 +121,7 @@ func (c *Client) sendDummy(ctx context.Context) (res *Event, err error) {
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -194,7 +194,7 @@ func (c *Client) sendEnvelope(ctx context.Context, request *EnvelopeReqWithConte
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Start stage for error reporting.
+	// Track stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
