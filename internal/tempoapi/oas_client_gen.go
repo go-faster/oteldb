@@ -161,7 +161,7 @@ func (c *Client) sendBuildInfo(ctx context.Context) (res *PrometheusVersion, err
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -234,7 +234,7 @@ func (c *Client) sendEcho(ctx context.Context) (res EchoOK, err error) {
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -307,7 +307,7 @@ func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res *Trac
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -520,7 +520,7 @@ func (c *Client) sendSearchTagValues(ctx context.Context, params SearchTagValues
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -668,7 +668,7 @@ func (c *Client) sendSearchTagValuesV2(ctx context.Context, params SearchTagValu
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -815,7 +815,7 @@ func (c *Client) sendSearchTags(ctx context.Context, params SearchTagsParams) (r
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -943,7 +943,7 @@ func (c *Client) sendSearchTagsV2(ctx context.Context, params SearchTagsV2Params
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1071,7 +1071,7 @@ func (c *Client) sendTraceByID(ctx context.Context, params TraceByIDParams) (res
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {

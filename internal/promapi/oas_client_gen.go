@@ -176,7 +176,7 @@ func (c *Client) sendGetLabelValues(ctx context.Context, params GetLabelValuesPa
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -353,7 +353,7 @@ func (c *Client) sendGetLabels(ctx context.Context, params GetLabelsParams) (res
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -511,7 +511,7 @@ func (c *Client) sendGetMetadata(ctx context.Context, params GetMetadataParams) 
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -639,7 +639,7 @@ func (c *Client) sendGetQuery(ctx context.Context, params GetQueryParams) (res *
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -784,7 +784,7 @@ func (c *Client) sendGetQueryExemplars(ctx context.Context, params GetQueryExemp
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -909,7 +909,7 @@ func (c *Client) sendGetQueryRange(ctx context.Context, params GetQueryRangePara
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1080,7 +1080,7 @@ func (c *Client) sendGetRules(ctx context.Context, params GetRulesParams) (res *
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1252,7 +1252,7 @@ func (c *Client) sendGetSeries(ctx context.Context, params GetSeriesParams) (res
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1407,7 +1407,7 @@ func (c *Client) sendPostLabels(ctx context.Context, request *LabelsForm) (res *
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1483,7 +1483,7 @@ func (c *Client) sendPostQuery(ctx context.Context, request *QueryForm) (res *Qu
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1559,7 +1559,7 @@ func (c *Client) sendPostQueryExemplars(ctx context.Context, request *ExemplarsF
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1635,7 +1635,7 @@ func (c *Client) sendPostQueryRange(ctx context.Context, request *QueryRangeForm
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -1711,7 +1711,7 @@ func (c *Client) sendPostSeries(ctx context.Context, request *SeriesForm) (res *
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {

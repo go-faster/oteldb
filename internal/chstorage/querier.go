@@ -105,7 +105,7 @@ type selectQuery struct {
 func (q *Querier) do(ctx context.Context, s selectQuery) error {
 	lg := zctx.From(ctx)
 
-	ctx, track := q.tracker.Track(ctx, globalmetric.WithAttributes(
+	ctx, track := q.tracker.Start(ctx, globalmetric.WithAttributes(
 		attribute.String("chstorage.query_type", s.Type),
 		attribute.String("chstorage.table", s.Table),
 		attribute.String("chstorage.signal", s.Signal),
@@ -152,5 +152,6 @@ func (q *Querier) do(ctx context.Context, s selectQuery) error {
 			attribute.String("chstorage.signal", s.Signal),
 		),
 	)
+
 	return nil
 }

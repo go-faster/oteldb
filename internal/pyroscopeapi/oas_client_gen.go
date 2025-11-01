@@ -143,7 +143,7 @@ func (c *Client) sendGetApps(ctx context.Context) (res []ApplicationMetadata, er
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -216,7 +216,7 @@ func (c *Client) sendIngest(ctx context.Context, request *IngestReqWithContentTy
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -438,7 +438,7 @@ func (c *Client) sendLabelValues(ctx context.Context, params LabelValuesParams) 
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -586,7 +586,7 @@ func (c *Client) sendLabels(ctx context.Context, params LabelsParams) (res Label
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {
@@ -721,7 +721,7 @@ func (c *Client) sendRender(ctx context.Context, params RenderParams) (res *Flam
 		trace.WithAttributes(otelAttrs...),
 		clientSpanKind,
 	)
-	// Track stage for error reporting.
+	// Start stage for error reporting.
 	var stage string
 	defer func() {
 		if err != nil {

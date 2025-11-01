@@ -18,7 +18,7 @@ func (n noopTrack) End() {}
 
 func (n noopTrack) OnProfiles(ctx context.Context, events []ch.ProfileEvent) error { return nil }
 
-func (n noopTracker) Track(ctx context.Context, opts ...TrackOption) (context.Context, Track) {
+func (n noopTracker) Start(ctx context.Context, opts ...TrackOption) (context.Context, Track) {
 	return ctx, noopTrack{}
 }
 

@@ -62,7 +62,7 @@ func setupCH(
 		return store, errors.Wrap(err, "create tables")
 	}
 
-	tracker, err := globalmetric.NewTracker(m.MeterProvider())
+	tracker, err := globalmetric.NewTracker(m.MeterProvider(), m.TracerProvider())
 	if err != nil {
 		return store, errors.Wrap(err, "create global metric tracker")
 	}
