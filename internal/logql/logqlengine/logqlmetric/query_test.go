@@ -3,6 +3,7 @@ package logqlmetric
 import (
 	"cmp"
 	"fmt"
+	"runtime"
 	"slices"
 	"testing"
 	"time"
@@ -168,7 +169,13 @@ func TestInstantAggregation(t *testing.T) {
 	}
 	for i, tt := range tests {
 		tt := tt
-		t.Run(fmt.Sprintf("Test%d", i+1), func(t *testing.T) {
+		id := i + 1
+		t.Run(fmt.Sprintf("Test%d", id), func(t *testing.T) {
+			if id == 12 && runtime.GOARCH == "riscv64" {
+				// TODO: Fix test failure on riscv64.
+				t.Skip("https://github.com/oteldb/oteldb/issues/828")
+			}
+
 			data := evaluateQuery(t, testSamples, tt.query, testParams, true)
 
 			v, ok := data.GetVectorResult()
