@@ -15,7 +15,7 @@ env:
 
 jobs:
   PromQL:
-    runs-on: ubuntu-latest
+    runs-on: [bench]
     steps:
       - name: Install Go
         uses: actions/setup-go@v6
