@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/sdk/app"
 	"github.com/prometheus/prometheus/storage"
 	"go.uber.org/zap"
 
 	"github.com/go-faster/oteldb/internal/chstorage"
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/oteldb/internal/logql/logqlengine"
 	"github.com/go-faster/oteldb/internal/logstorage"
 	"github.com/go-faster/oteldb/internal/traceql/traceqlengine"
