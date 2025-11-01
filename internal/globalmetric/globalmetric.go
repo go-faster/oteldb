@@ -10,16 +10,16 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-// Tracker tracks global metrics from multiple tracks.
-type Tracker struct {
+// tracker tracks global metrics from multiple tracks.
+type tracker struct {
 	mu     sync.Mutex
-	tracks []*Track
+	tracks []*track
 
 	virtualTime metric.Int64Counter
 	userTime    metric.Int64Counter
 }
 
-func (t *Tracker) memoryTrackerUsage() int64 {
+func (t *tracker) memoryTrackerUsage() int64 {
 	var total int64
 	for _, c := range t.tracks {
 		c.mu.Lock()
@@ -30,7 +30,7 @@ func (t *Tracker) memoryTrackerUsage() int64 {
 	return total
 }
 
-func (t *Tracker) memoryTrackerPeakUsage() int64 {
+func (t *tracker) memoryTrackerPeakUsage() int64 {
 	var total int64
 	for _, c := range t.tracks {
 		c.mu.Lock()
@@ -41,7 +41,7 @@ func (t *Tracker) memoryTrackerPeakUsage() int64 {
 	return total
 }
 
-func (t *Tracker) remove(ctx *Track) {
+func (t *tracker) remove(ctx *track) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -53,34 +53,34 @@ func (t *Tracker) remove(ctx *Track) {
 	}
 }
 
-// TrackOption configures a [Track].
-type TrackOption func(t *Track)
+// TrackOption configures a [track].
+type TrackOption func(t *track)
 
 // WithAttributes sets attributes for the track.
 func WithAttributes(attrs ...attribute.KeyValue) TrackOption {
-	return func(t *Track) {
+	return func(t *track) {
 		t.attributes = append(t.attributes, attrs...)
 	}
 }
 
-// Track creates a new [Track] with given options.
-func (t *Tracker) Track(ctx context.Context, options ...TrackOption) (context.Context, *Track) {
-	track := &Track{
+// Track creates a new [track] with given options.
+func (t *tracker) Track(ctx context.Context, options ...TrackOption) (context.Context, Track) {
+	trk := &track{
 		tracker: t,
 	}
 	for _, o := range options {
-		o(track)
+		o(trk)
 	}
 
-	t.tracks = append(t.tracks, track)
+	t.tracks = append(t.tracks, trk)
 
-	return ctx, track
+	return ctx, trk
 }
 
-// Track represents a tracked ClickHouse query or series of queries.
-type Track struct {
+// track represents a tracked ClickHouse query or series of queries.
+type track struct {
 	attributes []attribute.KeyValue
-	tracker    *Tracker
+	tracker    *tracker
 
 	mu                     sync.Mutex
 	memoryTrackerPeakUsage int64
@@ -89,14 +89,14 @@ type Track struct {
 	userTime               int64
 }
 
-func (c *Track) increaseVirtualTime(ctx context.Context, delta int64) {
-	c.virtualTime += delta
-	c.tracker.virtualTime.Add(ctx, delta, metric.WithAttributes(c.attributes...))
+func (t *track) increaseVirtualTime(ctx context.Context, delta int64) {
+	t.virtualTime += delta
+	t.tracker.virtualTime.Add(ctx, delta, metric.WithAttributes(t.attributes...))
 }
 
-func (c *Track) increaseUserTime(ctx context.Context, value int64) {
-	c.userTime += value
-	c.tracker.userTime.Add(ctx, value, metric.WithAttributes(c.attributes...))
+func (t *track) increaseUserTime(ctx context.Context, value int64) {
+	t.userTime += value
+	t.tracker.userTime.Add(ctx, value, metric.WithAttributes(t.attributes...))
 }
 
 const (
@@ -106,31 +106,42 @@ const (
 	EventUserTimeMicroseconds         = "UserTimeMicroseconds"
 )
 
-func (c *Track) OnProfiles(ctx context.Context, events []ch.ProfileEvent) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+func (t *track) OnProfiles(ctx context.Context, events []ch.ProfileEvent) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 
 	for _, e := range events {
 		switch e.Name {
 		case EventMemoryTrackerUsage:
-			c.memoryTrackerUsage = e.Value
+			t.memoryTrackerUsage = e.Value
 		case EventMemoryTrackerPeakUsage:
-			c.memoryTrackerPeakUsage = e.Value
+			t.memoryTrackerPeakUsage = e.Value
 		case EventOSCPUVirtualTimeMicroseconds:
-			c.increaseVirtualTime(ctx, e.Value)
+			t.increaseVirtualTime(ctx, e.Value)
 		case EventUserTimeMicroseconds:
-			c.increaseUserTime(ctx, e.Value)
+			t.increaseUserTime(ctx, e.Value)
 		default:
 			continue
 		}
 	}
+
+	return nil
 }
 
-func (c *Track) End() {
-	c.tracker.remove(c)
+func (t *track) End() {
+	t.tracker.remove(t)
 }
 
-func NewTracker(meterProvider metric.MeterProvider) (*Tracker, error) {
+type Track interface {
+	End()
+	OnProfiles(ctx context.Context, events []ch.ProfileEvent) error
+}
+
+type Tracker interface {
+	Track(ctx context.Context, opts ...TrackOption) (context.Context, Track)
+}
+
+func NewTracker(meterProvider metric.MeterProvider) (Tracker, error) {
 	meter := meterProvider.Meter("github.com/oteldb/oteldb/internal/globalmetric",
 		metric.WithSchemaURL("https://schema.oteldb.tech/metrics/v1"),
 		metric.WithInstrumentationVersion("0.1.0"),
@@ -164,16 +175,16 @@ func NewTracker(meterProvider metric.MeterProvider) (*Tracker, error) {
 		return nil, errors.Wrap(err, "memory tracker peak usage gauge")
 	}
 
-	tracker := &Tracker{
+	t := &tracker{
 		virtualTime: virtualTime,
 		userTime:    userTime,
 	}
 
 	_, err = meter.RegisterCallback(func(ctx context.Context, observer metric.Observer) error {
-		tracker.mu.Lock()
-		defer tracker.mu.Unlock()
-		observer.ObserveInt64(memoryTrackerUsage, tracker.memoryTrackerUsage())
-		observer.ObserveInt64(memoryTrackerPeakUsage, tracker.memoryTrackerPeakUsage())
+		t.mu.Lock()
+		defer t.mu.Unlock()
+		observer.ObserveInt64(memoryTrackerUsage, t.memoryTrackerUsage())
+		observer.ObserveInt64(memoryTrackerPeakUsage, t.memoryTrackerPeakUsage())
 		return nil
 	},
 		memoryTrackerUsage,
@@ -183,5 +194,5 @@ func NewTracker(meterProvider metric.MeterProvider) (*Tracker, error) {
 		return nil, errors.Wrap(err, "register memory tracker callback")
 	}
 
-	return tracker, nil
+	return t, nil
 }

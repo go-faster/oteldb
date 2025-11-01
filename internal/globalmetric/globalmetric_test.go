@@ -12,16 +12,16 @@ import (
 
 func TestTracker(t *testing.T) {
 	meterProvider := noop.NewMeterProvider()
-	tracker, err := NewTracker(meterProvider)
+	tr, err := NewTracker(meterProvider)
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	ctx, track := tracker.Track(ctx,
+	ctx, trk := tr.Track(ctx,
 		WithAttributes(
 			attribute.String("hello", "world"),
 		),
 	)
-	track.OnProfiles(ctx, []ch.ProfileEvent{
+	trk.OnProfiles(ctx, []ch.ProfileEvent{
 		{
 			Name:  EventMemoryTrackerPeakUsage,
 			Value: 10_000,
@@ -40,14 +40,16 @@ func TestTracker(t *testing.T) {
 		},
 	})
 
-	require.Equal(t, int64(10_000), track.memoryTrackerPeakUsage)
-	require.Equal(t, int64(5_000), track.memoryTrackerUsage)
-	require.Equal(t, int64(1_000_000), track.virtualTime)
-	require.Equal(t, int64(2_000_000), track.userTime)
+	tkrPrivate := trk.(*track)
+	require.Equal(t, int64(10_000), tkrPrivate.memoryTrackerPeakUsage)
+	require.Equal(t, int64(5_000), tkrPrivate.memoryTrackerUsage)
+	require.Equal(t, int64(1_000_000), tkrPrivate.virtualTime)
+	require.Equal(t, int64(2_000_000), tkrPrivate.userTime)
 
-	require.Equal(t, int64(10_000), tracker.memoryTrackerPeakUsage())
+	trPrivate := tr.(*tracker)
+	require.Equal(t, int64(10_000), trPrivate.memoryTrackerPeakUsage())
 
-	track.End()
+	trk.End()
 
-	require.Equal(t, int64(0), tracker.memoryTrackerUsage())
+	require.Equal(t, int64(0), trPrivate.memoryTrackerUsage())
 }

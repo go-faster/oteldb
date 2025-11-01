@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/ch-go"
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -29,6 +30,7 @@ type Querier struct {
 
 	clickhouseRequestHistogram metric.Float64Histogram
 	tracer                     trace.Tracer
+	tracker                    globalmetric.Tracker
 }
 
 // QuerierOptions is Querier's options.
@@ -41,6 +43,8 @@ type QuerierOptions struct {
 	MeterProvider metric.MeterProvider
 	// TracerProvider provides OpenTelemetry tracer for this querier.
 	TracerProvider trace.TracerProvider
+	// Tracker tracks global metrics.
+	Tracker globalmetric.Tracker
 }
 
 func (opts *QuerierOptions) setDefaults() {
@@ -55,6 +59,9 @@ func (opts *QuerierOptions) setDefaults() {
 	}
 	if opts.TracerProvider == nil {
 		opts.TracerProvider = otel.GetTracerProvider()
+	}
+	if opts.Tracker == nil {
+		opts.Tracker = globalmetric.NewNoopTracker()
 	}
 }
 
@@ -76,6 +83,7 @@ func NewQuerier(c ClickhouseClient, opts QuerierOptions) (*Querier, error) {
 		labelLimit: opts.LabelLimit,
 
 		tracer:                     opts.TracerProvider.Tracer("chstorage.Querier"),
+		tracker:                    opts.Tracker,
 		clickhouseRequestHistogram: clickhouseRequestHistogram,
 	}, nil
 }
@@ -97,6 +105,13 @@ type selectQuery struct {
 func (q *Querier) do(ctx context.Context, s selectQuery) error {
 	lg := zctx.From(ctx)
 
+	ctx, track := q.tracker.Track(ctx, globalmetric.WithAttributes(
+		attribute.String("chstorage.query_type", s.Type),
+		attribute.String("chstorage.table", s.Table),
+		attribute.String("chstorage.signal", s.Signal),
+	))
+	defer track.End()
+
 	query, err := s.Query.Prepare(s.OnResult)
 	if err != nil {
 		return errors.Wrap(err, "build query")
@@ -104,6 +119,7 @@ func (q *Querier) do(ctx context.Context, s selectQuery) error {
 	query.ExternalData = s.ExternalData
 	query.ExternalTable = s.ExternalTable
 	query.Logger = lg.Named("ch")
+	query.OnProfileEvents = track.OnProfiles
 
 	if logqlengine.IsExplainQuery(ctx) {
 		query.Settings = append(query.Settings, ch.Setting{
