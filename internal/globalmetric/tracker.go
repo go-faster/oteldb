@@ -6,9 +6,11 @@ import (
 
 	"github.com/ClickHouse/ch-go"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 // tracker tracks global metrics from multiple tracks.
@@ -28,6 +30,24 @@ type tracker struct {
 	osReadBytes               metric.Int64Counter
 	networkSendBytes          metric.Int64Counter
 	peakMemoryHistogram       metric.Int64Histogram
+}
+
+const (
+	memoryUsageThreshold = 100 * 1024 * 1024 // 100 MB
+)
+
+func (t *tracker) generateLogMessages(ctx context.Context) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	lg := zctx.From(ctx)
+	if t.memoryTrackerPeakUsage() > memoryUsageThreshold {
+		lg.Warn("High ClickHouse memory usage detected",
+			zap.Int64("memory_tracker_peak_usage_bytes", t.memoryTrackerPeakUsage()),
+			zap.Int64("memory_tracker_usage_bytes", t.memoryTrackerUsage()),
+			zap.Int64("file_open_count", t.fileOpen()),
+		)
+	}
 }
 
 func (t *tracker) memoryTrackerUsage() int64 {
@@ -278,6 +298,8 @@ func (t *track) End() {
 
 	// Record peak memory consumption to histogram.
 	t.tracker.peakMemoryHistogram.Record(t.ctx, t.memoryTrackerPeakUsage, metric.WithAttributes(t.attributes...))
+	// Generate logs for high memory usage.
+	t.tracker.generateLogMessages(t.ctx)
 
 	t.tracker.remove(t)
 	t.span.End()
