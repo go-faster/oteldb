@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/oteldb/internal/globalmetric"
-	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/autometric"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
@@ -13,6 +11,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
+	"github.com/go-faster/oteldb/internal/globalmetric"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 

@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/klauspost/compress/zstd"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/oteldb/internal/otelbench"
 	prw "github.com/go-faster/oteldb/internal/otelreceiver/prometheusremotewrite"
 	"github.com/go-faster/oteldb/internal/prompb"

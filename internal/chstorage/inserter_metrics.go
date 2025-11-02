@@ -12,8 +12,6 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
-	"github.com/go-faster/oteldb/internal/globalmetric"
-	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/google/uuid"
 	"github.com/prometheus/prometheus/model/labels"
@@ -24,6 +22,9 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/globalmetric"
+	"github.com/go-faster/oteldb/internal/semconv"
 )
 
 func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error) {
