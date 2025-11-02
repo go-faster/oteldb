@@ -274,12 +274,12 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 		}
 
 		var (
-			value proto.ColStr
+			value = (&proto.ColStr{}).LowCardinality()
 
 			query = chsql.Select(table, chsql.ResultColumn{
 				Name: "value",
 				Expr: columnExpr,
-				Data: &value,
+				Data: value,
 			}).
 				Distinct(true).
 				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
