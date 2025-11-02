@@ -1,12 +1,18 @@
 package chstorage
 
 import (
+	"context"
+
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/autometric"
+	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 
+	"github.com/go-faster/oteldb/internal/globalmetric"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 )
 
@@ -14,7 +20,7 @@ var _ tracestorage.Inserter = (*Inserter)(nil)
 
 // Inserter implements tracestorage.Inserter using Clickhouse.
 type Inserter struct {
-	ch     ClickhouseClient
+	ch     ClickHouseClient
 	tables Tables
 
 	stats struct {
@@ -32,7 +38,8 @@ type Inserter struct {
 		// Common.
 		Inserts metric.Int64Counter `name:"inserts" description:"Number of insert invocations"`
 	}
-	tracer trace.Tracer
+	tracer  trace.Tracer
+	tracker globalmetric.Tracker
 }
 
 // InserterOptions is Inserter's options.
@@ -43,6 +50,8 @@ type InserterOptions struct {
 	MeterProvider metric.MeterProvider
 	// TracerProvider provides OpenTelemetry tracer for this querier.
 	TracerProvider trace.TracerProvider
+	// Tracker provides global metric tracker.
+	Tracker globalmetric.Tracker
 }
 
 func (opts *InserterOptions) setDefaults() {
@@ -55,19 +64,24 @@ func (opts *InserterOptions) setDefaults() {
 	if opts.TracerProvider == nil {
 		opts.TracerProvider = otel.GetTracerProvider()
 	}
+	if opts.Tracker == nil {
+		opts.Tracker = globalmetric.NewNoopTracker()
+	}
 }
 
 // NewInserter creates new Inserter.
-func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
+func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 	// HACK(ernado): for some reason, we are getting no-op here.
 	opts.TracerProvider = otel.GetTracerProvider()
 	opts.MeterProvider = otel.GetMeterProvider()
+	opts.Tracker = globalmetric.GetTracker()
 	opts.setDefaults()
 
 	inserter := &Inserter{
-		ch:     c,
-		tables: opts.Tables,
-		tracer: opts.TracerProvider.Tracer("chstorage.Inserter"),
+		ch:      c,
+		tables:  opts.Tables,
+		tracer:  opts.TracerProvider.Tracer("chstorage.Inserter"),
+		tracker: opts.Tracker,
 	}
 
 	meter := opts.MeterProvider.Meter("chstorage.Inserter")
@@ -75,6 +89,57 @@ func NewInserter(c ClickhouseClient, opts InserterOptions) (*Inserter, error) {
 		Prefix: "chstorage.",
 	}); err != nil {
 		return nil, errors.Wrap(err, "init stats")
+	}
+
+	totalSignals, err := meter.Int64ObservableGauge("chstorage.logs.total_signals",
+		metric.WithDescription("Total number of inserted log records"),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "create total inserted log records counter")
+	}
+
+	_, err = meter.RegisterCallback(func(ctx context.Context, o metric.Observer) error {
+		type total struct {
+			Table    string
+			Signal   semconv.SignalType
+			Observed metric.Int64Observable
+		}
+		for _, t := range []total{
+			{
+				Table:    inserter.tables.Logs,
+				Signal:   semconv.SignalLogs,
+				Observed: totalSignals,
+			},
+			{
+				Table:    inserter.tables.Points,
+				Signal:   semconv.SignalMetrics,
+				Observed: totalSignals,
+			},
+			{
+				Table:    inserter.tables.Spans,
+				Signal:   semconv.SignalTraces,
+				Observed: totalSignals,
+			},
+		} {
+			v, err := inserter.totals(ctx, t.Table)
+			if err != nil {
+				zctx.From(ctx).Error("Failed to get totals",
+					zap.String("table", t.Table),
+					zap.Error(err),
+				)
+				return errors.Wrapf(err, "get totals for table %q", t.Table)
+			}
+			o.ObserveInt64(t.Observed, v, metric.WithAttributes(
+				semconv.Signal(t.Signal),
+			))
+		}
+
+		return nil
+	},
+		totalSignals,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "register totals callback")
 	}
 
 	return inserter, nil

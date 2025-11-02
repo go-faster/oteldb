@@ -10,6 +10,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/oteldb/internal/otelbench"
 	prw "github.com/go-faster/oteldb/internal/otelreceiver/prometheusremotewrite"
 	"github.com/go-faster/oteldb/internal/prompb"
@@ -35,7 +36,7 @@ func Benchmark_metricsBatch(b *testing.B) {
 	timeSeries, err := prw.FromTimeSeries(rw.Timeseries, prw.Settings{TimeThreshold: 1_000_000})
 	require.NoError(b, err)
 
-	batch := newMetricBatch()
+	batch := newMetricBatch(globalmetric.NewNoopTracker())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		batch.Reset()

@@ -11,6 +11,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/go-faster/oteldb/internal/globalmetric"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/oteldb/internal/traceql"
 	"github.com/go-faster/oteldb/internal/tracestorage"
 	"github.com/go-faster/oteldb/internal/xsync"
@@ -66,6 +68,7 @@ func (i *Inserter) submitTraces(
 	ctx, span := i.tracer.Start(ctx, "chstorage.traces.submitTraces", trace.WithAttributes(
 		attribute.Int("chstorage.spans_count", spans.spanID.Rows()),
 	))
+
 	defer func() {
 		if rerr != nil {
 			span.RecordError(rerr)
@@ -75,21 +78,27 @@ func (i *Inserter) submitTraces(
 
 			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
-					attribute.String("chstorage.signal", "traces"),
+					semconv.Signal(semconv.SignalTraces),
 				),
 			)
 		}
 		span.End()
 	}()
 
+	ctx, track := i.tracker.Start(ctx, globalmetric.WithAttributes(
+		semconv.Signal(semconv.SignalTraces),
+	))
+	defer track.End()
+
 	grp, grpCtx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		ctx := grpCtx
 
 		if err := i.ch.Do(ctx, ch.Query{
-			Logger: zctx.From(ctx).Named("ch"),
-			Body:   spans.Body(i.tables.Spans),
-			Input:  spans.Input(),
+			Logger:          zctx.From(ctx).Named("ch"),
+			Body:            spans.Body(i.tables.Spans),
+			Input:           spans.Input(),
+			OnProfileEvents: track.OnProfiles,
 		}); err != nil {
 			return errors.Wrap(err, "insert spans")
 		}

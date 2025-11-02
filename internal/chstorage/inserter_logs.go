@@ -11,7 +11,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/oteldb/internal/logstorage"
+	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/oteldb/internal/xsync"
 )
 
@@ -72,7 +74,7 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 
 			i.stats.Inserts.Add(ctx, 1,
 				metric.WithAttributes(
-					attribute.String("chstorage.signal", "logs"),
+					semconv.Signal(semconv.SignalLogs),
 				),
 			)
 		}
@@ -83,11 +85,18 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 	grp.Go(func() error {
 		ctx := grpCtx
 
+		ctx, track := i.tracker.Start(ctx, globalmetric.WithAttributes(
+			semconv.Signal(semconv.SignalLogs),
+			attribute.String("chstorage.table", i.tables.Logs),
+		))
+		defer track.End()
+
 		table := i.tables.Logs
 		if err := i.ch.Do(ctx, ch.Query{
-			Logger: zctx.From(ctx).Named("ch"),
-			Body:   logs.Body(table),
-			Input:  logs.Input(),
+			Logger:          zctx.From(ctx).Named("ch"),
+			Body:            logs.Body(table),
+			Input:           logs.Input(),
+			OnProfileEvents: track.OnProfiles,
 		}); err != nil {
 			return errors.Wrap(err, "insert records")
 		}
@@ -96,11 +105,18 @@ func (i *Inserter) submitLogs(ctx context.Context, logs *logColumns, attrs *logA
 	grp.Go(func() error {
 		ctx := grpCtx
 
+		ctx, track := i.tracker.Start(ctx, globalmetric.WithAttributes(
+			semconv.Signal(semconv.SignalLogs),
+			attribute.String("chstorage.table", i.tables.Labels),
+		))
+		defer track.End()
+
 		table := i.tables.LogAttrs
 		if err := i.ch.Do(ctx, ch.Query{
-			Logger: zctx.From(ctx).Named("ch"),
-			Body:   attrs.Body(table),
-			Input:  attrs.Input(),
+			Logger:          zctx.From(ctx).Named("ch"),
+			Body:            attrs.Body(table),
+			Input:           attrs.Input(),
+			OnProfileEvents: track.OnProfiles,
 		}); err != nil {
 			return errors.Wrap(err, "insert labels")
 		}

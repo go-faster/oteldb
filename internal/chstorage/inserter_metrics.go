@@ -22,6 +22,9 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/go-faster/oteldb/internal/globalmetric"
+	"github.com/go-faster/oteldb/internal/semconv"
 )
 
 func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error) {
@@ -35,9 +38,11 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 			i.stats.InsertedExemplars.Add(ctx, int64(b.exemplars.value.Rows()))
 			i.stats.InsertedMetricLabels.Add(ctx, int64(len(b.labels)))
 
-			i.stats.Inserts.Add(ctx, 1, metric.WithAttributes(
-				attribute.String("chstorage.signal", "metrics"),
-			))
+			i.stats.Inserts.Add(ctx, 1,
+				metric.WithAttributes(
+					semconv.Signal(semconv.SignalMetrics),
+				),
+			)
 		}
 		span.End()
 	}()
@@ -46,7 +51,7 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 
 // ConsumeMetrics inserts given metrics.
 func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
-	b := newMetricBatch()
+	b := newMetricBatch(i.tracker)
 	if err := b.mapMetrics(metrics); err != nil {
 		return errors.Wrap(err, "map metrics")
 	}
@@ -61,6 +66,7 @@ type metricsBatch struct {
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
 	labels        map[[2]string]labelScope
+	tracker       globalmetric.Tracker
 }
 
 func (b *metricsBatch) Reset() {
@@ -70,12 +76,13 @@ func (b *metricsBatch) Reset() {
 	maps.Clear(b.labels)
 }
 
-func newMetricBatch() *metricsBatch {
+func newMetricBatch(tracker globalmetric.Tracker) *metricsBatch {
 	return &metricsBatch{
 		points:        newPointColumns(),
 		expHistograms: newExpHistogramColumns(),
 		exemplars:     newExemplarColumns(),
 		labels:        map[[2]string]labelScope{},
+		tracker:       tracker,
 	}
 }
 
@@ -88,7 +95,7 @@ const (
 	labelScopeAttribute
 )
 
-func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickhouseClient) error {
+func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickHouseClient) error {
 	lg := zctx.From(ctx)
 
 	labelColumns := newLabelsColumns()
@@ -137,6 +144,12 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 		grp.Go(func() error {
 			ctx := grpCtx
 
+			ctx, track := b.tracker.Start(ctx, globalmetric.WithAttributes(
+				semconv.Signal(semconv.SignalMetrics),
+				attribute.String("chstorage.table", table.name),
+			))
+			defer track.End()
+
 			var (
 				queryID = uuid.New().String()
 				lg      = lg.With(
@@ -147,9 +160,10 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client Clickho
 				input  = table.columns.Input()
 				insert = func() error {
 					err := client.Do(ctx, ch.Query{
-						Body:   input.Into(table.name),
-						Input:  input,
-						Logger: zctx.From(ctx).Named("ch"),
+						Body:            input.Into(table.name),
+						Input:           input,
+						Logger:          zctx.From(ctx).Named("ch"),
+						OnProfileEvents: track.OnProfiles,
 					})
 					if pe, ok := errors.Into[proto.Error](err); ok && pe == proto.ErrQueryWithSameIDIsAlreadyRunning {
 						lg.Debug("Query already running")
