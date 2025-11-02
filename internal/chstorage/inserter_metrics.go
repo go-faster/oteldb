@@ -12,12 +12,14 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/zctx"
 	"github.com/google/uuid"
 	"github.com/prometheus/prometheus/model/labels"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
@@ -48,7 +50,7 @@ func (i *Inserter) insertBatch(ctx context.Context, b *metricsBatch) (rerr error
 
 // ConsumeMetrics inserts given metrics.
 func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) error {
-	b := newMetricBatch()
+	b := newMetricBatch(i.tracker)
 	if err := b.mapMetrics(metrics); err != nil {
 		return errors.Wrap(err, "map metrics")
 	}
@@ -63,6 +65,7 @@ type metricsBatch struct {
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
 	labels        map[[2]string]labelScope
+	tracker       globalmetric.Tracker
 }
 
 func (b *metricsBatch) Reset() {
@@ -72,12 +75,13 @@ func (b *metricsBatch) Reset() {
 	maps.Clear(b.labels)
 }
 
-func newMetricBatch() *metricsBatch {
+func newMetricBatch(tracker globalmetric.Tracker) *metricsBatch {
 	return &metricsBatch{
 		points:        newPointColumns(),
 		expHistograms: newExpHistogramColumns(),
 		exemplars:     newExemplarColumns(),
 		labels:        map[[2]string]labelScope{},
+		tracker:       tracker,
 	}
 }
 
@@ -139,6 +143,12 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickHo
 		grp.Go(func() error {
 			ctx := grpCtx
 
+			ctx, track := b.tracker.Start(ctx, globalmetric.WithAttributes(
+				semconv.Signal(semconv.SignalMetrics),
+				attribute.String("chstorage.table", table.name),
+			))
+			defer track.End()
+
 			var (
 				queryID = uuid.New().String()
 				lg      = lg.With(
@@ -149,9 +159,10 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickHo
 				input  = table.columns.Input()
 				insert = func() error {
 					err := client.Do(ctx, ch.Query{
-						Body:   input.Into(table.name),
-						Input:  input,
-						Logger: zctx.From(ctx).Named("ch"),
+						Body:            input.Into(table.name),
+						Input:           input,
+						Logger:          zctx.From(ctx).Named("ch"),
+						OnProfileEvents: track.OnProfiles,
 					})
 					if pe, ok := errors.Into[proto.Error](err); ok && pe == proto.ErrQueryWithSameIDIsAlreadyRunning {
 						lg.Debug("Query already running")

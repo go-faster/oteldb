@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/oteldb/internal/globalmetric"
 	"github.com/go-faster/oteldb/internal/semconv"
 	"github.com/go-faster/sdk/autometric"
 	"github.com/go-faster/sdk/zctx"
@@ -37,7 +38,8 @@ type Inserter struct {
 		// Common.
 		Inserts metric.Int64Counter `name:"inserts" description:"Number of insert invocations"`
 	}
-	tracer trace.Tracer
+	tracer  trace.Tracer
+	tracker globalmetric.Tracker
 }
 
 // InserterOptions is Inserter's options.
@@ -48,6 +50,8 @@ type InserterOptions struct {
 	MeterProvider metric.MeterProvider
 	// TracerProvider provides OpenTelemetry tracer for this querier.
 	TracerProvider trace.TracerProvider
+	// Tracker provides global metric tracker.
+	Tracker globalmetric.Tracker
 }
 
 func (opts *InserterOptions) setDefaults() {
@@ -60,6 +64,9 @@ func (opts *InserterOptions) setDefaults() {
 	if opts.TracerProvider == nil {
 		opts.TracerProvider = otel.GetTracerProvider()
 	}
+	if opts.Tracker == nil {
+		opts.Tracker = globalmetric.NewNoopTracker()
+	}
 }
 
 // NewInserter creates new Inserter.
@@ -67,12 +74,14 @@ func NewInserter(c ClickHouseClient, opts InserterOptions) (*Inserter, error) {
 	// HACK(ernado): for some reason, we are getting no-op here.
 	opts.TracerProvider = otel.GetTracerProvider()
 	opts.MeterProvider = otel.GetMeterProvider()
+	opts.Tracker = globalmetric.GetTracker()
 	opts.setDefaults()
 
 	inserter := &Inserter{
-		ch:     c,
-		tables: opts.Tables,
-		tracer: opts.TracerProvider.Tracer("chstorage.Inserter"),
+		ch:      c,
+		tables:  opts.Tables,
+		tracer:  opts.TracerProvider.Tracer("chstorage.Inserter"),
+		tracker: opts.Tracker,
 	}
 
 	meter := opts.MeterProvider.Meter("chstorage.Inserter")

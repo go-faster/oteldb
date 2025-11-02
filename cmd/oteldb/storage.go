@@ -67,6 +67,8 @@ func setupCH(
 		return store, errors.Wrap(err, "create global metric tracker")
 	}
 
+	globalmetric.SetTracker(tracker)
+
 	querier, err := chstorage.NewQuerier(c, chstorage.QuerierOptions{
 		Tables:         tables,
 		MeterProvider:  m.MeterProvider(),

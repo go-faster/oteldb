@@ -74,6 +74,28 @@ func (t *tracker) remove(ctx *track) {
 	}
 }
 
+var (
+	_globalTracker Tracker
+	_globalMu      sync.Mutex
+)
+
+func GetTracker() Tracker {
+	_globalMu.Lock()
+	defer _globalMu.Unlock()
+
+	if _globalTracker == nil {
+		return NewNoopTracker()
+	}
+	return _globalTracker
+}
+
+func SetTracker(t Tracker) {
+	_globalMu.Lock()
+	defer _globalMu.Unlock()
+
+	_globalTracker = t
+}
+
 // TrackOption configures a [track].
 type TrackOption func(t *track)
 

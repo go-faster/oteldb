@@ -50,6 +50,7 @@ services:
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=client
+      - OTEL_METRIC_EXPORT_INTERVAL=5000
   server:
     image: ghcr.io/go-faster/oteldb/oteldemo
     command: ["server"]
@@ -66,6 +67,7 @@ services:
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=server
+      - OTEL_METRIC_EXPORT_INTERVAL=5000
 
   oteldb:
     image: ghcr.io/go-faster/oteldb
@@ -83,6 +85,7 @@ services:
       - OTEL_EXPORTER_OTLP_INSECURE=true
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=oteldb
+      - OTEL_METRIC_EXPORT_INTERVAL=5000
     ports:
       - "9090:9090" # prometheus API
     depends_on:
