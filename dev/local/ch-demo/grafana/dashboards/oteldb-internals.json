@@ -1049,7 +1049,8 @@
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
-              "type": "linear"
+              "log": 2,
+              "type": "log"
             },
             "showPoints": "auto",
             "spanNulls": false,
@@ -1062,6 +1063,7 @@
             }
           },
           "mappings": [],
+          "max": 400554461,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1785,5 +1787,5 @@
   "timezone": "browser",
   "title": "oteldb: internals",
   "uid": "oteldb-internals",
-  "version": 7
+  "version": 9
 }
