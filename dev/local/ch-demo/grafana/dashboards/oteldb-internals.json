@@ -810,6 +810,7 @@
         {
           "disableTextWrap": false,
           "editorMode": "builder",
+          "exemplar": true,
           "expr": "sum({\"clickhouse.memory_tracker.usage\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -908,6 +909,7 @@
         {
           "disableTextWrap": false,
           "editorMode": "builder",
+          "exemplar": true,
           "expr": "sum({\"clickhouse.memory_tracker.peak_usage\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1787,5 +1789,5 @@
   "timezone": "browser",
   "title": "oteldb: internals",
   "uid": "oteldb-internals",
-  "version": 9
+  "version": 10
 }
