@@ -27,6 +27,7 @@ type tracker struct {
 	selectedRows              metric.Int64Counter
 	osReadBytes               metric.Int64Counter
 	networkSendBytes          metric.Int64Counter
+	peakMemoryHistogram       metric.Int64Histogram
 }
 
 func (t *tracker) memoryTrackerUsage() int64 {
@@ -119,6 +120,7 @@ func (t *tracker) Start(ctx context.Context, options ...TrackOption) (context.Co
 		trace.WithAttributes(trk.attributes...),
 	)
 	trk.span = span
+	trk.ctx = ctx
 
 	t.tracks = append(t.tracks, trk)
 
@@ -129,6 +131,7 @@ func (t *tracker) Start(ctx context.Context, options ...TrackOption) (context.Co
 type track struct {
 	attributes []attribute.KeyValue
 	tracker    *tracker
+	ctx        context.Context
 	span       trace.Span
 
 	mu                        sync.Mutex
@@ -272,6 +275,10 @@ func (t *track) End() {
 		attribute.Int64(FileOpen, t.fileOpen),
 		attribute.Int64(NetworkSendBytes, t.networkSendBytes),
 	))
+
+	// Record peak memory consumption to histogram.
+	t.tracker.peakMemoryHistogram.Record(t.ctx, t.memoryTrackerPeakUsage, metric.WithAttributes(t.attributes...))
+
 	t.tracker.remove(t)
 	t.span.End()
 }
@@ -378,6 +385,13 @@ func NewTracker(meterProvider metric.MeterProvider, tracerProvider trace.TracerP
 	if err != nil {
 		return nil, errors.Wrap(err, "file open gauge")
 	}
+	peakMemoryHistogram, err := meter.Int64Histogram("clickhouse.memory_tracker.peak_usage_histogram",
+		metric.WithDescription("Distribution of peak memory usage per track"),
+		metric.WithUnit("By"),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "peak memory histogram")
+	}
 
 	t := &tracker{
 		tracer: tracer,
@@ -391,6 +405,7 @@ func NewTracker(meterProvider metric.MeterProvider, tracerProvider trace.TracerP
 		selectedRows:              selectedRows,
 		osReadBytes:               osReadBytes,
 		networkSendBytes:          networkSendBytes,
+		peakMemoryHistogram:       peakMemoryHistogram,
 	}
 
 	_, err = meter.RegisterCallback(func(ctx context.Context, observer metric.Observer) error {

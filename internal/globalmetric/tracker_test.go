@@ -274,3 +274,37 @@ func TestTracker_UnknownEvent(t *testing.T) {
 
 	trk.End()
 }
+
+func TestTracker_PeakMemoryHistogram(t *testing.T) {
+	meterProvider := noopmeter.NewMeterProvider()
+	tracerProvider := nooptracer.NewTracerProvider()
+	tr, err := NewTracker(meterProvider, tracerProvider)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// Create multiple tracks with different peak memory values.
+	for i, peakMemory := range []int64{1000, 5000, 10000, 50000, 100000} {
+		ctx, trk := tr.Start(ctx,
+			WithAttributes(
+				attribute.Int("track", i),
+			),
+		)
+		err = trk.OnProfiles(ctx, []ch.ProfileEvent{
+			{
+				Name:  EventMemoryTrackerPeakUsage,
+				Value: peakMemory,
+			},
+		})
+		require.NoError(t, err)
+
+		tkrPrivate := trk.(*track)
+		require.Equal(t, peakMemory, tkrPrivate.memoryTrackerPeakUsage)
+
+		// End the track to record to histogram.
+		trk.End()
+	}
+
+	trPrivate := tr.(*tracker)
+	require.NotNil(t, trPrivate.peakMemoryHistogram)
+}
