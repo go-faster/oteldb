@@ -277,15 +277,13 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 			value = &proto.ColStr{}
 		}
 
-		var (
-			query = chsql.Select(table, chsql.ResultColumn{
-				Name: "value",
-				Expr: columnExpr,
-				Data: value,
-			}).
-				Distinct(true).
-				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
-		)
+		query := chsql.Select(table, chsql.ResultColumn{
+			Name: "value",
+			Expr: columnExpr,
+			Data: value,
+		}).
+			Distinct(true).
+			Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
 		for _, m := range matchers {
 			selectors := []chsql.Expr{
 				chsql.Ident("name"),
