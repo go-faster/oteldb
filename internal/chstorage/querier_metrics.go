@@ -266,24 +266,24 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 	}
 
 	query := func(ctx context.Context, table string) (result []string, rerr error) {
+		var value proto.ColumnOf[string]
+
 		var columnExpr chsql.Expr
 		if labelName == labels.MetricName {
 			columnExpr = chsql.Ident("name")
+			value = proto.NewLowCardinality(&proto.ColStr{})
 		} else {
 			columnExpr = firstAttrSelector(labelName)
+			value = &proto.ColStr{}
 		}
 
-		var (
-			value proto.ColStr
-
-			query = chsql.Select(table, chsql.ResultColumn{
-				Name: "value",
-				Expr: columnExpr,
-				Data: &value,
-			}).
-				Distinct(true).
-				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
-		)
+		query := chsql.Select(table, chsql.ResultColumn{
+			Name: "value",
+			Expr: columnExpr,
+			Data: value,
+		}).
+			Distinct(true).
+			Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
 		for _, m := range matchers {
 			selectors := []chsql.Expr{
 				chsql.Ident("name"),
