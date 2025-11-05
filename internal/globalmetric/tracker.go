@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/ClickHouse/ch-go"
+	"github.com/dustin/go-humanize"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/sdk/zctx"
 	"go.opentelemetry.io/otel/attribute"
@@ -44,7 +45,9 @@ func (t *tracker) generateLogMessages(ctx context.Context) {
 	if t.memoryTrackerPeakUsage() > memoryUsageThreshold {
 		lg.Warn("High ClickHouse memory usage detected",
 			zap.Int64("memory_tracker_peak_usage_bytes", t.memoryTrackerPeakUsage()),
+			zap.String("memory_tracker_peak_usage_bytes_human", humanize.Bytes(uint64(t.memoryTrackerPeakUsage()))),
 			zap.Int64("memory_tracker_usage_bytes", t.memoryTrackerUsage()),
+			zap.String("memory_tracker_usage_bytes_human", humanize.Bytes(uint64(t.memoryTrackerUsage()))),
 			zap.Int64("file_open_count", t.fileOpen()),
 		)
 	}
