@@ -13,7 +13,7 @@ func TestHash(t *testing.T) {
 	require.NotEqual(t, AttrHash(m), Hash{})
 }
 
-func BenchmarkHash(b *testing.B) {
+func BenchmarkAttrHash(b *testing.B) {
 	m := pcommon.NewMap()
 	m.PutStr("net.transport", "ip_tcp")
 	m.PutStr("net.sock.family", "inet")
