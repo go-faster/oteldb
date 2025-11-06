@@ -9,7 +9,7 @@ import (
 
 type timeseriesColumns struct {
 	name *proto.ColLowCardinality[string]
-	hash proto.ColUInt128
+	hash proto.ColFixedStr16
 
 	attributes *Attributes
 	scope      *Attributes
@@ -69,7 +69,7 @@ func (c *timeseriesColumns) DDL() ddl.Table {
 }
 
 type pointColumns struct {
-	hash      proto.ColUInt128
+	hash      proto.ColFixedStr16
 	timestamp *proto.ColDateTime64
 
 	value proto.ColFloat64

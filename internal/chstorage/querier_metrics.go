@@ -979,7 +979,7 @@ func (p *promQuerier) buildQuery(
 	return query, nil
 }
 
-func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end time.Time, timeseries map[proto.UInt128]labels.Labels) ([]storage.Series, error) {
+func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end time.Time, timeseries map[[16]byte]labels.Labels) ([]storage.Series, error) {
 	var (
 		c     = newPointColumns()
 		query = chsql.Select(table, c.ChsqlResult()...).Where(
@@ -990,13 +990,13 @@ func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end 
 			),
 		).Order(chsql.Ident("timestamp"), chsql.Asc)
 
-		inputData proto.ColUInt128
+		inputData proto.ColFixedStr16
 	)
 	for hash := range timeseries {
 		inputData.Append(hash)
 	}
 
-	set := map[proto.UInt128]*series[pointData]{}
+	set := map[[16]byte]*series[pointData]{}
 	if err := p.do(ctx, selectQuery{
 		Query:         query,
 		ExternalTable: "timeseries_hashes",
@@ -1048,7 +1048,7 @@ func (p *promQuerier) querySeries(
 	table string,
 	matchers []*labels.Matcher,
 	mapping metricsLabelMapping,
-) (map[proto.UInt128]labels.Labels, error) {
+) (map[[16]byte]labels.Labels, error) {
 	var (
 		c     = newTimeseriesColumns()
 		query = chsql.Select(table, c.ChsqlResult()...)
@@ -1070,7 +1070,7 @@ func (p *promQuerier) querySeries(
 	}
 
 	var (
-		set = map[proto.UInt128]labels.Labels{}
+		set = map[[16]byte]labels.Labels{}
 		lb  labels.ScratchBuilder
 	)
 	if err := p.do(ctx, selectQuery{

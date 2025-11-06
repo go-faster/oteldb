@@ -1,12 +1,11 @@
 package chstorage
 
 import (
-	"encoding/binary"
 	"slices"
 	"strings"
 
-	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/jx"
+	"github.com/zeebo/xxh3"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -193,29 +192,14 @@ func decodeMap(d *jx.Decoder, m pcommon.Map) error {
 	})
 }
 
-func hashTimeseries(name string, res, scope, attrs otelstorage.Attrs) proto.UInt128 {
-	intersect := pcommon.NewMap()
+func hashTimeseries(name string, res, scope, attrs otelstorage.Attrs) [16]byte {
+	h := xxh3.New()
 
-	intersect.EnsureCapacity(
-		res.Len() +
-			scope.Len() +
-			attrs.Len(),
-	)
+	_, _ = h.WriteString(name)
+	otelstorage.WriteAttrHash(h, res.AsMap())
+	otelstorage.WriteAttrHash(h, scope.AsMap())
+	otelstorage.WriteAttrHash(h, attrs.AsMap())
 
-	for k, v := range attrs.AsMap().All() {
-		v.CopyTo(intersect.PutEmpty(k))
-	}
-	for k, v := range scope.AsMap().All() {
-		v.CopyTo(intersect.PutEmpty(k))
-	}
-	for k, v := range res.AsMap().All() {
-		v.CopyTo(intersect.PutEmpty(k))
-	}
-	intersect.PutStr("__name__", name)
-
-	hash := otelstorage.Attrs(intersect).Hash()
-	return proto.UInt128{
-		Low:  binary.LittleEndian.Uint64(hash[0:8]),
-		High: binary.LittleEndian.Uint64(hash[8:16]),
-	}
+	hash := h.Sum128().Bytes()
+	return hash
 }
