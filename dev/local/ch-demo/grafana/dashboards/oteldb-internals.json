@@ -19,7 +19,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 8,
+  "id": 171,
   "links": [],
   "panels": [
     {
@@ -38,7 +38,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "/src/oteldb/oteldb/internal/globalmetric/tracker.go",
       "fieldConfig": {
@@ -120,6 +120,10 @@
       "pluginVersion": "12.1.1",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${ds}"
+          },
           "disableTextWrap": false,
           "editorMode": "builder",
           "expr": "sum(rate({\"clickhouse.cpu.user_time_microseconds\"}[$__rate_interval]))",
@@ -137,7 +141,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Total system CPU time used by ClickHouse in microseconds",
       "fieldConfig": {
@@ -236,7 +240,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Total virtual CPU time used by ClickHouse in microseconds",
       "fieldConfig": {
@@ -335,7 +339,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -433,7 +437,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -531,7 +535,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -629,7 +633,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -727,7 +731,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -826,7 +830,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -925,7 +929,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1023,7 +1027,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1121,7 +1125,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prom-oteldb"
+            "uid": "${ds}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1138,7 +1142,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prom-oteldb"
+            "uid": "${ds}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1155,7 +1159,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prom-oteldb"
+            "uid": "${ds}"
           },
           "disableTextWrap": false,
           "editorMode": "code",
@@ -1176,7 +1180,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1265,7 +1269,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prom-oteldb"
+            "uid": "${ds}"
           },
           "description": "Request query histogram for $signal.",
           "fieldConfig": {
@@ -1364,7 +1368,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Total amount of $signal entries in the database.",
       "fieldConfig": {
@@ -1417,7 +1421,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prom-oteldb"
+            "uid": "${ds}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -1449,7 +1453,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Inserts per second for $signal.",
       "fieldConfig": {
@@ -1533,7 +1537,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Total amount of $signal entries in the database.",
       "fieldConfig": {
@@ -1584,7 +1588,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prom-oteldb"
+            "uid": "${ds}"
           },
           "disableTextWrap": false,
           "editorMode": "builder",
@@ -1603,7 +1607,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Inserts per second for $signal.",
       "fieldConfig": {
@@ -1671,7 +1675,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prom-oteldb"
+        "uid": "${ds}"
       },
       "description": "Request query histogram for $signal.",
       "fieldConfig": {
@@ -1756,6 +1760,18 @@
   "templating": {
     "list": [
       {
+        "current": {
+          "text": "PromQL",
+          "value": "${ds}"
+        },
+        "name": "ds",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
         "allowCustomValue": false,
         "current": {
           "text": "All",
@@ -1763,7 +1779,11 @@
             "$__all"
           ]
         },
-        "definition": "label_values({\"chstorage.inserts\"},chstorage.signal)",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${ds}"
+        },
+        "definition": "label_values({\"chstorage.logs.total_signals\"},chstorage.signal)",
         "description": "Telemetry signal type.",
         "includeAll": true,
         "label": "signal",
@@ -1772,11 +1792,12 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values({\"chstorage.inserts\"},chstorage.signal)",
+          "query": "label_values({\"chstorage.logs.total_signals\"},chstorage.signal)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
+        "sort": 1,
         "type": "query"
       }
     ]
@@ -1789,5 +1810,5 @@
   "timezone": "browser",
   "title": "oteldb: internals",
   "uid": "oteldb-internals",
-  "version": 10
+  "version": 2
 }
