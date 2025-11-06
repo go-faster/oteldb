@@ -55,7 +55,8 @@ func (cfg *Config) setDefaults() {
 				"otlp": map[string]any{
 					"protocols": map[string]any{
 						"grpc": map[string]any{
-							"endpoint": "0.0.0.0:4317",
+							"endpoint":              "0.0.0.0:4317",
+							"max_recv_msg_size_mib": 512,
 						},
 						"http": map[string]any{
 							"endpoint": "0.0.0.0:4318",
