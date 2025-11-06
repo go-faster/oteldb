@@ -7,23 +7,18 @@ import (
 	"github.com/go-faster/oteldb/internal/ddl"
 )
 
-type pointColumns struct {
-	name      *proto.ColLowCardinality[string]
-	timestamp *proto.ColDateTime64
+type timeseriesColumns struct {
+	name *proto.ColLowCardinality[string]
+	hash proto.ColUInt128
 
-	mapping proto.ColEnum8
-	value   proto.ColFloat64
-
-	flags      proto.ColUInt8
 	attributes *Attributes
 	scope      *Attributes
 	resource   *Attributes
 }
 
-func newPointColumns() *pointColumns {
-	return &pointColumns{
-		name:      new(proto.ColStr).LowCardinality(),
-		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+func newTimeseriesColumns() *timeseriesColumns {
+	return &timeseriesColumns{
+		name: new(proto.ColStr).LowCardinality(),
 
 		attributes: NewAttributes(colAttrs),
 		scope:      NewAttributes(colScope),
@@ -31,20 +26,75 @@ func newPointColumns() *pointColumns {
 	}
 }
 
-func (c *pointColumns) Columns() Columns {
+func (c *timeseriesColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
 			{Name: "name", Data: c.name},
-			{Name: "timestamp", Data: c.timestamp},
-
-			{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
-			{Name: "value", Data: &c.value},
-
-			{Name: "flags", Data: &c.flags},
+			{Name: "hash", Data: &c.hash},
 		},
 		c.attributes.Columns(),
 		c.scope.Columns(),
 		c.resource.Columns(),
+	)
+}
+
+func (c *timeseriesColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *timeseriesColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *timeseriesColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
+
+func (c *timeseriesColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:     "ReplacingMergeTree",
+		PrimaryKey: []string{"name", "resource", "scope", "attribute"},
+		OrderBy:    []string{"name", "resource", "scope", "attribute"},
+		Columns: []ddl.Column{
+			{
+				Name:  "name",
+				Type:  c.name.Type(),
+				Codec: "ZSTD(1)",
+			},
+			{
+				Name:  "hash",
+				Type:  c.hash.Type(),
+				Codec: "ZSTD(1)",
+			},
+		},
+	}
+
+	c.attributes.DDL(&table)
+	c.resource.DDL(&table)
+	c.scope.DDL(&table)
+
+	return table
+}
+
+type pointColumns struct {
+	hash      proto.ColUInt128
+	timestamp *proto.ColDateTime64
+
+	value proto.ColFloat64
+
+	mapping proto.ColEnum8
+	flags   proto.ColUInt8
+}
+
+func newPointColumns() *pointColumns {
+	return &pointColumns{
+		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+	}
+}
+
+func (c *pointColumns) Columns() Columns {
+	return MergeColumns(
+		Columns{
+			{Name: "hash", Data: &c.hash},
+			{Name: "timestamp", Data: c.timestamp},
+
+			{Name: "value", Data: &c.value},
+
+			{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
+			{Name: "flags", Data: &c.flags},
+		},
 	)
 }
 
@@ -56,21 +106,13 @@ func (c *pointColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		PrimaryKey:  []string{"name", "mapping", "resource", "attribute"},
-		OrderBy:     []string{"name", "mapping", "resource", "attribute", "timestamp"},
+		PrimaryKey:  []string{"hash", "timestamp"},
+		OrderBy:     []string{"hash", "timestamp"},
 		TTL:         ddl.TTL{Field: "timestamp"},
-		Indexes: []ddl.Index{
-			{
-				Name:        "idx_ts",
-				Target:      "timestamp",
-				Type:        "minmax",
-				Granularity: 8192,
-			},
-		},
 		Columns: []ddl.Column{
 			{
-				Name:  "name",
-				Type:  c.name.Type(),
+				Name:  "hash",
+				Type:  c.hash.Type(),
 				Codec: "ZSTD(1)",
 			},
 			{
@@ -79,14 +121,14 @@ func (c *pointColumns) DDL() ddl.Table {
 				Codec: "Delta, ZSTD(1)",
 			},
 			{
-				Name:  "mapping",
-				Type:  c.mapping.Type().Sub(metricMappingDDL),
-				Codec: "T64, ZSTD(1)",
-			},
-			{
 				Name:  "value",
 				Type:  c.value.Type(),
 				Codec: "Gorilla, ZSTD(1)",
+			},
+			{
+				Name:  "mapping",
+				Type:  c.mapping.Type().Sub(metricMappingDDL),
+				Codec: "T64, ZSTD(1)",
 			},
 			{
 				Name:  "flags",
@@ -95,10 +137,6 @@ func (c *pointColumns) DDL() ddl.Table {
 			},
 		},
 	}
-
-	c.attributes.DDL(&table)
-	c.resource.DDL(&table)
-	c.scope.DDL(&table)
 
 	return table
 }

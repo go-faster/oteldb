@@ -1,9 +1,11 @@
 package chstorage
 
 import (
+	"encoding/binary"
 	"slices"
 	"strings"
 
+	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/jx"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
@@ -189,4 +191,31 @@ func decodeMap(d *jx.Decoder, m pcommon.Map) error {
 		rval := m.PutEmpty(key)
 		return decodeValue(d, rval)
 	})
+}
+
+func hashTimeseries(name string, res, scope, attrs otelstorage.Attrs) proto.UInt128 {
+	intersect := pcommon.NewMap()
+
+	intersect.EnsureCapacity(
+		res.Len() +
+			scope.Len() +
+			attrs.Len(),
+	)
+
+	for k, v := range attrs.AsMap().All() {
+		v.CopyTo(intersect.PutEmpty(k))
+	}
+	for k, v := range scope.AsMap().All() {
+		v.CopyTo(intersect.PutEmpty(k))
+	}
+	for k, v := range res.AsMap().All() {
+		v.CopyTo(intersect.PutEmpty(k))
+	}
+	intersect.PutStr("__name__", name)
+
+	hash := otelstorage.Attrs(intersect).Hash()
+	return proto.UInt128{
+		Low:  binary.LittleEndian.Uint64(hash[0:8]),
+		High: binary.LittleEndian.Uint64(hash[8:16]),
+	}
 }

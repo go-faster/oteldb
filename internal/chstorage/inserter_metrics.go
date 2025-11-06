@@ -63,6 +63,7 @@ func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 
 type metricsBatch struct {
 	points        *pointColumns
+	timeseries    *timeseriesColumns
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
 	labels        map[[2]string]labelScope
@@ -71,6 +72,7 @@ type metricsBatch struct {
 
 func (b *metricsBatch) Reset() {
 	b.points.Columns().Reset()
+	b.timeseries.Columns().Reset()
 	b.expHistograms.Columns().Reset()
 	b.exemplars.Columns().Reset()
 	maps.Clear(b.labels)
@@ -79,6 +81,7 @@ func (b *metricsBatch) Reset() {
 func newMetricBatch(tracker globalmetric.Tracker) *metricsBatch {
 	return &metricsBatch{
 		points:        newPointColumns(),
+		timeseries:    newTimeseriesColumns(),
 		expHistograms: newExpHistogramColumns(),
 		exemplars:     newExemplarColumns(),
 		labels:        map[[2]string]labelScope{},
@@ -136,6 +139,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickHo
 		columns columns
 	}{
 		{tables.Points, b.points},
+		{tables.Timeseries, b.timeseries},
 		{tables.ExpHistograms, b.expHistograms},
 		{tables.Exemplars, b.exemplars},
 		{tables.Labels, labelColumns},
@@ -239,14 +243,25 @@ func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice p
 		); err != nil {
 			return errors.Wrap(err, "map exemplars")
 		}
-		c.name.Append(name)
+
+		hash := hashTimeseries(
+			name,
+			res.Attributes(),
+			scope.Attributes(),
+			attrs.Attributes(),
+		)
+
+		c.hash.Append(hash)
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
 		c.flags.Append(uint8(flags))
-		c.attributes.Append(attrs.Attributes())
-		c.scope.Append(scope.Attributes())
-		c.resource.Append(res.Attributes())
+
+		b.timeseries.name.Append(name)
+		b.timeseries.resource.Append(res.Attributes())
+		b.timeseries.scope.Append(scope.Attributes())
+		b.timeseries.attributes.Append(attrs.Attributes())
+		b.timeseries.hash.Append(hash)
 	}
 	return nil
 }
@@ -547,15 +562,26 @@ func (b *metricsBatch) addMappedSample(
 	bucketKey ...[2]string,
 ) {
 	c := b.points
+	hash := hashTimeseries(
+		name,
+		series.Resource.Attributes(),
+		series.Scope.Attributes(),
+		series.Attributes.Attributes(bucketKey...),
+	)
+
 	b.addName(name)
-	c.name.Append(name)
+	c.hash.Append(hash)
 	c.timestamp.Append(series.Timestamp)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
 	c.flags.Append(uint8(series.Flags))
-	c.attributes.Append(series.Attributes.Attributes(bucketKey...))
-	c.scope.Append(series.Scope.Attributes())
-	c.resource.Append(series.Resource.Attributes())
+
+	b.timeseries.name.Append(name)
+	b.timeseries.resource.Append(series.Resource.Attributes())
+	b.timeseries.scope.Append(series.Scope.Attributes())
+	b.timeseries.attributes.Append(series.Attributes.Attributes(bucketKey...))
+
+	b.timeseries.hash.Append(hash)
 }
 
 type exemplarSeries struct {

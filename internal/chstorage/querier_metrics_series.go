@@ -138,6 +138,85 @@ func (p *promQuerier) selectOnlySeries(
 		return result, nil
 	}
 
+	queryTimeseries := func(ctx context.Context, table string) (result []onlyLabelsSeries, _ error) {
+		series := proto.ColMap[string, string]{
+			Keys:   new(proto.ColStr),
+			Values: new(proto.ColStr),
+		}
+
+		query := chsql.Select(table,
+			chsql.ResultColumn{
+				Name: "series",
+				Expr: chsql.MapConcat(
+					chsql.Map(chsql.String("__name__"), chsql.Ident("name")),
+					attrStringMap(colAttrs),
+					attrStringMap(colResource),
+					attrStringMap(colScope),
+				),
+				Data: &series,
+			}).
+			Distinct(true)
+
+		sets := make([]chsql.Expr, 0, len(matcherSets))
+		for _, set := range matcherSets {
+			matchers := make([]chsql.Expr, 0, len(set))
+			for _, m := range set {
+				selectors := []chsql.Expr{
+					chsql.Ident("name"),
+				}
+				if name := m.Name; name != labels.MetricName {
+					selectors = mapping.Selectors(name)
+				}
+
+				matcher, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+				if err != nil {
+					return result, err
+				}
+				matchers = append(matchers, matcher)
+			}
+			sets = append(sets, chsql.JoinAnd(matchers...))
+		}
+		query.Where(chsql.JoinOr(sets...))
+
+		var (
+			dedup = map[string]string{}
+			lb    labels.ScratchBuilder
+		)
+		if err := p.do(ctx, selectQuery{
+			Query: query,
+			OnResult: func(ctx context.Context, block proto.Block) error {
+				for i := 0; i < series.Rows(); i++ {
+					clear(dedup)
+					forEachColMap(&series, i, func(k, v string) {
+						dedup[k] = v
+					})
+
+					lb.Reset()
+					for k, v := range dedup {
+						lb.Add(k, v)
+					}
+					lb.Sort()
+					result = append(result, onlyLabelsSeries{
+						labels: lb.Labels(),
+					})
+				}
+				return nil
+			},
+
+			Type:   "QueryOnlySeries",
+			Signal: "metrics",
+			Table:  table,
+		}); err != nil {
+			return nil, err
+		}
+		span.AddEvent("series_fetched", trace.WithAttributes(
+			attribute.String("chstorage.table", table),
+			attribute.Int("chstorage.total_series", len(result)),
+		))
+
+		return result, nil
+	}
+
 	var (
 		pointsSeries  []onlyLabelsSeries
 		expHistSeries []onlyLabelsSeries
@@ -145,11 +224,11 @@ func (p *promQuerier) selectOnlySeries(
 	grp, grpCtx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		ctx := grpCtx
-		table := p.tables.Points
+		table := p.tables.Timeseries
 
-		result, err := query(ctx, table)
+		result, err := queryTimeseries(ctx, table)
 		if err != nil {
-			return errors.Wrap(err, "query points")
+			return errors.Wrap(err, "query timeseries")
 		}
 		pointsSeries = result
 		return nil

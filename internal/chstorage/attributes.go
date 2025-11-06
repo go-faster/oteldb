@@ -289,7 +289,7 @@ func (a *Attributes) DDL(table *ddl.Table) {
 
 func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
 	m.AsMap().Range(func(k string, v pcommon.Value) bool {
-		to[k] = v.Str()
+		to[k] = v.AsString()
 		return true
 	})
 }
