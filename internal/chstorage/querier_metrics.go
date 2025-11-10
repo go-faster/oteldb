@@ -342,6 +342,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 			Data: value,
 		}).
 			Distinct(true)
+
 		for _, m := range matchers {
 			selectors := []chsql.Expr{
 				chsql.Ident("name"),
@@ -356,6 +357,27 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 			}
 			query.Where(expr)
 		}
+
+		query.GroupBy(
+			chsql.Ident("name"),
+			chsql.Ident("attribute"),
+			chsql.Ident("scope"),
+			chsql.Ident("resource"),
+		)
+
+		if !p.mint.IsZero() {
+			query.Having(chsql.Gte(
+				chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
+				chsql.UnixNano(p.mint),
+			))
+		}
+		if !p.maxt.IsZero() {
+			query.Having(chsql.Lte(
+				chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
+				chsql.UnixNano(p.maxt),
+			))
+		}
+
 		query.Limit(p.labelLimit)
 
 		if err := p.do(ctx, selectQuery{
@@ -880,9 +902,9 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	grp.Go(func() error {
 		ctx := grpCtx
 
-		timeseries, err := p.querySeries(ctx, p.tables.Timeseries, matchers, mapping)
+		timeseries, err := p.querySeries(ctx, p.tables.Timeseries, start, end, matchers, mapping)
 		if err != nil {
-			return errors.Wrap(err, "query timeseries")
+			return errors.Wrap(err, "query timeseries hashes")
 		}
 
 		result, err := p.queryPoints(ctx, p.tables.Points, start, end, timeseries)
@@ -1046,14 +1068,28 @@ func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end 
 func (p *promQuerier) querySeries(
 	ctx context.Context,
 	table string,
+	start, end time.Time,
 	matchers []*labels.Matcher,
 	mapping metricsLabelMapping,
 ) (map[[16]byte]labels.Labels, error) {
 	var (
-		c     = newTimeseriesColumns()
-		query = chsql.Select(table, c.ChsqlResult()...)
+		c           = newTimeseriesColumns()
+		selectExprs = MergeColumns(
+			Columns{
+				{Name: "name", Data: c.name},
+			},
+			c.attributes.Columns(),
+			c.scope.Columns(),
+			c.resource.Columns(),
+		).ChsqlResult()
 	)
+	selectExprs = append(selectExprs, chsql.ResultColumn{
+		Name: "hash",
+		Expr: chsql.Function("any", chsql.Ident("hash")),
+		Data: c.hash,
+	})
 
+	query := chsql.Select(table, selectExprs...)
 	for _, m := range matchers {
 		selectors := []chsql.Expr{
 			chsql.Ident("name"),
@@ -1067,6 +1103,26 @@ func (p *promQuerier) querySeries(
 			return nil, err
 		}
 		query.Where(matcher)
+	}
+
+	query.GroupBy(
+		chsql.Ident("name"),
+		chsql.Ident("attribute"),
+		chsql.Ident("scope"),
+		chsql.Ident("resource"),
+	)
+
+	if !start.IsZero() {
+		query.Having(chsql.Gte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
+			chsql.UnixNano(start),
+		))
+	}
+	if !end.IsZero() {
+		query.Having(chsql.Lte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
+			chsql.UnixNano(end),
+		))
 	}
 
 	var (

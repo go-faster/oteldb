@@ -261,6 +261,9 @@ func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice p
 		b.timeseries.resource.Append(res.Attributes())
 		b.timeseries.scope.Append(scope.Attributes())
 		b.timeseries.attributes.Append(attrs.Attributes())
+
+		b.timeseries.firstSeen.Append(ts)
+		b.timeseries.lastSeen.Append(ts)
 		b.timeseries.hash.Append(hash)
 	}
 	return nil
@@ -581,6 +584,8 @@ func (b *metricsBatch) addMappedSample(
 	b.timeseries.scope.Append(series.Scope.Attributes())
 	b.timeseries.attributes.Append(series.Attributes.Attributes(bucketKey...))
 
+	b.timeseries.firstSeen.Append(series.Timestamp)
+	b.timeseries.lastSeen.Append(series.Timestamp)
 	b.timeseries.hash.Append(hash)
 }
 
