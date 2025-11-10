@@ -1,6 +1,8 @@
 package chstorage
 
 import (
+	"time"
+
 	"github.com/ClickHouse/ch-go/proto"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
@@ -9,7 +11,10 @@ import (
 
 type timeseriesColumns struct {
 	name *proto.ColLowCardinality[string]
-	hash proto.ColFixedStr16
+	hash *colSimpleAggregateFunction[[16]byte]
+
+	firstSeen *colSimpleAggregateFunction[time.Time]
+	lastSeen  *colSimpleAggregateFunction[time.Time]
 
 	attributes *Attributes
 	scope      *Attributes
@@ -19,6 +24,10 @@ type timeseriesColumns struct {
 func newTimeseriesColumns() *timeseriesColumns {
 	return &timeseriesColumns{
 		name: new(proto.ColStr).LowCardinality(),
+
+		hash:      &colSimpleAggregateFunction[[16]byte]{Function: "any", Data: new(proto.ColFixedStr16)},
+		firstSeen: &colSimpleAggregateFunction[time.Time]{Function: "min", Data: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano)},
+		lastSeen:  &colSimpleAggregateFunction[time.Time]{Function: "max", Data: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano)},
 
 		attributes: NewAttributes(colAttrs),
 		scope:      NewAttributes(colScope),
@@ -30,7 +39,9 @@ func (c *timeseriesColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
 			{Name: "name", Data: c.name},
-			{Name: "hash", Data: &c.hash},
+			{Name: "hash", Data: c.hash},
+			{Name: "first_seen", Data: c.firstSeen},
+			{Name: "last_seen", Data: c.lastSeen},
 		},
 		c.attributes.Columns(),
 		c.scope.Columns(),
@@ -44,7 +55,7 @@ func (c *timeseriesColumns) ChsqlResult() []chsql.ResultColumn { return c.Column
 
 func (c *timeseriesColumns) DDL() ddl.Table {
 	table := ddl.Table{
-		Engine:     "ReplacingMergeTree",
+		Engine:     "AggregatingMergeTree",
 		PrimaryKey: []string{"name", "resource", "scope", "attribute"},
 		OrderBy:    []string{"name", "resource", "scope", "attribute"},
 		Columns: []ddl.Column{
@@ -54,9 +65,16 @@ func (c *timeseriesColumns) DDL() ddl.Table {
 				Codec: "ZSTD(1)",
 			},
 			{
-				Name:  "hash",
-				Type:  c.hash.Type(),
-				Codec: "ZSTD(1)",
+				Name: "first_seen",
+				Type: c.firstSeen.Type(),
+			},
+			{
+				Name: "last_seen",
+				Type: c.lastSeen.Type(),
+			},
+			{
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 		},
 	}
