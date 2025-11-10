@@ -212,6 +212,11 @@ func (p *Printer) Group() {
 	p.Ident("GROUP")
 }
 
+// Having writes `HAVING` ident.
+func (p *Printer) Having() {
+	p.Ident("HAVING")
+}
+
 // Order writes `ORDER` ident.
 func (p *Printer) Order() {
 	p.Ident("ORDER")
