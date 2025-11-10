@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `metrics_points`
 (
-	`hash`      FixedString(16) CODEC(ZSTD(1)),
+	`hash`      FixedString(16),
 	`timestamp` DateTime64(9)   CODEC(Delta, ZSTD(1)),
 	`value`     Float64         CODEC(Gorilla, ZSTD(1)),
 	`mapping`   Enum8(
@@ -19,5 +19,4 @@ CREATE TABLE IF NOT EXISTS `metrics_points`
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
 ORDER BY (`hash`, `timestamp`)
-PRIMARY KEY (`hash`, `timestamp`)
 TTL toDateTime(`timestamp`) + toIntervalSecond(259200)
