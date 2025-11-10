@@ -17,7 +17,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
@@ -238,6 +237,8 @@ func (p *promQuerier) getLabelValues(ctx context.Context, labelName string, matc
 }
 
 func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName string, matchers []*labels.Matcher) (_ []string, rerr error) {
+	table := p.tables.Timeseries
+
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.getMatchingLabelValues",
 		trace.WithAttributes(
 			attribute.String("chstorage.label", labelName),
@@ -256,194 +257,92 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 		mlabels = append(mlabels, m.Name)
 	}
 	mlabels = append(mlabels, labelName)
-	zctx.From(ctx).Debug("Getting label mapping",
-		zap.String("label", labelName),
-		zap.Strings("labels", mlabels),
-	)
 	mapping, err := p.getLabelMapping(ctx, mlabels)
 	if err != nil {
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	query := func(ctx context.Context, table string) (result []string, rerr error) {
-		var value proto.ColumnOf[string]
-
-		var columnExpr chsql.Expr
-		if labelName == labels.MetricName {
-			columnExpr = chsql.Ident("name")
-			value = proto.NewLowCardinality(&proto.ColStr{})
-		} else {
-			columnExpr = firstAttrSelector(labelName)
-			value = &proto.ColStr{}
-		}
-
-		query := chsql.Select(table, chsql.ResultColumn{
-			Name: "value",
-			Expr: columnExpr,
-			Data: value,
-		}).
-			Distinct(true).
-			Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
-		for _, m := range matchers {
-			selectors := []chsql.Expr{
-				chsql.Ident("name"),
-			}
-			if name := m.Name; name != labels.MetricName {
-				selectors = mapping.Selectors(name)
-			}
-
-			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
-			if err != nil {
-				return nil, err
-			}
-			query.Where(expr)
-		}
-		query.Limit(p.labelLimit)
-
-		if err := p.do(ctx, selectQuery{
-			Query: query,
-			OnResult: func(ctx context.Context, block proto.Block) error {
-				for i := 0; i < value.Rows(); i++ {
-					if v := value.Row(i); v != "" {
-						result = append(result, v)
-					}
-				}
-				return nil
-			},
-
-			Type:   "getMatchingLabelValues",
-			Signal: "metrics",
-			Table:  table,
-		}); err != nil {
-			return nil, err
-		}
-		span.AddEvent("values_fetched", trace.WithAttributes(
-			attribute.String("chstorage.table", table),
-			attribute.Int("chstorage.total_values", len(result)),
-		))
-
-		return result, nil
-	}
-	queryTimeseries := func(ctx context.Context, table string) (result []string, _ error) {
-		var value proto.ColumnOf[string]
-
-		var columnExpr chsql.Expr
-		if labelName == labels.MetricName {
-			columnExpr = chsql.Ident("name")
-			value = proto.NewLowCardinality(&proto.ColStr{})
-		} else {
-			columnExpr = firstAttrSelector(labelName)
-			value = &proto.ColStr{}
-		}
-
-		query := chsql.Select(table, chsql.ResultColumn{
-			Name: "value",
-			Expr: columnExpr,
-			Data: value,
-		}).
-			Distinct(true)
-
-		for _, m := range matchers {
-			selectors := []chsql.Expr{
-				chsql.Ident("name"),
-			}
-			if name := m.Name; name != labels.MetricName {
-				selectors = mapping.Selectors(name)
-			}
-
-			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
-			if err != nil {
-				return nil, err
-			}
-			query.Where(expr)
-		}
-
-		query.GroupBy(
-			chsql.Ident("name"),
-			chsql.Ident("attribute"),
-			chsql.Ident("scope"),
-			chsql.Ident("resource"),
-		)
-
-		if !p.mint.IsZero() {
-			query.Having(chsql.Gte(
-				chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
-				chsql.UnixNano(p.mint),
-			))
-		}
-		if !p.maxt.IsZero() {
-			query.Having(chsql.Lte(
-				chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
-				chsql.UnixNano(p.maxt),
-			))
-		}
-
-		query.Limit(p.labelLimit)
-
-		if err := p.do(ctx, selectQuery{
-			Query: query,
-			OnResult: func(ctx context.Context, block proto.Block) error {
-				for i := 0; i < value.Rows(); i++ {
-					if v := value.Row(i); v != "" {
-						result = append(result, v)
-					}
-				}
-				return nil
-			},
-
-			Type:   "getMatchingLabelValues",
-			Signal: "metrics",
-			Table:  table,
-		}); err != nil {
-			return nil, err
-		}
-		span.AddEvent("values_fetched", trace.WithAttributes(
-			attribute.String("chstorage.table", table),
-			attribute.Int("chstorage.total_values", len(result)),
-		))
-
-		return result, nil
-	}
-
 	var (
-		points   []string
-		expHists []string
+		value      proto.ColumnOf[string]
+		columnExpr chsql.Expr
 	)
-	grp, grpCtx := errgroup.WithContext(ctx)
-	grp.Go(func() error {
-		ctx := grpCtx
-		table := p.tables.Timeseries
+	if labelName == labels.MetricName {
+		columnExpr = chsql.Ident("name")
+		value = proto.NewLowCardinality(&proto.ColStr{})
+	} else {
+		columnExpr = firstAttrSelector(labelName)
+		value = &proto.ColStr{}
+	}
 
-		result, err := queryTimeseries(ctx, table)
-		if err != nil {
-			return errors.Wrapf(err, "query label values from %q", table)
+	query := chsql.Select(table, chsql.ResultColumn{
+		Name: "value",
+		Expr: columnExpr,
+		Data: value,
+	}).
+		Distinct(true)
+
+	for _, m := range matchers {
+		selectors := []chsql.Expr{
+			chsql.Ident("name"),
 		}
-		points = result
-
-		return nil
-	})
-	grp.Go(func() error {
-		ctx := grpCtx
-		table := p.tables.ExpHistograms
-
-		result, err := query(ctx, table)
-		if err != nil {
-			return errors.Wrapf(err, "query label values from %q", table)
+		if name := m.Name; name != labels.MetricName {
+			selectors = mapping.Selectors(name)
 		}
-		expHists = result
 
-		return nil
-	})
-	if err := grp.Wait(); err != nil {
+		expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+		if err != nil {
+			return nil, err
+		}
+		query.Where(expr)
+	}
+	query.GroupBy(
+		chsql.Ident("name"),
+		chsql.Ident("attribute"),
+		chsql.Ident("scope"),
+		chsql.Ident("resource"),
+	)
+	if !p.mint.IsZero() {
+		query.Having(chsql.Gte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
+			chsql.UnixNano(p.mint),
+		))
+	}
+	if !p.maxt.IsZero() {
+		query.Having(chsql.Lte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
+			chsql.UnixNano(p.maxt),
+		))
+	}
+	query.Limit(p.labelLimit)
+
+	var result []string
+	if err := p.do(ctx, selectQuery{
+		Query: query,
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < value.Rows(); i++ {
+				if v := value.Row(i); v != "" {
+					result = append(result, v)
+				}
+			}
+			return nil
+		},
+
+		Type:   "getMatchingLabelValues",
+		Signal: "metrics",
+		Table:  table,
+	}); err != nil {
 		return nil, err
 	}
+	span.AddEvent("values_fetched", trace.WithAttributes(
+		attribute.String("chstorage.table", table),
+		attribute.Int("chstorage.total_values", len(result)),
+	))
 
-	points = append(points, expHists...)
-	slices.Sort(points)
+	slices.Sort(result)
 	// Remove duplicates.
-	points = slices.Clip(points)
+	result = slices.Clip(result)
 
-	return points, nil
+	return result, nil
 }
 
 // LabelNames returns all the unique label names present in the block in sorted order.
@@ -529,6 +428,8 @@ func (p *promQuerier) getLabelNames(ctx context.Context) (result []string, rerr 
 }
 
 func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*labels.Matcher) (_ []string, rerr error) {
+	table := p.tables.Timeseries
+
 	ctx, span := p.tracer.Start(ctx, "chstorage.metrics.getMatchingLabelNames",
 		trace.WithAttributes(
 			xattribute.StringerSlice("chstorage.matchers", matchers),
@@ -550,162 +451,75 @@ func (p *promQuerier) getMatchingLabelNames(ctx context.Context, matchers []*lab
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	query := func(ctx context.Context, table string) (result []string, rerr error) {
-		var (
-			value proto.ColStr
-
-			query = chsql.Select(table, chsql.ResultColumn{
-				Name: "values",
-				Expr: chsql.ArrayJoin(
-					chsql.ArrayConcat(
-						attrKeys(colAttrs),
-						attrKeys(colScope),
-						attrKeys(colResource),
-					),
-				),
-				Data: &value,
-			}).
-				Distinct(true).
-				Where(chsql.InTimeRange("timestamp", p.mint, p.maxt))
-		)
-		for _, m := range matchers {
-			selectors := []chsql.Expr{
-				chsql.Ident("name"),
-			}
-			if name := m.Name; name != labels.MetricName {
-				selectors = mapping.Selectors(name)
-			}
-
-			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
-			if err != nil {
-				return nil, err
-			}
-			query.Where(expr)
-		}
-		query.Limit(p.labelLimit)
-
-		if err := p.do(ctx, selectQuery{
-			Query: query,
-			OnResult: func(ctx context.Context, block proto.Block) error {
-				for i := 0; i < value.Rows(); i++ {
-					result = append(result, value.Row(i))
-				}
-				return nil
-			},
-
-			Type:   "getMatchingLabelNames",
-			Signal: "metrics",
-			Table:  table,
-		}); err != nil {
-			return nil, err
-		}
-		span.AddEvent("labels_fetched", trace.WithAttributes(
-			attribute.String("chstorage.table", table),
-			attribute.Int("chstorage.total_values", len(result)),
-		))
-
-		return result, nil
-	}
-	queryTimeseries := func(ctx context.Context, table string) (result []string, rerr error) {
-		var (
-			value proto.ColStr
-
-			query = chsql.Select(table, chsql.ResultColumn{
-				Name: "values",
-				Expr: chsql.ArrayJoin(
-					chsql.ArrayConcat(
-						attrKeys(colAttrs),
-						attrKeys(colScope),
-						attrKeys(colResource),
-					),
-				),
-				Data: &value,
-			}).
-				Distinct(true)
-		)
-		for _, m := range matchers {
-			selectors := []chsql.Expr{
-				chsql.Ident("name"),
-			}
-			if name := m.Name; name != labels.MetricName {
-				selectors = mapping.Selectors(name)
-			}
-
-			expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
-			if err != nil {
-				return nil, err
-			}
-			query.Where(expr)
-		}
-		query.Limit(p.labelLimit)
-
-		if err := p.do(ctx, selectQuery{
-			Query: query,
-			OnResult: func(ctx context.Context, block proto.Block) error {
-				for i := 0; i < value.Rows(); i++ {
-					result = append(result, value.Row(i))
-				}
-				return nil
-			},
-
-			Type:   "getMatchingLabelNames",
-			Signal: "metrics",
-			Table:  table,
-		}); err != nil {
-			return nil, err
-		}
-		span.AddEvent("labels_fetched", trace.WithAttributes(
-			attribute.String("chstorage.table", table),
-			attribute.Int("chstorage.total_values", len(result)),
-		))
-
-		return result, nil
-	}
-
 	var (
-		points   []string
-		expHists []string
+		value proto.ColStr
+
+		query = chsql.Select(table, chsql.ResultColumn{
+			Name: "values",
+			Expr: chsql.ArrayJoin(
+				chsql.ArrayConcat(
+					attrKeys(colAttrs),
+					attrKeys(colScope),
+					attrKeys(colResource),
+				),
+			),
+			Data: &value,
+		}).
+			Distinct(true)
 	)
-	grp, grpCtx := errgroup.WithContext(ctx)
-	grp.Go(func() error {
-		ctx := grpCtx
-		table := p.tables.Timeseries
-
-		result, err := queryTimeseries(ctx, table)
-		if err != nil {
-			return errors.Wrap(err, "query points series")
+	for _, m := range matchers {
+		selectors := []chsql.Expr{
+			chsql.Ident("name"),
 		}
-		points = result
-
-		return nil
-	})
-	grp.Go(func() error {
-		ctx := grpCtx
-		table := p.tables.ExpHistograms
-
-		result, err := query(ctx, table)
-		if err != nil {
-			return errors.Wrap(err, "query exponential histogram series")
+		if name := m.Name; name != labels.MetricName {
+			selectors = mapping.Selectors(name)
 		}
-		expHists = result
 
-		return nil
-	})
-	if err := grp.Wait(); err != nil {
+		expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
+		if err != nil {
+			return nil, err
+		}
+		query.Where(expr)
+	}
+	query.GroupBy(
+		chsql.Ident("name"),
+		chsql.Ident("attribute"),
+		chsql.Ident("scope"),
+		chsql.Ident("resource"),
+	)
+	query.Limit(p.labelLimit)
+
+	var result []string
+	if err := p.do(ctx, selectQuery{
+		Query: query,
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < value.Rows(); i++ {
+				result = append(result, value.Row(i))
+			}
+			return nil
+		},
+
+		Type:   "getMatchingLabelNames",
+		Signal: "metrics",
+		Table:  table,
+	}); err != nil {
 		return nil, err
 	}
+	span.AddEvent("labels_fetched", trace.WithAttributes(
+		attribute.String("chstorage.table", table),
+		attribute.Int("chstorage.total_values", len(result)),
+	))
 
-	points = append(points, expHists...)
-	if len(points) > 0 {
+	if len(result) > 0 {
 		// Add `__name__` only if there is any matching series.
-		points = append(points, labels.MetricName)
+		result = append(result, labels.MetricName)
 	}
 
-	slices.Sort(points)
+	slices.Sort(result)
 	// Remove duplicates.
-	points = slices.Clip(points)
+	result = slices.Clip(result)
 
-	return points, nil
+	return result, nil
 }
 
 func promQLLabelMatcher(valueSel []chsql.Expr, typ labels.MatchType, value string) (e chsql.Expr, rerr error) {
@@ -894,6 +708,11 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
+	timeseries, err := p.queryTimeseries(ctx, p.tables.Timeseries, start, end, matchers, mapping)
+	if err != nil {
+		return nil, errors.Wrap(err, "query timeseries hashes")
+	}
+
 	var (
 		points        []storage.Series
 		expHistSeries []storage.Series
@@ -901,11 +720,6 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	grp, grpCtx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		ctx := grpCtx
-
-		timeseries, err := p.querySeries(ctx, p.tables.Timeseries, start, end, matchers, mapping)
-		if err != nil {
-			return errors.Wrap(err, "query timeseries hashes")
-		}
 
 		result, err := p.queryPoints(ctx, p.tables.Points, start, end, timeseries)
 		if err != nil {
@@ -917,23 +731,12 @@ func (p *promQuerier) selectSeries(ctx context.Context, sortSeries bool, hints *
 	})
 	grp.Go(func() error {
 		ctx := grpCtx
-		table := p.tables.ExpHistograms
-		columns := newExpHistogramColumns()
 
-		query, err := p.buildQuery(
-			table, columns.ChsqlResult(),
-			start, end,
-			matchers,
-			mapping,
-		)
-		if err != nil {
-			return err
-		}
-
-		result, err := p.queryExpHistograms(ctx, table, query, columns)
+		result, err := p.queryExpHistograms(ctx, p.tables.ExpHistograms, start, end, timeseries)
 		if err != nil {
 			return errors.Wrap(err, "query exponential histograms")
 		}
+
 		expHistSeries = result
 		return nil
 	})
@@ -971,34 +774,6 @@ func (p *promQuerier) extractHints(
 	}
 
 	return hints, start, end, mlabels
-}
-
-func (p *promQuerier) buildQuery(
-	table string, columns []chsql.ResultColumn,
-	start, end time.Time,
-	matchers []*labels.Matcher,
-	mapping metricsLabelMapping,
-) (*chsql.SelectQuery, error) {
-	query := chsql.Select(table, columns...).
-		Where(chsql.InTimeRange("timestamp", start, end))
-
-	for _, m := range matchers {
-		selectors := []chsql.Expr{
-			chsql.Ident("name"),
-		}
-		if name := m.Name; name != labels.MetricName {
-			selectors = mapping.Selectors(name)
-		}
-
-		expr, err := promQLLabelMatcher(selectors, m.Type, m.Value)
-		if err != nil {
-			return nil, err
-		}
-		query.Where(expr)
-	}
-
-	query.Order(chsql.Ident("timestamp"), chsql.Asc)
-	return query, nil
 }
 
 func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end time.Time, timeseries map[[16]byte]labels.Labels) ([]storage.Series, error) {
@@ -1065,7 +840,89 @@ func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end 
 	return result, nil
 }
 
-func (p *promQuerier) querySeries(
+func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, start, end time.Time, timeseries map[[16]byte]labels.Labels) ([]storage.Series, error) {
+	var (
+		c     = newExpHistogramColumns()
+		query = chsql.Select(table, c.ChsqlResult()...).Where(
+			chsql.InTimeRange("timestamp", start, end),
+			chsql.In(
+				chsql.Ident("hash"),
+				chsql.Ident("timeseries_hashes"),
+			),
+		).Order(chsql.Ident("timestamp"), chsql.Asc)
+
+		inputData proto.ColFixedStr16
+	)
+	for hash := range timeseries {
+		inputData.Append(hash)
+	}
+
+	set := map[[16]byte]*series[expHistData]{}
+	if err := p.do(ctx, selectQuery{
+		Query:         query,
+		ExternalTable: "timeseries_hashes",
+		ExternalData: []proto.InputColumn{
+			{Name: "name", Data: &inputData},
+		},
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < c.timestamp.Rows(); i++ {
+				var (
+					hash                 = c.hash.Row(i)
+					timestamp            = c.timestamp.Row(i)
+					count                = c.count.Row(i)
+					sum                  = c.sum.Row(i)
+					vmin                 = c.min.Row(i)
+					vmax                 = c.max.Row(i)
+					scale                = c.scale.Row(i)
+					zerocount            = c.zerocount.Row(i)
+					positiveOffset       = c.positiveOffset.Row(i)
+					positiveBucketCounts = c.positiveBucketCounts.Row(i)
+					negativeOffset       = c.negativeOffset.Row(i)
+					negativeBucketCounts = c.negativeBucketCounts.Row(i)
+				)
+				s, ok := set[hash]
+				if !ok {
+					lb, ok := timeseries[hash]
+					if !ok {
+						zctx.From(ctx).Error("Can't find labels for requested series")
+						continue
+					}
+					s = &series[expHistData]{
+						labels: lb,
+					}
+					set[hash] = s
+				}
+
+				s.data.count = append(s.data.count, count)
+				s.data.sum = append(s.data.sum, sum)
+				s.data.min = append(s.data.min, vmin)
+				s.data.max = append(s.data.max, vmax)
+				s.data.scale = append(s.data.scale, scale)
+				s.data.zerocount = append(s.data.zerocount, zerocount)
+				s.data.positiveOffset = append(s.data.positiveOffset, positiveOffset)
+				s.data.positiveBucketCounts = append(s.data.positiveBucketCounts, positiveBucketCounts)
+				s.data.negativeOffset = append(s.data.negativeOffset, negativeOffset)
+				s.data.negativeBucketCounts = append(s.data.negativeBucketCounts, negativeBucketCounts)
+				s.ts = append(s.ts, timestamp.UnixMilli())
+			}
+			return nil
+		},
+
+		Type:   "QueryExpHistograms",
+		Signal: "metrics",
+		Table:  table,
+	}); err != nil {
+		return nil, err
+	}
+
+	result := make([]storage.Series, 0, len(set))
+	for _, s := range set {
+		result = append(result, s)
+	}
+	return result, nil
+}
+
+func (p *promQuerier) queryTimeseries(
 	ctx context.Context,
 	table string,
 	start, end time.Time,
@@ -1104,14 +961,12 @@ func (p *promQuerier) querySeries(
 		}
 		query.Where(matcher)
 	}
-
 	query.GroupBy(
 		chsql.Ident("name"),
 		chsql.Ident("attribute"),
 		chsql.Ident("scope"),
 		chsql.Ident("resource"),
 	)
-
 	if !start.IsZero() {
 		query.Having(chsql.Gte(
 			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
@@ -1169,88 +1024,6 @@ func (p *promQuerier) querySeries(
 	}
 
 	return set, nil
-}
-
-func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, query *chsql.SelectQuery, c *expHistogramColumns) ([]storage.Series, error) {
-	type seriesWithLabels struct {
-		series *series[expHistData]
-		labels map[string]string
-	}
-
-	set := map[seriesKey]seriesWithLabels{}
-	if err := p.do(ctx, selectQuery{
-		Query: query,
-		OnResult: func(ctx context.Context, block proto.Block) error {
-			for i := 0; i < c.timestamp.Rows(); i++ {
-				var (
-					name                 = c.name.Row(i)
-					timestamp            = c.timestamp.Row(i)
-					count                = c.count.Row(i)
-					sum                  = c.sum.Row(i)
-					vmin                 = c.min.Row(i)
-					vmax                 = c.max.Row(i)
-					scale                = c.scale.Row(i)
-					zerocount            = c.zerocount.Row(i)
-					positiveOffset       = c.positiveOffset.Row(i)
-					positiveBucketCounts = c.positiveBucketCounts.Row(i)
-					negativeOffset       = c.negativeOffset.Row(i)
-					negativeBucketCounts = c.negativeBucketCounts.Row(i)
-					attributes           = c.attributes.Row(i)
-					scope                = c.scope.Row(i)
-					resource             = c.resource.Row(i)
-				)
-				key := seriesKey{
-					name:       name,
-					attributes: attributes.Hash(),
-					scope:      scope.Hash(),
-					resource:   resource.Hash(),
-				}
-				s, ok := set[key]
-				if !ok {
-					s = seriesWithLabels{
-						series: &series[expHistData]{},
-						labels: map[string]string{},
-					}
-					set[key] = s
-				}
-
-				s.series.data.count = append(s.series.data.count, count)
-				s.series.data.sum = append(s.series.data.sum, sum)
-				s.series.data.min = append(s.series.data.min, vmin)
-				s.series.data.max = append(s.series.data.max, vmax)
-				s.series.data.scale = append(s.series.data.scale, scale)
-				s.series.data.zerocount = append(s.series.data.zerocount, zerocount)
-				s.series.data.positiveOffset = append(s.series.data.positiveOffset, positiveOffset)
-				s.series.data.positiveBucketCounts = append(s.series.data.positiveBucketCounts, positiveBucketCounts)
-				s.series.data.negativeOffset = append(s.series.data.negativeOffset, negativeOffset)
-				s.series.data.negativeBucketCounts = append(s.series.data.negativeBucketCounts, negativeBucketCounts)
-				s.series.ts = append(s.series.ts, timestamp.UnixMilli())
-
-				s.labels[labels.MetricName] = name
-				attrsToLabels(attributes, s.labels)
-				attrsToLabels(scope, s.labels)
-				attrsToLabels(resource, s.labels)
-			}
-			return nil
-		},
-
-		Type:   "QueryExpHistograms",
-		Signal: "metrics",
-		Table:  table,
-	}); err != nil {
-		return nil, err
-	}
-
-	var (
-		result = make([]storage.Series, 0, len(set))
-		lb     labels.ScratchBuilder
-	)
-	for _, s := range set {
-		s.series.labels = buildPromLabels(&lb, s.labels)
-		result = append(result, s.series)
-	}
-
-	return result, nil
 }
 
 func buildPromLabels(lb *labels.ScratchBuilder, set map[string]string) labels.Labels {

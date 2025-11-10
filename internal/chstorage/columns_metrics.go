@@ -124,14 +124,12 @@ func (c *pointColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		PrimaryKey:  []string{"hash", "timestamp"},
 		OrderBy:     []string{"hash", "timestamp"},
 		TTL:         ddl.TTL{Field: "timestamp"},
 		Columns: []ddl.Column{
 			{
-				Name:  "hash",
-				Type:  c.hash.Type(),
-				Codec: "ZSTD(1)",
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -160,7 +158,7 @@ func (c *pointColumns) DDL() ddl.Table {
 }
 
 type expHistogramColumns struct {
-	name      *proto.ColLowCardinality[string]
+	hash      proto.ColFixedStr16
 	timestamp *proto.ColDateTime64
 
 	count                proto.ColUInt64
@@ -174,15 +172,11 @@ type expHistogramColumns struct {
 	negativeOffset       proto.ColInt32
 	negativeBucketCounts *proto.ColArr[uint64]
 
-	flags      proto.ColUInt8
-	attributes *Attributes
-	scope      *Attributes
-	resource   *Attributes
+	flags proto.ColUInt8
 }
 
 func newExpHistogramColumns() *expHistogramColumns {
 	return &expHistogramColumns{
-		name:      new(proto.ColStr).LowCardinality(),
 		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
 		sum:                  new(proto.ColFloat64).Nullable(),
@@ -190,17 +184,13 @@ func newExpHistogramColumns() *expHistogramColumns {
 		max:                  new(proto.ColFloat64).Nullable(),
 		positiveBucketCounts: new(proto.ColUInt64).Array(),
 		negativeBucketCounts: new(proto.ColUInt64).Array(),
-
-		attributes: NewAttributes(colAttrs),
-		scope:      NewAttributes(colScope),
-		resource:   NewAttributes(colResource),
 	}
 }
 
 func (c *expHistogramColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
-			{Name: "name", Data: c.name},
+			{Name: "hash", Data: &c.hash},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "exp_histogram_count", Data: &c.count},
@@ -216,9 +206,6 @@ func (c *expHistogramColumns) Columns() Columns {
 
 			{Name: "flags", Data: &c.flags},
 		},
-		c.attributes.Columns(),
-		c.scope.Columns(),
-		c.resource.Columns(),
 	)
 }
 
@@ -230,12 +217,11 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"timestamp"},
+		OrderBy:     []string{"hash", "timestamp"},
 		Columns: []ddl.Column{
 			{
-				Name:  "name",
-				Type:  c.name.Type(),
-				Codec: "ZSTD(1)",
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -289,10 +275,6 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 			},
 		},
 	}
-
-	c.attributes.DDL(&table)
-	c.resource.DDL(&table)
-	c.scope.DDL(&table)
 
 	return table
 }

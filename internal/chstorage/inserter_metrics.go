@@ -244,27 +244,13 @@ func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice p
 			return errors.Wrap(err, "map exemplars")
 		}
 
-		hash := hashTimeseries(
-			name,
-			res.Attributes(),
-			scope.Attributes(),
-			attrs.Attributes(),
-		)
+		hash := b.addHash(ts, name, res, scope, attrs)
 
 		c.hash.Append(hash)
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
 		c.flags.Append(uint8(flags))
-
-		b.timeseries.name.Append(name)
-		b.timeseries.resource.Append(res.Attributes())
-		b.timeseries.scope.Append(scope.Attributes())
-		b.timeseries.attributes.Append(attrs.Attributes())
-
-		b.timeseries.firstSeen.Append(ts)
-		b.timeseries.lastSeen.Append(ts)
-		b.timeseries.hash.Append(hash)
 	}
 	return nil
 }
@@ -480,7 +466,9 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttribu
 		); err != nil {
 			return errors.Wrap(err, "map exemplars")
 		}
-		c.name.Append(name)
+		hash := b.addHash(ts, name, res, scope, attrs)
+
+		c.hash.Append(hash)
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
@@ -493,9 +481,6 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttribu
 		c.negativeOffset.Append(negativeOffset)
 		c.negativeBucketCounts.Append(negativeBucketCounts)
 		c.flags.Append(uint8(flags))
-		c.attributes.Append(attrs.Attributes())
-		c.scope.Append(scope.Attributes())
-		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
@@ -549,6 +534,25 @@ func (b *metricsBatch) addSummaryPoints(name string, res, scope lazyAttributes, 
 	return nil
 }
 
+func (b *metricsBatch) addHash(ts time.Time, name string, res, scope, attrs lazyAttributes, bucketKey ...[2]string) [16]byte {
+	hash := hashTimeseries(name,
+		res.Attributes(),
+		scope.Attributes(),
+		attrs.Attributes(bucketKey...),
+	)
+
+	b.timeseries.name.Append(name)
+	b.timeseries.resource.Append(res.Attributes())
+	b.timeseries.scope.Append(scope.Attributes())
+	b.timeseries.attributes.Append(attrs.Attributes())
+
+	b.timeseries.firstSeen.Append(ts)
+	b.timeseries.lastSeen.Append(ts)
+	b.timeseries.hash.Append(hash)
+
+	return hash
+}
+
 type mappedSeries struct {
 	Timestamp  time.Time
 	Flags      pmetric.DataPointFlags
@@ -565,11 +569,13 @@ func (b *metricsBatch) addMappedSample(
 	bucketKey ...[2]string,
 ) {
 	c := b.points
-	hash := hashTimeseries(
+	hash := b.addHash(
+		series.Timestamp,
 		name,
-		series.Resource.Attributes(),
-		series.Scope.Attributes(),
-		series.Attributes.Attributes(bucketKey...),
+		series.Resource,
+		series.Scope,
+		series.Attributes,
+		bucketKey...,
 	)
 
 	b.addName(name)
@@ -578,15 +584,6 @@ func (b *metricsBatch) addMappedSample(
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
 	c.flags.Append(uint8(series.Flags))
-
-	b.timeseries.name.Append(name)
-	b.timeseries.resource.Append(series.Resource.Attributes())
-	b.timeseries.scope.Append(series.Scope.Attributes())
-	b.timeseries.attributes.Append(series.Attributes.Attributes(bucketKey...))
-
-	b.timeseries.firstSeen.Append(series.Timestamp)
-	b.timeseries.lastSeen.Append(series.Timestamp)
-	b.timeseries.hash.Append(hash)
 }
 
 type exemplarSeries struct {
