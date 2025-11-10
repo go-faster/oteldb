@@ -69,12 +69,12 @@ func (a *colSimpleAggregateFunction[T]) Infer(t proto.ColumnType) error {
 	return nil
 }
 
-// Append wraps [proto.ColumnOf.Append]
+// Append wraps [proto.ColumnOf.Append].
 func (a *colSimpleAggregateFunction[T]) Append(val T) {
 	a.Data.Append(val)
 }
 
-// Row wraps [proto.ColumnOf.Row]
+// Row wraps [proto.ColumnOf.Row].
 func (a *colSimpleAggregateFunction[T]) Row(i int) T {
 	return a.Data.Row(i)
 }
