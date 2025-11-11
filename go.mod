@@ -13,7 +13,6 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/dmarkham/enumer v1.6.1
 	github.com/docker/cli v29.0.0+incompatible
-	github.com/docker/docker v28.5.2+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.18.0
 	github.com/go-faster/errors v0.7.1
@@ -30,6 +29,8 @@ require (
 	github.com/klauspost/compress v1.18.1
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6
 	github.com/mattn/go-isatty v0.0.20
+	github.com/moby/moby/api v1.52.0
+	github.com/moby/moby/client v0.1.0
 	github.com/ogen-go/ogen v1.16.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.139.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.139.0
@@ -117,6 +118,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
+	github.com/docker/docker v28.5.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
@@ -171,8 +173,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.1.0 // indirect
-	github.com/moby/moby/api v1.52.0 // indirect
-	github.com/moby/moby/client v0.1.0 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
