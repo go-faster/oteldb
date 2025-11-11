@@ -63,6 +63,7 @@ func (i *Inserter) ConsumeMetrics(ctx context.Context, metrics pmetric.Metrics) 
 
 type metricsBatch struct {
 	points        *pointColumns
+	timeseries    *timeseriesColumns
 	expHistograms *expHistogramColumns
 	exemplars     *exemplarColumns
 	labels        map[[2]string]labelScope
@@ -71,6 +72,7 @@ type metricsBatch struct {
 
 func (b *metricsBatch) Reset() {
 	b.points.Columns().Reset()
+	b.timeseries.Columns().Reset()
 	b.expHistograms.Columns().Reset()
 	b.exemplars.Columns().Reset()
 	maps.Clear(b.labels)
@@ -79,6 +81,7 @@ func (b *metricsBatch) Reset() {
 func newMetricBatch(tracker globalmetric.Tracker) *metricsBatch {
 	return &metricsBatch{
 		points:        newPointColumns(),
+		timeseries:    newTimeseriesColumns(),
 		expHistograms: newExpHistogramColumns(),
 		exemplars:     newExemplarColumns(),
 		labels:        map[[2]string]labelScope{},
@@ -136,6 +139,7 @@ func (b *metricsBatch) Insert(ctx context.Context, tables Tables, client ClickHo
 		columns columns
 	}{
 		{tables.Points, b.points},
+		{tables.Timeseries, b.timeseries},
 		{tables.ExpHistograms, b.expHistograms},
 		{tables.Exemplars, b.exemplars},
 		{tables.Labels, labelColumns},
@@ -239,14 +243,14 @@ func (b *metricsBatch) addPoints(name string, res, scope lazyAttributes, slice p
 		); err != nil {
 			return errors.Wrap(err, "map exemplars")
 		}
-		c.name.Append(name)
+
+		hash := b.addHash(ts, name, res, scope, attrs)
+
+		c.hash.Append(hash)
 		c.timestamp.Append(ts)
 		c.mapping.Append(proto.Enum8(noMapping))
 		c.value.Append(val)
 		c.flags.Append(uint8(flags))
-		c.attributes.Append(attrs.Attributes())
-		c.scope.Append(scope.Attributes())
-		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
@@ -462,7 +466,9 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttribu
 		); err != nil {
 			return errors.Wrap(err, "map exemplars")
 		}
-		c.name.Append(name)
+		hash := b.addHash(ts, name, res, scope, attrs)
+
+		c.hash.Append(hash)
 		c.timestamp.Append(ts)
 		c.count.Append(count)
 		c.sum.Append(sum)
@@ -475,9 +481,6 @@ func (b *metricsBatch) addExpHistogramPoints(name string, res, scope lazyAttribu
 		c.negativeOffset.Append(negativeOffset)
 		c.negativeBucketCounts.Append(negativeBucketCounts)
 		c.flags.Append(uint8(flags))
-		c.attributes.Append(attrs.Attributes())
-		c.scope.Append(scope.Attributes())
-		c.resource.Append(res.Attributes())
 	}
 	return nil
 }
@@ -531,6 +534,25 @@ func (b *metricsBatch) addSummaryPoints(name string, res, scope lazyAttributes, 
 	return nil
 }
 
+func (b *metricsBatch) addHash(ts time.Time, name string, res, scope, attrs lazyAttributes, bucketKey ...[2]string) [16]byte {
+	hash := hashTimeseries(name,
+		res.Attributes(),
+		scope.Attributes(),
+		attrs.Attributes(bucketKey...),
+	)
+
+	b.timeseries.name.Append(name)
+	b.timeseries.resource.Append(res.Attributes())
+	b.timeseries.scope.Append(scope.Attributes())
+	b.timeseries.attributes.Append(attrs.Attributes())
+
+	b.timeseries.firstSeen.Append(ts)
+	b.timeseries.lastSeen.Append(ts)
+	b.timeseries.hash.Append(hash)
+
+	return hash
+}
+
 type mappedSeries struct {
 	Timestamp  time.Time
 	Flags      pmetric.DataPointFlags
@@ -547,15 +569,21 @@ func (b *metricsBatch) addMappedSample(
 	bucketKey ...[2]string,
 ) {
 	c := b.points
+	hash := b.addHash(
+		series.Timestamp,
+		name,
+		series.Resource,
+		series.Scope,
+		series.Attributes,
+		bucketKey...,
+	)
+
 	b.addName(name)
-	c.name.Append(name)
+	c.hash.Append(hash)
 	c.timestamp.Append(series.Timestamp)
 	c.mapping.Append(proto.Enum8(mapping))
 	c.value.Append(val)
 	c.flags.Append(uint8(series.Flags))
-	c.attributes.Append(series.Attributes.Attributes(bucketKey...))
-	c.scope.Append(series.Scope.Attributes())
-	c.resource.Append(series.Resource.Attributes())
 }
 
 type exemplarSeries struct {
@@ -592,7 +620,9 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 		return errors.Errorf("unexpected exemplar value type: %v", typ)
 	}
 
-	c.name.Append(p.Name)
+	hash := b.addHash(p.Timestamp, p.Name, p.Resource, p.Scope, p.Attributes, bucketKey...)
+
+	c.hash.Append(hash)
 	c.timestamp.Append(p.Timestamp)
 
 	c.filteredAttributes.Append(encodeAttributes(e.FilteredAttributes()))
@@ -600,10 +630,6 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	c.value.Append(val)
 	c.spanID.Append(e.SpanID())
 	c.traceID.Append(e.TraceID())
-
-	c.attributes.Append(p.Attributes.Attributes(bucketKey...))
-	c.scope.Append(p.Scope.Attributes())
-	c.resource.Append(p.Resource.Attributes())
 	return nil
 }
 

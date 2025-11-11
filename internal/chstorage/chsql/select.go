@@ -23,6 +23,7 @@ type SelectQuery struct {
 	// where is a set of expression joined by AND
 	where   []Expr
 	groupBy []Expr
+	having  []Expr
 	order   []orderExpr
 
 	limit int
@@ -72,6 +73,12 @@ func (q *SelectQuery) Where(filters ...Expr) *SelectQuery {
 // GroupBy adds grouping to query.
 func (q *SelectQuery) GroupBy(groups ...Expr) *SelectQuery {
 	q.groupBy = append(q.groupBy, groups...)
+	return q
+}
+
+// Having adds grouped filters to query.
+func (q *SelectQuery) Having(filters ...Expr) *SelectQuery {
+	q.where = append(q.where, filters...)
 	return q
 }
 
@@ -192,6 +199,18 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 			}
 			if err := p.WriteExpr(e); err != nil {
 				return errors.Wrapf(err, "group by %d", i)
+			}
+		}
+	}
+	if len(q.having) > 0 {
+		p.Having()
+
+		for i, e := range q.having {
+			if i != 0 {
+				p.Comma()
+			}
+			if err := p.WriteExpr(e); err != nil {
+				return errors.Wrapf(err, "having %d", i)
 			}
 		}
 	}

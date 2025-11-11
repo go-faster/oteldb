@@ -1,29 +1,33 @@
 package chstorage
 
 import (
+	"time"
+
 	"github.com/ClickHouse/ch-go/proto"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/ddl"
 )
 
-type pointColumns struct {
-	name      *proto.ColLowCardinality[string]
-	timestamp *proto.ColDateTime64
+type timeseriesColumns struct {
+	name *proto.ColLowCardinality[string]
+	hash *colSimpleAggregateFunction[[16]byte]
 
-	mapping proto.ColEnum8
-	value   proto.ColFloat64
+	firstSeen *colSimpleAggregateFunction[time.Time]
+	lastSeen  *colSimpleAggregateFunction[time.Time]
 
-	flags      proto.ColUInt8
 	attributes *Attributes
 	scope      *Attributes
 	resource   *Attributes
 }
 
-func newPointColumns() *pointColumns {
-	return &pointColumns{
-		name:      new(proto.ColStr).LowCardinality(),
-		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+func newTimeseriesColumns() *timeseriesColumns {
+	return &timeseriesColumns{
+		name: new(proto.ColStr).LowCardinality(),
+
+		hash:      &colSimpleAggregateFunction[[16]byte]{Function: "any", Data: new(proto.ColFixedStr16)},
+		firstSeen: &colSimpleAggregateFunction[time.Time]{Function: "min", Data: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano)},
+		lastSeen:  &colSimpleAggregateFunction[time.Time]{Function: "max", Data: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano)},
 
 		attributes: NewAttributes(colAttrs),
 		scope:      NewAttributes(colScope),
@@ -31,16 +35,13 @@ func newPointColumns() *pointColumns {
 	}
 }
 
-func (c *pointColumns) Columns() Columns {
+func (c *timeseriesColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
 			{Name: "name", Data: c.name},
-			{Name: "timestamp", Data: c.timestamp},
-
-			{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
-			{Name: "value", Data: &c.value},
-
-			{Name: "flags", Data: &c.flags},
+			{Name: "hash", Data: c.hash},
+			{Name: "first_seen", Data: c.firstSeen},
+			{Name: "last_seen", Data: c.lastSeen},
 		},
 		c.attributes.Columns(),
 		c.scope.Columns(),
@@ -48,25 +49,15 @@ func (c *pointColumns) Columns() Columns {
 	)
 }
 
-func (c *pointColumns) Input() proto.Input                { return c.Columns().Input() }
-func (c *pointColumns) Result() proto.Results             { return c.Columns().Result() }
-func (c *pointColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
+func (c *timeseriesColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *timeseriesColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *timeseriesColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
 
-func (c *pointColumns) DDL() ddl.Table {
+func (c *timeseriesColumns) DDL() ddl.Table {
 	table := ddl.Table{
-		Engine:      "MergeTree",
-		PartitionBy: "toYYYYMMDD(timestamp)",
-		PrimaryKey:  []string{"name", "mapping", "resource", "attribute"},
-		OrderBy:     []string{"name", "mapping", "resource", "attribute", "timestamp"},
-		TTL:         ddl.TTL{Field: "timestamp"},
-		Indexes: []ddl.Index{
-			{
-				Name:        "idx_ts",
-				Target:      "timestamp",
-				Type:        "minmax",
-				Granularity: 8192,
-			},
-		},
+		Engine:     "AggregatingMergeTree",
+		PrimaryKey: []string{"name", "resource", "scope", "attribute"},
+		OrderBy:    []string{"name", "resource", "scope", "attribute"},
 		Columns: []ddl.Column{
 			{
 				Name:  "name",
@@ -74,24 +65,16 @@ func (c *pointColumns) DDL() ddl.Table {
 				Codec: "ZSTD(1)",
 			},
 			{
-				Name:  "timestamp",
-				Type:  c.timestamp.Type(),
-				Codec: "Delta, ZSTD(1)",
+				Name: "first_seen",
+				Type: c.firstSeen.Type(),
 			},
 			{
-				Name:  "mapping",
-				Type:  c.mapping.Type().Sub(metricMappingDDL),
-				Codec: "T64, ZSTD(1)",
+				Name: "last_seen",
+				Type: c.lastSeen.Type(),
 			},
 			{
-				Name:  "value",
-				Type:  c.value.Type(),
-				Codec: "Gorilla, ZSTD(1)",
-			},
-			{
-				Name:  "flags",
-				Type:  c.flags.Type(),
-				Codec: "T64, ZSTD(1)",
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 		},
 	}
@@ -103,8 +86,79 @@ func (c *pointColumns) DDL() ddl.Table {
 	return table
 }
 
+type pointColumns struct {
+	hash      proto.ColFixedStr16
+	timestamp *proto.ColDateTime64
+
+	value proto.ColFloat64
+
+	mapping proto.ColEnum8
+	flags   proto.ColUInt8
+}
+
+func newPointColumns() *pointColumns {
+	return &pointColumns{
+		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
+	}
+}
+
+func (c *pointColumns) Columns() Columns {
+	return MergeColumns(
+		Columns{
+			{Name: "hash", Data: &c.hash},
+			{Name: "timestamp", Data: c.timestamp},
+
+			{Name: "value", Data: &c.value},
+
+			{Name: "mapping", Data: proto.Wrap(&c.mapping, metricMappingDDL)},
+			{Name: "flags", Data: &c.flags},
+		},
+	)
+}
+
+func (c *pointColumns) Input() proto.Input                { return c.Columns().Input() }
+func (c *pointColumns) Result() proto.Results             { return c.Columns().Result() }
+func (c *pointColumns) ChsqlResult() []chsql.ResultColumn { return c.Columns().ChsqlResult() }
+
+func (c *pointColumns) DDL() ddl.Table {
+	table := ddl.Table{
+		Engine:      "MergeTree",
+		PartitionBy: "toYYYYMMDD(timestamp)",
+		OrderBy:     []string{"hash", "timestamp"},
+		TTL:         ddl.TTL{Field: "timestamp"},
+		Columns: []ddl.Column{
+			{
+				Name: "hash",
+				Type: c.hash.Type(),
+			},
+			{
+				Name:  "timestamp",
+				Type:  c.timestamp.Type(),
+				Codec: "Delta, ZSTD(1)",
+			},
+			{
+				Name:  "value",
+				Type:  c.value.Type(),
+				Codec: "Gorilla, ZSTD(1)",
+			},
+			{
+				Name:  "mapping",
+				Type:  c.mapping.Type().Sub(metricMappingDDL),
+				Codec: "T64, ZSTD(1)",
+			},
+			{
+				Name:  "flags",
+				Type:  c.flags.Type(),
+				Codec: "T64, ZSTD(1)",
+			},
+		},
+	}
+
+	return table
+}
+
 type expHistogramColumns struct {
-	name      *proto.ColLowCardinality[string]
+	hash      proto.ColFixedStr16
 	timestamp *proto.ColDateTime64
 
 	count                proto.ColUInt64
@@ -118,15 +172,11 @@ type expHistogramColumns struct {
 	negativeOffset       proto.ColInt32
 	negativeBucketCounts *proto.ColArr[uint64]
 
-	flags      proto.ColUInt8
-	attributes *Attributes
-	scope      *Attributes
-	resource   *Attributes
+	flags proto.ColUInt8
 }
 
 func newExpHistogramColumns() *expHistogramColumns {
 	return &expHistogramColumns{
-		name:      new(proto.ColStr).LowCardinality(),
 		timestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 
 		sum:                  new(proto.ColFloat64).Nullable(),
@@ -134,17 +184,13 @@ func newExpHistogramColumns() *expHistogramColumns {
 		max:                  new(proto.ColFloat64).Nullable(),
 		positiveBucketCounts: new(proto.ColUInt64).Array(),
 		negativeBucketCounts: new(proto.ColUInt64).Array(),
-
-		attributes: NewAttributes(colAttrs),
-		scope:      NewAttributes(colScope),
-		resource:   NewAttributes(colResource),
 	}
 }
 
 func (c *expHistogramColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
-			{Name: "name", Data: c.name},
+			{Name: "hash", Data: &c.hash},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "exp_histogram_count", Data: &c.count},
@@ -160,9 +206,6 @@ func (c *expHistogramColumns) Columns() Columns {
 
 			{Name: "flags", Data: &c.flags},
 		},
-		c.attributes.Columns(),
-		c.scope.Columns(),
-		c.resource.Columns(),
 	)
 }
 
@@ -174,12 +217,11 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"timestamp"},
+		OrderBy:     []string{"hash", "timestamp"},
 		Columns: []ddl.Column{
 			{
-				Name:  "name",
-				Type:  c.name.Type(),
-				Codec: "ZSTD(1)",
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -234,10 +276,6 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 		},
 	}
 
-	c.attributes.DDL(&table)
-	c.resource.DDL(&table)
-	c.scope.DDL(&table)
-
 	return table
 }
 
@@ -286,7 +324,7 @@ func (c *labelsColumns) DDL() ddl.Table {
 }
 
 type exemplarColumns struct {
-	name      *proto.ColLowCardinality[string]
+	hash      proto.ColFixedStr16
 	timestamp *proto.ColDateTime64
 
 	filteredAttributes proto.ColBytes
@@ -294,27 +332,19 @@ type exemplarColumns struct {
 	value              proto.ColFloat64
 	spanID             proto.ColFixedStr8
 	traceID            proto.ColFixedStr16
-
-	attributes *Attributes
-	scope      *Attributes
-	resource   *Attributes
 }
 
 func newExemplarColumns() *exemplarColumns {
 	return &exemplarColumns{
-		name:              new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		attributes:        NewAttributes(colAttrs),
-		scope:             NewAttributes(colScope),
-		resource:          NewAttributes(colResource),
 	}
 }
 
 func (c *exemplarColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
-			{Name: "name", Data: c.name},
+			{Name: "hash", Data: &c.hash},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "filtered_attributes", Data: &c.filteredAttributes},
@@ -323,9 +353,6 @@ func (c *exemplarColumns) Columns() Columns {
 			{Name: "span_id", Data: &c.spanID},
 			{Name: "trace_id", Data: &c.traceID},
 		},
-		c.attributes.Columns(),
-		c.scope.Columns(),
-		c.resource.Columns(),
 	)
 }
 
@@ -337,11 +364,11 @@ func (c *exemplarColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"name", "resource", "attribute", "timestamp"},
+		OrderBy:     []string{"hash", "timestamp"},
 		Columns: []ddl.Column{
 			{
-				Name: "name",
-				Type: c.name.Type(),
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -371,10 +398,6 @@ func (c *exemplarColumns) DDL() ddl.Table {
 			},
 		},
 	}
-
-	c.attributes.DDL(&table)
-	c.resource.DDL(&table)
-	c.scope.DDL(&table)
 
 	return table
 }

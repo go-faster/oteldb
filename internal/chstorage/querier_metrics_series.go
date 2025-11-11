@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
 	"github.com/go-faster/oteldb/internal/metricstorage"
@@ -74,120 +73,89 @@ func (p *promQuerier) selectOnlySeries(
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	query := func(ctx context.Context, table string) (result []onlyLabelsSeries, _ error) {
-		series := proto.ColMap[string, string]{
+	var (
+		table  = p.tables.Timeseries
+		series = proto.ColMap[string, string]{
 			Keys:   new(proto.ColStr),
 			Values: new(proto.ColStr),
 		}
-		query, err := p.buildSeriesQuery(
-			table,
-			chsql.ResultColumn{
-				Name: "series",
-				Expr: chsql.MapConcat(
-					chsql.Map(chsql.String("__name__"), chsql.Ident("name")),
-					attrStringMap(colAttrs),
-					attrStringMap(colResource),
-					attrStringMap(colScope),
-				),
-				Data: &series,
-			},
-			start, end,
-			matcherSets,
-			mapping,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		var (
-			dedup = map[string]string{}
-			lb    labels.ScratchBuilder
-		)
-		if err := p.do(ctx, selectQuery{
-			Query: query,
-			OnResult: func(ctx context.Context, block proto.Block) error {
-				for i := 0; i < series.Rows(); i++ {
-					clear(dedup)
-					forEachColMap(&series, i, func(k, v string) {
-						dedup[k] = v
-					})
-
-					lb.Reset()
-					for k, v := range dedup {
-						lb.Add(k, v)
-					}
-					lb.Sort()
-					result = append(result, onlyLabelsSeries{
-						labels: lb.Labels(),
-					})
-				}
-				return nil
-			},
-
-			Type:   "QueryOnlySeries",
-			Signal: "metrics",
-			Table:  table,
-		}); err != nil {
-			return nil, err
-		}
-		span.AddEvent("series_fetched", trace.WithAttributes(
-			attribute.String("chstorage.table", table),
-			attribute.Int("chstorage.total_series", len(result)),
-		))
-
-		return result, nil
+	)
+	query, err := p.buildSeriesQuery(
+		table,
+		&series,
+		start, end,
+		matcherSets,
+		mapping,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "build series query")
 	}
 
 	var (
-		pointsSeries  []onlyLabelsSeries
-		expHistSeries []onlyLabelsSeries
+		result []onlyLabelsSeries
+
+		dedup = map[string]string{}
+		lb    labels.ScratchBuilder
 	)
-	grp, grpCtx := errgroup.WithContext(ctx)
-	grp.Go(func() error {
-		ctx := grpCtx
-		table := p.tables.Points
+	if err := p.do(ctx, selectQuery{
+		Query: query,
+		OnResult: func(ctx context.Context, block proto.Block) error {
+			for i := 0; i < series.Rows(); i++ {
+				clear(dedup)
+				forEachColMap(&series, i, func(k, v string) {
+					dedup[k] = v
+				})
 
-		result, err := query(ctx, table)
-		if err != nil {
-			return errors.Wrap(err, "query points")
-		}
-		pointsSeries = result
-		return nil
-	})
-	grp.Go(func() error {
-		ctx := grpCtx
-		table := p.tables.ExpHistograms
+				lb.Reset()
+				for k, v := range dedup {
+					lb.Add(k, v)
+				}
+				lb.Sort()
+				result = append(result, onlyLabelsSeries{
+					labels: lb.Labels(),
+				})
+			}
+			return nil
+		},
 
-		result, err := query(ctx, table)
-		if err != nil {
-			return errors.Wrap(err, "query exponential histogram")
-		}
-		expHistSeries = result
-
-		return nil
-	})
-	if err := grp.Wait(); err != nil {
+		Type:   "QueryOnlySeries",
+		Signal: "metrics",
+		Table:  table,
+	}); err != nil {
 		return nil, err
 	}
+	span.AddEvent("series_fetched", trace.WithAttributes(
+		attribute.String("chstorage.table", table),
+		attribute.Int("chstorage.total_series", len(result)),
+	))
 
-	pointsSeries = append(pointsSeries, expHistSeries...)
 	if sortSeries {
-		slices.SortFunc(pointsSeries, func(a, b onlyLabelsSeries) int {
+		slices.SortFunc(result, func(a, b onlyLabelsSeries) int {
 			return labels.Compare(a.Labels(), b.Labels())
 		})
 	}
-	return newSeriesSet(pointsSeries), nil
+	return newSeriesSet(result), nil
 }
 
 func (p *promQuerier) buildSeriesQuery(
-	table string, column chsql.ResultColumn,
+	table string,
+	column proto.ColResult,
 	start, end time.Time,
 	matcherSets [][]*labels.Matcher,
 	mapping metricsLabelMapping,
 ) (*chsql.SelectQuery, error) {
-	query := chsql.Select(table, column).
-		Distinct(true).
-		Where(chsql.InTimeRange("timestamp", start, end))
+	query := chsql.Select(table,
+		chsql.ResultColumn{
+			Name: "series",
+			Expr: chsql.MapConcat(
+				chsql.Map(chsql.String("__name__"), chsql.Ident("name")),
+				attrStringMap(colAttrs),
+				attrStringMap(colResource),
+				attrStringMap(colScope),
+			),
+			Data: column,
+		}).
+		Distinct(true)
 
 	sets := make([]chsql.Expr, 0, len(matcherSets))
 	for _, set := range matcherSets {
@@ -202,16 +170,35 @@ func (p *promQuerier) buildSeriesQuery(
 
 			matcher, err := promQLLabelMatcher(selectors, m.Type, m.Value)
 			if err != nil {
-				return query, err
+				return nil, err
 			}
 			matchers = append(matchers, matcher)
 		}
 		sets = append(sets, chsql.JoinAnd(matchers...))
 	}
+	query.Where(chsql.JoinOr(sets...))
 
-	return query.
-		Where(chsql.JoinOr(sets...)).
-		Order(chsql.Ident("timestamp"), chsql.Asc), nil
+	query.GroupBy(
+		chsql.Ident("name"),
+		chsql.Ident("attribute"),
+		chsql.Ident("scope"),
+		chsql.Ident("resource"),
+	)
+
+	if !start.IsZero() {
+		query.Having(chsql.Gte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
+			chsql.UnixNano(start),
+		))
+	}
+	if !end.IsZero() {
+		query.Having(chsql.Lte(
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
+			chsql.UnixNano(end),
+		))
+	}
+
+	return query, nil
 }
 
 type onlyLabelsSeries struct {

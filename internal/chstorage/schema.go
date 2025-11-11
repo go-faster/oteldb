@@ -20,6 +20,7 @@ type Tables struct {
 	Tags  string
 
 	Points        string
+	Timeseries    string
 	ExpHistograms string
 	Exemplars     string
 	Labels        string
@@ -53,6 +54,7 @@ func (t *Tables) Each(cb func(name *string) error) error {
 		{&t.Tags, "Tags"},
 
 		{&t.Points, "Points"},
+		{&t.Timeseries, "Timeseries"},
 		{&t.ExpHistograms, "ExpHistograms"},
 		{&t.Exemplars, "Exemplars"},
 		{&t.Labels, "Labels"},
@@ -76,6 +78,7 @@ func DefaultTables() Tables {
 		Tags:  "traces_tags",
 
 		Points:        "metrics_points",
+		Timeseries:    "metrics_timeseries",
 		ExpHistograms: "metrics_exp_histograms",
 		Exemplars:     "metrics_exemplars",
 		Labels:        "metrics_labels",
@@ -171,6 +174,7 @@ func (t Tables) Create(ctx context.Context, c ClickHouseClient) error {
 		{Name: t.Spans, DDL: newSpanColumns().DDL()},
 		{Name: t.Tags, DDL: newTracesTagsDDL()},
 		{Name: t.Points, DDL: newPointColumns().DDL()},
+		{Name: t.Timeseries, DDL: newTimeseriesColumns().DDL()},
 		{Name: t.ExpHistograms, DDL: newExpHistogramColumns().DDL()},
 		{Name: t.Exemplars, DDL: newExemplarColumns().DDL()},
 		{Name: t.Labels, DDL: newLabelsColumns().DDL()},

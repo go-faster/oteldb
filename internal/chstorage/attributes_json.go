@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-faster/jx"
+	"github.com/zeebo/xxh3"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/go-faster/oteldb/internal/otelstorage"
@@ -189,4 +190,16 @@ func decodeMap(d *jx.Decoder, m pcommon.Map) error {
 		rval := m.PutEmpty(key)
 		return decodeValue(d, rval)
 	})
+}
+
+func hashTimeseries(name string, res, scope, attrs otelstorage.Attrs) [16]byte {
+	h := xxh3.New()
+
+	_, _ = h.WriteString(name)
+	otelstorage.WriteAttrHash(h, res.AsMap())
+	otelstorage.WriteAttrHash(h, scope.AsMap())
+	otelstorage.WriteAttrHash(h, attrs.AsMap())
+
+	hash := h.Sum128().Bytes()
+	return hash
 }

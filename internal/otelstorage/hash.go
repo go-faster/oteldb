@@ -28,6 +28,11 @@ func AttrHash(m pcommon.Map) Hash {
 	return h.Sum128().Bytes()
 }
 
+// WriteAttrHash adds attributes hash to the [xxh3.Hasher].
+func WriteAttrHash(h *xxh3.Hasher, m pcommon.Map) {
+	hashMap(h, m)
+}
+
 func hashValue(h *xxh3.Hasher, val pcommon.Value) {
 	var buf [8]byte
 

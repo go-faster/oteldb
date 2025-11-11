@@ -21,6 +21,7 @@ func TestGenerateDDL(t *testing.T) {
 		{tables.Spans, newSpanColumns().DDL()},
 		{tables.Tags, newTracesTagsDDL()},
 		{tables.Points, newPointColumns().DDL()},
+		{tables.Timeseries, newTimeseriesColumns().DDL()},
 		{tables.ExpHistograms, newExpHistogramColumns().DDL()},
 		{tables.Exemplars, newExemplarColumns().DDL()},
 		{tables.Labels, newLabelsColumns().DDL()},
