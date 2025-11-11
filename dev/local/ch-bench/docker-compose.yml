@@ -15,7 +15,7 @@ services:
       retries: 30
 
   generator:
-    image: ghcr.io/go-faster/oteldb/otelbench
+    image: ghcr.io/oteldb/oteldb/otelbench
     build:
       context: ../../../
       dockerfile: otelbench.Dockerfile
@@ -42,7 +42,7 @@ services:
       - oteldb
 
   oteldb:
-    image: ghcr.io/go-faster/oteldb
+    image: ghcr.io/oteldb/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile

@@ -18,7 +18,7 @@ services:
       retries: 30
 
   oteldb:
-    image: ghcr.io/go-faster/oteldb
+    image: ghcr.io/oteldb/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile

@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: oteldb
-          image: ghcr.io/go-faster/oteldb/proxy:main
+          image: ghcr.io/oteldb/oteldb/proxy:main
           ports:
             - containerPort: 8090
               protocol: TCP
@@ -93,7 +93,7 @@ spec:
 #    spec:
 #      containers:
 #        - name: oteldb
-#          image: ghcr.io/go-faster/oteldb/chotel:main
+#          image: ghcr.io/oteldb/oteldb/chotel:main
 #          resources:
 #            requests:
 #              cpu: 500m

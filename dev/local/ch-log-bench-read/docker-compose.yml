@@ -15,7 +15,7 @@ services:
       retries: 30
 
   oteldb:
-    image: ghcr.io/go-faster/oteldb
+    image: ghcr.io/oteldb/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile
@@ -52,7 +52,7 @@ services:
 
   # Exports traces from clickhouse internal table to otel.
   chotel:
-    image: ghcr.io/go-faster/oteldb/chotel
+    image: ghcr.io/oteldb/oteldb/chotel
     build:
       context: ../../../
       dockerfile: chotel.Dockerfile

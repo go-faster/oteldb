@@ -19,7 +19,7 @@ services:
 
   # Exports traces from clickhouse internal table to otel.
   chotel:
-    image: ghcr.io/go-faster/oteldb/chotel
+    image: ghcr.io/oteldb/oteldb/chotel
     build:
       context: ../../../
       dockerfile: chotel.Dockerfile
@@ -33,7 +33,7 @@ services:
       - clickhouse
 
   oteldb:
-    image: ghcr.io/go-faster/oteldb
+    image: ghcr.io/oteldb/oteldb
     build:
       context: ../../../
       dockerfile: Dockerfile
@@ -113,7 +113,7 @@ services:
 
   # demo client
   client:
-    image: ghcr.io/go-faster/oteldb/oteldemo
+    image: ghcr.io/oteldb/oteldb/oteldemo
     build:
       context: ../../../
       dockerfile: oteldemo.Dockerfile
@@ -130,7 +130,7 @@ services:
       - OTEL_RESOURCE_ATTRIBUTES=service.name=client
   # demo server
   server:
-    image: ghcr.io/go-faster/oteldb/oteldemo
+    image: ghcr.io/oteldb/oteldb/oteldemo
     command: ["server"]
     build:
       context: ../../../

@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   oteldb:
-    image: ghcr.io/go-faster/oteldb
+    image: ghcr.io/oteldb/oteldb
     build:
       context: ../../../
       dockerfile: deploy.Dockerfile
@@ -60,7 +60,7 @@ services:
 
   # Exports traces from clickhouse internal table to otel.
   chotel:
-    image: ghcr.io/go-faster/oteldb/chotel
+    image: ghcr.io/oteldb/oteldb/chotel
     build:
       context: ../../../
       dockerfile: deploy.chotel.Dockerfile
