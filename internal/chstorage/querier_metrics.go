@@ -320,13 +320,13 @@ func (q *Querier) queryMetricsTimeseries(
 	)
 	if !start.IsZero() {
 		query.Having(chsql.Gte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
 			chsql.UnixNano(start),
 		))
 	}
 	if !end.IsZero() {
 		query.Having(chsql.Lte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
+			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
 			chsql.UnixNano(end),
 		))
 	}
