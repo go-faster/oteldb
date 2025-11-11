@@ -1,0 +1,1 @@
+SELECT body FROM logs GROUP BY body,timestamp HAVING hasToken(body, 'Error'),hasToken(level, 'Error')
