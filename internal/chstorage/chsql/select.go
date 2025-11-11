@@ -78,7 +78,7 @@ func (q *SelectQuery) GroupBy(groups ...Expr) *SelectQuery {
 
 // Having adds grouped filters to query.
 func (q *SelectQuery) Having(filters ...Expr) *SelectQuery {
-	q.where = append(q.where, filters...)
+	q.having = append(q.having, filters...)
 	return q
 }
 
@@ -207,7 +207,7 @@ func (q *SelectQuery) WriteSQL(p *Printer) error {
 
 		for i, e := range q.having {
 			if i != 0 {
-				p.Comma()
+				p.And()
 			}
 			if err := p.WriteExpr(e); err != nil {
 				return errors.Wrapf(err, "having %d", i)

@@ -82,7 +82,7 @@ func TestSelect(t *testing.T) {
 			},
 			false,
 		},
-		// Test ORDER By.
+		// Test ORDER BY.
 		{
 			func() *SelectQuery {
 				return Select("spans",
@@ -148,7 +148,6 @@ func TestSelect(t *testing.T) {
 			},
 			false,
 		},
-
 		// Test PREWHERE.
 		{
 			func() *SelectQuery {
@@ -158,6 +157,21 @@ func TestSelect(t *testing.T) {
 				).
 					Prewhere(
 						HasToken(Ident("body"), "Error"),
+					)
+			},
+			false,
+		},
+		// Test GROUP BY/HAVING.
+		{
+			func() *SelectQuery {
+				return Select(
+					"logs",
+					Column("body", nil),
+				).
+					GroupBy(Ident("body"), Ident("timestamp")).
+					Having(
+						HasToken(Ident("body"), "Error"),
+						HasToken(Ident("level"), "Error"),
 					)
 			},
 			false,
