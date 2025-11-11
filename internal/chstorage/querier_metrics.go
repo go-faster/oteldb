@@ -15,7 +15,6 @@ import (
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 	"github.com/prometheus/prometheus/util/annotations"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
@@ -48,8 +47,7 @@ func (q *Querier) Querier(mint, maxt int64) (storage.Querier, error) {
 		queryTimeseries: q.queryMetricsTimeseries,
 		do:              q.do,
 
-		clickhouseRequestHistogram: q.clickhouseRequestHistogram,
-		tracer:                     q.tracer,
+		tracer: q.tracer,
 	}, nil
 }
 
@@ -64,8 +62,7 @@ type promQuerier struct {
 	queryTimeseries func(ctx context.Context, start, end time.Time, matcherSets [][]*labels.Matcher, mapping metricsLabelMapping) (map[[16]byte]labels.Labels, error)
 	do              func(ctx context.Context, s selectQuery) error
 
-	clickhouseRequestHistogram metric.Float64Histogram
-	tracer                     trace.Tracer
+	tracer trace.Tracer
 }
 
 var _ storage.Querier = (*promQuerier)(nil)

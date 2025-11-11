@@ -95,8 +95,6 @@ type selectQuery struct {
 	ExternalData  []proto.InputColumn
 	ExternalTable string
 
-	TraceLogs bool
-
 	Type   string
 	Signal string
 	Table  string
