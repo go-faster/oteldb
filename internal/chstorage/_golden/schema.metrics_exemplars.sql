@@ -1,16 +1,13 @@
 CREATE TABLE IF NOT EXISTS `metrics_exemplars`
 (
-	`name`                LowCardinality(String),
-	`timestamp`           DateTime64(9)          CODEC(Delta, ZSTD(1)),
+	`hash`                FixedString(16),
+	`timestamp`           DateTime64(9)   CODEC(Delta, ZSTD(1)),
 	`filtered_attributes` String,
-	`exemplar_timestamp`  DateTime64(9)          CODEC(Delta, ZSTD(1)),
+	`exemplar_timestamp`  DateTime64(9)   CODEC(Delta, ZSTD(1)),
 	`value`               Float64,
 	`trace_id`            FixedString(16),
-	`span_id`             FixedString(8),
-	`attribute`           LowCardinality(String),
-	`resource`            LowCardinality(String),
-	`scope`               LowCardinality(String)
+	`span_id`             FixedString(8)
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(timestamp)
-ORDER BY (`name`, `resource`, `attribute`, `timestamp`)
+ORDER BY (`hash`, `timestamp`)
