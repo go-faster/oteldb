@@ -121,7 +121,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/go-faster/oteldb
+        - github.com/oteldb/oteldb
   exclusions:
     generated: lax
     paths:
