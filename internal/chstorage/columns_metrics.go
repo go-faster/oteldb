@@ -324,7 +324,7 @@ func (c *labelsColumns) DDL() ddl.Table {
 }
 
 type exemplarColumns struct {
-	name      *proto.ColLowCardinality[string]
+	hash      proto.ColFixedStr16
 	timestamp *proto.ColDateTime64
 
 	filteredAttributes proto.ColBytes
@@ -332,27 +332,19 @@ type exemplarColumns struct {
 	value              proto.ColFloat64
 	spanID             proto.ColFixedStr8
 	traceID            proto.ColFixedStr16
-
-	attributes *Attributes
-	scope      *Attributes
-	resource   *Attributes
 }
 
 func newExemplarColumns() *exemplarColumns {
 	return &exemplarColumns{
-		name:              new(proto.ColStr).LowCardinality(),
 		timestamp:         new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
 		exemplarTimestamp: new(proto.ColDateTime64).WithPrecision(proto.PrecisionNano),
-		attributes:        NewAttributes(colAttrs),
-		scope:             NewAttributes(colScope),
-		resource:          NewAttributes(colResource),
 	}
 }
 
 func (c *exemplarColumns) Columns() Columns {
 	return MergeColumns(
 		Columns{
-			{Name: "name", Data: c.name},
+			{Name: "hash", Data: &c.hash},
 			{Name: "timestamp", Data: c.timestamp},
 
 			{Name: "filtered_attributes", Data: &c.filteredAttributes},
@@ -361,9 +353,6 @@ func (c *exemplarColumns) Columns() Columns {
 			{Name: "span_id", Data: &c.spanID},
 			{Name: "trace_id", Data: &c.traceID},
 		},
-		c.attributes.Columns(),
-		c.scope.Columns(),
-		c.resource.Columns(),
 	)
 }
 
@@ -375,11 +364,11 @@ func (c *exemplarColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"name", "resource", "attribute", "timestamp"},
+		OrderBy:     []string{"hash", "timestamp"},
 		Columns: []ddl.Column{
 			{
-				Name: "name",
-				Type: c.name.Type(),
+				Name: "hash",
+				Type: c.hash.Type(),
 			},
 			{
 				Name:  "timestamp",
@@ -409,10 +398,6 @@ func (c *exemplarColumns) DDL() ddl.Table {
 			},
 		},
 	}
-
-	c.attributes.DDL(&table)
-	c.resource.DDL(&table)
-	c.scope.DDL(&table)
 
 	return table
 }

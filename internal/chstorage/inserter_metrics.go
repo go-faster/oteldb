@@ -620,7 +620,9 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 		return errors.Errorf("unexpected exemplar value type: %v", typ)
 	}
 
-	c.name.Append(p.Name)
+	hash := b.addHash(p.Timestamp, p.Name, p.Resource, p.Scope, p.Attributes, bucketKey...)
+
+	c.hash.Append(hash)
 	c.timestamp.Append(p.Timestamp)
 
 	c.filteredAttributes.Append(encodeAttributes(e.FilteredAttributes()))
@@ -628,10 +630,6 @@ func (b *metricsBatch) addExemplar(p exemplarSeries, e pmetric.Exemplar, bucketK
 	c.value.Append(val)
 	c.spanID.Append(e.SpanID())
 	c.traceID.Append(e.TraceID())
-
-	c.attributes.Append(p.Attributes.Attributes(bucketKey...))
-	c.scope.Append(p.Scope.Attributes())
-	c.resource.Append(p.Resource.Attributes())
 	return nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
-	"go.opentelemetry.io/collector/pdata/pcommon"
 	"golang.org/x/exp/maps"
 
 	"github.com/go-faster/oteldb/internal/chstorage/chsql"
@@ -285,11 +284,4 @@ func (a *Attributes) DDL(table *ddl.Table) {
 			Type: a.Value.Type(),
 		},
 	)
-}
-
-func attrsToLabels(m otelstorage.Attrs, to map[string]string) {
-	m.AsMap().Range(func(k string, v pcommon.Value) bool {
-		to[k] = v.AsString()
-		return true
-	})
 }

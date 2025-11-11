@@ -7,6 +7,7 @@ import (
 
 	"github.com/ClickHouse/ch-go/proto"
 	"github.com/go-faster/errors"
+	"github.com/go-faster/sdk/zctx"
 	"github.com/prometheus/prometheus/model/exemplar"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/storage"
@@ -28,6 +29,7 @@ func (q *Querier) ExemplarQuerier(ctx context.Context) (storage.ExemplarQuerier,
 		ch:              q.ch,
 		tables:          q.tables,
 		getLabelMapping: q.getMetricsLabelMapping,
+		queryTimeseries: q.queryMetricsTimeseries,
 		do:              q.do,
 
 		tracer: q.tracer,
@@ -40,6 +42,7 @@ type exemplarQuerier struct {
 	ch              ClickHouseClient
 	tables          Tables
 	getLabelMapping func(context.Context, []string) (metricsLabelMapping, error)
+	queryTimeseries func(ctx context.Context, start, end time.Time, matcherSets [][]*labels.Matcher, mapping metricsLabelMapping) (map[[16]byte]labels.Labels, error)
 	do              func(ctx context.Context, s selectQuery) error
 
 	tracer trace.Tracer
@@ -71,52 +74,60 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 		return nil, errors.Wrap(err, "get label mapping")
 	}
 
-	c := newExemplarColumns()
-	query, err := q.buildQuery(
-		table, c.ChsqlResult(),
-		start, end,
-		matcherSets,
-		mapping,
-	)
+	timeseries, err := q.queryTimeseries(ctx, start, end, matcherSets, mapping)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "query timeseries hashes")
 	}
 
-	type groupedExemplars struct {
-		labels    map[string]string
-		exemplars []exemplar.Exemplar
-	}
 	var (
-		set = map[seriesKey]*groupedExemplars{}
+		c     = newExemplarColumns()
+		query = chsql.Select(table, c.ChsqlResult()...).
+			Where(
+				chsql.InTimeRange("timestamp", start, end),
+				chsql.In(
+					chsql.Ident("hash"),
+					chsql.Ident("timeseries_hashes"),
+				),
+			).
+			Order(chsql.Ident("timestamp"), chsql.Asc)
+
+		inputData proto.ColFixedStr16
+	)
+	for hash := range timeseries {
+		inputData.Append(hash)
+	}
+
+	var (
+		set = map[[16]byte]exemplar.QueryResult{}
 		lb  labels.ScratchBuilder
 	)
 	if err := q.do(ctx, selectQuery{
-		Query: query,
+		Query:         query,
+		ExternalTable: "timeseries_hashes",
+		ExternalData: []proto.InputColumn{
+			{Name: "name", Data: &inputData},
+		},
 		OnResult: func(ctx context.Context, block proto.Block) error {
 			for i := 0; i < c.timestamp.Rows(); i++ {
 				var (
-					name               = c.name.Row(i)
+					hash               = c.hash.Row(i)
 					filteredAttributes = c.filteredAttributes.Row(i)
 					exemplarTimestamp  = c.exemplarTimestamp.Row(i)
 					value              = c.value.Row(i)
 					spanID             = c.spanID.Row(i)
 					traceID            = c.traceID.Row(i)
-					attributes         = c.attributes.Row(i)
-					scope              = c.scope.Row(i)
-					resource           = c.resource.Row(i)
 				)
-				key := seriesKey{
-					name:       name,
-					attributes: attributes.Hash(),
-					scope:      scope.Hash(),
-					resource:   resource.Hash(),
-				}
-				s, ok := set[key]
+				s, ok := set[hash]
 				if !ok {
-					s = &groupedExemplars{
-						labels: map[string]string{},
+					lb, ok := timeseries[hash]
+					if !ok {
+						zctx.From(ctx).Error("Can't find labels for requested series")
+						continue
 					}
-					set[key] = s
+					s = exemplar.QueryResult{
+						SeriesLabels: lb,
+					}
+					set[hash] = s
 				}
 
 				exemplarLabels := map[string]string{
@@ -126,17 +137,12 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 				if err := parseLabels(filteredAttributes, exemplarLabels); err != nil {
 					return errors.Wrap(err, "parse filtered attributes")
 				}
-				s.exemplars = append(s.exemplars, exemplar.Exemplar{
+				s.Exemplars = append(s.Exemplars, exemplar.Exemplar{
 					Labels: buildPromLabels(&lb, exemplarLabels),
 					Value:  value,
 					Ts:     exemplarTimestamp.UnixMilli(),
 					HasTs:  true,
 				})
-
-				s.labels[labels.MetricName] = name
-				attrsToLabels(attributes, s.labels)
-				attrsToLabels(scope, s.labels)
-				attrsToLabels(resource, s.labels)
 			}
 			return nil
 		},
@@ -149,11 +155,8 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 	}
 
 	result := make([]exemplar.QueryResult, 0, len(set))
-	for _, group := range set {
-		result = append(result, exemplar.QueryResult{
-			SeriesLabels: buildPromLabels(&lb, group.labels),
-			Exemplars:    group.exemplars,
-		})
+	for _, qr := range set {
+		result = append(result, qr)
 	}
 	return result, nil
 }
@@ -171,38 +174,4 @@ func (q *exemplarQuerier) extractParams(startMs, endMs int64, matcherSets [][]*l
 		}
 	}
 	return start, end, mlabels
-}
-
-func (q *exemplarQuerier) buildQuery(
-	table string, columns []chsql.ResultColumn,
-	start, end time.Time,
-	matcherSets [][]*labels.Matcher,
-	mapping metricsLabelMapping,
-) (*chsql.SelectQuery, error) {
-	query := chsql.Select(table, columns...).
-		Where(chsql.InTimeRange("timestamp", start, end))
-
-	sets := make([]chsql.Expr, 0, len(matcherSets))
-	for _, set := range matcherSets {
-		matchers := make([]chsql.Expr, 0, len(set))
-		for _, m := range set {
-			selectors := []chsql.Expr{
-				chsql.Ident("name"),
-			}
-			if name := m.Name; name != labels.MetricName {
-				selectors = mapping.Selectors(name)
-			}
-
-			matcher, err := promQLLabelMatcher(selectors, m.Type, m.Value)
-			if err != nil {
-				return query, err
-			}
-			matchers = append(matchers, matcher)
-		}
-		sets = append(sets, chsql.JoinAnd(matchers...))
-	}
-
-	return query.
-		Where(chsql.JoinOr(sets...)).
-		Order(chsql.Ident("timestamp"), chsql.Asc), nil
 }
