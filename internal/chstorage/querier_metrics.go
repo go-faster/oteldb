@@ -318,7 +318,6 @@ func (q *Querier) queryMetricsTimeseries(
 		chsql.Ident("scope"),
 		chsql.Ident("resource"),
 	)
-	timeseriesInRange(query, start, end)
 
 	var (
 		set = map[[16]byte]labels.Labels{}
