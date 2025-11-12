@@ -567,27 +567,50 @@ func runTest(
 		}
 	})
 	t.Run("QueryRange", func(t *testing.T) {
-		a := require.New(t)
+		t.Run("Points", func(t *testing.T) {
+			a := require.New(t)
 
-		r, err := c.GetQueryRange(ctx, promapi.GetQueryRangeParams{
-			Query: `count(prometheus_http_requests_total{})`,
-			Start: getPromTS(set.Start),
-			End:   getPromTS(set.End),
-			Step:  "5s",
+			r, err := c.GetQueryRange(ctx, promapi.GetQueryRangeParams{
+				Query: `count(prometheus_http_requests_total{})`,
+				Start: getPromTS(set.Start),
+				End:   getPromTS(set.End),
+				Step:  "5s",
+			})
+			a.NoError(err)
+
+			data := r.Data
+			a.Equal(promapi.MatrixData, data.Type)
+
+			mat := data.Matrix.Result
+			a.Len(mat, 1)
+			values := mat[0].Values
+			a.NotEmpty(values)
+
+			for _, point := range values {
+				a.Equal(float64(51), point.V)
+			}
 		})
-		a.NoError(err)
+		t.Run("Histogram", func(t *testing.T) {
+			a := require.New(t)
 
-		data := r.Data
-		a.Equal(promapi.MatrixData, data.Type)
+			r, err := c.GetQueryRange(ctx, promapi.GetQueryRangeParams{
+				Query: `prometheus_http_response_size_bytes_bucket{handler="/api/v1/write", le="+Inf"}`,
+				Start: getPromTS(set.Start),
+				End:   getPromTS(set.End),
+				Step:  "5s",
+			})
+			a.NoError(err)
 
-		mat := data.Matrix.Result
-		a.Len(mat, 1)
-		values := mat[0].Values
-		a.NotEmpty(values)
+			data := r.Data
+			a.Equal(promapi.MatrixData, data.Type)
 
-		for _, point := range values {
-			a.Equal(float64(51), point.V)
-		}
+			mat := data.Matrix.Result
+			a.Len(mat, 1)
+
+			a.Equal(mat[0].Metric["le"], "+Inf")
+			values := mat[0].Values
+			a.NotEmpty(values)
+		})
 	})
 }
 
