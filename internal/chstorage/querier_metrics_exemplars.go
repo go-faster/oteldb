@@ -98,8 +98,10 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 	}
 
 	var (
-		set = map[[16]byte]exemplar.QueryResult{}
-		lb  labels.ScratchBuilder
+		set            = map[[16]byte]exemplar.QueryResult{}
+		totalExemplars int
+
+		lb labels.ScratchBuilder
 	)
 	if err := q.do(ctx, selectQuery{
 		Query:         query,
@@ -143,6 +145,7 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					Ts:     exemplarTimestamp.UnixMilli(),
 					HasTs:  true,
 				})
+				totalExemplars++
 			}
 			return nil
 		},
@@ -153,6 +156,10 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 	}); err != nil {
 		return nil, err
 	}
+	span.AddEvent("exemplars_fetched", trace.WithAttributes(
+		attribute.Int("chstorage.total_series", len(set)),
+		attribute.Int("chstorage.total_exemplars", totalExemplars),
+	))
 
 	result := make([]exemplar.QueryResult, 0, len(set))
 	for _, qr := range set {
