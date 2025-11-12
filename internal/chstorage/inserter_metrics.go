@@ -544,7 +544,7 @@ func (b *metricsBatch) addHash(ts time.Time, name string, res, scope, attrs lazy
 	b.timeseries.name.Append(name)
 	b.timeseries.resource.Append(res.Attributes())
 	b.timeseries.scope.Append(scope.Attributes())
-	b.timeseries.attributes.Append(attrs.Attributes())
+	b.timeseries.attributes.Append(attrs.Attributes(bucketKey...))
 
 	b.timeseries.firstSeen.Append(ts)
 	b.timeseries.lastSeen.Append(ts)
