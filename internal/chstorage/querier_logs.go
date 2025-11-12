@@ -200,10 +200,10 @@ func (q *Querier) LabelValues(ctx context.Context, labelName string, opts logsto
 			return nil, err
 		}
 	}
-
 	span.AddEvent("values_fetched", trace.WithAttributes(
 		attribute.Int("chstorage.total_values", len(values)),
 	))
+
 	return &labelStaticIterator{
 		name:   labelName,
 		values: values,

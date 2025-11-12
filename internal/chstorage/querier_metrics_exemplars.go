@@ -129,7 +129,6 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					s = exemplar.QueryResult{
 						SeriesLabels: lb,
 					}
-					set[hash] = s
 				}
 
 				exemplarLabels := map[string]string{
@@ -145,6 +144,8 @@ func (q *exemplarQuerier) Select(startMs, endMs int64, matcherSets ...[]*labels.
 					Ts:     exemplarTimestamp.UnixMilli(),
 					HasTs:  true,
 				})
+				set[hash] = s
+
 				totalExemplars++
 			}
 			return nil
