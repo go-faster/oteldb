@@ -190,19 +190,7 @@ func (p *promQuerier) getMatchingLabelValues(ctx context.Context, labelName stri
 		chsql.Ident("scope"),
 		chsql.Ident("resource"),
 	)
-
-	if !p.mint.IsZero() {
-		query.Having(chsql.Gte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
-			chsql.UnixNano(p.mint),
-		))
-	}
-	if !p.maxt.IsZero() {
-		query.Having(chsql.Lte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
-			chsql.UnixNano(p.maxt),
-		))
-	}
+	timeseriesInRange(query, p.mint, p.maxt)
 	query.Limit(p.labelLimit)
 
 	var result []string

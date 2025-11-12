@@ -184,19 +184,7 @@ func (p *promQuerier) buildSeriesQuery(
 		chsql.Ident("scope"),
 		chsql.Ident("resource"),
 	)
-
-	if !start.IsZero() {
-		query.Having(chsql.Gte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
-			chsql.UnixNano(start),
-		))
-	}
-	if !end.IsZero() {
-		query.Having(chsql.Lte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
-			chsql.UnixNano(end),
-		))
-	}
+	timeseriesInRange(query, start, end)
 
 	return query, nil
 }

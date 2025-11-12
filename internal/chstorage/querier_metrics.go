@@ -318,18 +318,7 @@ func (q *Querier) queryMetricsTimeseries(
 		chsql.Ident("scope"),
 		chsql.Ident("resource"),
 	)
-	if !start.IsZero() {
-		query.Having(chsql.Gte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("last_seen")),
-			chsql.UnixNano(start),
-		))
-	}
-	if !end.IsZero() {
-		query.Having(chsql.Lte(
-			chsql.ToUnixTimestamp64Nano(chsql.Ident("first_seen")),
-			chsql.UnixNano(end),
-		))
-	}
+	timeseriesInRange(query, start, end)
 
 	var (
 		set = map[[16]byte]labels.Labels{}
@@ -378,6 +367,21 @@ func (q *Querier) queryMetricsTimeseries(
 	))
 
 	return set, nil
+}
+
+func timeseriesInRange(query *chsql.SelectQuery, start, end time.Time) {
+	if !start.IsZero() {
+		query.Having(chsql.Gte(
+			chsql.ToUnixTimestamp64Nano(chsql.Function("max", chsql.Ident("last_seen"))),
+			chsql.UnixNano(start),
+		))
+	}
+	if !end.IsZero() {
+		query.Having(chsql.Lte(
+			chsql.ToUnixTimestamp64Nano(chsql.Function("min", chsql.Ident("first_seen"))),
+			chsql.UnixNano(end),
+		))
+	}
 }
 
 // Select returns a set of series that matches the given label matchers.
