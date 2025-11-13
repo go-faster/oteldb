@@ -19,7 +19,7 @@ func TestGenerate(t *testing.T) {
 				Delta: time.Hour * 10,
 				Field: "timestamp",
 			},
-			OrderBy: []string{"a", "b"},
+			OrderBy: []string{"a", "toStartOfHour(b)"},
 			Columns: []Column{
 				{
 					Name: "a",
