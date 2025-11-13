@@ -139,7 +139,7 @@ func (c *pointColumns) DDL() ddl.Table {
 			{
 				Name:  "value",
 				Type:  c.value.Type(),
-				Codec: "Gorilla, ZSTD(1)",
+				Codec: "FPC, ZSTD(1)",
 			},
 			{
 				Name:  "mapping",
