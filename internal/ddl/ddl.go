@@ -71,10 +71,16 @@ func Backtick(s string) string {
 	return "`" + s + "`"
 }
 
-func backticks(ss []string) []string {
+func backticks(ss []string, columnNames map[string]struct{}) []string {
 	out := make([]string, len(ss))
 	for i, s := range ss {
-		out[i] = Backtick(s)
+		// Backtick only column names.
+		if _, ok := columnNames[s]; ok {
+			out[i] = Backtick(s)
+		} else {
+			// Ignore in case if key expression contains functions.
+			out[i] = s
+		}
 	}
 	return out
 }
@@ -106,7 +112,9 @@ func Generate(t Table) (string, error) {
 		}
 	}
 	hasIndexes := len(t.Indexes) > 0
+	columnNames := map[string]struct{}{}
 	for i, c := range t.Columns {
+		columnNames[c.Name] = struct{}{}
 		b.WriteString("\n")
 		var col strings.Builder
 		col.WriteString("\t")
@@ -181,12 +189,12 @@ func Generate(t Table) (string, error) {
 	}
 	if len(t.OrderBy) > 0 {
 		b.WriteString("ORDER BY (")
-		b.WriteString(strings.Join(backticks(t.OrderBy), ", "))
+		b.WriteString(strings.Join(backticks(t.OrderBy, columnNames), ", "))
 		b.WriteString(")\n")
 	}
 	if len(t.PrimaryKey) > 0 {
 		b.WriteString("PRIMARY KEY (")
-		b.WriteString(strings.Join(backticks(t.PrimaryKey), ", "))
+		b.WriteString(strings.Join(backticks(t.PrimaryKey, columnNames), ", "))
 		b.WriteString(")\n")
 	}
 	if t.TTL.Delta > 0 && t.TTL.Field != "" {
