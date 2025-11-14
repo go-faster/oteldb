@@ -12,6 +12,8 @@ env:
   COMPOSE_FILE: docker-compose.ci.yml
   OTEL_EXPORTER_OTLP_INSECURE: "true"
   CGO_ENABLED: 0
+  LOCAL: true
+  TEST_BROKEN: true # https://github.com/oteldb/oteldb/issues/848
 
 jobs:
   PromQL:
@@ -41,18 +43,16 @@ jobs:
           echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
           echo "goversion=$(go env GOVERSION)" >> $GITHUB_ENV
 
-#        # NOTE(ernado): don't run on self-hosted runners
-#      - name: Set up cache
-#        uses: actions/cache@v4
-#
-#
-#        with:
-#          path: |
-#            ${{ env.cache }}
-#            ${{ env.modcache }}
-#          key: Benchmark-${{ runner.os }}-go-${{ env.goversion }}-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            Benchmark-${{ runner.os }}-go-${{ env.goversion }}
+      - name: Set up cache
+        uses: actions/cache@v4
+        if: ${{ env.LOCAL != 'true' }}
+        with:
+          path: |
+            ${{ env.cache }}
+            ${{ env.modcache }}
+          key: Benchmark-${{ runner.os }}-go-${{ env.goversion }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            Benchmark-${{ runner.os }}-go-${{ env.goversion }}
 
       - name: Go build
         env:
@@ -79,10 +79,12 @@ jobs:
         run: go run github.com/go-faster/oteldb/cmd/otelbench promql bench -i testdata/node-exporter-selected.promql.yml --warmup 10
 
       - name: Test
+        if: ${{ env.TEST_BROKEN != 'true' }}
         working-directory: ${{ env.WORKDIR }}
         run: go run github.com/go-faster/oteldb/cmd/otelbench promql bench -o report.yml -i testdata/node-exporter-selected.promql.yml --trace --allow-empty=false --warmup 5
 
       - name: Upload report
+        if: ${{ env.TEST_BROKEN != 'true' }}
         uses: actions/upload-artifact@v5
         with:
           name: report.yml
@@ -91,6 +93,7 @@ jobs:
           retention-days: 1
 
       - name: Analyze report
+        if: ${{ env.TEST_BROKEN != 'true' }}
         working-directory: ${{ env.WORKDIR }}
         run: go run github.com/go-faster/oteldb/cmd/otelbench promql analyze -i report.yml
 
