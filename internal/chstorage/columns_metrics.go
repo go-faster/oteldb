@@ -124,7 +124,7 @@ func (c *pointColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"hash", "timestamp"},
+		OrderBy:     []string{"toStartOfHour(timestamp)", "hash", "timestamp"},
 		TTL:         ddl.TTL{Field: "timestamp"},
 		Columns: []ddl.Column{
 			{
@@ -217,7 +217,7 @@ func (c *expHistogramColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"hash", "timestamp"},
+		OrderBy:     []string{"toStartOfHour(timestamp)", "hash", "timestamp"},
 		Columns: []ddl.Column{
 			{
 				Name: "hash",
@@ -364,7 +364,7 @@ func (c *exemplarColumns) DDL() ddl.Table {
 	table := ddl.Table{
 		Engine:      "MergeTree",
 		PartitionBy: "toYYYYMMDD(timestamp)",
-		OrderBy:     []string{"hash", "timestamp"},
+		OrderBy:     []string{"toStartOfHour(timestamp)", "hash", "timestamp"},
 		Columns: []ddl.Column{
 			{
 				Name: "hash",

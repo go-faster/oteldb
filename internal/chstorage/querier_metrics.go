@@ -530,6 +530,8 @@ func (p *promQuerier) queryPoints(ctx context.Context, table string, start, end 
 					chsql.Ident("timeseries_hashes"),
 				),
 			).
+			Order(chsql.ToStartOfHour(chsql.Ident("timestamp")), chsql.Asc).
+			Order(chsql.Ident("hash"), chsql.Asc).
 			Order(chsql.Ident("timestamp"), chsql.Asc)
 
 		inputData proto.ColFixedStr16
@@ -611,13 +613,17 @@ func (p *promQuerier) queryExpHistograms(ctx context.Context, table string, star
 
 	var (
 		c     = newExpHistogramColumns()
-		query = chsql.Select(table, c.ChsqlResult()...).Where(
-			chsql.InTimeRange("timestamp", start, end),
-			chsql.In(
-				chsql.Ident("hash"),
-				chsql.Ident("timeseries_hashes"),
-			),
-		).Order(chsql.Ident("timestamp"), chsql.Asc)
+		query = chsql.Select(table, c.ChsqlResult()...).
+			Where(
+				chsql.InTimeRange("timestamp", start, end),
+				chsql.In(
+					chsql.Ident("hash"),
+					chsql.Ident("timeseries_hashes"),
+				),
+			).
+			Order(chsql.ToStartOfHour(chsql.Ident("timestamp")), chsql.Asc).
+			Order(chsql.Ident("hash"), chsql.Asc).
+			Order(chsql.Ident("timestamp"), chsql.Asc)
 
 		inputData proto.ColFixedStr16
 	)
